@@ -3,20 +3,20 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-address-points.js",
   "chain": "sources",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 200,
+    "records_total": 205,
     "records_new": 0,
-    "records_updated": 200,
+    "records_updated": 205,
     "records_meta": {
       "address_points_load": {
-        "duration_ms": 105437,
+        "duration_ms": 121383,
         "rows_read": 525343,
         "records_inserted": 0,
-        "records_updated": 200,
-        "records_unchanged": 525143,
+        "records_updated": 205,
+        "records_unchanged": 525138,
         "records_skipped": 0,
         "errors": 0
       },
@@ -78,7 +78,7 @@
       "terminal": "loaded",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "code_sha": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -167,13 +167,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 1.9,
+            "value": 1.69,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 105478,
+            "value": 121426,
             "threshold": null,
             "status": "INFO"
           }
@@ -219,16 +219,16 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=247 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"acquired 525343 feature(s) (183472891 bytes, md5 f73a287e…)\"}\nPIPELINE_SUMMARY:{\"records_total\":200,\"records_new\":0,\"records_updated\":200,\"records_meta\":{\"address_points_load\":{\"duration_ms\":105437,\"rows_read\":525343,\"records_inserted\":0,\"records_updated\":200,\"records_unchanged\":525143,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525343,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525343},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1.9,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":105478,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"address_points\":[\"address_point_id\",\"retired_at\"]},\"writes\":{\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"address_number\",\"linear_name_full\",\"address_full\",\"lo_num\",\"hi_num\",\"maint_stage\",\"address_status\",\"address_class_desc\",\"class_family_desc\",\"place_name\",\"addr_num_normalized\",\"linear_name_normalized\",\"geom\",\"retired_at\"]},\"external\":[\"ckan:address-points-4326\"]}\n\n[address_points] completed in 105.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=249 (floor 18)\"}\n{\"level\":\"INFO\",\"tag\":\"[address_points]\",\"msg\":\"acquired 525343 feature(s) (183472897 bytes, md5 a9ee210c…)\"}\nPIPELINE_SUMMARY:{\"records_total\":205,\"records_new\":0,\"records_updated\":205,\"records_meta\":{\"address_points_load\":{\"duration_ms\":121383,\"rows_read\":525343,\"records_inserted\":0,\"records_updated\":205,\"records_unchanged\":525138,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525343,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525343},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1.69,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":121426,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"address_points\":[\"address_point_id\",\"retired_at\"]},\"writes\":{\"address_points\":[\"address_point_id\",\"latitude\",\"longitude\",\"address_number\",\"linear_name_full\",\"address_full\",\"lo_num\",\"hi_num\",\"maint_stage\",\"address_status\",\"address_class_desc\",\"class_family_desc\",\"place_name\",\"addr_num_normalized\",\"linear_name_normalized\",\"geom\",\"retired_at\"]},\"external\":[\"ckan:address-points-4326\"]}\n\n[address_points] completed in 121.4s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2304,
+  "pipeline_runs_max_id_before": 2492,
   "table_state": [
     {
       "table": "address_points",
       "row_count": 525668,
       "ceiling_bypassed": "projected",
-      "content_hash": "2446dd467d8a0709699a0eda5b251570",
+      "content_hash": "d0b9872a9b6ea6d48263132d470d47dd",
       "order_by": "explicit",
       "order_columns": [
         "address_point_id"
@@ -257,7 +257,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "address_points": 1696
+    "address_points": 2042
   },
   "table_specs": {
     "address_points": {
@@ -354,8 +354,8 @@
           "errors": 0,
           "records_inserted": 0,
           "records_skipped": 0,
-          "records_unchanged": 525143,
-          "records_updated": 200,
+          "records_unchanged": 525138,
+          "records_updated": 205,
           "rows_read": 525343
         },
         "audit_table": {
@@ -461,8 +461,8 @@
         "warnings": []
       },
       "records_new": 0,
-      "records_total": 200,
-      "records_updated": 200
+      "records_total": 205,
+      "records_updated": 205
     },
     "summary_count": 1,
     "meta": [
@@ -502,8 +502,8 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=247 (floor 18)\",\"tag\":\"[address_points]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"acquired 525343 feature(s) (183472891 bytes, md5 f73a287e…)\",\"tag\":\"[address_points]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[address_points] target: address_points (descriptor.database) → database=postgres user=postgres migrations=249 (floor 18)\",\"tag\":\"[address_points]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"acquired 525343 feature(s) (183472897 bytes, md5 a9ee210c…)\",\"tag\":\"[address_points]\"}",
       "[address_points] completed in <DUR>"
     ],
     "table_state": [
@@ -528,7 +528,7 @@
           "geom",
           "retired_at"
         ],
-        "content_hash": "2446dd467d8a0709699a0eda5b251570",
+        "content_hash": "d0b9872a9b6ea6d48263132d470d47dd",
         "order_by": "explicit",
         "order_columns": [
           "address_point_id"
@@ -551,13 +551,23 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [address_points]",
-    "txid_before_run2": 3196669,
+    "txid_before_run2": 3370142,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "loaded"
     }
   },
+  "capture_ledger_rows": [
+    {
+      "id": 2493,
+      "recorded_by": "harness"
+    },
+    {
+      "id": 2494,
+      "recorded_by": "harness"
+    }
+  ],
   "source_fingerprint": "c4e3dd51837c4fc9ae1689677bd5b14ad837a2abe3f9512e4ddf64c7ec0333bc",
   "fingerprint_files": [
     "scripts/lib/compute/load-address-points.js",
@@ -565,5 +575,5 @@
     "scripts/load-address-points.js",
     "scripts/load-address-points.notes.json"
   ],
-  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
+  "lib_fingerprint": "42eb52a1152e816a8b0d1ddcef29bd87fb6df652bb9da30d6e3fe9fce3cad7f4"
 }

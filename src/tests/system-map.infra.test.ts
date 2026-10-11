@@ -119,6 +119,7 @@ describe('chain-spec Step Breakdown tables — membership + position vs manifest
     deep_scrapes: '44_chain_deep_scrapes.md',
     entities: '45_chain_entities.md',
     wsib: '46_wsib_enrichment.md',
+    coa_notices: '129_source_coa_notices.md',
   };
 
   const loadManifest = () =>
@@ -202,7 +203,7 @@ describe('chain-spec Step Breakdown tables — membership + position vs manifest
       checked += live.length;
       problems.push(...membershipProblems(chain, specFile, live, parseStepBreakdown(specFile)));
     }
-    expect(checked).toBe(86); // 32+16+28+7+2+1 — MEASURED 2026-09-15 as 87, 86 after FLEET-2 2.1 (link_massing out of permits). Kept EXACT on purpose: deriving it from the manifest would let a chain lose steps quietly, the one thing this pin guards.
+    expect(checked).toBe(87); // 32+16+28+7+2+1+1 (coa_notices, Spec 129, 2026-10-07) — MEASURED 2026-09-15 as 87, 86 after FLEET-2 2.1 (link_massing out of permits). Kept EXACT on purpose: deriving it from the manifest would let a chain lose steps quietly, the one thing this pin guards.
     expect(problems).toEqual([]);
   });
 

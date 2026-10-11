@@ -664,6 +664,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   massing:              { summary: 'Loads 3D building massing models from City shapefile', table: 'building_footprints' },
   neighbourhoods:       { summary: 'Loads neighbourhood boundary polygons and demographic data', table: 'neighbourhoods' },
   load_wsib:            { summary: 'Loads WSIB registry snapshot for contractor identity matching', table: 'wsib_registry' },
+  load_coa_notices:     { summary: 'Loads CoA decision-notice variance items from pinned PDFs (operator-triggered, local only)', table: 'coa_notice_variances' },
   load_zoning:          { summary: 'Loads Toronto Zoning By-law (569-2013) — 10 CKAN DataStore layers into the zoning tables', table: 'zoning_bylaw_areas' },
   enrich_parcels:       { summary: 'Spatially joins parcels against the zoning tables; writes the zoning by-law feed (class, FSI, coverage, height, overlays) onto parcels', table: 'parcels' },
   enrich_ravines:       { summary: 'Spatially joins parcels against the ravines table; writes the Chapter-658 protection flag + signed ravine distance + dataset lineage onto parcels', table: 'parcels' },

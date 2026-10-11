@@ -323,6 +323,18 @@ const rules: Rule[] = [
     pattern: new RegExp(`"parcels_geom_change_tolerance_deg":[\\s\\S]{0,30}"default":\\s*${contracts.parcels_geom_change_tolerance_deg.default}\\b`),
   },
   {
+    name: 'parcels_geom_change_tolerance_deg.min → load_parcels descriptor config.logic_variables',
+    value: contracts.parcels_geom_change_tolerance_deg.min,
+    file: 'scripts/load-parcels.descriptor.json',
+    pattern: new RegExp(`"name": "parcels_geom_change_tolerance_deg",\\s*"min": ${contracts.parcels_geom_change_tolerance_deg.min},`),
+  },
+  {
+    name: 'parcels_geom_change_tolerance_deg.max → load_parcels descriptor config.logic_variables',
+    value: contracts.parcels_geom_change_tolerance_deg.max,
+    file: 'scripts/load-parcels.descriptor.json',
+    pattern: new RegExp(`"name": "parcels_geom_change_tolerance_deg",\\s*"min": [^,]+,\\s*"max": ${contracts.parcels_geom_change_tolerance_deg.max}\\b`),
+  },
+  {
     name: 'parcels_geom_change_tolerance_deg.min → seed JSON min',
     value: contracts.parcels_geom_change_tolerance_deg.min,
     file: 'scripts/seeds/logic_variables.json',

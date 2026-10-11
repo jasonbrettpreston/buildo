@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/compute-centroids.js",
   "chain": "sources",
-  "source_fingerprint": "23a74d7142a0c40da137edec4f29a387d7826bea481225c35a5a2f5c3c4164fe",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "source_fingerprint": "35bdeff1bebbeaa1989ad3c63c30d7f78b2a4aa75e683a51790607fc5feb9b25",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
     "calls": 28,
     "distinct": 24,
     "utility": 8,
-    "tracer_self_ms": 6.368,
-    "wall_ms": 26206
+    "tracer_self_ms": 5.649,
+    "wall_ms": 30410
   },
   "statements": [
     {
@@ -260,7 +260,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -298,11 +298,12 @@
       "fingerprint": "e28a4ad36539d928",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 214,
       "reads": {
         "parcels": [
           "centroid_lat",
-          "geom"
+          "geom",
+          "id"
         ]
       },
       "writes": {

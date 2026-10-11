@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **36** (+ **0** pending) · remaining slugs: **38** (+ **0** pending)
+Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 0 | 0 |
+| C5 | 1 | 1 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -29,9 +29,11 @@ Remaining files: **36** (+ **0** pending) · remaining slugs: **38** (+ **0** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
+| INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
+- `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
 
 </details>
 
@@ -88,4 +90,4 @@ Remaining files: **36** (+ **0** pending) · remaining slugs: **38** (+ **0** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **68** manifest.scripts slugs = **27** converted + **0** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **69** manifest.scripts slugs = **27** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

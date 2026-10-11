@@ -132,7 +132,7 @@
       {
         "table": "parcels",
         "column": "heritage_dataset_version_when_enriched",
-        "when": "the parcels geom trigger parcels.trg_parcels_geom_invalidation NULLs this stamp on every geom change from any writer — its fifth arm lands with the LDG-10 trigger migration (Step 1, O2-A). load-parcels.js's ON CONFLICT CASE (DEC-FENCE2, anchor `heritage_dataset_version_when_enriched = CASE`) stays as the documented fence. A load_heritage source_dataset_version bump on EITHER dataset also stales every parcel, because the stamp is the two versions concatenated.",
+        "when": "the parcels geom trigger parcels.trg_parcels_geom_invalidation NULLs this stamp on every MATERIAL geom change from any writer (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate) — its fifth arm lands with the LDG-10 trigger migration (Step 1, O2-A). load-parcels.js's ON CONFLICT CASE (DEC-FENCE2, anchor `heritage_dataset_version_when_enriched = CASE`) stays as the documented fence. A load_heritage source_dataset_version bump on EITHER dataset also stales every parcel, because the stamp is the two versions concatenated.",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       }

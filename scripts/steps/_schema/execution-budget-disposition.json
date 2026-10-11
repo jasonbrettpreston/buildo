@@ -98,6 +98,7 @@
         "link_parcels",
         "link_wsib",
         "load_centreline",
+        "load_coa_notices",
         "load_heritage",
         "load_zoning",
         "load_wsib",

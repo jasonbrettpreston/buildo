@@ -175,6 +175,7 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 ### Cross-Spec Dependencies
 - **Relies on:** `pipeline_system.md` (SDK, orchestrator)
 - **Relies on:** `chain_permits.md` (permits must be loaded first for linking)
+- **Sibling (not a step of this chain):** `129_source_coa_notices.md` — the decision-notice ingestor runs in its own operator-triggered chain `coa_notices`, so a toronto.ca failure never stops this chain; its ordering after `load_coa` is declared-only.
 - **Shared steps (current state):** `assert_schema`, `link_coa`, `refresh_snapshot`, `assert_data_bounds`, `assert_engine_health`, `classify_lifecycle_phase`, `assert_lifecycle_phase_distribution`, `compute_phase_calibration`, `assert_global_coverage` also appear in `chain_permits.md` — re-derived 2026-09-15 as the intersection of `manifest.chains.coa` and `manifest.chains.permits`, and locked against it (`system-map.infra.test.ts`, SHARED-STEPS PROSE arm). `create_pre_permits` stood on this line until then, three Phase-G-retirements late: §6.5 step 18 retired it, `scripts/create-pre-permits.js` is deleted, and it is in neither chain.
 - `load-permits.js` — permits-chain step referenced as the CoA-lead-must-become-first-class design-pivot context, not governed here.
 - `close-stale-permits.js` — permits-chain step named as a "does CoA need this too" comparison in §6's per-step table.

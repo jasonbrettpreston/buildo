@@ -108,7 +108,7 @@
       {
         "table": "parcels",
         "column": "ravine_dataset_version_when_enriched",
-        "when": "the parcels geom trigger parcels.trg_parcels_geom_invalidation NULLs this stamp on every geom change from any writer — its fifth arm lands with the LDG-10 trigger migration (Step 1, O2-A). load-parcels.js's ON CONFLICT CASE (#418 DEC-FENCE2, locked by src/tests/db/load-parcels-ravine-invalidation.db.test.ts) stays as the documented fence. A load_ravines source_dataset_version bump also stales every parcel through the SAME scope predicate this step's own write_discipline.scope declares.",
+        "when": "the parcels geom trigger parcels.trg_parcels_geom_invalidation NULLs this stamp on every MATERIAL geom change from any writer (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate) — its fifth arm lands with the LDG-10 trigger migration (Step 1, O2-A). load-parcels.js's ON CONFLICT CASE (#418 DEC-FENCE2, locked by src/tests/db/load-parcels-ravine-invalidation.db.test.ts) stays as the documented fence. A load_ravines source_dataset_version bump also stales every parcel through the SAME scope predicate this step's own write_discipline.scope declares.",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
       }

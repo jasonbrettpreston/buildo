@@ -3,19 +3,19 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-heritage.js",
   "chain": "sources",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "exit_code": 0,
   "signal": null,
   "summary": {
-    "records_total": 496509,
+    "records_total": 496535,
     "records_new": 0,
-    "records_updated": 0,
+    "records_updated": 214,
     "records_meta": {
-      "duration_ms": 19228,
+      "duration_ms": 21538,
       "code_version": "none",
       "heritage_designated_by_zone": {
         "RD": {
-          "parcels": 236067,
+          "parcels": 236072,
           "designated": 2490
         },
         "R": {
@@ -31,7 +31,7 @@
           "designated": 3
         },
         "CR": {
-          "parcels": 19305,
+          "parcels": 19312,
           "designated": 2056
         },
         "RT": {
@@ -47,12 +47,12 @@
           "designated": 659
         },
         "(null)": {
-          "parcels": 17820,
+          "parcels": 17829,
           "designated": 515
         },
         "other": {
-          "parcels": 15980,
-          "designated": 259
+          "parcels": 15985,
+          "designated": 260
         }
       },
       "config": {
@@ -70,7 +70,7 @@
       "terminal": "enriched",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "code_sha": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -84,7 +84,7 @@
         "rows": [
           {
             "metric": "parcels_heritage_designated_count",
-            "value": 10615,
+            "value": 10616,
             "threshold": "value_min 1",
             "status": "PASS",
             "source": "check",
@@ -92,7 +92,7 @@
           },
           {
             "metric": "parcels_part_iv_count",
-            "value": 1361,
+            "value": 1362,
             "threshold": "value_min 1",
             "status": "PASS",
             "source": "check",
@@ -133,7 +133,7 @@
           },
           {
             "metric": "parcels_enriched_count",
-            "value": 0,
+            "value": 214,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -141,7 +141,7 @@
           },
           {
             "metric": "parcels_heritage_enrich_skipped",
-            "value": true,
+            "value": false,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -157,7 +157,7 @@
           },
           {
             "metric": "enrich_heritage_duration_ms",
-            "value": 19228,
+            "value": 21538,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -197,7 +197,7 @@
           },
           {
             "metric": "heritage_designated_share_max_pct",
-            "value": 2.13792270044913,
+            "value": 2.13801214816247,
             "threshold": "value_max 10",
             "status": "PASS",
             "source": "plausibility",
@@ -205,7 +205,7 @@
           },
           {
             "metric": "heritage_designated_count_collapse_floor",
-            "value": 10615,
+            "value": 10616,
             "threshold": "value_min 1000",
             "status": "PASS",
             "source": "plausibility",
@@ -244,55 +244,55 @@
           },
           {
             "metric": "sys_heritage_flag_type_agree_flagged_side_duration_ms",
-            "value": 4120,
+            "value": 6592,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_flag_type_agree_unflagged_side_duration_ms",
-            "value": 4328,
+            "value": 6443,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_date_without_type_count_duration_ms",
-            "value": 4348,
+            "value": 6150,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_part_iv_null_date_count_duration_ms",
-            "value": 4361,
+            "value": 6599,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_designated_share_max_pct_duration_ms",
-            "value": 1702,
+            "value": 3927,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_designated_count_collapse_floor_duration_ms",
-            "value": 1560,
+            "value": 3914,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_part_iv_matched_le_source_duration_ms",
-            "value": 1677,
+            "value": 3852,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 19600.07,
+            "value": 15459.71,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 25332,
+            "value": 32118,
             "threshold": null,
             "status": "INFO"
           }
@@ -341,16 +341,16 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=247 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 12586ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496509,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":19228,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236067,\"designated\":2490},\"R\":{\"parcels\":104544,\"designated\":4593},\"RM\":{\"parcels\":54869,\"designated\":25},\"RS\":{\"parcels\":29683,\"designated\":3},\"CR\":{\"parcels\":19305,\"designated\":2056},\"RT\":{\"parcels\":14926,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17820,\"designated\":515},\"other\":{\"parcels\":15980,\"designated\":259}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10615,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1361,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":19228,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13792270044913,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10615,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":4120,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":4328,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":4348,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":4361,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":1702,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":1560,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":1677,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":19600.07,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":25332,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 25.3s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=249 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 14832ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496535,\"records_new\":0,\"records_updated\":214,\"records_meta\":{\"duration_ms\":21538,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236072,\"designated\":2490},\"R\":{\"parcels\":104544,\"designated\":4593},\"RM\":{\"parcels\":54869,\"designated\":25},\"RS\":{\"parcels\":29683,\"designated\":3},\"CR\":{\"parcels\":19312,\"designated\":2056},\"RT\":{\"parcels\":14926,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17829,\"designated\":515},\"other\":{\"parcels\":15985,\"designated\":260}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10616,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1362,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":214,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":21538,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13801214816247,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10616,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":6592,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":6443,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":6150,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":6599,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":3927,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":3914,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":3852,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":15459.71,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":32118,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 32.1s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2287,
+  "pipeline_runs_max_id_before": 2446,
   "table_state": [
     {
       "table": "parcels",
-      "row_count": 496510,
+      "row_count": 496536,
       "ceiling_bypassed": "projected",
-      "content_hash": "7339a5234225cd1cc52b2fafdd4348df",
+      "content_hash": "e06eaba1211025b151f9edcd17c4d3db",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -367,7 +367,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 2136
+    "parcels": 2480
   },
   "table_specs": {
     "parcels": {
@@ -404,11 +404,11 @@
     },
     {
       "name": "heritage_designated_share_max_pct",
-      "value": "2.13792270044913"
+      "value": "2.13801214816247"
     },
     {
       "name": "heritage_designated_count_collapse_floor",
-      "value": "10615"
+      "value": "10616"
     },
     {
       "name": "heritage_part_iv_matched_le_source",
@@ -450,7 +450,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 1",
-              "value": 10615
+              "value": 10616
             },
             {
               "metric": "parcels_part_iv_count",
@@ -458,7 +458,7 @@
               "source": "check",
               "status": "PASS",
               "threshold": "value_min 1",
-              "value": 1361
+              "value": 1362
             },
             {
               "metric": "parcels_part_v_hcd_count",
@@ -499,7 +499,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 0
+              "value": 214
             },
             {
               "metric": "parcels_heritage_enrich_skipped",
@@ -507,7 +507,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": true
+              "value": false
             },
             {
               "metric": "heritage_source_dataset_version",
@@ -523,7 +523,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 19228
+              "value": 21538
             },
             {
               "metric": "heritage_flag_type_agree_flagged_side",
@@ -563,7 +563,7 @@
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_max 10",
-              "value": 2.13792270044913
+              "value": 2.13801214816247
             },
             {
               "metric": "heritage_designated_count_collapse_floor",
@@ -571,7 +571,7 @@
               "source": "plausibility",
               "status": "PASS",
               "threshold": "value_min 1000",
-              "value": 10615
+              "value": 10616
             },
             {
               "metric": "heritage_part_iv_matched_le_source",
@@ -627,11 +627,11 @@
         "heritage_designated_by_zone": {
           "(null)": {
             "designated": 515,
-            "parcels": 17820
+            "parcels": 17829
           },
           "CR": {
             "designated": 2056,
-            "parcels": 19305
+            "parcels": 19312
           },
           "CRE": {
             "designated": 659,
@@ -647,7 +647,7 @@
           },
           "RD": {
             "designated": 2490,
-            "parcels": 236067
+            "parcels": 236072
           },
           "RM": {
             "designated": 25,
@@ -662,8 +662,8 @@
             "parcels": 14926
           },
           "other": {
-            "designated": 259,
-            "parcels": 15980
+            "designated": 260,
+            "parcels": 15985
           }
         },
         "ledger_row": "chain_owned",
@@ -672,8 +672,8 @@
         "warnings": []
       },
       "records_new": 0,
-      "records_total": 496509,
-      "records_updated": 0
+      "records_total": 496535,
+      "records_updated": 214
     },
     "summary_count": 1,
     "meta": [
@@ -716,7 +716,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=247 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=249 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join completed in <DUR>\",\"tag\":\"[enrich_heritage]\"}",
       "[enrich_heritage] completed in <DUR>"
@@ -731,12 +731,12 @@
           "heritage_designation_date",
           "heritage_dataset_version_when_enriched"
         ],
-        "content_hash": "7339a5234225cd1cc52b2fafdd4348df",
+        "content_hash": "e06eaba1211025b151f9edcd17c4d3db",
         "order_by": "explicit",
         "order_columns": [
           "id"
         ],
-        "row_count": 496510,
+        "row_count": 496536,
         "table": "parcels"
       }
     ],
@@ -759,11 +759,11 @@
       },
       {
         "name": "heritage_designated_share_max_pct",
-        "value": "2.13792270044913"
+        "value": "2.13801214816247"
       },
       {
         "name": "heritage_designated_count_collapse_floor",
-        "value": "10615"
+        "value": "10616"
       },
       {
         "name": "heritage_part_iv_matched_le_source",
@@ -783,18 +783,28 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 3191217,
+    "txid_before_run2": 3364995,
     "run2": {
       "exit_code": 0,
       "skipped": false,
       "terminal": "enriched"
     }
   },
-  "source_fingerprint": "91187f63df513d6ae265c46b46efd754d50e89be8f48c0fa5d77dbfef4743cc6",
+  "capture_ledger_rows": [
+    {
+      "id": 2447,
+      "recorded_by": "harness"
+    },
+    {
+      "id": 2448,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": "0d37cba8d618305b240659e5bfd67ff26f645fae5e21f17fc094ea5583d1f6fb",
   "fingerprint_files": [
     "scripts/enrich-heritage.descriptor.json",
     "scripts/enrich-heritage.js",
     "scripts/lib/compute/enrich-heritage.js"
   ],
-  "lib_fingerprint": "558b3900865425160a4a8135973316402899f5f365ff3e79d2cb03fdffc960e6"
+  "lib_fingerprint": "42eb52a1152e816a8b0d1ddcef29bd87fb6df652bb9da30d6e3fe9fce3cad7f4"
 }

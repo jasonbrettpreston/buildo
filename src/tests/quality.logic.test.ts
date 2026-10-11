@@ -518,10 +518,11 @@ describe('Pipeline Registry', () => {
     // +1 dispatch_notifications (P25 25A, permits chain after update_tracked_projects; gated OFF)
     // +1 reconcile (Spec 122 §7.4 / A3, S3 2026-08-24) — the Step-0 reaper at the
     // head of chain_sources; the only writer of pipeline_runs.status = 'crashed'.
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(68);
+    // +1 load_coa_notices (Spec 129 §12, commit B)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(69);
   });
 
-  it('groups are correct: 14 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 15 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -542,7 +543,8 @@ describe('Pipeline Registry', () => {
     // +1 classify: compute_storey_norms (Spec 65 §8 WF3-C1 2026-06-24)
     // +1 classify: compute_build_norms (Spec 78 P1 2026-06-26)
     // +1 classify: compute_parcel_cost_estimates (Spec 88 P1 2026-06-30)
-    expect(groups.filter((g) => g === 'ingest')).toHaveLength(14);
+    // +1 ingest: load_coa_notices (Spec 129 §12, commit B)
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(15);
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(18); // +dispatch_notifications (P25 25A, group 'classify')
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
@@ -567,10 +569,11 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 6 chains: coa, permits, entities, wsib, sources, deep_scrapes', () => {
+  it('has exactly 7 chains: coa, permits, entities, wsib, sources, deep_scrapes, coa_notices', () => {
     // WF2 2026-07-25: CoA ordered before Permits (coa→permits combined chain).
+    // Spec 129 §12 (commit B): standalone chain coa_notices = [load_coa_notices], last.
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes']);
+    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes', 'coa_notices']);
   });
 
   it('permits chain has 29 steps ending with backup_db (Phase G removed create_pre_permits)', () => {

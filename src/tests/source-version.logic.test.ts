@@ -100,6 +100,47 @@ function codeOnly(file: string): string {
     .join('\n');
 }
 
+/** Fence F2 exemptions (operator ruling (b) 2026-10-10). Each names ONE function and ONE banned pattern. */
+const F2_EXEMPT = [
+  { fn: 'readDocumentManifest', ban: 'readFileSync', why: 'reads the repo-pinned manifest JSON, not a download', until: null },
+  { fn: 'fetchPdfCapped', ban: 'arrayBuffer()', why: 'dead no-reader fallback; deleted in compute-purity Phase 2', until: 'H5 fleet recapture night 4 (filed 2026-10-10)' },
+] as const;
+
+/**
+ * Removes the body of `function <name>(` / `async function <name>(` up to the matching
+ * closing brace. The scan starts at the first `{` AFTER the parameter list's closing `)`
+ * — a destructured parameter object (`{ allowlist, … }`) is part of the signature, not the
+ * body, and starting at it would stop one brace too early and leave the banned pattern in.
+ * If the function is not found, the text is returned unchanged.
+ */
+function withoutFunction(text: string, name: string): string {
+  const sig = new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\(`).exec(text);
+  if (!sig) return text;
+  const open = text.indexOf('(', sig.index);
+  let depth = 0;
+  let cursor = open;
+  for (; cursor < text.length; cursor++) {
+    const c = text[cursor];
+    if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) { cursor++; break; }
+  }
+  const bodyStart = text.indexOf('{', cursor);
+  if (bodyStart === -1) return text;
+  let braces = 0;
+  let end = bodyStart;
+  for (; end < text.length; end++) {
+    const c = text[end];
+    if (c === '{') braces++;
+    else if (c === '}' && --braces === 0) { end++; break; }
+  }
+  return text.slice(0, sig.index) + text.slice(end);
+}
+
+/** The subject text with every F2_EXEMPT entry that bans `ban` stripped of its function body. */
+function withoutF2Exempt(text: string, ban: string): string {
+  return F2_EXEMPT.filter((e) => e.ban === ban).reduce((t, e) => withoutFunction(t, e.fn), text);
+}
+
 // ── 3. The three distinguishable outcomes ──────────────────────────────────
 describe('outcome constants (three-way, distinguishable)', () => {
   it('exposes exactly the three named outcome strings', () => {
@@ -283,8 +324,10 @@ describe('contentHashDecision — tier-2, the gate that eats the daily-regenerat
       const src = codeOnly(f);
       expect(src, `${f} must run the tier-2 gate`).toContain('contentHashDecision(');
       // §9.5: hash the bytes as they stream to disk — never Buffer.from(await res.arrayBuffer()).
-      expect(src, `${f} must not buffer the download`).not.toContain('arrayBuffer()');
-      expect(src, `${f} must not buffer a file read`).not.toContain('readFileSync');
+      // Operator ruling (b) 2026-10-10: each ban is checked over the text with its own F2_EXEMPT
+      // function bodies removed (acquire.js's CoA PDF arm carries the two dated/permanent drifts).
+      expect(withoutF2Exempt(src, 'arrayBuffer()'), `${f} must not buffer the download`).not.toContain('arrayBuffer()');
+      expect(withoutF2Exempt(src, 'readFileSync'), `${f} must not buffer a file read`).not.toContain('readFileSync');
       expect(src, `${f} must hash through the stream`).toMatch(/hashThrough|streamFileHash/);
     }
   });
@@ -296,6 +339,37 @@ describe('contentHashDecision — tier-2, the gate that eats the daily-regenerat
       expect(tier2Idx, `${f} must have a tier-2 skip branch`).toBeGreaterThan(-1);
       expect(src.slice(tier2Idx), `${f} tier-2 skip must re-emit prior meta`).toContain('buildSkipReEmitMeta(');
     }
+  });
+  it('F2 exemptions stay narrow: each exempted function exists and is the only place its banned pattern appears', () => {
+    // Operator ruling (b) 2026-10-10 — the F-2 fence (0b230472) is narrowed to two NAMED
+    // functions in acquire.js, not to a file. Each entry is proved here: the function exists,
+    // it contains the banned pattern, and the rest of the file (with that one body removed)
+    // does not. When compute-purity Phase 2 deletes fetchPdfCapped's no-reader fallback, the
+    // `contains` half goes red and forces the dated entry's removal.
+    const acquire = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/step/acquire.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n')
+      .filter((l) => { const t = l.trim(); return !t.startsWith('//') && !t.startsWith('*'); })
+      .join('\n');
+
+    expect(F2_EXEMPT.length, 'one entry per exempted function — a widened table is the failure this locks').toBe(2);
+
+    const BAN_RE: Record<string, RegExp> = { 'readFileSync': /readFileSync/, 'arrayBuffer()': /arrayBuffer\s*\(\s*\)/ };
+    for (const e of F2_EXEMPT) {
+      const re = BAN_RE[e.ban] as RegExp;
+      const body = withoutFunction(acquire, e.fn);
+      expect(body, `acquire.js no longer declares function ${e.fn}() — remove its F2_EXEMPT entry (${e.until ?? 'permanent'})`).not.toBe(acquire);
+      expect(re.test(acquire), `${e.fn} no longer contains ${e.ban} — the exemption is dead, delete the entry`).toBe(true);
+      expect(re.test(body), `${e.ban} appears OUTSIDE ${e.fn} in acquire.js — the exemption must name every occurrence`).toBe(false);
+    }
+
+    // Negative control: a top-level banned call OUTSIDE any exempt function is still caught
+    // after the stripping, so the narrowing cannot silently widen into a file-level pass.
+    const withStrayCall = `${acquire}\nconst body = Buffer.from(await res.arrayBuffer());\n`;
+    expect(withoutF2Exempt(withStrayCall, 'arrayBuffer()'), 'a top-level arrayBuffer() outside every exempt function must still be seen').toMatch(/arrayBuffer\s*\(\s*\)/);
+    expect(withoutF2Exempt(withStrayCall, 'arrayBuffer()')).toContain('res.arrayBuffer()');
+    // ...and withoutFunction on an unknown name is a no-op, never a blanket strip.
+    expect(withoutFunction(acquire, 'noSuchFunctionAtAll')).toBe(acquire);
   });
 });
 

@@ -1,0 +1,248 @@
+# `load_coa_notices` — net-new INGESTOR assessment (WF1, converted from day one)
+
+**Commit form: compressed (R-PACE-1)**
+
+> **Status:** commit A landed the table, the pure parser library, the PDF text extractor, the manifest tool and their
+> tests on branch `wf1/load-coa-notices`. Commit B (this report's commit) lands RE-FREEZE #32, the compute, the
+> descriptor, shell, notes, seeds and the chain, with the fleet recapture. Pending stage
+> `shape_clean_pending_recapture`: everything except this step's own captures is present; the first pin and the first
+> captures follow (Spec 129 §12). The tag `batch3-p1-1` is provisional — the queue (`.cursor/QUEUE.md`) assigns it.
+
+**Target spec:** `docs/specs/01-pipeline/129_source_coa_notices.md` · **Governing plan:** `.cursor/wf1_load_coa_notices_active_task.md`
+v3 (operator-authorized 2026-10-07) · **Script:** `scripts/load-coa-notices.js` (frozen shell) · **Chain:** `coa_notices`, position 1
+of 1 · **Lock:** `129` (Spec 47 §A.5 row added in this commit).
+
+INGESTOR has ≥ 2 converted members (`load_ravines`, `address_points`, `parcels`, …) and is proven, so the compressed form is the
+default; no full-form reason applies.
+
+## 1. PH-0 — Boundary freeze
+
+* **Boundary:** one write target, `coa_notice_variances` (migration 252), class `guarded_upsert` with soft retire
+  (`retract: "departed_mark"`), `txn_scope: step`. Reads: the pinned manifest and the documents it names; `coa_notice_variances`
+  (key + `retired_at`, for the MARK). No other table is written.
+* **Seed:** 39 `coa_notices_*` logic variables (Spec 129 §10), admin group "CoA Decision Notices".
+* **Columns written:** exactly `ROW_COLUMNS` of the compute (27 step columns) + `retired_at` (`insert_only`, library MARK) +
+  `loaded_at` (`db_default`). No text column (Spec 129 §3).
+
+**G2:** ASSESSMENT-INCOMPLETE — because this is a net-new step: no legacy script exists, so there is no churn history to plot.
+
+## 3. PH-3 — Intent ledger (G3)
+
+There is no legacy behaviour to preserve. The intents below come from the authorized plan and the spike, and each is encoded in
+the converted form. Commit shas: the base `9027972f` (the main tip the branch started from) and `3d087484` (the McBylaw S6g slice
+whose `vocab.json` `dsl_target` the target map is pinned to).
+
+| Intent | Source | Disposition (preserved-in-compute / encoded-as-descriptor-field / encoded-as-deviation / knowingly-retired) and why |
+|---|---|---|
+| Values only: no PDF, no text, no names stored or logged | plan D3; spike PII finding (LCN-D1) | encoded-as-descriptor-field — the write columns are `ROW_COLUMNS`; T-PII-1/2/4 lock it |
+| Hearing date from the pinned title, verified against the mailed date | plan D2/D8, G3/G8/G11 | preserved-in-compute — `mail_lag_out_of_bounds`; why: the notice text has no hearing label (Spec 129 §2) |
+| Never write or retire from a bad parse or an incomplete acquisition | plan D9 | encoded-as-descriptor-field — every such check is `pre_write` with an `order_guarantee` |
+| Spike value defects (decimal split, comma-as-decimal, unit relabel, compound sentences, reversed whereas) | spike `parse.mjs` measured | knowingly-retired — rules (a)–(l), each red against `src/tests/fixtures/coa-notices/spike-parser.cjs` |
+| A second source family needs its own step | plan D11 (B3/B9, table-wide MARK) | encoded-as-deviation — Spec 129 §11; no multi-family path ships |
+
+## 4. Risk class (G4)
+
+| Risk class | Chance | Impact | Guard |
+|---|---|---|---|
+| PII leak (names/text reach disk, log or a column) | low | high | in-memory arm, no text column, T-PII-1/2/3/4, T-ACQ-11 (no disk writes) |
+| Extractor regression writes or retires bad rows | medium | high | pre_write C1–C4, C7a, C9, C13, C15–C17; content hash includes logic_version |
+| Mis-mapped target poisons the oracle | medium | medium | C13 FAIL on pair rows; T-MAP-1/2; independence from McBylaw's evaluator (T-IND) |
+| Pair rate below the pre-registered bound (LCN-D4, CLOSED) | high | low | ruled 2026-10-07: parser fixed (coa-extractor-2, 0.888 on the spike corpus); C3 unchanged, measured again at run 1 |
+| Source drift (a pinned PDF changes or dies) | low | medium | C1/C2 FAIL; `build-manifest --verify`; a re-pin is a reviewed commit |
+
+## 5. PH-5 — Seam map (G5)
+
+* **DB seam:** the library (`scripts/lib/step/write.js` guarded upsert + MARK/UNMARK, plausibility SQL); the compute holds no SQL.
+* **Clock seam:** none in the compute or library (date arithmetic is pure day-number math; `loaded_at` is a DB default, the
+  MARK uses `now()` in its UPDATE).
+* **Network seam:** the `pdf_document_set` arm only (`ctxFetch`, paced, allowlisted on every hop); the compute never fetches.
+* **argv / env seam:** none read by the step; `COA_NOTICES_FORCE_RELOAD` is the declared `override.force_run`; `PIPELINE_CHAIN`
+  is the runner's.
+
+## 6. PH-6 — Defect ledger (G6)
+
+Rows `LCN-D1` (CLOSED), `LCN-D2` (PIN), `LCN-D3` (PIN), `LCN-D4` (CLOSED, fold 661731b5) in
+`docs/reports/defect-ledger.md`.
+
+## 7. Red suite (PH-7)
+
+Red-first evidence, both directions, committed vitest JSON (each red run swaps in the baseline named in Spec 129 §15; the matching green file sits beside it):
+* `docs/reports/red-evidence/load_coa_notices/parse-values-red.json` — `T-PARSE-a pair requires the same unit family`
+* `docs/reports/red-evidence/load_coa_notices/parse-red.json` — `T-PARSE-j the decision comes from the decision paragraph only`
+* `docs/reports/red-evidence/load_coa_notices/target-map-red.json` — `T-MAP-2 exact outputs`
+* `docs/reports/red-evidence/load_coa_notices/checks-red.json` — `T-CHECKS-C3 a null pair rate FAILs`
+* `docs/reports/red-evidence/load_coa_notices/manifest-red.json` — `T-MAN-1 a duplicate url is refused`
+* `docs/reports/red-evidence/load_coa_notices/property-red.json` — `T-PROP-1 reasons sum to totals at every level`
+* `docs/reports/red-evidence/load_coa_notices/acquire-red.json` — `T-ACQ-15 unknown format names "pdf_document_set" among the declared formats`
+* `docs/reports/red-evidence/load_coa_notices/db-red.json` — `T-DB-1 a bad source family is rejected`
+
+`src/tests/steps/load_coa_notices/violations.test.ts` C-1…C-11 flipped green in this commit; C-12…C-14 stay `it.fails` until the
+pin and the samples (§12).
+
+## R. Reflection (G9)
+
+### LOW-CONFIDENCE table
+
+| Item | Why low confidence | What would raise it |
+|---|---|---|
+| Real-text segmentation (notice blocks, consent items, signature pages) | built from the spike's structure; no real notice text was available to this build (PII) | the first `--measure` run over all pinned documents |
+| pdfjs vs `pdftotext -layout` parity (P0.2) | the spike rates came from xpdf; line reconstruction differs | the per-document pair rates of run 1 vs `measure.json` |
+| Mail-lag bounds (14 days / 0) | provisional from 5 spike PDFs | P0.4 `--measure` |
+
+### RECURRING / STANDARD-SHAPING table
+
+| Pattern | Where else it applies |
+|---|---|
+| A document set acquired in memory with a pinned manifest (RE-FREEZE #32) | any future PDF / HTML source the standard must ingest without storing it |
+| Red baselines as committed adapters selected by env (`COA_PARSE_IMPL=spike`) | any net-new step with a prototype to beat |
+| Values-only oracle tables with a soft reference instead of an FK | any ingest whose key lives in another source's table |
+
+---
+
+## Validation scorecard (generated)
+
+> Generated by `node scripts/analysis/step-validate.mjs --step=load_coa_notices --write` — Spec 123 §6, ruling R-R (2026-08-29).
+> Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+
+**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+
+### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
+
+| Word | Status | Detail |
+|---|---|---|
+| STANDARDIZED | PASS | PASS |
+| OBSERVABLE | PASS | PASS |
+| SCALABLE | PASS | PASS |
+| UNDERSTANDABLE | PASS | PASS |
+| ACCURATE | PASS | PASS |
+
+| Gate | Score | Max | Detail |
+|---|---:|---:|---|
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=2 |
+| G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
+| G3 | 2 | 2 | table rows=6 vocab-hit rows=6 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 4 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=0 it-count=15 red-evidence-claims=8 red-evidence-pass=true ledger-deferred=false |
+| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=2 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (shape_clean_pending_recapture) |
+| G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=15 |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
+
+### Fast invariants (always run — the fast descriptor gate)
+
+| # | Scope | Pass | Detail |
+|---|---|---|---|
+| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=250 |
+| 2 | load_coa_notices | PASS | 39 declared, missing from seeds: none |
+| 3 | load_coa_notices | PASS | retired=0 overlap-with-declared=none |
+| 7 | load_coa_notices | PASS | SPEC LINK header present=true |
+| 8 | load_coa_notices | PASS | G-4: 39 declared, 7 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | load_coa_notices | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | load_coa_notices | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 4 | (registry) | PASS | overlap: none |
+| 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
+| 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
+| 22 | (registry) | FAIL | GOLD-PRE-FRESH: 2 unrecoverable PRE capture(s): docs/reports/golden/load_centreline/pre/sources.json (worktree differs from the index — the local edit is unrecoverable); docs/reports/golden/load_centreline/pre/standalone.json (worktree differs from the index — the local edit is unrecoverable) |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 1 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 1 eligible pending slug(s), all either compressed or carry a stated full-form reason |
+| 25 | (registry) | PASS | ARCHETYPE-PARITY: 27 converted slug(s) — 27 compared against a retained census row (all agree), 0 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
+| 26 | (registry) | PASS | COUNTER-ROOT: 68 declared counter source(s) across 23 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
+| 27 | (registry) | PASS | ROW-ERROR-GATE: 10 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
+| 28 | (registry) | PASS | CLOSED-BOUNDS (gate A): 8 bound(s) checked, all closed (8 ledger-allowed, 0 from config/viol==0) |
+| 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
+| 30 | (registry) | PASS | EMITS-EQUIV (gate C): 0 emits drift(s) checked, all closed (0 ledger-allowed, 0 from declared==emitted) |
+| 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 0 contract(s) checked, all closed (0 ledger-allowed, 0 present+typed/excluded); 41 unproduced src read(s) (hard until the FLEET-2 landing commit (.cursor/wf2_registry_truth_active_task.md, Fold 14 P1-C6)) [unproduced:src/app/api/admin/builders/route.ts:entities.google_place_id; unproduced:src/app/api/admin/stats/route.ts:notifications.is_sent; unproduced:src/app/api/admin/stats/route.ts:permits.first_seen_at; unproduced:src/app/api/leads/flight-board/detail/[id]/route.ts:permits.updated_at; unproduced:src/app/api/leads/flight-board/route.ts:permits.updated_at; unproduced:src/app/api/notifications/route.ts:notifications.id; unproduced:src/app/api/notifications/route.ts:notifications.is_read; unproduced:src/features/leads/lib/get-lead-feed.ts:entities.id; unproduced:src/features/leads/lib/get-lead-feed.ts:entities.photo_url; unproduced:src/features/leads/lib/get-lead-feed.ts:permits.location; unproduced:src/lib/admin/supplier-leads.ts:trade_forecasts.target_window; unproduced:src/lib/analytics/queries.ts:entities.id; unproduced:src/lib/builders/enrichment.ts:entities.first_seen_at; unproduced:src/lib/builders/enrichment.ts:entities.google_place_id; unproduced:src/lib/builders/enrichment.ts:entities.google_rating; unproduced:src/lib/builders/enrichment.ts:entities.google_review_count; unproduced:src/lib/builders/enrichment.ts:entities.id; unproduced:src/lib/builders/enrichment.ts:entities.linkedin_url; unproduced:src/lib/builders/enrichment.ts:entities.photo_url; unproduced:src/lib/builders/enrichment.ts:entities.photo_validated_at; unproduced:src/lib/builders/enrichment.ts:entities.trade_name; unproduced:src/lib/leads/lead-detail-query.ts:permits.updated_at; unproduced:src/lib/leads/lead-detail-query.ts:trade_forecasts.target_window; unproduced:src/lib/leads/lead-inspect-query.ts:coa_applications.lead_id; unproduced:src/lib/leads/lead-inspect-query.ts:lifecycle_status_history.id; unproduced:src/lib/leads/lead-inspect-query.ts:permits.first_seen_at; unproduced:src/lib/leads/lead-inspect-query.ts:permits.updated_at; unproduced:src/lib/leads/lead-inspect-query.ts:trade_forecasts.target_window; unproduced:src/lib/quality/metrics.ts:entities.google_place_id; unproduced:src/lib/quality/metrics.ts:permits.first_seen_at; unproduced:src/lib/sync/process.ts:permits.bid_value; unproduced:src/lib/sync/process.ts:permits.first_seen_at; unproduced:src/lib/sync/process.ts:permits.lead_id; unproduced:src/lib/sync/process.ts:permits.lifecycle_block; unproduced:src/lib/sync/process.ts:permits.lifecycle_group; unproduced:src/lib/sync/process.ts:permits.lifecycle_seq; unproduced:src/lib/sync/process.ts:permits.lifecycle_stage; unproduced:src/lib/sync/process.ts:permits.location; unproduced:src/lib/sync/process.ts:permits.photo_url; unproduced:src/lib/sync/process.ts:permits.trade_classified_at; unproduced:src/lib/sync/process.ts:permits.updated_at]; UNPRODUCED-UNWITNESSED: 41 (report-only until the table's inserter converts) [UNPRODUCED-UNWITNESSED:src/app/api/admin/builders/route.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/app/api/admin/stats/route.ts:notifications.is_sent; UNPRODUCED-UNWITNESSED:src/app/api/admin/stats/route.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/app/api/leads/flight-board/detail/[id]/route.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/app/api/leads/flight-board/route.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/app/api/notifications/route.ts:notifications.id; UNPRODUCED-UNWITNESSED:src/app/api/notifications/route.ts:notifications.is_read; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:entities.id; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:entities.photo_url; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:permits.location; UNPRODUCED-UNWITNESSED:src/lib/admin/supplier-leads.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/analytics/queries.ts:entities.id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_rating; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_review_count; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.linkedin_url; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.photo_url; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.photo_validated_at; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.trade_name; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-detail-query.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-detail-query.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:coa_applications.lead_id; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:lifecycle_status_history.id; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/quality/metrics.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/lib/quality/metrics.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.bid_value; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lead_id; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_block; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_group; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_seq; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_stage; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.location; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.photo_url; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.trade_classified_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.updated_at]; 4 unconverted-producer read(s) listed (O3, red once the producer converts) [unconverted_producer:scripts/classify-lifecycle-phase.js:permit_classifier_extended; unconverted_producer:scripts/quality/assert-lifecycle-phase-distribution.js:seq_violations; unconverted_producer:scripts/quality/assert-lifecycle-phase-distribution.js:seq_violations_truncated_count; unconverted_producer:scripts/quality/assert-network-health.js:scraper_telemetry] |
+| 37 | (registry) | PASS | LF-ONLY (gate F): 3 path(s) checked, all LF (3 ledger-allowed) |
+| 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
+| 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
+| 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 367 definition row(s) checked, 44 legal mirror(s), 0 disagreements |
+| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (11 ledger-allowed, 4 outputs:"none" vacuous) |
+| 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
+| 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 29 finding(s), all ledger-allowed (29) |
+| 41 | (registry) | PASS | RED-EVIDENCE (gate K): 18 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
+| 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 28 slug(s), every defect prefix unique |
+| 45 | (registry) | PASS | NOTES-CAP: 20 declaring notes file(s), every one <= 12 prose entries |
+| 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 491 emits.type check(s), 0 mismatches |
+| 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 149 terminal(s) unwitnessed (no capture) |
+
+### Captures (item iv)
+- missing invocations (POST): none
+- missing invocations (PRE, GOLD-PRE): coa_notices::, none::
+- stale fingerprints: none
+- compare ran: false · diffs found: 0 · unexplained: 0
+
+### Test suite (item iii)
+- 2222/2262 passed (suite success=false)
+- harvested: 71 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
+- skipped (declared but not run): 0
+- failing (40):
+  - src/tests/step-conformance.infra.test.ts > converted.json — `pending` (declared data, not a code skip) > a `shape_clean_pending_recapture` pending file names WHICH commit will restore plain "shape_clean" — the deferral must be a bounded, declared promise, not open-ended (R-K.2)
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-schema.js (slug "assert_schema") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-ravines.js (slug "load_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-wsib.js (slug "load_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-heritage.js (slug "load_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-centreline.js (slug "enrich_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-zoning.js (slug "load_zoning") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+  - src/tests/steps/compute_centroids/violations.test.ts > 55-A — the hard per-conversion gate (k=PER_STEP) > #150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no backlog since 245 landed) hash-identical; the POST pair hash-identical too (landed: commit 7, 7b — the differential lands in the same commit as the descriptor/compute, ahead of its originally-planned commit-9 slot). AMENDED (CC-D3, WF3, 2026-08-30): PRE no longer equals POST — a LATER, separate, fully-documented data repair (never a "behaviour change" to the conversion itself, which this test still isolates) intentionally moved the table_state hash. See below.
+  - src/tests/steps/assert_schema/violations.test.ts > RULING R-D — declared_logic_variables_present (cloud parity, chain-start assertion) > checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others
+  - src/tests/steps/assert_schema/violations.test.ts > R-D generator — scripts/generate-assert-schema-probe-lists.js (Ask A1) > real file — applyToText(committed text, LIVE names) is a byte-for-byte no-op (the descriptor is clean, not stale)
+  - src/tests/steps/link_massing/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #150 Gate 1 — reproducible against itself: OLD non-forced captures agree; the OLD FORCED pair is the pinned LM-D13 defect (invariants equal, hash differs); the two POST FORCED FULL relinks hash-EQUAL
+  - src/tests/steps/link_massing/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #159 Idempotence-successor run is a supplement, never the sole gate (old/new pair per invocation ×3, pre/post junction state, one forced FULL)
+  - src/tests/steps/link_parcel_addresses/violations.test.ts > 55-A — the hard per-conversion gate (44, k=PER_STEP) > #150 Gate 1 — reproducible against itself: both PRE captures (commit 5, SKIP path — no corpus change since 2026-07-08) hash-identical; the POST pair hash-identical too, and matches PRE (no forced-FULL/reset scenario belongs in the diffed set, A-1 declare-only ruling — a clean cutover with an unchanged corpus is a genuine zero-diff, not a repair) (flips at: commit 9)
+  - src/tests/steps/load_ravines/violations.test.ts > the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold B library growth > acquire.js — the ONE home for the content-hash gate (Fold B item 3) and the acquisition seam (A-2)
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — present in the converted step (acquire.js + descriptor): tier-2 content-hash gate — contentHashDecision over the streamed hash-through-to-disk (never Buffer.from(await res.arrayBuffer()), never readFileSync), tier2.skip re-emits the prior meta via buildSkipReEmitMeta
+  - src/tests/steps/load_ravines/violations.test.ts > G4d fence locks > F2 0b230472 — reversion is detectable: the patch applied to the current subject makes the lock fire (arrayBuffer()/readFileSync)
+
+### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
+
+| Rule | Name | Status | Note |
+|---|---|---|---|
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
+| 2 | Compute is just compute | enforced-green |  |
+| 3 | Tunables externalized | enforced-green | G-4: 39 declared, 7 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not scoped to this step |
+| 4 | Compute rule declared | enforced-green | G-2: 2 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
+| 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 11 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=48079B notes=3709B checks=14 rows records_meta=14112B (newest post/ capture) |
+
+**Enforced-green: 13/14** · not-run: 0 · vacuous: 0
+

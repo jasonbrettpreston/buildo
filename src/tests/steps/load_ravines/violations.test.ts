@@ -847,6 +847,47 @@ function revertMassDeleteFence(i: MassDeleteInput): MassDeleteInput {
   return { ...i, rows: i.rows.map((r) => (/mass_delete/.test(r.metric) ? { ...r, status: 'INFO' } : r)) };
 }
 
+/** Fence F2 exemptions (operator ruling (b) 2026-10-10). Each names ONE function and ONE banned pattern. */
+const F2_EXEMPT = [
+  { fn: 'readDocumentManifest', ban: 'readFileSync', why: 'reads the repo-pinned manifest JSON, not a download', until: null },
+  { fn: 'fetchPdfCapped', ban: 'arrayBuffer()', why: 'dead no-reader fallback; deleted in compute-purity Phase 2', until: 'H5 fleet recapture night 4 (filed 2026-10-10)' },
+] as const;
+
+/**
+ * Removes the body of `function <name>(` / `async function <name>(` up to the matching
+ * closing brace. The scan starts at the first `{` AFTER the parameter list's closing `)`
+ * — a destructured parameter object (`{ allowlist, … }`) is part of the signature, not the
+ * body, and starting at it would stop one brace too early and leave the banned pattern in.
+ * If the function is not found, the text is returned unchanged.
+ */
+function withoutFunction(text: string, name: string): string {
+  const sig = new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\(`).exec(text);
+  if (!sig) return text;
+  const open = text.indexOf('(', sig.index);
+  let depth = 0;
+  let cursor = open;
+  for (; cursor < text.length; cursor++) {
+    const c = text[cursor];
+    if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) { cursor++; break; }
+  }
+  const bodyStart = text.indexOf('{', cursor);
+  if (bodyStart === -1) return text;
+  let braces = 0;
+  let end = bodyStart;
+  for (; end < text.length; end++) {
+    const c = text[end];
+    if (c === '{') braces++;
+    else if (c === '}' && --braces === 0) { end++; break; }
+  }
+  return text.slice(0, sig.index) + text.slice(end);
+}
+
+/** The subject text with every F2_EXEMPT entry that bans `ban` stripped of its function body. */
+function withoutF2Exempt(text: string, ban: string): string {
+  return F2_EXEMPT.filter((e) => e.ban === ban).reduce((t, e) => withoutFunction(t, e.fn), text);
+}
+
 /** F-2 detector over CODE text. [] = fence intact. */
 function detectHashGateFence(i: HashGateInput): string[] {
   const v: string[] = [];
@@ -854,8 +895,11 @@ function detectHashGateFence(i: HashGateInput): string[] {
   if (!/tier2/.test(i.text)) v.push(`${i.file}: no tier2 decision`);
   if (!/buildSkipReEmitMeta\s*\(/.test(i.text)) v.push(`${i.file}: the tier-2 skip no longer re-emits the prior meta`);
   if (!/hashThrough|streamFileHash/.test(i.text)) v.push(`${i.file}: the streamed hash-through-to-disk is gone`);
-  if (/arrayBuffer\s*\(\s*\)/.test(i.text)) v.push(`${i.file}: the download is buffered whole via arrayBuffer() (Spec 43 §9.5 ban)`);
-  if (/readFileSync/.test(i.text)) v.push(`${i.file}: readFileSync over the download (the hash must stream)`);
+  // Operator ruling (b) 2026-10-10: each ban is evaluated over the text with its own F2_EXEMPT
+  // bodies removed. Anything OUTSIDE an exempt function (incl. revertHashGateFence's top-level
+  // append) is still caught — the fence is narrowed to two named functions, not widened.
+  if (/arrayBuffer\s*\(\s*\)/.test(withoutF2Exempt(i.text, 'arrayBuffer()'))) v.push(`${i.file}: the download is buffered whole via arrayBuffer() (Spec 43 §9.5 ban)`);
+  if (/readFileSync/.test(withoutF2Exempt(i.text, 'readFileSync'))) v.push(`${i.file}: readFileSync over the download (the hash must stream)`);
   return v;
 }
 

@@ -3,16 +3,178 @@
   "step": "scripts/link-wsib.js",
   "chain": "permits",
   "source_fingerprint": "ede4d7587996fe4c281f73e13888c5c62faf0a31375cb59a4b10b8c764427698",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
-    "calls": 21,
-    "distinct": 16,
-    "utility": 5,
-    "tracer_self_ms": 6.295,
-    "wall_ms": 3107
+    "calls": 62,
+    "distinct": 39,
+    "utility": 13,
+    "tracer_self_ms": 14.635,
+    "wall_ms": 130644
   },
   "statements": [
+    {
+      "fingerprint": "09f583a5a4899729",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [],
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "10ee26a7b34c8467",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "entities": [
+          "id",
+          "name_normalized",
+          "permit_count"
+        ],
+        "wsib_registry": [
+          "id",
+          "legal_name_normalized",
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at",
+          "primary_email",
+          "primary_phone",
+          "trade_name_normalized",
+          "website"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "1633e72c0321de8b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "wsib_registry": [
+          "id",
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "364706ddb141b2b1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "377cdddb5913b1ae",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id",
+          "is_wsib_registered",
+          "name_normalized"
+        ],
+        "wsib_registry": [
+          "legal_name_normalized",
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at",
+          "trade_name_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "39b91759afd4bb88",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3a19026ae83dfa15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 3,
+      "reads": {
+        "wsib_registry": [
+          "match_confidence"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4a0c75a6636f42eb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4ac5c4c76ff5921e",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "entities": [
+          "id",
+          "is_wsib_registered"
+        ],
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {
+        "entities": [
+          "is_wsib_registered"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
     {
       "fingerprint": "56985cbee4dfe3a3",
       "kind": "read",
@@ -22,6 +184,20 @@
       "writes": {},
       "excluded": [
         "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
       ],
       "error": null
     },
@@ -38,6 +214,18 @@
       "error": null
     },
     {
+      "fingerprint": "684302603f8d0b89",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "6b18467966eba81f",
       "kind": "read",
       "count": 2,
@@ -47,6 +235,51 @@
       "excluded": [
         "pg_indexes"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "7381f8755a0a5b89",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "entities": [
+          "id",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "writes": {
+        "entities": [
+          "primary_email",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "73eae0e3ec0ca644",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "wsib_registry": [
+          "id",
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence",
+          "matched_at"
+        ]
+      },
+      "excluded": [],
       "error": null
     },
     {
@@ -74,7 +307,7 @@
     {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
-      "count": 1,
+      "count": 3,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -104,6 +337,32 @@
       "error": null
     },
     {
+      "fingerprint": "9a0e16e87e1d384c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9aa1671901c45fe6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "a47b9456480b80ba",
       "kind": "read",
       "count": 1,
@@ -128,6 +387,50 @@
       ]
     },
     {
+      "fingerprint": "ab488b124615d279",
+      "kind": "write",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {
+        "entities": [
+          "id",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ],
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence",
+          "primary_email",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "writes": {
+        "entities": [
+          "primary_email",
+          "primary_phone",
+          "website"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "aea7297a6f4d4ec9",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "is_wsib_registered"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "afd4d45d41748e8c",
       "kind": "read",
       "count": 1,
@@ -142,7 +445,7 @@
     {
       "fingerprint": "b16b431979fc3e05",
       "kind": "utility",
-      "count": 1,
+      "count": 3,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -185,7 +488,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -196,9 +499,61 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 2,
+      "count": 5,
       "rowCount": 0,
       "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d0bb652d38c76181",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id"
+        ],
+        "wsib_registry": [
+          "linked_entity_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "d1d508211277db12",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id",
+          "name_normalized"
+        ],
+        "wsib_registry": [
+          "legal_name_normalized",
+          "linked_entity_id",
+          "match_confidence",
+          "trade_name_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e04cb1dc30678d74",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "wsib_registry": [
+          "match_confidence"
+        ]
+      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -214,25 +569,120 @@
       "error": null
     },
     {
+      "fingerprint": "eab23751646d4a6b",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "entities": [
+          "id",
+          "is_wsib_registered"
+        ],
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {
+        "entities": [
+          "is_wsib_registered"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f85dbe8b50b16d65",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "entities": [
+          "id",
+          "is_wsib_registered"
+        ],
+        "wsib_registry": [
+          "linked_entity_id",
+          "match_confidence"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "f919ada5fc8565b0",
       "kind": "read",
-      "count": 4,
-      "rowCount": 4,
+      "count": 12,
+      "rowCount": 12,
       "reads": {},
       "writes": {},
       "excluded": [
         "logic_variables"
       ],
       "error": null
+    },
+    {
+      "fingerprint": "fee49076a028cdb2",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "client": "11160:2",
+      "write_fingerprints": [
+        "1633e72c0321de8b",
+        "4ac5c4c76ff5921e",
+        "7381f8755a0a5b89",
+        "73eae0e3ec0ca644",
+        "ab488b124615d279",
+        "eab23751646d4a6b"
+      ]
+    }
+  ],
   "autocommit_writes": [],
   "touched": {
     "reads": {
-      "entities": []
+      "entities": [
+        "id",
+        "is_wsib_registered",
+        "name_normalized",
+        "permit_count",
+        "primary_email",
+        "primary_phone",
+        "website"
+      ],
+      "wsib_registry": [
+        "id",
+        "legal_name_normalized",
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at",
+        "primary_email",
+        "primary_phone",
+        "trade_name_normalized",
+        "website"
+      ]
     },
-    "writes": {}
+    "writes": {
+      "entities": [
+        "is_wsib_registered",
+        "primary_email",
+        "primary_phone",
+        "website"
+      ],
+      "wsib_registry": [
+        "linked_entity_id",
+        "match_confidence",
+        "matched_at"
+      ]
+    }
   },
   "errors": []
 }

@@ -2,48 +2,48 @@
   "entries": {
     "centreline_corner_or_through_has_frontage": {
       "value": 0,
-      "cost_ms": 904,
-      "at": "2026-10-05T19:25:20.357Z",
-      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "cost_ms": 1295,
+      "at": "2026-10-09T02:49:04.502Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 3
+      "sample_n": 6
     },
     "centreline_corner_share_min_pct": {
-      "value": 11.2569963485053,
-      "cost_ms": 1472,
-      "at": "2026-10-05T19:25:20.357Z",
-      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "value": 11.2580180651918,
+      "cost_ms": 6688,
+      "at": "2026-10-09T02:49:04.502Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 3
+      "sample_n": 6
     },
     "centreline_corner_share_max_pct": {
-      "value": 11.2569963485053,
-      "cost_ms": 1527,
-      "at": "2026-10-05T19:25:20.357Z",
-      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "value": 11.2580180651918,
+      "cost_ms": 6653,
+      "at": "2026-10-09T02:49:04.502Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 3
+      "sample_n": 6
     },
     "centreline_through_share_min_pct": {
-      "value": 1.00481562267753,
-      "cost_ms": 1531,
-      "at": "2026-10-05T19:25:20.357Z",
-      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "value": 1.00556859033099,
+      "cost_ms": 6730,
+      "at": "2026-10-09T02:49:04.502Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 3
+      "sample_n": 6
     },
     "centreline_through_share_max_pct": {
-      "value": 1.00481562267753,
-      "cost_ms": 1531,
-      "at": "2026-10-05T19:25:20.357Z",
-      "commit": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+      "value": 1.00556859033099,
+      "cost_ms": 6666,
+      "at": "2026-10-09T02:49:04.502Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 3
+      "sample_n": 6
     }
   }
 }

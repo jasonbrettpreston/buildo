@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 470 declarable fields
+# The step contract — 20 categories, 482 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -15,8 +15,8 @@
 | # | Category | Fields | Frozen menus | Banned values |
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
-| 2 | `inputs` | 27 | 6 | 0 |
-| 3 | `outputs` | 90 | 26 | 1 |
+| 2 | `inputs` | 35 | 6 | 0 |
+| 3 | `outputs` | 94 | 27 | 1 |
 | 4 | `staleness` | 30 | 9 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
 | 6 | `execution` | 74 | 15 | 0 |
@@ -166,16 +166,24 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `reads.tables` | list of object {table, columns} | † |
 | `reads.tables[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `reads.tables[].columns` | list of string `^[a-z_][a-z0-9_]*$` | — |
-| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, license, on_head_error, target, on_failure, ckan, key_property} | † |
+| `reads.externals` | list of object {id, kind, format, role, csv_options, url, path, manifest, pdf, license, on_head_error, target, on_failure, ckan, key_property} | † |
 | `reads.externals[].id` | string | † |
 | `reads.externals[].kind` | `http_api` · `http_file` · `s3` · `filesystem` · `service` | † ! |
-| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` · `ckan_datastore` | ! |
+| `reads.externals[].format` | `shapefile_zip` · `csv` · `geojson` · `xlsx` · `ckan_datastore` · `pdf_document_set` | ! |
 | `reads.externals[].role` | `primary` · `lookup` | ! |
 | `reads.externals[].csv_options` | object {bom, relax_quotes} | — |
 | `reads.externals[].csv_options.bom` | `true` · `false` | † |
 | `reads.externals[].csv_options.relax_quotes` | `true` · `false` | † |
 | `reads.externals[].url` | string | — |
 | `reads.externals[].path` | string | — |
+| `reads.externals[].manifest` | string `^scripts/seeds/[A-Za-z0-9_./-]+\.json$` | — |
+| `reads.externals[].pdf` | object {host_allowlist, pace_ms_from_config, max_doc_bytes_from_config, max_pages_from_config, max_text_chars_from_config, line_y_tolerance_from_config} | — |
+| `reads.externals[].pdf.host_allowlist` | list (min 1) of string `^[a-z0-9.-]+\.[a-z]{2,}$` | † |
+| `reads.externals[].pdf.pace_ms_from_config` | string | † |
+| `reads.externals[].pdf.max_doc_bytes_from_config` | string | † |
+| `reads.externals[].pdf.max_pages_from_config` | string | † |
+| `reads.externals[].pdf.max_text_chars_from_config` | string | † |
+| `reads.externals[].pdf.line_y_tolerance_from_config` | string | † |
 | `reads.externals[].license` | string | — |
 | `reads.externals[].on_head_error` | `fail_step` · `warn_row` | ! |
 | `reads.externals[].target` | string | — |
@@ -195,7 +203,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes` | list (min 1) of object {table, key, columns, geometry_srid, geometry_repair, key_sql_type, write_discipline, retract, retract_when, retire_max_pct_from_config, line_validity, geometry_kind} | † |
 | `writes[].table` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].key` | string `^[a-z_][a-z0-9_]*$` \| list (min 1) of string `^[a-z_][a-z0-9_]*$` | † |
-| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty, derived_from_geometry} | † |
+| `writes[].columns` | list (min 1) of object {name, vocabulary, written, bind, source, set_value, on_empty, materiality, derived_from_geometry} | † |
 | `writes[].columns[].name` | string `^[a-z_][a-z0-9_]*$` | † |
 | `writes[].columns[].vocabulary` | `none` \| object {values, on_unknown, source} | † |
 | `writes[].columns[].vocabulary.values` | list (min 1) of string | † |
@@ -206,6 +214,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `writes[].columns[].source` | `compute` · `run_at` | ! |
 | `writes[].columns[].set_value` | OPEN | — |
 | `writes[].columns[].on_empty` | `preserve` · `preserve_null` | ! |
+| `writes[].columns[].materiality` | object {sql_function, tolerance_from_config, carries} | ! |
+| `writes[].columns[].materiality.sql_function` | string `^[a-z_][a-z0-9_]*$` | † |
+| `writes[].columns[].materiality.tolerance_from_config` | string `^[a-z][a-z0-9_]*$` | † |
+| `writes[].columns[].materiality.carries` | list of string | † |
 | `writes[].columns[].derived_from_geometry` | object {measure, unit, scale} | — |
 | `writes[].columns[].derived_from_geometry.measure` | `geodesic_area` | † ! |
 | `writes[].columns[].derived_from_geometry.unit` | `m2` · `ft2` | † ! |

@@ -39,7 +39,7 @@ const UPSERT_SQL: string = writeLib.buildWritePlan(LOAD_PARCELS.outputs.writes[0
 
 // ── (A) Source-contract: the DECLARED fence AND its rendered CASE invalidation ─────────────
 describe('load-parcels descriptor — DEC-FENCE2 source contract (#418)', () => {
-  it('NULLs the ravine + heritage + centreline stamps via a CASE gated ONLY on a geom change (WF3 2026-09-28: watched column `geom`)', () => {
+  it('NULLs the ravine + heritage + centreline stamps via a CASE gated ONLY on a geom change (WF3 2026-09-28: watched column `geom`) — geom-drift WF3 Commit 2: gated on the material-change predicate', () => {
     // The DECLARATION (the descriptor), for each of the three stamps.
     for (const column of [
       'ravine_dataset_version_when_enriched',
@@ -57,16 +57,17 @@ describe('load-parcels descriptor — DEC-FENCE2 source contract (#418)', () => 
     // preserve the stamp; the regex pins the WHEN to exactly the derived-geom predicate).
     // Re-pointed IN PLACE, WF3 2026-09-28: the legacy `geometry::jsonb` WHEN text is
     // knowingly retired — the stamp now follows `geom`, the shape the enrichers read.
+    // Re-pointed IN PLACE again, geom-drift WF3 Commit 2 (2026-10-08): before = `WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom`, after = the migration-251 tolerance predicate; the fence (stamps follow ONLY the derived geom, never the address) is unchanged.
     expect(UPSERT_SQL).toMatch(
-      /ravine_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.ravine_dataset_version_when_enriched END/,
+      /ravine_dataset_version_when_enriched = CASE\s+WHEN public\.parcels_geom_materially_changed\(parcels\.geom, EXCLUDED\.geom\)\s+THEN NULL ELSE parcels\.ravine_dataset_version_when_enriched END/,
     );
     expect(UPSERT_SQL).toMatch(
-      /heritage_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.heritage_dataset_version_when_enriched END/,
+      /heritage_dataset_version_when_enriched = CASE\s+WHEN public\.parcels_geom_materially_changed\(parcels\.geom, EXCLUDED\.geom\)\s+THEN NULL ELSE parcels\.heritage_dataset_version_when_enriched END/,
     );
     // WF2 P11-1: the centreline arm is the load-bearing precondition for the
     // enrich_centreline row-level version-skip gate.
     expect(UPSERT_SQL).toMatch(
-      /centreline_dataset_version_when_enriched = CASE\s+WHEN parcels\.geom IS DISTINCT FROM EXCLUDED\.geom\s+THEN NULL ELSE parcels\.centreline_dataset_version_when_enriched END/,
+      /centreline_dataset_version_when_enriched = CASE\s+WHEN public\.parcels_geom_materially_changed\(parcels\.geom, EXCLUDED\.geom\)\s+THEN NULL ELSE parcels\.centreline_dataset_version_when_enriched END/,
     );
   });
 });

@@ -372,7 +372,7 @@
   "terminals": [
     {
       "id": "recorded", "kind": "success", "status": "completed",
-      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "records_meta": { "audit_table": "object", "terminal": "string" },
       "why": { "text": "The normal, and only steady-state, outcome: every table is re-recorded every run. Verdict is PASS when no declared check reports a violation.", "liveness": { "kind": "check", "ref": "engine_health_write_failed" } }
     },
     {

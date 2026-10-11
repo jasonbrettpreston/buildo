@@ -18,7 +18,9 @@
 // Artifacts asserted against (plan of record `.cursor/batch2_p3_7_parcels_active_task.md` D1–D6 +
 // the commit-① assessment report `docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md`):
 //   scripts/load-parcels.descriptor.json  — class A guarded_upsert, set_source:"compute", 17 + geom
-//                                            write columns, 3 outputs.invalidates[] (DEC-FENCE2),
+//                                            write columns, geom.materiality (parcels_geom_materially_changed
+//                                            carrying `geometry`; guard_columns 10 → 9, geom-drift WF3 Commit 2),
+//                                            3 outputs.invalidates[] (DEC-FENCE2),
 //                                            checks[], config.logic_variables[], recovery, deviations[]
 //   scripts/load-parcels.notes.json       — a REAL notes file (≤12 entries), unit constants declared
 //   scripts/lib/compute/load-parcels.js   — checks dispatch + pure helpers + shapeRecord + buildWriteSql
@@ -61,15 +63,20 @@ const WRITE_COLUMNS = [
 ];
 const WRITE_CLASS = 'guarded_upsert';
 /**
- * WF3 2026-09-28 (A+W): `write_discipline.guard_columns` is now the NINE declared entries —
- * the eight legacy columns plus `geometry`, the raw jsonb source. The ten-term WHERE clause's
- * FIRST term, `parcels.geom IS DISTINCT FROM EXCLUDED.geom`, is still NOT declared here: the
- * shared codegen (scripts/lib/step/write.js `changeOfGuardColumns`) adds it automatically and
- * FIRST, because `geom` is now the watched column of all three `outputs.invalidates[]` entries
- * below (deduplicated against this list). Do not RESTORE the legacy shape here: the pre-WF3
- * pin (`geometry` the auto-added watched column, NEVER declared) let the write guard see only
- * the raw source, so it converged neither the 9,855 NULL geoms the legacy INSERT left nor the
- * 16 rows the make_valid repair arm would rewrite.
+ * geom-drift WF3 Commit 2 (2026-10-06) — `write_discipline.guard_columns` is now the NINE
+ * declared entries (BEFORE → AFTER: TEN → NINE, `geometry` DROPPED) — the eight legacy
+ * columns plus `date_effective` (the WF3-2026-09-28 lot-size entry set minus `geometry`).
+ * The WHERE clause's FIRST term is now the material-change PREDICATE on geom, `M =
+ * public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom)`, rendered by the
+ * shared codegen (scripts/lib/step/write.js) from the `geom` column's `columns[].materiality`
+ * declaration (MATERIALITY below), because `geom` is the watched column of all three
+ * `outputs.invalidates[]` entries below (deduplicated against this list). The raw jsonb
+ * `geometry` is no longer a guard term at all — it is CARRIED with geom (its SET arm is
+ * `CASE WHEN M THEN EXCLUDED.geometry ELSE parcels.geometry END`), so a jitter/rotation/
+ * Polygon-vs-MultiPolygon re-serialisation writes nothing. Do not RESTORE the pre-WF3 shape
+ * here: declaring `geometry` as an exact `IS DISTINCT FROM` term re-fires the write (and the
+ * three DEC-FENCE2 stamp NULLs) on sub-tolerance publisher drift — the PR-D3 defect this
+ * commit closes.
  *
  * WF3 lot-size 2026-10-01: `lot_size_source` joins as the second entry (preserve_null guard
  * form) so a stated value equal to a backfilled one still flips provenance.
@@ -78,8 +85,18 @@ const GUARD_COLUMNS = [
   'lot_size_sqm', 'lot_size_source', 'feature_type',
   'address_number', 'linear_name_full', 'addr_num_normalized',
   'street_name_normalized', 'street_type_normalized', 'date_effective',
-  'geometry',
 ];
+/**
+ * geom-drift WF3 Commit 2 (2026-10-06) — the `geom` column's declared `materiality` axis,
+ * the source of the WHERE's first term, geom's own SET arm and the three DEC-FENCE2 stamp
+ * arms. `carries: ['geometry']` is why `geometry` is absent from GUARD_COLUMNS above yet
+ * still SET by this statement (replaced ONLY when `M` is true).
+ */
+const MATERIALITY = {
+  sql_function: 'parcels_geom_materially_changed',
+  tolerance_from_config: 'parcels_geom_change_tolerance_deg',
+  carries: ['geometry'],
+};
 /** The five TEXT address columns declared `on_empty:"preserve"` (plan D1 REVISED, prerequisite 0m). */
 const PRESERVE_COLUMNS = [
   'address_number', 'linear_name_full', 'addr_num_normalized',
@@ -115,6 +132,8 @@ const CONFIG_VARS: Record<string, number> = {
   // fraction as `value` and the verdict resolves this var via the descriptor's
   // `limit_from_config` (exercised by the checks below and pct-checks-evaluate.logic.test.ts).
   parcels_null_address_pct_max: 0.1,
+  // geom-drift WF3 Commit 2: the tolerance the materiality predicate (migration 251) reads; minted by Commit 1's migration + seed, so NOT in NEW_CONFIG_VARS.
+  parcels_geom_change_tolerance_deg: 1e-7,
 };
 /** New variables this step mints (sources_parcels_floor is SHARED, pre-existing). */
 const NEW_CONFIG_VARS = [
@@ -379,12 +398,18 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
     expect(declaredOnEmpty).toEqual([...PRESERVE_COLUMNS, ...PRESERVE_NULL_COLUMNS].sort());
   });
 
-  it('guard_columns carry the 10-item DECLARED set (WF3 2026-09-28: the eight legacy columns + `geometry`, the raw jsonb source; WF3 lot-size 2026-10-01 adds `lot_size_source`; `geom` is the eleventh RUNTIME term, added automatically, FIRST, via invalidates[].set_null_on_change_of)', () => {
+  it('guard_columns carry the 9-item DECLARED set (geom-drift WF3 Commit 2, 2026-10-06: `geometry` DROPPED 10 → 9; the eight legacy columns + `lot_size_source`; the WHERE opens on the geom materiality predicate, `M`, added automatically via invalidates[].set_null_on_change_of)', () => {
     const d = loadDescriptor();
     const gc = writes(d)[0]!.write_discipline.guard_columns as string[] | 'all_declared';
     expect(Array.isArray(gc), 'guard_columns must be the explicit WHERE-clause set').toBe(true);
     expect((gc as string[]).sort()).toEqual([...GUARD_COLUMNS].sort());
-    expect((gc as string[]).includes('geometry'), 'WF3 2026-09-28 — `geometry`, the raw jsonb source, is DECLARED as a plain structural guard term').toBe(true);
+    expect((gc as string[]).includes('geometry'), 'geometry is CARRIED with geom, not a guard term (geom-drift WF3 Commit 2)').toBe(false);
+    // The geom column DECLARES the materiality axis — the predicate the where clause opens on,
+    // and whose `carries: ['geometry']` replaces the retired `geometry` guard term.
+    const geomCol = (writes(d)[0]!.columns as Array<{ name: string; materiality?: unknown }>).find((c) => c.name === 'geom');
+    expect(geomCol, 'the geom column').toBeDefined();
+    expect(geomCol!.materiality, 'geom.materiality drives the predicate + the carried geometry').toEqual(MATERIALITY);
+    expect((geomCol!.materiality as { carries: string[] }).carries).toEqual(['geometry']);
   });
 
   it('execution.on_batch_error is fail_step (PR-D1 FIXED-BY-RUNNER, MQ-B5 (a)) and network declares the shared timeout var', () => {
@@ -478,26 +503,28 @@ describe('row 3.7 — the artifacts exist and validate (Spec 122 §5.1/§5.2, Sp
 
 describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim (fixtures/legacy-upsert.sql.txt)', () => {
   /**
-   * WF3 2026-09-28 — the TWO declared deltas from the legacy text (knowingly retired legacy
-   * pins; the fixture file itself stays byte-identical as the historical record):
+   * The declared deltas from the legacy text (knowingly retired legacy pins; the fixture file
+   * itself stays byte-identical as the historical record):
    *   (a) the watched predicate moves from the raw jsonb source to the derived geom
    *       (`parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb` →
    *        `parcels.geom IS DISTINCT FROM EXCLUDED.geom`) — the WHERE's first term + 3 CASE arms;
-   *   (b) the WHERE gains `OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry` after the
-   *       date_effective term (the raw jsonb source stays a plain structural guard term).
-   * WF3 lot-size 2026-10-01 — a THIRD declared delta (c): the two lot columns' SET/SET-guard
+   * WF3 lot-size 2026-10-01 — a SECOND declared delta (c): the two lot columns' SET/SET-guard
    * forms move from `= EXCLUDED.<col>` / `<col> IS DISTINCT FROM EXCLUDED.<col>` to the
    * preserve_null COALESCE forms, a third SET arm for `lot_size_source` joins, and the WHERE
    * gains the lot_size_source guard term — the three lot columns declared `preserve_null`.
-   * Each replacement must match exactly as often as stated (4, 1 and the (c) counts), so any
-   * further drift in either the fixture or the codegen still reddens the comparison. Input:
-   * whitespace-normalised.
+   * geom-drift WF3 Commit 2 (2026-10-06) — a THIRD declared delta (d): the whole geom comparison
+   * becomes the material-change predicate `M = public.parcels_geom_materially_changed(parcels.geom,
+   * EXCLUDED.geom)`. Delta (a)'s WHERE opener `parcels.geom IS DISTINCT FROM EXCLUDED.geom` and
+   * its three CASE-arm comparisons each become `M`; the raw jsonb `geometry` is no longer a
+   * separate guard term (legacy delta (b), RETIRED) but is CARRIED — its SET arm becomes
+   * `geometry = CASE WHEN M THEN EXCLUDED.geometry ELSE parcels.geometry END`, and geom's own SET
+   * arm becomes `geom = CASE WHEN M THEN EXCLUDED.geom ELSE parcels.geom END`. Each replacement
+   * must match exactly as often as stated so any further drift in either the fixture or the
+   * codegen still reddens the comparison. Input: whitespace-normalised.
    */
   function applyWf3Deltas(legacyNorm: string): string {
     const oldWatched = /parcels\.geometry::jsonb IS DISTINCT FROM EXCLUDED\.geometry::jsonb/g;
     expect((legacyNorm.match(oldWatched) ?? []).length, 'delta (a): 1 WHERE term + 3 CASE arms').toBe(4);
-    const dateTerm = normalizeWs('OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)');
-    expect(legacyNorm.split(dateTerm).length - 1, 'delta (b): the date_effective term the geometry term follows').toBe(1);
     // delta (c) — WF3 lot-size 2026-10-01: the two legacy lot SET arms become preserve_null
     // COALESCEs, a third (lot_size_source) SET arm joins them, and the lot_size_sqm WHERE term
     // becomes the preserve_null guard form plus a lot_size_source guard term.
@@ -506,8 +533,11 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
     const lotSqmGuard = normalizeWs('OR parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm');
     expect(legacyNorm.split(lotSqmGuard).length - 1, 'delta (c): the legacy lot_size_sqm WHERE term').toBe(1);
     return legacyNorm
-      .replace(oldWatched, 'parcels.geom IS DISTINCT FROM EXCLUDED.geom')
-      .replace(dateTerm, `${dateTerm} OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry`)
+      // delta (d) — geom-drift WF3 Commit 2: every legacy `parcels.geometry::jsonb IS DISTINCT
+      // FROM EXCLUDED.geometry::jsonb` (the WHERE opener + the 3 stamp CASE arms) becomes the
+      // material-change predicate M. The legacy WHERE opener used geom's own SET slot for the
+      // raw geometry; after (d) the geometry guard term is GONE and M is the WHERE's first term.
+      .replace(oldWatched, 'public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom)')
       .replace(
         lotSet,
         normalizeWs('lot_size_sqm = COALESCE(EXCLUDED.lot_size_sqm, parcels.lot_size_sqm), '
@@ -518,6 +548,15 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
         lotSqmGuard,
         normalizeWs('OR (EXCLUDED.lot_size_sqm IS NOT NULL AND parcels.lot_size_sqm IS DISTINCT FROM EXCLUDED.lot_size_sqm) '
           + 'OR (EXCLUDED.lot_size_source IS NOT NULL AND parcels.lot_size_source IS DISTINCT FROM EXCLUDED.lot_size_source)'),
+      )
+      // The legacy SET slot for the raw geometry — `geometry = EXCLUDED.geometry,` followed by
+      // the excluded `${geomLine}` arm — is CARRIED now: replaced together with geom. Its text
+      // after (d) is the `CASE WHEN M` form (the legacy line and geom's own regenerated SET both
+      // land as this arm; the codegen's `geom = EXCLUDED.geom,` slot is stripped by the caller).
+      .replace(
+        normalizeWs('geometry = EXCLUDED.geometry,'),
+        normalizeWs('geometry = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) '
+          + 'THEN EXCLUDED.geometry ELSE parcels.geometry END,'),
       );
   }
 
@@ -525,7 +564,7 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
    *  in the generated statement — both sides read from the ONE fixture, so there is no second,
    *  independently-typed copy of the SQL to drift out of sync. */
   function fenceFragments(): string[] {
-    // The fixture, after the two declared WF3-2026-09-28 deltas (`applyWf3Deltas`).
+    // The fixture, after the declared WF3 deltas (`applyWf3Deltas`).
     const legacyDelta = applyWf3Deltas(normalizeWs(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8')));
     const FRAGMENTS = [
       'address_number = COALESCE(NULLIF(EXCLUDED.address_number, \'\'), parcels.address_number)',
@@ -534,10 +573,12 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
       'street_name_normalized = COALESCE(NULLIF(EXCLUDED.street_name_normalized, \'\'), parcels.street_name_normalized)',
       'street_type_normalized = COALESCE(NULLIF(EXCLUDED.street_type_normalized, \'\'), parcels.street_type_normalized)',
       'date_effective = COALESCE(EXCLUDED.date_effective, parcels.date_effective)',
-      'ravine_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END',
-      'heritage_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
-      'centreline_dataset_version_when_enriched = CASE WHEN parcels.geom IS DISTINCT FROM EXCLUDED.geom THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
-      'WHERE parcels.geom IS DISTINCT FROM EXCLUDED.geom',
+      'ravine_dataset_version_when_enriched = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) THEN NULL ELSE parcels.ravine_dataset_version_when_enriched END',
+      'heritage_dataset_version_when_enriched = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) THEN NULL ELSE parcels.heritage_dataset_version_when_enriched END',
+      'centreline_dataset_version_when_enriched = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) THEN NULL ELSE parcels.centreline_dataset_version_when_enriched END',
+      'WHERE public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom)',
+      // geom's own CASE-WHEN-M SET is the codegen-only slot stripped from both sides (T5/T7 exclusion); it is asserted exactly once by the delta (d) test below.
+      'geometry = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) THEN EXCLUDED.geometry ELSE parcels.geometry END',
       'lot_size_sqm = COALESCE(EXCLUDED.lot_size_sqm, parcels.lot_size_sqm)',
       'lot_size_sqft = COALESCE(EXCLUDED.lot_size_sqft, parcels.lot_size_sqft)',
       'lot_size_source = COALESCE(EXCLUDED.lot_size_source, parcels.lot_size_source)',
@@ -545,13 +586,12 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
       'OR (EXCLUDED.lot_size_source IS NOT NULL AND parcels.lot_size_source IS DISTINCT FROM EXCLUDED.lot_size_source)',
       'OR parcels.feature_type IS DISTINCT FROM EXCLUDED.feature_type',
       'OR (EXCLUDED.date_effective IS NOT NULL AND parcels.date_effective IS DISTINCT FROM EXCLUDED.date_effective)',
-      'OR parcels.geometry IS DISTINCT FROM EXCLUDED.geometry',
       'ON CONFLICT (parcel_id)',
       'RETURNING (xmax = 0) AS is_insert',
     ];
     // Sanity: every fragment we are about to demand of the generated statement is genuinely
     // present in the fixture itself (never assert a fragment that drifted out of the fixture's
-    // own text), after the two declared WF3-2026-09-28 deltas.
+    // own text), after the declared WF3 deltas.
     for (const f of FRAGMENTS) {
       expect(legacyDelta.includes(normalizeWs(f)), `fixture drift: "${f}" not found in legacy-upsert.sql.txt (post-WF3 deltas)`).toBe(true);
     }
@@ -565,52 +605,66 @@ describe('row 3.7 — write.buildWritePlan reproduces the legacy UPSERT verbatim
     expect(legacy).toContain('RETURNING (xmax = 0) AS is_insert');
   });
 
-  it('write.buildWritePlan(writes[0], descriptor).upsertSqlFor(1) reproduces the legacy tail EXCEPT the two declared WF3-2026-09-28 deltas (watched column `geom`; `geometry` a plain jsonb guard term) and MINUS the legacy ${geomLine} arm (out of scope for prerequisites 0l/0m, T5/T7\'s own exclusion) — the DECLARED on_empty + set_null_on_change_of axes are the ONLY source of the SET/WHERE text', () => {
+  it('write.buildWritePlan(writes[0], descriptor).upsertSqlFor(1) reproduces the legacy tail EXCEPT the declared WF3 deltas — delta (a)+(d) the geom comparison is now the `public.parcels_geom_materially_changed` predicate M (WHERE opener + 3 CASE arms), geom/geometry SET via `CASE WHEN M`, raw `geometry` carried not guarded (legacy delta (b) RETIRED) — and MINUS the legacy ${geomLine} arm (out of scope for prerequisites 0l/0m, T5/T7\'s own exclusion); the DECLARED on_empty + set_null_on_change_of + materiality axes are the ONLY source of the SET/WHERE text', () => {
     const d = loadDescriptor();
     const writeSpec = writes(d)[0]!;
     const plan = writeLib.buildWritePlan(writeSpec, d);
     const sql = plan.upsertSqlFor(1);
-    // `geom`'s own SET arm (`geom = EXCLUDED.geom,`) is the standard wkb_geometry
-    // default-codegen slot for the PostGIS column — it did not exist in the legacy
-    // statement (which set `geom` via the conditional ${geomLine} arm instead) and is
-    // orthogonal to the on_empty/set_null_on_change_of axes under test here, exactly
-    // as T5/T7 exclude the `${geomLine}` slot from their own comparison.
+    // `geom`'s own SET arm is the standard wkb_geometry slot for the PostGIS column — since
+    // geom-drift WF3 Commit 2 it is the carried `geom = CASE WHEN M THEN EXCLUDED.geom ELSE
+    // parcels.geom END`. It did not exist in the legacy statement (which set `geom` via the
+    // conditional ${geomLine} arm instead) and is orthogonal to the on_empty/
+    // set_null_on_change_of/materiality axes under test here, exactly as T5/T7 exclude the
+    // `${geomLine}` slot from their own comparison.
     const actualTail = sql.slice(sql.indexOf('\nON CONFLICT')).replace(/;$/, '');
     // Both sides are compared WITHOUT SQL comments: the legacy fixture already goes through stripSqlComments, and the
     // codegen's only comment is the db_default note for parcels.id (FLEET-2) — a comment is not executable SQL.
-    const actualNorm = normalizeWs(stripSqlComments(actualTail).replace('geom = EXCLUDED.geom,', ''));
+    const actualNorm = normalizeWs(stripSqlComments(actualTail).replace(
+      normalizeWs('geom = CASE WHEN public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom) THEN EXCLUDED.geom ELSE parcels.geom END,'),
+      '',
+    ));
 
     // The fixture is the HISTORICAL record and stays byte-identical; the comparison applies
-    // EXACTLY the two declared WF3-2026-09-28 deltas to it (`applyWf3Deltas`, knowingly
-    // retired legacy pins), so any third drift stays red.
+    // EXACTLY the declared WF3 deltas to it (`applyWf3Deltas`, knowingly retired legacy pins),
+    // so any third drift stays red.
     let legacy = stripSqlComments(fs.readFileSync(artifact(LEGACY_SQL_REL), 'utf8'));
     legacy = legacy.replace(/\$\{geomLine\}\s*/, '');
     const legacyTail = legacy.slice(legacy.indexOf('ON CONFLICT'));
     const legacyNorm = applyWf3Deltas(normalizeWs(legacyTail));
 
-    expect(actualNorm, 'the shared codegen, driven ONLY by declared axes, must reproduce the legacy statement byte-for-byte (whitespace-normalised) EXCEPT the two declared WF3-2026-09-28 deltas — cite step-library.logic.test.ts T7').toBe(legacyNorm);
+    expect(actualNorm, 'the shared codegen, driven ONLY by declared axes, must reproduce the legacy statement byte-for-byte (whitespace-normalised) EXCEPT the declared WF3 deltas — cite step-library.logic.test.ts T7').toBe(legacyNorm);
     for (const frag of fenceFragments()) {
       expect(actualNorm, `generated SQL is missing the fenced fragment: ${frag}`).toContain(normalizeWs(frag));
     }
   });
 
-  it('WF3 2026-09-28: the guard and DEC-FENCE2 watch the derived geom — upsertSqlFor(1) carries `parcels.geom IS DISTINCT FROM EXCLUDED.geom` in the WHERE and in each of the three stamp CASE arms (RED today: the guard watches `geometry` only, so a geom-only change never writes nor nulls the stamps)', () => {
+  it('geom-drift WF3 Commit 2 (delta (d), was "the guard + DEC-FENCE2 watch the derived geom"): upsertSqlFor(1) opens the WHERE on the materiality predicate M = `public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom)`, renders each of the three stamp arms as `CASE WHEN M THEN NULL`, sets `geom`/`geometry` via `CASE WHEN M`, and carries NEITHER `parcels.geom IS DISTINCT FROM` NOR `parcels.geometry IS DISTINCT FROM` (each counted EXACTLY 0 times; M counted EXACTLY 6 times = WHERE opener + geom SET + geometry SET + 3 stamp arms)', () => {
+    const M = 'public.parcels_geom_materially_changed(parcels.geom, EXCLUDED.geom)';
+    const count = (hay: string, needle: string) => hay.split(needle).length - 1;
     const d = loadDescriptor();
     const sql = writeLib.buildWritePlan(writes(d)[0], d).upsertSqlFor(1);
     const where = sql.slice(sql.indexOf('\n  WHERE '));
-    expect(where, 'the WHERE opens on the watched derived column').toContain(
-      'parcels.geom IS DISTINCT FROM EXCLUDED.geom',
-    );
-    expect(where, 'the raw jsonb source stays a guard term beside it').toContain(
-      'parcels.geometry IS DISTINCT FROM EXCLUDED.geometry',
-    );
+
+    // The WHERE opens on the predicate (BEFORE: `WHERE parcels.geom IS DISTINCT FROM EXCLUDED.geom`).
+    expect(where.startsWith(`\n  WHERE ${M}`), 'the WHERE opens on the materiality predicate M').toBe(true);
+    // M is rendered EXACTLY 6 times: the WHERE opener, geom's SET, geometry's CARRIED SET, and the
+    // three DEC-FENCE2 stamp arms (3). Counted exactly so any codegen drift reddens here.
+    expect(count(sql, M), 'M occurrences: WHERE opener + geom SET + geometry SET + 3 stamp arms').toBe(6);
+
+    // Each of the 3 stamp arms is the `CASE WHEN M THEN NULL` form (exactly once each).
     for (const stamp of INVALIDATE_COLUMNS) {
-      expect(sql, `DEC-FENCE2 arm for ${stamp}`).toMatch(
-        new RegExp(
-          `${stamp} = CASE WHEN parcels\\.geom IS DISTINCT FROM EXCLUDED\\.geom THEN NULL ELSE parcels\\.${stamp} END`,
-        ),
-      );
+      expect(count(sql, `${stamp} = CASE WHEN ${M} THEN NULL ELSE parcels.${stamp} END`), `DEC-FENCE2 arm for ${stamp}`).toBe(1);
     }
+
+    // geom and geometry are SET via the `CASE WHEN M` forms (exactly once each).
+    expect(count(sql, `geom = CASE WHEN ${M} THEN EXCLUDED.geom ELSE parcels.geom END`), 'geom SET').toBe(1);
+    expect(count(sql, `geometry = CASE WHEN ${M} THEN EXCLUDED.geometry ELSE parcels.geometry END`), 'geometry CARRIED SET').toBe(1);
+
+    // RETIRED legacy terms — the raw jsonb source is no longer a guard term and the exact geom
+    // comparison is gone: each occurs EXACTLY 0 times.
+    expect(count(sql, 'parcels.geometry IS DISTINCT FROM EXCLUDED.geometry'), 'retired: raw jsonb guard term').toBe(0);
+    expect(count(sql, 'parcels.geometry::jsonb IS DISTINCT FROM EXCLUDED.geometry::jsonb'), 'retired: raw jsonb jsonb-cast guard term').toBe(0);
+    expect(count(sql, 'parcels.geom IS DISTINCT FROM EXCLUDED.geom'), 'retired: exact geom comparison').toBe(0);
   });
 
   it('the generated statement structurally forbids DELETE/TRUNCATE (class A, retract:"none")', () => {

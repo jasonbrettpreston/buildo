@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "source_fingerprint": "920097ea99f585aefac0bc43f673a6a250a1964db440fe10ebe940ec79740d8e",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "source_fingerprint": "7091422d7587da47c66a0c982df1cef3214b1579421bde4998d519c1369c79f3",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
     "calls": 43,
     "distinct": 32,
     "utility": 13,
-    "tracer_self_ms": 7.799,
-    "wall_ms": 18381
+    "tracer_self_ms": 11.611,
+    "wall_ms": 30098
   },
   "statements": [
     {
       "fingerprint": "15a0517fc5bfeebb",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 214,
       "reads": {
         "parcels": [
           "geom",
@@ -303,7 +303,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -440,7 +440,7 @@
   ],
   "transactions": [
     {
-      "client": "19612:3",
+      "client": "21812:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

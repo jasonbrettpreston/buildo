@@ -1,0 +1,50 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-coa-notices.descriptor.json (Spec 120 §3.4-§3.4b; owner spec docs/specs/01-pipeline/129_source_coa_notices.md).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if · blind_spots · decisions · review_notes · expected · known_normal · known_bad · do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked by step-validate fast invariant #45 (NOTES-CAP)."
+  ],
+  "expected_shape": [
+    {
+      "what": "The NORMAL terminal is the completed skip `skipped_content_hash`: the pinned manifest and staleness.logic_version are unchanged, so nothing is fetched (0 bytes) and the prior coa_notices_load block is re-emitted. A load happens only after a manifest commit, a logic_version bump, or COA_NOTICES_FORCE_RELOAD=1. A full 2017 load fetches ~69 documents one at a time at coa_notices_fetch_pace_ms (default 3 s) — about 8-15 minutes and ~0.4 GB transferred — and writes ~9-12K rows."
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "Every row is VALUES ONLY (Spec 129 §D3): the notice text and the owner/agent header never leave process memory. To adjudicate a row, open the pinned document by its manifest url, check its sha256 against `source_sha256`, and read page `source_page`. Read `parse_status = 'pair'` rows for values; read `target_status = 'mapped'` for the McBylaw rule; filter `retired_at IS NULL`."
+    },
+    {
+      "what": "docs_by_status / notices_by_status / items_by_* in coa_notices_load always sum to their totals (check reason_totality). A dropped duplicate notice's items are counted as shaped_skipped reasons (duplicate_superseded, duplicate_same_date_conflict), so rows_read = every parsed item."
+    }
+  ],
+  "suspicious_if": [
+    {
+      "what": "pair_rate_569 below 0.85, a single document's pair rate below coa_notices_doc_pair_rate_floor, or notices_without_section_pct above 10: the extractor no longer reads the layout. Nothing is written in that case (on_warn skip_write / FAIL); fix the extractor under a new logic_version, never the threshold."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "D-1: hearing_date comes from the pinned document title, not CKAN (G3/G11: CKAN's hearing_date is +1 day for 153/164 spike notices) and not the notice text (it carries no hearing label, G8). mail_lag_out_of_bounds verifies the title date against the notice's DATE DECISION MAILED ON."
+    },
+    {
+      "what": "D-2: no FK onto coa_applications (an ingest compute cannot read the DB; a 23503 would roll back the run); plausibility app_not_in_coa_applications counts the orphans instead."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "unmapped / ambiguous targets (P0.3 on the spike: 444 mapped, 7 ambiguous, 128 unmapped of 579 items citing 569-2013) — eaves, platforms, ancillary buildings and landscaping have no single McBylaw target. Consumers use mapped rows only; ambiguity is fixed by adding `none` phrases to target-map.json, never by a tiebreak."
+    }
+  ],
+  "how_to_investigate": [
+    {
+      "what": "A doc_sha_mismatch or doc_acquire_failed FAIL: run `node scripts/analysis/coa-notices/build-manifest.mjs --verify --manifest scripts/seeds/coa-notices/manifest-toronto-2017.json` (paced, read-only). A changed document is re-pinned by a reviewed manifest commit; a dead one moves to excluded[] with its reason. Never re-run with the document silently skipped — its rows would be retired."
+    }
+  ],
+  "limitations": [
+    {
+      "what": "Raw text lives in JS strings until garbage collection (the byte buffer is zero-filled; strings cannot be). No disk, log or column ever holds them (T-PII-4)."
+    }
+  ],
+  "fences": []
+}

@@ -21,7 +21,8 @@
 //       * a REPO-RELATIVE FILE THAT IS A REAL IMPORT OF THE STEP: reachable by
 //         the transitive RELATIVE `require(...)` / `import ... from` /
 //         `import(...)` walk from the CONVERTED step file (the shell, which
-//         requires its compute).
+//         requires its compute). A `require`d `.json` is a real import
+//         (recorded, not walked) — 2026-10-11.
 //     An entry carrying a `:` that does not match the grammar is an UNDECLARED
 //     data-signal form (RED). Any other entry the walk does not reach is RED
 //     (not a real import). `"none"` declares nothing and is out of scope.
@@ -93,8 +94,9 @@ export function logicVersionViolations(descriptor) {
  * `entryRel` itself. REAL I/O plumbing (not a rule): `read(rel)` returns the
  * file text or `null` when absent, and the resolved candidate is the FIRST one
  * `read` answers for. A specifier that does not start `./` or `../` (a package
- * or an absolute path) is skipped, as is a `.json` specifier — a descriptor is
- * read at runtime but is never a source import. Never visits a file twice.
+ * or an absolute path) is skipped. A `.json` specifier is a real import: when
+ * `read` answers for it, the file is RECORDED in the closure but never walked
+ * (a JSON has no imports of its own). Never visits a source file twice.
  * @param {string} entryRel repo-relative POSIX path of the converted step file
  * @param {(rel: string) => (string|null)} read
  * @returns {Set<string>}
@@ -115,8 +117,14 @@ export function requireWalk(entryRel, read) {
         match = pattern.exec(text);
         if (!spec) continue;
         if (!spec.startsWith('./') && !spec.startsWith('../')) continue;
-        if (spec.endsWith('.json')) continue;
         const base = path.posix.join(path.posix.dirname(cur), spec).replace(/\\/g, '/');
+        if (spec.endsWith('.json')) {
+          // A `require`d `.json` IS a real import of the step (rule (2)): the
+          // file is read at runtime, so RECORD it — but a JSON has no imports
+          // of its own, so never queue it for walking.
+          if (typeof read(base) === 'string') seen.add(base);
+          continue;
+        }
         const resolvable = spec.endsWith('.js') || spec.endsWith('.cjs') || spec.endsWith('.mjs');
         const candidates = resolvable
           ? [base]

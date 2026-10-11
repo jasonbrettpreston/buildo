@@ -6556,5 +6556,425 @@
     "admin": {
       "group": "WSIB Matching"
     }
+  },
+  "coa_notices_fetch_pace_ms": {
+    "default": 3000,
+    "type": "number",
+    "description": "Pause between two document GETs of the pdf_document_set arm, ms (Spec 129 §2; floor 2000 is enforced by the arm). CONSUMED by load_coa_notices via inputs.reads.externals[0].pdf.pace_ms_from_config.",
+    "min": 2000,
+    "max": 60000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_download_timeout_ms": {
+    "default": 120000,
+    "type": "number",
+    "description": "Per-request deadline of a decision-notice document GET, ms. CONSUMED by load_coa_notices via execution.network.timeout_from_config.",
+    "min": 1000,
+    "max": 600000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_max_doc_bytes": {
+    "default": 52428800,
+    "type": "number",
+    "description": "Byte cap of one decision-notice PDF; a larger body is doc_status too_large (FAIL doc_acquire_failed). CONSUMED by load_coa_notices via pdf.max_doc_bytes_from_config.",
+    "min": 1,
+    "max": 209715200,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_max_pages": {
+    "default": 400,
+    "type": "number",
+    "description": "Page cap of one decision-notice PDF (too_large above it, no page read). CONSUMED by load_coa_notices via pdf.max_pages_from_config.",
+    "min": 1,
+    "max": 5000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_max_text_chars": {
+    "default": 5000000,
+    "type": "number",
+    "description": "Extracted-text character cap of one PDF (too_large above it). CONSUMED by load_coa_notices via pdf.max_text_chars_from_config.",
+    "min": 1,
+    "max": 50000000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_line_y_tolerance": {
+    "default": 2,
+    "type": "number",
+    "description": "Line-reconstruction y tolerance of the in-memory PDF text extraction, PDF units (Spec 129 §11). CONSUMED by load_coa_notices via pdf.line_y_tolerance_from_config.",
+    "min": 0.1,
+    "max": 20,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_retire_max_pct": {
+    "default": 0.1,
+    "type": "number",
+    "description": "Mass-retire guard of the departed_mark soft retire, a FRACTION of active rows; above it the MARK is suppressed with a FAIL row. Raising it is the acknowledgement of a legitimate mass retirement (Spec 129 §14). CONSUMED by load_coa_notices via outputs.writes[0].retire_max_pct_from_config.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_pair_rate_warn_min": {
+    "default": 0.85,
+    "type": "number",
+    "description": "C3 pre-registered PASS bound of the 569-2013 pair rate (spike notice-clustered 95% CI lower bound). NOT editable to clear a WARN: a first-run WARN is resolved by extractor work only (Spec 129 §10). LCN-D4 RULED 2026-10-07: parser fixed (coa-extractor-2), bound unchanged. CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_pair_rate_fail_min": {
+    "default": 0.8,
+    "type": "number",
+    "description": "C3 pre-registered FAIL bound of the 569-2013 pair rate (between the two bounds: WARN + skip_write). CONSUMED by load_coa_notices via checks[].warn_limit_from_config.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_no_section_warn_max_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "C4: max percent of minor-variance notices with no REQUESTED VARIANCE(S) section (spike 3.7%). CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_mail_lag_max_days": {
+    "default": 14,
+    "type": "number",
+    "description": "C7a: max days from the manifest hearing date to DATE DECISION MAILED ON. PROVISIONAL (spike 4-8 days) until build-manifest --measure (P0.4) measures every pinned document; updated in a commit before run 1 if needed. CONSUMED by load_coa_notices via the compute reconcile.",
+    "min": 0,
+    "max": 3650,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_mail_lag_viol_max": {
+    "default": 0,
+    "type": "number",
+    "description": "C7a: tolerated notices outside the mail-lag window. PROVISIONAL until P0.4. CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_unit_target_viol_max": {
+    "default": 0,
+    "type": "number",
+    "description": "C13: tolerated pair rows mapped to a target of another unit family (P0.3 measured 0). CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_doc_pair_rate_floor": {
+    "default": 0.6,
+    "type": "number",
+    "description": "C15: per-document 569-2013 pair-rate floor (spike per-panel 0.80-1.00). CONSUMED by load_coa_notices via the compute check.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_doc_pair_rate_min_items": {
+    "default": 10,
+    "type": "number",
+    "description": "C15: a document needs at least this many 569-2013 items before its own pair rate is judged. CONSUMED by load_coa_notices via the compute check.",
+    "min": 1,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_items_min": {
+    "default": 1000,
+    "type": "number",
+    "description": "C17: item floor of a full load (spike: 1,020 items from 5 of 69 documents). CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 1,
+    "max": 10000000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_direction_viol_max_pct": {
+    "default": 5,
+    "type": "number",
+    "description": "C14: max percent of bound-known pairs whose proposed value is on the permitted side (P0.3: 0 of 339). CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_required_oob_max": {
+    "default": 0,
+    "type": "number",
+    "description": "C12: tolerated required values outside their target range (WARN). CONSUMED by load_coa_notices via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_oob_sample_max": {
+    "default": 10,
+    "type": "number",
+    "description": "C12: how many variance keys of out-of-range rows ride in the audit-row detail. CONSUMED by load_coa_notices via the compute reconcile.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_side_setback_m_min": {
+    "default": 0.3,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped side setback variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_side_setback_m_max": {
+    "default": 8,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped side setback variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_front_setback_m_min": {
+    "default": 0.3,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped front setback variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_front_setback_m_max": {
+    "default": 20,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped front setback variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_rear_setback_m_min": {
+    "default": 0.3,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped rear setback variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_rear_setback_m_max": {
+    "default": 25,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped rear setback variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_height_m_min": {
+    "default": 2,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped building height variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_height_m_max": {
+    "default": 16,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped building height variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_main_wall_height_m_min": {
+    "default": 5,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped main wall height variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_main_wall_height_m_max": {
+    "default": 12,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped main wall height variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_building_length_depth_m_min": {
+    "default": 5,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped building length or depth variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_building_length_depth_m_max": {
+    "default": 25,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped building length or depth variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_frontage_m_min": {
+    "default": 3,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped lot frontage variance, in m (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_frontage_m_max": {
+    "default": 40,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped lot frontage variance, in m (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_coverage_pct_min": {
+    "default": 10,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped lot coverage variance, in percent (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_coverage_pct_max": {
+    "default": 100,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped lot coverage variance, in percent (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_area_m2_min": {
+    "default": 100,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped lot area variance, in m2 (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_lot_area_m2_max": {
+    "default": 2000,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped lot area variance, in m2 (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_fsi_min": {
+    "default": 0.15,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) lower plausibility bound for the REQUIRED value of a mapped floor space index variance, in ratio (Spec 129 §10). A required value below it is counted, WARN. CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_req_fsi_max": {
+    "default": 3,
+    "type": "number",
+    "description": "C12 (required_out_of_bounds) upper plausibility bound for the REQUIRED value of a mapped floor space index variance, in ratio (Spec 129 §10). CONSUMED by load_coa_notices via compute REQUIRED_RANGE_VARS.",
+    "min": 0,
+    "max": 100000,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_precision_layer2_min": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Spec 129 §10 pre-registered bound (hand-checked precision, two blind seats, §12 step 5) of the Layer-2 pair precision. NOT editable to clear a FAIL: resolved by extractor or link work under a new version only. CONSUMED by src/tests/steps/load_coa_notices/precision-sample.infra.test.ts.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_precision_all_min": {
+    "default": 0.9,
+    "type": "number",
+    "description": "Spec 129 §10 pre-registered bound (hand-checked precision, two blind seats, §12 step 5) of the all-pair precision. NOT editable to clear a FAIL: resolved by extractor or link work under a new version only. CONSUMED by src/tests/steps/load_coa_notices/precision-sample.infra.test.ts.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
+  },
+  "coa_notices_link_precision_min": {
+    "default": 0.95,
+    "type": "number",
+    "description": "Spec 129 §10 pre-registered bound (hand-checked precision, two blind seats, §12 step 5) of the link precision. NOT editable to clear a FAIL: resolved by extractor or link work under a new version only. CONSUMED by src/tests/steps/load_coa_notices/precision-sample.infra.test.ts.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "CoA Decision Notices"
+    }
   }
 }

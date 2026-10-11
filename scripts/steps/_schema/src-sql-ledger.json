@@ -574,7 +574,15 @@
       "fingerprints": [
         "d471c58e0444b2e6"
       ],
-      "reads": {},
+      "reads": {
+        "user_profiles": [
+          "account_preset",
+          "email",
+          "trade_slug",
+          "trade_slugs_override",
+          "user_id"
+        ]
+      },
       "writes": {
         "user_profiles": [
           "account_preset",
@@ -825,13 +833,17 @@
         "a67895ce7651c7d7"
       ],
       "reads": {
-        "lead_view_events": [],
         "user_profiles": [
           "lead_views_count",
           "user_id"
         ]
       },
       "writes": {
+        "lead_view_events": [
+          "permit_num",
+          "revision_num",
+          "user_id"
+        ],
         "user_profiles": [
           "lead_views_count"
         ]
@@ -1050,7 +1062,8 @@
       "reads": {
         "subscribe_nonces": [
           "expires_at",
-          "nonce"
+          "nonce",
+          "user_id"
         ],
         "user_profiles": [
           "email",
@@ -1255,6 +1268,9 @@
         "entitlements": [
           "product",
           "stripe_subscription_id"
+        ],
+        "stripe_webhook_events": [
+          "event_id"
         ],
         "user_profiles": [
           "stripe_customer_id",

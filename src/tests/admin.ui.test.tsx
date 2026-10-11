@@ -1692,8 +1692,9 @@ describe('NON_TOGGLEABLE_SLUGS filtering', () => {
   });
 
   it('every ingestion chain has at least one non-toggleable step', () => {
-    // Entities, wsib, and deep_scrapes chains have no infrastructure steps — skip them
-    const ingestionChains = PIPELINE_CHAINS.filter((c) => !['entities', 'wsib', 'deep_scrapes'].includes(c.id));
+    // Entities, wsib, deep_scrapes and coa_notices (Spec 129: one operator-triggered step, no
+    // infrastructure step of its own) have no infrastructure steps — skip them
+    const ingestionChains = PIPELINE_CHAINS.filter((c) => !['entities', 'wsib', 'deep_scrapes', 'coa_notices'].includes(c.id));
     for (const chain of ingestionChains) {
       const hasInfra = chain.steps.some((s) => NON_TOGGLEABLE_SLUGS.has(s.slug));
       expect(hasInfra).toBe(true);

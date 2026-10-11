@@ -993,6 +993,239 @@ async function acquireCkanDatastore({
   };
 }
 
+/** RE-FREEZE #32: the pace floor between document GETs (Spec 129 §2 — politeness, not a tunable). */
+const PDF_PACE_FLOOR_MS = 2000;
+
+// RE-FREEZE #32 (Spec 122 §8, Spec 129 §11, 2026-10-07): THE PDF DOCUMENT-SET ARM.
+//
+// `format: "pdf_document_set"` + `manifest` (a repo-relative, committed JSON inventory of
+// sha256-pinned PDFs) + `pdf` (the host allowlist and five `*_from_config` knob NAMES). The arm:
+//   1. reads and hashes the manifest; the skip decision is made BEFORE any document GET, over
+//      sha256(<manifest sha256>:<staleness.logic_version>) — so a hand-bumped logic_version
+//      (gate #48) re-acquires an unchanged manifest, and an unchanged pair skips with 0 bytes;
+//   2. per document, strictly in sequence: the declared pace; the host allowlist on the request
+//      AND every redirect hop (`redirect: "manual"`); a byte cap while streaming; the `%PDF-`
+//      magic bytes; the pinned sha256; in-memory text extraction (`scripts/lib/pdf-text.js`,
+//      page and text-character caps); `shapeDocument(doc, {config})` (the compute export the
+//      runner resolved before the HEAD); the byte buffer is ZERO-FILLED on every path;
+//   3. returns `docResults` (no text) for the runner's `compute.reconcileDocuments`.
+// It writes NO file and opens no temp root: the PDF bytes and their text exist only in memory
+// (Spec 129 §D3). Every per-document outcome is a closed `doc_status`:
+// parsed | sha_mismatch | http_error | timeout | too_large | extract_error | no_text_layer |
+// no_notices_found (an `excluded[]` manifest entry counts as `excluded`, never fetched).
+// A non-PDF body (an HTML soft-404) is `http_error`. Failures never throw out of the loop: the
+// step's own pre_write checks (doc_sha_mismatch / doc_acquire_failed / docs_no_notices) FAIL
+// the run before any write, because a skipped document would get its rows retired.
+
+const PDF_MAGIC = Buffer.from('%PDF-', 'latin1');
+const SHA256_RE = /^[0-9a-f]{64}$/;
+const MAX_REDIRECTS = 5;
+
+/** A `*_from_config` knob resolved to a finite positive number, or a named throw. */
+function pdfKnob(tag, external, config, field, { integer = false, min = 0 } = {}) {
+  const name = external.pdf && external.pdf[field];
+  const v = typeof name === 'string' ? config[name] : undefined;
+  if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0 || v < min || (integer && !Number.isInteger(v))) {
+    throw new Error(`${tag} external "${external.id}": pdf.${field} "${String(name)}" did not resolve to a `
+      + `${integer ? 'positive integer' : 'positive number'}${min ? ` >= ${min}` : ''} (got ${String(v)}).`);
+  }
+  return v;
+}
+
+/** The manifest, read from the repo and checked for the fields the ARM needs (the step's own T-MAN owns the rest). */
+function readDocumentManifest(tag, external, repoRoot) {
+  const rel = external.manifest;
+  if (typeof rel !== 'string' || rel.length === 0 || path.isAbsolute(rel) || rel.split(/[\\/]/).includes('..')) {
+    throw new Error(`${tag} external "${external.id}": manifest "${String(rel)}" must be a repo-relative path with no "..".`);
+  }
+  const abs = path.join(repoRoot || REPO_ROOT, rel);
+  if (!fs.existsSync(abs)) {
+    throw new Error(`${tag} external "${external.id}": manifest ${rel} does not exist — pin it first (Spec 129 §2 build-manifest --pin).`);
+  }
+  const bytes = fs.readFileSync(abs);
+  let manifest;
+  try {
+    manifest = JSON.parse(bytes.toString('utf8'));
+  } catch (err) {
+    throw new Error(`${tag} external "${external.id}": manifest ${rel} is not JSON (${err.message}).`);
+  }
+  const docs = manifest && Array.isArray(manifest.documents) ? manifest.documents : null;
+  if (!docs || docs.length === 0) throw new Error(`${tag} external "${external.id}": manifest ${rel} has no documents[].`);
+  if (typeof manifest.user_agent !== 'string' || manifest.user_agent.length === 0) {
+    throw new Error(`${tag} external "${external.id}": manifest ${rel} declares no user_agent.`);
+  }
+  const ids = new Set();
+  for (const d of docs) {
+    if (!d || typeof d.doc_id !== 'string' || ids.has(d.doc_id) || typeof d.url !== 'string' || !SHA256_RE.test(String(d.sha256))) {
+      throw new Error(`${tag} external "${external.id}": manifest ${rel} has a document without a unique doc_id, a url and a 64-hex sha256 (${String(d && d.doc_id)}).`);
+    }
+    ids.add(d.doc_id);
+  }
+  const excluded = Array.isArray(manifest.excluded) ? manifest.excluded : [];
+  return { manifest, docs, excluded, sha256: crypto.createHash('sha256').update(bytes).digest('hex') };
+}
+
+/**
+ * GET one document under the allowlist + cap. Never throws for a network outcome:
+ * `{status: 'ok'|'http_error'|'timeout'|'too_large', bytes, bytesRead}`.
+ */
+async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, maxBytes }) {
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    let host;
+    try {
+      const u = new URL(current);
+      host = u.protocol === 'https:' ? u.hostname : null;
+    } catch {
+      host = null; // an unparseable URL or Location is refused below, like a foreign host
+    }
+    if (!host || !allowlist.includes(host)) return { status: 'http_error', bytes: null, bytesRead: 0, refused_host: true };
+    const ctrl = new AbortController();
+    const t = abortTimer(ctrl, timeoutMs);
+    try {
+      const res = await ctxFetch(current, { redirect: 'manual', headers: { 'User-Agent': userAgent }, signal: ctrl.signal });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers && typeof res.headers.get === 'function' ? res.headers.get('location') : null;
+        if (!loc || hop === MAX_REDIRECTS) return { status: 'http_error', bytes: null, bytesRead: 0 };
+        current = new URL(loc, current).href;
+        continue;
+      }
+      if (!res.ok) return { status: 'http_error', bytes: null, bytesRead: 0 };
+      const declared = res.headers && typeof res.headers.get === 'function' ? Number(res.headers.get('content-length')) : NaN;
+      if (Number.isFinite(declared) && declared > maxBytes) return { status: 'too_large', bytes: null, bytesRead: 0 };
+      const chunks = [];
+      let total = 0;
+      if (res.body && typeof res.body.getReader === 'function') {
+        const reader = res.body.getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          total += value.length;
+          if (total > maxBytes) {
+            for (const c of chunks) c.fill(0);
+            await reader.cancel().catch((err) => err); // the cap already decided; a cancel error changes nothing
+            return { status: 'too_large', bytes: null, bytesRead: total };
+          }
+          chunks.push(Buffer.from(value));
+        }
+      } else {
+        const buf = Buffer.from(await res.arrayBuffer());
+        total = buf.length;
+        if (total > maxBytes) { buf.fill(0); return { status: 'too_large', bytes: null, bytesRead: total }; }
+        chunks.push(buf);
+      }
+      const bytes = Buffer.concat(chunks);
+      for (const c of chunks) c.fill(0);
+      return { status: 'ok', bytes, bytesRead: total };
+    } catch (err) {
+      return { status: err && (err.name === 'AbortError' || err.name === 'TimeoutError') ? 'timeout' : 'http_error', bytes: null, bytesRead: 0 };
+    } finally {
+      if (t) clearTimeout(t);
+    }
+  }
+  return { status: 'http_error', bytes: null, bytesRead: 0 };
+}
+
+/**
+ * The arm. `shapeDocument` is the compute export (resolved by the runner before the HEAD);
+ * `sleep` is injectable (tests pass a recorder; the runner passes nothing and gets a real timer).
+ */
+async function acquirePdfDocumentSet({
+  ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
+  timeoutMs, base, tier1, shapeDocument, sleep,
+}) {
+  if (typeof shapeDocument !== 'function') {
+    throw new Error(`${tag} external "${external.id}" is a pdf_document_set but no shapeDocument seam was handed to the arm.`);
+  }
+  const allowlist = external.pdf && Array.isArray(external.pdf.host_allowlist) ? external.pdf.host_allowlist : [];
+  if (allowlist.length === 0) throw new Error(`${tag} external "${external.id}": pdf.host_allowlist is empty.`);
+  const paceMs = pdfKnob(tag, external, config, 'pace_ms_from_config', { integer: true, min: PDF_PACE_FLOOR_MS });
+  const maxBytes = pdfKnob(tag, external, config, 'max_doc_bytes_from_config', { integer: true });
+  const maxPages = pdfKnob(tag, external, config, 'max_pages_from_config', { integer: true });
+  const maxTextChars = pdfKnob(tag, external, config, 'max_text_chars_from_config', { integer: true });
+  const lineYTolerance = pdfKnob(tag, external, config, 'line_y_tolerance_from_config');
+  const { manifest, docs, excluded, sha256 } = readDocumentManifest(tag, external, repoRoot);
+  const logicVersion = descriptor.staleness && descriptor.staleness.logic_version;
+  const contentHash = crypto.createHash('sha256').update(`${sha256}:${String(logicVersion)}`).digest('hex');
+  const tier2 = forced
+    ? { skip: false, reason: 'force_run' }
+    : contentHashSkip({ descriptor, contentHash, prior });
+  const acquiredBase = { ...base, content_hash: contentHash, source_dataset_version: sha256 };
+  if (tier2.skip) {
+    log.info(tag, `pdf_document_set gate: skip (${tier2.reason}) — manifest + logic_version unchanged, nothing fetched`);
+    return {
+      acquired: acquiredBase,
+      tier1,
+      tier2,
+      features: [],
+      docResults: [],
+      emitBlock: buildSkipReEmitMeta({
+        skeleton: emitSkeleton || {},
+        prior,
+        pins: { spec_version: descriptor.identity.spec_version, skipped_reason: tier2.reason },
+      }),
+    };
+  }
+  const extractor = require('../pdf-text');
+  const wait = typeof sleep === 'function' ? sleep : (ms) => new Promise((r) => setTimeout(r, ms));
+  const byStatus = {
+    parsed: 0, sha_mismatch: 0, http_error: 0, timeout: 0, too_large: 0, extract_error: 0,
+    no_text_layer: 0, no_notices_found: 0, excluded: excluded.length,
+  };
+  const docResults = [];
+  let bytesFetched = 0;
+  for (let i = 0; i < docs.length; i++) {
+    const d = docs[i];
+    if (i > 0) await wait(paceMs);
+    const meta = {
+      doc_id: d.doc_id, sha256: d.sha256, hearing_date: d.hearing_date, kind: d.kind,
+      revision: d.revision, session: d.session, panel: d.panel,
+    };
+    const got = await fetchPdfCapped(ctxFetch, d.url, { allowlist, userAgent: manifest.user_agent, timeoutMs, maxBytes });
+    bytesFetched += got.bytesRead;
+    let status = got.status;
+    let result = null;
+    const bytes = got.bytes;
+    try {
+      if (status === 'ok' && !bytes.subarray(0, PDF_MAGIC.length).equals(PDF_MAGIC)) status = 'http_error';
+      if (status === 'ok' && crypto.createHash('sha256').update(bytes).digest('hex') !== d.sha256) status = 'sha_mismatch';
+      if (status === 'ok') {
+        const x = await extractor.extractPdfText(bytes, { maxPages, maxTextChars, lineYTolerance });
+        if (x.status !== 'ok') {
+          status = x.status;
+        } else {
+          result = shapeDocument({ ...meta, text_pages: x.pages }, { config });
+          status = result.doc_status;
+        }
+      }
+    } finally {
+      if (bytes) bytes.fill(0);
+    }
+    byStatus[status] = (byStatus[status] || 0) + 1;
+    docResults.push({ doc: meta, doc_status: status, result });
+  }
+  log.info(tag, `acquired pdf_document_set "${external.id}": ${docs.length} document(s), ${bytesFetched} bytes, `
+    + `${byStatus.parsed} parsed (manifest ${sha256.slice(0, 8)}…)`);
+  return {
+    acquired: {
+      ...acquiredBase,
+      bytes_downloaded: bytesFetched,
+      document_set: {
+        manifest_sha256: sha256,
+        docs_total: docs.length + excluded.length,
+        docs_excluded: excluded.length,
+        docs_by_status: byStatus,
+        bytes_fetched: bytesFetched,
+      },
+    },
+    tier1,
+    tier2,
+    features: [],
+    docResults,
+    emitBlock: null,
+  };
+}
+
 /**
  * Acquire one declared external.
  *
@@ -1021,6 +1254,10 @@ async function acquireExternal({
   // T6). UNDEFINED on the single-primary path (the legacy callers pass nothing) —
   // that is the byte-identical path: non-CKAN arms never read it.
   validatorCache,
+  // RE-FREEZE #32: the compute's `shapeDocument` seam (resolved by runIngestPhase before the
+  // HEAD) and an injectable sleep for the document pace. Both UNDEFINED for every other format.
+  shapeDocument,
+  sleep,
 }) {
   // ── 0w: A LOOKUP IS XLSX-ONLY, AND AN XLSX IS LOOKUP-ONLY (2026-09-28) ──────────
   // The TWO new declarations (`role: "lookup"`, `format: "xlsx"`) are one axis spelled
@@ -1034,7 +1271,7 @@ async function acquireExternal({
     throw new Error(`${tag} external "${external.id}" declares role "${String(external.role)}" `
       + `with format "${String(external.format)}": a lookup (role "lookup") is xlsx-only `
       + 'and an xlsx (format "xlsx") is lookup-only — declare `role: "lookup"` with '
-      + '`format: "xlsx"`, or a primary feature format ("shapefile_zip", "csv", "geojson", "ckan_datastore") '
+      + '`format: "xlsx"`, or a primary feature format ("shapefile_zip", "csv", "geojson", "ckan_datastore", "pdf_document_set") '
       + 'with no role.');
   }
   // The DS4 contract, built HERE because this is where a gate can fire: a skipped run
@@ -1066,10 +1303,12 @@ async function acquireExternal({
   // `no_source_file` below. Url externals take the unchanged HEAD path.
   const isLocal = external.kind === 'filesystem';
   const local = isLocal ? resolveLocalSource(external.path, repoRoot) : null;
+  // RE-FREEZE #32: a pdf_document_set has no single URL to HEAD; its source version is the manifest.
+  const isDocSet = external.format === 'pdf_document_set';
   let head;
   let headError = null;
   try {
-    head = isLocal
+    head = (isLocal || isDocSet)
       ? { lastModified: null, etag: null }
       // 0y §3b: a `ckan_datastore` external's validators are NOT a HEAD — they come from the
       // resource's `package_show` metadata (`last_modified || metadata_modified`, the legacy
@@ -1140,6 +1379,15 @@ async function acquireExternal({
     return acquireCkanDatastore({
       ctxFetch, log, tag, external, descriptor, config, head, base, tier1,
       keyProperty, keyColumn, coerceKey, validatorCache,
+    });
+  }
+
+  // RE-FREEZE #32: the PDF document-set arm — no temp root, no file, the tier-2 skip inside the arm
+  // (decided over the manifest BEFORE any document GET).
+  if (isDocSet) {
+    return acquirePdfDocumentSet({
+      ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
+      timeoutMs, base, tier1, shapeDocument, sleep,
     });
   }
 
@@ -1229,7 +1477,7 @@ async function acquireExternal({
       };
     } else {
       throw new Error(`${tag} external "${external.id}" declares format "${String(external.format)}", which no parser `
-        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv", "geojson", "ckan_datastore" or "xlsx" (step.schema.json '
+        + 'in the acquisition seam handles. Declare "shapefile_zip", "csv", "geojson", "ckan_datastore", "xlsx" or "pdf_document_set" (step.schema.json '
         + 'inputs.reads.externals[].format), or teach acquire.js the new payload format — an '
         + 'unrecognised value must never fall through to the shapefile parser.');
     }
@@ -1279,6 +1527,10 @@ module.exports = {
   // acquire suite can call them directly and assert the per-run `validatorCache` identity.
   ckanResourceValidators,
   acquireCkanDatastore,
+  // RE-FREEZE #32: the PDF document-set arm and its capped, allowlisted fetch (T-ACQ drives both).
+  acquirePdfDocumentSet,
+  fetchPdfCapped,
+  PDF_PACE_FLOOR_MS,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,

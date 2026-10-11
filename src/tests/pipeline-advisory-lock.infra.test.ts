@@ -60,6 +60,7 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   'scripts/load-coa.js':             95,
   'scripts/load-address-points.js':  96,
   'scripts/load-wsib.js':            97,
+  'scripts/load-coa-notices.js':     129, // Spec 129 — load_coa_notices (standalone chain coa_notices)
   // Wave 5 — Compute / Maintenance
   'scripts/close-stale-permits.js':  98,
   'scripts/compute-centroids.js':    99,

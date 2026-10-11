@@ -739,3 +739,72 @@ export function makePricingLine(overrides: Partial<PricingLineRow> = {}): Pricin
     ...overrides,
   };
 }
+
+// Spec 129 §D4 — one `coa_notice_variances` row (migration 252), snake_case as the DB holds it.
+// Every value is synthetic; the row satisfies every CHECK (a `pair` with both values, a mapped target).
+export interface CoaNoticeVarianceRow {
+  variance_key: string;
+  source_family: string;
+  application_number: string;
+  item_ordinal: number;
+  hearing_date: string;
+  decision_mailed_on: string | null;
+  decision: string;
+  decision_source: string;
+  cited_bylaw: string | null;
+  citation_kind: string;
+  regulation_id_as_cited: string | null;
+  exception_ref: string | null;
+  zoning_as_stated: string | null;
+  target: string;
+  target_status: string;
+  bound: string | null;
+  required_value: number | null;
+  required_unit: string | null;
+  proposed_value: number | null;
+  proposed_unit: string | null;
+  parse_status: string;
+  parse_confidence: string;
+  qualified: boolean;
+  source_sha256: string;
+  source_page: number;
+  extractor_version: string;
+  vocab_version: string;
+}
+
+export function makeCoaNoticeVariance(overrides: Partial<CoaNoticeVarianceRow> = {}): CoaNoticeVarianceRow {
+  const base: CoaNoticeVarianceRow = {
+    variance_key: '',
+    source_family: 'toronto_ca_decision_pdf',
+    application_number: 'A0999/17EYK',
+    item_ordinal: 1,
+    hearing_date: '2017-07-13',
+    decision_mailed_on: '2017-07-19',
+    decision: 'approved_with_conditions',
+    decision_source: 'committee',
+    cited_bylaw: '569-2013',
+    citation_kind: 'chapter_regulation',
+    regulation_id_as_cited: '10.20.40.70(3)',
+    exception_ref: null,
+    zoning_as_stated: 'RD',
+    target: 'side_setback_m',
+    target_status: 'mapped',
+    bound: 'min',
+    required_value: 1.2,
+    required_unit: 'm',
+    proposed_value: 0.9,
+    proposed_unit: 'm',
+    parse_status: 'pair',
+    parse_confidence: 'high',
+    qualified: false,
+    source_sha256: 'a'.repeat(64),
+    source_page: 1,
+    extractor_version: 'coa-extractor-1',
+    vocab_version: 'coa-vocab-1',
+    ...overrides,
+  };
+  if (!overrides.variance_key) {
+    base.variance_key = `${base.source_family}|${base.application_number}|${base.item_ordinal}`;
+  }
+  return base;
+}

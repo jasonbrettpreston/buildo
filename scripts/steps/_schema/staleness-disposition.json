@@ -217,6 +217,26 @@
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
+    "scripts/lib/coa-notices/parse-values.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-07 (WF1 load_coa_notices, Spec 129 §9): a real import of load_coa_notices (shell -> compute -> library, or the pdf_document_set arm). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version, which the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
+    "scripts/lib/coa-notices/target-map.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-10 (H1, Spec 129 §9): data the load_coa_notices compute requires (keyword → target map). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version (coa-target-map-2 rode coa-extractor-3), which the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
+    "scripts/lib/coa-notices/vocab.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-10 (H1, Spec 129 §9): the closed vocabulary the load_coa_notices compute requires (units, parse_status). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version (coa-vocab-3 rode coa-extractor-3), which the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
+    "scripts/lib/compute/load-coa-notices.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-07 (WF1 load_coa_notices, Spec 129 §9): a real import of load_coa_notices (shell -> compute -> library, or the pdf_document_set arm). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version, which the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
+    "scripts/lib/pdf-text.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-07 (WF1 load_coa_notices, Spec 129 §9): a real import of load_coa_notices (shell -> compute -> library, or the pdf_document_set arm). 0 runtime readers hash it; a semantic change is signalled by the hand-bumped staleness.logic_version, which the pdf_document_set arm folds into its content hash, so the row stays descriptive."
+    },
     "scripts/lib/parcel-cost.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."

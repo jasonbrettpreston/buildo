@@ -2,66 +2,66 @@
   "entries": {
     "pb_unique_pairs_violations": {
       "value": 0,
-      "cost_ms": 182,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "cost_ms": 207,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "pb_rows": {
-      "value": 534989,
+      "value": 535039,
       "cost_ms": 76,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "pb_distinct_parcels": {
-      "value": 494932,
-      "cost_ms": 130,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "value": 494958,
+      "cost_ms": 149,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "parcels_with_centroid": {
-      "value": 496321,
-      "cost_ms": 371,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "value": 496535,
+      "cost_ms": 429,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "nearest_share_pct": {
       "value": 20.14,
-      "cost_ms": 37,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "cost_ms": 48,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "linked_parcel_null_centroid_count": {
-      "value": 186,
-      "cost_ms": 853,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "value": 0,
+      "cost_ms": 1064,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     },
     "borrowed_primary_links": {
-      "value": 106275,
-      "cost_ms": 159,
-      "at": "2026-10-07T04:33:29.781Z",
-      "commit": "c3dd6fb1f9b1c5d9a8c203224f9dd374c2bc5a7e",
+      "value": 106288,
+      "cost_ms": 186,
+      "at": "2026-10-09T20:52:11.708Z",
+      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 10
+      "sample_n": 14
     }
   }
 }

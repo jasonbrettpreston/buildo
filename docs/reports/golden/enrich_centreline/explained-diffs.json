@@ -179,6 +179,10 @@
     {
       "key": "summary.records_meta.centreline_enrich.parcels_with_zero_centreline_intersections_pct",
       "why": "Scenario change, not a FLEET-2 code effect: the PRE (2026-10-03) ran INCREMENTAL on centreline version 1da4549b223eb577a79c57ba1f0f97dc; toronto_centreline was republished on CKAN at 18:15 GMT 2026-10-05 and reloaded by load_centreline in the FLEET-2 recapture (ASSEMBLY A26 (4), content_hash 2ac6f399...), so the POST saw a changed version and decideCentrelineMode chose full (scripts/lib/compute/enrich-centreline.js:358-361). The full run emits the whole-table coverage counter parcels_with_zero_centreline_intersections_pct (POST 3.23); an incremental run does not, so the PRE has no value."
+    },
+    {
+      "key": "table_state[0].row_count",
+      "why": "Upstream data growth, not this step (attributed by query 2026-10-10): parcels 496,510 (PRE, e77f95bb) -> 496,536 (POST, c498a7bb) = 26 NEW source parcels (COMMON 23 / CONDO 3, ids 42,499,993-42,506,470, 0 duplicate parcel_id), all created 2026-10-05 20:35:33 UTC between the two captures. enrich_centreline cannot insert parcels: its only write is set_based_join_update (descriptor outputs.writes[0]); 0 INSERT INTO parcels in its compute. Applies to sources.json and standalone.json."
     }
   ]
 }

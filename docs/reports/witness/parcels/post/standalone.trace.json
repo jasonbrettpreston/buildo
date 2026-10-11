@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-parcels.js",
   "chain": "none",
-  "source_fingerprint": "ae15fd6a8f747e01866c9e440c48237306c583b64d5ac54e809faddc7c3585b4",
-  "git_head": "a3418800f56d09ddd8003fe3e8ba8e94efe0b945",
+  "source_fingerprint": "9798faeacafc8e16eae3650b06a84b512fcf0a31b2ee27f68f4709e047db41be",
+  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
   "header": {
     "processes": 1,
     "calls": 164,
     "distinct": 16,
     "utility": 8,
-    "tracer_self_ms": 7446.899,
-    "wall_ms": 221725
+    "tracer_self_ms": 6905.953,
+    "wall_ms": 255078
   },
   "statements": [
     {
@@ -38,13 +38,13 @@
       "params": [
         [
           "completed_with_warnings",
-          220579,
+          240236,
           null,
-          2307,
+          2508,
           0,
           0,
           0,
-          "{\"parcels_load\":{\"duration_ms\":220538,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":220578,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"a3418800f56d09ddd8003fe3e8ba8e94efe0b945\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}"
+          "{\"parcels_load\":{\"duration_ms\":240170,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":240235,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000,\"parcels_geom_change_tolerance_deg\":1e-7},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}"
         ]
       ]
     },
@@ -112,27 +112,7 @@
       ]
     },
     {
-      "fingerprint": "77d30c21e4d01ffb",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7bbcde9cfab6c79c",
-      "kind": "utility",
-      "count": 2,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7e9953ff29309ce6",
+      "fingerprint": "74861d67d045ac4d",
       "kind": "write",
       "count": 144,
       "rowCount": 0,
@@ -185,6 +165,26 @@
       "error": null
     },
     {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 1,
@@ -198,7 +198,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 5,
+      "rowCount": 6,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -232,7 +232,7 @@
       "fingerprint": "ba271f702f1828b6",
       "kind": "read",
       "count": 1,
-      "rowCount": 680,
+      "rowCount": 720,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -263,9 +263,9 @@
   ],
   "transactions": [
     {
-      "client": "23520:3",
+      "client": "18920:3",
       "write_fingerprints": [
-        "7e9953ff29309ce6"
+        "74861d67d045ac4d"
       ]
     }
   ],

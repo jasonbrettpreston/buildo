@@ -1361,26 +1361,44 @@ describe('Pipeline SDK', () => {
 
     // §9.3 — RE-HOMED (Spec 122 §5.1 conversion, batch-2 row 3.7, compressed commit ③,
     // 2026-09-24). The hand-written ON CONFLICT text left the shell (585 lines → a require +
-    // `pipeline.step()`); the guard is now DECLARED (`write_discipline.guard_columns`, 8 of the
-    // WHERE clause's 9 terms — the 9th, `geometry`, is added automatically by the codegen as the
-    // watched column of all three `invalidates[].set_null_on_change_of` DEC-FENCE2 entries, so it
-    // is deliberately absent from this list, not missing) and PROVEN equal to the legacy SQL
-    // text by step-library.logic.test.ts's T5/T7 (`buildWritePlan(...).upsertSqlFor(1)` vs the
-    // legacy file text whitespace-normalised) — this test reads the same declaration, not the SQL.
-    it('load-parcels.js declares the IS DISTINCT FROM guard on 10 columns (8 legacy + raw geometry + lot_size_source, WF3 lot-size 2026-10-01) and DEC-FENCE2 watches the derived geom (WF3 2026-09-28)', () => {
+    // `pipeline.step()`); the guard is now DECLARED (`write_discipline.guard_columns`, the 9
+    // non-geometry IS DISTINCT FROM terms) while the geom term itself is the tolerant
+    // material-change PREDICATE `public.parcels_geom_materially_changed(parcels.geom,
+    // EXCLUDED.geom)` — rendered by the codegen from the `geom` column's `columns[].materiality`
+    // axis because `geom` is the watched column of all three `invalidates[].set_null_on_change_of`
+    // DEC-FENCE2 entries, so it is deliberately absent from this list, not missing) and PROVEN equal
+    // to the legacy SQL text by step-library.logic.test.ts's T5/T7 (`buildWritePlan(...).upsertSqlFor(1)`
+    // vs the legacy file text whitespace-normalised; now minus the retired `geometry` guard term) —
+    // this test reads the same declaration, not the SQL.
+    it('load-parcels.js declares the materiality(geom) predicate + IS DISTINCT FROM guard on 9 columns, geometry DROPPED 10 → 9 (8 legacy + lot_size_source; was 10 with raw `geometry`, WF3 lot-size 2026-10-01) and DEC-FENCE2 watches the derived geom (WF3 2026-09-28; geom-drift WF3 Commit 2)', () => {
       // WF3 2026-09-28 (parcels geom guard): the pre-WF3 shape pinned here (8 columns, no geometry,
-      // invalidates watching geometry) left 9,855 NULL + 16 invalid geoms unreachable. geometry is now a
-      // declared guard term, and the invalidates watch geom, so the codegen adds geom IS DISTINCT FROM as the first term.
+      // invalidates watching geometry) left 9,855 NULL + 16 invalid geoms unreachable; geometry became a
+      // declared guard term and the invalidates watched geom, so the codegen added geom IS DISTINCT FROM as the first term.
       // WF3 lot-size 2026-10-01 (6fe38a4f): lot_size_source joined the guard (declared second, after lot_size_sqm).
+      // geom-drift WF3 Commit 2 (2026-10-06): `geometry` is DROPPED from guard_columns (10 → 9) and is now
+      // CARRIED with geom — the WHERE opens on the tolerant predicate M (migration 251) and geom/geometry
+      // SET via `CASE WHEN M`, so sub-tolerance CKAN jitter writes nothing (the PR-D3 close).
       const d = JSON.parse(fs.readFileSync(path.join(scriptDir, 'load-parcels.descriptor.json'), 'utf-8'));
       const write = d.outputs.writes[0].write_discipline;
       expect(write.guard).toBe('is_distinct_from');
       expect(write.guard_columns).toEqual([
         'lot_size_sqm', 'lot_size_source', 'feature_type', 'address_number', 'linear_name_full',
         'addr_num_normalized', 'street_name_normalized', 'street_type_normalized', 'date_effective',
-        'geometry',
       ]);
+      // BEFORE (WF3 2026-09-28 / lot-size 2026-10-01): TEN — the nine above plus a raw jsonb
+      // `geometry` as a plain structural IS DISTINCT FROM term. AFTER: geometry is CARRIED by the
+      // geom column's materiality axis (below), never its own guard term (geom-drift WF3 Commit 2).
+      expect(write.guard_columns).not.toContain('geometry');
       expect(write.guard_columns).not.toContain('geom');
+      // The geom column DECLARES the materiality axis: `carries: ['geometry']` is why the raw
+      // jsonb source is SET (`CASE WHEN M THEN EXCLUDED.geometry ELSE parcels.geometry END`) yet
+      // absent from guard_columns — and M (public.parcels_geom_materially_changed, migration 251)
+      // is the WHERE's first term (geom-drift WF3 Commit 2).
+      const geomColumn = d.outputs.writes[0].columns.find(
+        (c: { name: string; materiality?: { carries: string[] } }) => c.name === 'geom',
+      );
+      expect(geomColumn).toBeDefined();
+      expect(geomColumn!.materiality.carries).toEqual(['geometry']);
       const invalidates = d.outputs.invalidates as Array<{ set_null_on_change_of: string }>;
       expect(invalidates).toHaveLength(3);
       expect(invalidates.every((inv) => inv.set_null_on_change_of === 'geom')).toBe(true);

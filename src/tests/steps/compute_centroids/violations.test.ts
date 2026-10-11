@@ -432,9 +432,11 @@ describe('55-A — the hard per-conversion gate (k=PER_STEP)', () => {
     // pre-CC-D3 `94473cfd60dd563d80d0c5ecb7edac95`, post-CC-D3
     // `a12a1a5497c3fcbbc89442f44ee739b6` (defect-ledger.md CC-D3 row).
     const CCD3_PRE_HASH = '94473cfd60dd563d80d0c5ecb7edac95';
-    // FLEET-2 §5 triage 2026-10-06: post/ re-captured at a3418800 after the parcels reload (486,530 → 496,510 rows) —
-    // measured hash ff8c8b8e… in all three post/*.json; the CC-D3-era value was a12a1a5497c3fcbbc89442f44ee739b6.
-    const CCD3_POST_HASH = 'ff8c8b8e69beb9ff4468fd89ad2957b0';
+    // FLEET-2 §5 triage 2026-10-06: post/ re-captured at a3418800 after the parcels reload (486,530 → 496,510 rows),
+    // measured hash ff8c8b8e… in all three post/*.json.
+    // re-pinned 2026-10-10 fleet-night-3 recapture: parcels 496,510 → 496,536 (26 new source parcels, attributed by
+    // query 2026-10-10); all 3 POSTs agree on e557c003… after the recapture wrote 214 updates.
+    const CCD3_POST_HASH = 'e557c00374a4b9bbfde22654caff4e26';
     expect([...preHashes][0], 'PRE must still read the ORIGINAL pilot-6-cutover hash — CC-D3 never touches pre/').toBe(CCD3_PRE_HASH);
     expect([...postHashes][0], 'POST must read the CC-D3-repaired hash, not PRE\'s — a match here would mean the repair silently reverted').toBe(CCD3_POST_HASH);
   });
