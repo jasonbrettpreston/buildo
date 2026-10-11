@@ -57,7 +57,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'  # 22: pdfjs-dist 6.x engines >=22.13 (CoA notices, Spec 129)
           cache: 'npm'
 
       - name: Install dependencies
@@ -69,6 +69,16 @@ jobs:
             PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d postgres -c 'select 1' >/dev/null 2>&1 && break
             sleep 2
           done
+
+      - name: Install PostgreSQL 17 client
+        # The service is Postgres 17; ubuntu's default pg_dump is older, and restore-db.infra.test.ts asserts on a
+        # real pg_dump's stderr. Same commands as chain-coa-permits.yml (F8 fold 2026-07-20).
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: Run DB integration tests
         run: npm run test:db

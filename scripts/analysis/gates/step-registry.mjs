@@ -674,7 +674,7 @@ export function resolveStep(input, inputs) {
     if (rows.some((row) => row.slug === input)) return input;
 
     let rel = input.split('\\').join('/');
-    if (ABSOLUTE_RE.test(rel)) rel = path.relative(inputs.root, input).split(path.sep).join('/');
+    if (ABSOLUTE_RE.test(rel)) rel = path.relative(inputs.root, rel).split(path.sep).join('/');
     if (rel.length === 0 || rel.startsWith('..')) return null;
 
     let match = null;
