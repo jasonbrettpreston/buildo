@@ -8,6 +8,7 @@
 // No DB, no network, no child process.
 import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const harness = require('../../scripts/analysis/capture-step-golden.js');
@@ -201,6 +202,27 @@ describe('buildCapture + parseArgs', () => {
   });
   it('parses --k=v and bare --flag', () => {
     expect(parseArgs(['--step=a.js', '--chain=none', '--compare=x,y', '--v'])).toEqual({ step: 'a.js', chain: 'none', compare: 'x,y', v: true });
+  });
+
+  // WF3 2026-10-09 (plan .cursor/wf3_capture_githead_active_task.md) — twice in fleet-night-3 a
+  // capture that had ALREADY finished a successful (hour-long) step run died at the write because
+  // `gitHead()` ran a `git rev-parse HEAD` spawn AFTER the step, and under memory pressure the spawn
+  // itself failed (`Error: Command failed: git rev-parse HEAD`, no stderr) — an hour of work lost to
+  // a metadata read. The head must be resolved ONCE at the start of main(), before any spawn.
+  it('uses the git_head resolved at start, never re-reading git after the run', () => {
+    expect(buildCapture(rawCapture({ git_head: '0123abcd' })).git_head).toBe('0123abcd');
+  });
+
+  it('main resolves gitHead() once, before the step is spawned', () => {
+    const src = fs.readFileSync('scripts/analysis/capture-step-golden.js', 'utf8');
+    const mainSrc = src.slice(src.indexOf('async function main()'), src.indexOf('if (require.main === module)'));
+    expect(mainSrc).not.toBe('');
+    expect(mainSrc.match(/gitHead\(\)/g) ?? []).toHaveLength(1);
+    const headAt = mainSrc.indexOf('const startHead = gitHead()');
+    const spawnAt = mainSrc.indexOf('await capture(');
+    expect(headAt).toBeGreaterThanOrEqual(0);
+    expect(spawnAt).toBeGreaterThanOrEqual(0);
+    expect(headAt).toBeLessThan(spawnAt);
   });
 });
 

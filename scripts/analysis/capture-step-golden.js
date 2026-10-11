@@ -1008,7 +1008,7 @@ function buildCapture(raw) {
     spec: 'docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3',
     step: raw.step,
     chain: raw.chain,
-    git_head: gitHead(),
+    git_head: raw.git_head ?? gitHead(),
     // (a) exit code
     exit_code: raw.exit_code,
     signal: raw.signal,
@@ -1117,6 +1117,7 @@ async function main() {
     throw new Error('usage: --step=<script> --chain=<chainId|none> [--out=<file>] [--overwrite] [--args=a,b] [--trace-only]  |  --compare=<a>,<b>');
   }
   const step = String(opts.step);
+  const startHead = gitHead(); // WF3 2026-10-09: resolved once, before any spawn — a git spawn after an hour-long run can fail under memory pressure and lose the capture
   if (!fs.existsSync(step)) throw new Error(`step script not found: ${step}`);
   const args = opts.args ? String(opts.args).split(',').filter(Boolean) : [];
   const traceOnly = opts['trace-only'] === true;
@@ -1191,6 +1192,7 @@ async function main() {
   const latch = ledger.installSignalLatch({ flush });
   const kind = ledger.captureKind({ out: opts.out ? String(opts.out) : null, isPost, traceOnly });
   const raw = await capture({ step, chain: String(opts.chain), args, tables, tablesSource, ceiling, tableSpecs, invariantSpec, invariantsFile, traceDir, traceOut, session, kind });
+  raw.git_head = startHead;
   const doc = buildCapture(raw);
   assertCaptureIsValid(doc);
 
@@ -1264,7 +1266,7 @@ async function main() {
         step,
         chain: doc.chain,
         source_fingerprint: doc.source_fingerprint ?? null,
-        git_head: gitHead(),
+        git_head: doc.git_head,
         wall_ms: traceOut.wall_ms ?? null,
       },
       outPath: path.resolve(String(opts.out)),
