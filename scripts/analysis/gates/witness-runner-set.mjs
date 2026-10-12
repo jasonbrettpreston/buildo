@@ -20,10 +20,18 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const SQL_WORD = /\b(select|insert|update|delete|with|begin|commit|rollback|set|show|vacuum|analyze|create|drop|alter|truncate)\b/i;
 
 export const CLOSED_RUNNER_TEMPLATES = Object.freeze([
-  { fingerprint: '4253520a71996e5c', cite: 'scripts/lib/step/index.js:5886', why: 'countTables `SELECT COUNT(*)::bigint AS n FROM ${t}`, t = pg_stat_user_tables (inputs.expect_nonempty)' },
-  { fingerprint: 'caf69de66af279fa', cite: 'scripts/lib/step/index.js:5886', why: 'countTables, t = logic_variables (inputs.expect_nonempty)' },
-  { fingerprint: 'aeeb008ed29d0e15', cite: 'scripts/lib/step/plausibility.js:163', why: 'executes scripts/enrich-parcels.descriptor.json:2319 plausibility[3].sql (descriptor-authored)' },
+  Object.freeze({ fingerprint: '4253520a71996e5c', cite: 'scripts/lib/step/index.js:5886', why: 'countTables `SELECT COUNT(*)::bigint AS n FROM ${t}`, t = pg_stat_user_tables (inputs.expect_nonempty)' }),
+  Object.freeze({ fingerprint: 'caf69de66af279fa', cite: 'scripts/lib/step/index.js:5886', why: 'countTables, t = logic_variables (inputs.expect_nonempty)' }),
+  Object.freeze({ fingerprint: 'aeeb008ed29d0e15', cite: 'scripts/lib/step/plausibility.js:163', why: 'executes scripts/enrich-parcels.descriptor.json:2319 plausibility[3].sql (descriptor-authored)' }),
 ]);
+
+/**
+ * Stats for the most recent `buildRunnerFingerprints` call. `scanned` counts fingerprints derived from
+ * the runner closure's SQL literals (before CLOSED_RUNNER_TEMPLATES are merged); `skippedUnparseable`
+ * counts literals that looked like SQL but whose fingerprint threw a parse error.
+ * @type {{ scanned: number, skippedUnparseable: number }}
+ */
+export let lastRunnerSetStats = { scanned: 0, skippedUnparseable: 0 };
 
 /** The SQL text of a string / no-substitution template literal, or null (templates with `${}` are never guessed). */
 function plainText(node) {
@@ -34,7 +42,8 @@ function plainText(node) {
 /**
  * @param {{repoRoot?: string}} [opts]
  * @returns {Promise<Map<string, string>>} fingerprint -> `file:line` cite. Throws when the closure is empty
- *   or yields no fingerprint (an empty set is RED, never a fallback).
+ *   or when the closure yields no fingerprint (an empty scan is RED, never a fallback: the closed
+ *   templates are merged only after that check, so they cannot mask a dead scan).
  */
 export async function buildRunnerFingerprints({ repoRoot = REPO_ROOT } = {}) {
   const closure = runnerClosure({ repoRoot });
@@ -42,6 +51,8 @@ export async function buildRunnerFingerprints({ repoRoot = REPO_ROOT } = {}) {
   if (files.length === 0) throw new Error('runner closure is empty');
   const { lq: pg } = await initSql();
   const out = new Map();
+  let scanned = 0;
+  let skippedUnparseable = 0;
   for (const rel of files) {
     const abs = path.join(repoRoot, rel);
     const sf = ts.createSourceFile(abs, fs.readFileSync(abs, 'utf8'), ts.ScriptTarget.Latest, true);
@@ -50,14 +61,19 @@ export async function buildRunnerFingerprints({ repoRoot = REPO_ROOT } = {}) {
       if (text !== null && SQL_WORD.test(text)) {
         try {
           const fp = pg.fingerprintSync(text);
+          scanned += 1;
           if (!out.has(fp)) out.set(fp, `${rel}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1}`);
-        } catch { /* not parseable SQL: not a fingerprint source */ }
+        } catch (err) {
+          if (!/syntax|parse/i.test(String(err && err.message))) throw err;
+          skippedUnparseable += 1; /* not parseable SQL: not a fingerprint source */
+        }
       }
       ts.forEachChild(node, visit);
     };
     visit(sf);
   }
+  lastRunnerSetStats = { scanned, skippedUnparseable };
+  if (scanned === 0) throw new Error('runner closure produced 0 fingerprints (scanned 0 literals)');
   for (const e of CLOSED_RUNNER_TEMPLATES) if (!out.has(e.fingerprint)) out.set(e.fingerprint, e.cite);
-  if (out.size === 0) throw new Error('runner fingerprint set is empty');
   return out;
 }

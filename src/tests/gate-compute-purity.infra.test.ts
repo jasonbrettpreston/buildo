@@ -246,4 +246,19 @@ describe('G1–G8 — compute purity (Rule 2 / §5.5: compute MEASURES only)', (
       });
     }
   }, TIMEOUT);
+
+  // ---------------------------------------------------------------------------
+  // T9 — R-CA(i) message correction: an ASSERT compute MAY read through `ctx.pool`
+  // (read-only, every relation declared, no DML/DDL/txn/maintenance), so no rule
+  // message may still claim a `pool` is unusable "at all" for an ASSERT.
+  // ---------------------------------------------------------------------------
+  it('T9: compute-shape.yml messages cite R-CA(i) and drop "must not use at all"', () => {
+    const text = fs.readFileSync(
+      path.resolve(REPO_ROOT, 'scripts/ast-grep-rules/compute-shape.yml'),
+      'utf8',
+    );
+
+    expect(text).not.toContain('must not use at all');
+    expect(text).toContain('R-CA(i)');
+  }, TIMEOUT);
 });

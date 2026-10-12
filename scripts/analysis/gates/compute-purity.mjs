@@ -65,12 +65,13 @@
 // extension points, added in the NEXT brief, same file.
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
-import { computeEntries, computeClosure, requireClosure } from './compute-closure.mjs';
+import { computeEntries, computeClosure, requireClosure, verdict } from './compute-closure.mjs';
 import { BAD_FIXTURE, BAD_HELPER, CLEAN_FIXTURE, CODES, REPO_ROOT, initSql, libpg, resolver } from './compute-purity-base.mjs';
-import { ADVISORY_RE, CATALOG_RE, FIND_SRID_RE, G4_STMT_RE, LEDGER_TABLES, PG_REL_RE, UNPARSED_FP_RE, UTILITY_START, bareRelationName, baseTableName, catalogRefs, collectFileTemps, declaredFor, hasStmtKey, isCatalogName, lexicalMatch, literalSites, scanDiagnostics, statementRelations } from './compute-purity-sql.mjs';
+import { ADVISORY_RE, CATALOG_RE, FIND_SRID_RE, G4_STMT_RE, LEDGER_TABLES, PG_REL_RE, UNPARSED_FP_RE, UTILITY_START, bareRelationName, baseTableName, catalogRefs, collectFileTemps, declaredFor, hasStmtKey, isCatalogName, lexicalMatch, literalSites, resetScanDiagnostics, scanDiagnostics, statementRelations } from './compute-purity-sql.mjs';
 import { G5Sites, G7Sites, G8Sites, finalizeSites } from './compute-purity-js.mjs';
 export { BAD_FIXTURE, BAD_HELPER, CLEAN_FIXTURE, CODES, initSql, libpg } from './compute-purity-base.mjs';
 export { LEDGER_TABLES, scanDiagnostics } from './compute-purity-sql.mjs';
@@ -92,9 +93,17 @@ export { LEDGER_TABLES, scanDiagnostics } from './compute-purity-sql.mjs';
  */
 export async function scanPurity({ repoRoot = REPO_ROOT, files, entries } = {}) {
   await initSql();
+  resetScanDiagnostics();
 
-  const explicit = !!(files && files.length);
+  const explicit = Array.isArray(files);
   const norm = (f) => path.relative(repoRoot, path.isAbsolute(f) ? f : path.resolve(repoRoot, f)).split(path.sep).join('/');
+  if (!explicit) {
+    // R-BZ G0: the SQL half scans the closure the graph half proved — a closure that is
+    // NOT scannable (dynamic edge, parse error, empty) must stop the scan, not silently
+    // narrow it. Callers turn this throw into exit 2.
+    const v = verdict(computeClosure({ repoRoot }));
+    if (v !== 'PASS') throw new Error(v + ' — compute closure is not scannable (R-BZ G0)');
+  }
   const scanFiles = (explicit
     ? files.map(norm)
     : [...computeEntries(repoRoot), ...computeClosure({ repoRoot }).modules])
@@ -114,8 +123,8 @@ export async function scanPurity({ repoRoot = REPO_ROOT, files, entries } = {}) 
     let text;
     try {
       text = fs.readFileSync(path.resolve(repoRoot, file), 'utf8');
-    } catch {
-      continue;
+    } catch (err) {
+      throw new Error('compute-purity: cannot read scan file ' + file + ': ' + err.message);
     }
     // B3: G7 (the ctx.config alias table) and G8 (the export call graph) read this
     // same `sf` — the file is parsed exactly once, here. G5 (def-use) walks it too.
@@ -123,7 +132,7 @@ export async function scanPurity({ repoRoot = REPO_ROOT, files, entries } = {}) 
 
     // G2 applies to compute ENTRIES only — never to a closure module, and never to
     // an explicit override that is not one of the compute entries.
-    const isEntry = explicit ? entrySet.has(file) : true;
+    const isEntry = entrySet.has(file);
     if (!declaredCache.has(file)) declaredCache.set(file, declaredFor(repoRoot, file, sf));
     const declared = isEntry ? declaredCache.get(file) : null;
 
@@ -139,12 +148,23 @@ export async function scanPurity({ repoRoot = REPO_ROOT, files, entries } = {}) 
       let fp = null;
       try {
         parsed = libpg().parseSync(sql);
-        res = resolver.resolveStatement(sql, {});
-        fp = res && typeof res.fingerprint === 'string' && res.fingerprint
-          ? res.fingerprint
-          : libpg().fingerprintSync(sql);
       } catch {
         parsed = null;
+      }
+      if (parsed) {
+        // A resolver throw must NOT discard a good AST: `parsed` survives, and the same
+        // unparsed fingerprint/diagnostic the old single-try catch recorded is used.
+        try {
+          res = resolver.resolveStatement(sql, {});
+          fp = res && typeof res.fingerprint === 'string' && res.fingerprint
+            ? res.fingerprint
+            : libpg().fingerprintSync(sql);
+        } catch {
+          res = null;
+          fp = `unparsed:${lineText}`;
+          parsed = null;
+        }
+      } else {
         res = null;
         fp = `unparsed:${lineText}`;
       }
@@ -392,6 +412,77 @@ export async function selfTest() {
   if (new Set(pairs).size !== pairs.length) {
     throw new Error(`self-test FAILED (compute-purity): a (file, code, relation, fp) site is reported twice`);
   }
+
+  // 6. CP-B8a default path: the scan set is the real `computeEntries()` ∪ closure, so a
+  //    temp repo is laid out the same way — one compute entry (a G2 site, since the entry
+  //    declares nothing) and one helper it `require()`s (a closure module: NOT an entry,
+  //    so its undeclared relation is never a G2 site).
+  {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'compute-purity-default-'));
+    fs.mkdirSync(path.join(dir, 'scripts/lib/compute'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, 'scripts/lib/compute/a-compute.js'),
+      ["const { helper } = require('../helper');", 'module.exports = () => helper();', ''].join('\n'),
+      'utf8',
+    );
+    fs.writeFileSync(
+      path.join(dir, 'scripts/lib/helper.js'),
+      ['/** @returns {string} */', "module.exports = { helper: () => 'SELECT 1 FROM pipeline_runs' };", ''].join('\n'),
+      'utf8',
+    );
+    const sites = await scanPurity({ repoRoot: dir });
+    const entry = 'scripts/lib/compute/a-compute.js';
+    const helper = 'scripts/lib/helper.js';
+    // The helper is in the scan set (it is in the closure) but is NOT an entry.
+    if (scanDiagnostics.get(entry)?.isEntry !== true) {
+      throw new Error('self-test FAILED (compute-purity): default path did not mark the compute entry as an entry');
+    }
+    if (scanDiagnostics.get(helper)?.isEntry !== false) {
+      throw new Error('self-test FAILED (compute-purity): default path marked the closure helper as an entry');
+    }
+    if (sites.some((s) => s.code === 'G2' && s.file === helper)) {
+      throw new Error('self-test FAILED (compute-purity): G2 fired on a closure helper in default mode');
+    }
+    if (!sites.some((s) => s.code === 'G1' && s.file === helper)) {
+      throw new Error('self-test FAILED (compute-purity): the helper ledger read did not fire G1 in default mode');
+    }
+  }
+
+  // 6b. `files: []` is EXPLICIT (Array.isArray) — it scans nothing rather than falling
+  //     back to the whole fleet.
+  {
+    const none = await scanPurity({ repoRoot, files: [] });
+    if (none.length !== 0) {
+      throw new Error(`self-test FAILED (compute-purity): files:[] scanned ${none.length} site(s), expected 0`);
+    }
+  }
+
+  // 6c. A leading comment must not defeat the SQL_START test: `-- c\nSELECT …` is SQL-shaped.
+  {
+    const src = 'module.exports = () => `-- c\nSELECT 1 FROM pipeline_runs`;\n';
+    const sf = ts.createSourceFile('c.js', src, ts.ScriptTarget.Latest, /* setParentNodes */ true, ts.ScriptKind.JS);
+    const lits = literalSites(sf, src);
+    if (!lits.some((l) => l.sql.includes('SELECT 1 FROM pipeline_runs'))) {
+      throw new Error('self-test FAILED (compute-purity): a literal with a leading `--` comment was not read as SQL');
+    }
+  }
+
+  // 6d. An EMPTY compute dir in default mode is not a vacuous PASS: the closure verdict is
+  //     FAIL:G0:empty and `scanPurity` refuses to scan (R-BZ G0).
+  {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'compute-purity-empty-'));
+    fs.mkdirSync(path.join(dir, 'scripts/lib/compute'), { recursive: true });
+    let threw = null;
+    try {
+      await scanPurity({ repoRoot: dir });
+    } catch (err) {
+      threw = err;
+    }
+    if (!threw || !/G0/.test(threw.message)) {
+      throw new Error('self-test FAILED (compute-purity): an empty compute dir in default mode did not throw G0');
+    }
+  }
+
   return { bad, clean };
 }
 

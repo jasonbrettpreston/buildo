@@ -100,7 +100,8 @@ message: |
   A compute may not reach the database (`pg`, `../resolve-db`), the environment
   (`dotenv`), the filesystem (`fs`), the process table (`child_process`) or the
   runner itself (`../pipeline`, `../step`). Everything it is allowed to touch is
-  handed to it on `ctx`: `pool` (which an ASSERT must not use at all), `log`,
+  handed to it on `ctx`: `pool` (an ASSERT may only READ through it: every
+  relation declared, no DML/DDL/txn/maintenance; Spec 124 R-CA(i)), `log`,
   `fetch`, `clock`, `report`. Pure domain libraries under `scripts/lib/` are fine.
 
   SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5
@@ -195,8 +196,9 @@ message: |
   `require('f' + 's')`, `` require(`pg`) `` and `await import(...)` defeat a
   literal-name check while reaching exactly what Rule 2 forbids: the database,
   the environment, the filesystem, the process table or the runner. Everything
-  a compute may touch arrives on `ctx` — `pool` (which an ASSERT must not use
-  at all), `log`, `fetch`, `clock`, `report`; pure domain libraries under
+  a compute may touch arrives on `ctx` — `pool` (an ASSERT may only READ
+  through it: every relation declared, no DML/DDL/txn/maintenance;
+  Spec 124 R-CA(i)), `log`, `fetch`, `clock`, `report`; pure domain libraries under
   `scripts/lib/` stay statically required and are unaffected by this rule.
 
   SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)

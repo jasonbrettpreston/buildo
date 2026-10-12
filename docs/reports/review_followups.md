@@ -4329,3 +4329,18 @@ Resolver gaps raised by the DeepSeek error-paths / spec lenses on the DML-CTE di
 | LOW | **`items_total` (and C17 `items_total_floor`) count dropped duplicate notices' items**; the pair rates use kept items only (Observability seat L2). | **OPEN.** Decide at the first real run whether C17 should read kept items; measured value first. |
 | LOW | **A `shapeDocument` throw (sanitised `COA_PARSE_E_*`) fails the step with no per-document status row** (Observability seat). Loud, not silent. | **OPEN.** Consider mapping it to `extract_error` for that document at the next WF touching the arm. |
 | LOW | **Code-review lens items not taken:** case-insensitive `NOTICE OF DECISION`/`File Number` regexes, a whereas-count guard, phrase-regex precompilation in `parse-values.js`. All are refuted or unmeasured on synthetic text. | **OPEN.** Re-measure against the first `--measure` run (real text) before changing the extractor (any change bumps `extractor_version`). |
+
+## 2026-10-12 — H3 compute purity Phase 1, WF6 output-panel residue (wf1/compute-purity)
+
+Grounded by a Sonnet seat against the code (DeepSeek ×2 + Gemini CLI reviews). The must-fix items (closure verdict applied, no silent skip of unreadable inputs, entry marking, leading-comment SQL, parse/resolve split, runner-set guard, hook print + row freeze, R-CA(i) wording) landed in the H3 fix commit; these are deferred.
+
+| Severity | Item | Disposition |
+|----------|------|-------------|
+| MED | **G2 has no lexical arm.** An SQL-shaped literal that does not parse (string concatenation `'SELECT * FROM ' + t`, an interpolated identifier `FROM ${t}`) yields no G2 site, so an undeclared relation read that way is invisible. Measured: `'SELECT * FROM '+'pipeline_runs'` gives only the unparsed fragment. | **OPEN — own WF2 after H3.** Fold static `+` concatenation and flag unparsed SQL-shaped literals in entries; any new site needs a ruling (the purity rows are frozen at 2026-10-11). |
+| MED | **`scripts/lib/vocab-coverage.js` is in both the runner closure (22 modules) and the compute closure (60).** Its literals are runner-allowlisted, so #44 does not attribute them to compute. Known (Phase 1 plan "latent false FAIL"). | **OPEN — closes with seam S2** (moves the module behind a seam); add a disjointness assertion then. |
+| MED | **`.connect()`/`.release()` (G5) matching is name-only**; an alias or computed access evades it. Syntactic gate by design. | **OPEN — declared limit.** Bind to receiver names if a real evasion is found. |
+| LOW | **`SQL_WORD` in witness-runner-set.mjs omits COPY/MERGE/CALL**; such runner literals are not fingerprinted. | **OPEN.** Fingerprint every literal that parses instead of filtering by leading word. |
+| LOW | **`compute-purity.mjs --list` exits 0 with sites present.** The consumer reads stdout. | **OPEN.** Decide and lock: exit 1 when sites exist, or document exit 0. |
+| LOW | **Counting/hygiene:** `skipped` counts sites not unparsed literals; `g5` mixes literal and call sites; temps are collected per file (shadowing); CODES summary prints 0 for ast-grep-owned codes; `.mjs`/`.ts` compute entries dropped by the extension filter. | **OPEN — hygiene batch.** |
+| LOW | **CLOSED_RUNNER_TEMPLATES have no staleness check**: a cited runner line can change and the fixed fingerprint stays. | **OPEN.** Assert each cite still produces its fingerprint. |
+| — | **Ledger key lacks the file**, so identical statements in two steps share a key. | **OUT OF SCOPE — Spec 124 R-BZ/R-BA ledger-key ruling** (operator). |

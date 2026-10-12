@@ -151,7 +151,14 @@ function descriptorHookExports(repoRoot, file) {
       let obj;
       try {
         obj = JSON.parse(fs.readFileSync(d, 'utf8'));
-      } catch {
+      } catch (err) {
+        // CP-B8b: a descriptor that EXISTS but cannot be read/parsed would
+        // silently drop its declared contract_read/defer roots (under-declaring
+        // the relation set). A descriptor that does not exist is a genuine
+        // "no descriptor" — that case is handled below, unchanged.
+        if (fs.existsSync(d)) {
+          throw new Error('G8: cannot read descriptor ' + d + ': ' + err.message);
+        }
         continue;
       }
       const hooks = obj && obj.execution && obj.execution.enrich_hooks;
@@ -554,6 +561,9 @@ export function G5Sites(file, sf, text) {
           ? res.fingerprint
           : libpg().fingerprintSync(sql);
       } catch {
+        // CP-B8b: legitimate "not applicable" — this is ONE in-memory SQL
+        // statement's fingerprint fallback, not an input read; the site is
+        // still emitted below as `unparsed:`.
         fp = `unparsed:${(lines[line - 1] || '').trim()}`;
       }
       const dedupe = `${v.resolved ? v.resolved.pos : -1}\t${line}\t${fp}`;

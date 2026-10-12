@@ -6003,6 +6003,7 @@ async function main() {
       if (attributed.length > 0) {
         console.log(`[step-validate] #44 ATTRIBUTION ${row.slug} (report-only until max(CP-S1, P1-C9), Spec 124 R-BZ): ${attributed.length} compute-attributed FAIL(s)`);
         for (const r of attributed.slice(0, 20)) console.log(`  - ${r}`);
+        if (attributed.length > 20) console.log(`  … +${attributed.length - 20} more`);
       }
     }
 

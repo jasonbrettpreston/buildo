@@ -42,7 +42,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { filterGateELedgerFindings, purityFindings } from '../analysis/gates/compute-literals.mjs';
+import { filterGateELedgerFindings, purityFindings, purityRowFreeze } from '../analysis/gates/compute-literals.mjs';
 import { scanPurity } from '../analysis/gates/compute-purity.mjs';
 import { loadLedger, matchLedger } from '../analysis/gates/ledger.mjs';
 
@@ -171,6 +171,36 @@ function filterGateEFindings(computeResults, repoRoot) {
   filterGateELedgerFindings(computeResults, repoRoot, rows);
 }
 
+/**
+ * Render one line per `matchLedger` purity `unallowed` entry.
+ *
+ * ⚠️ 2026-10-11 (CP-B8d defect 1): `matchLedger` returns `unallowed` entries as
+ * `{step, item[, collision]}` — NOT the finding itself. The blocking loop printed
+ * `v.ruleId`/`v.file`/`v.line`, so every purity failure read
+ * "footgun[undefined]: undefined:undefined". The finding is only recoverable by
+ * looking the entry's `(step, item)` key back up in the findings array the same
+ * match was fed (the same key `matchLedger` keys on, `<step>\0<item>`). Pure:
+ * no fs, no clock, no ledger.
+ *
+ * @param {Array<{step: string, item: string}>} unallowed `matchLedger(...).unallowed`
+ * @param {Array<{step: string, item: string, file: string, line: number, ruleId: string}>} findings
+ *   the exact array passed to `matchLedger` (i.e. `purityFindings(puritySites)`)
+ * @returns {string[]} one message per entry, in the same order
+ */
+export function formatPurityUnallowed(unallowed, findings) {
+  const byKey = new Map(
+    (Array.isArray(findings) ? findings : []).map((f) => [`${f.step}\u0000${f.item}`, f]),
+  );
+  return (Array.isArray(unallowed) ? unallowed : []).map((u) => {
+    const f = byKey.get(`${u.step}\u0000${u.item}`);
+    if (!f) return `${u.step} ${u.item}`;
+    return (
+      `footgun[${f.ruleId}]: ${f.file}:${f.line} — ${f.message || 'is a compute-purity finding'} ` +
+      `(no ledger row; purity rows are frozen)`
+    );
+  });
+}
+
 async function main() {
   const converted = readConvertedList();
   const manifestFiles = readManifestStepFiles();
@@ -202,7 +232,16 @@ async function main() {
   // as exit 2. Only `purity.unallowed` gates — orphans are step-validate #32's job,
   // fleet-wide, and would fire wrongly in a directory-scoped hook.
   const puritySites = await scanPurity({ repoRoot: REPO_ROOT });
-  const purity = matchLedger('E', purityFindings(puritySites), loadLedger(REPO_ROOT).rows);
+  const purityFindingsList = purityFindings(puritySites);
+  const ledgerRows = loadLedger(REPO_ROOT).rows;
+  const purity = matchLedger('E', purityFindingsList, ledgerRows);
+  // Airtight V3 freeze (CP-B8d defect 2): a purity row is ILLEGITIMATE by
+  // construction — Phase 1's rows are frozen, so any purity row at a later
+  // `filed` date, or on a module outside V2_PURITY_MODULES, is a NEW row
+  // invented to slip an unledgered finding past gate E. `step-validate` #32
+  // catches it too; a commit-time hook that never applied it left the door
+  // open until CI.
+  const purityFrozen = purityRowFreeze(ledgerRows);
 
   if (AS_JSON) {
     const shape = (map) => [...map.entries()].map(([file, violations]) => ({ file, violations }));
@@ -215,6 +254,7 @@ async function main() {
         compute_rule: COMPUTE_RULE,
         compute: shape(computeResults),
         purity_unallowed: purity.unallowed,
+        purity_frozen: purityFrozen,
       }),
     );
     return;
@@ -271,10 +311,23 @@ async function main() {
   // Same corpus as the ast-grep half above, different rule family: a purity
   // finding is a `ctx.*` requirement the compute did not honour, and it is invisible
   // to the rule file. Both halves fail the commit.
-  for (const v of purity.unallowed) {
+  // The finding's real rule id, file and line — `matchLedger` hands back only
+  // `{step, item}`, so `formatPurityUnallowed` looks it back up (CP-B8d defect 1).
+  for (const line of formatPurityUnallowed(purity.unallowed, purityFindingsList)) {
     console.error(
-      `footgun[${v.ruleId}]: ${v.file}:${v.line} is a compute-purity finding with no ledger row (Spec 124 R-BZ, McDonald's Airtight V3). ` +
-        `Compute measures only — fix the compute; a new ledger row is refused (purity rows are frozen).`,
+      `${line} (Spec 124 R-BZ, McDonald's Airtight V3). ` +
+        `Compute measures only — fix the compute; a new ledger row is refused.`,
+    );
+    failed = true;
+  }
+  // ---- Airtight V3 purity-row freeze, ALSO blocking ------------------------
+  // A purity row with a post-2026-10-11 `filed`, or one moved onto a module
+  // outside V2_PURITY_MODULES, is a NEW row invented to slip an unledgered
+  // purity finding past gate E. CP-B8d defect 2: the hook never applied
+  // `purityRowFreeze` at all, so that row lived until step-validate #32.
+  for (const problem of purityFrozen) {
+    console.error(
+      `footgun[compute-purity-freeze]: ${problem} (Spec 124 R-BZ, McDonald's Airtight V3).`,
     );
     failed = true;
   }
@@ -290,7 +343,14 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error(`footgun[step-shape]: ${err.message}`);
-  process.exit(2);
-});
+// Run only as a program. The conformance suite (and CP-B8d's purity test) imports
+// this module for `formatPurityUnallowed`; unguarded, that import would spawn
+// ast-grep and call `process.exit` inside the test runner.
+const isEntryPoint =
+  process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isEntryPoint) {
+  main().catch((err) => {
+    console.error(`footgun[step-shape]: ${err.message}`);
+    process.exit(2);
+  });
+}

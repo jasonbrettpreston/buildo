@@ -27,6 +27,11 @@ const RUNNER_OWNED_TABLES = new Set([
 /** `scanPurity` diagnostics — keyed by repo-relative file, so a caller can print why G2 was skipped. */
 export const scanDiagnostics = new Map();
 
+/** Clear `scanDiagnostics` — `scanPurity` calls this at its top so a run never reports a stale file. */
+export function resetScanDiagnostics() {
+  scanDiagnostics.clear();
+}
+
 /** The SQL verbs that make a literal SQL-shaped, by leading keyword. */
 const SQL_START = /^(SELECT|WITH|INSERT|UPDATE|DELETE|MERGE|BEGIN|COMMIT|ROLLBACK|SAVEPOINT|VACUUM|ANALYZE|SET|RESET|CREATE|DROP|ALTER|TRUNCATE|LOCK|REINDEX|CLUSTER|DO(?=\s+(?:\$|LANGUAGE\b)))\b/i;
 
@@ -344,6 +349,31 @@ function isDiagnosticArg(node) {
 }
 
 /**
+ * Strip a literal's leading whitespace and leading line comments (`--`) and block
+ * comments, for the SQL_START test ONLY (CP-B8a). A statement that opens with a comment
+ * is still SQL-shaped, but a leading `--` would otherwise defeat the leading-verb regex.
+ * The literal text passed on to the parser/resolver is unchanged.
+ */
+export function stripLeadingSqlComments(text) {
+  let out = text.replace(/^\s+/, '');
+  for (;;) {
+    if (out.startsWith('--')) {
+      const nl = out.indexOf('\n');
+      if (nl === -1) return '';
+      out = out.slice(nl + 1).replace(/^\s+/, '');
+      continue;
+    }
+    if (out.startsWith('/*')) {
+      const end = out.indexOf('*/');
+      if (end === -1) return '';
+      out = out.slice(end + 2).replace(/^\s+/, '');
+      continue;
+    }
+    return out;
+  }
+}
+
+/**
  * Every SQL-shaped literal of one parsed file, in source order, each with the line
  * of its (part-of-a-)call-argument site. A template is rendered with `1` per `${}`
  * span; a render that fails the SQL_START test is retried with `''` (a span in a
@@ -369,11 +399,11 @@ export function literalSites(sf, text) {
   const visit = (node) => {
     if ((ts.isStringLiteral(node) || isTemplate(node)) && !isDiagnosticArg(node)) {
       let sql = render(node, false);
-      if (isTemplate(node) && !SQL_START.test(sql.trim())) {
+      if (!SQL_START.test(stripLeadingSqlComments(sql))) {
         const alt = render(node, true);
-        if (SQL_START.test(alt.trim())) sql = alt;
+        if (SQL_START.test(stripLeadingSqlComments(alt))) sql = alt;
       }
-      if (SQL_START.test(sql.trim())) {
+      if (SQL_START.test(stripLeadingSqlComments(sql))) {
         const line = siteLineOf(sf, node);
         out.push({ node, sql, line, lineText: (lines[line - 1] || '').trim() });
       }

@@ -237,8 +237,10 @@ export function filterGateELedgerFindings(byFile, repoRoot, ledgerRows) {
     let text;
     try {
       text = fs.readFileSync(path.join(repoRoot, file), 'utf8').split('\n');
-    } catch {
-      continue;
+    } catch (err) {
+      // CP-B8b: an unreadable scan file is NOT "nothing to allow" — silently
+      // skipping it would hide every gate-E finding in the file.
+      throw new Error('gate E: cannot read ' + file + ': ' + err.message);
     }
     const step = path.basename(file).replace(/\.js$/, '');
     // Same ordinal rule as `scanGateE` (CP-B11 fix 6): duplicates of one
