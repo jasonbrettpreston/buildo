@@ -695,6 +695,7 @@ describe('Spec 124 R-AO — the retained census row makes #25 ARCHETYPE-PARITY r
     }
   });
 
+  // 60 s: reads the REAL census + every descriptor; timed out at the 5 s default under the 2-fork suite (2026-10-12, twice).
   it('GREEN — checkArchetypeParity passes against the REAL census + REAL descriptors, and is NOT vacuous (>=1 retained row is actually compared)', async () => {
     const mod = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as {
       checkArchetypeParity: (rows: unknown[]) => { pass: boolean; blockedSlugs: string[]; detail: string };
@@ -703,7 +704,7 @@ describe('Spec 124 R-AO — the retained census row makes #25 ARCHETYPE-PARITY r
     expect(rows.filter((r) => r.censusArchetype !== null).length, 'at least one converted slug must have a retained census row, or this invariant is vacuous').toBeGreaterThan(0);
     const result = mod.checkArchetypeParity(rows);
     expect(result.pass, result.detail).toBe(true);
-  });
+  }, 60_000);
 
   it('RED — a VALID-BUT-WRONG retained archetype (a real enum value, just not the one this step measured) is caught, scoped to its slug', async () => {
     const mod = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as {
