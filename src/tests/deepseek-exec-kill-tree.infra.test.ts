@@ -15,6 +15,8 @@
 // under load (the kill then lands before the fixture exists and the test
 // would prove nothing). Each arm re-runs with a doubled ceiling until the
 // fixture's pid file proves it started, and bounds time against THAT ceiling.
+// Bounds are load-tolerant (2026-10-11): fixtures outlive any bound by far, so
+// a slow host cannot fail the fixed code and a regression cannot pass.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -26,9 +28,11 @@ const { createTools } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'
 
 const CEILINGS_MS = [1500, 3000, 6000, 12000];
 // Budget for the kill + bounded post-kill wait on top of the ceiling. The
-// pipe-holding fixtures live 9 s, so an unbounded wait on any of them blows
-// this bound by seconds; the fixed code stays well inside it.
-const KILL_BUDGET_MS = 5000;
+// pipe-holding fixtures live 30 s, so an unbounded wait on any of them exceeds
+// ceiling + 12 s even at the 12 s ceiling (30 s vs 24 s); the fixed code
+// (ceiling + tree kill + 1.5 s grace) keeps ~10 s of headroom on a loaded host.
+// 2026-10-11: 6,512 ms against the old 5 s budget (6,500 ms) failed a push.
+const KILL_BUDGET_MS = 12000;
 const PID_LOG = 'children.log';
 
 type Outcome = { toolResult: { ok: boolean; error?: { code: string; detail?: { orphan_output_holder?: boolean; escaped_killed?: number } } } };
@@ -92,7 +96,7 @@ describe.runIf(process.platform === 'win32')('run_bash_command TIMEOUT: tree kil
   // leave none of them alive, and nothing is left holding the pipe.
   it('dispatch returns within ceiling + kill budget AND every spawned child is gone', async () => {
     fs.writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ name: 'kill-tree', version: '1.0.0', scripts: { test: 'node spawner.js' } }));
-    // Each child is `ping` (tiny) with INHERITED stdio — it holds our pipe.
+    // Each child is `ping` (tiny, ~30 s) with INHERITED stdio — it holds our pipe.
     // Bounded: at most 150 children, and the spawner stops after 6 s.
     fs.writeFileSync(path.join(repo, 'spawner.js'), [
       "const { spawn } = require('child_process');",
@@ -100,7 +104,7 @@ describe.runIf(process.platform === 'win32')('run_bash_command TIMEOUT: tree kil
       `const log = require('path').join(__dirname, '${PID_LOG}');`,
       'let n = 0;',
       'const t = setInterval(() => {',
-      "  const c = spawn('ping', ['-n', '10', '127.0.0.1'], { stdio: 'inherit' });",
+      "  const c = spawn('ping', ['-n', '30', '127.0.0.1'], { stdio: 'inherit' });",
       "  fs.appendFileSync(log, c.pid + '\\n');",
       '  if (++n >= 150) clearInterval(t);',
       '}, 40);',
@@ -119,7 +123,8 @@ describe.runIf(process.platform === 'win32')('run_bash_command TIMEOUT: tree kil
   // The pipe-holder case, deterministic: `start /b` makes cmd.exe create a
   // process OUTSIDE any libuv job (the parentage of the measured escape) that
   // inherits our stdout pipe, and cmd.exe exits at once. Before the fix,
-  // dispatch waited on `close` until that holder exited (~9.6 s measured);
+  // dispatch waited on `close` until that holder exited (~9.6 s measured with a
+  // 9 s holder; the holder now lives 30 s, far beyond the bound);
   // now the wait is bounded and the escape is RECORDED
   // (error.detail.orphan_output_holder), never silent. Its whole ancestor
   // chain is dead before the kill, so nothing can reach it by parent pid —
@@ -129,7 +134,7 @@ describe.runIf(process.platform === 'win32')('run_bash_command TIMEOUT: tree kil
     fs.writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ name: 'kill-tree', version: '1.0.0', scripts: { test: 'start /b node holder.js' } }));
     fs.writeFileSync(path.join(repo, 'holder.js'), [
       `require('fs').writeFileSync(require('path').join(__dirname, '${PID_LOG}'), process.pid + '\\n');`,
-      'setTimeout(() => {}, 9000);',
+      'setTimeout(() => {}, 30000);',
     ].join('\n'));
 
     const { outcome, elapsedMs, ceilingMs, pids } = await runUntilStarted();
