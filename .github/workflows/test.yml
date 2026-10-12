@@ -50,7 +50,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'  # 22: pdfjs-dist 6.x engines >=22.13 (CoA notices, Spec 129)
           cache: 'npm'
 
       - name: Install dependencies

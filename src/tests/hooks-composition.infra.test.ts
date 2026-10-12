@@ -87,7 +87,9 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     // Pre-push followed the same day: the full suite at two forks hit the same timeout on the
     // same file (push of 7853342f, 2 errors / 0 failures), so BOTH hooks pin one fork.
     expect(stripComments(PRE_COMMIT)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
+    // 2026-10-11 R-BV: pre-push back to TWO forks (measured, see .husky/pre-push); pre-commit stays at one.
+    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=2 VITEST_MAX_FORKS=2 npm run test\b/);
+    expect(stripComments(PRE_PUSH)).not.toMatch(/\bVITEST_MAX_FORKS=([3-9]|\d{2,})\b/); // R-BV: never above 2 (4 forks was OS-killed)
     for (const hook of [PRE_COMMIT, PRE_PUSH]) {
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
@@ -128,12 +130,17 @@ describe('hooks-composition (R-AG) — pre-push', () => {
     expect(PRE_PUSH).toMatch(/\bnpm run typecheck\b/);
   });
 
+  it('RED — a tampered pre-push raised to four forks trips the R-BV never-above-2 lock', () => {
+    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=2\b/, 'VITEST_MAX_FORKS=4');
+    expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=([3-9]|\d{2,})\b/);
+  });
+
   it('GREEN — invokes the full suite exactly once per push', () => {
     expect(invokesFullSuite(PRE_PUSH)).toBe(true);
   });
 
   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=1 npm run test\b/, 'true');
+    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=2 npm run test\b/, 'true');
     expect(invokesFullSuite(tampered)).toBe(false);
   });
 

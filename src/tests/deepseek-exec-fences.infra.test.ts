@@ -18,13 +18,13 @@
 // Tests must NOT depend on the real repo's husky hooks: the temp repo this
 // suite creates has no `.husky`, so `git commit` there runs no hooks — the
 // real-hook path is exercised by Phase 4's supervised pilot, not here.
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
-  makeRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv, cleanupTempDir,
+  makeRepo, cloneRepo, REPO_ROOT, runEngine, toolTurn, multiToolTurn, writeBrief, ledgerRecords, scrubbedChildEnv, cleanupTempDir,
 } from './helpers/deepseek-exec-harness';
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS tool layer directly
 const { committerLockFileName } = require(path.join(REPO_ROOT, 'scripts/lib/exec-tools.js'));
@@ -33,9 +33,18 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
   let repo = '';
   let ledgerDir = '';
   const savedEnv: Record<string, string | undefined> = {};
+  // The seed repo is identical for every test: build it ONCE (six git spawns) and give
+  // each test its own fresh copy (zero spawns) — suite-speed WF2 2026-10-08.
+  let templateRepo = '';
+  beforeAll(() => {
+    templateRepo = makeRepo();
+  });
+  afterAll(() => {
+    cleanupTempDir(templateRepo);
+  });
 
   beforeEach(() => {
-    repo = makeRepo();
+    repo = cloneRepo(templateRepo);
     ledgerDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepseek-exec-fences-ledger-'));
     savedEnv.EXECUTION_PROVIDER = process.env.EXECUTION_PROVIDER;
     savedEnv.DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;

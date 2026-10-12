@@ -13,12 +13,13 @@
 // both directions with fixtures, mirroring step-conformance.infra.test.ts's
 // own canary discipline (an untested checker proves nothing, Spec 121
 // §12b.6).
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import Ajv from 'ajv';
+import { createExecMemo, prefetchJob } from './helpers/exec-memo';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const ITEMS_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/programme-items.json');
@@ -26,6 +27,9 @@ const SCHEMA_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/programme-items.
 const GENERATED_PATH = path.join(REPO_ROOT, 'docs/reports/generated/122-programme-backlog.md');
 const GENERATOR = path.join(REPO_ROOT, 'scripts/violations/generate-programme-backlog.mjs');
 const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
+// Identical step-validate runs (same args + same env) happen once per file — see helpers/exec-memo.ts.
+// GENERATOR calls stay raw: the RED --check test mutates the committed file between runs.
+const memo = createExecMemo();
 const BAD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-unmet-cutover-prereq.json';
 const GOOD_FIXTURE = 'scripts/steps/_schema/fixtures/programme/good-met-cutover-prereq.json';
 const BAD_APPLIES_WHEN_FIXTURE = 'scripts/steps/_schema/fixtures/programme/bad-applies-when-condition-met.json';
@@ -258,8 +262,20 @@ describe('generate-programme-backlog.mjs — render() blocksBatching honesty (G9
 // ---------------------------------------------------------------------------
 
 describe('step-validate.mjs — programme section', () => {
+  beforeAll(async () => {
+    const env = (f: string) => ({ ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: f });
+    const sv = (slug: string, e?: NodeJS.ProcessEnv) =>
+      prefetchJob.execFileSync('node', [STEP_VALIDATE, '--step=' + slug, '--fast'], { cwd: REPO_ROOT, ...(e ? { env: e } : {}) });
+    await memo.prefetch(
+      [sv('compute_centroids'), sv('compute_centroids', env(BAD_FIXTURE)), sv('link_massing', env(BAD_FIXTURE)),
+       sv('compute_centroids', env(GOOD_FIXTURE)), sv('compute_centroids', env(BAD_APPLIES_WHEN_FIXTURE)),
+       sv('compute_centroids', env(GOOD_APPLIES_WHEN_FIXTURE)), sv('compute_centroids', env(FIXTURE_HONESTY))],
+      4,
+    );
+  }, 300_000);
+
   it('prints "blocks batching: N" unconditionally (the hook fast path line)', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
     });
@@ -267,7 +283,7 @@ describe('step-validate.mjs — programme section', () => {
   });
 
   it('the real (committed) data is clean — no converted slug is blocked by an unmet cutover_prereq item', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
     });
@@ -278,7 +294,7 @@ describe('step-validate.mjs — programme section', () => {
     let threw = false;
     let out = '';
     try {
-      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
@@ -298,7 +314,7 @@ describe('step-validate.mjs — programme section', () => {
     // --fast run hard-stop regardless of which slug was actually named — the exact
     // "cloud_deploy token or similar" over-broad wiring CLOUDPARITY's own real-world use
     // (blocking `enrich_parcels` alone, EP-D13) surfaced live.
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=link_massing', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
@@ -312,7 +328,7 @@ describe('step-validate.mjs — programme section', () => {
     let threw = false;
     let out = '';
     try {
-      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
@@ -326,7 +342,7 @@ describe('step-validate.mjs — programme section', () => {
   });
 
   it('GREEN — the same slug, same shape, but the item is BUILT — passes clean (proves the finding names the STATUS, not the fixture)', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: GOOD_FIXTURE },
@@ -335,7 +351,7 @@ describe('step-validate.mjs — programme section', () => {
   });
 
   it('prints per-step blocking items when the fixture names this slug directly', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: GOOD_FIXTURE },
@@ -357,7 +373,7 @@ describe('step-validate.mjs — programme section', () => {
     let threw = false;
     let out = '';
     try {
-      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_APPLIES_WHEN_FIXTURE },
@@ -371,7 +387,7 @@ describe('step-validate.mjs — programme section', () => {
   });
 
   it('GREEN — applies_when: a condition that does NOT match the blocked slug\'s descriptor does not block, even NOT_STARTED', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: GOOD_APPLIES_WHEN_FIXTURE },
@@ -387,7 +403,7 @@ describe('step-validate.mjs — programme section', () => {
     let threw = false;
     let out = '';
     try {
-      out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+      out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
@@ -414,7 +430,7 @@ describe('step-validate.mjs — programme section', () => {
 
 describe('step-validate.mjs — blocksBatchingCount honesty (G9)', () => {
   it('a BUILT item and a SUPERSEDED item naming "batching" are NOT counted as open blockers — only the genuinely open one is', () => {
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: FIXTURE_HONESTY },
@@ -437,7 +453,7 @@ describe('step-validate.mjs — blocksBatchingCount honesty (G9)', () => {
     const closedCount = ITEMS.filter((it) => it.gate.blocks.includes('batching') && (it.status === 'BUILT' || it.status === 'SUPERSEDED')).length;
     expect(closedCount).toBeGreaterThan(0);
     expect(naiveCount - honestCount).toBe(closedCount);
-    const out = execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8' });
+    const out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8' });
     expect(out).toMatch(new RegExp(`blocks batching: ${honestCount}\\b`));
   });
 });
