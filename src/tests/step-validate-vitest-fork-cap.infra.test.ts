@@ -8,12 +8,14 @@
 // twice (2026-09-21), worked around by 17 sequential single-step runs.
 //
 // Operator ruling (2026-09-21, same day): the default must EQUAL
-// `.husky/pre-push`'s own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values —
-// MIN=1/MAX=1, not MIN=1/MAX=2 — because `review_followups.md`'s 2026-09-16
-// HIGH row measured `VITEST_MAX_FORKS=2` dying on `[vitest-worker]: Timeout
-// calling "onTaskUpdate"` in `src/tests/step-conformance.infra.test.ts`, which
-// is one of `runVitest()`'s own `VITEST_TARGETS`; CLAUDE.md's "MIN=1/MAX=2"
-// text predates that finding and is stale. So `vitestChildEnv()` PARSES the
+// `.husky/pre-push`'s own `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS` values. The cap
+// is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124 R-BV
+// (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
+// (`review_followups.md` HIGH row, measured dying in
+// `src/tests/step-conformance.infra.test.ts`, one of `runVitest()`'s own
+// `VITEST_TARGETS`) was cured by suite-speed step 1 (feafc74c), measured by two
+// clean 2-fork full suites; never above two (the 2026-09-21 memory kill). So
+// `vitestChildEnv()` PARSES the
 // cap out of `.husky/pre-push` (single source of truth) instead of
 // re-typing it, per `parseForkCapFromHookText()` — this suite proves that
 // parsing is genuinely load-bearing (a tampered hook fixture changes the
@@ -46,16 +48,16 @@ async function loadModule() {
 }
 
 describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on .husky/pre-push)', () => {
-  it('GREEN — the live .husky/pre-push carries MIN=1/MAX=1 (the operator-ruled value; CLAUDE.md\'s "MAX=2" text is stale)', () => {
-    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=1\b/);
-    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=1\b/);
+  it('GREEN — the live .husky/pre-push carries MIN=2/MAX=2 (R-BV, operator-ruled 2026-10-11 after two clean 2-fork full suites)', () => {
+    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=2\b/);
+    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=2\b/);
   });
 
-  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=1/MAX=1)', async () => {
+  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=2/MAX=2, R-BV)', async () => {
     const { vitestChildEnv } = await loadModule();
     const out = vitestChildEnv({ PATH: '/usr/bin' });
-    expect(out.VITEST_MIN_FORKS).toBe('1');
-    expect(out.VITEST_MAX_FORKS).toBe('1');
+    expect(out.VITEST_MIN_FORKS).toBe('2');
+    expect(out.VITEST_MAX_FORKS).toBe('2');
     // never mutates the caller's object (selfTest()/a suite can reuse a base fixture)
     expect(out).not.toBe({ PATH: '/usr/bin' });
   });
@@ -81,14 +83,14 @@ describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-sou
     const out = vitestChildEnv({ VITEST_MAX_FORKS: '4' });
     expect(out.VITEST_MAX_FORKS).toBe('4');
     // the untouched sibling variable still gets its default off the live hook
-    expect(out.VITEST_MIN_FORKS).toBe('1');
+    expect(out.VITEST_MIN_FORKS).toBe('2');
   });
 
   it('GREEN — an explicit caller value for VITEST_MIN_FORKS is never clobbered', async () => {
     const { vitestChildEnv } = await loadModule();
     const out = vitestChildEnv({ VITEST_MIN_FORKS: '3' });
     expect(out.VITEST_MIN_FORKS).toBe('3');
-    expect(out.VITEST_MAX_FORKS).toBe('1');
+    expect(out.VITEST_MAX_FORKS).toBe('2');
   });
 
   it('GREEN — both explicit caller values are preserved together', async () => {

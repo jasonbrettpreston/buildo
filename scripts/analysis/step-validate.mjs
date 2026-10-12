@@ -1177,12 +1177,11 @@ export function parseForkCapFromHookText(hookText) {
  * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
  * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
  * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
- * MIN=1/MAX=1, not MAX=2: `review_followups.md`'s 2026-09-16 HIGH row measured
- * `VITEST_MAX_FORKS=2` dying on `[vitest-worker]: Timeout calling
- * "onTaskUpdate"` in `src/tests/step-conformance.infra.test.ts` — one of THIS
- * file's own `VITEST_TARGETS` — which is why both hooks were dropped to one
- * fork the same day; CLAUDE.md's "MIN=1/MAX=2" text predates that finding and
- * is stale (flagged to the operator separately, not edited here).
+ * The cap is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124
+ * R-BV (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
+ * (`review_followups.md` HIGH row) was cured by suite-speed step 1 (feafc74c),
+ * measured by two clean 2-fork full suites. Never above two (the 2026-09-21
+ * memory kill).
  * DEFAULT only — an operator (or CI) who already set either var in the env this
  * process inherited is never clobbered, so a caller can still widen the cap.
  * `hookText` is injectable (default: a live read of `.husky/pre-push`) so
