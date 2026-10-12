@@ -31,18 +31,40 @@ const MONTHS = [
   'july', 'august', 'september', 'october', 'november', 'december',
 ];
 
+// No try/catch here: R-BZ `compute-no-swallow` forbids a catch that neither rethrows nor reports.
+// A malformed percent-escape must not throw, so we detect undecodable input up front and return
+// the raw string unchanged — exactly the value the old swallow-and-keep would have produced.
+function decodeOrRaw(s) {
+  // A `%` not followed by two hex digits throws URIError in decodeURIComponent.
+  if (/%(?![0-9A-Fa-f]{2})/.test(s)) return s;
+  // A run of %XX escapes may still decode to invalid UTF-8, which also throws. Probe each maximal
+  // run with a non-fatal decoder: the run is valid UTF-8 exactly when every U+FFFD it yields comes
+  // from a literal EF BF BD triple (an encoded U+FFFD); any extra U+FFFD marks an invalid sequence.
+  const utf8 = new TextDecoder('utf-8', { fatal: false });
+  const runs = s.match(/(?:%[0-9A-Fa-f]{2})+/g);
+  if (runs) {
+    for (const run of runs) {
+      const bytes = [];
+      for (let i = 1; i < run.length; i += 3) bytes.push(parseInt(run.slice(i, i + 2), 16));
+      const buf = Uint8Array.from(bytes);
+      const decoded = utf8.decode(buf);
+      let literal = 0;
+      for (let j = 0; j + 2 < bytes.length; j++) {
+        if (bytes[j] === 0xEF && bytes[j + 1] === 0xBF && bytes[j + 2] === 0xBD) literal++;
+      }
+      if (decoded.split('\uFFFD').length - 1 !== literal) return s;
+    }
+  }
+  return decodeURIComponent(s);
+}
+
 /** The basename of a URL (fallback: a bare path), decoded of any percent-escapes. */
 function basenameOf(url) {
   const s = String(url);
   const cut = s.split(/[?#]/)[0];
   const parts = cut.split('/');
-  let base = parts[parts.length - 1] || '';
-  try {
-    base = decodeURIComponent(base);
-  } catch {
-    // A malformed escape sequence: keep the raw basename rather than throw.
-  }
-  return base;
+  const base = parts[parts.length - 1] || '';
+  return decodeOrRaw(base);
 }
 
 /**
@@ -116,13 +138,8 @@ function isRealCalendarDate(iso) {
 
 /** Parse a URL and return its https host, or null if it is not a parseable https URL. */
 function httpsHost(url) {
-  if (typeof url !== 'string') return null;
-  let u;
-  try {
-    u = new URL(url);
-  } catch {
-    return null;
-  }
+  if (typeof url !== 'string' || !URL.canParse(url)) return null;
+  const u = new URL(url);
   if (u.protocol !== 'https:') return null;
   return u.hostname;
 }
