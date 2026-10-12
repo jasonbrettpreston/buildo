@@ -44,6 +44,7 @@ const REPO_ROOT = process.cwd();
 // dynamically, exactly as the gate's own consumers must.
 const closureMod = await import('../../scripts/analysis/gates/compute-closure.mjs');
 const purityMod = await import('../../scripts/analysis/gates/compute-purity.mjs');
+const sqlMod = await import('../../scripts/analysis/gates/compute-purity-sql.mjs');
 
 const TIMEOUT = 120_000;
 
@@ -260,5 +261,31 @@ describe('G1–G8 — compute purity (Rule 2 / §5.5: compute MEASURES only)', (
 
     expect(text).not.toContain('must not use at all');
     expect(text).toContain('R-CA(i)');
+  }, TIMEOUT);
+
+  // ---------------------------------------------------------------------------
+  // T10 — findDescriptors must NOT walk the whole repo (CP-B10, measured
+  // 2026-10-12): the old walk descended into `.claude/worktrees/agent-*` and
+  // returned their stale `enrich-parcels.descriptor.json` first, poisoning the
+  // declared set → 3 false G2 sites. Descriptors live under scripts/; a decoy in
+  // a dot-dir and a decoy outside scripts/ must both be ignored.
+  // ---------------------------------------------------------------------------
+  it('T10: findDescriptors walks only scripts/ — dot-dir and outside decoys ignored', () => {
+    const tmp = tmpDir('gate-purity-descriptors-');
+
+    const real = path.join(tmp, 'scripts', 'foo.descriptor.json');
+    fs.mkdirSync(path.dirname(real), { recursive: true });
+    fs.writeFileSync(real, '{}', 'utf8');
+
+    const dotDirDecoy = path.join(tmp, '.claude', 'worktrees', 'x', 'scripts', 'foo.descriptor.json');
+    fs.mkdirSync(path.dirname(dotDirDecoy), { recursive: true });
+    fs.writeFileSync(dotDirDecoy, '{}', 'utf8');
+
+    const outsideDecoy = path.join(tmp, 'other', 'foo.descriptor.json');
+    fs.mkdirSync(path.dirname(outsideDecoy), { recursive: true });
+    fs.writeFileSync(outsideDecoy, '{}', 'utf8');
+
+    // RED against the old whole-repo walk: it returned all 3 paths.
+    expect(sqlMod.findDescriptors(tmp, 'foo')).toEqual([real]);
   }, TIMEOUT);
 });
