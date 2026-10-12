@@ -416,7 +416,19 @@ export function literalSites(sf, text) {
 
 // ------------------------------------------------------------------ declared set (G2)
 
-/** Recursively collect every `<basename>.descriptor.json` under `dir`, skipping node_modules. */
+/**
+ * Collect every `<basename>.descriptor.json` under `repoRoot/scripts`, skipping every dot-dir
+ * (`.claude/worktrees/agent-*` holds 16 stale repo copies) and `node_modules`. Results are
+ * sorted by path for determinism.
+ *
+ * MEASURED 2026-10-12, programme tip in the MAIN tree: the previous whole-repo walk descended
+ * into `.claude/worktrees/agent-*` dirs and returned their stale `scripts/enrich-parcels.descriptor.json`
+ * FIRST, so `declaredFor` got a stale declared set → 3 false G2 sites (enrich-parcels.js:554/964
+ * building_footprints, :1150 coa_applications) and every scan statted 16 repo copies → step-validate
+ * spawn timeouts. A clean worktree finds 0 G2 sites. Step descriptors live under scripts/
+ * (scripts/<slug>.descriptor.json, scripts/quality/<slug>.descriptor.json), so that is the only
+ * subtree worth walking.
+ */
 export function findDescriptors(repoRoot, basename) {
   const found = [];
   const want = `${basename}.descriptor.json`;
@@ -428,14 +440,14 @@ export function findDescriptors(repoRoot, basename) {
       return;
     }
     for (const e of entries) {
-      if (e.name === 'node_modules') continue;
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
       const abs = path.join(dir, e.name);
       if (e.isDirectory()) walk(abs);
       else if (e.isFile() && e.name === want) found.push(abs);
     }
   };
-  walk(repoRoot);
-  return found;
+  walk(path.join(repoRoot, 'scripts'));
+  return found.sort();
 }
 
 /** A descriptor's declared set: inputs.reads.tables ∪ checks[].reads ∪ outputs.writes (missing keys tolerated). */
