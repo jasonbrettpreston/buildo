@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-BA (closed-response gates ledger); R-X closing-row posture
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-BA (closed-response gates ledger); R-X closing-row posture; R-BZ (C2 ledger collision lock, C3 programme-expiry tripwire; plan .cursor/wf1_compute_purity_active_task.md; appendix 124a R-T)
 //
 // WF2 commit 0/11 — `scripts/analysis/gates/ledger.mjs` +
 // `scripts/steps/_schema/standard-gates-ledger.json`.
@@ -237,5 +237,125 @@ describe('standard-gates ledger (R-BA)', () => {
     }
     expect(err).not.toBeNull();
     expect(err?.message).toContain('standard-gates-ledger.json');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// T5 — R-BZ: the ledger collision lock (C2) and the programme-expiry tripwire
+// (C3). C2: one row is a permit for ONE site, never N same-key sites — a second
+// violation sharing `step\0item` is `unallowed` with `collision: true`. C3: a row
+// whose `closing_brief` is exactly a programme-item id expires the moment that
+// item is BUILT or SUPERSEDED (or is missing), because the closing work it names
+// is done or gone — the row MUST be deleted (R-X posture, now mechanically
+// tripped).
+// ---------------------------------------------------------------------------
+describe('standard-gates ledger — R-BZ collision lock + programme expiry', () => {
+  const PROG_ITEMS_REL = 'scripts/steps/_schema/programme-items.json';
+
+  const progRow = (closing_brief: string, over: Record<string, unknown> = {}): Record<string, unknown> => ({
+    ...pendingRow(),
+    closing_brief,
+    ...over,
+  });
+
+  const programmeItems = (): Array<{ id: string; status: string }> => {
+    const parsed = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, PROG_ITEMS_REL), 'utf8'));
+    return parsed.items;
+  };
+
+  it('T5a (C2): two violations on one step+item, one row => 1 allowed, 1 unallowed with collision: true', () => {
+    const out = ledger.matchLedger(
+      'A',
+      [
+        { step: 'link_neighbourhoods', item: 'checks[neighbourhoods_loaded] limit' },
+        { step: 'link_neighbourhoods', item: 'checks[neighbourhoods_loaded] limit' },
+      ],
+      [pendingRow()],
+    );
+    expect(out.allowed).toHaveLength(1);
+    expect(out.unallowed).toHaveLength(1);
+    expect(out.unallowed[0]).toEqual({
+      step: 'link_neighbourhoods',
+      item: 'checks[neighbourhoods_loaded] limit',
+      collision: true,
+    });
+    expect(out.orphans).toHaveLength(0);
+  });
+
+  it('T5b (C2, no regression): distinct keys each with its own row => 0 unallowed', () => {
+    const out = ledger.matchLedger(
+      'A',
+      [
+        { step: 'link_neighbourhoods', item: 'checks[neighbourhoods_loaded] limit' },
+        { step: 'link_neighbourhoods', item: 'checks[neighbourhoods_loaded] warn_limit' },
+      ],
+      [
+        pendingRow(),
+        pendingRow({ item: 'checks[neighbourhoods_loaded] warn_limit' }),
+      ],
+    );
+    expect(out.unallowed).toHaveLength(0);
+    expect(out.allowed).toHaveLength(2);
+    expect(out.orphans).toHaveLength(0);
+  });
+
+  it('T5c (C2, live data): the committed ledger has no duplicate gate+step+item keys', () => {
+    const live = ledger.loadLedger(REPO_ROOT);
+    const keys = new Map<string, number>();
+    live.rows.forEach((row: Record<string, unknown>) => {
+      const k = `${row.gate}\u0000${row.step}\u0000${row.item}`;
+      keys.set(k, (keys.get(k) ?? 0) + 1);
+    });
+    const dupes = [...keys.entries()].filter(([, n]) => n > 1);
+    expect(dupes).toEqual([]);
+  });
+
+  it('T5d (C3): a row closing on CP-S1 — NOT_STARTED ignored; BUILT/SUPERSEDED/missing expired; prose ignored', () => {
+    const items = [
+      { id: 'CP-S1', status: 'NOT_STARTED' },
+      { id: 'CP-BUILT', status: 'BUILT' },
+      { id: 'CP-GONE', status: 'SUPERSEDED' },
+    ];
+    // NOT_STARTED: the closing work is still owed — nothing expires.
+    expect(ledger.programmeExpiry([progRow('CP-S1')], items)).toEqual([]);
+    // BUILT: the closing work is DONE — the row must be deleted.
+    expect(ledger.programmeExpiry([progRow('CP-BUILT')], items)).toEqual([
+      {
+        step: 'link_neighbourhoods',
+        item: 'checks[neighbourhoods_loaded] limit',
+        closing_brief: 'CP-BUILT',
+        reason: 'item_built',
+      },
+    ]);
+    // SUPERSEDED: the closing work is GONE — the row must be deleted.
+    expect(ledger.programmeExpiry([progRow('CP-GONE')], items)).toEqual([
+      {
+        step: 'link_neighbourhoods',
+        item: 'checks[neighbourhoods_loaded] limit',
+        closing_brief: 'CP-GONE',
+        reason: 'item_superseded',
+      },
+    ]);
+    // An id naming no item: a promise that does not exist.
+    expect(ledger.programmeExpiry([progRow('CP-NOPE')], items)).toEqual([
+      {
+        step: 'link_neighbourhoods',
+        item: 'checks[neighbourhoods_loaded] limit',
+        closing_brief: 'CP-NOPE',
+        reason: 'item_missing',
+      },
+    ]);
+    // A prose closing_brief ids nothing — out of scope, never expired.
+    expect(
+      ledger.programmeExpiry(
+        [progRow('chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance)')],
+        items,
+      ),
+    ).toEqual([]);
+  });
+
+  it('T5e (C3, live data): no committed row closes on a programme item yet => []', () => {
+    const live = ledger.loadLedger(REPO_ROOT);
+    expect(ledger.programmeExpiry(live.rows, programmeItems())).toEqual([]);
   });
 });

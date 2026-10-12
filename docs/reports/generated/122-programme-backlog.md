@@ -6,11 +6,11 @@
 
 ## Counts
 
-Total items: **130**
+Total items: **138**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 26 |
+| ⬜ NOT_STARTED | 34 |
 | ⚠️ PARTIAL | 16 |
 | ✅ BUILT | 82 |
 | ⏭️ SUPERSEDED | 6 |
@@ -55,7 +55,7 @@ Total items: **130**
 | `B2-DRYRUN-SEAM` | 124 R-AV | ENRICHER runner dry-run seam | ✅ BUILT | library-wf: wf: batch-2 row 2.6 (.cursor/batch2_c5_active_task.md Phase 2) - ENRICHER runner dry-run seam | enrich_centreline | 2026-09-23 |
 | `B2-OWNER-SPEC-DIFF` | 123 §7 row 9(b); 124 §5 R-BB | OWNER-SPEC-DIFF: a cutover commit touches its slug’s owner specs, or declares N-A | ✅ BUILT | wf: wf: batch-2 closing item (.cursor/batch2_c5_active_task.md §5) - OWNER-SPEC-DIFF fast invariant | enrich_centreline | 2026-09-29 |
 
-## Nice-to-have — real gap, not currently blocking (102)
+## Nice-to-have — real gap, not currently blocking (110)
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
@@ -161,6 +161,14 @@ Total items: **130**
 | `ENR-1` | 122 §1.10 | runEnrichPhase is a GENERIC ENRICHER runner, not enrich_parcels with a front door | ✅ BUILT | followup: docs/reports/review_followups.md - WF2 batch-2 Phase 0.10b section, the class-based-target MED row (the 0.10 matched-telemetry MED row it supersedes is CLOSED) | — | 2026-09-16 |
 | `ROW-ERR-QUARANTINE` | 120 §6 | step_quarantine sink for execution.on_row_error:"quarantine" | ⬜ NOT_STARTED | followup: review_followups.md (2026-09-21 row-error policy filing) | — | 2026-09-21 |
 | `GEN-TARGET-FILES` | 124 §5 R-BE; 122 §4.1, §6 | Generated step Target Files + npm run step:registry + the step-edit PreToolUse hook | ✅ BUILT | wf: wf: .cursor/wf2_generated_target_files_active_task.md | — | 2026-09-30 |
+| `CP-S1` | 124 R-BZ | Compute-purity seam S1: one producer / run-history reader | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S1) | — | 2026-10-11 |
+| `CP-S2` | 124 R-BZ | Compute-purity seam S2: temp tables, maintenance, transactions | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S2) | — | 2026-10-11 |
+| `CP-S3` | 124 R-BZ | Compute-purity seam S3: ENRICHER write seam | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S3) | — | 2026-10-11 |
+| `CP-S4` | 124 R-BZ | Compute-purity seam S4: ctx to contract_read / defer_scope hooks | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S4) | — | 2026-10-11 |
+| `CP-S5` | 124 R-BZ | Compute-purity seam S5: catalog / SRID probe | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5) | — | 2026-10-11 |
+| `CP-PLANA` | 124 R-BZ | Compute-purity plan A: pure bans | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 plan A) | — | 2026-10-11 |
+| `CP-PERMITS` | 124 R-BZ | Compute-purity: refresh_snapshot sync_runs read closes at the permits conversion | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Q4; permits chain conversion) | — | 2026-10-11 |
+| `P1-C9` | 122 §6.6.1 | #44 witness hard for every converted step | ⬜ NOT_STARTED | wf: wf: registry-truth plan (QUEUE H13 P1-C9+C10) | — | 2026-10-11 |
 
 ---
 

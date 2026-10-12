@@ -566,6 +566,41 @@ export function fullRescanItems(descriptor, freshTraces) {
   return [...new Set(items)].sort();
 }
 
+/** Every table a slug declares, at table level: inputs.reads U checks[].reads (R-BJ) U outputs.writes. */
+function declaredAnyTables(descriptor) {
+  const set = new Set(declaredReads(descriptor).map((r) => r.table));
+  for (const r of declaredCheckReads(descriptor)) set.add(r.table);
+  for (const w of declaredWrites(descriptor)) set.add(w.table);
+  return set;
+}
+
+/**
+ * Spec 124 R-BZ (amends R-BG), witness attribution for ONE fresh post trace. A statement whose
+ * fingerprint is in `runnerSet` is RUNNER-authored and stays excluded (R-BG). Any other statement that
+ * carries `excluded[]` is COMPUTE-attributed: each excluded table must be a declared read/write table,
+ * else `FAIL:WITNESS:<slug>:a:<table>.*`. `input` = structural REDs (a statement with no fingerprint);
+ * `attributed` = the report-only FAILs (never merged into evaluateWitness `rows`).
+ */
+export function attributionRows(slug, descriptor, invocation, trace, runnerSet) {
+  const input = [];
+  const attributed = [];
+  const declared = declaredAnyTables(descriptor);
+  const statements = Array.isArray(trace && trace.statements) ? trace.statements : [];
+  for (const s of statements) {
+    const fp = s && typeof s.fingerprint === 'string' ? s.fingerprint : '';
+    if (fp === '') {
+      input.push(`FAIL:INPUT:${slug}:${invocation}:statement-no-fingerprint`);
+      continue;
+    }
+    const excluded = Array.isArray(s.excluded) ? s.excluded : [];
+    if (excluded.length === 0 || runnerSet.has(fp)) continue;
+    for (const table of excluded) {
+      if (typeof table === 'string' && !declared.has(table)) attributed.push(`FAIL:WITNESS:${slug}:a:${table}.*`);
+    }
+  }
+  return { input, attributed };
+}
+
 /**
  * Gate #44 (slice A) for ONE slug.
  *
@@ -573,9 +608,10 @@ export function fullRescanItems(descriptor, freshTraces) {
  *   currentFingerprint: string, postTraces: Record<string, object>,
  *   preTraces: Record<string, object>, explainedDiffs: string[],
  *   derivedReadsSteps?: string[],
+ *   runnerFingerprints?: Map<string, string>|Set<string>|string[],
  *   fixtureRecords?: Record<string, {reads: object, writes: object,
  *     violations: string[], errors: string[]}>}} args
- * @returns {{answer: string, rows: string[], hardStop: boolean}}
+ * @returns {{answer: string, rows: string[], hardStop: boolean, attributed: string[]}}
  */
 export function evaluateWitness({
   slug,
@@ -587,6 +623,7 @@ export function evaluateWitness({
   explainedDiffs,
   derivedReadsSteps,
   fixtureRecords,
+  runnerFingerprints,
 } = {}) {
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
   const pres = preTraces && typeof preTraces === 'object' ? preTraces : {};
@@ -597,6 +634,15 @@ export function evaluateWitness({
   const rows = [];
   const witnessedTouched = [];
   const freshTraces = [];
+  // R-BZ attribution. `undefined` = not evaluated (selfTest / legacy callers); step-validate ALWAYS passes it.
+  // Provided-but-empty (or not a collection, incl. null) is RED: there is no blanket-exemption fallback.
+  const runnerSet = runnerFingerprints instanceof Map || runnerFingerprints instanceof Set
+    ? runnerFingerprints
+    : (Array.isArray(runnerFingerprints) ? new Set(runnerFingerprints) : null);
+  const attributed = [];
+  if (runnerFingerprints !== undefined && (!runnerSet || runnerSet.size === 0)) {
+    rows.push(`FAIL:INPUT:${slug}:runner-fingerprints:empty`);
+  }
 
   if (invocations.length === 0) {
     // Nothing captured at all: not a FAIL, and nothing else is evaluated.
@@ -615,6 +661,11 @@ export function evaluateWitness({
       rows.push(...producerRows(slug, trace));
       witnessedTouched.push(touchedOf(trace));
       freshTraces.push(trace);
+      if (runnerSet && runnerSet.size > 0) {
+        const att = attributionRows(slug, descriptor, invocation, trace, runnerSet);
+        rows.push(...att.input);
+        attributed.push(...att.attributed);
+      }
     }
   }
 
@@ -688,6 +739,7 @@ export function evaluateWitness({
     answer: unique.length === 0 ? 'PASS' : unique[0],
     rows: unique,
     hardStop: status === 'pending' && unique.some((r) => r.startsWith(FAIL_PREFIX)),
+    attributed: [...new Set(attributed)].sort(),
   };
 }
 

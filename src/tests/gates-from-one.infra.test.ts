@@ -90,7 +90,7 @@ describe('gates from ① — a pending step is evaluated as-converted', () => {
     const out = run.stdout;
     // #40 walks loadConvertedDescriptors: converted.length + the overlaid pending slug.
     expect(out).toContain(`CAPTURE-EXPLAINED (gate G): ${conv.converted.length + 1} step(s) checked`);
-    expect(out).toMatch(new RegExp(`${slug}: \\d+/\\d+ hard-stop=\\w+ \\| STANDARDIZED:`));
+    expect(out).toMatch(new RegExp(`${slug}: \\d+/\\d+ hard-stop=\\w+.*#44-attributed=\\d+ \\| STANDARDIZED:`));
   }, 320_000);
 });
 

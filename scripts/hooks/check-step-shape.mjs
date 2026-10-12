@@ -42,8 +42,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { filterGateELedgerFindings } from '../analysis/gates/compute-literals.mjs';
-import { loadLedger } from '../analysis/gates/ledger.mjs';
+import { filterGateELedgerFindings, purityFindings } from '../analysis/gates/compute-literals.mjs';
+import { scanPurity } from '../analysis/gates/compute-purity.mjs';
+import { loadLedger, matchLedger } from '../analysis/gates/ledger.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // Repo-relative, POSIX-separated on every platform: these strings are printed in
@@ -170,7 +171,7 @@ function filterGateEFindings(computeResults, repoRoot) {
   filterGateELedgerFindings(computeResults, repoRoot, rows);
 }
 
-function main() {
+async function main() {
   const converted = readConvertedList();
   const manifestFiles = readManifestStepFiles();
   const manifestSet = new Set(manifestFiles);
@@ -189,6 +190,19 @@ function main() {
   const computeFiles = readComputeFiles();
   const computeResults = scan(computeFiles, COMPUTE_RULE);
   filterGateEFindings(computeResults, REPO_ROOT);
+  // ---- the G1–G8 compute-purity codes, SAME ledger ------------------------
+  // `step-validate --staged` exits early when no step is staged, so a compute or
+  // closure-lib edit can add a purity finding at commit time with nothing on this
+  // side seeing it. The purity codes never reached THIS hook at all: they come from
+  // `scanPurity` (async), not from an ast-grep rule. Gate E's ledger mechanism is
+  // shared, so the same rows adjudicate both halves.
+  // ⚠️ `loadLedger` is NOT wrapped in a try/catch here (unlike `filterGateEFindings`,
+  // whose try degrades to "no rows = no findings filtered"): a gate that cannot read
+  // its ledger must not pass, and letting it throw lands in the `main().catch` below
+  // as exit 2. Only `purity.unallowed` gates — orphans are step-validate #32's job,
+  // fleet-wide, and would fire wrongly in a directory-scoped hook.
+  const puritySites = await scanPurity({ repoRoot: REPO_ROOT });
+  const purity = matchLedger('E', purityFindings(puritySites), loadLedger(REPO_ROOT).rows);
 
   if (AS_JSON) {
     const shape = (map) => [...map.entries()].map(([file, violations]) => ({ file, violations }));
@@ -200,6 +214,7 @@ function main() {
         report_only: shape(reportResults),
         compute_rule: COMPUTE_RULE,
         compute: shape(computeResults),
+        purity_unallowed: purity.unallowed,
       }),
     );
     return;
@@ -252,6 +267,17 @@ function main() {
       failed = true;
     }
   }
+  // ---- the compute-purity corpus (G1–G8), ALSO blocking --------------------
+  // Same corpus as the ast-grep half above, different rule family: a purity
+  // finding is a `ctx.*` requirement the compute did not honour, and it is invisible
+  // to the rule file. Both halves fail the commit.
+  for (const v of purity.unallowed) {
+    console.error(
+      `footgun[${v.ruleId}]: ${v.file}:${v.line} is a compute-purity finding with no ledger row (Spec 124 R-BZ, McDonald's Airtight V3). ` +
+        `Compute measures only — fix the compute; a new ledger row is refused (purity rows are frozen).`,
+    );
+    failed = true;
+  }
 
   if (failed) {
     console.error('\n❌ Step-shape gate failed. Run `npx ast-grep scan --rule scripts/ast-grep-rules/step-shape.yml <file>` for the full message.');
@@ -259,13 +285,12 @@ function main() {
   }
   console.log(
     `✅ Step-shape gate clean (${converted.length} converted step file(s) enforced; ` +
-      `${computeFiles.length} compute module(s) enforced against ${COMPUTE_RULE}).`,
+      `${computeFiles.length} compute module(s) enforced against ${COMPUTE_RULE}; ` +
+      `${puritySites.length} compute-purity site(s), all ledger-allowed).`,
   );
 }
 
-try {
-  main();
-} catch (err) {
+main().catch((err) => {
   console.error(`footgun[step-shape]: ${err.message}`);
   process.exit(2);
-}
+});

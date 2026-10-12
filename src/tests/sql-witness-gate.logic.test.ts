@@ -35,10 +35,11 @@ type EvaluateArgs = {
   preTraces: Record<string, TraceDoc>;
   explainedDiffs: string[];
   derivedReadsSteps?: string[];
+  runnerFingerprints?: unknown;
 };
 
 type GateModule = {
-  evaluateWitness: (args: EvaluateArgs) => { answer: string; rows: string[]; hardStop: boolean };
+  evaluateWitness: (args: EvaluateArgs) => { answer: string; rows: string[]; hardStop: boolean; attributed?: string[] };
   selfTest: () => { ok: boolean; detail: string };
   undeclaredItems: (descriptor: unknown, touched: unknown) => string[];
 };
@@ -977,4 +978,265 @@ describe('gate #44 (e) — step-validate wiring (P1-C5)', () => {
     expect(src).toContain('derivedReadsSteps');
     expect(src).toContain('effectiveLedger');
   });
+});
+
+// ===========================================================================
+// 18. Witness attribution (Spec 124 R-BZ, amends R-BG; CP-B6) — runner-set statements stay excluded, compute-attributed ones are judged at table level, report-only.
+// ===========================================================================
+
+/** A trace whose single statement carries `excluded: [...]` and a chosen fingerprint. */
+function attributedTrace(statement: Record<string, unknown>): TraceDoc {
+  const t = trace();
+  t.statements = [...(t.statements ?? []), statement];
+  return t;
+}
+
+function attributed(extra: Partial<EvaluateArgs> & { runnerFingerprints?: unknown } = {}) {
+  return G.evaluateWitness({
+    slug: 'sources',
+    descriptor: makeDescriptor(),
+    status: 'pending',
+    currentFingerprint: FP,
+    postTraces: { sources: trace() },
+    preTraces: {},
+    explainedDiffs: [],
+    ...extra,
+  });
+}
+
+describe('gate #44 — witness attribution (Spec 124 R-BZ, CP-B6)', () => {
+  it('GREEN: a runner-set fingerprint stays excluded', () => {
+    const t = attributedTrace({
+      fingerprint: 'rf1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.answer).toBe('PASS');
+    expect(out.attributed).toEqual([]);
+  });
+
+  it('RED: a compute-attributed statement on pipeline_runs gives FAIL:WITNESS:sources:a:pipeline_runs.*', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.attributed).toEqual(['FAIL:WITNESS:sources:a:pipeline_runs.*']);
+  });
+
+  it('RED/contract: the attributed FAIL is report-only', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      status: 'pending',
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.answer).toBe('PASS');
+    expect(out.hardStop).toBe(false);
+    expect(out.rows).toEqual([]);
+  });
+
+  it('GREEN: table-level: an excluded table the slug declares passes', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['parcels'],
+      error: null,
+    });
+    const out = attributed({
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.attributed).toEqual([]);
+  });
+
+  it.each([
+    ['empty Set', new Set<string>()],
+    ['null', null],
+    ['empty array', []],
+  ])('RED: an empty runner set is RED (%s)', (_label, runnerFingerprints) => {
+    const t = attributedTrace({
+      fingerprint: 'rf1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      status: 'pending',
+      postTraces: { sources: t },
+      runnerFingerprints,
+    });
+    expect(out.rows).toContain('FAIL:INPUT:sources:runner-fingerprints:empty');
+    expect(out.hardStop).toBe(true);
+  });
+
+  it('RED: a statement with no fingerprint is RED', () => {
+    const t = attributedTrace({
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: [],
+      error: null,
+    });
+    const out = attributed({
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.rows).toContain('FAIL:INPUT:sources:sources:statement-no-fingerprint');
+  });
+
+  it('GREEN control: omitting runnerFingerprints leaves attribution unevaluated', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({ postTraces: { sources: t } });
+    expect(out.attributed).toEqual([]);
+    expect(out.answer).toBe('PASS');
+  });
+});
+
+describe('flip dependency (Spec 124 R-BZ, Q7)', () => {
+  it('P1-C9 is still owned by the plan (promise + the witness.mjs hardStop line)', () => {
+    const items = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), 'scripts/steps/_schema/programme-items.json'), 'utf8'),
+    ) as { items: Array<{ id: string; promised: string }> };
+    const item = items.items.find((i) => i.id === 'P1-C9');
+    expect(item).toBeTruthy();
+    expect(item!.promised).toContain('CP-S1');
+
+    const src = fs.readFileSync(MODULE_PATH, 'utf8');
+    expect(src).toContain('hardStop: status === \'pending\' && unique.some((r) => r.startsWith(FAIL_PREFIX)),');
+  });
+
+  it('a converted slug with a compute-attributed FAIL still has hardStop false', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      status: 'converted',
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.hardStop).toBe(false);
+  });
+
+  it('a pending slug whose only FAIL is attributed has hardStop false', () => {
+    const t = attributedTrace({
+      fingerprint: 'c1',
+      kind: 'read',
+      count: 1,
+      reads: {},
+      writes: {},
+      excluded: ['pipeline_runs'],
+      error: null,
+    });
+    const out = attributed({
+      status: 'pending',
+      postTraces: { sources: t },
+      runnerFingerprints: new Set(['rf1']),
+    });
+    expect(out.hardStop).toBe(false);
+  });
+});
+
+describe('step-validate wiring (R-BZ)', () => {
+  it('threads buildRunnerFingerprints into the gate', () => {
+    const src = fs.readFileSync(STEP_VALIDATE_PATH, 'utf8');
+    expect(src).toContain('buildRunnerFingerprints');
+    expect(src).toContain('runnerFingerprints,');
+    expect(src).toContain('#44 ATTRIBUTION');
+  });
+});
+
+describe('closed runner template set (R-BZ)', () => {
+  let mod: { CLOSED_RUNNER_TEMPLATES: Array<{ fingerprint: string; cite: string; why: string }>; buildRunnerFingerprints: (opts?: { repoRoot?: string }) => Promise<Map<string, string>> };
+  let lq: { fingerprintSync: (sql: string) => string };
+
+  beforeAll(async () => {
+    mod = (await import(
+      pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/witness-runner-set.mjs')).href
+    )) as unknown as typeof mod;
+    const base = (await import(
+      pathToFileURL(path.join(process.cwd(), 'scripts/analysis/gates/compute-purity-base.mjs')).href
+    )) as unknown as { initSql: () => Promise<{ lq: typeof lq }> };
+    ({ lq } = await base.initSql());
+  }, 60000);
+
+  it('CLOSED_RUNNER_TEMPLATES has exactly 3 entries, each with a SQL-bearing cited line', () => {
+    expect(mod.CLOSED_RUNNER_TEMPLATES).toHaveLength(3);
+    for (const entry of mod.CLOSED_RUNNER_TEMPLATES) {
+      const [file = '', lineStr = ''] = entry.cite.split(':');
+      const line = Number(lineStr);
+      const lines = fs.readFileSync(path.join(process.cwd(), file), 'utf8').split(/\r?\n/);
+      const source = lines[line - 1] ?? '';
+      expect(source.length).toBeGreaterThan(0);
+      expect(/index\.js$/.test(file) ? source : source).toBeTruthy();
+    }
+    const indexEntry = mod.CLOSED_RUNNER_TEMPLATES.find((e) => e.cite.startsWith('scripts/lib/step/index.js'))!;
+    const [ifile = '', ilineStr = ''] = indexEntry.cite.split(':');
+    const indexLine = fs.readFileSync(path.join(process.cwd(), ifile), 'utf8').split(/\r?\n/)[Number(ilineStr) - 1];
+    expect(indexLine).toContain('COUNT(*)::bigint AS n FROM');
+
+    const plausEntry = mod.CLOSED_RUNNER_TEMPLATES.find((e) => e.cite.startsWith('scripts/lib/step/plausibility.js'))!;
+    const [pfile = '', plineStr = ''] = plausEntry.cite.split(':');
+    const plausLine = fs.readFileSync(path.join(process.cwd(), pfile), 'utf8').split(/\r?\n/)[Number(plineStr) - 1];
+    expect(plausLine).toContain('entry.sql');
+  });
+
+  it('the two interpolated COUNT fingerprints are reproducible with libpg', () => {
+    expect(lq.fingerprintSync('SELECT COUNT(*)::bigint AS n FROM pg_stat_user_tables')).toBe('4253520a71996e5c');
+    expect(lq.fingerprintSync('SELECT COUNT(*)::bigint AS n FROM logic_variables')).toBe('caf69de66af279fa');
+  });
+
+  it('buildRunnerFingerprints covers all 3 closed fingerprints and cites index.js:5886', async () => {
+    const map = await mod.buildRunnerFingerprints();
+    expect(map.size).toBeGreaterThanOrEqual(24);
+    for (const entry of mod.CLOSED_RUNNER_TEMPLATES) {
+      expect(map.has(entry.fingerprint)).toBe(true);
+    }
+    expect(map.get('4253520a71996e5c')).toBe('scripts/lib/step/index.js:5886');
+  }, 60000);
 });

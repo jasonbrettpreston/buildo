@@ -265,7 +265,8 @@ import { homesReport, loadConvertedFleetDescriptors, selfTest as schemaHomesSelf
 import { checkModeEmitsType, loadModeEmitsFleet, selfTest as modeEmitsTypeSelfTest } from './gates/mode-emits-type.mjs';
 import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfTest } from './gates/logic-version.mjs';
 import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
-import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { scanPurity } from './gates/compute-purity.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, LIB_FINGERPRINT_ITEM, EXPLAINED_REPORT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
 import {
@@ -279,6 +280,7 @@ import {
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
 import { evaluateWitness, selfTest as witnessSelfTest } from './gates/witness.mjs';
+import { buildRunnerFingerprints } from './gates/witness-runner-set.mjs';
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -1578,7 +1580,7 @@ function fastSeeds() {
   if (!existsSync(SEEDS_PATH)) return {};
   return JSON.parse(readFileSync(SEEDS_PATH, 'utf8'));
 }
-function fastInvariants(rows, converted, pending) {
+function fastInvariants(rows, converted, pending, puritySites = []) {
   const results = [];
   const migCount = fastMigrationCount();
   const seeds = fastSeeds();
@@ -2355,7 +2357,7 @@ function fastInvariants(rows, converted, pending) {
   // `scripts/hooks/check-step-shape.mjs` is the blocking driver that applies
   // this same allowlist at commit time.
   {
-    const literals = checkComputeLiterals(loadComputeFiles(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    const literals = checkComputeLiterals(loadComputeFiles(REPO_ROOT), loadLedger(REPO_ROOT).rows, undefined, puritySites);
     results.push({
       id: 32,
       slug: '(registry)',
@@ -5816,7 +5818,7 @@ function readFixtureRecords(slug) {
   }
 }
 
-function witnessFor(row, descriptorInfo, computePath) {
+function witnessFor(row, descriptorInfo, computePath, runnerFingerprints) {
   const witnessRoot = path.join(REPO_ROOT, 'docs', 'reports', 'witness', row.slug);
   const descriptorOnDisk = descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath));
   if (!descriptorOnDisk) return null;
@@ -5889,6 +5891,7 @@ function witnessFor(row, descriptorInfo, computePath) {
     preTraces,
     explainedDiffs,
     fixtureRecords,
+    runnerFingerprints,
   });
 }
 
@@ -5948,13 +5951,16 @@ async function main() {
   // because scripts/lib/step/** is staged, so one in-flight step cannot block another's commit.
   const overlayRows = opts.all ? [] : targets.filter((r) => opts.step || r.ownCodeStaged);
   setAsConverted(overlayRows.filter((r) => r.stage === 'pending' && existsSync(path.join(REPO_ROOT, harness.descriptorPathFor(r.relFile)))).map((r) => r.relFile), REPO_ROOT);
-  const invariantResults = fastInvariants(targets, converted, pending);
+  const puritySites = await scanPurity({ repoRoot: REPO_ROOT });
+  const invariantResults = fastInvariants(targets, converted, pending, puritySites);
   const shapeBatch = checkShapeBatch(targets);
   const vitestResult = opts.fast ? { ranOk: false, error: '--fast: vitest spawn skipped' } : runVitest();
   // G2 (FOLD 1) — the generated churn×complexity table is parsed ONCE here,
   // never per-row and never inside scoreG2 itself.
   const churnFindings = loadChurnFindings();
 
+  // R-BZ: the RUNNER-authored statement set for #44 witness attribution (closure literals + the closed template set).
+  const runnerFingerprints = await buildRunnerFingerprints({ repoRoot: REPO_ROOT });
   let anyHardStop = false;
   if (ownerSpecHardStop) anyHardStop = true; // #43 is not in invariantResults — set explicitly (panel I-2)
   const summaries = [];
@@ -5968,7 +5974,7 @@ async function main() {
       console.error(`[step-validate] WARNING: no assessment report found for ${row.slug} — scorecard gates that read the report will read as empty/0`);
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
-    const witness44 = witnessFor(row, descriptorInfo, computePath);
+    const witness44 = witnessFor(row, descriptorInfo, computePath, runnerFingerprints);
     const p3 = measureP3Footprint(row, descriptorInfo);
     // matrix computed BEFORE the scorecard (Rule 13 hard-stop wiring, WF3
     // commit 4) — computeScorecard now folds an unpinned enforced-red matrix
@@ -5984,7 +5990,7 @@ async function main() {
     // printed table from reading as a silent pass.
     const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults, fiveWord);
 
-    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}\n\`\`\`\n`);
+    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows)}\n\`\`\`\n`);
     console.log(block);
 
     if (witness44) {
@@ -5993,6 +5999,11 @@ async function main() {
       if (witness44.rows.length > 1) {
         for (const r of witness44.rows.slice(0, 20)) console.log(`  - ${r}`);
         if (witness44.rows.length > 20) console.log(`  … +${witness44.rows.length - 20} more`);
+      }
+      const attributed = witness44.attributed || [];
+      if (attributed.length > 0) {
+        console.log(`[step-validate] #44 ATTRIBUTION ${row.slug} (report-only until max(CP-S1, P1-C9), Spec 124 R-BZ): ${attributed.length} compute-attributed FAIL(s)`);
+        for (const r of attributed.slice(0, 20)) console.log(`  - ${r}`);
       }
     }
 
@@ -6024,7 +6035,7 @@ async function main() {
     }
     if (sc.hardStop && isBlocking) anyHardStop = true;
     if (witness44 && witness44.hardStop && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 WITNESS failed for pending slug ${row.slug}`); }
-    summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking, fiveWord });
+    summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking, fiveWord, attributedFails: (witness44 && witness44.attributed ? witness44.attributed.length : 0) });
   }
 
   const registryFails = invariantResults.filter((r) => r.slug === '(registry)' && !r.pass);
@@ -6065,7 +6076,7 @@ async function main() {
     const words = Object.entries(s.fiveWord || {})
       .map(([w, v]) => `${w}:${v.status}${v.deferred ? `(${v.deferred} deferred)` : ''}`)
       .join(' ');
-    console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'} | ${words}`);
+    console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'} #44-attributed=${s.attributedFails || 0} | ${words}`);
   }
   if (registryFails.length) {
     console.log('[step-validate] registry-level fast invariant failures:');

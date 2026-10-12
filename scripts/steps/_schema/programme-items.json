@@ -2449,6 +2449,142 @@
         "blocks": []
       },
       "last_reviewed": "2026-09-30"
+    },
+    {
+      "id": "CP-S1",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity seam S1: one producer / run-history reader",
+      "promised": "One readRunHistory in step/ledger.js replaces every compute-authored pipeline_runs read; ctx.producer + staleness.pins[] predicates; pin rows report the derived verdict and are never read to halt.",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G1 8, G8 23, G6 1, G9 1, G12 3); standard-gates-ledger.json rows with closing_brief \"CP-S1\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S1)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-S2",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity seam S2: temp tables, maintenance, transactions",
+      "promised": "ctx.tempTable scoped to the txn; execution.maintenance dead-tuple selection arm writing selection-evidence rows; RECORDER upsert via flushBatch; vocab-coverage timeout from config.",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G4 19, G5 1, G6 1, G7 4, G13 1); standard-gates-ledger.json rows with closing_brief \"CP-S2\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S2)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-S3",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity seam S3: ENRICHER write seam",
+      "promised": "enrich_parcels passes[] hand statements to the closed seam set; the pass3 queue and the lock DELETE go through the library (ctx.lock.held + a lock-held row).",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G5 17, G1 1); standard-gates-ledger.json rows with closing_brief \"CP-S3\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S3)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-S4",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity seam S4: ctx to contract_read / defer_scope hooks",
+      "promised": "contract_read/defer_scope hooks take (ctx) not (pool); ctx.config.$meta replaces the logic_variables read; duplicate guards.empty_source HALTs deleted.",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G8 6, G1 2); standard-gates-ledger.json rows with closing_brief \"CP-S4\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S4)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-S5",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity seam S5: catalog / SRID probe",
+      "promised": "guards.requires {kind:\"srid\"} and a library column-count probe replace compute-authored catalog reads.",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G3 6, G8 2); standard-gates-ledger.json rows with closing_brief \"CP-S5\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-PLANA",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity plan A: pure bans",
+      "promised": "ctx.clock bound as $n::timestamptz; limit_from_config + declared checks; externals[].url; ctx.descriptor; on_check_error / parse-counter rows.",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G6 14, G7 12, G10 9, G12 5, G13 4); standard-gates-ledger.json rows with closing_brief \"CP-PLANA\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 plan A)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "CP-PERMITS",
+      "spec": "124 R-BZ",
+      "title": "Compute-purity: refresh_snapshot sync_runs read closes at the permits conversion",
+      "promised": "refresh_snapshot reads the legacy permits loader run table sync_runs; the row closes when the permits chain converts and its producer writes pipeline_runs (Q4 a).",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G1 1); standard-gates-ledger.json rows with closing_brief \"CP-PERMITS\"",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Q4; permits chain conversion)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
+    },
+    {
+      "id": "P1-C9",
+      "spec": "122 §6.6.1",
+      "title": "#44 witness hard for every converted step",
+      "promised": "#44 SQL-witness FAILs turn hard for converted steps (witness.mjs hardStop, today status === pending only). Precondition: CP-S1 (compute-attributed #44 FAILs turn hard at max(S1 landing, P1-C9), Spec 124 R-BZ).",
+      "status": "NOT_STARTED",
+      "evidence": "NOT_STARTED 2026-10-11: scripts/analysis/gates/witness.mjs hardStop is status === 'pending' only; QUEUE H13 orders P1-C9 after the S1 batch (Q7 a+b, .cursor/wf1_compute_purity_active_task.md)",
+      "owner": {
+        "kind": "wf",
+        "ref": "wf: registry-truth plan (QUEUE H13 P1-C9+C10)"
+      },
+      "gate": {
+        "kind": "nice_to_have",
+        "blocks": []
+      },
+      "last_reviewed": "2026-10-11"
     }
   ]
 }

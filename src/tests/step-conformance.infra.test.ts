@@ -622,6 +622,8 @@ const COMPUTE_RULE_IDS = [
   // the exact three literals assert_schema hard-coded before externalization
   // (`&limit=20`, `Range: bytes=0-2048`) plus a bare violation threshold, so this
   // set IS the prove-red for the retired literals.
+  // R-BZ (2026-10-11): whole-literal URL; the fixture's https:// line trips it
+  'compute-no-literal-url',
   'compute-no-literal-url-tunable',
   'compute-no-literal-byte-window',
   'compute-no-literal-threshold',
@@ -2792,7 +2794,7 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
         const run = spawnSync('node', [STEP_VALIDATE, `--step=${slug}`, '--fast'], {
           cwd: REPO_ROOT,
           encoding: 'utf8',
-          timeout: 60_000,
+          timeout: 120_000, // H3 (2026-10-12): step-validate now also runs scanPurity (~35 s alone); 60 s was killed under pre-commit load
           maxBuffer: 16 * 1024 * 1024,
         });
         const stdout = run.stdout || '';
@@ -2809,7 +2811,7 @@ describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-i
             `("(registry)"-scoped rows and a matrix-derived "Rule N (unpinned enforced-red)" hard-stop reason ` +
             `are excluded from this comparison — see stripRegistryRows / stripVitestDependentHardStopReasons above)`,
         ).toBe(normalise(committedBlock));
-      });
+      }, 150_000);
 
       it('the committed block also carries a Test-suite line and a 14-row Policy coverage matrix (presence only — content is `--all --write`\'s job, not this lock\'s)', () => {
         if (!reportPath) return;
@@ -3073,7 +3075,7 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
     const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
-      timeout: 30_000,
+      timeout: 120_000,
       env: { ...process.env, BUILDO_VERDICT_CORPUS_EXTRA: FIXTURE_REL },
     });
     // Status is 0 OR 1 here, never 2 (a crash): once Rule 13's hard-stop
@@ -3092,7 +3094,7 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
     // but not THIS one, or that reports it without a line number, has not
     // actually been proven to fire correctly.
     expect(row).toContain(`${FIXTURE_REL}:31`);
-  });
+  }, 150_000);
 
   it('the SAME sanctioned sites still pass with no override at all — the fixture above is additive, never a narrowing of the real corpus', () => {
     const run = spawnSync('node', [STEP_VALIDATE, '--step=assert_schema', '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });

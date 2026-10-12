@@ -11,8 +11,11 @@
 // `scripts/lib/compute/**` from a CLOSED answer set: none at all, OR a
 // `{gate:'E'}` ledger row keyed on `<rule-id>@<trimmed source line text>`.
 // `scripts/hooks/check-step-shape.mjs` applies the SAME allowlist at commit
-// time — only these 5 rule ids are ever filterable by a ledger row; every
-// pre-existing compute-shape rule is not.
+// time — only these 11 rule ids are ever filterable by a ledger row; every
+// pre-existing compute-shape rule is not. The first five ids are FROZEN and in
+// order (a reorder would re-point every gate-E ledger row); the six ids appended
+// 2026-10-11 (R-BZ) each EXTEND one of them (or, for
+// `compute-forbidden-require-descriptor`, are a sibling extension).
 //
 // T1/T2 re-run the module's own selfTest() both as a whole and via its direct
 // assertions (Spec 121 §12b.6: a checker never proven to fire is not a check).
@@ -20,10 +23,34 @@
 // rows (0 orphans), landed 2026-09-26.
 
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import * as gateE from '../../scripts/analysis/gates/compute-literals.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
+import { scanPurity } from '../../scripts/analysis/gates/compute-purity.mjs';
 
 const REPO_ROOT = process.cwd();
+
+// The five rule ids gate E owned before the 2026-10-11 R-BZ extension, in the
+// exact order the rule table lists them. The six ids appended after are EXTENSIONS
+// of these (or, for `compute-forbidden-require-descriptor`, a sibling): the first
+// five are frozen — a reorder or a removal would silently re-point every gate-E
+// ledger row at a different rule.
+const GATE_E_ORIGINAL_FIVE = [
+  'compute-no-sql-interval-literal',
+  'compute-no-sql-date-literal',
+  'compute-no-module-numeric-const',
+  'compute-no-literal-violation-compare',
+  'compute-no-sql-numeric-bound',
+];
+const GATE_E_NEW_SIX = [
+  'compute-no-sql-clock',
+  'compute-no-local-numeric-const',
+  'compute-no-literal-url',
+  'compute-forbidden-require-dynamic',
+  'compute-forbidden-require-descriptor',
+  'compute-no-swallow',
+];
 
 describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-level numeric const of any case, violations-compare, SQL bound)', () => {
   // -------------------------------------------------------------------------
@@ -34,11 +61,11 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
   });
 
   // -------------------------------------------------------------------------
-  // T2 — each of the 5 rule ids fires on the known-bad fixture (RED), and a
+  // T2 — each of the 11 rule ids fires on the known-bad fixture (RED), and a
   // clean compute module fires 0 (GREEN).
   // -------------------------------------------------------------------------
   describe('T2: each rule id fires on the fixture; a clean compute fires 0', () => {
-    it('T2a: all 5 gate-E rule ids fire on the known-bad fixture', () => {
+    it('T2a: all 11 gate-E rule ids fire on the known-bad fixture', () => {
       const findings = gateE.scanGateE([gateE.FIXTURE_FILE]);
       const seen = new Set(findings.map((f: { ruleId: string | undefined }) => f.ruleId));
       for (const ruleId of gateE.GATE_E_RULE_IDS) {
@@ -46,9 +73,48 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
       }
     });
 
-    it('T2b: a clean compute module (assert-schema.js) yields 0 gate-E hits', () => {
-      const findings = gateE.scanGateE(['scripts/lib/compute/assert-schema.js']);
+    it('T2a2: GATE_E_RULE_IDS is 11 ids — the frozen first five unchanged, then the six new ids', () => {
+      expect(gateE.GATE_E_RULE_IDS.length).toBe(11);
+      expect(gateE.GATE_E_RULE_IDS.slice(0, 5)).toEqual(GATE_E_ORIGINAL_FIVE);
+      expect(gateE.GATE_E_RULE_IDS.slice(5)).toEqual(GATE_E_NEW_SIX);
+    });
+
+    it('T2a3: each of the six new ids is an `id:` line in compute-shape.yml (21 ids total)', () => {
+      const yml = fs.readFileSync(path.join(REPO_ROOT, gateE.RULE_FILE), 'utf8');
+      const ids = yml.split(/\r?\n/)
+        .map((l) => /^id:\s*(\S+)\s*$/.exec(l))
+        .filter((m): m is RegExpExecArray => m !== null)
+        .map((m) => m[1]);
+      // 21 ids total — the pre-existing compute-shape rules plus the 11 gate-E ids.
+      expect(ids.length).toBe(21);
+      for (const id of GATE_E_NEW_SIX) {
+        expect(ids, `id "${id}" is not a top-level \`id:\` line in ${gateE.RULE_FILE}`).toContain(id);
+      }
+    });
+
+    it('T2b: the clean compute fixture (clean-compute-purity.js) yields 0 gate-E hits', () => {
+      const findings = gateE.scanGateE([gateE.CLEAN_FIXTURE_FILE]);
       expect(findings).toEqual([]);
+    });
+
+    it('T2b2: assert-schema.js yields ONLY compute-no-literal-url hits (9) among the 11 gate-E ids', () => {
+      // The real step-1 compute module is NOT gate-E-clean: it holds nine literal
+      // `https://` CKAN endpoints — the measured G10 `compute-no-literal-url`
+      // sites that receive ledger rows at Step 3. Until those rows exist this is
+      // RED by design, so the sites stay visible here rather than disappearing
+      // behind a "clean module" claim. What this locks is the SHAPE: no other
+      // gate-E id may fire on this file, so a future rule regression cannot hide
+      // behind the nine known URL findings.
+      const findings = gateE.scanGateE(['scripts/lib/compute/assert-schema.js']);
+      expect(findings.length).toBe(9);
+      for (const f of findings as { ruleId: string }[]) {
+        expect(f.ruleId).toBe('compute-no-literal-url');
+      }
+      // Every one of the nine is a real gate-E id (not a pre-existing rule that
+      // scanGateE happens to keep), and it is the URL id — nothing else.
+      const seen = new Set(findings.map((f: { ruleId: string | undefined }) => f.ruleId));
+      expect([...seen]).toEqual(['compute-no-literal-url']);
+      expect(gateE.GATE_E_RULE_IDS).toContain('compute-no-literal-url');
     });
 
     it('T2c: a finding with a matching ledger row is filtered (allowed), not reported', () => {
@@ -116,15 +182,17 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
   // T3 — LIVE: the fleet's real gate-E findings are exactly the ledger's
   // gate-E rows, and there are zero orphans.
   // -------------------------------------------------------------------------
-  it('T3: live — every compute-literal finding has a gate-E ledger row, and zero orphans', () => {
+  it('T3: live — every compute-literal finding has a gate-E ledger row, and zero orphans', async () => {
     const files = gateE.loadComputeFiles(REPO_ROOT);
     const { rows } = ledger.loadLedger(REPO_ROOT);
-    const out = gateE.checkComputeLiterals(files, rows, REPO_ROOT);
+    const sites = await scanPurity({ repoRoot: REPO_ROOT });
+    const out = gateE.checkComputeLiterals(files, rows, REPO_ROOT, sites);
 
     expect(out.orphans).toEqual([]);
     expect(out.unallowed).toEqual([]);
     expect(out.pass).toBe(true);
-  });
+    expect(out.allowed.length).toBeGreaterThanOrEqual(143);
+  }, 120000);
 
   // -------------------------------------------------------------------------
   // T4 — the live scan actually finds something (a suite whose fleet scan
@@ -134,5 +202,63 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
     const files = gateE.loadComputeFiles(REPO_ROOT);
     const findings = gateE.scanGateE(files, REPO_ROOT);
     expect(findings.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Airtight V3 (R-BZ, operator ruling 2026-10-11) — every conversion from now on
+// needs CLEAN compute: the ledger's PURITY rows are FROZEN at the Phase 1 set,
+// so a purity finding can never be ledgered to slip past gate E again.
+// ---------------------------------------------------------------------------
+describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
+  const loadRows = () => ledger.loadLedger(REPO_ROOT).rows;
+
+  it('V1: the live ledger is frozen — 0 freeze problems, ≥143 purity rows', () => {
+    const rows = loadRows();
+    expect(gateE.purityRowFreeze(rows)).toEqual([]);
+    expect(rows.filter((r: object) => gateE.isPurityRow(r)).length).toBeGreaterThanOrEqual(143);
+  });
+
+  it('V2: a purity row filed on a later date is a freeze problem (RED)', () => {
+    const rows = loadRows();
+    const row = rows.find((r: object) => gateE.isPurityRow(r));
+    expect(row).toBeTruthy();
+    const bad = { ...(row as object), filed: '2026-10-12' };
+    expect(gateE.purityRowFreeze([bad]).length).toBe(1);
+  });
+
+  it('V3: a purity row moved to a fresh module is a freeze problem (RED)', () => {
+    const rows = loadRows();
+    const row = rows.find((r: object) => gateE.isPurityRow(r));
+    expect(row).toBeTruthy();
+    const bad = { ...(row as object), step: 'link-coa-to-parcels' };
+    expect(gateE.purityRowFreeze([bad]).length).toBe(1);
+  });
+
+  it('V4: a NON-purity gate-E row with a later date is not a freeze problem', () => {
+    const row = {
+      gate: 'E', step: 'link-wsib',
+      item: 'compute-no-sql-interval-literal@no such line exists anywhere',
+      disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
+      filed: '2026-10-12', adjudicated_by: 'operator',
+    };
+    expect(gateE.isPurityRow(row)).toBe(false);
+    expect(gateE.purityRowFreeze([row])).toEqual([]);
+  });
+
+  it('V5: standardFor speaks V2 for a frozen module, V3 for a clean one', () => {
+    const rows = loadRows();
+    expect(gateE.standardFor('enrich-parcels', rows)).toBe('V2');
+    expect(gateE.standardFor('load-wsib', rows)).toBe('V3');
+  });
+
+  it('V6: a frozen (rogue) purity row RED-fails checkComputeLiterals with frozen.length === 1', () => {
+    const rows = loadRows();
+    const live = rows.find((r: object) => gateE.isPurityRow(r));
+    expect(live).toBeTruthy();
+    const frozenBadRow = { ...(live as object), filed: '2026-10-12' };
+    const out = gateE.checkComputeLiterals([gateE.FIXTURE_FILE], [frozenBadRow]);
+    expect(out.pass).toBe(false);
+    expect(out.frozen.length).toBe(1);
   });
 });

@@ -1,15 +1,19 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2, Rule 3, §5 R-BA (gate E);
 //            122_pipeline_step_optimization.md §5.5
 //
-// GATE E — SCALABLE. Five ast-grep rules appended to
+// GATE E — SCALABLE. Eleven ast-grep rules appended to
 // `scripts/ast-grep-rules/compute-shape.yml` (fast invariant #32) ban a
 // hard-coded SQL INTERVAL/date literal, a module-level numeric constant of ANY
 // identifier case (STANDARDIZED 2026-09-26 — a camelCase rename used to evade
 // the original UPPER_SNAKE_CASE-only match), a `violations:` key compared
 // against a non-zero literal, and a literal numeric
 // SQL bound inside `scripts/lib/compute/**` — the class of invisible, no-audit-
-// row, no-deploy-free-to-move tunable Rule 3 bans. `check-step-shape.mjs`
-// (the blocking driver) filters a finding for ONE of these 5 rule ids when a
+// row, no-deploy-free-to-move tunable Rule 3 bans. The 2026-10-11 R-BZ
+// EXTENSION added six more: a literal SQL clock read (`now()`/`CURRENT_DATE`/…),
+// a function-LOCAL numeric const, a literal URL, a dynamic `require(...)`/
+// `import(...)`, a direct `<step>.descriptor.json` require, and a `catch` that
+// neither throws nor reports. `check-step-shape.mjs`
+// (the blocking driver) filters a finding for ONE of these 11 rule ids when a
 // ledger row exists keyed on `<rule-id>@<trimmed source line text>` — TEXT, not
 // line number, so the row survives line drift. The other (pre-existing)
 // compute-shape rules are NOT filterable by this mechanism (no widening of an
@@ -28,15 +32,82 @@ const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 export const RULE_FILE = 'scripts/ast-grep-rules/compute-shape.yml';
 export const COMPUTE_DIR = 'scripts/lib/compute';
 export const FIXTURE_FILE = 'scripts/steps/_schema/fixtures/compute/bad-compute-literals.js';
+/** The KNOWN-GOOD twin (CP-B4) — the gate-E clean exemplar. */
+export const CLEAN_FIXTURE_FILE = 'scripts/steps/_schema/fixtures/compute/clean-compute-purity.js';
 
-/** The 5 NEW rule ids gate E owns — filterable by a ledger row; nothing else is. */
+/** The 11 NEW rule ids gate E owns — filterable by a ledger row; nothing else is. */
 export const GATE_E_RULE_IDS = [
   'compute-no-sql-interval-literal',
   'compute-no-sql-date-literal',
   'compute-no-module-numeric-const',
   'compute-no-literal-violation-compare',
   'compute-no-sql-numeric-bound',
+  // 2026-10-11 R-BZ extension — six further ids, each EXTENDING one of the five
+  // above (or, for `compute-forbidden-require-descriptor`, a sibling extension),
+  // in the same order the gate-E rule table lists them.
+  'compute-no-sql-clock',
+  'compute-no-local-numeric-const',
+  'compute-no-literal-url',
+  'compute-forbidden-require-dynamic',
+  'compute-forbidden-require-descriptor',
+  'compute-no-swallow',
 ];
+
+/** Compute-purity rule ids (Spec 124 R-BZ, 122a §A26): G1–G8 from compute-purity.mjs + the 6 R-BZ ast-grep ids. */
+export const PURITY_RULE_IDS = [
+  'compute-ledger-sql', 'compute-undeclared-relation', 'compute-catalog', 'compute-ddl-txn',
+  'compute-direct-write', 'compute-decides', 'compute-halt',
+  'compute-no-sql-clock', 'compute-no-local-numeric-const', 'compute-no-literal-url',
+  'compute-forbidden-require-dynamic', 'compute-forbidden-require-descriptor', 'compute-no-swallow',
+];
+/** Airtight V3 freeze: the only date a purity row may carry, and the only modules that may carry one. */
+export const PURITY_ROWS_FILED = '2026-10-11';
+export const V2_PURITY_MODULES = [
+  'assert-data-bounds', 'assert-engine-health', 'assert-global-coverage', 'assert-schema',
+  'compute-parcel-cost-estimates', 'enrich-centreline', 'enrich-heritage', 'enrich-parcels',
+  'enrich-ravines', 'load-address-points', 'load-centreline', 'load-heritage', 'load-massing',
+  'load-neighbourhoods', 'load-parcels', 'load-ravines', 'load-zoning', 'refresh-snapshot',
+  'vocab-coverage',
+];
+
+/**
+ * A purity ledger row: gate E, keyed on one of the 13 purity rule ids. The
+ * `@`-suffix (the offending source line text) is stripped before the lookup, so
+ * the row is recognised by its rule id alone.
+ */
+export function isPurityRow(row) {
+  return !!row && row.gate === 'E' && PURITY_RULE_IDS.includes(String(row.item).split('@')[0]);
+}
+
+/**
+ * Airtight V3 freeze (operator ruling 2026-10-11): a purity finding can NEVER be
+ * ledgered. The Phase 1 set of purity rows is frozen — every purity row must
+ * carry `filed === PURITY_ROWS_FILED` and sit on a module in `V2_PURITY_MODULES`.
+ * Any other purity row is a NEW ledger row invented to slip an unledgered
+ * finding past gate E, and is reported here. Returns one problem string per row.
+ */
+export function purityRowFreeze(ledgerRows) {
+  const problems = [];
+  for (const row of Array.isArray(ledgerRows) ? ledgerRows : []) {
+    if (!isPurityRow(row)) continue;
+    if (row.filed !== PURITY_ROWS_FILED || !V2_PURITY_MODULES.includes(row.step)) {
+      problems.push(
+        `${row.step}:${row.item.split('@')[0]} — Airtight V3: a purity finding cannot be ledgered (filed ${row.filed}); fix the compute`,
+      );
+    }
+  }
+  return problems;
+}
+
+/**
+ * The standard a step speaks: `'V2'` if any purity row names that module (its
+ * compute still carries a frozen 2026-10-11 purity finding), else `'V3'`.
+ */
+export function standardFor(moduleBase, ledgerRows) {
+  return (Array.isArray(ledgerRows) ? ledgerRows : []).some(
+    (row) => isPurityRow(row) && row.step === moduleBase,
+  ) ? 'V2' : 'V3';
+}
 
 /** Proposed dispositions for the orchestrator's `--list` output. */
 const PROPOSED_UNIT_CONVERSION = /^(MS_PER_DAY|DAYS_PER_JULIAN_YEAR|SQM_TO_SQFT|M_TO_FT)$/;
@@ -58,8 +129,8 @@ function astGrepBinary() {
 const LINE_RE = /^(.+?):(\d+):(\d+): error\[([\w-]+)\]:/;
 
 /**
- * Run the 5 gate-E rule ids over `files`. Returns `[{file, line, ruleId, lineText, step, item}]`.
- * Only the 5 gate-E ids are kept — the pre-existing rules in the same file are
+ * Run the 11 gate-E rule ids over `files`. Returns `[{file, line, ruleId, lineText, step, item}]`.
+ * Only the 11 gate-E ids are kept — the pre-existing rules in the same file are
  * scanned too (ast-grep has no per-rule-id file filter) and dropped here.
  */
 export function scanGateE(files, repoRoot = REPO_ROOT) {
@@ -76,6 +147,16 @@ export function scanGateE(files, repoRoot = REPO_ROOT) {
   }
   const out = [];
   const fileTextCache = new Map();
+  // `<rule>@<trimmed line>` → how many times it has occurred SO FAR *in this step file*.
+  // CP-B11 fix 6: the 1st occurrence keeps the bare key; the 2nd, 3rd… get `#2`, `#3`.
+  // An existing key that occurs once is therefore unchanged (the 29 ledger rows hold).
+  const itemSeen = new Map();
+  const ord = (step, base) => {
+    const k = `${step}\u0000${base}`;
+    const n = (itemSeen.get(k) || 0) + 1;
+    itemSeen.set(k, n);
+    return n === 1 ? base : `${base}#${n}`;
+  };
   for (const line of stdout.split(/\r?\n/)) {
     const m = LINE_RE.exec(line);
     if (!m) continue;
@@ -88,22 +169,48 @@ export function scanGateE(files, repoRoot = REPO_ROOT) {
     const lines = fileTextCache.get(rel);
     const lineText = (lines[Number(lineNo) - 1] || '').trim();
     const step = path.basename(rel).replace(/\.js$/, '');
-    out.push({ file: rel, line: Number(lineNo), ruleId, lineText, step, item: `${ruleId}@${lineText}` });
+    out.push({ file: rel, line: Number(lineNo), ruleId, lineText, step, item: ord(step, `${ruleId}@${lineText}`) });
   }
   return out;
 }
 
+/**
+ * Map `scanPurity` sites (`{code, rule, file, line, key}`) onto the gate-E finding
+ * shape, so the same ledger-row mechanism filters compute-purity findings too.
+ */
+export function purityFindings(sites) {
+  return (sites || []).map((s) => ({
+    file: s.file,
+    line: s.line,
+    ruleId: s.rule,
+    step: path.basename(s.file).replace(/\.(c?js)$/, ''),
+    item: s.key,
+  }));
+}
+
 /** Gate E over an explicit file list. PURE modulo the ast-grep spawn. */
-export function checkComputeLiterals(files, ledgerRows, repoRoot = REPO_ROOT) {
-  const findings = scanGateE(files, repoRoot);
+export function checkComputeLiterals(files, ledgerRows, repoRoot = REPO_ROOT, puritySites = []) {
+  const findings = [...scanGateE(files, repoRoot), ...purityFindings(puritySites)];
   const { unallowed, orphans, allowed } = matchLedger('E', findings, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
+  const frozen = purityRowFreeze(ledgerRows);
+  const frozenSteps = [...new Set((Array.isArray(ledgerRows) ? ledgerRows : [])
+    .filter(isPurityRow)
+    .filter((r) => r.filed !== PURITY_ROWS_FILED || !V2_PURITY_MODULES.includes(r.step))
+    .map((r) => r.step))];
+  for (const step of frozenSteps) if (!blockedSlugs.includes(step)) blockedSlugs.push(step);
+  const frozenDetail = frozen.length ? `; ${frozen.length} V3-frozen row(s) [${frozen.join('; ')}]` : '';
   const detail = (unallowed.length || orphans.length)
     ? `COMPUTE-LITERALS (gate E): ${unallowed.length} unallowed finding(s)`
       + (unallowed.length ? ` [${unallowed.map((v) => `${v.step}:${v.item.split('@')[0]}`).join('; ')}]` : '')
       + `; ${orphans.length} orphan ledger row(s)`
-    : `COMPUTE-LITERALS (gate E): ${findings.length} finding(s), all ledger-allowed (${allowed.length})`;
-  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, findings };
+      + frozenDetail
+    : `COMPUTE-LITERALS (gate E): ${findings.length} finding(s), all ledger-allowed (${allowed.length})`
+      + frozenDetail;
+  return {
+    pass: unallowed.length === 0 && orphans.length === 0 && frozen.length === 0,
+    blockedSlugs, detail, unallowed, orphans, allowed, findings, frozen,
+  };
 }
 
 /** Every real compute module under scripts/lib/compute/. */
@@ -117,7 +224,7 @@ export function loadComputeFiles(repoRoot = REPO_ROOT) {
  * The ONE shared gate-E ledger-filter, applied to any `Map<file, [{rule, line}]>`
  * an ast-grep-driven caller produces (`scripts/hooks/check-step-shape.mjs`'s
  * `computeResults`, `step-validate.mjs`'s `checkShapeBatch`). Drops a finding
- * for one of the 5 `GATE_E_RULE_IDS` when a `{gate:'E'}` ledger row allows it
+ * for one of the 11 `GATE_E_RULE_IDS` when a `{gate:'E'}` ledger row allows it
  * (keyed on `<rule-id>@<trimmed source line text>`); every other rule id is
  * untouched. A SINGLE implementation so the blocking driver and the
  * `step:validate` per-step `computeClean` check can never drift apart on what
@@ -134,7 +241,15 @@ export function filterGateELedgerFindings(byFile, repoRoot, ledgerRows) {
       continue;
     }
     const step = path.basename(file).replace(/\.js$/, '');
-    const findings = gateEHits.map((v) => ({ step, item: `${v.rule}@${(text[v.line - 1] || '').trim()}`, _v: v }));
+    // Same ordinal rule as `scanGateE` (CP-B11 fix 6): duplicates of one
+    // `<rule>@<trimmed line>` within one step file get `#2`, `#3`…
+    const itemSeen = new Map();
+    const ord = (base) => {
+      const n = (itemSeen.get(base) || 0) + 1;
+      itemSeen.set(base, n);
+      return n === 1 ? base : `${base}#${n}`;
+    };
+    const findings = gateEHits.map((v) => ({ step, item: ord(`${v.rule}@${(text[v.line - 1] || '').trim()}`), _v: v }));
     const { unallowed } = matchLedger('E', findings, ledgerRows);
     const stillReported = new Set(unallowed.map((u) => u.item));
     const others = violations.filter((v) => !GATE_E_RULE_IDS.includes(v.rule));
@@ -144,7 +259,10 @@ export function filterGateELedgerFindings(byFile, repoRoot, ledgerRows) {
   return byFile;
 }
 
-/** `selfTest()` — the fixture proves each of the 5 rule ids fires, and a clean file fires 0. */
+/**
+ * `selfTest()` — the fixture proves each of the 11 rule ids fires, and the
+ * KNOWN-GOOD purity fixture (`CLEAN_FIXTURE_FILE`) fires 0.
+ */
 export function selfTest() {
   const fixtureFindings = scanGateE([FIXTURE_FILE]);
   for (const ruleId of GATE_E_RULE_IDS) {
@@ -152,10 +270,14 @@ export function selfTest() {
       throw new Error(`self-test FAILED (gate E): rule "${ruleId}" did not fire on the known-bad fixture`);
     }
   }
-  // GREEN — a clean compute module yields 0 gate-E hits.
-  const cleanFindings = scanGateE(['scripts/lib/compute/assert-schema.js']);
+  // GREEN — a clean compute module yields 0 gate-E hits. The exemplar is the
+  // CP-B4 purity fixture, NOT `scripts/lib/compute/assert-schema.js`: that real
+  // module holds nine literal `https://` CKAN endpoints — the measured G10 sites
+  // (`compute-no-literal-url`) the plan expects ledger rows for — so it is not
+  // clean for gate E.
+  const cleanFindings = scanGateE([CLEAN_FIXTURE_FILE]);
   if (cleanFindings.length !== 0) {
-    throw new Error(`self-test FAILED (gate E): assert-schema.js (clean) unexpectedly matched ${JSON.stringify(cleanFindings)}`);
+    throw new Error(`self-test FAILED (gate E): ${CLEAN_FIXTURE_FILE} (clean) unexpectedly matched ${JSON.stringify(cleanFindings)}`);
   }
   // A finding with a matching ledger row is filtered (allowed); without one it
   // is reported (unallowed). Old rule ids (e.g. compute-no-console) are never

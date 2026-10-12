@@ -149,6 +149,100 @@ rule:
 
 ---
 
+id: compute-no-literal-url
+language: JavaScript
+severity: error
+message: |
+  A literal absolute URL (`http://` / `https://`) in a compute module (Spec 124
+  §2 Rule 2 (R-BZ), gate E extension 2026-10-11). EXTENDS
+  `compute-no-literal-url-tunable` directly above: that rule bans a numeric
+  `limit=`/`sample=` knob inside a URL string, this one bans the whole literal
+  URL, `kind: string` AND `kind: template_string` alike.
+
+  An endpoint is a tunable — the same class Rule 3 names. A host baked into a
+  compute is a second, invisible copy of something the descriptor or
+  `ctx.config` already owns, so an operator who moves the service must edit
+  code and redeploy, and no audit row shows where the data came from. The
+  network is the injected seam `ctx.fetch(...)`; the URL it is handed belongs
+  in a registered `config.logic_variables[]` entry (or the descriptor), never
+  inline.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - kind: string
+      regex: 'https?://'
+    - kind: template_string
+      regex: 'https?://'
+
+---
+
+id: compute-forbidden-require-dynamic
+language: JavaScript
+severity: error
+message: |
+  A DYNAMIC module load in a compute module — `require.resolve(...)`, a
+  `require(<template literal>)`, or a dynamic `import(...)` (Spec 124 §2 Rule 2
+  (R-BZ), gate E extension 2026-10-11). EXTENDS `compute-forbidden-require`
+  directly above: that rule bans a LITERAL module name on the closed
+  forbidden list (`pg`, `dotenv`, `fs`, `child_process`, `../pipeline`,
+  `../step`, `../resolve-db`); this one bans the evasion — a name the
+  constraint regex cannot see.
+
+  `require('f' + 's')`, `` require(`pg`) `` and `await import(...)` defeat a
+  literal-name check while reaching exactly what Rule 2 forbids: the database,
+  the environment, the filesystem, the process table or the runner. Everything
+  a compute may touch arrives on `ctx` — `pool` (which an ASSERT must not use
+  at all), `log`, `fetch`, `clock`, `report`; pure domain libraries under
+  `scripts/lib/` stay statically required and are unaffected by this rule.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    - pattern: require.resolve($$$)
+    - pattern: require($A)
+    - pattern: import($$$)
+constraints:
+  A:
+    kind: template_string
+
+---
+
+id: compute-forbidden-require-descriptor
+language: JavaScript
+severity: error
+message: |
+  A compute module requires a `<step>.descriptor.json` directly (Spec 124 §2
+  Rule 2 (R-BZ), gate E extension 2026-10-11). EXTENDS
+  `compute-forbidden-require-dynamic` directly above, which does not catch it: a
+  single-quoted descriptor path is a plain static `require(<string>)`.
+
+  The descriptor is the runner's contract, and the fields a compute legitimately
+  needs are already projected onto `ctx` — `ctx.descriptor.identity.name` is the
+  proven idiom. Reading the raw JSON puts a SECOND source of truth beside the
+  validated descriptor inside domain logic: the file is read at require time,
+  bypasses `scripts/lib/step`'s validation, and is invisible to the audit row
+  that records what the runner actually ran.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: require($S)
+constraints:
+  S:
+    kind: string
+    regex: '\.descriptor\.json[''"]$'
+
+---
+
 id: compute-no-literal-byte-window
 language: JavaScript
 severity: error
@@ -328,6 +422,46 @@ rule:
 
 ---
 
+id: compute-no-sql-clock
+language: JavaScript
+severity: error
+message: |
+  A literal SQL clock read (`now()`, `CURRENT_DATE`, `CURRENT_TIMESTAMP`,
+  `clock_timestamp()`, `LOCALTIMESTAMP`) in a compute module (Spec 124 §2
+  Rule 2 (R-BZ), gate E extension 2026-10-11). EXTENDS
+  `compute-no-sql-interval-literal` directly above: the same class of literal
+  SQL time expression frozen into a compute.
+
+  A compute does not read the clock for itself — the clock is the injected
+  seam `ctx.clock` (Rule 2: SEAMS. The library defaults it to `Date.now`;
+  a test pins it), and anything written to the database is stamped by the
+  runner, never by a query the compute authored (Spec 47 §R3.5). A
+  `CURRENT_DATE - INTERVAL '30 days'` window measured by the DATABASE is a
+  second, unpinnable source of "now" that no test can freeze and no audit
+  row shows.
+
+  FIX: take the instant from `ctx.clock()` and pass it as a bound parameter,
+  or, if the window itself is the tunable, register it as a
+  `config.logic_variables[]` interval and interpolate it.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  all:
+    - any:
+        - kind: string
+          regex: '(?i)\b(now\(\)|current_date|current_timestamp|clock_timestamp\(\)|localtimestamp)'
+        - kind: template_string
+          regex: '(?i)\b(now\(\)|current_date|current_timestamp|clock_timestamp\(\)|localtimestamp)'
+    - not:
+        inside:
+          pattern: new Error($$$)
+          stopBy: end
+
+---
+
 id: compute-no-sql-date-literal
 language: JavaScript
 severity: error
@@ -401,6 +535,49 @@ constraints:
 
 ---
 
+id: compute-no-local-numeric-const
+language: JavaScript
+severity: error
+message: |
+  A function-local numeric constant declared inside a compute module (Spec 124
+  §2 Rule 2 (R-BZ), gate E extension 2026-10-11). EXTENDS
+  `compute-no-module-numeric-const` directly above, to function scope: the same
+  `const`/`let` + numeric-literal shape, matched INSIDE a `statement_block`
+  rather than the program body.
+
+  A magic number is a tunable wherever it is declared. Its visibility decides
+  the remedy, not whether it is one: a MODULE-level const reads as
+  configuration and belongs in a `config.logic_variables[]` entry, whereas a
+  function-local one has no name anyone can register, so it is either lifted to
+  a declared variable or filed as a dated gate-E ledger row naming which of
+  `physical_constant` / `unit_conversion` / `coordinate_reference` it is
+  (Rule 3). The identifier's case does not decide it and neither does its
+  nesting depth (STANDARDIZED 2026-09-26 / 2026-10-11).
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  pattern: const $N = $V;
+  inside:
+    kind: statement_block
+    stopBy: end
+constraints:
+  V:
+    any:
+      - kind: number
+      - all:
+          - kind: unary_expression
+          - has: { field: operator, regex: '^-$' }
+          - has: { field: argument, kind: number }
+      - all:
+          - kind: binary_expression
+          - not: { has: { kind: identifier, stopBy: end } }
+          - not: { has: { kind: string, stopBy: end } }
+
+---
+
 id: compute-no-literal-violation-compare
 language: JavaScript
 severity: error
@@ -425,6 +602,91 @@ files:
 rule:
   kind: pair
   regex: '^violations\s*:.*[<>]=?\s*(0\.[1-9][0-9]*|[1-9][0-9]*(\.[0-9]+)?)'
+
+---
+
+id: compute-no-swallow
+language: JavaScript
+severity: error
+message: |
+  A compute module SWALLOWS an error — a `catch` whose body neither rethrows
+  nor reports (Spec 124 §2 Rule 2 (R-BZ), gate E extension 2026-10-11).
+  EXTENDS `compute-no-verdict-derivation` directly above: both refuse a compute
+  a SECOND, silent source of the run's outcome — that rule a private verdict,
+  this one a silently-dropped failure.
+
+  A swallowed error is a check that cannot fail: the run ends PASS while the
+  work never happened, and no audit row is built from it. The body must either
+  `throw` (fatal — the Spec 30 §5.4.1 halt contract) or make the failure
+  visible through a seam: `ctx.report(id, { error: err })` (which is what the
+  audit table and the derived verdict ultimately rest on) or
+  `ctx.log.error/warn(...)`, the injected logger. Assigning into a local
+  counter and returning, or an empty `catch {}`, is neither.
+
+  The reported range is only the ANCHOR, never the whole catch: the rule
+  matches the FIRST statement of the catch body (so the finding points at what
+  was done instead of throwing) or, for an empty body, the `catch` clause
+  itself.
+
+  SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 2 (R-BZ)
+files:
+  - 'scripts/lib/compute/**/*.js'
+  - 'scripts/steps/_schema/fixtures/compute/**/*.js'
+rule:
+  any:
+    # ARM 1 — the FIRST statement of a non-empty catch body that neither
+    # rethrows nor reports. `statement` is an ABSTRACT tree-sitter supertype and
+    # never matches a concrete node, so the anchor is expressed as the first
+    # child of the catch body instead. The inner `statement_block` step carries
+    # NO `stopBy: end`, so it is the catch body ITSELF — not any block nested
+    # inside the statement (measured 2026-10-11).
+    - all:
+        - any:
+            - kind: expression_statement
+            - kind: return_statement
+            - kind: lexical_declaration
+            - kind: if_statement
+          # `expression_statement` is only one of many node kinds a first
+          # statement can be; the shape that matters is `nthChild: 1` on the
+          # catch body, and the concrete kinds this corpus writes
+          # (`failures += 1;`, a call, an assignment) all parse as one.
+        - nthChild:
+            position: 1
+            ofRule: { not: { kind: comment } }
+        - inside:
+            kind: statement_block
+            inside:
+              kind: catch_clause
+              stopBy: end
+            # `stopBy: end` keeps the seam reaches (ctx.log/ctx.report/throw)
+            # anywhere in the body visible, by design: a catch that hands the
+            # error on with a counter + log a few lines later is NOT a swallow.
+            # That over-leniency is the price of arm 1 noting only on the
+            # statement, and it is the SAFE direction — no false positive on a
+            # real compute (measured 2026-10-11: assert-schema.js:235/258/451 and
+            # assert-engine-health.js:231 all surface the failure later in the
+            # body and must stay silent).
+            not:
+              has:
+                stopBy: end
+                any:
+                  - kind: throw_statement
+                  - pattern: ctx.report($$$)
+                  - pattern: ctx.log.$M($$$)
+                  - pattern: log.$M($$$)
+                  - pattern: report.$M($$$)
+                  - pattern: ctx.report
+    # ARM 2 — a catch body with NO statements at all (`catch {}`). Expressed as
+    # the brace-only text, NOT `not: has: kind: statement`: `statement` is an
+    # abstract supertype, that `has` could never match, and the arm therefore
+    # treated EVERY catch body as empty (measured 2026-10-11: it fired on
+    # `} catch (err) {` in assert-schema.js ×3 and clean-compute-purity.js:61).
+    - all:
+        - kind: statement_block
+        - regex: '^\{(\s|//[^\n]*|/\*[\s\S]*?\*/)*\}$'
+        - inside:
+            kind: catch_clause
+            stopBy: end
 
 ---
 

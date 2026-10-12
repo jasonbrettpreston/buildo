@@ -1,5 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-BA
-// (one closed allowlist for every closed-response gate); R-X closing-row posture.
+// (one closed allowlist for every closed-response gate); R-X closing-row posture;
+// R-BZ C2 (2026-10-11 — a row allows exactly ONE violation: one row must not
+// cover N same-key sites) + R-BZ C3 (`programmeExpiry` — a row closing on a
+// BUILT/SUPERSEDED/missing programme item has expired and MUST be deleted).
 //
 // The five-word standard draws every gate answer from a CLOSED set. This module
 // is the SHARED half of every one of those gates: the load, the row shape, and
@@ -129,6 +132,17 @@ export function validateRow(row, deps = {}) {
  * Match a gate's live violations against the ledger rows. An ORPHAN (a row whose
  * violation no longer exists) is returned, not swallowed — the caller REDs on it.
  *
+ * A row allows EXACTLY ONE violation (R-BZ C2, 2026-10-11). A row is keyed
+ * `step\0item`, and a key is looked up, never consumed: before the collision lock
+ * any number of same-key violations resolved to the same row, so ONE dated row
+ * silently covered N distinct same-key sites (that is precisely the shape a
+ * "grandfathered" permission hardens into). Now the FIRST violation (in input
+ * order) with a key takes the row; every further violation with that same key is
+ * `unallowed` — carrying `collision: true` so the caller can tell "no row at all"
+ * from "a row already spent on another site with this key" — and each site must
+ * be closed on its own terms (a fresh row, or a real fix), never folded under a
+ * sibling's excuse.
+ *
  * @param {string} gate
  * @param {Array<{step: string, item: string}>} violations
  * @param {Array<object>} rows
@@ -142,10 +156,14 @@ export function matchLedger(gate, violations, rows) {
   const allowed = [];
   const consumed = new Set();
   for (const v of Array.isArray(violations) ? violations : []) {
-    const row = rowsByKey.get(key(v));
-    if (row) {
+    const k = key(v);
+    const row = rowsByKey.get(k);
+    if (row && !consumed.has(k)) {
       allowed.push({ violation: { step: v.step, item: v.item }, row });
-      consumed.add(key(v));
+      consumed.add(k);
+    } else if (row) {
+      // The key's single row is already spent on an earlier site: a collision.
+      unallowed.push({ step: v.step, item: v.item, collision: true });
     } else {
       unallowed.push({ step: v.step, item: v.item });
     }
@@ -153,6 +171,55 @@ export function matchLedger(gate, violations, rows) {
 
   const orphans = gateRows.filter((r) => !consumed.has(key(r)));
   return { unallowed, orphans, allowed };
+}
+
+/**
+ * Programme-item id shape (`CP-S1`, `CP-PLANA`, `STD-1`, ...). A `closing_brief`
+ * that is a BARE id — not a prose sentence that happens to mention one — is the
+ * only thing this tripwire judges: everything else (e.g. "chain_sources
+ * conversion complete (Spec 124 R-AQ ...)") is prose and out of scope.
+ */
+const PROGRAMME_ID_RE = /^[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$/;
+
+/**
+ * Programme-expiry tripwire (R-BZ C3). A ledger row that closes on a PROGRAMME
+ * item (its `closing_brief` is exactly that item's id) expires the moment that
+ * item is BUILT or SUPERSEDED — the closing work is done or gone, so the row can
+ * no longer be a dated deferral and MUST be deleted. An id naming no item in
+ * `programmeItems` is `item_missing`: the row points at a promise that does not
+ * exist (a typo, or an item already removed), which is RED for the same reason.
+ *
+ * Only rows whose `closing_brief` is EXACTLY a programme-item-id shape are in
+ * scope; prose closing briefs are ignored (their expiry is adjudicated by the
+ * brief they name, not by this registry). Pure: no fs, no clock.
+ *
+ * @param {Array<object>} rows ledger rows
+ * @param {Array<{id: string, status: string}>} programmeItems parsed `programme-items.json` items
+ * @returns {Array<{step: string, item: string, closing_brief: string, reason: string}>}
+ *   reason is one of `item_missing` | `item_built` | `item_superseded`.
+ */
+export function programmeExpiry(rows, programmeItems) {
+  const items = new Map(
+    (Array.isArray(programmeItems) ? programmeItems : [])
+      .filter((it) => it && typeof it.id === 'string')
+      .map((it) => [it.id, it]),
+  );
+
+  const expired = [];
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (!row || typeof row.closing_brief !== 'string') continue;
+    const brief = row.closing_brief;
+    if (!PROGRAMME_ID_RE.test(brief)) continue; // prose closing brief — out of scope.
+    const item = items.get(brief);
+    let reason = null;
+    if (!item) reason = 'item_missing';
+    else if (item.status === 'BUILT') reason = 'item_built';
+    else if (item.status === 'SUPERSEDED') reason = 'item_superseded';
+    if (reason) {
+      expired.push({ step: row.step, item: row.item, closing_brief: brief, reason });
+    }
+  }
+  return expired;
 }
 
 /**
@@ -251,5 +318,55 @@ export function selfTest() {
   const p8 = matchLedger('B', [], [pendingFixture]);
   if (p8.orphans.length !== 0) {
     throw new Error(`self-test FAILED (8): cross-gate row counted as orphan (${JSON.stringify(p8)})`);
+  }
+
+  // (9) R-BZ C2 — ONE row covers exactly ONE violation. A second same-key site
+  // is a COLLISION (unallowed, flagged), not a second free pass.
+  const p9 = matchLedger(
+    'A',
+    [{ step: 's', item: 'i' }, { step: 's', item: 'i' }],
+    [pendingFixture],
+  );
+  if (
+    p9.allowed.length !== 1
+    || p9.unallowed.length !== 1
+    || p9.unallowed[0].collision !== true
+    || p9.orphans.length !== 0
+  ) {
+    throw new Error(`self-test FAILED (9): same-key collision not caught (${JSON.stringify(p9)})`);
+  }
+
+  // (9b) distinct keys, each with its own row, are NOT a collision.
+  const p9b = matchLedger(
+    'A',
+    [{ step: 's', item: 'i' }, { step: 's', item: 'j' }],
+    [pendingFixture, { ...pendingFixture, item: 'j' }],
+  );
+  if (p9b.unallowed.length !== 0 || p9b.allowed.length !== 2 || p9b.orphans.length !== 0) {
+    throw new Error(`self-test FAILED (9b): distinct keys misreported (${JSON.stringify(p9b)})`);
+  }
+
+  // (10) R-BZ C3 — programmeExpiry: BUILT / SUPERSEDED / missing, and prose ignored.
+  const cpRow = (closing_brief) => ({ ...pendingFixture, closing_brief });
+  const items = [{ id: 'CP-S1', status: 'NOT_STARTED' }, { id: 'CP-PLANA', status: 'BUILT' }];
+  const p10 = programmeExpiry([cpRow('CP-S1')], items);
+  if (p10.length !== 0) {
+    throw new Error(`self-test FAILED (10): NOT_STARTED item reported expired (${JSON.stringify(p10)})`);
+  }
+  const p10b = programmeExpiry([cpRow('CP-PLANA')], items);
+  if (p10b.length !== 1 || p10b[0].reason !== 'item_built') {
+    throw new Error(`self-test FAILED (10b): BUILT item not expired (${JSON.stringify(p10b)})`);
+  }
+  const p10c = programmeExpiry([cpRow('CP-PLANA')], [{ id: 'CP-PLANA', status: 'SUPERSEDED' }]);
+  if (p10c.length !== 1 || p10c[0].reason !== 'item_superseded') {
+    throw new Error(`self-test FAILED (10c): SUPERSEDED item not expired (${JSON.stringify(p10c)})`);
+  }
+  const p10d = programmeExpiry([cpRow('CP-GONE')], items);
+  if (p10d.length !== 1 || p10d[0].reason !== 'item_missing') {
+    throw new Error(`self-test FAILED (10d): missing item not expired (${JSON.stringify(p10d)})`);
+  }
+  const p10e = programmeExpiry([cpRow('chain_sources conversion complete (Spec 124 R-AQ)')], items);
+  if (p10e.length !== 0) {
+    throw new Error(`self-test FAILED (10e): prose closing_brief not ignored (${JSON.stringify(p10e)})`);
   }
 }
