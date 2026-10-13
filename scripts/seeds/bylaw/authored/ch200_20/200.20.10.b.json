@@ -1,0 +1,23 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_20/200.20.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.20.10(1)#whole",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "max",
+      "numeric_expression": [
+        "parking_spaces = min(parking_spaces @(1); existing(parking_spaces; 1993-07-20) @(1)) @(1)"
+      ]
+    },
+    {
+      "unit_id": "200.20.10(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

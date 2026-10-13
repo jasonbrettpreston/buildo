@@ -1,0 +1,66 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "970.10.1(1)#whole",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "By-law 569-2013, as amended, as it read prior to July 22, 2022", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "status": "not_modelled", "description": "An application submitted before July 22, 2022 may comply with the transitional parking clauses or with By-law 569-2013 as it read before that date. The earlier text is an alternate compliance path and is not evaluated.", "gaps": "Application date and the pre-2022 by-law text are not held."},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "970.10.1(2)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": [], "status": "not_modelled", "description": "An application submitted after July 22, 2022 and on or before March 31, 2025 must comply with 970.10.15.5(13) to (18) and Table 970.10.15.5(1) (parking space rates for effective parking spaces).", "gaps": "Depends on the application date, which is not a lot attribute."},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "970.10.1(3)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "needs_user_input", "user_inputs": [], "status": "not_modelled", "description": "An application submitted on or before July 22, 2022 must comply with 970.10.15.5(11) and (12).", "gaps": "Depends on the application date, which is not a lot attribute."},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "970.10.1(1)": {"explanation": "An application filed before July 22, 2022 that qualifies under the listed parking clauses may follow the transitional parking rules in 970.10.15 or the version of By-law 569-2013 in force before that date.", "code_refs": "none"},
+    "970.10.1(2)": {"explanation": "An application filed after July 22, 2022 and on or before March 31, 2025 that qualifies under the listed parking clauses must follow 970.10.15.5(13) to (18) and the effective parking space rates in Table 970.10.15.5(1).", "code_refs": "none"},
+    "970.10.1(3)": {"explanation": "An application filed on or before July 22, 2022 that qualifies under the listed parking clauses must follow 970.10.15.5(11) and (12).", "code_refs": "none"}
+  }
+}

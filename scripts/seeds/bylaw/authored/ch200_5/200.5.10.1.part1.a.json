@@ -1,0 +1,1783 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch200_5/200.5.10.1.part1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T1.R1.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T1.R2.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R1.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R1.C2]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R2.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R2.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3",
+     "clause": "(1)[T2.R2.C2](A)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "45 square metres",
+     "clause": "(1)[T2.R2.C2](A)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R2.C2](A)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.5",
+     "clause": "(1)[T2.R2.C2](A)(ii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.8",
+     "clause": "(1)[T2.R2.C2](A)(iii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R2.C2](A)(iv)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.7",
+     "clause": "(1)[T2.R2.C2](B)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "45 square metres",
+     "clause": "(1)[T2.R2.C2](B)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R2.C2](B)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.8",
+     "clause": "(1)[T2.R2.C2](B)(ii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.9",
+     "clause": "(1)[T2.R2.C2](B)(iii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.1",
+     "clause": "(1)[T2.R2.C2](B)(iv)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.8",
+     "clause": "(1)[T2.R2.C2](C)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "45 square metres",
+     "clause": "(1)[T2.R2.C2](C)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R2.C2](C)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.9",
+     "clause": "(1)[T2.R2.C2](C)(ii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R2.C2](C)(iii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.2",
+     "clause": "(1)[T2.R2.C2](C)(iv)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The maximum resident parking rate varies by Parking Zone A, Parking Zone B or elsewhere, and by bedroom count; the Parking Zone Overlay Map is not held."
+   },
+   "disclosure": "The maximum resident parking rate varies by Parking Zone A, Parking Zone B or elsewhere, and by bedroom count; the Parking Zone Overlay Map is not held.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R3.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_rate = unregulated @(1)[T2.R3.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_house",
+     "semi_detached_house",
+     "townhouse",
+     "detached_houseplex",
+     "semi_detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "detached_house": "Detached House",
+     "semi_detached_house": "Semi-detached House",
+     "townhouse": "Townhouse, Detached Houseplex",
+     "detached_houseplex": "Detached Houseplex",
+     "semi_detached_houseplex": "Semi-detached Houseplex",
+     "parking_space": "Parking Rate None"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "No parking rate is set for this building type.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R4.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_rate = 1.0 ratio @(1)[T2.R4.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must",
+     "dwelling_unit": "each dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum 1.0 space per dwelling unit in multiple dwelling unit buildings.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R5.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_rate = unregulated @(1)[T2.R5.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "secondary_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "secondary_suite": "Secondary Suite",
+     "parking_space": "Parking Rate None"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "No parking rate is set for this building type.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R6.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R6.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0",
+     "clause": "(1)[T2.R6.C2](A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0",
+     "clause": "(1)[T2.R6.C2](B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "2",
+     "clause": "(1)[T2.R6.C2](B)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "0.34",
+     "clause": "(1)[T2.R6.C2](C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The minimum rate for multi-tenant house rooms depends on the Policy Area Overlay Map and Diagram 2 of By-law 156-2023, which are not held."
+   },
+   "disclosure": "The minimum rate for multi-tenant house rooms depends on the Policy Area Overlay Map and Diagram 2 of By-law 156-2023, which are not held.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R7.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R7.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "2.0",
+     "clause": "(1)[T2.R7.C2](A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.01",
+     "clause": "(1)[T2.R7.C2](A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "2.0",
+     "clause": "(1)[T2.R7.C2](B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.05",
+     "clause": "(1)[T2.R7.C2](B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R7.C2](C)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "five (5)",
+     "clause": "(1)[T2.R7.C2](C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "0.1",
+     "clause": "(1)[T2.R7.C2](D)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Visitor parking rates vary by Parking Zone A, Parking Zone B and elsewhere, and need the Parking Zone Overlay Map, which is not held."
+   },
+   "disclosure": "Visitor parking rates vary by Parking Zone A, Parking Zone B and elsewhere, and need the Parking Zone Overlay Map, which is not held.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R8.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_rate = 0.5 ratio @(1)[T2.R8.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum 0.5 space per bed-sitting room or dwelling unit for Tier 1 uses.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R9.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R9.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.8",
+     "clause": "(1)[T2.R9.C2](A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(1)[T2.R9.C2](B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "3.5",
+     "clause": "(1)[T2.R9.C2](C)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "100 square metres",
+     "clause": "(1)[T2.R9.C2](C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The maximum rate varies by Parking Zone A, Parking Zone B and elsewhere; the Parking Zone Overlay Map is not held."
+   },
+   "disclosure": "The maximum rate varies by Parking Zone A, Parking Zone B and elsewhere; the Parking Zone Overlay Map is not held.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R10.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_rate = 1.5 ratio @(1)[T2.R10.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100 square metres",
+     "clause": "(1)[T2.R10.C2]",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum 1.5 spaces per 100 m2 of gross floor area for Tier 3 uses.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R11.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T2.R11.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "3.5",
+     "clause": "(1)[T2.R11.C2](A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "4.0",
+     "clause": "(1)[T2.R11.C2](B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "6.0",
+     "clause": "(1)[T2.R11.C2](C)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "100 square metres",
+     "clause": "(1)[T2.R11.C2](C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "Parking spaces must",
+     "parking_space": "Parking spaces must"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The maximum rate varies by Parking Zone A, Parking Zone B and elsewhere; the Parking Zone Overlay Map is not held."
+   },
+   "disclosure": "The maximum rate varies by Parking Zone A, Parking Zone B and elsewhere; the Parking Zone Overlay Map is not held.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(1)#(1)[T1.R4.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Table heading or land use label cell; no numeric effect.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(10)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "alternative housing",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Defines alternative housing for parking purposes.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(11)#(11)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "outdoor patio",
+     "parking_space": "required parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "An outdoor patio may take a required space that is not for a resident or is an accessible space.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(11)#(11)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "half",
+     "clause": "(11)(B)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "outdoor patio",
+     "parking_space": "visitor parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The cap on visitor spaces removed for a patio (half of the required amount) has no matching model target."
+   },
+   "disclosure": "The cap on visitor spaces removed for a patio (half of the required amount) has no matching model target.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(12)#whole",
+   "archetype": "LIMIT",
+   "target": "parking_spaces",
+   "bound": "exact",
+   "numeric_expression": [
+    "parking_spaces = 1 units @(12)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street",
+     "unit_count_band"
+    ],
+    "if": "dwelling_units ≤ 60 units"
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street",
+     "unit_count_band"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "apartment_building": "apartment building",
+     "major_street": "abutting a major street",
+     "unit_count_band": "60 or fewer dwelling units",
+     "parking_space": "visitor parking requirement"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [
+     "building_type",
+     "unit_count"
+    ],
+    "description": "Visitor parking for small apartment buildings on major streets is 1 space.",
+    "gaps": "Major street comes from the Policy Area Overlay Map."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(2)#(2)(A)",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Restates that provided spaces may not fall below the required minimum.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(2)#(2)(B)",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Restates that provided spaces may not exceed the permitted maximum.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(3)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "ancillary uses",
+     "parking_space": "parking space rate"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "An ancillary use takes the parking rate of its principal use.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(4)#(4)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "use is not listed",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "Parking may be provided for a use with no table rate if this condition holds.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(4)#(4)(B)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "owner, occupant or visitors",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "Parking may be provided for a use with no table rate if this condition holds.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(4)#(4)(C)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "number of parking spaces",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "Parking may be provided for a use with no table rate if this condition holds.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(5)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "multiple uses",
+     "parking_space": "parking space rates"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Totals are the sum of each use's minimum and maximum.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(7)#(7)(A)",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Provided spaces may not fall below the required minimum.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(7)#(7)(B)",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Provided spaces may not exceed the permitted maximum.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(7)#(7)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "minimum is not",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "With no minimum specified, only accessible spaces are required.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.1(8)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "section 24",
+     "clause": "(8)",
+     "reason": "cross_reference_value"
+    },
+    {
+     "literal": "two or more",
+     "clause": "(8)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "residential buildings"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Defines a multiple dwelling unit building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "200.5.10.1(1)": {
+   "explanation": "Table 200.5.10.1 sets parking rates by use; most are maximums, and rates vary by parking zone.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(10)": {
+   "explanation": "Alternative housing means City-linked or non-profit housing for parking purposes.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(11)": {
+   "explanation": "An outdoor patio may replace some required parking, with limits on resident and visitor spaces.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(12)": {
+   "explanation": "Small apartment buildings on major streets in residential zones need just 1 visitor space.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(2)": {
+   "explanation": "Parking provided must be between the required minimum and the permitted maximum.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(3)": {
+   "explanation": "An ancillary use follows the parking rate of the use it serves.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(4)": {
+   "explanation": "A use with no table rate may still have parking if it stays within the lot's minimum and maximum totals.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(5)": {
+   "explanation": "With several uses, minimums add up and maximums add up.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(7)": {
+   "explanation": "Table minimums and maximums are both binding, and no minimum means only accessible spaces are required.",
+   "code_refs": "none"
+  },
+  "200.5.10.1(8)": {
+   "explanation": "A multiple dwelling unit building is two or more residential buildings sharing a driveway over tied land.",
+   "code_refs": "none"
+  }
+ }
+}

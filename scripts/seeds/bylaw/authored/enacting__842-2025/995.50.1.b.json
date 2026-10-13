@@ -1,0 +1,34 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:842-2025/995.50.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "995.50.1@842-2025#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": [],
+      "condition": [],
+      "applies_to": {
+        "part": "map_area"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

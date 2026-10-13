@@ -1,0 +1,222 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.80.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.80.40(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["required_frontage_band"], "if": "required_lot_frontage_m < 24.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "6.0 metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "detached_houseplex", "semi_detached_houseplex"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": ["private_garage"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house, detached houseplex",
+          "detached_houseplex": "detached houseplex or",
+          "semi_detached_houseplex": "semi-detached houseplex, if",
+          "required_frontage_band": "required minimum lot frontage",
+          "private_garage": "Width of Garage Entrance"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Maximum combined width of all vehicle entrances through the front main wall is 6.0 m where the required minimum lot frontage is under 24.0 m; no dsl_target measures vehicle-entrance width.",
+        "gaps": "No vocab target for the combined width of vehicle entrances (driveway_width_m is a driveway, not an entrance).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "The 6.0 m limit on the combined width of vehicle entrances in the front main wall (lots with required frontage under 24.0 m) is not evaluated; there is no model target for entrance width.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.80.40(2)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "detached_houseplex", "semi_detached_houseplex", "townhouse"],
+        "lot_conditions": [],
+        "uses": ["private_garage"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "detached_house": "a detached house",
+          "semi_detached_house": "semi-detached house, detached houseplex",
+          "detached_houseplex": "detached houseplex or",
+          "semi_detached_houseplex": "semi-detached houseplex, and",
+          "townhouse": "townhouse dwelling unit",
+          "private_garage": "Elevation of Garage Entrance"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "The lowest point of a vehicle entrance must be higher than the driveway centreline elevation at the street lot line; a grade comparison with no numeric limit.",
+        "gaps": "No elevation data for entrances or driveway centrelines; no vocab requirement for this obligation. The individual-private-driveway proviso applies to the townhouse arm only.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "The rule that a vehicle entrance must sit higher than the driveway centreline at the street lot line is not evaluated; no elevation data is held.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "access_from_lane",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_lane"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_lane"],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "vehicle access to a parking space",
+          "abuts_lane": "the lot abuts a lane",
+          "parking_space": "access to a parking space"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Vehicle access to a parking space must be from the lane when the lot abuts a lane.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "vehicle access to a parking space",
+          "parking_space": "access to a parking space"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Where the lot does not abut a lane, vehicle access must be from a flanking street that is not a major street on the Policy Areas Overlay Map.",
+        "gaps": "No vocab requirement for flanking-street access; the Policy Areas Overlay Map is not held; a negated lot condition (does not abut a lane) cannot be keyed.",
+        "not_modelled_reason": "map_area_not_held",
+        "user_inputs": []
+      },
+      "disclosure": "Access from a flanking street that is not a major street (lots not abutting a lane) is not evaluated; the Policy Areas Overlay Map is not held.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "any": "vehicle access to a parking space",
+          "parking_space": "access to a parking space"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "In all other cases vehicle access may be from the street on which the lot fronts.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.80.40(1)": {
+      "explanation": "In the Residential zones, on a lot with a detached house, semi-detached house, detached houseplex or semi-detached houseplex whose required minimum lot frontage is under 24.0 m, all vehicle entrances in the front main wall may total no more than 6.0 m wide.",
+      "code_refs": "none"
+    },
+    "10.5.80.40(2)": {
+      "explanation": "In the Residential zones, the lowest point of a garage vehicle entrance must be higher than the driveway centreline where it meets the street lot line. This applies to detached and semi-detached houses and houseplexes, and to a townhouse unit with its own private driveway.",
+      "code_refs": "none"
+    },
+    "10.5.80.40(3)": {
+      "explanation": "In the Residential zones, vehicle access to a parking space must come from the lane if the lot abuts one. If not, it must come from a flanking street that is not a major street on the Policy Areas Overlay Map. In all other cases it may come from the street the lot fronts.",
+      "code_refs": "none"
+    }
+  }
+}

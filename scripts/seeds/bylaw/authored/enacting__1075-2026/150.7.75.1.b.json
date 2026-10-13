@@ -1,0 +1,58 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:1075-2026/150.7.75.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.7.75.1(2)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "569-2013", "clause": "[instruction]", "reason": "cross_reference_value"},
+        {"literal": "150.7.75.1(2)", "clause": "[instruction]", "reason": "cross_reference_value"},
+        {"literal": "32.", "clause": "[instruction]", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "150.7.75.1(2)@1075-2026#(2)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["has_garden_suite"], "if": "existing(distance_to_residential_m; enacted(569-2013)) >= 0.3 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "numeric_expression": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9", "clause": "(2)", "reason": "threshold_used_in_application"},
+        {"literal": "0.3", "clause": "(2)", "reason": "threshold_used_in_application"},
+        {"literal": "2.0", "clause": "(2)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building", "garden_suite"],
+        "lot_conditions": ["has_garden_suite"],
+        "uses": ["energy_device"],
+        "evidence": {
+          "ancillary_building": "on an ancillary building containing a garden suite",
+          "garden_suite": "associated with a garden suite",
+          "has_garden_suite": "associated with a garden suite",
+          "energy_device": "Heating, Ventilation and Air Conditioning Devices"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "needs_data_we_lack", "user_inputs": ["has_garden_suite", "building_type"]}
+    }
+  ]
+}

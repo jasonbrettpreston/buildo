@@ -1,0 +1,77 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.15.5.part2",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "970.10.15.5(17)#(17)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 1.0 units @(17)(A)"]
+    },
+    {
+      "unit_id": "970.10.15.5(17)#(17)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 1.0 units ÷ 25.0 units × parking_spaces @(17)(B)"]
+    },
+    {
+      "unit_id": "970.10.15.5(17)#(17)(C)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 5.0 units + 1.0 units ÷ 50.0 units × (parking_spaces − 100.0 units) @(17)(C)"]
+    },
+    {
+      "unit_id": "970.10.15.5(18)#(18)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 10.0 pct × parking_spaces @(18)(A)"]
+    },
+    {
+      "unit_id": "970.10.15.5(18)#(18)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(2)#(2)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(2)#(2)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(2)#(2)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(3)#whole",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": ["parking_spaces = parking_rate × gfa_m2 @(3)"]
+    },
+    {
+      "unit_id": "970.10.15.5(4)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

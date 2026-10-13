@@ -1,0 +1,236 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.6.10(18)#(18)[SSP]",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = by_type(detached_house: 465 m2; semi_detached_house: 665 m2; duplex: 555 m2; triplex: 610 m2) @(18)[SSP](A)",
+        "required_lot_frontage_m = by_type(detached_house: 12.0 m; semi_detached_house: 18.0 m; duplex: 15 m; triplex: 16.5 m) @(18)[SSP](B)",
+        "lot_coverage_pct = by_type(detached_house: 33 pct; semi_detached_house: 33 pct; duplex: 35 pct; triplex: 35 pct) @(18)[SSP](C)",
+        "height_m = by_type(detached_house: 9.5 m; semi_detached_house: 11.0 m; duplex: 11.0 m; triplex: 11.0 m) @(18)[SSP](D)",
+        "fsi = by_type(detached_house: 0.45 ratio) @(18)[SSP](E)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 18",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex",
+          "triplex": "for a triplex"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "Site specific minimum lot area, minimum lot frontage, maximum lot coverage, maximum height and maximum floor space index by building type; the unit target is the first (lot area, min); the other four statements carry their own targets and bounds (frontage min, coverage max, height max, FSI max).", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(18)#(18)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "former City of Etobicoke By-laws 1979-67 and 1981-272", "municipality": "City of Etobicoke"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["lands in the zone 'RM', between Kipling Ave. on the east, Brown's Line on the West, Evans Ave. to the north and Horner Ave. to the south", "lands in the zone 'RM', between Brown's Line on the east, Etobicoke Creek on the west, Horner Ave. on the north and Lake Shore Blvd. W. to the south"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "in the zone 'RM'",
+          "any": "The lands, or a portion thereof"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "status": "not_modelled", "description": "Alternate compliance path under former City of Etobicoke by-laws on two street-described areas; never evaluated.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(22)#(22)[SSP]",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = by_type(detached_house: 325 m2; semi_detached_house: 555 m2; duplex: 370 m2; triplex: 465 m2) @(22)[SSP](A)",
+        "required_lot_frontage_m = by_type(detached_house: 10.5 m; semi_detached_house: 18.0 m; duplex: 12.0 m; triplex: 15.0 m) @(22)[SSP](B)",
+        "height_m = by_type(detached_house: 9.5 m) @(22)[SSP](C)",
+        "side_setback_m = 0.9 m @(22)[SSP](D)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 22",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex",
+          "triplex": "for a triplex"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "Site specific minimum lot area, minimum lot frontage, maximum height (detached house) and minimum side yard setback; the unit target is the first (lot area, min); the other statements carry their own targets and bounds (frontage min, height max, side setback min).", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(22)#(22)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": [], "status": "informational", "description": "No prevailing by-laws or sections apply (None Apply).", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(252)#(252)[SSP]",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_house: 8.0 m) @(252)[SSP](A)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 252",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": ["building_type"], "status": "modelled", "description": "Site specific minimum lot frontage of 8.0 m for a detached house.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(252)#(252)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto By-law 1268-2009(OMB); City of Toronto By-law 593-2008; City of Toronto by-law 106-2015", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["1500 Weston Road", "601, 603 and 605 Oakwood Avenue", "441 Jane Street"]},
+      "literals_not_expressed": [
+        {"literal": "1500", "clause": "(252)[PBS](A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "601", "clause": "(252)[PBS](B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "603", "clause": "(252)[PBS](B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "605", "clause": "(252)[PBS](B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "441", "clause": "(252)[PBS](C)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 252",
+          "any": "The lands, or a portion thereof"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "status": "not_modelled", "description": "Alternate compliance paths under three City of Toronto by-laws on named addresses; never evaluated.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(474)#(474)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "procedural_not_numeric", "user_inputs": [], "status": "informational", "description": "No site specific provisions apply (None Apply).", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(474)#(474)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["Schedule 'D' Airport Hazard Map"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 474",
+          "any": "The lands, or a portion thereof"
+        }
+      },
+      "calculation_handling": {"not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "status": "not_modelled", "description": "Prevailing Schedule D Airport Hazard Map of former North York by-law 7625; map not held, never evaluated.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.6.10(18)": {"explanation": "Exception RM 18 sets site specific minimum lot area and frontage, maximum lot coverage and height, and a 0.45 floor space index for detached houses, with different values for detached, semi-detached, duplex and triplex buildings. Two street-described areas also remain subject to former Etobicoke by-laws 1979-67 and 1981-272.", "code_refs": "none"},
+    "900.6.10(22)": {"explanation": "Exception RM 22 sets site specific minimum lot areas and frontages by building type, a 9.5 m maximum height for a detached house and a 0.9 m minimum side yard setback. No prevailing by-laws apply.", "code_refs": "none"},
+    "900.6.10(252)": {"explanation": "Exception RM 252 sets an 8.0 m minimum lot frontage for a detached house. Three named addresses remain subject to City of Toronto by-laws 1268-2009(OMB), 593-2008 and 106-2015.", "code_refs": "none"},
+    "900.6.10(474)": {"explanation": "Exception RM 474 has no site specific provisions; the lands are subject to the Schedule D Airport Hazard Map of former North York by-law 7625.", "code_refs": "none"}
+  }
+}

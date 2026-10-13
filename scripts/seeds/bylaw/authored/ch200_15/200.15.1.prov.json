@@ -1,0 +1,47 @@
+{
+  "a_seal": {
+    "seal_id": 212,
+    "sha256": "b230b2e4e71a09d37a638c8b10cccafcf4e3506d0ef7d2b87582a54c037b27b1"
+  },
+  "b_run": {
+    "ledger_sha256": "9b1880fdc645a81da67c6324eeb7a4a3d1f5d8c35530a1ca816303c935c8578b",
+    "read_paths": [
+      "."
+    ],
+    "run_id": "20261008T212139Z-5001477d",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "82de471b295a4b54db8acd988fcb2de530dc4e261296358ded23c1d56bff52f6",
+    "b": "cc39edf1b328b3579e458d255260969c521e65d6473f4f329571c29989debe7e"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_15/200.15.1",
+  "unit_shas": {
+    "200.15.1(1)#(1)(A)": "3c15116215d74d8d910613c4685aad26a3ac24d65339c092b3e9471c8b9d8f2d",
+    "200.15.1(1)#(1)(B)": "c1e1d4879ba147ede765bc54956fe9ad722998d4293f6dac26e74f24bd5422d1",
+    "200.15.1(1)#(1)(C)": "3a10b515d671e4a7b34effbbf5c3876c4383c68b3098ad243c8501539aa85d2c",
+    "200.15.1(1)~under_appeal#(1)~under_appeal(A)": "38785f00480d304558335e9f1535cd520418bea4d9bb3c0d4140c9f5a6493966",
+    "200.15.1(1)~under_appeal#(1)~under_appeal(B)": "17ebb11d0bbe8be4005be4c6d58c72582c703495e6efe2e3799d10891508ad11",
+    "200.15.1(1)~under_appeal#(1)~under_appeal(C)": "c92279eb1beff5ff73968202b82c96215fafedd25c13fe79b3551ea0e55e7105",
+    "200.15.1(2)#(2)(A)": "69621092bf4a0e62e36219b3e16c2232c7f4f15a070cc5d48f9fd06046005619",
+    "200.15.1(2)#(2)(B)": "5783a552263675e017ccb5d1058550f41d07c596aad2675cbc689cf9a43fb8f8",
+    "200.15.1(2)#(2)(C)": "32c35b1aaa4cdfbf8eb0562fc79a29f7f3ea5fa7e9498d7c9c4785755caf05c6",
+    "200.15.1(3)#whole": "ca7fb62d36dfa39b20c73538eae6d07f2851adbb1c6b7296bb43965b747d962c",
+    "200.15.1(4)#(4)(A)": "ad41ad093bebd43ccaaeb1ec104d829fbb5d90e2a2a7d6ebdb4705fcbee3c63c",
+    "200.15.1(4)#(4)(B)": "c1f9a1a0ec494ef61ac5051f61c29eab484e2c5314531b8a02229569d7afebab",
+    "200.15.1(4)#(4)(C)": "97e32a8408e51f1550f6562db0cd4fa430c30090de69d1eec4a5e0da98c33f37",
+    "200.15.1(5)#whole": "30885fcae7f5cf2e01cd05a204dbb7b161a4754ae20a4df416d06605ec20d5b4"
+  }
+}

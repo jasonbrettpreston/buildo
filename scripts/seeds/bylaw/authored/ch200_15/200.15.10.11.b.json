@@ -1,0 +1,231 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_15/200.15.10.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.15.10.11(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": [
+        "parking_spaces = existing(parking_spaces; enacted(569-2013)) @(1)(A)"
+      ],
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "max",
+      "numeric_expression": [
+        "parking_spaces = existing(parking_spaces; enacted(569-2013)) @(1)(B)"
+      ],
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(1)#(1)(C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"]
+      },
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(3)#(3)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(3)#(3)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": ["lawfully_existing"],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"]
+      },
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(4)#(4)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {
+          "literal": "March 31, 2025",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(4)(A)"
+        }
+      ],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.10.11(4)#(4)(B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {
+          "literal": "March 31, 2025",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(4)(B)"
+        }
+      ],
+      "input_fidelity": "none",
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

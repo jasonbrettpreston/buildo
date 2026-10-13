@@ -1,0 +1,32 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_48/150.48.50.10", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.48.50.10(1)#(1)(A)",
+      "archetype": "LIMIT", "target": "landscaping_strip_width_m", "bound": "min",
+      "numeric_expression": ["landscaping_strip_width_m = 1.5 m @(1)(A)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A lot with a public school"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A lot with a public or private school must have a strip of soft landscaping at least 1.5 m wide along all side and rear lot lines.", "gaps": "Schools are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.48.50.10(1)#(1)(B)",
+      "archetype": "LIMIT", "target": "landscaping_strip_width_m", "bound": "min",
+      "numeric_expression": ["landscaping_strip_width_m = 3.0 m @(1)(B)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A lot with a public school"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A lot with a public or private school must have a strip of soft landscaping at least 3.0 m wide along the entire length of any lot line abutting a street, excluding play areas, walkways, driveways, parking, loading and drop-off areas.", "gaps": "Schools are not a modelled building type; the excluded areas are not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.48.50.10(1)": {"explanation": "A lot with a public or private school needs a soft landscaping strip at least 1.5 m wide along all side and rear lot lines, and at least 3.0 m wide along any lot line abutting a street, excluding areas used for play, walkways, driveways, parking, loading and student drop-off and pick-up.", "code_refs": "none"}
+  }
+}

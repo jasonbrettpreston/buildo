@@ -1,0 +1,57 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_25/150.25.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.25.1(1)#whole",
+      "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "apply to multi-tenant houses"}},
+      "calculation_handling": {"status": "informational", "description": "Scope statement: the regulations in Section 150.25 apply to multi-tenant houses.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.1(2)#whole",
+      "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "base > exception",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "informational", "description": "Despite 900.1.10(3) and 900.1.10(4)(A), a multi-tenant house is permitted if it complies with the zone regulations and Section 150.25.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.1(3)#(3)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [], "building_types": ["semi_detached_house", "townhouse"], "lot_conditions": [], "uses": [],
+        "evidence": {"semi_detached_house": "portion of a semi-detached house", "townhouse": "semi-detached house or townhouse"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "When part of a semi-detached house or townhouse is converted to a multi-tenant house, the remaining portions on abutting lots are deemed to be in the original building type.", "gaps": "Conversion history of existing buildings is not held.", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]},
+      "disclosure": "The deeming of unconverted portions of a semi-detached house or townhouse as the original building type is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.1(3)#(3)(B)",
+      "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A residential building"}},
+      "calculation_handling": {"status": "informational", "description": "A converted building must comply with the zone regulations and the regulations in Section 150.25.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.25.1(1)": {"explanation": "The multi-tenant house rules in Section 150.25 apply to multi-tenant houses.", "code_refs": "none"},
+    "150.25.1(2)": {"explanation": "Despite the Chapter 900 exception rules in 900.1.10(3) and 900.1.10(4)(A), a multi-tenant house is permitted if it meets the regulations for its zone and Section 150.25.", "code_refs": "none"},
+    "150.25.1(3)": {"explanation": "A residential building, or part of one, may be converted to a multi-tenant house and stay a lawfully existing building. When part of a semi-detached house or townhouse is converted, the remaining parts on abutting lots are treated as the original building type. A converted building must meet the zone regulations and Section 150.25.", "code_refs": "none"}
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.80.1(1)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.1(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "numeric_expression": ["separation_m = 6.0 m @(2)(A)"]
+    },
+    {
+      "unit_id": "10.5.80.1(2)#(2)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.1(2)#(2)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.1(2)#(2)(D)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": ["street_setback_m = max(6.0 m @(2)(D)(i); abutting_front_setback_m @(2)(D)(ii)) @(2)(D)"]
+    },
+    {
+      "unit_id": "10.5.80.1(2)#(2)(E)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 3.0 m @(2)(E)(i)"]
+    }
+  ]
+}

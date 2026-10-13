@@ -1,0 +1,104 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch5_10/5.10.1.30",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "5.10.1.30(3)#(3)(A)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R",
+     "RD",
+     "RS",
+     "RT",
+     "RM"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "R": "Residential Zone category",
+     "RD": "Residential Zone category",
+     "RS": "Residential Zone category",
+     "RT": "Residential Zone category",
+     "RM": "Residential Zone category",
+     "any": "dwelling unit may",
+     "dwelling_unit": "dwelling unit may"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "A dwelling unit may not be entirely below established grade.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "5.10.1.30(3)#(3)(B)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "dwelling unit may",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "A dwelling unit may not be entirely below average grade in other zones.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "5.10.1.30(3)": {
+   "explanation": "A dwelling unit may not sit entirely below grade: established grade in residential zones, average grade in other zones.",
+   "code_refs": "none"
+  }
+ }
+}

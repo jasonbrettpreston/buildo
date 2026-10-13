@@ -1,0 +1,53 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_30/150.30.20.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.30.20.1(1)#(1)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A seniors community house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A seniors community house must occupy the entire building.", "gaps": "No vocabulary requirement for sole-occupancy of a building.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The rule that a seniors community house occupies the entire building is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.30.20.1(1)#(1)(B)",
+      "archetype": "PROHIBIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A seniors community house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A seniors community house may not be combined with another use.", "gaps": "Combined use is not a scenario input.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.30.20.1(1)#(1)(C)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "65 years", "clause": "(1)(C)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A seniors community house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A seniors community house may not have residents, excluding staff, under 65 years old.", "gaps": "Resident age is not a model input.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 65 year minimum age for residents of a seniors community house is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.30.20.1(2)#whole",
+      "archetype": "PROHIBIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["the area bounded on the north by Dundas St. W., on the east by Dufferin St. and the rail lines, on the south by Lake Shore Blvd. W., and on the west by Roncesvalles Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A seniors community house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A seniors community house may not be located in the area bounded by Dundas St. W., Dufferin St. and the rail lines, Lake Shore Blvd. W. and Roncesvalles Ave.", "gaps": "The described area is not held as a map.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+      "disclosure": "The ban on seniors community houses in the area bounded by Dundas St. W., Dufferin St., Lake Shore Blvd. W. and Roncesvalles Ave. is not evaluated; the area is not held.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.30.20.1(1)": {"explanation": "A seniors community house must occupy the entire building, may not be combined with another use, and may not have residents (other than staff) under 65 years old.", "code_refs": "none"},
+    "150.30.20.1(2)": {"explanation": "A seniors community house may not be located in the area bounded by Dundas St. W. on the north, Dufferin St. and the rail lines on the east, Lake Shore Blvd. W. on the south and Roncesvalles Ave. on the west.", "code_refs": "none"}
+  }
+}

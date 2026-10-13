@@ -1,0 +1,355 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.70",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.40.70(1)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "General rule that no part of a building or structure may sit inside a required minimum building setback; the setback values are keyed in the zone clauses.",
+        "gaps": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "Measurement rule: building setback requirements apply only to the parts of a building or structure above ground.",
+        "gaps": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(3)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building is located"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "description": "Measurement rule: when one building sits on more than one lot, setbacks are measured from the outer boundary of the combined lots to the building's main walls.",
+        "gaps": "Our lot data is per lot and does not model combined lots.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception: a use outside a building that is landscaping or a horticultural use does not have to meet the building setbacks.",
+        "gaps": "We hold no data on landscaping or horticultural uses outside buildings.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception: a use outside a building that is a park or an outdoor recreation use does not have to meet the building setbacks.",
+        "gaps": "We hold no data on park or outdoor recreation uses outside buildings.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(C)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "A use outside a building follows the building setbacks unless another regulation of the By-law sets an alternative setback; that other regulation is keyed on its own.",
+        "gaps": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(5)#whole",
+      "archetype": "DEFINE",
+      "target": "rear_setback_m",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "required minimum building setback"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Measurement rule: on a triangular lot with no rear lot line, the rear yard setback is measured as a radius from the point where the side lot lines meet.",
+        "gaps": "Our lot data does not identify triangular lots without a rear lot line or the point where the side lines meet.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(6)#(6)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "R.S.O 1990 c. C.27", "clause": "(6)", "reason": "cross_reference_value"},
+        {"literal": "10 metres", "clause": "(6)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building",
+          "shoreline_or_top_of_bank": "shoreline hazard limit"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception to the 10 metre setback from a shoreline hazard limit or stable top-of-bank: an ancillary building on a residential lot is exempt.",
+        "gaps": "The 10 metre value sits in the lead-in of (6), which has no unit of its own. The TRCA line is not held in our lot data.",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(6)#(6)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "R.S.O 1990 c. C.27", "clause": "(6)", "reason": "cross_reference_value"},
+        {"literal": "10 metres", "clause": "(6)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {"any": "building or structure", "shoreline_or_top_of_bank": "shoreline hazard limit"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception to the 10 metre setback from a shoreline hazard limit or stable top-of-bank: conservation works, public utilities and transportation uses are exempt.",
+        "gaps": "The 10 metre value sits in the lead-in of (6), which has no unit of its own. The TRCA line is not held in our lot data.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.70(7)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing", "shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {
+          "any": "building or structure",
+          "lawfully_existing": "lawfully existing building",
+          "shoreline_or_top_of_bank": "shoreline hazard limit"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "description": "A lawfully existing building closer to a shoreline hazard limit or stable top-of-bank than the required setback stays permitted, and may be altered or replaced on the same lot if it is no closer at any point along its main walls.",
+        "gaps": "Needs as-built wall positions and the TRCA line, neither held in our lot data.",
+        "user_inputs": ["lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.40.70(1)": {
+      "explanation": "No part of a building or structure may sit inside a required minimum building setback.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(2)": {
+      "explanation": "Building setback requirements apply only to the parts of a building or structure that are above ground.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(3)": {
+      "explanation": "If one building sits on more than one lot, the required setbacks are measured from the outer boundary of the combined lots to the building's main walls.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(4)": {
+      "explanation": "A use outside any building must keep the same setbacks as a building, except landscaping or horticultural uses, parks and outdoor recreation uses, and cases where another regulation sets a different setback.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(5)": {
+      "explanation": "On a triangular lot with no rear lot line, the rear yard setback is measured as a radius from the point where the two side lot lines meet.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(6)": {
+      "explanation": "On Toronto and Region Conservation Authority lands where a shoreline hazard limit or stable top-of-bank crosses a lot, buildings must be set back at least 10 metres from that line. Ancillary buildings on residential lots and conservation works, public utilities and transportation uses are exempt.",
+      "code_refs": "none"
+    },
+    "5.10.40.70(7)": {
+      "explanation": "A lawfully existing building already closer than the required setback to a shoreline hazard limit or stable top-of-bank may stay. It may be altered or replaced on the same lot if it is no closer to the line at any point along its main walls.",
+      "code_refs": "none"
+    }
+  }
+}

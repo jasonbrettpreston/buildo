@@ -1,0 +1,16 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_50/150.50.40.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.50.40.10(1)#whole",
+      "archetype": "LIMIT",
+      "target": "height_projection_m",
+      "bound": "max",
+      "numeric_expression": [
+        "height_projection_m = 0.4 ratio × height_m @(1)"
+      ]
+    }
+  ]
+}

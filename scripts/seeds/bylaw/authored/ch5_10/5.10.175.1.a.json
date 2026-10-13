@@ -1,0 +1,87 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch5_10/5.10.175.1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "5.10.175.1(1)#whole",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "A required fence must comply with the Municipal Code fence chapter.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "5.10.175.1(2)#whole",
+   "archetype": "DISAPPLY",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "A fence"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "A fence is exempt from minimum building setbacks.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "5.10.175.1(1)": {
+   "explanation": "A fence required by the by-law must also meet the Municipal Code fence rules.",
+   "code_refs": "none"
+  },
+  "5.10.175.1(2)": {
+   "explanation": "A fence does not have to meet minimum building setbacks.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -36,7 +36,9 @@ export const FIXTURE_ROW_IDS = Object.freeze([
   '10.20.40.70(3)', '10.20.40.70(4)', '10.20.40.70(6)', '10.20.40.10(1)', '10.80.40.10(1)', '10.20.40.40(1)', '10.20.40.20(1)',
   '10.20.40.20(4)', '10.20.30.20(1)', '600.60.40(1)', '600.60.40(3)', '900.1.10(2)', '900.1.10(3)', '900.1.10(4)', '1.5.7(1)',
   '10.5.20.40(1)', '10.5.20.40(2)', '10.5.20.40(3)', '10.5.20.40(4)', '10.5.20.40(5)', '10.10.40.1(3)', '10.60.40.1(2)',
-  '10.80.40.1(2)', '800.50(445)',
+  '10.80.40.1(2)', '800.50(445)', '10.80.80.1(1)', '10.10.80.1(1)', '10.40.40.20(2)',
+  '10.20.20.100(8)', '10.10.80.200(1)', '10.5.40.40(3)', '10.5.40.40(3)(E)@1075-2026',
+  '10.10.20.40(2)', '10.5.40.60(8)', '10.5.40.60(8)(C)@1075-2026',
 ]);
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -155,11 +157,20 @@ export function shardOf(units, { key = null, a = null, b = undefined, prov = und
     ? { schema: AUTHORED_SCHEMA, shard: aDoc.shard, keyers: { a: { id: 'keyer-a:claude', engine: 'claude' }, b: { id: 'keyer-b:deepseek', engine: 'deepseek' } }, briefs: { a: 'a'.repeat(64), b: 'b'.repeat(64) }, a_seal: { sha256: sha256(aBytes), seal_id: 1 }, b_run: { run_id: 'run-1', ledger_sha256: 'c'.repeat(64), read_paths: [`.cursor/briefs/${article}.b.md`], worktree_commit: 'f'.repeat(40) }, unit_shas: unitShas }
     : prov;
   const k = aDoc.shard;
-  return { key: k, page: 'fx', article, paths: { a: `scripts/seeds/bylaw/authored/${k}.a.json`, b: `scripts/seeds/bylaw/authored/${k}.b.json`, prov: `scripts/seeds/bylaw/authored/${k}.prov.json` }, a: aDoc, b: bDoc, prov: pv, a_sha256: sha256(aBytes), parse_errors: [] };
+  return { key: k, page: 'fx', article, paths: { a: `scripts/seeds/bylaw/authored/${k}.a.json`, b: `scripts/seeds/bylaw/authored/${k}.b.json`, prov: `scripts/seeds/bylaw/authored/${k}.prov.json` }, a: aDoc, b: bDoc, prov: pv, a_sha256: sha256(aBytes), b_sha256: bDoc ? sha256(Buffer.from(JSON.stringify(bDoc), 'utf8')) : null, prov_sha256: pv ? sha256(Buffer.from(JSON.stringify(pv), 'utf8')) : null, parse_errors: [] };
 }
 function unitSha(sl, unitId) {
   const v = unitView(buildIndex(sl), unitId); // exactly what G-SHAPE compares the pin with
   return v ? v.sha256 : 'missing';
+}
+
+/** Spec 69a M-80: a re-key generation `<key>~r<n>` of `old` holding `units`, its prov recording what it supersedes. */
+export function rekeyOf(old, units, { gen = 1, seal_id = 2, b = undefined } = {}) {
+  const key = `${old.key}~r${gen}`;
+  const s = shardOf(units, { key, b });
+  s.prov.a_seal.seal_id = seal_id;
+  s.prov.supersedes = { a_sha: old.a_sha256, b_sha: old.b_sha256, prov_sha: old.prov_sha256 };
+  return s;
 }
 
 export const realAdjudications = () => clone(REAL_ADJ);
@@ -199,10 +210,29 @@ export function agreeFixtures() {
     { name: 'adjudication_duplicate: order-independent (invalid entry first)', reason: 'adjudication_duplicate', input: { shards: [disagree()], adjudications: { adjudications: [{ ...adj({}).adjudications[0], id: 'ADJ-0', decision: 'x' }, ...adj({}).adjudications] }, vocab } },
     { name: 'adjudication_orphan', reason: 'adjudication_orphan', input: { shards: [shardOf([g])], adjudications: adj({}), vocab } },
     { name: 'adjudication_kind_invalid', reason: 'adjudication_kind_invalid', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: 'ADJ-9', kind: 'opinion', unit: g.unit_id, adjudicator: 'operator' }] }, vocab } },
+    // M-75 corrections: a sealed draft is corrected by a record, never edited. `application` is A-only (not ⧉).
+    { name: 'good twin: a correction on an A-only field (application)', reason: null, input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: `COR-${g.unit_id}/application`, kind: 'correction', unit: g.unit_id, field: 'application', value: { zones: ['RS'], building_types: ['any'], lot_conditions: [], uses: [], evidence: { RS: 'in the RS zone' } }, reason: 'the clause names the RS zone, not RD', rule: 'Spec 68 §6.4 rule 4 — application lists the named zone', adjudicator: 'operator', adjudicated_on: '2026-10-08' }] }, vocab }, expect: (r) => r.counts.corrections === 1 && r.counts.units_agreed === 1 && r.units.get(g.unit_id).unit.application.zones[0] === 'RS' },
+    { name: 'correction_orphan', reason: 'correction_orphan', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: 'COR-1', kind: 'correction', unit: g.unit_id, field: 'not_a_field', value: 'x', reason: 'x', rule: 'Spec 68 §7.4', adjudicator: 'operator' }] }, vocab } },
+    { name: 'correction_rule_missing', reason: 'correction_rule_missing', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: 'COR-2', kind: 'correction', unit: g.unit_id, field: 'application', value: { zones: ['RS'], building_types: ['any'], lot_conditions: [], uses: [], evidence: {} }, reason: 'x', rule: '', adjudicator: 'operator' }] }, vocab } },
+    { name: 'correction_duplicate', reason: 'correction_duplicate', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: 'COR-3', kind: 'correction', unit: g.unit_id, field: 'application', value: { zones: ['RS'], building_types: ['any'], lot_conditions: [], uses: [], evidence: {} }, reason: 'x', rule: 'Spec 68 §7.4', adjudicator: 'operator' }, { id: 'COR-4', kind: 'correction', unit: g.unit_id, field: 'application', value: { zones: ['RT'], building_types: ['any'], lot_conditions: [], uses: [], evidence: {} }, reason: 'y', rule: 'Spec 68 §7.4', adjudicator: 'operator' }] }, vocab } },
+    // Spec 69a M-75 note 2026-10-08: supersedes — the newest live correction applies; unknown / duplicate supersede is RED
+    (() => {
+      const app = (z) => ({ zones: [z], building_types: ['any'], lot_conditions: [], uses: [], evidence: { [z]: `in the ${z} zone` } });
+      const c1 = { id: `COR-${g.unit_id}/application`, kind: 'correction', unit: g.unit_id, field: 'application', value: app('RS'), reason: 'x', rule: 'Spec 68 §6.4 rule 4', adjudicator: 'operator', adjudicated_on: '2026-10-08' };
+      const c2 = { ...c1, id: `${c1.id}~s1`, value: app('RT'), supersedes: c1.id };
+      return { name: 'good twin: M-75 supersedes — the superseding correction applies', reason: null, input: { shards: [shardOf([g])], adjudications: { adjudications: [c1, c2] }, vocab }, expect: (r) => r.counts.corrections === 1 && r.counts.corrections_superseded === 1 && r.units.get(g.unit_id).unit.application.zones[0] === 'RT' };
+    })(),
+    { name: 'correction_supersedes_unknown', reason: 'correction_supersedes_unknown', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ id: 'COR-S1', kind: 'correction', unit: g.unit_id, field: 'application', value: { zones: ['RS'], building_types: ['any'], lot_conditions: [], uses: [], evidence: {} }, reason: 'x', rule: 'Spec 68 §7.4', adjudicator: 'operator', supersedes: 'COR-nope' }] }, vocab } },
+    (() => {
+      const base = { kind: 'correction', unit: g.unit_id, field: 'application', reason: 'x', rule: 'Spec 68 §7.4', adjudicator: 'operator' };
+      const v = (z) => ({ zones: [z], building_types: ['any'], lot_conditions: [], uses: [], evidence: {} });
+      return { name: 'correction_supersede_duplicate', reason: 'correction_supersede_duplicate', input: { shards: [shardOf([g])], adjudications: { adjudications: [{ ...base, id: 'COR-D', value: v('RS') }, { ...base, id: 'COR-D~s1', value: v('RT'), supersedes: 'COR-D' }, { ...base, id: 'COR-D~s1b', value: v('RM'), supersedes: 'COR-D' }] }, vocab } };
+    })(),
+    // Spec 69a M-80: the old generation disagrees on bound; the re-key generation agrees → the unit is agreed, from the newest
+    { name: 'good twin: M-80 — a re-key generation supersedes the older drafts of its units', reason: null, input: { shards: (() => { const old = shardOf([g]); old.b.units[0].bound = 'max'; return [old, rekeyOf(old, [g])]; })(), vocab }, expect: (r) => r.counts.units_agreed === 1 && r.counts.units_pending === 0 && r.counts.superseded_units === 1 },
+    { name: 'pending never fails: M-80 — a re-key generation with only its .a makes the unit pending', reason: null, input: { shards: (() => { const old = shardOf([g]); const nu = rekeyOf(old, [g]); nu.b = null; return [old, nu]; })(), vocab }, expect: (r) => r.counts.units_pending === 1 && r.counts.units_agreed === 0 },
   ];
 }
-
-/** G-CLAUSE: {name, reason, input:{slice, units, vocab, adjudications}}. */
 export function clauseFixtures() {
   const slice = fixtureSlice();
   const vocab = REAL_VOCAB;
@@ -224,12 +254,33 @@ export function clauseFixtures() {
   bad('evidence_not_in_clause', 'LIMIT×literal', (u) => (u.application.evidence.RD = 'in the RM zone'));
   bad('evidence_pattern_mismatch', 'PERMIT×none', (u) => (u.application.evidence.detached_houseplex = 'houseplex with five'), { vocab: patVocab });
   bad('any_with_named_type', 'LIMIT×formula', (u) => (u.application.building_types = ['any']));
+  // Spec 69 M-76 A1 both directions, real text: a type named only as an exclusion ("other than an ancillary building",
+  // "other than an apartment building") is not named, so `any` passes; a type the clause names positively still fails
+  const exclusionOnly = base('10.80.80.1(1)#(1)(A)', { archetype: 'PERMIT', application: app([], ['any'], {}), calculation_handling: { status: 'informational' } });
+  out.push({ name: 'good twin: M-76 A1 — types named only as exclusions ("other than an …") leave `any` allowed', reason: null, input: { slice, units: unitsMap(exclusionOnly), vocab, adjudications } });
+  const positiveAfterExclusion = base('10.10.80.1(1)#(1)(B)', { archetype: 'PERMIT', application: app([], ['any'], {}), calculation_handling: { status: 'informational' } });
+  out.push({ name: 'any_with_named_type: M-76 A1 — the exclusion is dropped, the positively named types still count', reason: 'any_with_named_type', input: { slice, units: unitsMap(positiveAfterExclusion), vocab, adjudications } });
   const s2 = fixtureSlice();
   const r = s2.rows.find((x) => x.regulation_id === '10.20.40.70(3)');
   r.uncovered_numbers = [{ start: 0, end: 1, token: '3', clause_path: '(3)(A)', context: 'an injected slicer miss' }];
   out.push({ name: 'number_uncovered', reason: 'number_uncovered', input: { slice: s2, units: unitsMap(GOOD['LIMIT×literal']), vocab, adjudications } });
   // M-39: the (3)(C) evidence exists only in the enacting excerpt; without the adjudication it is not in the clause
   out.push({ name: 'M-39 both directions: no consolidation_mismatch adjudication → evidence_not_in_clause', reason: 'evidence_not_in_clause', input: { slice, units: unitsMap(GOOD['DEFINE×none (M-39)']), vocab, adjudications: { adjudications: [] } } });
+  // A13 + M-76 A10, real text 10.40.40.20(2)(A) "a maximum height of 5.0 metres and one storey": both measures bind the
+  // clause's own literals (not the heading "One Storey"); with only height_m the body's "one storey" is unaccounted
+  const mixedApp = app(['RS'], ['detached_house', 'semi_detached_house'], { RS: 'In the RS zone', detached_house: 'for a detached house', semi_detached_house: 'an entire semi-detached house' });
+  const mixed = base('10.40.40.20(2)#(2)(A)', { target: ['height_m', 'height_storeys'], bound: 'max', numeric_expression: ['height_m = 5.0 m @(A)', 'height_storeys = 1 storeys @(A)'], application: mixedApp });
+  out.push({ name: 'good twin: A13 + M-76 A10 — two measures bind the body literals, never the heading', reason: null, input: { slice, units: unitsMap(mixed), vocab, adjudications } });
+  out.push({ name: 'literal_unaccounted: A13 — keyed height only, the body "one storey" is unaccounted', reason: 'literal_unaccounted', input: { slice, units: unitsMap({ ...clone(mixed), target: 'height_m', numeric_expression: ['height_m = 5.0 m @(A)'] }), vocab, adjudications } });
+  // A12, real text 10.10.20.40(2) "a detached houseplex, semi- detached houseplex, townhouse or apartment building"
+  const plex = base('10.10.20.40(2)#whole', { archetype: 'PERMIT', application: app(['R'], ['detached_houseplex', 'semi_detached_houseplex', 'townhouse', 'apartment_building'], { R: 'for the R zone', detached_houseplex: 'a detached houseplex', semi_detached_houseplex: 'semi- detached houseplex', townhouse: 'townhouse or apartment building', apartment_building: 'or apartment building' }), calculation_handling: { status: 'informational' } });
+  out.push({ name: 'good twin: A12 — "semi- detached houseplex" matches the pattern "semi-detached houseplex"', reason: null, input: { slice, units: unitsMap(plex), vocab, adjudications } });
+  out.push({ name: 'evidence_pattern_mismatch: A12 — the fold does not license a wrong token', reason: 'evidence_pattern_mismatch', input: { slice, units: unitsMap((() => { const u = clone(plex); u.application.evidence.townhouse = 'semi- detached houseplex'; return u; })()), vocab, adjudications } });
+  // A6b, real text: enacting 10.5.40.60(8)(C)@1075-2026 "(C) antenna … a maximum of 0.9 metres into …" under the
+  // consolidation lead-in "(8) … may encroach …"; without that row the target is unlicensed
+  const antenna = base('10.5.40.60(8)(C)@1075-2026#(8)(C)', { target: 'encroachment_m', bound: 'max', numeric_expression: ['encroachment_m = 0.9 m @(8)(C)'], application: app([], ['any'], {}) });
+  out.push({ name: 'good twin: A6b — an enacting clause reads the consolidation lead-in ("may encroach")', reason: null, input: { slice, units: unitsMap(antenna), vocab, adjudications } });
+  out.push({ name: 'variable_unlicensed: A6b — without the consolidation row the lead-in is absent', reason: 'variable_unlicensed', input: { slice: fixtureSlice((m) => m.delete('10.5.40.60(8)')), units: unitsMap(antenna), vocab, adjudications } });
   return out;
 }
 
@@ -251,8 +302,23 @@ export function xrefFixtures() {
   out.push({ name: 'include_to_ref', reason: 'include_to_ref', input: { slice: fixtureSlice((m) => m.delete('10.20.40.20(1)')), units: unitsMap(include('10.20.40.20(4)#whole')), vocab, external: { entries: [{ id: 'REF-2', kind: 'ref', citation: '10.20.40.20(1)', url: 'https://www.toronto.ca/x', reason: 'outside_page_set' }] } } });
   out.push({ name: 'include_cycle', reason: 'include_cycle', input: { slice: fixtureSlice(injectRef('10.20.40.20(1)', '10.20.40.20(4)')), units: unitsMap(include('10.20.40.20(4)#whole'), include('10.20.40.20(1)#whole')), vocab, external } });
   out.push({ name: 'include_cycle: an INCLUDE of its own regulation', reason: 'include_cycle', input: { slice: fixtureSlice(injectRef('10.20.40.20(1)', '10.20.40.20(1)')), units: unitsMap(include('10.20.40.20(1)#whole')), vocab, external } });
+  // Spec 69 M-76 A2 + A3 (real rows; the reference is injected at the root clause so it is the first one includeOf reads)
+  out.push({ name: 'good twin: M-76 A2 — a section include ("10.20") expands to its in-scope rows', reason: null, input: { slice: fixtureSlice(injectRef('600.60.40(1)', '10.20')), units: unitsMap(include('600.60.40(1)#whole')), vocab, external }, expect: (r) => r.counts.include_group_expansions === 1 && r.counts.include_group_rows >= 3 });
+  out.push({ name: 'good twin: M-76 A2 + A3 — a 3-part Article include ("10.20.40") resolves and expands', reason: null, input: { slice: fixtureSlice(injectRef('600.60.40(1)', '10.20.40')), units: unitsMap(include('600.60.40(1)#whole')), vocab, external }, expect: (r) => r.counts.include_group_expansions === 1 && r.counts.include_group_rows >= 3 });
+  out.push({ name: 'include_cycle: M-76 A2 — an Article include whose other rows include the unit back (transitive)', reason: 'include_cycle', input: { slice: fixtureSlice((m) => { injectRef('10.20.40.70(6)', '10.20.40.70')(m); injectRef('10.20.40.70(4)', '10.20.40.70(6)')(m); }), units: unitsMap(include('10.20.40.70(6)#whole'), include('10.20.40.70(4)#whole')), vocab, external } });
+  out.push({ name: 'good twin: M-76 A2 (R5 Q7c) — an Article include that contains the unit own regulation expands to the OTHER rows', reason: null, input: { slice: fixtureSlice(injectRef('10.20.40.70(6)', '10.20.40.70')), units: unitsMap(include('10.20.40.70(6)#whole')), vocab, external }, expect: (r) => r.counts.include_group_expansions === 1 && r.counts.include_group_rows === 2 });
+  out.push({ name: 'include_unresolved: M-76 A2 (R5 Q7c) — the unit own regulation is the only in-scope row of the group', reason: 'include_unresolved', input: { slice: fixtureSlice(injectRef('10.20.40.70(6)', '10.20.40.70')), units: unitsMap(include('10.20.40.70(6)#whole')), vocab, external, inScopeIds: new Set(['10.20.40.70(6)']) } });
+  out.push({ name: 'include_unresolved: M-76 A2 — a section include with no in-scope rows', reason: 'include_unresolved', input: { slice: fixtureSlice(injectRef('600.60.40(1)', '10.20')), units: unitsMap(include('600.60.40(1)#whole')), vocab, external, inScopeIds: new Set(['600.60.40(1)']) } });
   out.push({ name: 'trigger_unaccounted', reason: 'trigger_unaccounted', input: { slice, units: unitsMap(mutU('PROCEDURAL×none (not_an_override)', (u) => (u.not_an_override = []))), vocab, external } });
   out.push({ name: 'not_an_override_invalid', reason: 'not_an_override_invalid', input: { slice, units: unitsMap(mutU('PROCEDURAL×none (not_an_override)', (u) => (u.not_an_override = [{ phrase: 'despite', reason: 'seemed_harmless' }]))), vocab, external } });
+  // A4: "exempt from the requirements of regulation 10.20.20.100(8) (B) and (C)" — a forward trigger; the " (B) and (C)" tail
+  const exempt = base('10.20.20.100(8)#(8)(D)', { archetype: 'DISAPPLY', calculation_handling: { status: 'informational' } });
+  out.push({ name: 'good twin: A4 — "exempt from the requirements of regulation X (B) and (C)" displaces both clauses', reason: null, input: { slice, units: unitsMap(exempt), vocab, external }, expect: (r) => r.counts.displaces === 2 });
+  out.push({ name: 'displaces_unresolved: A4 — "exempt from" is a trigger, so a target that resolves nowhere is reported', reason: 'displaces_unresolved', input: { slice: fixtureSlice(retargetRef('10.20.20.100(8)', '10.20.20.100(8)', '10.99.99.99(8)')), units: unitsMap(exempt), vocab, external } });
+  // A9: the enacting instruction cites the regulation it creates
+  const instr = base('10.5.40.40(3)(E)@1075-2026#[instruction]', { archetype: 'PROCEDURAL', calculation_handling: { status: 'informational' } });
+  out.push({ name: 'good twin: A9 — an instruction citing the regulation it creates resolves to its own row', reason: null, input: { slice, units: unitsMap(instr), vocab, external }, expect: (r) => r.counts.self_instruction_refs === 1 });
+  out.push({ name: 'ref_unresolved: A9 — a non-self instruction citation that names nothing still fails', reason: 'ref_unresolved', input: { slice: fixtureSlice((m) => { m.get('10.5.40.40(3)(E)@1075-2026').target = '10.5.40.40(3)(F)'; }), units: unitsMap(instr), vocab, external } });
   return out;
 }
 
@@ -271,6 +337,12 @@ export function shapeFixtures() {
   bad('shape_must_be_none', 'REQUIRE×none', (u) => (u.numeric_expression = ['side_setback_m = 0.6 m @(B)']));
   bad('value_form_not_allowed', 'PERMIT×none', (u) => (u.numeric_expression = ['dwelling_units_max = 6 units @(B)']));
   bad('statement_target_mismatch', 'LIMIT×literal', (u) => (u.target = 'side_setback_street_m'));
+  { // Spec 69 M-76 A10, real text 10.40.40.20(2)(A) "a maximum height of 5.0 metres and one storey": one LIMIT, two targets
+    const mixed = base('10.40.40.20(2)#(2)(A)', { target: ['height_m', 'height_storeys'], bound: 'max', numeric_expression: ['height_m = 5.0 m @(A)', 'height_storeys = 1 storeys @(A)'], application: app(['RS'], ['any'], { RS: 'In the RS zone' }) });
+    out.push({ name: 'good twin: M-76 A10 — a mixed-measure LIMIT lists both targets, one statement each', reason: null, input: { slice, shards: one(mixed), vocab } });
+    out.push({ name: 'statement_target_mismatch: M-76 A10 — a listed target without a statement and a statement outside the list', reason: 'statement_target_mismatch', input: { slice, shards: one({ ...clone(mixed), target: ['height_m', 'building_length_m'] }), vocab } });
+    out.push({ name: 'statement_target_mismatch: M-76 A10 — a target list on a DEFINE', reason: 'statement_target_mismatch', input: { slice, shards: one({ ...clone(mixed), archetype: 'DEFINE', bound: 'none' }), vocab } });
+  }
   { // vocab.json declares HT / ST / LC held (Spec 58; folded by the hardening lane): the not-held arm runs on a
     // vocab clone whose overlays are not declared held, so the gate keeps a red fixture
     const notHeld = JSON.parse(JSON.stringify(REAL_VOCAB));
@@ -280,10 +352,20 @@ export function shapeFixtures() {
   bad('feeds_unresolved', 'LIMIT×literal', (u) => (u.application.building_types = []));
   bad('authored_orphan', 'LIMIT×literal', (u) => (u.unit_id = '10.20.40.70(3)#(3)(Z)'));
   bad('generated_field_authored', 'LIMIT×literal', (u) => (u.displaces = ['10.20.40.70(2)']));
+  { // Spec 69 M-17: keyer B's draft is never the resolved unit, so in ANY batch a generated field a .b writes
+    // is ignored and counted. The same write in the .a draft still fails.
+    const legacy = one(GOOD['LIMIT×literal']);
+    legacy[0].b.units[0].displaces = ['10.20.40.70(2)'];
+    out.push({ name: 'good twin: M-84 — a generated field in a .b draft is ignored (counted)', reason: null, input: { slice, shards: legacy, vocab }, expect: (r) => r.counts.b_generated_ignored === 1 });
+    const a4 = one(GOOD['LIMIT×literal']);
+    a4[0].b.units[0].displaces = ['10.20.40.70(2)'];
+    a4[0].prov.batch = 'A4';
+    out.push({ name: 'good twin: M-84 — the same write in an A4 .b is ignored too', reason: null, input: { slice, shards: a4, vocab }, expect: (r) => r.counts.b_generated_ignored === 1 });
+  }
   {
     const s = one(GOOD['LIMIT×literal']);
     (s[0].b.units[0].calculation_handling ||= {}).status = 'modelled';
-    out.push({ name: 'single_field_in_b', reason: 'single_field_in_b', input: { slice, shards: s, vocab } });
+    out.push({ name: 'good twin: M-84 — a single-drafted field in a .b draft is ignored (counted)', reason: null, input: { slice, shards: s, vocab }, expect: (r) => r.counts.b_single_ignored === 1 });
   }
   {
     const s = one(GOOD['LIMIT×literal']);
@@ -313,10 +395,20 @@ export function shapeFixtures() {
     s[0].a.rows['10.20.40.70(99)'] = { explanation: 'x', code_refs: 'none' };
     out.push({ name: 'authored_orphan: a rows key names no row', reason: 'authored_orphan', input: { slice, shards: s, vocab } });
   }
+  { // Spec 69a M-80: the same unit keyed in a shard and its re-key generation is not "keyed in two shards"
+    const old = shardOf([GOOD['LIMIT×literal']], { slice });
+    out.push({ name: 'good twin: M-80 — a unit in a shard and its re-key generation', reason: null, input: { slice, shards: [old, rekeyOf(old, [GOOD['LIMIT×literal']])], vocab } });
+    const other = shardOf([GOOD['LIMIT×literal']], { slice, key: 'fx/other' });
+    out.push({ name: 'schema_invalid: M-80 — the same unit in two unrelated shards still fails', reason: 'schema_invalid', input: { slice, shards: [old, other], vocab } });
+  }
+  { // Spec 69a M-82 Q7: limit_not_modelled only on UNUSUAL
+    const lit = [{ literal: '0.6 metres', clause: '(3)(A)', reason: 'limit_not_modelled' }];
+    const un = mutU('LIMIT×literal', (u) => { u.archetype = 'UNUSUAL'; u.target = 'none'; u.bound = 'none'; u.numeric_expression = 'none'; u.literals_not_expressed = lit; u.calculation_handling.status = 'not_modelled'; u.calculation_handling.not_modelled_reason = vocab.not_modelled_reason[0]; u.disclosure = 'the clause states a limit this unit does not model'; });
+    out.push({ name: 'good twin: M-82 — limit_not_modelled on an UNUSUAL unit', reason: null, input: { slice, shards: one(un), vocab } });
+    out.push({ name: 'shape_must_be_none: M-82 — limit_not_modelled on a LIMIT', reason: 'shape_must_be_none', input: { slice, shards: one(mutU('LIMIT×literal', (u) => (u.literals_not_expressed = lit))), vocab } });
+  }
   return out;
 }
-
-/** G-PROV keyer arm: {name, reason, input:{shards, lsTree, headTree, staged}}. */
 export function keyerFixtures() {
   const g = GOOD['LIMIT×literal'];
   const s = () => shardOf([g]);
@@ -343,6 +435,19 @@ export function keyerFixtures() {
   bad('seal_mismatch', (x) => (x.a = null)); // a .b with no .a: nothing for the seal to equal
   bad('prov_field_missing', (x) => (x.prov.b_run.worktree_commit = 'HEAD')); // a moving ref is not a witness
   bad('witness_commit_unknown', () => {}, { lsTree: () => null });
+  // Spec 69a M-80: the old shard's seal no longer matches (it was edited after sealing), but a re-key generation supersedes it
+  {
+    const old = s();
+    old.a_sha256 = '0'.repeat(64); // seal ≠ .a
+    out.push({ name: 'good twin: M-80 — a wholly superseded shard is not re-checked; the generation records its predecessor', reason: null, input: { shards: [old, rekeyOf(old, [GOOD['LIMIT×literal']])], ...ok }, expect: (r) => r.counts.superseded_shards === 1 });
+    const old2 = s();
+    const bad = rekeyOf(old2, [GOOD['LIMIT×literal']]);
+    out.push({ name: 'supersedes_mismatch: M-80 — the recorded predecessor hashes differ from its files', reason: 'supersedes_mismatch', input: { shards: [old2, (() => { bad.prov.supersedes.b_sha = 'f'.repeat(64); return bad; })()], ...ok } });
+    const old3 = s();
+    const none = rekeyOf(old3, [GOOD['LIMIT×literal']]);
+    delete none.prov.supersedes;
+    out.push({ name: 'supersedes_mismatch: M-80 — a generation without prov.supersedes', reason: 'supersedes_mismatch', input: { shards: [old3, none], ...ok } });
+  }
   return out;
 }
 

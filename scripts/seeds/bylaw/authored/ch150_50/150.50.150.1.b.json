@@ -1,0 +1,38 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_50/150.50.150.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.50.150.1(1)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "three years",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(1)"
+        }
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": []
+      }
+    }
+  ]
+}

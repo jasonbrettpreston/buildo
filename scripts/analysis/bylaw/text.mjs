@@ -137,6 +137,7 @@ const UNIT_RE = UNIT_TABLE.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 export function wordValue(w) {
   const k = w.toLowerCase();
+  if (k === 'half' || k === 'one-half') return 0.5; // Spec 69a M-81 R10
   if (k in WORD_NUM) return WORD_NUM[k];
   const [t, o] = k.split('-');
   return WORD_NUM[t] + WORD_NUM[o];
@@ -165,7 +166,7 @@ const inSpans = (spans, s, e) => spans.some((x) => x.start <= s && e <= x.end);
  */
 export function extractLiterals(text) {
   const excl = exclusionSpans(text);
-  const re = new RegExp(`(?<![\\w.,])(${NUM_RE}|${WORD_RE})(?:\\s?(${UNIT_RE})(?![\\w²]))?(?![\\w]|\\.\\d|-(?:half|halves|thirds?|quarters?)\\b)`, 'gi'); // "one-half" is not 1 (left uncovered); "one-way" counts
+  const re = new RegExp(`(?<![\\w.,])(${NUM_RE}|${WORD_RE})(?:\\s?(${UNIT_RE})(?![\\w²]))?(?![\\w]|\\.\\d|-(?:half|halves|thirds?|quarters?)\\b)`, 'gi'); // "one-half" is not 1 (the half pass below reads it as 0.5, Spec 69a M-81 R10); "one-way" counts
   const raw = [];
   for (const m of text.matchAll(re)) {
     const s = m.index;
@@ -173,6 +174,15 @@ export function extractLiterals(text) {
     if (inSpans(excl, s, numEnd)) continue;
     raw.push({ start: s, end: s + m[0].length, numEnd, raw: m[0], numRaw: m[1], unitRaw: m[2] || null });
   }
+  // Spec 69a M-81 R10: "half" / "one-half" is the literal 0.5 (Spec 68 §6.5 number words → numerals)
+  const halfRe = new RegExp(`(?<![\\w.,-])((?:one-)?half)(?:\\s?(${UNIT_RE})(?![\\w²]))?(?![\\w-])`, 'gi');
+  for (const m of text.matchAll(halfRe)) {
+    const s = m.index;
+    const numEnd = s + m[1].length;
+    if (inSpans(excl, s, numEnd)) continue;
+    raw.push({ start: s, end: s + m[0].length, numEnd, raw: m[0], numRaw: m[1], unitRaw: m[2] || null });
+  }
+  raw.sort((a, b) => a.start - b.start);
   // Unit inheritance across `to | or | and` (right to left so chains inherit).
   for (let i = raw.length - 2; i >= 0; i--) {
     const a = raw[i];
@@ -190,6 +200,12 @@ export function extractLiterals(text) {
     unit: unitOf(r.unitRaw || r.inherited || null),
     value: numValue(r.numRaw),
   }));
+}
+
+/** Spec 69a M-81 R6: a reference keyword glued to its id ("regulation10.5.60.20(2)", the City's missing space) — a
+ * counted `source_defect` disclosure `ref_missing_space` (Spec 68 §9 G-TEXT), never a failure. Returns [{index, context}]. PURE. */
+export function refSpaceDefects(text) {
+  return [...text.matchAll(/\b(?:regulations?|clauses?|sections?)(?=\d)/gi)].map((m) => ({ index: m.index, context: text.slice(m.index, m.index + 40) }));
 }
 
 /**
@@ -246,6 +262,9 @@ function continuePath(baseGroups, cont) {
   return at < 0 ? [...baseGroups, ...cont] : [...baseGroups.slice(0, at), ...cont];
 }
 
+/** The by-law's own numbering illustrations (a worked example of the numbering scheme, never a citation): 1.20.1(1) "... divided into parts using a numeric decimal system as follows: 20. Chapter 20.10 Section 20.10.30 Article 20.10.30.15 Clause" and 1.20.2(2) "For example, "20.10.30.15" would be Clause 15 of Article 30 ... "regulation 20.10.30.15(1)"". Each matches from its marker to the end of the text. */
+export const REF_ILLUSTRATIONS = Object.freeze([/numeric decimal system as follows:[\s\S]*$/g, /For example, "20\.10\.30\.15"[\s\S]*$/g]);
+
 /**
  * Cross-references to by-law divisions: dotted ids with attached bracket groups, plus the continuation
  * forms `… (1) and (2)`, `… (3)(B) and (C)`, `… (1) to (4)` (a range: from/to). `skip` = spans that
@@ -254,6 +273,7 @@ function continuePath(baseGroups, cont) {
  */
 export function extractRefs(text, skip = []) {
   const out = [];
+  skip = [...skip, ...REF_ILLUSTRATIONS.flatMap((re) => [...text.matchAll(re)].map((m) => ({ start: m.index, end: m.index + m[0].length, kind: 'numbering_illustration' })))];
   const re = /(?<![\d.])(\d{1,3}(?:\.\d{1,3}){1,3})((?:\([0-9A-Za-z]{1,7}\))*)/g;
   for (const m of text.matchAll(re)) {
     const s = m.index;

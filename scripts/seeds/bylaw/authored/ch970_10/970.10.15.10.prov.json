@@ -1,0 +1,44 @@
+{
+  "a_seal": {
+    "seal_id": 323,
+    "sha256": "7569fefa62f3d7b4e04c1ded4c8e0a040742ef3aed7ed0191f4800dde42bf895"
+  },
+  "b_run": {
+    "ledger_sha256": "737ab0ab63610def758601c64cad078d7b3b53ad545b2831d902493881f1b475",
+    "read_paths": [],
+    "run_id": "20261008T211448Z-80829a69",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "ed6da6642af224d2182d41e471d9ddedc2cb9e6d05a9a43982b5ea243b72f967",
+    "b": "b46b232a35ed7293c140909678ed68e51f4972004d653cbca3cfde2ad160cfb1"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.15.10",
+  "unit_shas": {
+    "970.10.15.10(1)#(1)(A)": "4e08f3fb86cdc47e44e55bf77c293de97a5ffdc8e1f1bb37c0ccf4f718d56526",
+    "970.10.15.10(1)#(1)(B)": "3723a8defd6e81c1d6d4fdd3cb752e85c9c2e4ac6be9e802c14e8da52cf2f21d",
+    "970.10.15.10(1)#(1)(C)": "ce0a18f0c28bf9fd755249c87b8c5501af19a6c0527c2ec446b42ef451e0e7ec",
+    "970.10.15.10(1)#(1)(D)": "d346aea848886ce0227b90a190b85b1bb3d19a88bfa33c48ea56a4c4ba4891e8",
+    "970.10.15.10(2)#whole": "f2d05f2b624a555af8a7a1d5030a0e368f8e99ab46da684392e026c620c0ff6a",
+    "970.10.15.10(3)#whole": "1cf67386641ad4fd685ab0c27fd33d48775909600d1d322aad0c569e8eb64915",
+    "970.10.15.10(4)#whole": "15ad62ac4f64fe1f987dda1c5a0dcf22cc81cc3f378a1a05710085a3cf70c02d",
+    "970.10.15.10(5)#(5)(A)": "1381026e0f0caca5d40024b15f467b4ceb7fa791c815124125c242dab2b6abdc",
+    "970.10.15.10(5)#(5)(B)": "278bfe51d22819a378e61f2a0d9aa604866ec6b35b6857717d0a04dd58d57f6a",
+    "970.10.15.10(6)#(6)(A)": "cd9579346129dc59b1a61d95b64f5b8eba8b2926b7520379d91b5aa854e2f759",
+    "970.10.15.10(6)#(6)(B)": "cd194d1b257f2f0113c379b39f5df6e25d8a05331f0a2782ecf731471f77badc",
+    "970.10.15.10(6)#(6)(C)": "5e96d6a2de1939aad8f490d5c1a3ee1b24c0ccfb0a8fe751edf9d137a9036438",
+    "970.10.15.10(6)#(6)(D)": "9fa524390309de8d97d404620641fa5e2fb5deeefbe73df2c10832ed658b9914"
+  }
+}

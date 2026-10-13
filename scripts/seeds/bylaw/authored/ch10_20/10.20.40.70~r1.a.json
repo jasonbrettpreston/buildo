@@ -1,0 +1,134 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch10_20/10.20.40.70~r1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "10.20.40.70(7)#(7)(A)",
+   "archetype": "LIMIT",
+   "target": "front_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; 3.0 m) @(7)(A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "townhouse",
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street",
+     "depth_band",
+     "through_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "regulations 10.20.40.70(1)",
+     "townhouse": "townhouse or apartment building",
+     "apartment_building": "townhouse or apartment building",
+     "major_street": "lot abutting a major street",
+     "depth_band": "for a lot depth",
+     "through_lot": "on a through lot"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "Depth arms (36.0 m) modelled; the 10.5.40.70(1) 'lesser of' arm and the through-lot 6.0 m arm are not expressible.",
+    "gaps": "through-lot and 10.5.40.70(1)-applies tests are not DSL atoms"
+   },
+   "not_an_override": [],
+   "disclosure": "none"
+  },
+  {
+   "unit_id": "10.20.40.70(7)#(7)(D)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = if(proposed_building_length_m > 25.0 m; 7.5 m; 2.4 m) @(7)(D)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "major_street"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "5.5 metres",
+     "clause": "(7)(D)(ii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "3.0 metres",
+     "clause": "(7)(D)(iv)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "RD"
+    ],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [
+     "major_street",
+     "corner_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "RD": "regulations 10.20.40.70(1)",
+     "apartment_building": "for an apartment building",
+     "major_street": "lot abutting a major street",
+     "corner_lot": "on a corner lot"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "partially_modelled",
+    "description": "Building-length arm modelled over the whole wall; primary-window and corner-lot street-side arms are not expressible.",
+    "gaps": "primary windows are not lot data; street-side arm targets side_setback_street_m"
+   },
+   "not_an_override": [],
+   "disclosure": "none"
+  }
+ ],
+ "rows": {
+  "10.20.40.70(7)": {
+   "explanation": "On a lot that abuts a major street, a townhouse or apartment building must meet these minimum setbacks instead of the general ones. Front yard: 3.0 m (or the lesser of the 10.5.40.70(1) front setback and 6.0 m where that rule applies) for lots up to 36.0 m deep, and 6.0 m for through lots or lots deeper than 36.0 m. Rear yard: 7.5 m. Side yard: 0.9 m or 7.5 m for townhouses depending on whether all units front a street; for apartment buildings 2.4 m, 5.5 m where the main wall has primary windows, 7.5 m for wall portions longer than 25.0 m, and 3.0 m beside a street on a corner lot.",
+   "code_refs": "none"
+  }
+ }
+}

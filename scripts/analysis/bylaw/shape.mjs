@@ -25,14 +25,15 @@
 // Reason codes (closed):
 //   schema_invalid             an authored file does not parse or breaks its declared shape (bylaw-authored-v1)
 //   authored_orphan            an authored unit id names no slice row / clause (renumbering is mapped via adoptions.json)
-//   generated_field_authored   an agreed unit's draft writes a generated field (Spec 68 §6 G)
-//   single_field_in_b          keyer B's draft writes a single-drafted (A) field (data boundary, M-17)
+//   generated_field_authored   an agreed unit's draft writes a generated field (Spec 68 §6 G) (a generated field in a .b is ignored, counted b_generated_ignored, in any batch — A11, M-84)
+//   unknown unit keys evidence / not_modelled_reason / term in a .b are ignored, counted b_schema_ignored (M-84)
+//   (retired M-84: keyer B's single-drafted (A) fields are ignored, counted b_single_ignored)
 //   field_missing              an agreed unit / its row omits an authored field ("none" is written, never omitted)
 //   vocab_value_unknown        an authored value outside its vocab.json list
 //   shape_required_missing     a §7.3 required field of the unit's archetype is "none" / empty
-//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written
+//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit)
 //   value_form_not_allowed     the generated value_form is outside the archetype's allowed forms (§7.3)
-//   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target`
+//   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10)
 //   modelled_without_inputs    calculation_handling `modelled` with an overlay / existing(…) we do not hold, or
 //                              applies_to.part ∈ {map_area, named_addresses, lot_list} (§7.3 cross-cutting)
 //   feeds_unresolved           a LIMIT / PERMIT / PROHIBIT unit resolves to no (structure, aspect) pair (M-52)
@@ -40,7 +41,7 @@
 import { DslError, parseCond, parseExpression, valueForm } from './dsl.mjs';
 import {
   AUTHORED_SCHEMA, DOUBLE_KEYED, GENERATED_FIELDS, INSTRUMENT_KINDS, NARROWED_OUT, OPTIONAL_KEYED, ROW_SINGLE_DRAFTED,
-  SINGLE_DRAFTED, buildIndex, gateResult, getField, splitUnitId, unitView, violation,
+  SINGLE_DRAFTED, buildIndex, gateResult, getField, shardGeneration, splitUnitId, supersession, unitTargets, unitView, violation,
 } from './authored.mjs';
 import { checkAgree } from './agree.mjs';
 import { displacesOf, includeOf } from './xref.mjs';
@@ -51,7 +52,6 @@ export const REASON_CODES = Object.freeze([
   'schema_invalid',
   'authored_orphan',
   'generated_field_authored',
-  'single_field_in_b',
   'field_missing',
   'vocab_value_unknown',
   'shape_required_missing',
@@ -93,6 +93,8 @@ export const ALLOWED_FORMS = Object.freeze({
 const EXPRESSION_NONE = Object.freeze(['REQUIRE', 'DISAPPLY', 'INCLUDE', 'PREVAILING', 'PROCEDURAL', 'UNUSUAL']);
 const REQUIRED_SINGLE = Object.freeze(['calculation_handling.status', 'calculation_handling.description', 'calculation_handling.gaps', 'disclosure']);
 const UNIT_KEYS = new Set(['unit_id', ...[...DOUBLE_KEYED, ...NARROWED_OUT, ...SINGLE_DRAFTED].map((p) => p.split('.')[0])]);
+/** Spec 69a M-84: unit keys keyer B writes outside the boundary (not_modelled_reason / evidence / term at top level) are ignored and counted, never schema_invalid. */
+const B_IGNORED_UNIT_KEYS = Object.freeze(['evidence', 'not_modelled_reason', 'term']);
 const NOT_HELD_PARTS = Object.freeze(['map_area', 'named_addresses', 'lot_list']);
 
 const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
@@ -137,7 +139,11 @@ function vocabProblems(u, vocab) {
     if (!ok) p.push(what);
   };
   chk(inList(vocab.archetype, u.archetype), `archetype ${u.archetype}`);
-  chk(u.target === 'none' || Object.hasOwn(vocab.dsl_target || {}, u.target), `target ${u.target}`);
+  if (Array.isArray(u.target)) {
+    // Spec 69 M-76 A10: a target list holds ≥ 2 distinct dsl_targets
+    chk(u.target.length >= 2 && new Set(u.target).size === u.target.length, `target list ${JSON.stringify(u.target)} (needs ≥ 2 distinct targets)`);
+    for (const t of u.target) chk(Object.hasOwn(vocab.dsl_target || {}, t), `target ${t}`);
+  } else chk(u.target === 'none' || Object.hasOwn(vocab.dsl_target || {}, u.target), `target ${u.target}`);
   chk(u.bound === 'none' || inList(vocab.bound, u.bound), `bound ${u.bound}`);
   chk(u.requirement === 'none' || inList(vocab.requirement, u.requirement), `requirement ${u.requirement}`);
   chk(u.evaluated_by_us === 'none' || u.evaluated_by_us === 'no', `evaluated_by_us ${u.evaluated_by_us}`);
@@ -220,7 +226,17 @@ function shapeProblems(u, index, vocab, external) {
   }
   if (EXPRESSION_NONE.includes(a) && !none(u.numeric_expression)) p.push(['shape_must_be_none', `${a}: numeric_expression must be "none"`]);
   else if (vf !== null && ALLOWED_FORMS[a] && !ALLOWED_FORMS[a].includes(vf)) p.push(['value_form_not_allowed', `${a} × ${vf}`]);
-  if ((a === 'LIMIT' || a === 'DEFINE') && !none(u.target)) for (const s of sts) if (s.target !== u.target) p.push(['statement_target_mismatch', `statement target ${s.target} ≠ unit target ${u.target}`]);
+  if ((a === 'LIMIT' || a === 'DEFINE') && !none(u.target)) {
+    if (Array.isArray(u.target)) {
+      // Spec 69 M-76 A10: each statement is checked against its own target; every listed target has a statement
+      const ts = unitTargets(u.target);
+      if (a !== 'LIMIT') p.push(['statement_target_mismatch', `a target list is LIMIT-only (Spec 69 M-76 A10); ${a} has ${ts.join(', ')}`]);
+      else {
+        for (const s of sts) if (!ts.includes(s.target)) p.push(['statement_target_mismatch', `statement target ${s.target} ∉ unit targets ${ts.join(', ')}`]);
+        if (sts.length) for (const t of ts) if (!sts.some((s) => s.target === t)) p.push(['statement_target_mismatch', `unit target ${t} has no statement`]);
+      }
+    } else for (const s of sts) if (s.target !== u.target) p.push(['statement_target_mismatch', `statement target ${s.target} ≠ unit target ${u.target}`]);
+  }
   // cross-cutting (§7.3): what we do not hold cannot be `modelled`
   if (ch.status === 'modelled') {
     const nodes = [];
@@ -237,6 +253,8 @@ function shapeProblems(u, index, vocab, external) {
     if (nodes.some((n) => n.type === 'existing')) p.push(['modelled_without_inputs', 'existing(…) needs as-built input']);
     if (NOT_HELD_PARTS.includes(u.applies_to && u.applies_to.part)) p.push(['modelled_without_inputs', `applies_to.part ${u.applies_to.part}`]);
   }
+  // Spec 69a M-82 (Q7): `limit_not_modelled` names a real limit the unit does not model — only an UNUSUAL unit may say so
+  for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'limit_not_modelled' && a !== 'UNUSUAL') p.push(['shape_must_be_none', `literals_not_expressed reason limit_not_modelled on ${a} (only UNUSUAL may use it — Spec 69a M-82)`]);
   return p;
 }
 
@@ -245,25 +263,33 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
   const v = [];
   const index = buildIndex(slice);
   const ag = agree || checkAgree({ shards, adjudications, vocab });
-  const counts = { complete: 0, pending: 0, 'pending:stale': 0, failed: 0, units_checked: 0, draft_failures: ag.counts ? ag.counts.draft_failures : 0 };
+  const counts = { complete: 0, pending: 0, 'pending:stale': 0, failed: 0, units_checked: 0, b_generated_ignored: 0, b_single_ignored: 0, b_schema_ignored: 0, draft_failures: ag.counts ? ag.counts.draft_failures : 0 };
+  const sup = supersession(shards); // Spec 69a M-80
 
   // files: schema + orphans (every draft, any state)
   const orphans = new Set();
   const pins = new Map(); // unit_id → pinned sha
   const rowFields = new Map(); // regulation_id → A row fields
+  const rowFieldShard = new Map(); // regulation_id → the shard that wrote rowFields
+  const sameBase = (x, y) => x && y && shardGeneration(x).base === shardGeneration(y).base;
   const drafts = new Map(); // unit_id → {a, b}
   for (const s of [...shards].sort((x, y) => cmpStr(String(x.key), String(y.key)))) {
     for (const e of s.parse_errors || []) v.push(violation('schema_invalid', s.key, e));
     for (const [k, keyer] of [['a', 'A'], ['b', 'B']]) {
       const doc = s[k];
       if (!doc) continue;
-      for (const prob of fileProblems(doc, keyer, s.key)) v.push(violation('schema_invalid', s.paths[k] || s.key, prob));
+      let checked = doc;
+      if (k === 'b' && isMap(doc) && Array.isArray(doc.units)) {
+        checked = { ...doc, units: doc.units.map((u) => { if (!isMap(u)) return u; const c = { ...u }; for (const x of B_IGNORED_UNIT_KEYS) if (Object.hasOwn(c, x)) { delete c[x]; counts.b_schema_ignored++; } return c; }) };
+      }
+      for (const prob of fileProblems(checked, keyer, s.key)) v.push(violation('schema_invalid', s.paths[k] || s.key, prob));
       for (const u of Array.isArray(doc.units) ? doc.units : []) {
         if (!isMap(u) || !isStr(u.unit_id)) continue;
         if (!unitView(index, u.unit_id) && !orphans.has(u.unit_id)) {
           orphans.add(u.unit_id);
           v.push(violation('authored_orphan', u.unit_id, `${s.key}: names no row / clause of the slice`));
         }
+        if (sup.superseded.has(s.key) && sup.superseded.get(s.key).has(u.unit_id)) continue; // M-80: an older generation's draft of a re-keyed unit
         if (!drafts.has(u.unit_id)) drafts.set(u.unit_id, {});
         const prev = drafts.get(u.unit_id)[`${k}_shard`];
         if (prev && prev !== s.key) v.push(violation('schema_invalid', u.unit_id, `keyed in shards ${prev} and ${s.key}`));
@@ -274,11 +300,15 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
     if (s.a && isMap(s.a.rows)) {
       for (const [rid, r] of Object.entries(s.a.rows)) {
         if (!index.rows.has(rid)) v.push(violation('authored_orphan', rid, `${s.key}: rows.${rid} names no slice row`));
-        else if (rowFields.has(rid)) v.push(violation('schema_invalid', rid, `row fields written in two shards (${s.key})`));
-        rowFields.set(rid, r);
+        else if (rowFields.has(rid) && !sameBase(rowFieldShard.get(rid), s.key)) v.push(violation('schema_invalid', rid, `row fields written in two shards (${s.key})`));
+        // M-80: a newer generation of the same shard rewrites the row fields; the newest generation wins
+        if (!rowFields.has(rid) || shardGeneration(s.key).gen >= shardGeneration(rowFieldShard.get(rid)).gen) {
+          rowFields.set(rid, r);
+          rowFieldShard.set(rid, s.key);
+        }
       }
     }
-    if (s.prov && isMap(s.prov.unit_shas)) for (const [id, sha] of Object.entries(s.prov.unit_shas)) pins.set(id, sha);
+    if (s.prov && isMap(s.prov.unit_shas)) for (const [id, sha] of Object.entries(s.prov.unit_shas)) if (!(sup.superseded.has(s.key) && sup.superseded.get(s.key).has(id))) pins.set(id, sha);
   }
 
   // agreed / adjudicated units: fields, vocab, §7.3, feeds
@@ -296,11 +326,15 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
     const d = drafts.get(id) || {};
     for (const [k, draft] of [['a', d.a], ['b', d.b]]) {
       if (!draft) continue;
-      for (const g of GENERATED_FIELDS) if (Object.hasOwn(draft, g)) flag(id, 'generated_field_authored', `keyer ${k.toUpperCase()} wrote ${g}`);
+      for (const g of GENERATED_FIELDS) {
+        if (!Object.hasOwn(draft, g)) continue;
+        if (k === 'b') counts.b_generated_ignored++; // A11/M-84: any B draft; never the resolved unit
+        else flag(id, 'generated_field_authored', `keyer ${k.toUpperCase()} wrote ${g}`);
+      }
       // keyer A writes every keyed field; keyer B the ⧉ set only (the narrowed-out fields, if B wrote them, are ignored)
       for (const f of k === 'a' ? [...DOUBLE_KEYED, ...NARROWED_OUT] : DOUBLE_KEYED) if (!OPTIONAL_KEYED.includes(f) && getField(draft, f) === undefined) flag(id, 'field_missing', `keyer ${k.toUpperCase()} omits ${f}`);
     }
-    if (d.b) for (const f of SINGLE_DRAFTED) if (getField(d.b, f) !== undefined) flag(id, 'single_field_in_b', `keyer B wrote ${f}`);
+    if (d.b) for (const f of SINGLE_DRAFTED) if (getField(d.b, f) !== undefined) counts.b_single_ignored++; // M-84: B's single-drafted (A) fields are ignored, counted
     for (const f of REQUIRED_SINGLE) if (getField(u, f) === undefined) flag(id, 'field_missing', `keyer A omits ${f}`);
     for (const x of vocabProblems(u, vocab)) flag(id, 'vocab_value_unknown', x);
     for (const [code, detail] of shapeProblems(u, index, vocab, external)) flag(id, code, detail);

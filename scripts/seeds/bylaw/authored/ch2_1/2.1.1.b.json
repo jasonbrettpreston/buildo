@@ -1,0 +1,67 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch2_1/2.1.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "2.1.1(1)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "2.1.1(2)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "2.1.1(3)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "2.1.1(4)#(4)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": [
+        "required_lot_frontage_m = 85 pct × required_lot_frontage_m @(4)(A)(i)",
+        "required_lot_area_m2 = 85 pct × required_lot_area_m2 @(4)(A)(i)",
+        "lot_line_setback_m = 75 pct × lot_line_setback_m @(4)(A)(ii)"
+      ]
+    },
+    {
+      "unit_id": "2.1.1(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": [
+        "dwelling_units_max = existing(dwelling_units_max; enacted(569-2013)) @(4)(B)",
+        "gfa_m2 = existing(gfa_m2; enacted(569-2013)) @(4)(B)"
+      ]
+    },
+    {
+      "unit_id": "2.1.1(4)#(4)(C)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": [
+        "parking_spaces = existing(parking_spaces; enacted(569-2013)) @(4)(C)"
+      ]
+    },
+    {
+      "unit_id": "2.1.1(4)#(4)(D)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = existing(lot_coverage_pct; enacted(569-2013)) @(4)(D)(i)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:1075-2026/800.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "800.50(234)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "800.50(234)@1075-2026#(234)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "800.50(791)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "800.50(791)@1075-2026#(791)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

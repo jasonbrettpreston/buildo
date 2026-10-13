@@ -1,0 +1,42 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.80.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.80.40(1)#whole",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_width_m",
+      "bound": "max",
+      "numeric_expression": ["garage_entrance_width_m = 6.0 m @(1)"]
+    },
+    {
+      "unit_id": "10.5.80.40(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.80.40(3)#(3)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{"schema": "bylaw-authored-v1", "shard": "ch150_7/150.7.75.1~r1", "keyer": "A",
+ "units": [
+  {
+   "unit_id": "150.7.75.1(1)#(1)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "literals_not_expressed": [
+    {"literal": "1.2 metres", "clause": "(1)(B)", "reason": "cross_reference_value"}
+   ],
+   "application": {
+    "zones": [],
+    "building_types": ["ancillary_building", "garden_suite"],
+    "lot_conditions": [],
+    "uses": ["energy_device"],
+    "evidence": {
+     "ancillary_building": "ancillary building containing",
+     "garden_suite": "garden suite",
+     "energy_device": "solar energy device"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": [],
+    "description": "Allowance of 1.2 m for a solar energy device above the permitted maximum height of an ancillary building containing a garden suite; a device height offset relative to another unit's limit, not a building height target.",
+    "gaps": "No DSL target or input for device height above another regulation's permitted maximum."
+   },
+   "disclosure": "Rooftop solar devices on a garden suite may rise up to 1.2 metres above the maximum height allowed for that garden suite building. This allowance is not included in the height calculation.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "150.7.75.1(1)": {
+   "explanation": "A solar panel or thermal solar device on a garden suite must meet the garden suite's minimum setbacks, and no part of it may stand more than 1.2 metres above the garden suite's permitted maximum height.",
+   "code_refs": "none"
+  }
+ }
+}

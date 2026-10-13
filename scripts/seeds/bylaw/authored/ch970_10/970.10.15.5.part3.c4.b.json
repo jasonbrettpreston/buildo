@@ -1,0 +1,287 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.15.5.part3.c4",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R25.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R25.C2]",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "min",
+      "numeric_expression": ["parking_rate = 1.0 ratio @(5)[T2.R25.C2]"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R25.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R25.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R25.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R26.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R26.C2]",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "min",
+      "numeric_expression": ["parking_rate = 0.2 ratio @(5)[T2.R26.C2]"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R26.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R26.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R26.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R27.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R27.C2]",
+      "archetype": "LIMIT",
+      "target": ["parking_rate"],
+      "bound": "min",
+      "numeric_expression": ["parking_rate = by_type(bachelor_dwelling_unit: 0.3 ratio; other: 0.5 ratio) @(5)[T2.R27.C2](A)(i)"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R27.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R27.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R27.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R28.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R28.C2]",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "min",
+      "numeric_expression": ["parking_rate = if(mapped(PA1); 0.1 ratio; if(mapped(PA2); 0.1 ratio; if(mapped(PA3); 0.1 ratio; if(mapped(PA4); 0.15 ratio; 0.2 ratio)))) @(5)[T2.R28.C2]"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R28.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R28.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R28.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R29.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R29.C2]",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R29.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R29.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R29.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R30.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R30.C2]",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "min",
+      "numeric_expression": ["parking_rate = if(mapped(PA1); 0.1 ratio; if(mapped(PA2); 0.1 ratio; if(mapped(PA3); 0.1 ratio; if(mapped(PA4); 0.15 ratio; 0.2 ratio)))) @(5)[T2.R30.C2]"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R30.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R30.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R30.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R31.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R31.C2]",
+      "archetype": "LIMIT",
+      "target": ["parking_rate"],
+      "bound": "min",
+      "numeric_expression": ["parking_rate = 0 ratio @(5)[T2.R31.C2](A)(i)"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R31.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R31.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R31.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R32.C1]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R32.C2]",
+      "archetype": "LIMIT",
+      "target": "parking_rate",
+      "bound": "min",
+      "numeric_expression": ["parking_rate = if(mapped(PA1); 0.5 ratio; if(mapped(PA2); 0.5 ratio; if(mapped(PA3); 1.5 ratio; if(mapped(PA4); 2.0 ratio; 3.0 ratio)))) @(5)[T2.R32.C2]"]
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R32.C3]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R32.C4]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(5)#(5)[T2.R32.C5]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

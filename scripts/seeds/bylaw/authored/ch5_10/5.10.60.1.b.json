@@ -1,0 +1,37 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.60.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "5.10.60.1(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "ancillary_building",
+            "evidence": "Ancillary Buildings and Structures"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    }
+  ]
+}

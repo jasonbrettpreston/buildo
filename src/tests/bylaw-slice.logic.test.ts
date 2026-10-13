@@ -177,6 +177,21 @@ describe('literal extractor (Spec 68 §6.5 unit table) and the anti-vacuity scan
     expect(lit('between 1.0 to 1.5 metres above grade')).toEqual([[1, 'm'], [1.5, 'm']]);
     expect(lit('5, 10 or 15 metres')).toEqual([[5, 'm'], [10, 'm'], [15, 'm']]);
   });
+  it('Spec 69a M-81 R10: "half" / "one-half" is the literal 0.5; other fractions are unchanged', () => {
+    expect(lit('equal to half the height')).toEqual([[0.5, null]]);
+    expect(lit('one-half of the lot area')).toEqual([[0.5, null]]);
+    expect(lit('half a metre or 2 metres')).toEqual([[0.5, null], [2, 'm']]);
+    expect(SL.scanNumbers('is one-half the height').uncovered).toEqual([]);
+    // good twins: unchanged by the ruling
+    expect(lit('one-way drive aisle')).toEqual([[1, null]]);
+    expect(lit('two-thirds of the lot')).toEqual([]);
+    expect(SL.scanNumbers('two-thirds of the lot').uncovered.map((u: Json) => u.token)).toEqual(['two']);
+  });
+  it('Spec 69a M-81 R6: a reference keyword glued to its id is a ref_missing_space defect; a spaced one is not', () => {
+    expect(SL.refSpaceDefects('Despite regulation10.5.60.20(2), (3)').map((d: Json) => d.index)).toEqual([8]);
+    expect(SL.refSpaceDefects('Clauses10.5.60.20 and 10.5.80.10')).toHaveLength(1);
+    expect(SL.refSpaceDefects('Despite regulation 10.5.60.20(2)')).toEqual([]);
+  });
   it('ids, by-law numbers, dates, zone labels, map numbers, statute citations, street numbers and tags are not literals', () => {
     expect(lit('regulation 10.20.40.70(3) of By-law 569-2013 enacted May 9, 2013, label RD (f12.0; a370) (x5), Diagram 2, R.S.O. 1990, c. P.13, 25R Queens Quay [ By-law: 654-2025 ]')).toEqual([]);
   });
@@ -189,6 +204,24 @@ describe('literal extractor (Spec 68 §6.5 unit table) and the anti-vacuity scan
     expect(SL.extractTags('x. [ By-law: 1062-2025(OLT); 608-2024 ] y [103-2016] w [Deleted]').map((t: Json) => t.entries.map((e: Json) => [e.bylaw, e.qualifier]))).toEqual([[['1062-2025', '(OLT)'], ['608-2024', null]], [['103-2016', null]]]);
     const t = 'comply with regulations 10.80.30.10(1) and (2), 600.60.40(3)(B) and (C), 10.10.40.70(1) to (4)';
     expect(SL.extractRefs(t).map((r: Json) => [r.citation, r.via])).toEqual([['10.80.30.10(1)', 'direct'], ['10.80.30.10(2)', 'and'], ['600.60.40(3)(B)', 'direct'], ['600.60.40(3)(C)', 'and'], ['10.10.40.70(1)', 'direct'], ['10.10.40.70(4)', 'range_to']]);
+  });
+});
+
+const FX = await load('scripts/analysis/bylaw/authored-fixtures.mjs'); // top-level await: a describe callback is synchronous
+
+describe('Spec 68 §6.5 "by-law numbers": [PBS] literals are citations, never literals', () => {
+  const slice = FX.liveSlice();
+  const pathsOf = (x: Json) => String(x.clause_path ?? '');
+  it('no row carries a literal or uncovered number whose clause path is a [PBS] item', () => {
+    const pbsLits = slice.rows.flatMap((r: Json) => (r.literals || []).filter((l: Json) => pathsOf(l).includes('[PBS]')));
+    const pbsUnc = slice.rows.flatMap((r: Json) => (r.uncovered_numbers || []).filter((u: Json) => pathsOf(u).includes('[PBS]')));
+    expect(pbsLits).toEqual([]);
+    expect(pbsUnc).toEqual([]);
+    expect(slice.rows.length).toBeGreaterThan(0);
+  });
+  it('an [SSP] literal is still extracted (the exclusion is [PBS]-only)', () => {
+    const ssp = slice.rows.flatMap((r: Json) => r.literals || []).filter((l: Json) => pathsOf(l).includes('[SSP]'));
+    expect(ssp.length).toBeGreaterThan(0);
   });
 });
 

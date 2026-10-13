@@ -10,6 +10,8 @@
 //       agreement_rate, agreement_label, units: Map(unit_id → {state, unit, shard, keyers, disagreements[]})}
 //   selfTest()
 //
+//   Spec 69a M-80: a unit re-keyed in a generation <shard>~r<n> is read from the newest generation only (counted superseded_units).
+//
 // A unit's state: `agreed` (every ⧉ projection equal), `adjudicated` (every disagreement carries a valid adjudication),
 // `pending` (no .b yet, a unit drafted by one keyer only, or an open disagreement). The resolved unit is A's draft with
 // each adjudicated field replaced (decision `b` → B's value, `value` → the adjudicated value). Only agreed/adjudicated
@@ -17,6 +19,9 @@
 //
 // An adjudication record (adjudications.json, kind `disagreement`):
 //   {id, kind:"disagreement", unit:<unit_id>, field:<⧉ path>, adjudicator, decision: a | b | value, value? , reason}
+//   {id, kind:"correction", unit:<unit_id>, field:<authored field path>, value, reason, rule, adjudicator, adjudicated_on}  (Spec 69 M-75)
+//   a correction may carry supersedes:"<COR id>" — it replaces that earlier correction of the same (unit, field); the newest live record applies (Spec 69a M-75 note 2026-10-08)
+// A correction replaces one authored field of the resolved unit (⧉ or A-only); the sealed .a / .b drafts stay byte-identical.
 //
 // Reason codes (closed; ADJ = an adjudications.json entry of kind `disagreement`):
 //   adjudicator_missing             an ADJ names no adjudicator
@@ -24,11 +29,17 @@
 //   adjudication_decision_invalid   decision ∉ {a, b, value}, or `value` without a value / a value with a or b
 //   adjudication_duplicate          two ADJs for one (unit, field)
 //   adjudication_orphan             an ADJ for a (unit, field) that has no open disagreement (agreed, not ⧉, or unknown)
+//   adjudications_superseded — an ADJ on a unit an M-80 re-key generation superseded (counted, never an orphan)
 //   adjudication_kind_invalid       an adjudications.json kind outside vocab.adjudication_kind
+//   correction_orphan               a correction for a unit that is not agreed / adjudicated, or a field absent from it
+//   correction_rule_missing         a correction names no non-empty `rule` (Spec 69 M-75)
+//   correction_duplicate            two corrections for one (unit, field)
+//   correction_supersedes_unknown   a correction's `supersedes` names no correction of the same unit and field (Spec 69a M-75 note 2026-10-08)
+//   correction_supersede_duplicate  two records supersede the same correction id (Spec 69a M-75 note 2026-10-08)
 // Counted, never failing: pending units, open disagreements, draft failures (a draft whose DSL does not parse).
 
 import { DslError } from './dsl.mjs';
-import { DOUBLE_KEYED, OPTIONAL_KEYED, canonicalField, gateResult, getField, sortedJson, violation } from './authored.mjs';
+import { DOUBLE_KEYED, OPTIONAL_KEYED, canonicalField, gateResult, getField, sortedJson, supersession, violation } from './authored.mjs';
 import { agreeFixtures } from './authored-fixtures.mjs';
 
 export const REASON_CODES = Object.freeze([
@@ -38,11 +49,16 @@ export const REASON_CODES = Object.freeze([
   'adjudication_duplicate',
   'adjudication_orphan',
   'adjudication_kind_invalid',
+  'correction_orphan',
+  'correction_rule_missing',
+  'correction_duplicate',
+  'correction_supersedes_unknown',
+  'correction_supersede_duplicate',
 ]);
 export const AGREEMENT_LABEL = 'agreement≠correctness';
 export const DECISIONS = Object.freeze(['a', 'b', 'value']);
 /** The adjudications.json kinds this gate decides (the others belong to G-PROV / G-CLAUSE / G-EVAL). */
-export const HANDLED_KINDS = Object.freeze(['disagreement']);
+export const HANDLED_KINDS = Object.freeze(['disagreement', 'correction']);
 /** Spec 68 §6 names the ⧉ field `applies_to.part` (compared with its refs as one projection, key `applies_to`). */
 export const FIELD_ALIASES = Object.freeze({ 'applies_to.part': 'applies_to' });
 
@@ -75,8 +91,11 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
   const v = [];
   const units = new Map();
   const open = new Map(); // `${unit}\0${field}` → {a, b, keyers}
-  const counts = { units_agreed: 0, units_adjudicated: 0, units_pending: 0, fields_compared: 0, fields_agreed: 0, disagreements: 0, disagreements_open: 0, draft_failures: 0, unpaired_units: 0, fields_absent_both: 0 };
+  const counts = { units_agreed: 0, units_adjudicated: 0, units_pending: 0, fields_compared: 0, fields_agreed: 0, disagreements: 0, disagreements_open: 0, draft_failures: 0, unpaired_units: 0, fields_absent_both: 0, corrections: 0, corrections_superseded: 0, superseded_units: 0, adjudications_superseded: 0 };
 
+  const sup = supersession(shards); // Spec 69a M-80: only the newest generation of a unit is read
+  // Spec 69a M-80: units whose drafts a newer generation superseded (shard key → Set(unit ids) → one flat Set)
+  const rekeyedUnits = new Set([...sup.superseded.values()].flatMap((ids) => [...ids]));
   for (const s of [...shards].sort((x, y) => cmpStr(x.key, y.key))) {
     const aUnits = (s.a && Array.isArray(s.a.units) ? s.a.units : []).filter((u) => u && isStr(u.unit_id));
     const bUnits = (s.b && Array.isArray(s.b.units) ? s.b.units : []).filter((u) => u && isStr(u.unit_id));
@@ -84,6 +103,10 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
     const bMap = new Map(bUnits.map((u) => [u.unit_id, u]));
     const aMap = new Map(aUnits.map((u) => [u.unit_id, u]));
     for (const id of [...new Set([...aMap.keys(), ...bMap.keys()])].sort(cmpStr)) {
+      if (sup.superseded.has(s.key) && sup.superseded.get(s.key).has(id)) {
+        counts.superseded_units++; // M-80: a re-key generation of this unit supersedes this shard's drafts
+        continue;
+      }
       const a = aMap.get(id);
       const b = bMap.get(id);
       if (!a || !b) {
@@ -139,6 +162,7 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
     }
     const d = open.get(key);
     if (!d) {
+      if (rekeyedUnits.has(e.unit)) { counts.adjudications_superseded++; continue; } // Spec 69a M-80: the re-key superseded the disagreement this answered — kept as history, counted
       v.push(violation('adjudication_orphan', id, `${e.unit} ${e.field} has no open disagreement`));
       continue;
     }
@@ -173,6 +197,88 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
         }
       } else counts.disagreements_open += rec.disagreements.filter((f) => !resolved.has(`${id}\u0000${f}`)).length;
     }
+  }
+
+  // corrections of kind `correction` (Spec 69 M-75): applied once every unit's state is final, to the resolved unit.
+  // Group first, so the verdict never depends on the order of adjudications.json (a duplicate applies nothing).
+  // Spec 69a M-75 note 2026-10-08: a correction may carry `supersedes:"<COR id>"`; the newest live record applies and
+  // the superseded record stays byte-identical. Known-bad supersedes is RED (fail closed — the group applies nothing).
+  const corrections = entries.filter((e) => e && typeof e === 'object' && e.kind === 'correction');
+  const byId = new Map(); // every correction id → record
+  for (const e of corrections) if (isStr(e.id)) byId.set(e.id, e);
+  const notApplying = new Set(); // records that are in play but must not be applied
+  const supersededBy = new Map(); // superseded id → [superseding record]
+  for (const e of corrections) {
+    if (!Object.hasOwn(e, 'supersedes')) continue;
+    const t = byId.get(e.supersedes);
+    if (!t || t.unit !== e.unit || t.field !== e.field) {
+      v.push(violation('correction_supersedes_unknown', e.id ?? `${e.unit}/${e.field}`, `${e.id ?? '?'} supersedes ${e.supersedes}, which is not a correction of ${e.unit} ${e.field}`));
+      notApplying.add(e);
+      continue;
+    }
+    if (!supersededBy.has(e.supersedes)) supersededBy.set(e.supersedes, []);
+    supersededBy.get(e.supersedes).push(e);
+  }
+  const failClosed = new Set(); // ids of superseded records whose superseders are ambiguous
+  for (const [sid, ss] of supersededBy) {
+    if (ss.length <= 1) continue;
+    for (const x of ss) {
+      v.push(violation('correction_supersede_duplicate', x.id ?? `${x.unit}/${x.field}`, `${ss.length} corrections supersede ${sid} (${x.unit} ${x.field})`));
+      notApplying.add(x);
+    }
+    failClosed.add(sid);
+    const t = byId.get(sid);
+    if (t) notApplying.add(t); // the group applies nothing
+  }
+  const cGroups = new Map(); // `${unit}\0${field}` → [correction]
+  for (const e of corrections) {
+    if (notApplying.has(e)) continue;
+    const key = `${e.unit}\u0000${e.field}`;
+    if (!cGroups.has(key)) cGroups.set(key, []);
+    cGroups.get(key).push(e);
+  }
+  for (const [key, group] of [...cGroups].sort((x, y) => cmpStr(x[0], y[0]))) {
+    const e = group[0];
+    const id = e.id ?? `${e.unit}/${e.field}`;
+    // the newest live record: one a record in play of the same group supersedes
+    const supersededHere = group.filter((x) => supersededBy.has(x.id) && supersededBy.get(x.id).some((s) => group.includes(s)) && !failClosed.has(x.id));
+    const live = group.filter((x) => !supersededHere.includes(x));
+    for (const x of supersededHere) counts.corrections_superseded++;
+    if (live.length > 1) {
+      for (const x of live) v.push(violation('correction_duplicate', x.id ?? id, `${live.length} corrections for ${e.unit} ${e.field}`));
+      continue;
+    }
+    if (!live.length) continue; // every record in the group was validly superseded by an excluded record
+    const winner = live[0];
+    const wid = winner.id ?? id;
+    const rec = units.get(winner.unit);
+    if (!rec || (rec.state !== 'agreed' && rec.state !== 'adjudicated') || getField(rec.unit, winner.field) === undefined) {
+      v.push(violation('correction_orphan', wid, `${winner.unit} ${winner.field} is not an agreed / adjudicated field`));
+      continue;
+    }
+    let ok = true;
+    if (!isStr(winner.adjudicator)) {
+      v.push(violation('adjudicator_missing', wid));
+      ok = false;
+    } else {
+      const ks = rec.keyers ? [rec.keyers.a && rec.keyers.a.id, rec.keyers.b && rec.keyers.b.id].filter(isStr) : [];
+      // fail closed: without both keyer ids from the provenance record, independence cannot be shown
+      if (ks.length < 2 || ks.includes(winner.adjudicator)) {
+        v.push(violation('adjudicator_is_keyer', wid, ks.length < 2 ? `shard ${rec.shard} records no keyer ids, so ${winner.adjudicator} cannot be shown to be neither keyer` : `${winner.adjudicator} drafted shard ${rec.shard}`));
+        ok = false;
+      }
+    }
+    if (!isStr(winner.rule)) {
+      v.push(violation('correction_rule_missing', wid, `${winner.unit} ${winner.field} cites no rule`));
+      ok = false;
+    }
+    if (ok) {
+      setField(rec.unit, winner.field, winner.value);
+      counts.corrections++;
+    }
+  }
+
+  for (const [, rec] of units) {
     delete rec.b;
     if (rec.state === 'agreed') counts.units_agreed++;
     else if (rec.state === 'adjudicated') counts.units_adjudicated++;

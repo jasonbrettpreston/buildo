@@ -1,0 +1,33 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_45/150.45.50.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.45.50.1(1)#(1)(A)",
+      "archetype": "PROHIBIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "children's play area"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "In the Residential Zone category a day nursery children's play area may not be in a front yard or a side yard abutting a street.", "gaps": "Day nursery play areas are not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.50.1(1)#(1)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "6.0 metres", "clause": "(1)(B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "children's play area"}},
+      "calculation_handling": {"status": "not_modelled", "description": "In the Residential Apartment Zone category a day nursery children's play area may be no closer to a lot line abutting a street than 6.0 m.", "gaps": "No target for a play-area setback (street_setback_m is a building setback); the Residential Apartment zone is not in the zone vocabulary.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 6.0 m street setback for day nursery play areas in the Residential Apartment zone category is not evaluated.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.45.50.1(1)": {"explanation": "A day nursery children's play area may not be in a front yard or a side yard abutting a street in the Residential zone category, and in the Residential Apartment zone category it may be no closer than 6.0 m to a lot line abutting a street.", "code_refs": "none"}
+  }
+}

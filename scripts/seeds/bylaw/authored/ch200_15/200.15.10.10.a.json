@@ -1,0 +1,7 @@
+{"schema": "bylaw-authored-v1", "shard": "ch200_15/200.15.10.10", "keyer": "A",
+ "units": [
+{"unit_id":"200.15.10.10(1)#whole","archetype":"PERMIT","target":"none","bound":"none","numeric_expression":"none","requirement":"none","instrument":"none","evaluated_by_us":"none","ranks_layers":"none","condition":{"tokens":["lawfully_existing"]},"applies_to":{"part":"whole","refs":[]},"literals_not_expressed":[],"application":{"zones":[],"building_types":["any"],"lot_conditions":["lawfully_existing"],"uses":["parking_space"],"evidence":{"lawfully_existing":"lawfully existing parking","parking_space":"accessible parking space"}},"calculation_handling":{"status":"not_modelled","not_modelled_reason":"existing_building_facts","description":"Two lawfully existing parking spaces beside each other may be replaced by one accessible parking space.","gaps":"Needs as-built parking layout; no parking-space layout is held.","user_inputs":[]},"disclosure":"none","not_an_override":[]}
+ ],
+ "rows": {
+  "200.15.10.10(1)": {"explanation": "Two lawfully existing parking spaces that sit beside each other may be removed and replaced with one accessible parking space, even where 200.5.10.11(1)(C) would otherwise stop it, provided the new space meets every accessible parking rule in Section 200.15.", "code_refs": "none"}
+ }}

@@ -1,0 +1,30 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.30.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.30.11(1)#whole",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(1)"
+      ]
+    },
+    {
+      "unit_id": "10.5.30.11(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.30.11(3)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

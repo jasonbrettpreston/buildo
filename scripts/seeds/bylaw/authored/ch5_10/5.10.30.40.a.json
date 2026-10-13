@@ -1,0 +1,43 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.30.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.30.40(1)#whole",
+      "archetype": "DEFINE",
+      "target": "lot_coverage_pct",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exclusion rule: the area of a barrier-free access ramp or elevating device is left out of the lot coverage calculation.",
+        "gaps": "We hold no data on barrier-free access ramps or elevating devices, so the exclusion cannot be applied to a lot.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.30.40(1)": {
+      "explanation": "A pedestrian ramp or lift that provides barrier-free access to a building does not count toward lot coverage, so it does not use up any of the lot coverage allowance.",
+      "code_refs": "none"
+    }
+  }
+}

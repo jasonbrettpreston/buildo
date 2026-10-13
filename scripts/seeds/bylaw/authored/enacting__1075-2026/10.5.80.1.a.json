@@ -1,0 +1,25 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:1075-2026/10.5.80.1", "keyer": "A",
+ "units": [
+  {"unit_id": "10.5.80.1(4)@1075-2026#[instruction]", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "informational", "description": "Enacting instruction that adds regulation 10.5.80.1(4); no regulation of its own.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "10.5.80.1(4)@1075-2026#(4)", "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "literals_not_expressed": [
+     {"literal": "3", "clause": "(4)", "reason": "threshold_used_in_application"},
+     {"literal": "0.5", "clause": "(4)", "reason": "threshold_used_in_application"},
+     {"literal": "0.3", "clause": "(4)", "reason": "threshold_used_in_application"},
+     {"literal": "1.0", "clause": "(4)", "reason": "threshold_used_in_application"},
+     {"literal": "4.0", "clause": "(4)", "reason": "threshold_used_in_application"},
+     {"literal": "6.0", "clause": "(4)", "reason": "threshold_used_in_application"}],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["apartment_building"], "lot_conditions": [], "uses": ["parking_space"],
+    "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "apartment_building": "an apartment building", "parking_space": "permitted parking space"}},
+   "calculation_handling": {"status": "not_modelled", "description": "Permits a solar parking canopy in any yard without meeting a building setback when it is over a parking space or drive aisle, with a 0.5 m encroachment, support clearances and 4.0 m or 6.0 m height limits.", "gaps": "The encroachment, height and clearance limits are on different targets and are not keyed as separate limits.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "10.5.80.1(4)@1075-2026": {"explanation": "In the Residential Zone category, a solar parking canopy over parking may be built in any front, side or rear yard without meeting the building setback. Its edge and supports may extend 0.5 m beyond the parking space, it may be 4.0 m high (6.0 m with an apartment building), and its area does not count toward lot coverage.", "code_refs": "none"}}}

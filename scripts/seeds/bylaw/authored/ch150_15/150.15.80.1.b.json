@@ -1,0 +1,21 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_15/150.15.80.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.15.80.1(1)#(1)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.15.80.1(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "max",
+      "numeric_expression": ["parking_spaces = 1 units @(1)(B)"]
+    }
+  ]
+}

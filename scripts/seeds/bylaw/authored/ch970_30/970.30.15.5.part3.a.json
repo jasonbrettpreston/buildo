@@ -1,0 +1,29 @@
+{"schema": "bylaw-authored-v1", "shard": "ch970_30/970.30.15.5.part3", "keyer": "A",
+ "units": [
+  {"unit_id": "970.30.15.5(5)#(5)(A)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "literals_not_expressed": [
+    {"literal": "half", "clause": "(5)(A)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "bicycle parking spaces"}},
+   "calculation_handling": {"status": "not_modelled", "description": "The short-term bicycle parking requirement may be reduced by up to half, rounded down.", "gaps": "No target exists for a reduction in required spaces.", "not_modelled_reason": "deferred_phase2", "user_inputs": []},
+   "disclosure": "A payment-in-lieu reduction of up to half the required short-term bicycle parking is not modelled.", "not_an_override": []},
+  {"unit_id": "970.30.15.5(5)#(5)(B)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "bicycle parking space"}},
+   "calculation_handling": {"status": "not_modelled", "description": "Each short-term space reduced requires a payment in lieu to the City.", "gaps": "Payment amounts and the City's rate are not held.", "not_modelled_reason": "deferred_phase2", "user_inputs": []},
+   "disclosure": "The payment owed to the City for each reduced short-term bicycle space is not modelled.", "not_an_override": []},
+  {"unit_id": "970.30.15.5(5)#(5)(C)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []},
+   "literals_not_expressed": [
+    {"literal": "40", "clause": "(5)(C)", "reason": "cross_reference_value"}],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "bicycle parking spaces"}},
+   "calculation_handling": {"status": "not_modelled", "description": "A reduction needs an agreement with the City under Section 40 of the Planning Act.", "gaps": "Agreements are a process step, not lot data.", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "The required agreement with the City under Section 40 of the Planning Act is not modelled.", "not_an_override": []}
+ ],
+ "rows": {
+  "970.30.15.5(5)": {"explanation": "The required short-term bicycle parking may be reduced by up to half (rounded down) if the owner pays the City a payment in lieu for each reduced space and signs a Planning Act Section 40 agreement.", "code_refs": "none"}
+ }}

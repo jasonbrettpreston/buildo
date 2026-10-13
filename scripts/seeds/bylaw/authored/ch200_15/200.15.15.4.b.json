@@ -1,0 +1,255 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_15/200.15.15.4",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.15.15.4(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 5.6 m @(1)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_space_width_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_width_m = 3.9 m @(1)(B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "vertical_clearance_m",
+      "bound": "min",
+      "numeric_expression": ["vertical_clearance_m = 2.1 m @(1)(C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(2)#(2)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(2)#(2)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(3)#(3)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "5",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(3)(A)"
+        },
+        {
+          "literal": "24",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(3)(A)"
+        },
+        {
+          "literal": "1",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(3)(A)"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(3)#(3)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "25",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(3)(B)"
+        },
+        {
+          "literal": "100",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(3)(B)"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.15.15.4(3)#(3)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": "none",
+      "literals_not_expressed": [
+        {
+          "literal": "100",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(3)(C)"
+        },
+        {
+          "literal": "4",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(3)(C)"
+        },
+        {
+          "literal": "1",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(3)(C)"
+        },
+        {
+          "literal": "50",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(3)(C)"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    }
+  ]
+}

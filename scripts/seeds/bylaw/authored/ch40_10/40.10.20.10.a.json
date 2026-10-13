@@ -1,0 +1,46 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch40_10/40.10.20.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "40.10.20.10(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "outside_maxbld_building_types", "user_inputs": [], "status": "not_modelled", "description": "List of non-residential uses (office, library, medical office and similar) permitted in the CR zone under the letter c in the zone label. No residential use is permitted by this clause.", "gaps": "The CR zone and these commercial uses are outside the modelled residential zones and building types."},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "40.10.20.10(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": ["dwelling_unit"], "evidence": {"any": "permitted building type", "dwelling_unit": "Dwelling Unit"}},
+      "calculation_handling": {"not_modelled_reason": "deferred_phase2", "user_inputs": [], "status": "not_modelled", "description": "Dwelling units and residential care uses (hospice, nursing home, retirement home, student residence and similar) are permitted in the CR zone under the letter r in the zone label.", "gaps": "The CR zone is not among the modelled residential zones."},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "40.10.20.10(1)": {"explanation": "In the CR zone, the commercial and institutional uses listed (such as offices, libraries and medical offices) are permitted where the zone label carries the letter c, and dwelling units and residential care uses (such as nursing homes, retirement homes and student residences) are permitted where it carries the letter r.", "code_refs": "none"}
+  }
+}

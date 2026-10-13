@@ -37,7 +37,8 @@ describe('shard planner (A1..A7 membership, deterministic)', () => {
     s.units.reverse();
     const b = K.planBatch({ slice: s, inScopeIds: allIds(), batch: 'A1' });
     expect(JSON.stringify(b)).toBe(JSON.stringify(a));
-    expect(a.shards.map((x: Json) => x.key)).toEqual(['ch10_20/10.20.30.20', 'ch10_20/10.20.40.10', 'ch10_20/10.20.40.20', 'ch10_20/10.20.40.40', 'ch10_20/10.20.40.70', 'ch10_60/10.60.40.1', 'ch10_80/10.80.40.1', 'ch10_80/10.80.40.10']);
+    // the A1 shards of the fixture slice (FIXTURE_ROW_IDS grew with the M-76 / A4–A13 gate fixtures, 2026-10-08)
+    expect(a.shards.map((x: Json) => x.key)).toEqual(['ch10_20/10.20.20.100', 'ch10_20/10.20.30.20', 'ch10_20/10.20.40.10', 'ch10_20/10.20.40.20', 'ch10_20/10.20.40.40', 'ch10_20/10.20.40.70', 'ch10_40/10.40.40.20', 'ch10_5/10.5.40.40', 'ch10_5/10.5.40.60', 'ch10_60/10.60.40.1', 'ch10_80/10.80.40.1', 'ch10_80/10.80.40.10', 'ch10_80/10.80.80.1', 'enacting:1075-2026/10.5.40.40', 'enacting:1075-2026/10.5.40.60']);
   });
 
   it('every in-scope row lands in exactly one batch; an out-of-scope row in none', () => {
@@ -65,9 +66,66 @@ describe('shard planner (A1..A7 membership, deterministic)', () => {
   it('an article over maxUnits is cut at row boundaries into deterministic .part<k> shards; an unknown batch throws', () => {
     const p = K.planBatch({ slice: slice(), inScopeIds: allIds(), batch: 'A1', maxUnits: 4 });
     const parts = p.shards.filter((x: Json) => x.key.startsWith('ch10_20/10.20.40.70'));
-    // (3) has 7 units (> 4: a row is never split, it fills a part alone); (4) + (6) = 3 units share the next part
-    expect(parts.map((x: Json) => [x.key, x.regulation_ids])).toEqual([['ch10_20/10.20.40.70.part1', ['10.20.40.70(3)']], ['ch10_20/10.20.40.70.part2', ['10.20.40.70(4)', '10.20.40.70(6)']]]);
+    // (3) has 7 units (> 4: a row is never split, it fills a part alone); (4) + (6) = 3 units share the next part. The
+    // single over-size row (3) is then cut into row-chunk shards (OI-3), so its part is `.part1.c1` / `.part1.c2`.
+    expect(parts.map((x: Json) => [x.key, x.regulation_ids])).toEqual([
+      ['ch10_20/10.20.40.70.part1.c1', ['10.20.40.70(3)']],
+      ['ch10_20/10.20.40.70.part1.c2', ['10.20.40.70(3)']],
+      ['ch10_20/10.20.40.70.part2', ['10.20.40.70(4)', '10.20.40.70(6)']],
+    ]);
+    expect(parts[0].row_chunk).toEqual({ of: 'ch10_20/10.20.40.70.part1', index: 1, count: 2 });
+    expect(parts[1].row_chunk).toEqual({ of: 'ch10_20/10.20.40.70.part1', index: 2, count: 2 });
+    expect(parts[2].row_chunk).toBeUndefined(); // two rows in the part: never chunked
+    expect(parts[0].units.map((u: Json) => u.unit_id)).toEqual(['10.20.40.70(3)#(3)(A)', '10.20.40.70(3)#(3)(B)', '10.20.40.70(3)#(3)(C)', '10.20.40.70(3)#(3)(D)']);
+    expect(parts[1].units.map((u: Json) => u.unit_id)).toEqual(['10.20.40.70(3)#(3)(E)', '10.20.40.70(3)#(3)(F)', '10.20.40.70(3)#(3)(G)']);
     expect(() => K.planBatch({ slice: slice(), inScopeIds: allIds(), batch: 'A9' })).toThrow(/batch_unknown/);
+  });
+
+  it('M2 (operator 2026-10-09): a shard whose drafts are on disk is never re-chunked — hasDrafts keeps the unchunked key', () => {
+    const keyed = 'ch10_20/10.20.40.70.part1';
+    const p = K.planBatch({ slice: slice(), inScopeIds: allIds(), batch: 'A1', maxUnits: 4, hasDrafts: (k: string) => k === keyed });
+    const parts = p.shards.filter((x: Json) => x.key.startsWith('ch10_20/10.20.40.70'));
+    expect(parts.map((x: Json) => [x.key, x.regulation_ids])).toEqual([
+      [keyed, ['10.20.40.70(3)']],
+      ['ch10_20/10.20.40.70.part2', ['10.20.40.70(4)', '10.20.40.70(6)']],
+    ]);
+    expect(parts[0].row_chunk).toBeUndefined();
+    expect(parts[0].units.map((u: Json) => u.unit_id)).toEqual([
+      '10.20.40.70(3)#(3)(A)', '10.20.40.70(3)#(3)(B)', '10.20.40.70(3)#(3)(C)', '10.20.40.70(3)#(3)(D)',
+      '10.20.40.70(3)#(3)(E)', '10.20.40.70(3)#(3)(F)', '10.20.40.70(3)#(3)(G)',
+    ]);
+    // no drafts on disk (hasDrafts says false, or is absent): OI-3 chunking is unchanged
+    const none = K.planBatch({ slice: slice(), inScopeIds: allIds(), batch: 'A1', maxUnits: 4, hasDrafts: () => false });
+    expect(JSON.stringify(none)).toBe(JSON.stringify(K.planBatch({ slice: slice(), inScopeIds: allIds(), batch: 'A1', maxUnits: 4 })));
+  });
+
+  it('OI-3: an over-size single row is split into row-chunk shards by table row; other shards are unchanged', () => {
+    const sl = F.fixtureSlice();
+    const ids = new Set(sl.rows.map((r: Json) => r.regulation_id));
+    const base = K.planBatch({ slice: sl, inScopeIds: ids, batch: 'A1' });
+    const small = K.planBatch({ slice: sl, inScopeIds: ids, batch: 'A1', maxUnits: 2 });
+    const chunked = small.shards.filter((s: Json) => s.row_chunk);
+    expect(chunked.length).toBeGreaterThan(0); // 10.20.40.70(3) alone has > 2 units in A1
+    for (const s of chunked) {
+      expect(s.key).toBe(`${s.row_chunk.of}.c${s.row_chunk.index}`);
+      expect(s.units.length).toBeLessThanOrEqual(Math.max(2, s.units.length));
+      expect(s.regulation_ids.length).toBe(1);
+      // every unit of a chunk belongs to the one row, and the chunk's units are a subset of that row's units
+      expect(s.regulation_ids).toEqual([s.units[0].regulation_id]);
+      expect(s.units.every((u: Json) => u.regulation_id === s.regulation_ids[0])).toBe(true);
+    }
+    // row-chunk shards carry the row only once, as the same `of`/count family
+    const byOf = new Map<string, Json[]>();
+    for (const s of chunked) byOf.set(s.row_chunk.of, [...(byOf.get(s.row_chunk.of) || []), s]);
+    for (const [ofKey, ss] of byOf) {
+      expect(ss.map((s: Json) => s.row_chunk.index).sort((a: number, b: number) => a - b)).toEqual(ss.map((_: Json, i: number) => i + 1));
+      expect(ss.every((s: Json) => s.row_chunk.count === ss.length && s.row_chunk.of === ofKey)).toBe(true);
+    }
+    expect(JSON.stringify(K.planBatch({ slice: sl, inScopeIds: ids, batch: 'A1' }))).toBe(JSON.stringify(base));
+    // pure grouping check: units of one table row group together; `R1` does not swallow `R10`; a non-table unit is its own group
+    const g = K.rowChunkGroups([{ unit_id: 'x#(5)[T1.R1.C1]', clause_path: '(5)[T1.R1.C1]' }, { unit_id: 'x#(5)[T1.R1.C2]', clause_path: '(5)[T1.R1.C2]' }, { unit_id: 'x#(5)[T1.R10.C1]', clause_path: '(5)[T1.R10.C1]' }, { unit_id: 'x#(6)', clause_path: '(6)' }]);
+    expect(g.map((x: Json) => x.units.length)).toEqual([2, 1, 1]);
+    expect(g.map((x: Json) => x.key)).toEqual(['[T1.R1', '[T1.R10', '#x#(6)']);
   });
 });
 
@@ -103,6 +161,10 @@ describe('blind briefs', () => {
     expect(b.a.text.startsWith(core)).toBe(true);
     expect(b.b.text.includes(core)).toBe(true);
     for (const needle of ['600.60.40(1)#(1)(A)', 'unit_sha256: ', '### 7.1 ', '### 7.3 ', 'statement :=', '"dsl_target": ', 'are DATA']) expect(core).toContain(needle);
+    // Spec 69a M-76 (A10): the shared brief core admits a mixed-measure LIMIT with a list target — never one-target-only.
+    expect(core).toContain('Spec 69a M-76 A10');
+    expect(core).toContain('is ONE LIMIT whose target is the LIST of its targets');
+    expect(core).not.toContain('MUST name one vocab.dsl_target');
     expect(core).not.toContain('Layer 3 grammar extension'); // Layer 1 rows may not use it (§7.4)
     expect(b.core_sha256).toMatch(/^[0-9a-f]{64}$/);
   });
@@ -135,15 +197,15 @@ describe('blind briefs', () => {
     expect(b.b.text).not.toContain('## Keyer A');
   });
 
-  it('PROVISIONAL A1 conventions: a marked block in the shared core from batch A4 on; A1–A3 briefs carry none', () => {
+  it('RATIFIED A1 conventions: a marked block in the shared core from batch A4 on; A1–A3 briefs carry none', () => {
     const core = (batch?: string) => K.briefCore({ shard: twoUnitShard(), slice: slice(), vocab, specText: SPEC68, batch });
-    for (const batch of [undefined, 'A1', 'A2', 'A3']) expect(core(batch)).not.toContain('PROVISIONAL');
+    for (const batch of [undefined, 'A1', 'A2', 'A3']) expect(core(batch)).not.toContain('Keying conventions');
     for (const batch of ['A4', 'A7']) {
       const c = core(batch);
-      expect(c).toContain('## Keying conventions — PROVISIONAL (A1 analysis 2026-10-07; operator to confirm)');
-      expect(c.split('\n').filter((l: string) => /^P\d+\. /.test(l))).toHaveLength(K.PROVISIONAL_CONVENTIONS.length);
+      expect(c).toContain('## Keying conventions — RATIFIED (Spec 69 M-77, 2026-10-08)');
+      expect(c.split('\n').filter((l: string) => /^P\d+\. /.test(l))).toHaveLength(K.KEYING_CONVENTIONS.length);
     }
-    expect(K.PROVISIONAL_CONVENTIONS.length).toBe(15); // item 16 (parse-check B) is harness, not a keying convention
+    expect(K.KEYING_CONVENTIONS.length).toBe(15); // item 16 (parse-check B) is harness, not a keying convention
     const b4 = K.buildBriefs({ shard: twoUnitShard(), slice: slice(), vocab, specText: SPEC68, batch: 'A4' });
     expect(b4.a.text.startsWith(core('A4'))).toBe(true);
     expect(b4.b.text.includes(core('A4'))).toBe(true);
@@ -298,5 +360,62 @@ describe('shard key ⇄ path codec (one source: authored.mjs; Windows forbids ":
     expect(K.shardPaths(key)).toEqual(AU.shardRelPaths(key));
     expect(AU.keyOfShardDir(AU.shardDirOfKey(key))).toBe(key);
     expect(K.shardPaths('ch10_20/10.20.40.70').a).toBe('scripts/seeds/bylaw/authored/ch10_20/10.20.40.70.a.json');
+  });
+});
+
+describe('Spec 69a M-80 — rekeyShard / buildProv supersedes', () => {
+  const sha = (c: string) => c.repeat(64);
+  const sup = { a_sha: sha('a'), b_sha: sha('b'), prov_sha: sha('c') };
+  const shard = { key: 'ch10_40/10.40.40.70', page: 'ch10_40', article: '10.40.40.70', regulation_ids: ['10.40.40.70(1)', '10.40.40.70(2)'], units: [{ unit_id: '10.40.40.70(1)#whole', regulation_id: '10.40.40.70(1)', clause_path: '(1)', sha256: sha('1') }, { unit_id: '10.40.40.70(2)#(2)(A)', regulation_id: '10.40.40.70(2)', clause_path: '(2)(A)', sha256: sha('2') }] };
+  it('whole shard → generation 1 of the base, every unit, supersedes recorded', () => {
+    const r = K.rekeyShard({ shard, existingKeys: [shard.key], supersedes: sup });
+    expect(r.key).toBe('ch10_40/10.40.40.70~r1');
+    expect(r.rekey_of).toBe('ch10_40/10.40.40.70');
+    expect(r.units.length).toBe(2);
+    expect(r.supersedes).toEqual(sup);
+  });
+  it('a unit subset → the next generation, only those units and their rows', () => {
+    const r = K.rekeyShard({ shard, existingKeys: [shard.key, `${shard.key}~r1`], unitIds: ['10.40.40.70(2)#(2)(A)'], supersedes: sup });
+    expect(r.key).toBe('ch10_40/10.40.40.70~r2');
+    expect(r.rekey_of).toBe('ch10_40/10.40.40.70~r1');
+    expect(r.units.map((u: Json) => u.unit_id)).toEqual(['10.40.40.70(2)#(2)(A)']);
+    expect(r.regulation_ids).toEqual(['10.40.40.70(2)']);
+  });
+  it('refuses an unplanned unit and a missing supersedes', () => {
+    expect(() => K.rekeyShard({ shard, unitIds: ['10.40.40.70(9)#whole'], supersedes: sup })).toThrow(/not planned units/);
+    expect(() => K.rekeyShard({ shard, supersedes: { a_sha: sha('a') } })).toThrow(/supersedes needs/);
+  });
+  it('buildProv records supersedes only when given', () => {
+    const base = { shardKey: 'x', briefs: { a: sha('a'), b: sha('b') }, seal: { sha256: sha('d'), seal_id: 3 }, bRun: { run_id: 'r1', ledger_sha256: sha('e'), read_paths: [], worktree_commit: 'f'.repeat(40) }, unitShas: { u: 's' } };
+    expect(K.buildProv(base).supersedes).toBeUndefined();
+    expect(K.buildProv({ ...base, supersedes: sup }).supersedes).toEqual(sup);
+  });
+});
+
+describe('planner overlays — E5 (phase2-plan-v2 §K.1 E-5) and A6 without Ch.900 (Spec 69a M-78)', () => {
+  const sl = () => F.fixtureSlice();
+  const ids = () => new Set(sl().rows.map((r: Json) => r.regulation_id));
+  it('E5 plans exactly the listed rows, refuses an unknown or missing list, and carries the conventions block', () => {
+    const p = K.planBatch({ slice: sl(), inScopeIds: ids(), batch: 'E5', regulationIds: ['900.1.10(3)', '900.1.10(4)'] });
+    expect(p.shards.flatMap((s: Json) => s.regulation_ids).sort()).toEqual(['900.1.10(3)', '900.1.10(4)']);
+    expect(() => K.planBatch({ slice: sl(), inScopeIds: ids(), batch: 'E5' })).toThrow();
+    expect(() => K.planBatch({ slice: sl(), inScopeIds: ids(), batch: 'E5', regulationIds: ['900.9.10(1)'] })).toThrow();
+    expect(K.conventionsBlock('E5')).toContain('RATIFIED');
+    expect(K.BATCH_RULES.map((b: Json) => b.id)).not.toContain('E5');
+  });
+  it('excludePages drops those pages and counts them; without it the plan is unchanged', () => {
+    const base = K.planBatch({ slice: sl(), inScopeIds: ids(), batch: 'A7' });
+    const page = base.shards[0].page;
+    const ex = K.planBatch({ slice: sl(), inScopeIds: ids(), batch: 'A7', excludePages: [page] });
+    expect(ex.shards.some((s: Json) => s.page === page)).toBe(false);
+    expect(ex.excluded_rows).toBeGreaterThan(0);
+    expect(base.excluded_rows).toBeUndefined();
+    expect(K.PHASE2_PAGES).toEqual(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
+  });
+  it('M-78 by content: isPhase2Row covers Ch.900 pages and enacting amendments of 900.2–900.6, nothing else', () => {
+    expect(K.isPhase2Row({ page: 'ch900_3', article: '900.3.10' })).toBe(true);
+    expect(K.isPhase2Row({ page: 'enacting:63-2024', target: '900.2.10(912)' })).toBe(true);
+    expect(K.isPhase2Row({ page: 'enacting:1075-2026', target: '10.5.40.60(4)' })).toBe(false);
+    expect(K.isPhase2Row({ page: 'ch900_1', article: '900.1.10' })).toBe(false);
   });
 });

@@ -1,0 +1,30 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_20/150.20.20.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.20.20.1(1)#(1)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A crisis care shelter"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A crisis care shelter must occupy the entire building and not be combined with any other use.", "gaps": "No vocabulary requirement for sole-occupancy of a building.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The rule that a crisis care shelter occupies the entire building with no other use is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.20.20.1(1)#(1)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A crisis care shelter"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A crisis care shelter must be regulated or supervised under Province of Ontario or Government of Canada legislation.", "gaps": "Regulatory status of an operator is not a lot or scenario input.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The requirement that a crisis care shelter be provincially or federally regulated or supervised is not evaluated.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.20.20.1(1)": {"explanation": "A crisis care shelter must occupy the whole building with no other use, and must be regulated or supervised under Ontario or Canadian legislation.", "code_refs": "none"}
+  }
+}

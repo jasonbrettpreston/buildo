@@ -1,0 +1,37 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_48/150.48.150.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.48.150.1(1)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "public school or a private school"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "three",
+          "reason": "threshold_used_in_application",
+          "clause_path": "(1)"
+        }
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    }
+  ]
+}

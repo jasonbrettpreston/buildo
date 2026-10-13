@@ -1,0 +1,21 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch40_10/40.10.20.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "40.10.20.10(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.20.10(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

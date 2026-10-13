@@ -149,16 +149,24 @@ describe('ruling (S12) 2026-10-07: legacy decisions operator-confirmed; REF-1..3
   });
   it('REF-1..3 are in external.json exactly as S12 proposed them', () => {
     const refs = EXT.entries.filter((e: Json) => e.kind === 'ref');
-    expect(refs).toEqual(DEC.proposed_refs);
+    expect(refs.filter((e: Json) => ['REF-1', 'REF-2', 'REF-3'].includes(e.id))).toEqual(DEC.proposed_refs); // REF-4/5 are Spec 69a M-79; REF-6..23 are other_zone_category refs (M-56); neither is S12
   });
-  it('external.json passes G-READ (external arm) incl. canonical bytes, with 3 refs counted', () => {
+  it('external.json passes G-READ (external arm) incl. canonical bytes, with 35 refs counted (REF-4/5: M-79; REF-6..23: M-56 other_zone_category; REF-24..27: M-86 out_of_scope_section; REF-28..31: R5 Q6(d) needs_ref; REF-32..35: M-95)', () => {
     const r = X.checkExternalFile({ seeds: path.join(ROOT, 'scripts/seeds/bylaw') });
-    expect([r.violations, r.counts.ref]).toEqual([[], 3]);
+    expect([r.violations, r.counts.ref]).toEqual([[], 35]);
   });
-  it('the REF reason set is phase2_exception · other_zone_category · dataset_documentation, closed', () => {
+  it('the REF reason set is phase2_exception · other_zone_category · dataset_documentation · other_instrument (M-79) · out_of_scope_section (R5 Q6b), closed', () => {
     const base = (reason: string): Json => ({ ...EXT, entries: [...EXT.entries.filter((e: Json) => e.kind !== 'ref'), { citation: 'c', id: 'REF-9', kind: 'ref', reason, url: 'https://www.toronto.ca/x' }] });
-    for (const ok of ['phase2_exception', 'other_zone_category', 'dataset_documentation']) expect([ok, X.checkExternal(base(ok)).violations]).toEqual([ok, []]);
-    expect(X.checkExternal(base('vibes')).violations.map((v: string) => v.split(':')[0])).toEqual(['external_shape']);
+    for (const ok of ['phase2_exception', 'other_zone_category', 'dataset_documentation', 'out_of_scope_section']) expect([ok, X.checkExternal(base(ok)).violations]).toEqual([ok, []]);
+    const pinned = (o: Json): Json => ({ ...EXT, entries: [...EXT.entries.filter((e: Json) => e.kind !== 'ref'), { citation: 'Chapter 363', id: 'REF-9', kind: 'ref', reason: 'other_instrument', url: 'https://www.toronto.ca/x', ...o }] });
+    expect(X.checkExternal(pinned({ source_sha256: 'a'.repeat(64) })).violations).toEqual([]);
+    expect(X.checkExternal(pinned({})).violations.map((v: string) => v.split(':')[0])).toEqual(['external_shape']); // M-79: the source sha is required
+    expect(X.checkExternal(base('other_instrument')).violations.map((v: string) => v.split(':')[0])).toEqual(['external_shape']);
+    // out_of_scope_section takes the plain REF_KEYS set: a source_sha256 on it is a shape violation (unlike other_instrument)
+    const oos = (o: Json): Json => ({ ...EXT, entries: [...EXT.entries.filter((e: Json) => e.kind !== 'ref'), { citation: '600.20', id: 'REF-9', kind: 'ref', reason: 'out_of_scope_section', url: 'https://www.toronto.ca/x', ...o }] });
+    expect(X.checkExternal(oos({ source_sha256: 'a'.repeat(64) })).violations.map((v: string) => v.split(':')[0])).toEqual(['external_shape']);
+    expect(X.checkExternal(oos({})).violations).toEqual([]);
+    expect(X.checkExternal(base('out_of_scope')).violations.map((v: string) => v.split(':')[0])).toEqual(['external_shape']); // closedness: 'out_of_scope' is not the name
   });
 });
 
@@ -234,5 +242,62 @@ describe('DeepSeek lens findings on the rulings diff, each executed red → fixe
   it('spec lens: permitted() records each condition it read in the trace, like effective()', () => {
     const p = U({ unit_id: 'P#c', archetype: 'PERMIT', target: 'none', bound: 'none', condition: { tokens: ['corner_lot'], if: 'none' }, numeric_expression: 'none' });
     expect(E.permitted(rdLot, 'detached_house', [p], C).trace.join('\n')).toMatch(/condition P#c: corner_lot=false → not applicable/);
+  });
+});
+
+// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-87..M-92 (operator rulings 2026-10-13, R5 landing)
+describe('Spec 69a M-87..M-92 — R5 rulings (vocab members, rate_base, ref_target_absent)', () => {
+  const XR = load('scripts/analysis/bylaw/xref.mjs');
+  const AFX = load('scripts/analysis/bylaw/authored-fixtures.mjs');
+  it('M-88: vocab.requirement gains comply_with_bylaw (own member, not the borrowed comply_or_minor_variance) and 27 members in all', () => {
+    expect(PVOCAB.requirement).toEqual(expect.arrayContaining(['comply_or_minor_variance', 'comply_with_bylaw', 'identified_and_marked', 'fenced']));
+    expect(PVOCAB.requirement).toHaveLength(27);
+    expect(new Set(PVOCAB.requirement).size).toBe(27);
+  });
+  it('M-89: rate_base is a closed literal_not_expressed_reason; M-91: building_length_band is a threshold token reading building_length_m', () => {
+    expect(PVOCAB.literal_not_expressed_reason).toContain('rate_base');
+    expect(PVOCAB.lot_condition.building_length_band).toEqual({ threshold: true, reads: ['building_length_m'] });
+    expect(Object.keys(PVOCAB.dsl_target)).toContain('building_length_m');
+  });
+  it('M-87: no licence pattern is shared by two dsl_targets (vocab_synonym), and the refused gfa_m2 "square metres" is absent', () => {
+    const owner = new Map<string, string>();
+    for (const [n, t] of Object.entries<Json>(PVOCAB.dsl_target)) for (const p of t.patterns) { expect([n, owner.get(p.toLowerCase())]).toEqual([n, undefined]); owner.set(p.toLowerCase(), n); }
+    expect(PVOCAB.dsl_target.gfa_m2.patterns).toEqual(['gross floor area']);
+    expect(PVOCAB.dsl_target.height_projection_m.patterns).toContain('above the permitted maximum height');
+  });
+  it('M-92: ref_target_absent is a vocab adjudication kind and source_defect kind; an adjudication of that kind turns ref_unresolved into a counted disclosure', async () => {
+    expect(PVOCAB.adjudication_kind).toContain('ref_target_absent');
+    expect(PVOCAB.disclosure_reason.source_defect).toContain('ref_target_absent');
+    const { checkXref } = await XR;
+    const { xrefFixtures } = await AFX;
+    const f = xrefFixtures().find((x: Json) => x.name === 'ref_unresolved');
+    const red = checkXref(f.input);
+    expect(red.violations.map((v: Json) => v.code)).toEqual(['ref_unresolved']);
+    const v = red.violations[0];
+    const citation = /"([^"]+)"/.exec(v.detail)![1];
+    const adj = [{ id: 'ADJ-fixture', kind: 'ref_target_absent', unit: v.id, citation, reason: 'fixture', rule: 'fixture', adjudicator: 'operator' }];
+    const green = checkXref({ ...f.input, adjudications: adj });
+    expect([green.violations, green.counts.refs_target_absent]).toEqual([[], 1]);
+    expect(checkXref({ ...f.input, adjudications: [{ ...adj[0], citation: 'other' }] }).violations.map((x: Json) => x.code)).toEqual(['ref_unresolved']); // pinned to the exact unit + citation
+  });
+  it('M-101: instrument_not_published_online is a vocab adjudication kind and source_defect kind', () => {
+    expect(PVOCAB.adjudication_kind).toContain('instrument_not_published_online');
+    expect(PVOCAB.disclosure_reason.source_defect).toContain('instrument_not_published_online');
+  });
+  it('M-94: a DISAPPLY whose cited regulation is absent is a counted refs_target_absent, not displaces_unresolved; "will prevent" is a backward trigger', async () => {
+    const { checkXref, BACKWARD_TRIGGERS } = await XR;
+    const { xrefFixtures } = await AFX;
+    expect(PVOCAB.displacement_triggers.phrases).toContain('will prevent');
+    expect(BACKWARD_TRIGGERS).toContain('will prevent');
+    const f = xrefFixtures().find((x: Json) => x.name === 'displaces_unresolved');
+    const red = checkXref(f.input);
+    expect(red.violations.map((v: Json) => v.code)).toEqual(['displaces_unresolved']);
+    const v = red.violations[0];
+    const citation = /"[^"]*?\s?([0-9][^"\s]*)"/.exec(v.detail)![1];
+    const reg = String(v.id).split('#')[0];
+    const adj = [{ id: 'ADJ-fixture', kind: 'ref_target_absent', unit: reg, citation, reason: 'fixture', rule: 'fixture', adjudicator: 'operator' }];
+    const green = checkXref({ ...f.input, adjudications: adj });
+    expect([green.violations.map((x: Json) => x.code), green.counts.refs_target_absent]).toEqual([[], 1]);
+    expect(checkXref({ ...f.input, adjudications: [{ ...adj[0], citation: 'other' }] }).violations.map((x: Json) => x.code)).toEqual(['displaces_unresolved']);
   });
 });

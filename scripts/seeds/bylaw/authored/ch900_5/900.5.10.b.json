@@ -1,0 +1,23 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_5/900.5.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.5.10(352)#(352)[SSP]",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": [
+        "fsi = if(lot_area_m2 < 408 m2; min(0.6 ratio × lot_area_m2; 204 m2); if(lot_area_m2 ≤ 697 m2; min(0.5 ratio × lot_area_m2; 279 m2); 0.4 ratio × lot_area_m2)) @(A)"
+      ]
+    },
+    {
+      "unit_id": "900.5.10(352)#(352)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

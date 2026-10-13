@@ -1,0 +1,37 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:842-2025/995.10.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "995.10.1@842-2025#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "not_modelled_reason": "map_area_not_held",
+      "disclosure": "Adds the lands subject to By-law 842-2025 to the Policy Areas Overlay Map in Article 995.10.1 and applies Policy Area label PA2, as shown on Diagram 3. The lands and the Diagram 3 geometry are not held, and the vocabulary has no target for a Policy Area label, so no numeric bound can be evaluated from lot data.",
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "applies_to": {
+        "part": "map_area"
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "map_area_not_held",
+        "user_inputs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "PA2",
+          "reason": "map_label_value",
+          "clause_path": "[instruction]"
+        }
+      ]
+    }
+  ]
+}

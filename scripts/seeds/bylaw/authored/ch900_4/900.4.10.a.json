@@ -1,0 +1,158 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_4/900.4.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.4.10(312)#(312)[SSP]",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = 185 m2 @(312)[SSP](A)",
+        "required_lot_frontage_m = 6.0 m @(312)[SSP](B)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 312",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum lot area 185 m2 and minimum lot frontage 6.0 m for a detached house on the exception lands; both read from the lot vector.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(312)#(312)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 944-2015",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["120 Donlands Avenue"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 312",
+          "any": "following Site Specific Provisions"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Alternate compliance path under former by-law 944-2015 for 120 Donlands Avenue only; never evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On 120 Donlands Avenue, City of Toronto by-law 944-2015 prevails as an alternate compliance path; it is not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(336)#(336)[SSP]",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": [
+        "gfa_m2 = if(lot_area_m2 < 408 m2; min(0.6 ratio × lot_area_m2; 204 m2); if(lot_area_m2 ≤ 697 m2; min(0.5 ratio × lot_area_m2; 279 m2); 0.4 ratio × lot_area_m2)) @(336)[SSP](A)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "permitted building type"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Maximum floor space index expressed as a gross floor area cap by lot-area band: lesser of 0.6 x lot area or 204 m2 under 408 m2; lesser of 0.5 x lot area or 279 m2 from 408 to 697 m2; 0.4 x lot area above 697 m2.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(336)#(336)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "following Site Specific Provisions"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "States that no prevailing by-laws or sections apply; no effect on evaluation.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.4.10(312)": {
+      "explanation": "On the lands covered by Exception RS 312, a detached house needs a lot of at least 185 square metres with at least 6.0 metres of frontage. For 120 Donlands Avenue, former City of Toronto by-law 944-2015 is a separate alternate path that we do not evaluate.",
+      "code_refs": "none"
+    },
+    "900.4.10(336)": {
+      "explanation": "On the lands covered by Exception RS 336, the maximum floor space index depends on lot area: under 408 square metres, the lesser of 0.6 times the lot area or 204 square metres; 408 to 697 square metres, the lesser of 0.5 times the lot area or 279 square metres; over 697 square metres, 0.4 times the lot area. No prevailing by-laws apply.",
+      "code_refs": "none"
+    }
+  }
+}

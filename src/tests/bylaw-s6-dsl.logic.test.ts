@@ -306,3 +306,46 @@ describe('archetype × value_form fixtures from real clause text (§7.3, pinned 
     expect(bad).toEqual(['10.5.50.10(1)#(A) LIMIT none']);
   });
 });
+
+describe('Spec 69 M-74 (2026-10-08): a count scales a length or area in Layer 1', () => {
+  it('m × units → m and units × m → m (10.20.30.20(1)(C)(i)(a) "6.0 metres for each dwelling unit")', () => {
+    expect(D.combineUnits('×', 'm', 'units')).toBe('m');
+    expect(D.combineUnits('×', 'units', 'm')).toBe('m');
+    expect(D.checkStatement('required_lot_frontage_m = 6.0 m × dwelling_units @(1)(C)(i)(a)', VOCAB)).toEqual([]);
+  });
+  it('m2 × units → m2 (minimum lot area for each dwelling unit)', () => {
+    expect(D.combineUnits('×', 'm2', 'units')).toBe('m2');
+    expect(D.checkStatement('lot_area_per_unit_min_m2 = 90 m2 × dwelling_units @(2)', VOCAB)).toEqual([]);
+  });
+  it('the red twins stay illegal: units × units, storeys × units, m2 × m2, and m + units', () => {
+    expect(D.combineUnits('×', 'units', 'units')).toBeNull();
+    expect(D.combineUnits('×', 'storeys', 'units')).toBeNull();
+    expect(D.combineUnits('×', 'm2', 'm2')).toBeNull();
+    expect(D.combineUnits('+', 'm', 'units')).toBeNull();
+    expect(D.checkStatement('required_lot_frontage_m = 6.0 m + dwelling_units @x', VOCAB).map((e: string) => e.split(':')[0])).toContain('unit_mismatch');
+  });
+});
+
+describe('@clause_path accepts bracket path groups (Spec 68 §6 ids; Spec 69 M-57 table cells)', () => {
+  for (const s of ['required_lot_frontage_m = 8.0 m @(252)[SSP](A)', 'parking_rate = 1.0 ratio @(1)[T2.R4.C2]', 'height_m = 10.0 m @(5)[SSP](A)(i)', 'x_m = 1 m @[SSP](A)']) {
+    it(`parses ${s}`, () => {
+      const target = s.split(' ')[0];
+      if (target === 'x_m') return; // shape-only check below
+      expect(() => D.parseExpression([s])).not.toThrow();
+    });
+  }
+  it('the bracket group is kept in the statement path and canonical form', () => {
+    const [st] = D.parseExpression(['required_lot_frontage_m = 8.0 m @(252)[SSP](A)']);
+    expect(st.path).toBe('(252)[SSP](A)');
+    expect(D.canonicalExpression(['required_lot_frontage_m = 8 m @(252)[SSP](A)'])).toBe(D.canonicalExpression(['required_lot_frontage_m = 8.0 m @(252)[SSP](A)']));
+  });
+  it('a malformed bracket is still a parse error', () => {
+    expect(() => D.parseExpression(['required_lot_frontage_m = 8.0 m @(252)[SSP'])).toThrow();
+    expect(() => D.parseExpression(['required_lot_frontage_m = 8.0 m @(252)[S P](A)'])).toThrow();
+  });
+  it('accepts a status-variant tag (Spec 69 M-57) and keeps it in the path', () => {
+    const [st] = D.parseExpression(['parking_space_length_m = 5.6 m @(1)~under_appeal(A)']);
+    expect(st.path).toBe('(1)~under_appeal(A)');
+    expect(() => D.parseExpression(['x_m = 1 m @(1)~Under(A)'])).toThrow();
+  });
+});

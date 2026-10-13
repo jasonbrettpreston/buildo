@@ -1,0 +1,43 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.50.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.50.10(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "of the building"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Inclusion rule: the area under an exterior barrier-free access ramp or elevating device counts as landscaping.",
+        "gaps": "We hold no data on barrier-free access ramps or elevating devices.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.50.10(1)": {
+      "explanation": "The ground covered by an exterior ramp or lift that gives barrier-free access to the first floor counts as landscaping, so it helps meet landscaping requirements.",
+      "code_refs": "none"
+    }
+  }
+}

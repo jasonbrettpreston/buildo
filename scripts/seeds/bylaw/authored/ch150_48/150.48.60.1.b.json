@@ -1,0 +1,31 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_48/150.48.60.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.48.60.1(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "condition": "none",
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "applies_to": {
+        "part": "whole"
+      },
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "not_modelled_reason": "outside_maxbld_building_types",
+      "disclosure": "Permits a portable classroom building on a lot with a lawfully existing public school or private school, if the portable classroom building complies with Section 150.48 and the zone in which the lot is located. The permission's subject is a portable classroom building, which is not one of the modelled building types in vocab.building_type, so no application subject token can be named and the permission cannot be evaluated; the lot condition (lot with a lawfully existing public school or private school) and the zone cross-reference are recorded here rather than keyed as application tokens."
+    }
+  ]
+}

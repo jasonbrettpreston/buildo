@@ -1,0 +1,66 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch800_50/800.50.part7",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "800.50(940)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Defined term (Wholesaling Use); a definition with no numeric value, not evaluated against the lot.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "800.50(945)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Defined term (Wind Energy); a definition with no numeric value, not evaluated against the lot.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "800.50(95)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {"not_modelled_reason": "none", "user_inputs": [], "status": "informational", "description": "Defined term (Building); a definition with no numeric value, not evaluated against the lot.", "gaps": "none"},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "800.50(940)": {"explanation": "Wholesaling Use is defined as the use of premises for the sale of goods or commodities only to retailers or other businesses.", "code_refs": "none"},
+    "800.50(945)": {"explanation": "Wind Energy is defined as energy from the wind that is converted to produce electrical energy.", "code_refs": "none"},
+    "800.50(95)": {"explanation": "A building is a wholly or partially enclosed structure with a roof supported by walls, columns, piers or other structural systems; a vehicle is not a building.", "code_refs": "none"}
+  }
+}

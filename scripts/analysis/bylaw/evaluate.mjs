@@ -322,7 +322,13 @@ const statementsOf = (u) => {
   return PARSED.get(u);
 };
 const parsedFor = (u, target) => statementsOf(u).filter((s) => !s.error && s.target === target);
-const hasTarget = (u) => u.target && u.target !== 'none';
+const hasTarget = (u) => unitTargets(u.target).length > 0; // a list target (Spec 69 M-76 A10) counts
+// = authored.mjs unitTargets (Spec 69 M-76 A10): [] for none, [t] for one, the list for a mixed-measure LIMIT.
+// Defined locally: authored.mjs imports evaluate.mjs (chapterZone), so importing it back would cycle.
+const unitTargets = (target) => {
+  if (target === undefined || target === null || target === 'none') return [];
+  return Array.isArray(target) ? target.filter((t) => typeof t === 'string' && t !== 'none') : [target];
+};
 const tokensOf = (cond) => {
   if (!cond || cond === 'none') return [];
   const raw = cond.tokens ?? cond.token ?? [];
@@ -530,6 +536,7 @@ function lotGate(lot, target, candidates, C) {
   return null;
 }
 
+// P1-Q8 (Spec 69a M-50 / M-60 c): an agreed not_evaluated INPUT GAP never outranks building type; only `no_candidate` (nothing regulates the target for any type) is a building-type-independent answer
 function effResolve(lot, target, cands, C, _env) {
   const { depth } = _env;
   const core = effCore(lot, target, cands, C, _env);
@@ -544,7 +551,8 @@ function effResolve(lot, target, cands, C, _env) {
   const distinct = [...new Set(C.residentialTypes.map((t) => resultKey(results[t])))]; // value, bounds, reason, evidence
   const trace = [...core.trace, `M-50 per-type: ${C.residentialTypes.map((t) => `${t}=${per[t]}`).join(', ')}`];
   const ins = [...inputs].sort(cmpStr);
-  if (distinct.length === 1 && C.residentialTypes.length) {
+  // P1-Q8 (Spec 69a M-50 / M-60 c): an agreed not_evaluated INPUT GAP never outranks building type; only `no_candidate` (nothing regulates the target for any type) is a building-type-independent answer
+  if (distinct.length === 1 && C.residentialTypes.length && (results[C.residentialTypes[0]].status !== 'not_evaluated' || results[C.residentialTypes[0]].reason === 'no_candidate')) {
     const any = results[C.residentialTypes[0]];
     const winners = [...new Set(C.residentialTypes.map((t) => results[t].winner ?? null))];
     return { ...any, winner: winners.length === 1 ? any.winner : null, ...(winners.length > 1 ? { winners_per_type: Object.fromEntries(C.residentialTypes.map((t) => [t, results[t].winner ?? null])) } : {}), trace: [...trace, 'all residential types agree'], per_type: per, inputs: ins };
@@ -561,7 +569,7 @@ function effCore(lot, target, candidates, C, env) {
   valueUnits = valueUnits.filter((u) => u.layer !== 'provincial' || (u.provincial && LIMITS[u.provincial.limits_bylaw]));
   const refsValue = (u) => (u.displaces || []).some((ref) => valueUnits.some((v) => v !== u && refMatch(ref, v.unit_id)));
   const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
-  const displacers = candidates.filter((u) => u.archetype !== 'PROCEDURAL' && refsValue(u) && (!hasTarget(u) || u.target === target));
+  const displacers = candidates.filter((u) => u.archetype !== 'PROCEDURAL' && refsValue(u) && (!hasTarget(u) || unitTargets(u.target).includes(target)));
   const prevailing = candidates.filter((u) => u.archetype === 'PREVAILING');
 
   // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
@@ -650,7 +658,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, p
       if (v === d || v.archetype === 'PROCEDURAL' || !valueUnits.includes(v)) continue;
       const m = refMatch(ref, v.unit_id);
       if (!m) continue;
-      if (hasTarget(d) && d.target !== v.target) continue;
+      if (hasTarget(d) && !unitTargets(d.target).some((t) => unitTargets(v.target).includes(t))) continue;
       if (m === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
       if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
@@ -682,7 +690,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, p
     // any layer carries the target, keyed or pending.
     const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
     if (abs) {
-      const any = candidates.filter((u) => u.layer !== 'provincial' && (u.target === target || parsedFor(u, target).length));
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length));
       if (!any.length) {
         return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
           evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
@@ -1175,6 +1183,9 @@ export function precedenceFixtures(vocab) {
   const rt = { ...lot, zone: 'RT' };
   const rtA = U({ unit_id: '10.60.40.70(3)#(A)', regulation_id: '10.60.40.70(3)', application: { zones: ['RT'], building_types: ['any'] }, target: 'side_setback_m', numeric_expression: ['side_setback_m = 7.5 m @(3)(A)'] });
   const rtB = U({ unit_id: '10.60.40.70(3)#(B)', regulation_id: '10.60.40.70(3)', application: { zones: ['RT'], building_types: ['detached_house', 'semi_detached_house', 'detached_houseplex', 'semi_detached_houseplex'] }, target: 'side_setback_m', displaces: ['10.60.40.70(3)(A)'], numeric_expression: ['side_setback_m = 0.9 m @(3)(B)'] });
+  const gapA = U({ unit_id: '10.60.40.70(3)#(G)', regulation_id: '10.60.40.70(3)', application: { zones: ['RT'], building_types: ['any'] }, target: 'side_setback_m', numeric_expression: ['side_setback_m = 10 pct × lot_frontage_m @(3)(G)'] });
+  const gapB = U({ unit_id: '10.60.40.70(3)#(H)', regulation_id: '10.60.40.70(3)', application: { zones: ['RT'], building_types: ['detached_house'] }, target: 'side_setback_m', numeric_expression: ['side_setback_m = 10 pct × lot_frontage_m @(3)(H)'] });
+  const bare = { ...rt, building_type: null, vars: {} };
   const prev = ex({ unit_id: '900.3.10(1463)#PBS(A)', regulation_id: '900.3.10(1463)', exception: '900.3.10(1463)', archetype: 'PREVAILING', target: 'none', bound: 'none', numeric_expression: 'none' });
   const permB = U({ unit_id: '600.60.40(1)#(B)', regulation_id: '600.60.40(1)', layer: 'overlay', archetype: 'PERMIT', target: 'none', bound: 'none', applies_to: { part: 'map_area', refs: ['sixplex_overlay'] }, application: { zones: ['R', 'RD', 'RS', 'RT', 'RM'], building_types: ['detached_houseplex'] }, condition: { tokens: ['unit_count_band'], if: 'dwelling_units ≥ 5 units and dwelling_units ≤ 6 units' }, displaces: ['900.1.10(3)', '900.1.10(4)(A)'], numeric_expression: 'none' });
   const synProh = ex({ unit_id: 'SYN#PROHIBIT', regulation_id: 'SYN', archetype: 'PROHIBIT', target: 'none', bound: 'none', application: { zones: ['RD'], building_types: ['detached_houseplex'] }, condition: { tokens: ['unit_count_band'], if: 'dwelling_units ≥ 5 units' }, numeric_expression: 'none' });
@@ -1214,6 +1225,9 @@ export function precedenceFixtures(vocab) {
     E('M-50', 'building type NULL, types disagree (RT 0.9 vs 7.5) → needs_user_input:building_type', () => val(effective({ ...rt, building_type: null }, 'side_setback_m', [rtA, rtB], C)), 'not_evaluated:needs_user_input:building_type'),
     E('M-50', 'building type NULL, every type agrees → the value', () => val(effective({ ...lot, building_type: null }, 'side_setback_m', [...band, ...reqF], C)), 0.9),
     E('M-50', 'per-type values are returned with the not_evaluated result', () => { const r = effective({ ...rt, building_type: null }, 'side_setback_m', [rtA, rtB], C); return `${r.per_type.detached_house}|${r.per_type.apartment_building}`; }, '0.9|7.5'),
+    E('M-50', 'building type NULL, a type-dependent unit exists and every type agrees on an input gap (missing_input) -> needs_user_input:building_type outranks it (P1-Q8)', () => val(effective(bare, 'side_setback_m', [gapA, gapB], C)), 'not_evaluated:needs_user_input:building_type'),
+    E('M-50', 'building type NULL, no type-dependent candidate: the agreed input gap is kept (missing_input)', () => val(effective(bare, 'side_setback_m', [gapA], C)), 'not_evaluated:missing_input:lot_frontage_m'),
+    E('M-50', 'building type NULL, every type agrees on no_candidate -> no_candidate stays (nothing regulates the target for any type)', () => val(effective(bare, 'building_length_m', [gapA, gapB], C)), 'not_evaluated:no_candidate'),
   ];
 }
 

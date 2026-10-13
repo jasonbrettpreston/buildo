@@ -1,0 +1,47 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.70~r1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.10.40.70(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m @(5)(A)(ii); 3.0 m @(5)(A)(i)(b)) @(5)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "6.0 metres", "clause": "(5)(A)(i)(a)", "reason": "cross_reference_value"},
+        {"literal": "6.0 metres", "clause": "(5)(A)(i)(c)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street", "through_lot"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Buildings",
+          "RD": "Residential Buildings",
+          "RS": "Residential Buildings",
+          "RT": "Residential Buildings",
+          "RM": "Residential Buildings",
+          "townhouse": "a townhouse or apartment building",
+          "apartment_building": "apartment building located",
+          "major_street": "abutting a major street",
+          "through_lot": "on a through lot"
+        }
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "Front yard minimum split on lot depth at 36.0 m: 6.0 m beyond, 3.0 m otherwise.", "gaps": "The 10.5.40.70(1) lesser-of arm and the through-lot 6.0 m arm are not expressible; the 3.0 m arm is used as the fallback.", "not_modelled_reason": "none", "user_inputs": []},
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.10.40.70(5)": {"explanation": "Townhouses and apartment buildings on a lot abutting a major street have their own minimum setbacks. The front yard must be 6.0 m deep for a lot deeper than 36.0 m; for a lot 36.0 m deep or less it is 3.0 m (or the lesser of the standard 10.5.40.70(1) setback and 6.0 m where that applies), and 6.0 m on a through lot.", "code_refs": "none"}
+  }
+}

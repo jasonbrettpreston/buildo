@@ -1,0 +1,17 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:1075-2026/80.5.40.40", "keyer": "A",
+ "units": [
+  {"unit_id": "80.5.40.40(1)(I)@1075-2026#[instruction]", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "informational", "description": "Enacting instruction that edits the list in regulation 80.5.40.40(1) and adds item (I); no regulation of its own.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "80.5.40.40(1)(I)@1075-2026#(1)(I)", "archetype": "DEFINE", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "main wall of a building"}},
+   "calculation_handling": {"status": "informational", "description": "Adds cladding on the original exterior surface of a main wall or an addition, with the vents, pipes and utility equipment beneath it, to the items listed in regulation 80.5.40.40(1).", "gaps": "The effect depends on the lead-in of regulation 80.5.40.40(1), which is not part of this unit.", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "80.5.40.40(1)(I)@1075-2026": {"explanation": "Adds cladding applied over the original exterior surface of a main wall, or over an addition or extension, including vents, pipes and utility equipment beneath the cladding, to the list of items in regulation 80.5.40.40(1).", "code_refs": "none"}}}

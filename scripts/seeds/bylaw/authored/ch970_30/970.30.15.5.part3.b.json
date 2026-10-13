@@ -1,0 +1,30 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_30/970.30.15.5.part3",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "970.30.15.5(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "max",
+      "numeric_expression": [
+        "bicycle_parking_spaces = 0.5 ratio × bicycle_parking_spaces @(5)(A)"
+      ]
+    },
+    {
+      "unit_id": "970.30.15.5(5)#(5)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(5)#(5)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

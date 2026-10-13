@@ -1,0 +1,30 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_45/150.45.40.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.45.40.1(1)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.45.40.1(2)#(2)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.45.40.1(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "interior_floor_area_m2",
+      "bound": "max",
+      "numeric_expression": [
+        "interior_floor_area_m2 = 40 pct \u00d7 gfa_m2 @(2)(B)"
+      ]
+    }
+  ]
+}

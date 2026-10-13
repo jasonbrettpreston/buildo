@@ -1,0 +1,42 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:63-2024/900.2.10~r1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(912)@63-2024#(912)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "former City of Toronto By-law 438-86, Section 12(2) 118; former City of Toronto By-law 438-86, Section 12(2) 119; City of Toronto By-law 165-69; former City of Toronto by-law 195-67; former City of Toronto by-law 20904; City of Toronto by-law 49-02",
+      "condition": [],
+      "ranks_layers": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "addresses": [
+          "107 Broadway Avenue",
+          "15 Erskine Avenue",
+          "133-141 Erskine Avenue",
+          "165-171 Erskine Avenue",
+          "140-144 Redpath Avenue"
+        ]
+      },
+      "evaluated_by_us": "no",
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Prevailing By-laws and Prevailing Sections list: (A) Section 12(2) 118 of former City of Toronto By-law 438-86; (B) Section 12(2) 119 of former City of Toronto By-law 438-86; (C) On 107 Broadway Avenue, City of Toronto By-law 165-69; (D) On 15 Erskine Avenue, former City of Toronto by-law 195-67; (E) On or between the odd numbered addresses of 133-141 Erskine Avenue, the odd numbered addresses of 165-171 Erskine Avenue, former City of Toronto by-law 20904; and (F) On the even numbered addresses of 140-144 Redpath Avenue, City of Toronto by-law 49-02. These are alternate compliance paths under former by-laws and sections; they are never evaluated by us."
+    }
+  ]
+}

@@ -430,7 +430,7 @@ export function resolveCodeRef(ctx, parsed) {
 // ---------------------------------------------------------------- G-CODE (i) blocking + (ii) report-only
 
 const refsOf = (row) => (Array.isArray(row.code_refs) ? row.code_refs : []);
-const targetsOf = (row) => (Array.isArray(row.units) ? row.units.map((u) => u && u.target).filter(Boolean) : []);
+const targetsOf = (row) => (Array.isArray(row.units) ? row.units.flatMap((u) => (u && Array.isArray(u.target) ? u.target : [u && u.target])).filter(Boolean) : []); // a list target flattens (Spec 69 M-76 A10)
 const statusOf = (row) => (row.calculation_handling && row.calculation_handling.status) || null;
 
 /**

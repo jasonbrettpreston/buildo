@@ -56,6 +56,16 @@ describe('vocab.mjs — closed vocabularies and the feeds maps (Spec 68 §6.5, S
     expect(V.feedsOf({ unit_id: 'h', archetype: 'LIMIT', target: 'height_m', application: { building_types: ['detached_house'] } }, vocab).pairs).toEqual([{ structure: 'principal', aspect: 'envelope' }]);
     expect(V.feedsOf({ unit_id: 'p', archetype: 'PERMIT', target: 'none', application: { building_types: ['duplex'] } }, vocab).pairs).toEqual([{ structure: 'principal', aspect: 'use_permission' }]);
   });
+  it('feedsOf reads an M-76 A10 target list: one pair per (structure, aspect of each target); an unknown member is reported', () => {
+    const fv = V.fixtureVocab();
+    const t = Object.keys(fv.dsl_target);
+    const bt = Object.keys(fv.building_type).find((k) => k !== 'any' && fv.building_type[k].structure);
+    const u = { unit_id: 'x#whole', archetype: 'LIMIT', target: [t[0], t[1] ?? t[0]], application: { building_types: [bt] } };
+    const r = V.feedsOf(u, fv);
+    expect(r.problems).toEqual([]);
+    expect(r.pairs.length).toBeGreaterThan(0);
+    expect(V.feedsOf({ ...u, target: [t[0], 'no_such_target'] }, fv).problems).toEqual(['feeds_target_unknown: x#whole target no_such_target']);
+  });
   it('evaluatorVocab derives the M-50 list, the parent map and the threshold tokens (never kept twice)', () => {
     const ev = V.evaluatorVocab(V.fixtureVocab());
     expect(ev.building_type_residential).toEqual(['detached_house', 'detached_houseplex']);

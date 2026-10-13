@@ -1,0 +1,7 @@
+{"schema": "bylaw-authored-v1", "shard": "ch200_15/200.15.15.5", "keyer": "A",
+ "units": [
+{"unit_id":"200.15.15.5(1)#whole","archetype":"UNUSUAL","target":"none","bound":"none","numeric_expression":"none","requirement":"none","instrument":"none","evaluated_by_us":"none","ranks_layers":"none","condition":"none","applies_to":{"part":"whole","refs":[]},"literals_not_expressed":[{"literal":"10 percent","clause":"(1)","reason":"count_or_ordinal_not_a_limit"}],"application":{"zones":[],"building_types":["any"],"lot_conditions":[],"uses":["parking_space"],"evidence":{"parking_space":"accessible parking space"}},"calculation_handling":{"status":"not_modelled","not_modelled_reason":"outside_maxbld_building_types","description":"At least 10 percent of the required parking of a medical office must meet the accessible dimensions, and lawfully existing accessible spaces must be retained.","gaps":"Medical offices are not MaxBLD building types; no accessible-parking count target.","user_inputs":[]},"disclosure":"The 10 percent accessible parking share for medical offices established after May 26, 2017 is not evaluated.","not_an_override":[]}
+ ],
+ "rows": {
+  "200.15.15.5(1)": {"explanation": "For a medical office established after May 26, 2017, at least 10 percent of the required parking spaces must meet the accessible parking space dimensions, and any lawfully existing accessible spaces on the lot must be kept.", "code_refs": "none"}
+ }}

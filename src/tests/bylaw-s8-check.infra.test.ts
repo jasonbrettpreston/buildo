@@ -44,15 +44,22 @@ real = await check({ root: ROOT });
 const checkMs = Date.now() - t0;
 
 describe('--check on the real snapshot (every gate run once)', () => {
-  it('exits 0: 0 agreed rows, every in-scope row pending, nothing failed (Spec 68 §4, M-45)', () => {
+  // S6 gates wired 2026-10-08: G-CLAUSE / G-XREF / G-AGREE run over the authored drafts
+  // G-SHAPE fold, G-EVAL, G-PROV keyer arm, G-TEXT unit_pins wired 2026-10-08
+  it('check: row states are the G-SHAPE fold (Spec 68 §4), nothing failed, exit 0 iff no pre-commit gate failed (M-45)', () => {
     warnIfNear('check()', checkMs, CHECK_BUDGET_MS);
     expect(real.errors).toEqual([]);
     expect(real.drift).toEqual([]);
-    expect(real.code).toBe(0);
-    expect(real.counts.complete).toBe(0);
-    expect(real.counts.failed).toBe(0);
-    expect(real.counts.pending).toBe(real.counts.in_scope);
+    // row states come from the G-SHAPE fold (Spec 68 §4): every in-scope row gets exactly one state from
+    // complete · pending · pending:stale · failed, and G-SHAPE decided every in-scope row (fold over all gate results)
+    expect(real.counts.complete + real.counts.failed + real.counts.pending).toBe(real.counts.in_scope);
+    expect(real.counts.stale).toBeGreaterThanOrEqual(0);
+    expect(real.counts.stale).toBeLessThanOrEqual(real.counts.pending); // pending counts include the stale ones
     expect(real.counts.in_scope).toBeGreaterThan(0);
+    // Spec 68 §4: an agreed unit a content gate rejects fails that gate, and exit is 1 exactly then; drift is [] above,
+    // so the exit is 1 iff some gate failed
+    const gatesFailed = Object.values(real.gates as Record<string, Json>).some((g: Json) => g.state === 'fail');
+    expect(real.code).toBe(gatesFailed ? 1 : 0);
   });
 
   it('every one of the 13 gates has a closed state; no unbuilt or unpinned gate is reported as a pass', () => {
@@ -60,17 +67,28 @@ describe('--check on the real snapshot (every gate run once)', () => {
     for (const g of GATES) expect([g.id, GATE_STATES.includes(real.gates[g.id].state)]).toEqual([g.id, true]);
     for (const g of GATES.filter((x: Json) => !x.built)) expect([g.id, real.gates[g.id].state]).toEqual([g.id, 'not_run']);
     // the arms that exist ran on the real snapshot and passed
-    for (const id of ['G-DRIFT', 'G-EVAL']) expect([id, real.gates[id].state, real.gates[id].violations]).toEqual([id, 'pass', []]);
-    // G-TEXT / G-PROV / G-READ each hold an authored-content arm not yet wired into --check (unit_pins,
-    // keyer_provenance, explanations). With no authored file they pass; once real drafts exist (A1, 4bd4d97e) that
-    // arm has input it cannot check, so the gate is not_run — never a silent pass (Spec 68 §4)
+    expect(['G-DRIFT', real.gates['G-DRIFT'].state, real.gates['G-DRIFT'].violations]).toEqual(['G-DRIFT', 'pass', []]);
+    // G-EVAL runs over the agreed units since 2026-10-08: its real-unit arm may fail on content findings (closed state),
+    // but its precedence fixtures (the gate's own known-bad / good-twin proof) always pass
+    expect(['pass', 'fail']).toContain(real.gates['G-EVAL'].state);
+    expect(real.gates['G-EVAL'].arms.find((a: Json) => a.name === 'precedence_fixtures')?.state).toBe('pass');
+    // S6 gates wired 2026-10-08 + G-SHAPE fold, G-EVAL, G-PROV keyer arm, G-TEXT unit_pins wired 2026-10-08: G-TEXT's
+    // unit_pins arm always passes (a stale pin is `pending:stale`, never a failure — Spec 68 §4) and G-SHAPE's fold ran,
+    // so each gate holds a closed state pass · fail · not_run and, once authored drafts exist, is never a silent pass
     const authoredDir = path.join(ROOT, 'scripts/seeds/bylaw/authored');
     const authored = fs.existsSync(authoredDir) ? fs.readdirSync(authoredDir, { recursive: true }).filter((f) => String(f).endsWith('.json')).length : 0;
-    const UNWIRED: Record<string, string> = { 'G-TEXT': 'unit_pins', 'G-PROV': 'keyer_provenance', 'G-READ': 'explanations' };
-    for (const [id, arm] of Object.entries(UNWIRED)) {
-      expect([id, real.gates[id].state, real.gates[id].violations]).toEqual([id, authored ? 'not_run' : 'pass', []]);
-      if (authored) expect([id, real.gates[id].arms.find((a: Json) => a.name === arm)?.state]).toEqual([id, 'not_run']);
+    for (const id of ['G-TEXT', 'G-PROV', 'G-SHAPE']) for (const a of real.gates[id].arms) expect([id, GATE_STATES.includes(real.gates[id].state), real.gates[id].state !== 'pass' || !a.violations.length]).toEqual([id, true, true]);
+    // the wired arms report a closed state (never the old `not built` note)
+    if (authored) {
+      expect([real.gates['G-TEXT'].arms.find((a: Json) => a.name === 'unit_pins')?.state]).toEqual(['pass']);
+      expect(['pass', 'fail', 'not_run', 'vacuous']).toContain(real.gates['G-PROV'].arms.find((a: Json) => a.name === 'keyer_provenance')?.state);
+      expect(['pass', 'fail', 'not_run', 'vacuous']).toContain(real.gates['G-SHAPE'].arms.find((a: Json) => a.name === 'schema_and_unit_shape')?.state);
     }
+    // G-READ still holds an authored-content arm not yet wired into --check (explanations): with authored files it is not_run
+    if (authored) expect([real.gates['G-READ'].arms.find((a: Json) => a.name === 'explanations')?.state]).toEqual(['not_run']);
+    // S6 gates wired 2026-10-08: G-CLAUSE / G-XREF / G-AGREE run over the authored drafts. With authored files on disk
+    // they have a closed state pass · fail — never not_run, never a silent pass (Spec 68 §4, §9)
+    for (const id of ['G-CLAUSE', 'G-XREF', 'G-AGREE']) expect([id, authored > 0, ['pass', 'fail'].includes(real.gates[id].state)]).toEqual([id, true, true]);
     // G-UNIVERSE stays not_run until --accept pins the universe after the S4 re-slice; never a silent pass
     const locked = fs.existsSync(path.join(ROOT, 'scripts/seeds/bylaw/universe.lock.json'));
     expect(real.gates['G-UNIVERSE'].state).toBe(locked ? 'pass' : 'not_run');
@@ -135,12 +153,12 @@ describe('--self-test and the registry', () => {
 });
 
 describe('determinism (Spec 68 §10): --check under a different TZ and locale gives byte-identical renders', () => {
-  it('a spawned --check (TZ Pacific/Chatham, tr_TR) exits 0 and prints the same render shas as the in-process run', () => {
+  it('a spawned --check (TZ Pacific/Chatham, tr_TR) exits like the in-process run and prints the same render shas', () => {
     const s0 = Date.now();
     const r = spawnSync(process.execPath, [CLI, '--check'], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, TZ: 'Pacific/Chatham', LANG: 'tr_TR.UTF-8', LC_ALL: 'tr_TR.UTF-8' }, timeout: SPAWN_BUDGET_MS * 3 });
     warnIfNear('--check spawn', Date.now() - s0, SPAWN_BUDGET_MS);
     expect(r.stderr).toBe('');
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(real.code); // S6 gates wired 2026-10-08: the same exit as the in-process --check, whatever it is
     const shas = (r.stdout.match(/^render .+ sha256 [0-9a-f]{64}$/gm) || []).sort();
     expect(shas).toEqual([...real.renderShaLines].sort());
     expect(shas.length).toBe(2);

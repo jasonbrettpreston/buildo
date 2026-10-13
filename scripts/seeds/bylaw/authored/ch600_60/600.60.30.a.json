@@ -1,0 +1,130 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.30",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "600.60.30(1)#(1)(A)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RM"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "in the R Zone",
+          "RM": "in the RM Zone",
+          "apartment_building": "an apartment building"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "Confirms that an apartment building under the 600.60.20 definition follows the ordinary R Zone and RM Zone regulations listed, and all other regulations. It adds no new value.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.30(2)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "five", "clause": "(2)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(2)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "45", "clause": "(2)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["apartment_building", "fiveplex", "sixplex"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "apartment_building": "apartment building with",
+          "fiveplex": "fiveplex or sixplex",
+          "sixplex": "fiveplex or sixplex",
+          "lawfully_existing": "lawfully existing apartment"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Treats a lawfully existing five or six unit apartment building as an apartment building, outside the Section 600.60 fiveplex and sixplex rules. It depends on facts about the existing building.",
+        "gaps": "Whether a building is lawfully existing needs as-built information we do not hold.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type", "lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.30(3)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "five", "clause": "(3)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(3)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "45", "clause": "(3)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "A detached houseplex with five or six dwelling units must meet every other regulation in the By-law, or get a Section 45 minor variance. It adds no value of its own.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "600.60.30(1)": {
+      "explanation": "An apartment building (seven or more dwelling units) gets no special treatment from the sixplex rules: in the R Zone and RM Zone it follows the ordinary regulations listed, and every other regulation in the By-law.",
+      "code_refs": "none"
+    },
+    "600.60.30(2)": {
+      "explanation": "An existing, lawful apartment building with five or six dwelling units is not treated as a fiveplex or sixplex and the Section 600.60 sixplex rules do not apply to it. It must meet all other By-law regulations or get a Section 45 minor variance.",
+      "code_refs": "none"
+    },
+    "600.60.30(3)": {
+      "explanation": "A detached houseplex with five or six dwelling units follows the Article 600.60.40 rules, and otherwise must meet all other regulations in the By-law or get a Section 45 minor variance (except for the conversion cases excluded in 600.60.40(3)(D)).",
+      "code_refs": "none"
+    }
+  }
+}

@@ -52,11 +52,11 @@ describe('the slicer on the real exception pages (G-TEXT)', () => {
     expect(d).toHaveLength(16);
     for (const x of d) expect(EXC.includes(x.page)).toBe(true);
   });
-  it('the anti-vacuity residue on exception rows is exactly the 9 source quirks keying must list (literals_not_expressed)', () => {
+  it('the anti-vacuity residue on exception rows is exactly the 5 source quirks keying must list (literals_not_expressed)', () => {
     const left = slice.rows.filter((r: Json) => EXC.includes(r.page)).flatMap((r: Json) => r.uncovered_numbers.map((u: Json) => `${r.regulation_id} ${u.token}`));
-    // "800 .50(75)" (spaced id), "one-half" x3 (fractions are left uncovered by design), "1,25" / "7,5" (decimal
-    // comma), "minimum1.5" (glued)
-    expect(left).toEqual(['900.2.10(21) 50', '900.3.10(617) one', '900.3.10(618) one', '900.3.10(1006) 25', '900.6.10(50) one', '900.6.10(174) 1', '900.6.10(174) 5', '900.6.10(260) one', '900.6.10(404) 5']);
+    // "800 .50(75)" (spaced id), "1,25" / "7,5" (decimal comma), "minimum1.5" (glued); "one-half" is now the literal
+    // 0.5 (Spec 69a M-81 R10), so 900.3.10(617)/(618) and 900.6.10(50)/(260) left the residue
+    expect(left).toEqual(['900.2.10(21) 50', '900.3.10(1006) 25', '900.6.10(174) 1', '900.6.10(174) 5', '900.6.10(404) 5']);
   });
   it('every exception anchor <A Name="900.k.10(n)"> is exactly one row, and every exception row has its anchor', () => {
     for (const p of sliced.snap.pages.filter((x: Json) => EXC.includes(x.key))) {

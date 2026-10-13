@@ -1,0 +1,30 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_15/150.15.30.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.15.30.1(2)#(2)(A)",
+      "archetype": "PROHIBIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": ["RD"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RD": "in the RD zone", "any": "A group home or"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A group home or residential care home used for correctional purposes may not be on a lot in the RD zone.", "gaps": "Correctional use is not a scenario input.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.15.30.1(2)#(2)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A group home or"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A correctional group home or residential care home must be on a lot with a front lot line abutting a major street on the Policy Areas Overlay Map.", "gaps": "The Policy Areas Overlay Map is not held; correctional use is not a scenario input.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+      "disclosure": "The major-street location requirement for correctional group homes is not evaluated; the Policy Areas Overlay Map is not held.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.15.30.1(2)": {"explanation": "A group home or residential care home used for correctional purposes must not be in the RD zone and must be on a lot whose front lot line abuts a major street on the Policy Areas Overlay Map.", "code_refs": "none"}
+  }
+}

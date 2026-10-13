@@ -22,6 +22,7 @@
 //   prov_field_missing       the provenance record omits a field (keyers, briefs, a_seal, b_run, unit_shas)
 //   keyers_not_distinct      keyer A and keyer B are the same id
 //   seal_mismatch            A's seal ≠ the sha256 of A's committed draft bytes
+//   supersedes_mismatch      a re-key generation's prov.supersedes is absent or ≠ the predecessor's .a/.b/.prov sha (Spec 69a M-80)
 //   seal_id_duplicate        two shards carry the same monotonic seal id
 //   a_visible_to_b           witnessed: the shard's .a path is in the tree of B's recorded worktree commit
 //   a_in_b_read_paths        declared-only: B's engine-ledger read paths contain an .a path
@@ -36,7 +37,7 @@
 //   adjudication_ruling_wrong  a `consolidation_mismatch` adjudication does not cite M-39
 
 import { execFileSync } from 'node:child_process';
-import { gateResult, violation } from './authored.mjs';
+import { gateResult, predecessorKey, supersession, violation } from './authored.mjs';
 import { parseRulings } from './universe.mjs';
 import { keyerFixtures, rulingFixtures } from './authored-fixtures.mjs';
 
@@ -45,6 +46,7 @@ export const REASON_CODES = Object.freeze([
   'prov_field_missing',
   'keyers_not_distinct',
   'seal_mismatch',
+  'supersedes_mismatch',
   'seal_id_duplicate',
   'a_visible_to_b',
   'a_in_b_read_paths',
@@ -85,10 +87,11 @@ export function gitLsTree(root) {
 /** G-PROV keyer-provenance arm. PURE given the injected witness. */
 export function checkKeyerProv({ shards = [], lsTree = undefined, headTree = undefined, staged = undefined } = {}) {
   const v = [];
-  const counts = { shards: 0, sealed_without_b: 0, witnessed: 0 };
+  const counts = { shards: 0, sealed_without_b: 0, witnessed: 0, superseded_shards: 0 };
   const seals = new Map();
   const head = new Set(headTree || []);
   const stagedSet = new Set(staged || []);
+  const sup = supersession(shards);
   let notRun = null;
   for (const s of [...shards].sort((a, b) => cmpStr(a.key, b.key))) {
     counts.shards++;
@@ -126,7 +129,17 @@ export function checkKeyerProv({ shards = [], lsTree = undefined, headTree = und
       continue;
     }
     if (p.keyers.a.id === p.keyers.b.id) v.push(violation('keyers_not_distinct', s.key, `both keyers are ${p.keyers.a.id}`));
-    if (s.a && p.a_seal.sha256 !== s.a_sha256) v.push(violation('seal_mismatch', s.key, `seal ${p.a_seal.sha256.slice(0, 12)}… ≠ .a ${String(s.a_sha256).slice(0, 12)}…`));
+    // Spec 69a M-80: G-PROV checks the newest seal — a shard wholly superseded by a re-key generation is not re-checked
+    if (sup.whole.has(s.key)) counts.superseded_shards++;
+    else if (s.a && p.a_seal.sha256 !== s.a_sha256) v.push(violation('seal_mismatch', s.key, `seal ${p.a_seal.sha256.slice(0, 12)}… ≠ .a ${String(s.a_sha256).slice(0, 12)}…`));
+    const pred = predecessorKey(s.key);
+    if (pred !== null) {
+      // M-80: the generation records its predecessor's three files byte-for-byte (the old files stay identical)
+      const ps = shards.find((x) => x.key === pred);
+      const want = ps ? { a_sha: ps.a_sha256, b_sha: ps.b_sha256, prov_sha: ps.prov_sha256 } : null;
+      const got = p.supersedes || null;
+      if (!want || !got || ['a_sha', 'b_sha', 'prov_sha'].some((k) => !got[k] || got[k] !== want[k])) v.push(violation('supersedes_mismatch', s.key, !want ? `predecessor ${pred} is not on disk` : !got ? 'prov.supersedes is absent' : `prov.supersedes ≠ ${pred}'s files`));
+    }
     if (seals.has(p.a_seal.seal_id)) v.push(violation('seal_id_duplicate', s.key, `seal id ${p.a_seal.seal_id} is also ${seals.get(p.a_seal.seal_id)}'s`));
     else seals.set(p.a_seal.seal_id, s.key);
     const leaked = p.b_run.read_paths.filter((x) => A_DRAFT.test(String(x)));

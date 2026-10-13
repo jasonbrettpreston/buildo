@@ -16,6 +16,7 @@ import { pathToFileURL } from 'node:url';
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .mjs module surface
 const load = (rel: string): Promise<Json> => import(pathToFileURL(path.join(process.cwd(), rel)).href).catch((err: unknown) => ({ importError: String(err) }));
 const E = await load('scripts/analysis/bylaw/evaluate.mjs');
+const AU = await load('scripts/analysis/bylaw/authored.mjs');
 const read = (rel: string): Json => JSON.parse(fs.readFileSync(path.join(process.cwd(), rel), 'utf8'));
 const VOCAB = read('src/tests/fixtures/bylaw/eval-vocab.json');
 const ALL_UNITS: Json[] = read('src/tests/fixtures/bylaw/eval-units.json').units;
@@ -94,6 +95,11 @@ describe('G-EVAL (c): §7.5 precedence fixtures — rules 0–7, conflicts, M-38
   });
   it('selfTest() (the module-shape self test) passes', () => {
     expect(E.selfTest(VOCAB)).toMatchObject({ pass: true, violations: [] });
+  });
+  it('P1-Q8: the input-gap fixture is present exactly once and passes', () => {
+    const hits = fixtures.filter((f) => f.name.startsWith('building type NULL, a type-dependent unit exists and every type agrees'));
+    expect(hits.length).toBe(1);
+    expect(hits[0]!.run()).toEqual(hits[0]!.expect);
   });
 });
 
@@ -288,7 +294,8 @@ describe('M-54 G-EVAL (continued)', () => {
     const v = vec('eastbourne:lot_coverage_pct');
     expect(v.expected).toEqual({ value: 'unregulated', clause: '10.20.30.40(1)#(B)' });
     expect(E.checkEval({ units: UNITS, vectors: [v], vocab: VOCAB }).pass).toBe(true);
-    expect(E.checkEval({ units: UNITS, vectors: [{ ...v, expected: { value: 'unregulated', clause: '10.20.30.40(1)#(A)' } }], vocab: VOCAB }).pass).toBe(false);
+    // the twin drops the vector's eval_mismatch adjudication (Spec 69a M-81 follow-up), so the clause mismatch is unadjudicated
+    expect(E.checkEval({ units: UNITS, vectors: [{ ...v, adjudication: undefined, expected: { value: 'unregulated', clause: '10.20.30.40(1)#(A)' } }], vocab: VOCAB }).pass).toBe(false);
   });
   it('label au: p5071306 "RT (au220.0)" reads 220 m² per dwelling unit (10.60.30.10(2))', () => {
     const r = eff({ ...vec('p5071306:side_setback_m').lot }, 'lot_area_per_unit_min_m2');
@@ -332,5 +339,26 @@ describe('G-EVAL known-bad fixtures (each fails for its reason; the good twin pa
     const twin = (id: string, v: string) => ({ unit_id: id, regulation_id: '10.20.40.70(9)', layer: 'base', archetype: 'LIMIT', target: 'rear_setback_m', bound: 'exact', numeric_expression: [`rear_setback_m = ${v} m @(9)`], condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'] }, displaces: [] });
     const res = ok([vec('V7')], [twin('10.20.40.70(9)#(A)', '7.5'), twin('10.20.40.70(9)#(B)', '8.0')]);
     expect([res.pass, res.rows[0].got]).toEqual([false, 'conflict']);
+  });
+});
+
+describe('G-EVAL wiring: the generated layer reaches checkEval (Spec 68 §6 `layer` is G)', () => {
+  const keyed = { unit_id: '10.20.40.70(9)#(A)', archetype: 'LIMIT', target: 'rear_setback_m', bound: 'min', numeric_expression: ['rear_setback_m = 7.5 m @(9)'], condition: 'none', applies_to: { part: 'whole', refs: [] }, application: { zones: ['RD'], building_types: ['any'] } };
+  it('generatedLayer: Ch.600 overlay, Ch.900 exception rows exception, 900.1.10 and the rest base', () => {
+    expect(['10.20.40.70(3)#(3)(A)', '600.10.10(1)#whole', '900.3.10(5)#SSP(A)', '900.1.10(3)#whole', '150.7.60.40(3)#(3)(A)'].map((id) => AU.generatedLayer(id))).toEqual(['base', 'overlay', 'exception', 'base', 'base']);
+  });
+  it('withGeneratedFields adds regulation_id / layer (exception on an exception unit) and never mutates', () => {
+    const before = JSON.stringify(keyed);
+    expect(AU.withGeneratedFields(keyed)).toMatchObject({ regulation_id: '10.20.40.70(9)', layer: 'base' });
+    expect(AU.withGeneratedFields({ ...keyed, unit_id: '900.3.10(5)#SSP(A)' })).toMatchObject({ layer: 'exception', exception: '900.3.10(5)' });
+    expect(JSON.stringify(keyed)).toBe(before);
+  });
+  it('red: a keyed unit without the generated layer is never a candidate (V7 → no_candidate)', () => {
+    const r = E.checkEval({ units: [keyed], vectors: [vec('V7')], vocab: VOCAB });
+    expect(r.rows[0].got).toBe('not_evaluated:no_candidate');
+  });
+  it('green: the same unit with its generated fields is admitted and matches the by_law_expected V7 value 7.5', () => {
+    const r = E.checkEval({ units: [AU.withGeneratedFields(keyed)], vectors: [vec('V7')], vocab: VOCAB });
+    expect([r.rows[0].verdict, r.rows[0].got]).toEqual(['match', 7.5]);
   });
 });

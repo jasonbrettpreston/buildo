@@ -1,0 +1,49 @@
+{
+  "a_seal": {
+    "seal_id": 208,
+    "sha256": "102e589fdc9ede8d437ad41cf3277e840938c09aaed91dd0a5181e7f353e2ab2"
+  },
+  "b_run": {
+    "ledger_sha256": "86ade4a8f15559045099c29b9e5b673a5c2ba3cffe648ed522d02bf068749b13",
+    "read_paths": [],
+    "run_id": "20261008T205955Z-0655d758",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "d97a1514ca4f87902f1d94dd862bb053b9bedb8d3d8e37576e839f3ece45ac9d",
+    "b": "79d4227a37be52d199a2f6e2c39b985770524cd27360a29d1b437b6ef5fa24f8"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch1_40/1.40.80",
+  "unit_shas": {
+    "1.40.80(1)#(1)[T1.R1.C1]": "80b4cb2c1d34b25dc436b5e1f0f51b98719a1e6771e3da735efd30a70b5a6f08",
+    "1.40.80(1)#(1)[T1.R1.C2]": "a007226226efee464948fafdb2143400c293c7c06c37822410996fd91e681249",
+    "1.40.80(1)#(1)[T1.R2.C1]": "6d8d0fa9c8633a5960ddc137d9e335dec3141016823838b5550c7c93bff8359a",
+    "1.40.80(1)#(1)[T1.R2.C2]": "503d14c30d43cac95f4a27e201f02fd02c5441c187a258ac6bccaa85f21f6b5a",
+    "1.40.80(1)#(1)[T1.R3.C1]": "f2a550f88f5badc6692e8f9eaf631d594147bc61d5e7f53badd1319f7c8ca6d5",
+    "1.40.80(1)#(1)[T1.R3.C2]": "36963e3bccd859db13bc88471d9a81396ef1580cea0cfbf2891713e09893fc1b",
+    "1.40.80(1)#(1)[T1.R4.C1]": "37827f4b3cf82bfe58f971454affa0a8c5befe15fda6fca6649757bb53f97f9e",
+    "1.40.80(1)#(1)[T1.R4.C2]": "146bd00e14636e2860da69624fabe0e64f5801e62661f85ab5e24480ba93e8cb",
+    "1.40.80(1)#(1)[T1.R5.C1]": "0a7736d5368ee1190e22a3bd7352a14b8b6b3d333a5a9ceca8131558227ddc24",
+    "1.40.80(1)#(1)[T1.R5.C2]": "7d67d4ce3e48630f6fa14cdd5bce2dfc28057faa85d4e8161e653d4e5bc16232",
+    "1.40.80(1)#(1)[T1.R6.C1]": "ada099b486c6129b3ee1942f481d21a71f8510b4c79ee71f51f92842da393b8f",
+    "1.40.80(1)#(1)[T1.R6.C2]": "f600687a60ce4b1a3993f1e8b5574c7e0f433cc6a14587baf93cb65a21c4530c",
+    "1.40.80(2)#whole": "7eb770e808ee2bccb77dc4fcbbd4886c784e57b2091dd772f1c9dbe548fe0eb7",
+    "1.40.80(3)#(3)(A)": "98e931aa2d8c85219d594654848b7742966a845759b8166dedc23048a825290a",
+    "1.40.80(3)#(3)(B)": "b18c0c912f6482f13bba1ae1d97e4e81ad36a355c9aff5e2e051dca60cdc535a",
+    "1.40.80(3)#(3)(C)": "6d5315b5389db9b30f662d6eb1fdbc4b54341011ff84e799492afed0452d49ce",
+    "1.40.80(3)#(3)(D)": "53e6cd759510991339db3f96da2b08bda1a76dbe1fe5c673b75ac1c29d2ad108",
+    "1.40.80(3)#(3)(E)": "cccf520d1e2ad0248235c7b874bc869fe6789416f9c9cf28d2899930534b700d"
+  }
+}

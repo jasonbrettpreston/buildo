@@ -1,0 +1,22 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_50/150.50.40.10", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.50.40.10(1)#whole",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "40%", "clause": "(1)", "reason": "threshold_used_in_application"},
+        {"literal": "30.0 square metres", "clause": "(1)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a place of worship building"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A minaret, steeple or similar element on a place of worship may exceed the permitted maximum height by 40% if its horizontal area is at most 30.0 m2.", "gaps": "The excess is a percentage of the permitted maximum height, but height_projection_m is in metres and a pct-times-height product is not in Layer 1.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 40% height allowance for a minaret, steeple or similar element on a place of worship is not evaluated.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.50.40.10(1)": {"explanation": "A minaret, steeple or similar architectural element on a place of worship may exceed the permitted maximum building height by 40% if its horizontal area is no more than 30.0 m2.", "code_refs": "none"}
+  }
+}

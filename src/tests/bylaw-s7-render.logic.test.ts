@@ -247,6 +247,23 @@ describe('the five lines + PHASE 1 (Spec 68 §4)', () => {
     expect(VAL.fiveLines({ gates: allGates('pass', { 'G-CHANGE': 'fail' }), counts: done, extras }).at(-1)).toBe('PHASE 1: NOT_DONE');
   });
 
+  it('Spec 69a M-78: Ch.900 rows are Phase 2 — pending prints phase1 / phase2 and PHASE 1: DONE reads phase 1 only', () => {
+    const ph = (p1: number, p2: number) => ({ phase1: { pending: p1, stale: 0, failed: 0, complete: 0 }, phase2: { pending: p2, stale: 0, failed: 0, complete: 0 } });
+    const done = { ...zero, complete: 10, pending: 0 }; // as the PHASE 1 test above (its `done` is local to that block)
+    const withPhase2 = { ...done, pending: 3, phase: ph(0, 3) };
+    const l = VAL.fiveLines({ gates: allGates('pass'), counts: withPhase2, extras });
+    expect(l[0]).toContain('pending 3 (phase1 0 / phase2 3; stale 0)');
+    expect(l.at(-1)).toBe('PHASE 1: DONE');
+    expect(VAL.fiveLines({ gates: allGates('pass'), counts: { ...done, pending: 4, phase: ph(1, 3) }, extras }).at(-1)).toBe('PHASE 1: NOT_DONE');
+    const rowOf = new Map([
+      ['10.20.40.70(3)', { page: 'ch10_20' }],
+      ['900.3.10(5)', { page: 'ch900_3' }],
+      ['900.2.10(912)@63-2024', { page: 'enacting:63-2024', target: '900.2.10(912)' }],
+    ]); // Spec 69a M-78 (by content, note 2026-10-08): an enacting amendment of a Ch.900 exception is Phase 2
+    expect(VAL.phaseCounts({ '10.20.40.70(3)': 'pending', '900.3.10(5)': 'pending:stale', '900.2.10(912)@63-2024': 'pending' }, rowOf)).toEqual(ph(1, 1) && { phase1: { pending: 1, stale: 0, failed: 0, complete: 0 }, phase2: { pending: 2, stale: 1, failed: 0, complete: 0 } });
+    expect(VAL.PHASE2_PAGES).toEqual(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
+  });
+
   it('counts that cannot be computed yet print `unknown`, never a made-up 0', () => {
     const l = VAL.fiveLines({ gates: allGates('pass'), counts: { ...zero, draft_failures: null, disagreements: null }, extras });
     expect(l[0]).toContain('draft_failures unknown; disagreements unknown;');

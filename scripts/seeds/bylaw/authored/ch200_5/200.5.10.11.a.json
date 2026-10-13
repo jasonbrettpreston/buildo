@@ -1,0 +1,491 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch200_5/200.5.10.11",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "200.5.10.11(1)#(1)(A)",
+   "archetype": "LIMIT",
+   "target": "parking_spaces",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_spaces = existing(parking_spaces; enacted(569-2013)) @(1)(A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "lawful number",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Needs the lawful parking count of the existing building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(1)#(1)(B)",
+   "archetype": "LIMIT",
+   "target": "parking_spaces",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_spaces = existing(parking_spaces; enacted(569-2013)) @(1)(B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "lawful number",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Needs the lawful parking count of the existing building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(1)#(1)(C)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "lawful parking spaces",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Needs the lawful parking count of the existing building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(2)#whole",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "comply_or_minor_variance",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "addition or extension",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Additions must provide added required parking, up to the maximum, unless varied.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(3)#(3)(A)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "lawfully existing number",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Needs the lawful parking count of the existing building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(3)#(3)(B)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "comply_or_minor_variance",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "additional required parking",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Added parking must be provided or varied on a change of use.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(4)#(4)(A)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "lawful parking spaces",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Needs the lawful parking count of the existing building.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(4)#(4)(B)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "comply_or_minor_variance",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "addition or expansion",
+     "lawfully_existing": "lawfully existing building",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "lawfully_existing_status"
+    ],
+    "description": "Additions must meet the parking requirements or be varied.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(5)#(5)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Lawful includes things authorized or permitted before the cut-off date.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.10.11(5)#(5)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Lawful includes things authorized afterwards under the named clauses.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "200.5.10.11(1)": {
+   "explanation": "A lawfully existing building keeps its lawful parking count, even if that is below the minimum or above the maximum, and may not reduce it.",
+   "code_refs": "none"
+  },
+  "200.5.10.11(2)": {
+   "explanation": "Additions to such a building must add the extra parking required, up to the maximum, unless a minor variance is granted.",
+   "code_refs": "none"
+  },
+  "200.5.10.11(3)": {
+   "explanation": "On a change of use the existing parking may not be reduced and added parking must be provided or varied.",
+   "code_refs": "none"
+  },
+  "200.5.10.11(4)": {
+   "explanation": "Lawful off-site parking may stay if not reduced, and additions must comply or be varied.",
+   "code_refs": "none"
+  },
+  "200.5.10.11(5)": {
+   "explanation": "Lawful also covers things authorized before February 3, 2022 and afterwards under the listed clauses.",
+   "code_refs": "none"
+  }
+ }
+}

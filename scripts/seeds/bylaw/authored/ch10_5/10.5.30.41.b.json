@@ -1,0 +1,23 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.30.41",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.30.41(1)#whole",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = existing(lot_coverage_pct; enacted(569-2013)) @(1)"
+      ]
+    },
+    {
+      "unit_id": "10.5.30.41(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

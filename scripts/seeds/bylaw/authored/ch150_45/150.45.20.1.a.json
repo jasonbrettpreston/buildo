@@ -1,0 +1,107 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_45/150.45.20.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.45.20.1(1)#(1)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a day nursery may"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery may be in a building with a public school use.", "gaps": "Day nursery use is not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(B)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a day nursery may"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery may be in a building with a private school use.", "gaps": "Day nursery use is not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(C)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a day nursery may"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery may be in a building with a place of worship use.", "gaps": "Day nursery use is not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(D)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a day nursery may"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery may be in a building with a community centre use.", "gaps": "Day nursery use is not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(E)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a day nursery may"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery may be in a building with a library use.", "gaps": "Day nursery use is not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(2)#(2)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"], "building_types": ["detached_house", "semi_detached_house"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "in the R zone", "detached_house": "constructed as a detached house", "semi_detached_house": "a semi-detached house if"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "In the R zone a day nursery may be in a building that is or was originally a detached or semi-detached house if the day nursery occupies the entire building.", "gaps": "Original construction type and whole-building occupancy are not held.", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.45.20.1(2)#(2)(B)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"], "building_types": ["detached_house", "semi_detached_house"], "lot_conditions": [], "uses": ["dwelling_unit"],
+        "evidence": {"R": "in the R zone", "detached_house": "constructed as a detached house", "semi_detached_house": "a semi-detached house if", "dwelling_unit": "combination with a dwelling unit"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "In the R zone a day nursery may be in a building that is or was originally a detached or semi-detached house if it is combined with a dwelling unit that is the operator's principal residence.", "gaps": "Original construction type and operator residence are not held.", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.45.20.1(1)": {"explanation": "In the Residential and Residential Apartment zone categories a day nursery may be in an apartment building or in a building used as a public school, private school, place of worship, community centre or library.", "code_refs": "none"},
+    "150.45.20.1(2)": {"explanation": "In the R zone a day nursery may also be in a building that is or was originally a detached or semi-detached house, if the day nursery takes up the entire building or shares it with a dwelling unit that is the operator's principal residence.", "code_refs": "none"}
+  }
+}

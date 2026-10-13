@@ -1,0 +1,354 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_45/150.45.20.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.45.20.1(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Apartment Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "in an apartment building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Apartment Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "in an apartment building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Apartment Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "in an apartment building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Apartment Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "in an apartment building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(1)#(1)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Apartment Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "in an apartment building"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(2)#(2)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "in the R zone"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "detached_house",
+            "evidence": "originally constructed as a detached house"
+          },
+          {
+            "token": "semi_detached_house",
+            "evidence": "a semi-detached house if"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "150.45.20.1(2)#(2)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "in the R zone"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "detached_house",
+            "evidence": "originally constructed as a detached house"
+          },
+          {
+            "token": "semi_detached_house",
+            "evidence": "a semi-detached house if"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

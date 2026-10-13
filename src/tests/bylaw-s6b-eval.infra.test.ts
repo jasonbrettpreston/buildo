@@ -72,8 +72,18 @@ describe('M-51 — Spec 67 V1–V4 and V25 (side) corrected as eval_vector adjud
     expect(v.spec67_value).toBe(v.adjudication.with_label_f_equal_to_frontage.value);
     expect(v.bylaw_clause).toBe('10.20.40.70(3)#(C)');
   });
-  it('no other vector carries an adjudication', () => {
-    expect(V.filter((v) => v.adjudication).map((v) => v.id)).toEqual(['V1', 'V2', 'V3', 'V4', 'V25:side_setback_m']);
+  it('no other vector carries an eval_vector adjudication (M-51 set + the M-82 QR15 set)', () => {
+    // M-51 (V1–V4, V25 side) + the 10 QR15 vectors whose lot is not lawfully existing (Spec 68 §7.5; Spec 69a M-82)
+    expect(V.filter((v) => v.adjudication && v.adjudication.kind === 'eval_vector').map((v) => v.id)).toEqual(['p5071306:building_length_m', 'p5071306:building_depth_m', 'bijou:building_length_m', 'bijou:building_depth_m', 'V1', 'V2', 'V3', 'V4', 'V12', 'V18-RS', 'V18-RT', 'V22', 'V25:side_setback_m', 'V25:building_length_m', 'V25:building_depth_m']);
+  });
+  it('Spec 69a M-81 follow-up: 8 eval_mismatch adjudications, each naming the wrong side (an agreed unit) and its by-law clause', () => {
+    const m = V.filter((v) => v.adjudication && v.adjudication.kind === 'eval_mismatch');
+    expect(m.map((v) => v.id)).toEqual(['derwyn:lot_coverage_pct', 'eastbourne:lot_coverage_pct', 'futura:height_storeys', 'futura:lot_coverage_pct', 'cordella:height_storeys', 'cordella:lot_coverage_pct', 'p5071306:lot_coverage_pct', 'bijou:lot_coverage_pct']);
+    for (const v of m) {
+      expect(v.adjudication.wrong_side).toMatch(/^agreed unit \(/);
+      expect(v.adjudication.bylaw_clause).toMatch(/^(150\.7\.60\.70\(1\)|10\.40\.40\.20\(2\))$/);
+      expect(v.adjudication.reason.length).toBeGreaterThan(40);
+    }
   });
 });
 

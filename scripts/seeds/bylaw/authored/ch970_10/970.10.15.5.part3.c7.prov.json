@@ -1,0 +1,81 @@
+{
+  "a_seal": {
+    "seal_id": 359,
+    "sha256": "a358532683555cc63c6ff99bb95b7882384d3ff00d401470ea41d3d037d1f048"
+  },
+  "b_run": {
+    "ledger_sha256": "d3ad9f73a41ed9ef9a75a929beee52952548e37f88153f29578b0fb41204bafd",
+    "read_paths": [
+      "scripts",
+      "scripts/analysis/bylaw",
+      "scripts/analysis/bylaw/authored.mjs",
+      "scripts/analysis/bylaw/clause.mjs",
+      "scripts/analysis/bylaw/keying.mjs",
+      "scripts/analysis/bylaw/shape.mjs",
+      "scripts/analysis/bylaw/text.mjs",
+      "scripts/seeds/bylaw",
+      "scripts/seeds/bylaw/authored/ch970_10/970.10.15.5.part3.c7.b.json"
+    ],
+    "run_id": "20261009T020953Z-7ad6efca",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "d9469f1cf58bacc5014b970567b1d2806a659aac65e270edb978f89c5c5ba2dd",
+    "b": "e0ce4a0dead9e0060cd09f3d602792ed190e77820e191ef0779ea56ee846b953"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.15.5.part3.c7",
+  "unit_shas": {
+    "970.10.15.5(5)#(5)[T2.R49.C1]": "e051d2cf6c5942fa88a9819b3111c7b5319e27b3d99211b581d67e70b600c41b",
+    "970.10.15.5(5)#(5)[T2.R49.C2]": "4a83f94515141f62e19815fc802daae110e7c0f623023c000d6192c4d5f8bfaa",
+    "970.10.15.5(5)#(5)[T2.R49.C3]": "c61606f8931b5660962b6abf58a14f2227d30a8783b53151a85c0ea501577516",
+    "970.10.15.5(5)#(5)[T2.R49.C4]": "359ae0a7bec852df3836dcc03d9624bb551743480632a84ba31fc7c4e048251f",
+    "970.10.15.5(5)#(5)[T2.R49.C5]": "e50ad3ff167f1f875b1176c564a86d057b0716d1cb858b92a79011a672763d5c",
+    "970.10.15.5(5)#(5)[T2.R50.C1]": "25ad1c1b1a1703dd91cf1597d5e40174b56e29fa17e6bbdeff72331633a41bd0",
+    "970.10.15.5(5)#(5)[T2.R50.C2]": "315db9f2fda8d7c68eab124456593126b072bb87d94d5bbfcb47c4218864bcd6",
+    "970.10.15.5(5)#(5)[T2.R50.C3]": "b1f3c8c52d53d03326cc65b4ab194147629acd7b64db22aeb94e35a75266b998",
+    "970.10.15.5(5)#(5)[T2.R50.C4]": "7eb21e2862c4eb38e9231f30fd6ecab3f0b76e64a6b06245c43944c73eba4944",
+    "970.10.15.5(5)#(5)[T2.R50.C5]": "159fae7693b821151277f74926fd06ffe7b58e59e736eb14f5ca542b79450cd7",
+    "970.10.15.5(5)#(5)[T2.R51.C1]": "9852d2004420fba287237df25aa304c4d9d9a52bf6661532ee01ed69772835a0",
+    "970.10.15.5(5)#(5)[T2.R51.C2]": "38e24aedbd7d9c90c1495a0a85f32a1e9b55da209c723581ad126bb0eae4c801",
+    "970.10.15.5(5)#(5)[T2.R51.C3]": "1f43e0263d620ce3961c18fde41424ffcbb4662ed2605b223be04e40acf87528",
+    "970.10.15.5(5)#(5)[T2.R51.C4]": "7f284f3e94b306f0c3e9104d66a63e09144f047367c0b3a9df941d020e824a4a",
+    "970.10.15.5(5)#(5)[T2.R51.C5]": "582b0c329650495fbe845e86bd138a7d8dd683d8b4b32497100e98f1889d263a",
+    "970.10.15.5(5)#(5)[T2.R52.C1]": "d9c842693615564eac092090072049ee9388b2af2d53747cbde0a54810d0dc4e",
+    "970.10.15.5(5)#(5)[T2.R52.C2]": "7e57cd736fc8f9b76b905402fe431b0a1fc0e6126af7cd63015456b84c45aeaf",
+    "970.10.15.5(5)#(5)[T2.R52.C3]": "eeadcf276bac142d6ac0d9f0e6a456a6de2c2ca13e48c4e14b9e24016e2fb1cf",
+    "970.10.15.5(5)#(5)[T2.R52.C4]": "cc14255ef616dfd75b3b8f586e487ea1759243fd31c40ae640846983e5001f94",
+    "970.10.15.5(5)#(5)[T2.R52.C5]": "d91281d3c11a1f7b49c436e881d19a5b85d7e08ecef853fa7e1539e3b182b129",
+    "970.10.15.5(5)#(5)[T2.R53.C1]": "d67f46d010c8ada50d82b589c6c8beca139cb2e6f2d8cb3fdf5eee64e4c785b5",
+    "970.10.15.5(5)#(5)[T2.R53.C2]": "d6fa8ac75a79f2498db57edc40b7a55d01eb6525dc8e70884455e2ff01daa207",
+    "970.10.15.5(5)#(5)[T2.R53.C3]": "1f81afb8352eccc8d641b7b852a340c9f2857fa05a0593c825e38c31453fb96e",
+    "970.10.15.5(5)#(5)[T2.R53.C4]": "c6759bbfe9ad53a680728063b46cc27045888bd9eefcb0e8ab504ed4018feed9",
+    "970.10.15.5(5)#(5)[T2.R53.C5]": "795fd0ab5953fb156b17bbf12a771e571ebadcc2965900a59b9adef2463cf635",
+    "970.10.15.5(5)#(5)[T2.R54.C1]": "a9549040df0c411ac98b75d23517e13b37a439ae73318bc441e52da083a96af4",
+    "970.10.15.5(5)#(5)[T2.R54.C2]": "70da8d054e0fad54b0ec92376daf14b4635a4fbc5a9f440819c6c31f23a2c72a",
+    "970.10.15.5(5)#(5)[T2.R54.C3]": "3eeaa3fa675c7aee06daba6c2e299c1d84bab0810cc8cc12145fc5e62110f27b",
+    "970.10.15.5(5)#(5)[T2.R54.C4]": "eb4be8ee90d680e5279db728d7b37d666a9fc5ad2a44cd3c6d7e54a442b47fcb",
+    "970.10.15.5(5)#(5)[T2.R54.C5]": "3e4ed9b08ea433618003dea0760095d81125dc7e2af1eaa0f33f357dc3fa072d",
+    "970.10.15.5(5)#(5)[T2.R55.C1]": "c167032e579babed38cb3b0add16ffcd88a36b716041fab3bf94d0012caca964",
+    "970.10.15.5(5)#(5)[T2.R55.C2]": "2a2ed622866042283a3275d985bad59895a242cb32e3f1e4677c3dbbc311496d",
+    "970.10.15.5(5)#(5)[T2.R55.C3]": "72d50a3f8936524fe0f266df104b9f36748cd02b4d5f9451a4d5ee26da5b0001",
+    "970.10.15.5(5)#(5)[T2.R55.C4]": "50f0a718d0f6d7270af035cf470684b547dae50a76198e8b061533148ef0ddac",
+    "970.10.15.5(5)#(5)[T2.R55.C5]": "5bf7724e341d0483ed814a49e2db6366f20167be8334035de7761a753ffb2053",
+    "970.10.15.5(5)#(5)[T2.R56.C1]": "b827ff15141ab555e2d1969039276545491a40fdeac1ad995cca48f00bc5e3df",
+    "970.10.15.5(5)#(5)[T2.R56.C2]": "0ab5a31450d56fa09f6b4fad856d31a3d1b86881daac6674419e05c54ac989a1",
+    "970.10.15.5(5)#(5)[T2.R56.C3]": "30dd600478dfd24dbc8f8a0a64c006104adf338020a325dfac4ecd61fa14bc0c",
+    "970.10.15.5(5)#(5)[T2.R56.C4]": "5e401682b62648ef11bb86bf710ec4957ed94022dc538c5d2af4bac778208c69",
+    "970.10.15.5(5)#(5)[T2.R56.C5]": "872d274464abbe043d288f09669cf4239dc5d3b55d4f7e8ae5c5d051bcdedb3e"
+  }
+}

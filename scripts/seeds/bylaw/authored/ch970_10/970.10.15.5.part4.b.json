@@ -1,0 +1,66 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_10/970.10.15.5.part4",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "970.10.15.5(6)#whole",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": [
+        "parking_spaces = parking_rate × parking_spaces @(6)"
+      ]
+    },
+    {
+      "unit_id": "970.10.15.5(7)#(7)(A)",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": [
+        "parking_spaces = parking_rate × parking_spaces @(7)(A)"
+      ]
+    },
+    {
+      "unit_id": "970.10.15.5(7)#(7)(B)",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": [
+        "parking_spaces = parking_spaces @(7)(B)"
+      ]
+    },
+    {
+      "unit_id": "970.10.15.5(7)#(7)(C)",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": [
+        "parking_spaces = parking_spaces @(7)(C)"
+      ]
+    },
+    {
+      "unit_id": "970.10.15.5(8)#(8)(A)",
+      "archetype": "REQUIRE",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(8)#(8)(B)",
+      "archetype": "REQUIRE",
+      "target": "parking_spaces",
+      "bound": "max",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.10.15.5(9)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": [
+        "parking_spaces = 90.0 pct × lot_area_m2 @(9)"
+      ]
+    }
+  ]
+}

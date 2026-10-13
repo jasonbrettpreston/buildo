@@ -1,0 +1,94 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_10/10.10.40.70~r1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.10.40.70(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = 3.0 m @(5)(A)(i)(b)",
+        "front_setback_m = 6.0 m @(5)(A)(i)(a)",
+        "front_setback_m = 6.0 m @(5)(A)(i)(ii)",
+        "front_setback_m = if(labelled(through_lot); 6.0 m; front_setback_m) @(5)(A)(i)(c)"
+      ],
+      "condition": [
+        "depth_band",
+        "through_lot"
+      ],
+      "applies_to": {
+        "part": "whole",
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Buildings on Major Streets"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Buildings on Major Streets"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Buildings on Major Streets"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Buildings on Major Streets"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Buildings on Major Streets"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "townhouse",
+            "evidence": "a townhouse or apartment building"
+          },
+          {
+            "token": "apartment_building",
+            "evidence": "a townhouse or apartment building"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "major_street",
+            "evidence": "abutting a major street"
+          }
+        ],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": [],
+      "input_fidelity": "none",
+      "literals_not_expressed": [
+        {
+          "value": "36.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "value": "10.5.40.70(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "value": "(1)",
+          "reason": "cross_reference_value"
+        },
+        {
+          "value": "(4)",
+          "reason": "cross_reference_value"
+        }
+      ],
+      "calculation_handling": {
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    }
+  ]
+}

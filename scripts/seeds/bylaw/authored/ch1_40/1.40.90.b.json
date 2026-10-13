@@ -1,0 +1,175 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch1_40/1.40.90",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R1.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell in the Open Space Zone category listing: it is the header cell naming the 'ZONE NAME' column, carrying no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R1.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell in the Open Space Zone category listing: it is the header cell naming the 'ZONE SYMBOL' column, carrying no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R2.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R2.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'O' for Open Space in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R3.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space Natural' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R3.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'ON' for Open Space Natural in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R4.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space Recreation' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R4.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'OR' for Open Space Recreation in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R5.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space Golf Course' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R5.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'OG' for Open Space Golf Course in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R6.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space Marina' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R6.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'OM' for Open Space Marina in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R7.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone name 'Open Space Cemetery' in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(1)#(1)[T1.R7.C2]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Table cell listing the zone symbol 'OC' for Open Space Cemetery in the Open Space Zone category; a naming record with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(2)#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the Open Space Zone category ('permits uses associated with the Parks and Open Space Areas designation'); a descriptive purpose statement with no numeric bound, no enumerated DSL use token and no DSL target, so it is not modelled."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the O zone ('to provide areas for parks, including gardens and small play areas'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the ON zone ('to provide areas for the conservation of lands such as ravines and waterways'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the OR zone ('to provide areas for parks, including recreational uses and facilities'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(D)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the OG zone ('to provide areas for golf courses, including clubhouses and associated services'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(E)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the OM zone ('to provide areas for marinas, including clubhouses and associated services'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    },
+    {
+      "unit_id": "1.40.90(3)#(3)(F)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "disclosure": "Statement of the purpose of the OC zone ('to provide areas for cemeteries, including associated services and facilities'); a descriptive purpose statement with no numeric bound, permission, prohibition or definition."
+    }
+  ]
+}

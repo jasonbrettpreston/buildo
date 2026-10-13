@@ -1,0 +1,44 @@
+{
+  "a_seal": {
+    "seal_id": 314,
+    "sha256": "15e1526dd660cd1b7a511dda8b97ff5342eab07c4368c7593bb2ace346a01fa3"
+  },
+  "b_run": {
+    "ledger_sha256": "d3660b9653319f39afe7df0e76520278ae6286ae29005a3bbae13b5526c852cc",
+    "read_paths": [],
+    "run_id": "20261008T211342Z-c0d84539",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "4fd5bd74378013ace8e19d6e43a89d9972d78273b6035cf6cec14e6caee3ebf7",
+    "b": "196b162de0b0195ef2516826170e70a168ae80424e2acf53b4ba71f993dbeef7"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch230_5/230.5.10.11",
+  "unit_shas": {
+    "230.5.10.11(1)#whole": "bb7417e0a99dd70e3a30604eda169d02f354505b34b77744038a3ccfef551135",
+    "230.5.10.11(2)#whole": "df0a71d4372f3d9c0f4f7bb17f42de4b97692b006d97995802fba7225b06bda3",
+    "230.5.10.11(3)#whole": "4b3046e8a051f84ea42cacb051c338e1566b5e75fdbee8451106130619213bf5",
+    "230.5.10.11(4)#(4)(A)": "e49290a0670898136b9329a91f34296df2931da5d0c1e9cc87852620422b8984",
+    "230.5.10.11(4)#(4)(B)": "247d47125d9b1a61589a7589d643379106e416e02ba6cab5cf5c93030f3f255e",
+    "230.5.10.11(4)#(4)(C)": "ad03d4fa04e18ceda0ce92a5e7062a5508d839e94ce6b54fc8ed399d8bff3370",
+    "230.5.10.11(5)#(5)(A)": "034f93890356c024cb6bdc079bd0efa4b05ce9622883d4f5238412ef15c50271",
+    "230.5.10.11(5)#(5)(B)": "780b9520d95642394c07c1300efaf3636a9700df6c793dd831e578a331545315",
+    "230.5.10.11(5)#(5)(C)": "30dde2d3fe39cea309a929431774ec7bdd1d6d60f7a3cd90eddfd1c0ddd2da9e",
+    "230.5.10.11(6)#whole": "729e89434dad3f5b27676f823ea8b5afd81eba4e82e5b75aafe4d68a63a6ed69",
+    "230.5.10.11(7)#whole": "dbcb2f7b0c58301fe7a973e2859abde0f024624455f03ed00173e41ea46e9cfd",
+    "230.5.10.11(8)#(8)(A)": "91cba8cf4db300536f044c7edf90ff87f6ac8721bf0cd81aa28a01f14e2cf773",
+    "230.5.10.11(8)#(8)(B)": "6f11e754215929070818bc905b7fdc86ed6004e8b40259258de8a72c1b71ae2c"
+  }
+}

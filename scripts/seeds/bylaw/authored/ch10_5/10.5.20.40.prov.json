@@ -1,0 +1,46 @@
+{
+  "a_seal": {
+    "seal_id": 229,
+    "sha256": "5b4439e52d82eb925847f31e231d54607c917293e7418cdfc27c14a846916286"
+  },
+  "b_run": {
+    "ledger_sha256": "62b55026b0e28beecf5bf78accea696d576254bfa85eca1537c682360ce55ff5",
+    "read_paths": [],
+    "run_id": "20261008T210525Z-9fbafd1b",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "b5556ffeee58289ffa47f73b25a44029b9673ced3a5be2b304cc41982207447f",
+    "b": "9baf5aa0d16996bbfb7de8d3a9d391ff4e125c0d1e774f39feaa8e56ef4874c2"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.20.40",
+  "unit_shas": {
+    "10.5.20.40(1)#(1)(A)": "39c6511cdba72a11861b4d9f02c45e79b042553333a2b54b6cf07d15c5e6c868",
+    "10.5.20.40(2)#(2)(A)": "0813f2aec0c2dad91713c378fee417e2293aba905efa0756721bd5bc450852ee",
+    "10.5.20.40(2)#(2)(B)": "bc94ee0de2fe72716dfb0623accebc959046e1dd5b09777e84714f66029182e0",
+    "10.5.20.40(2)#(2)(C)": "fcb399e53c0d4d9c70ed0d7235dfa90a27cf155a8b0d09b8b9e2b692da12b24f",
+    "10.5.20.40(2)#(2)(D)": "5617959263083b6db711411b34b7a8faab784ec6c6e0cca35a1894ab9125cbde",
+    "10.5.20.40(3)#(3)(A)": "c8c0a3528889c45c00fcb08346f88b2da23363ad21143d34b1b6fa05ea843975",
+    "10.5.20.40(3)#(3)(B)": "f4813299c5faeee6de1a5ae9b7ec42bf87ef4556b9db3ddd57d6155c7da0d414",
+    "10.5.20.40(3)#(3)(C)": "4110653771fd616a83eb7675bb3ee5dea5ce5a3e532914b20f254fbe29963a10",
+    "10.5.20.40(3)#(3)(D)": "3b3e807e079f8817eda426bb07bd7572a3bfa1fdfd9dc304100f6d4c55f8adac",
+    "10.5.20.40(4)#whole": "7d41b47bfd1780a7952bf44fabc055a282751ae1174ec95a0e0696e2fd752447",
+    "10.5.20.40(5)#(5)(A)": "e9e6fa7a76ad0f92332c204c19e95d245515d35a59700ea937aabc81ad4be189",
+    "10.5.20.40(5)#(5)(B)": "1c73fe17e0c63e2a3c9de43c38e4206a73eacc088890fd185f962361fbdda183",
+    "10.5.20.40(6)#whole": "9abced116749498a90827b8d3a1bd00b341340426ed6c520df6e20c62c97715e",
+    "10.5.20.40(7)#(7)(A)": "54ce95ddfefae8ef7c57ebd63332ca21b97e87909a29f9c6ded35bd2cd367a46",
+    "10.5.20.40(7)#(7)(B)": "affc93290bed5f3b57b20685d259b24feee088afce5e70441de27831fdd22661"
+  }
+}

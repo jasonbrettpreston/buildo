@@ -1,0 +1,209 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_25/150.25.20.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.25.20.1(1)#(1)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": ["dwelling_unit"], "evidence": {"any": "a multi-tenant house", "dwelling_unit": "number of dwelling units"}},
+      "calculation_handling": {"status": "not_modelled", "description": "The dwelling units in a building containing a multi-tenant house may not exceed the zone's maximum number of dwelling units.", "gaps": "The limit is a cross-reference to the zone with no literal in this clause.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The cap on dwelling units in a building with a multi-tenant house follows the zone limit and is not separately evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(1)#(1)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "The total dwelling rooms, excluding bedrooms in a dwelling unit, may not exceed the numbers set in 150.25.20.1(3), (4) and (5).", "gaps": "Dwelling rooms are not a model target; the limits are cross-references.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The cap on dwelling rooms in a building with a multi-tenant house is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(2)#whole",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "one sanitary facility", "clause": "(2)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "four dwelling rooms", "clause": "(2)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A multi-tenant house needs at least one sanitary facility (toilet, wash basin and bath or shower) for every four dwelling rooms, rounded up.", "gaps": "No model target for sanitary facilities.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The washroom rate of one sanitary facility per four dwelling rooms is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(3)#(3)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "R, RD, RS, RT, and RM zones", "RD": "R, RD, RS, RT, and RM zones", "RS": "R, RD, RS, RT, and RM zones", "RT": "R, RD, RS, RT, and RM zones", "RM": "R, RD, RS, RT, and RM zones", "any": "a multi-tenant house is permitted"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A multi-tenant house is permitted in a building originally constructed as one and in any building type where dwelling units are permitted in the zone.", "gaps": "Multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(3)#(3)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "6 dwelling rooms", "clause": "(3)(B)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "R, RD, RS, RT, and RM zones", "RD": "R, RD, RS, RT, and RM zones", "RS": "R, RD, RS, RT, and RM zones", "RT": "R, RD, RS, RT, and RM zones", "RM": "R, RD, RS, RT, and RM zones", "any": "a multi-tenant house"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A maximum of 6 dwelling rooms per lot are permitted in a multi-tenant house.", "gaps": "Dwelling rooms are not a model target (dwelling_units_max counts dwelling units).", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 6 dwelling room limit per lot for a multi-tenant house is not evaluated; there is no model target for dwelling rooms.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(3)#(3)(C)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["12 Dwelling Room Special Area on the Multi-tenant House Overlay Map"]},
+      "literals_not_expressed": [{"literal": "12 dwelling rooms", "clause": "(3)(C)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "in an R zone", "any": "a multi-tenant house"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "In an R zone within a 12 Dwelling Room Special Area, a maximum of 12 dwelling rooms per lot are permitted in a multi-tenant house.", "gaps": "The Multi-tenant House Overlay Map is not held; dwelling rooms are not a model target.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+      "disclosure": "The 12 dwelling room allowance in the 12 Dwelling Room Special Area is not evaluated; the Multi-tenant House Overlay Map is not held.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(3)#(3)(D)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(u) and label(u) ≤ 6 units or not labelled(u)"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"], "building_types": ["any"], "lot_conditions": ["label_value"], "uses": [],
+        "evidence": {"RM": "apply to RM zones", "any": "Regulations (A) and (B)", "label_value": "numerical value of 6"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "Regulations (A) and (B) apply to RM zones whose zone label has a u value of 6 or less, or no u value.", "gaps": "Multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(3)#(3)(E)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "two abutting lots", "clause": "(3)(E)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "more than two abutting lots", "clause": "(3)(E)(iii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["detached_house", "semi_detached_house", "townhouse"], "lot_conditions": [], "uses": [],
+        "evidence": {"R": "R, RD, RS, RT, and RM zones", "RD": "R, RD, RS, RT, and RM zones", "RS": "R, RD, RS, RT, and RM zones", "RT": "R, RD, RS, RT, and RM zones", "RM": "R, RD, RS, RT, and RM zones", "detached_house": "a detached house", "semi_detached_house": "portion of a semi-detached house", "townhouse": "portion of a townhouse"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A multi-tenant house without a dwelling unit is subject to the lot and building requirements that apply to a detached house, or to the unit portion of a semi-detached house or townhouse, depending on how many lots the building spans.", "gaps": "Building attachment across lots is not held; multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": ["building_type"]},
+      "disclosure": "The borrowing of detached, semi-detached or townhouse lot and building requirements for a multi-tenant house without a dwelling unit is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(4)#(4)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RM": "and RM zones", "any": "a multi-tenant house is permitted"}},
+      "calculation_handling": {"status": "not_modelled", "description": "In the RA, RAC and RM zones a multi-tenant house is permitted in a building originally constructed as one and in any building type where dwelling units are permitted.", "gaps": "RA and RAC are not in the zone vocabulary; multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(4)#(4)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["6 Dwelling Room Special Area on the Multi-tenant House Overlay Map"]},
+      "literals_not_expressed": [{"literal": "6 dwelling rooms", "clause": "(4)(B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RM": "and RM zones", "any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "Within a 6 Dwelling Room Special Area a maximum of 6 dwelling rooms per lot are permitted in a multi-tenant house.", "gaps": "The Multi-tenant House Overlay Map is not held; dwelling rooms are not a model target.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+      "disclosure": "The 6 dwelling room limit in the 6 Dwelling Room Special Area is not evaluated; the Multi-tenant House Overlay Map is not held.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(4)#(4)(C)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "12 dwelling rooms", "clause": "(4)(C)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RM": "and RM zones", "any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "In all other areas a maximum of 12 dwelling rooms per lot are permitted in a multi-tenant house.", "gaps": "Dwelling rooms are not a model target.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 12 dwelling room limit per lot outside the special area is not evaluated; there is no model target for dwelling rooms.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(4)#(4)(D)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RM": "and RM zones", "any": "apply to a residential building"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A multi-tenant house without a dwelling unit is subject to the lot and building requirements that apply to a residential building.", "gaps": "Multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The borrowing of residential building requirements for a multi-tenant house without a dwelling unit is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(5)#(5)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house is permitted"}},
+      "calculation_handling": {"status": "not_modelled", "description": "In the CR and CRE zones a multi-tenant house is permitted in a building originally constructed as one and in any building type where dwelling units are permitted.", "gaps": "CR and CRE are not in the zone vocabulary.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(5)#(5)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["6 Dwelling Room Special Area on the Multi-tenant House Overlay Map"]},
+      "literals_not_expressed": [{"literal": "6 dwelling rooms", "clause": "(5)(B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "Within a 6 Dwelling Room Special Area a maximum of 6 dwelling rooms per lot are permitted in a multi-tenant house in the CR and CRE zones.", "gaps": "The Multi-tenant House Overlay Map is not held; CR and CRE are not in the zone vocabulary.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+      "disclosure": "The 6 dwelling room limit in the 6 Dwelling Room Special Area (CR and CRE zones) is not evaluated; the Multi-tenant House Overlay Map is not held.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(5)#(5)(C)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "25 dwelling rooms", "clause": "(5)(C)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "In all other areas of the CR and CRE zones a maximum of 25 dwelling rooms per lot are permitted in a multi-tenant house.", "gaps": "Dwelling rooms are not a model target; CR and CRE are not in the zone vocabulary.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 25 dwelling room limit per lot in the CR and CRE zones is not evaluated; there is no model target for dwelling rooms.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.25.20.1(5)#(5)(D)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "a multi-tenant house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A multi-tenant house without a dwelling unit is subject to the lot and building requirements that apply to a residential building or mixed use building.", "gaps": "Multi-tenant houses are not a modelled building type.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The borrowing of residential or mixed use building requirements for a multi-tenant house without a dwelling unit is not evaluated.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.25.20.1(1)": {"explanation": "A building with a multi-tenant house may also contain dwelling units, up to the zone's maximum number of dwelling units. The total number of dwelling rooms (not counting bedrooms in a dwelling unit) must stay within the room limits in subsections (3) to (5).", "code_refs": "none"},
+    "150.25.20.1(2)": {"explanation": "A multi-tenant house needs at least one sanitary facility (toilet, wash basin, and bath or shower) for every four dwelling rooms, rounded up to a whole number.", "code_refs": "none"},
+    "150.25.20.1(3)": {"explanation": "In the R, RD, RS, RT and RM zones a multi-tenant house is allowed in a building originally built as one or in any building type allowed with dwelling units. It is limited to 6 dwelling rooms per lot, or 12 in an R zone inside a 12 Dwelling Room Special Area. These rules apply in RM zones whose label has a u value of 6 or less, or no u value. A multi-tenant house without a dwelling unit follows the requirements for a detached house, or for the matching portion of a semi-detached house or townhouse.", "code_refs": "none"},
+    "150.25.20.1(4)": {"explanation": "In the RA, RAC and RM zones a multi-tenant house is allowed in a building originally built as one or in any building type allowed with dwelling units. It is limited to 6 dwelling rooms per lot in a 6 Dwelling Room Special Area and 12 elsewhere. Without a dwelling unit it follows the requirements for a residential building.", "code_refs": "none"},
+    "150.25.20.1(5)": {"explanation": "In the CR and CRE zones a multi-tenant house is allowed in a building originally built as one or in any building type allowed with dwelling units. It is limited to 6 dwelling rooms per lot in a 6 Dwelling Room Special Area and 25 elsewhere. Without a dwelling unit it follows the requirements for a residential or mixed use building.", "code_refs": "none"}
+  }
+}

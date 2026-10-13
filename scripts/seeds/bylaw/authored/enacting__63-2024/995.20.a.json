@@ -1,0 +1,12 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:63-2024/995.20", "keyer": "A",
+ "units": [
+  {"unit_id": "995.20@63-2024#whole", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["Diagrams 2A, 2B, and 2C", "Diagrams 1A, 1B, 1C, and 1D", "Diagrams 4A, 4B, 4C, and 4D"]},
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "not_modelled", "description": "Map amendment: adds the lands on Diagrams 2A to 2C to the Height Overlay Map and replaces zone labels on the lands on Diagrams 1A to 1D, applying the height labels on Diagrams 4A to 4D.", "gaps": "The lands and height labels are shown only on the diagrams and no map geometry for them is held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "995.20@63-2024": {"explanation": "Adds lands to the Height Overlay Map and replaces zone labels on the Zoning By-law Map for other lands, applying the height labels shown on Diagrams 4A to 4D.", "code_refs": "none"}}}

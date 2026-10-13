@@ -1,0 +1,1599 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch800_50/800.50.part4",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "800.50(505)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Nursing Home\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(520)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Open Storage\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(525)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Outdoor Patio\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(526)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Oversized Bicycle Parking Space\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(530)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Park\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(535)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one or more",
+     "clause": "(535)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Parking Garage\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(540)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Parking Space\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(545)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Passenger Terminal\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(55)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "five or more",
+     "clause": "(55)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "apartment_building": "Apartment Building means a building"
+    }
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "status": "informational",
+    "description": "Definition of the term \"Apartment Building\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(550)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Performing Arts Studio\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(555)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Personal Service Shop\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(565)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Pet Services\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(575)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Place of Assembly\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(580)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Place of Worship\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(585)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Post-Secondary School\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(595)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Premises\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(60)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Art Gallery\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(600)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Primary Window\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(605)#(605)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "twenty-four hours",
+     "clause": "(605)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "six children",
+     "clause": "(605)(A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Private Home Daycare\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(605)#(605)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "twenty-four hours",
+     "clause": "(605)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "five children",
+     "clause": "(605)(B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Private Home Daycare\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(610)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Private School\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(615)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Production Studio\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(620)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one or more",
+     "clause": "(620)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Public Parking\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(625)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Public School\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(630)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Public Utility\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(640)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Quarry\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(645)#(645)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Lot Line\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(645)#(645)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Lot Line\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(645)#(645)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "45 degrees",
+     "clause": "(645)(C)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Lot Line\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(65)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Artist Studio\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(650)#(650)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Yard\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(650)#(650)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Yard\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(655)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Rear Yard Setback\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(665)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Recreation Use\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(670)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Recyclable Material\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(675)#(675)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Religious Education Use\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(675)#(675)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Religious Education Use\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(680)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Religious Organization\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(685)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Religious Residence\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(690)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "status": "informational",
+    "description": "Definition of the term \"Renewable Energy\"; it is not a numeric limit and is not evaluated against lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "800.50(505)": {
+   "explanation": "Defines \"Nursing Home\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(520)": {
+   "explanation": "Defines \"Open Storage\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(525)": {
+   "explanation": "Defines \"Outdoor Patio\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(526)": {
+   "explanation": "Defines \"Oversized Bicycle Parking Space\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(530)": {
+   "explanation": "Defines \"Park\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(535)": {
+   "explanation": "Defines \"Parking Garage\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(540)": {
+   "explanation": "Defines \"Parking Space\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(545)": {
+   "explanation": "Defines \"Passenger Terminal\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(55)": {
+   "explanation": "Defines \"Apartment Building\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(550)": {
+   "explanation": "Defines \"Performing Arts Studio\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(555)": {
+   "explanation": "Defines \"Personal Service Shop\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(565)": {
+   "explanation": "Defines \"Pet Services\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(575)": {
+   "explanation": "Defines \"Place of Assembly\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(580)": {
+   "explanation": "Defines \"Place of Worship\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(585)": {
+   "explanation": "Defines \"Post-Secondary School\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(595)": {
+   "explanation": "Defines \"Premises\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(60)": {
+   "explanation": "Defines \"Art Gallery\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(600)": {
+   "explanation": "Defines \"Primary Window\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(605)": {
+   "explanation": "Defines \"Private Home Daycare\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(610)": {
+   "explanation": "Defines \"Private School\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(615)": {
+   "explanation": "Defines \"Production Studio\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(620)": {
+   "explanation": "Defines \"Public Parking\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(625)": {
+   "explanation": "Defines \"Public School\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(630)": {
+   "explanation": "Defines \"Public Utility\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(640)": {
+   "explanation": "Defines \"Quarry\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(645)": {
+   "explanation": "Defines \"Rear Lot Line\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(65)": {
+   "explanation": "Defines \"Artist Studio\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(650)": {
+   "explanation": "Defines \"Rear Yard\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(655)": {
+   "explanation": "Defines \"Rear Yard Setback\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(665)": {
+   "explanation": "Defines \"Recreation Use\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(670)": {
+   "explanation": "Defines \"Recyclable Material\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(675)": {
+   "explanation": "Defines \"Religious Education Use\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(680)": {
+   "explanation": "Defines \"Religious Organization\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(685)": {
+   "explanation": "Defines \"Religious Residence\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  },
+  "800.50(690)": {
+   "explanation": "Defines \"Renewable Energy\" for the purposes of the zoning by-law; it sets no numeric limit by itself.",
+   "code_refs": "none"
+  }
+ }
+}
