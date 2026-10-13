@@ -55,7 +55,8 @@ const pendingRow = (over: Record<string, unknown> = {}): Record<string, unknown>
 
 const permanentRow = (anchor: string, over: Record<string, unknown> = {}): Record<string, unknown> => ({
   gate: 'E',
-  step: 'compute_centroids',
+  step: 'assert-global-coverage',
+  file: 'scripts/lib/compute/assert-global-coverage.js',
   item: 'compute literal `ST_Transform(..., 4326)`',
   disposition: 'coordinate_reference',
   why: 'EPSG:4326 is the registry CRS, not a tunable — a scalar variable would be a lie.',
@@ -299,11 +300,11 @@ describe('standard-gates ledger — R-BZ collision lock + programme expiry', () 
     expect(out.orphans).toHaveLength(0);
   });
 
-  it('T5c (C2, live data): the committed ledger has no duplicate gate+step+item keys', () => {
+  it('T5c (C2, live data): the committed ledger has no duplicate gate+step(+file)+item keys (R-CN)', () => {
     const live = ledger.loadLedger(REPO_ROOT);
     const keys = new Map<string, number>();
     live.rows.forEach((row: Record<string, unknown>) => {
-      const k = `${row.gate}\u0000${row.step}\u0000${row.item}`;
+      const k = `${row.gate}\u0000${row.step}\u0000${row.file ?? ''}\u0000${row.item}`;
       keys.set(k, (keys.get(k) ?? 0) + 1);
     });
     const dupes = [...keys.entries()].filter(([, n]) => n > 1);

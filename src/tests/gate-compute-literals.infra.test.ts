@@ -124,7 +124,7 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
       // filter that one finding and leave the other two (camelCase) findings
       // reported, not swallow the whole rule id.
       const row = {
-        gate: 'E', step: 'bad-compute-literals',
+        gate: 'E', step: 'bad-compute-literals', file: gateE.FIXTURE_FILE,
         item: 'compute-no-module-numeric-const@const MAX_RETRY_COUNT = 5;',
         disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
         filed: '2026-09-26', adjudicated_by: 'operator',
@@ -146,7 +146,7 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
 
     it('T2e: a ledger row with no matching finding is an ORPHAN (R-X closing-row posture)', () => {
       const row = {
-        gate: 'E', step: 'bad-compute-literals',
+        gate: 'E', step: 'bad-compute-literals', file: gateE.FIXTURE_FILE,
         item: 'compute-no-module-numeric-const@no such line exists anywhere',
         disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
         filed: '2026-09-26', adjudicated_by: 'operator',
@@ -237,7 +237,7 @@ describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
 
   it('V4: a NON-purity gate-E row with a later date is not a freeze problem', () => {
     const row = {
-      gate: 'E', step: 'link-wsib',
+      gate: 'E', step: 'link-wsib', file: 'scripts/lib/compute/link-wsib.js',
       item: 'compute-no-sql-interval-literal@no such line exists anywhere',
       disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture',
       filed: '2026-10-12', adjudicated_by: 'operator',

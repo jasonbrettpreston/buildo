@@ -27,7 +27,7 @@ import { purityRowFreeze } from '../../scripts/analysis/gates/compute-literals.m
 describe('check-step-shape purity block (CP-B8d)', () => {
   it('(a) resolves an unallowed (step, item) back to its finding — no `undefined`', () => {
     // Exactly the shape `matchLedger` returns when no row covers a finding.
-    const unallowed = [{ step: 'load-parcels', item: 'compute-ledger-sql@SELECT 1' }];
+    const unallowed = [{ step: 'load-parcels', file: 'scripts/lib/compute/load-parcels.js', item: 'compute-ledger-sql@SELECT 1' }];
     // Exactly the shape `purityFindings(scanPurity(...))` produces.
     const findings = [
       {
@@ -49,7 +49,7 @@ describe('check-step-shape purity block (CP-B8d)', () => {
   });
 
   it('(a2) falls back to `<step> <item>` when no finding matches the key', () => {
-    const lines = formatPurityUnallowed([{ step: 'load-parcels', item: 'no-such-finding' }], []);
+    const lines = formatPurityUnallowed([{ step: 'load-parcels', file: 'scripts/lib/compute/load-parcels.js', item: 'no-such-finding' }], []);
     expect(lines).toEqual(['load-parcels no-such-finding']);
   });
 

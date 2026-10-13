@@ -178,21 +178,21 @@ function filterGateEFindings(computeResults, repoRoot) {
  * `{step, item[, collision]}` — NOT the finding itself. The blocking loop printed
  * `v.ruleId`/`v.file`/`v.line`, so every purity failure read
  * "footgun[undefined]: undefined:undefined". The finding is only recoverable by
- * looking the entry's `(step, item)` key back up in the findings array the same
- * match was fed (the same key `matchLedger` keys on, `<step>\0<item>`). Pure:
+ * looking the entry's `(step, file, item)` key back up in the findings array the
+ * same match was fed (the same key `matchLedger` keys on, `<step>\0<file>\0<item>`). Pure:
  * no fs, no clock, no ledger.
  *
- * @param {Array<{step: string, item: string}>} unallowed `matchLedger(...).unallowed`
- * @param {Array<{step: string, item: string, file: string, line: number, ruleId: string}>} findings
+ * @param {Array<{step: string, file: string, item: string}>} unallowed `matchLedger(...).unallowed`
+ * @param {Array<{step: string, file: string, item: string, line: number, ruleId: string}>} findings
  *   the exact array passed to `matchLedger` (i.e. `purityFindings(puritySites)`)
  * @returns {string[]} one message per entry, in the same order
  */
 export function formatPurityUnallowed(unallowed, findings) {
   const byKey = new Map(
-    (Array.isArray(findings) ? findings : []).map((f) => [`${f.step}\u0000${f.item}`, f]),
+    (Array.isArray(findings) ? findings : []).map((f) => [`${f.step}\u0000${f.file}\u0000${f.item}`, f]),
   );
   return (Array.isArray(unallowed) ? unallowed : []).map((u) => {
-    const f = byKey.get(`${u.step}\u0000${u.item}`);
+    const f = byKey.get(`${u.step}\u0000${u.file}\u0000${u.item}`);
     if (!f) return `${u.step} ${u.item}`;
     return (
       `footgun[${f.ruleId}]: ${f.file}:${f.line} — ${f.message || 'is a compute-purity finding'} ` +

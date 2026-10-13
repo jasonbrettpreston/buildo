@@ -147,16 +147,11 @@ export function scanGateE(files, repoRoot = REPO_ROOT) {
   }
   const out = [];
   const fileTextCache = new Map();
-  // `<rule>@<trimmed line>` → how many times it has occurred SO FAR *in this step file*.
+  // `<rule>@<trimmed line>` → how many times it has occurred SO FAR *in this FILE*
+  // (R-CN: the ordinal is per FILE, not per step — one basename may repeat across dirs).
   // CP-B11 fix 6: the 1st occurrence keeps the bare key; the 2nd, 3rd… get `#2`, `#3`.
   // An existing key that occurs once is therefore unchanged (the 29 ledger rows hold).
-  const itemSeen = new Map();
-  const ord = (step, base) => {
-    const k = `${step}\u0000${base}`;
-    const n = (itemSeen.get(k) || 0) + 1;
-    itemSeen.set(k, n);
-    return n === 1 ? base : `${base}#${n}`;
-  };
+  const ord = gateEOrdinal();
   for (const line of stdout.split(/\r?\n/)) {
     const m = LINE_RE.exec(line);
     if (!m) continue;
@@ -169,7 +164,7 @@ export function scanGateE(files, repoRoot = REPO_ROOT) {
     const lines = fileTextCache.get(rel);
     const lineText = (lines[Number(lineNo) - 1] || '').trim();
     const step = path.basename(rel).replace(/\.js$/, '');
-    out.push({ file: rel, line: Number(lineNo), ruleId, lineText, step, item: ord(step, `${ruleId}@${lineText}`) });
+    out.push({ file: rel, line: Number(lineNo), ruleId, lineText, step, item: ord(rel, `${ruleId}@${lineText}`) });
   }
   return out;
 }
@@ -186,6 +181,25 @@ export function purityFindings(sites) {
     step: path.basename(s.file).replace(/\.(c?js)$/, ''),
     item: s.key,
   }));
+}
+
+/**
+ * The gate-E ordinal helper (R-CN): a `(fileRel, base) => item` closure whose
+ * counter is keyed on the FILE (repo-relative posix path) plus the bare item
+ * text — never on `step`, because `step` is a basename and the same basename
+ * may occur in two directories. CP-B11 fix 6: the 1st occurrence in a file
+ * keeps the bare key; the 2nd, 3rd… get `#2`, `#3`. PURE: no fs, no clock.
+ *
+ * @returns {(fileRel: string, base: string) => string}
+ */
+export function gateEOrdinal() {
+  const itemSeen = new Map();
+  return (fileRel, base) => {
+    const k = `${fileRel}\u0000${base}`;
+    const n = (itemSeen.get(k) || 0) + 1;
+    itemSeen.set(k, n);
+    return n === 1 ? base : `${base}#${n}`;
+  };
 }
 
 /** Gate E over an explicit file list. PURE modulo the ast-grep spawn. */
@@ -243,6 +257,11 @@ export function filterGateELedgerFindings(byFile, repoRoot, ledgerRows) {
       throw new Error('gate E: cannot read ' + file + ': ' + err.message);
     }
     const step = path.basename(file).replace(/\.js$/, '');
+    // R-CN: the gate-E key names the file, so each finding carries it. `file` is
+    // already repo-relative posix here; normalise defensively if it is not.
+    const fileRel = path.isAbsolute(file)
+      ? path.relative(repoRoot, file).replace(/\\/g, '/')
+      : file.replace(/\\/g, '/');
     // Same ordinal rule as `scanGateE` (CP-B11 fix 6): duplicates of one
     // `<rule>@<trimmed line>` within one step file get `#2`, `#3`…
     const itemSeen = new Map();
@@ -251,7 +270,7 @@ export function filterGateELedgerFindings(byFile, repoRoot, ledgerRows) {
       itemSeen.set(base, n);
       return n === 1 ? base : `${base}#${n}`;
     };
-    const findings = gateEHits.map((v) => ({ step, item: ord(`${v.rule}@${(text[v.line - 1] || '').trim()}`), _v: v }));
+    const findings = gateEHits.map((v) => ({ step, file: fileRel, item: ord(`${v.rule}@${(text[v.line - 1] || '').trim()}`), _v: v }));
     const { unallowed } = matchLedger('E', findings, ledgerRows);
     const stillReported = new Set(unallowed.map((u) => u.item));
     const others = violations.filter((v) => !GATE_E_RULE_IDS.includes(v.rule));
@@ -290,7 +309,7 @@ export function selfTest() {
   // proven — a single matching ledger row must filter ONLY its own finding,
   // leaving the other two unledgered findings unallowed (still RED).
   const row = {
-    gate: 'E', step: 'bad-compute-literals', item: 'compute-no-module-numeric-const@const MAX_RETRY_COUNT = 5;',
+    gate: 'E', step: 'bad-compute-literals', file: FIXTURE_FILE, item: 'compute-no-module-numeric-const@const MAX_RETRY_COUNT = 5;',
     disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture', filed: '2026-09-26', adjudicated_by: 'operator',
   };
   const allowed = checkComputeLiterals([FIXTURE_FILE], [row]);
@@ -331,7 +350,7 @@ function main(argv) {
       else if (name && PROPOSED_COORDINATE_REFERENCE.test(name)) disposition = 'coordinate_reference';
       else if (name && PROPOSED_PHYSICAL_CONSTANT.test(name)) disposition = 'physical_constant';
       return {
-        gate: 'E', step: v.step, item: v.item, disposition,
+        gate: 'E', step: v.step, file: v.file, item: v.item, disposition,
         why: disposition === 'pending_remediation' ? 'measured 2026-09-26 — rides the step remediation commit' : null,
         spec_ref: disposition === 'pending_remediation' ? undefined : '(orchestrator fills)',
         anchor: disposition === 'pending_remediation' ? undefined : '(orchestrator fills)',

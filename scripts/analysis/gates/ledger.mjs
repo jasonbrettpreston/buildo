@@ -44,7 +44,7 @@ export const DISPOSITIONS = {
 export const LEDGER_REL_PATH = 'scripts/steps/_schema/standard-gates-ledger.json';
 
 const ROW_KEYS = [
-  'gate', 'step', 'item', 'disposition', 'why',
+  'gate', 'step', 'file', 'item', 'disposition', 'why',
   'spec_ref', 'anchor', 'closing_brief', 'filed', 'adjudicated_by',
 ];
 
@@ -125,6 +125,37 @@ export function validateRow(row, deps = {}) {
     problems.push(`closing_brief must name the roster row that closes a ${row.disposition} row`);
   }
 
+  // R-CN (2026-10-12): a gate-E row names the ONE file it allows. `step` is a
+  // basename, so two files sharing a basename in different directories were
+  // indistinguishable; the `file` field makes the allowed site unambiguous.
+  if (row.gate === 'E') {
+    if (!isNonEmptyString(row.file)) {
+      problems.push('gate E row must name its file (R-CN)');
+    } else {
+      const file = row.file;
+      if (file.startsWith('/') || file.includes('\\') || file.split('/').includes('..')) {
+        problems.push(`file "${file}" must be a repo-relative posix path without ".." (R-CN)`);
+      }
+      if (path.posix.normalize(file) !== file) {
+        problems.push(`file "${file}" must be a normalized posix path (no "." segments, "//", or trailing "/") (R-CN)`);
+      }
+      if (!file.endsWith('.js') && !file.endsWith('.cjs')) {
+        problems.push('gate E row file must be a .js/.cjs module (R-CN)');
+      }
+      if (!fileExists(file)) {
+        problems.push(`file "${file}" does not resolve to a real file (R-CN)`);
+      }
+      const expectedStep = path.posix.basename(file).replace(/\.(c?js)$/, '');
+      if (row.step !== expectedStep) {
+        problems.push(
+          `step "${row.step}" must equal basename(file) minus .js/.cjs ("${expectedStep}") (R-CN)`,
+        );
+      }
+    }
+  } else if (row.file !== undefined) {
+    problems.push('only gate E rows name a file (R-CN)');
+  }
+
   return problems;
 }
 
@@ -133,7 +164,9 @@ export function validateRow(row, deps = {}) {
  * violation no longer exists) is returned, not swallowed — the caller REDs on it.
  *
  * A row allows EXACTLY ONE violation (R-BZ C2, 2026-10-11). A row is keyed
- * `step\0item`, and a key is looked up, never consumed: before the collision lock
+ * `step\0item` — but for gate E the key is `step\0file\0item` (R-CN, 2026-10-12:
+ * a gate-E row names the file it allows, so a same-basename file elsewhere is
+ * never covered) — and a key is looked up, never consumed: before the collision lock
  * any number of same-key violations resolved to the same row, so ONE dated row
  * silently covered N distinct same-key sites (that is precisely the shape a
  * "grandfathered" permission hardens into). Now the FIRST violation (in input
@@ -144,28 +177,44 @@ export function validateRow(row, deps = {}) {
  * sibling's excuse.
  *
  * @param {string} gate
- * @param {Array<{step: string, item: string}>} violations
+ * @param {Array<{step: string, item: string, file?: string}>} violations
  * @param {Array<object>} rows
+ * @returns {{allowed: Array<{violation: {step: string, item: string, file?: string}, row: object}>,
+ *   unallowed: Array<{step: string, item: string, file?: string, collision?: true}>,
+ *   orphans: Array<object>}} entries carry `file` for gate E (R-CN).
  */
 export function matchLedger(gate, violations, rows) {
   const gateRows = (Array.isArray(rows) ? rows : []).filter((r) => r && r.gate === gate);
-  const key = (r) => `${r.step}\u0000${r.item}`;
+  const key = (r) => (gate === 'E'
+    ? `${r.step}\u0000${r.file || ''}\u0000${r.item}`
+    : `${r.step}\u0000${r.item}`);
   const rowsByKey = new Map(gateRows.map((r) => [key(r), r]));
 
   const unallowed = [];
   const allowed = [];
   const consumed = new Set();
   for (const v of Array.isArray(violations) ? violations : []) {
+    if (gate === 'E' && !isNonEmptyString(v && v.file)) {
+      throw new Error(
+        `matchLedger(E): violation ${v.step} ${v.item} has no file (R-CN) — a gate-E finding must carry its file`,
+      );
+    }
     const k = key(v);
     const row = rowsByKey.get(k);
     if (row && !consumed.has(k)) {
-      allowed.push({ violation: { step: v.step, item: v.item }, row });
+      allowed.push(gate === 'E'
+        ? { violation: { step: v.step, file: v.file, item: v.item }, row }
+        : { violation: { step: v.step, item: v.item }, row });
       consumed.add(k);
     } else if (row) {
       // The key's single row is already spent on an earlier site: a collision.
-      unallowed.push({ step: v.step, item: v.item, collision: true });
+      unallowed.push(gate === 'E'
+        ? { step: v.step, file: v.file, item: v.item, collision: true }
+        : { step: v.step, item: v.item, collision: true });
     } else {
-      unallowed.push({ step: v.step, item: v.item });
+      unallowed.push(gate === 'E'
+        ? { step: v.step, file: v.file, item: v.item }
+        : { step: v.step, item: v.item });
     }
   }
 
@@ -253,6 +302,10 @@ export function loadLedger(repoRoot) {
 export function selfTest() {
   const fakeSpecs = {
     'docs/specs/01-pipeline/999_fixture.md': 'the fixture sentence an anchor cites verbatim',
+    // R-CN: the gate-E fixture rows below name a real (faked) file.
+    'scripts/lib/compute/compute.js': '',
+    'scripts/lib/x.js': '',
+    'scripts/lib/compute/x.js': '',
   };
   const deps = {
     repoRoot: '/nonexistent-repo-root',
@@ -265,7 +318,8 @@ export function selfTest() {
     why: 'w', closing_brief: '.cursor/plan.md row 1', filed: '2026-09-25', adjudicated_by: 'operator',
   };
   const permanentFixture = {
-    gate: 'E', step: 's', item: 'i', disposition: 'coordinate_reference',
+    gate: 'E', step: 'compute', file: 'scripts/lib/compute/compute.js', item: 'i',
+    disposition: 'coordinate_reference',
     why: 'w', spec_ref: 'docs/specs/01-pipeline/999_fixture.md',
     anchor: 'the fixture sentence an anchor cites verbatim',
     filed: '2026-09-25', adjudicated_by: 'operator',
@@ -368,5 +422,42 @@ export function selfTest() {
   const p10e = programmeExpiry([cpRow('chain_sources conversion complete (Spec 124 R-AQ)')], items);
   if (p10e.length !== 0) {
     throw new Error(`self-test FAILED (10e): prose closing_brief not ignored (${JSON.stringify(p10e)})`);
+  }
+
+  // (11) R-CN — a gate-E row names its file, so the same step+item in TWO files
+  // is two distinct keys: the row allows only the file it names, and the other
+  // site is UNALLOWED (a plain "no row", not a collision), with 0 orphans.
+  const fileDeps = {
+    repoRoot: '/nonexistent-repo-root',
+    fileExists: deps.fileExists,
+    readFile: deps.readFile,
+  };
+  const eRow = {
+    ...permanentFixture,
+    step: 'x',
+    file: 'scripts/lib/x.js',
+    spec_ref: 'docs/specs/01-pipeline/999_fixture.md',
+  };
+  const p11 = matchLedger(
+    'E',
+    [
+      { step: 'x', file: 'scripts/lib/x.js', item: 'i' },
+      { step: 'x', file: 'scripts/lib/compute/x.js', item: 'i' },
+    ],
+    [eRow],
+  );
+  if (
+    p11.allowed.length !== 1
+    || p11.unallowed.length !== 1
+    || p11.unallowed[0].collision === true
+    || p11.orphans.length !== 0
+  ) {
+    throw new Error(`self-test FAILED (11): cross-file gate-E key misreport (${JSON.stringify(p11)})`);
+  }
+
+  // (11b) a gate-E row WITHOUT `file` fails validateRow.
+  const p11b = validateRow({ ...eRow, file: undefined }, fileDeps);
+  if (!p11b.length || !p11b.join(' ').includes('file')) {
+    throw new Error(`self-test FAILED (11b): gate-E row without file not caught (${JSON.stringify(p11b)})`);
   }
 }

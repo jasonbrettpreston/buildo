@@ -214,6 +214,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-interval-literal@const { rows: [cmRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -224,6 +225,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-interval-literal@const { rows: [miscRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -234,6 +236,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-interval-literal@const { rows: [tfdRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -244,6 +247,7 @@
     {
       "gate": "E",
       "step": "link-massing",
+      "file": "scripts/lib/compute/link-massing.js",
       "item": "compute-no-module-numeric-const@const DEGREES_PER_METRE_DIVISOR = 78000.0;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -254,6 +258,7 @@
     {
       "gate": "E",
       "step": "link-massing",
+      "file": "scripts/lib/compute/link-massing.js",
       "item": "compute-no-module-numeric-const@const ROUND_SCALE = 10000;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -264,6 +269,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-no-module-numeric-const@const DAYS_PER_JULIAN_YEAR = 365.25;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -274,6 +280,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-no-module-numeric-const@const MS_PER_DAY = 86400000;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -284,6 +291,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-no-module-numeric-const@const ROUND_SCALE = 1000;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -294,6 +302,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-no-module-numeric-const@const MAX_DETAIL_KEYS = 50;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -304,6 +313,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-date-literal@const ancientHearingRes = await pool.query(`SELECT COUNT(*) FROM coa_applications WHERE hearing_date < '2010-01-01'`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-date-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -314,6 +324,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-date-literal@const ancientDatesRes = await pool.query(`SELECT COUNT(*) FROM permit_inspections WHERE inspection_date < '2020-01-01'`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-date-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -324,6 +335,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-numeric-bound@`SELECT COUNT(*) FROM parcels WHERE lot_size_sqm IS NOT NULL AND (lot_size_sqm <= 0 OR lot_size_sqm > 1000000)`,",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-numeric-bound — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -334,6 +346,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-numeric-bound@`SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m < 0 OR max_height_m > 500)`,",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-numeric-bound — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -344,6 +357,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@const recentTotalRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day'`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -354,6 +368,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@const descNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND description IS NULL`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -364,6 +379,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@const builderNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -374,6 +390,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@const statusNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND status IS NULL`);",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -384,6 +401,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@`SELECT COUNT(*) FROM coa_applications WHERE hearing_date > CURRENT_DATE + ($1 * INTERVAL '1 year')`,",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -394,6 +412,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-interval-literal@`SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -404,6 +423,7 @@
     {
       "gate": "E",
       "step": "link-wsib",
+      "file": "scripts/lib/compute/link-wsib.js",
       "item": "compute-no-module-numeric-const@const EXACT_LENGTH_FLOOR = 3;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -414,6 +434,7 @@
     {
       "gate": "E",
       "step": "link-wsib",
+      "file": "scripts/lib/compute/link-wsib.js",
       "item": "compute-no-module-numeric-const@const FUZZY_LENGTH_FLOOR = 5;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -424,6 +445,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-module-numeric-const@const SOURCE_CRS = 4326;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -434,6 +456,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-module-numeric-const@const SQM_TO_SQFT = 10.7639;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -444,6 +467,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-module-numeric-const@const M_TO_FT = 3.28084;",
       "disposition": "pending_remediation",
       "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -454,6 +478,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-interval-literal@sql: `SELECT",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -464,6 +489,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-numeric-bound@sql: `SELECT",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-numeric-bound — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -474,6 +500,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-no-sql-interval-literal@return `",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -484,6 +511,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-no-sql-interval-literal@`SELECT count(*)::int AS backlog_rows, count(DISTINCT run_id)::int AS backlog_cohorts,",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -494,6 +522,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-no-sql-interval-literal@`WITH victims AS (",
       "disposition": "pending_remediation",
       "why": "compute-no-sql-interval-literal — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
@@ -1624,6 +1653,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-decides@js:if (live >= config.engine_health_dead_tuple_min_rows && deadRatio > config.engine_health_dead_tuple_ratio_warn_max) {#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/assert-engine-health.js:148 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1634,6 +1664,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-decides@js:if (live >= config.engine_health_seq_scan_min_rows && totalScans > 0#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/assert-engine-health.js:153 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1644,6 +1675,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-decides@js:&& seqRatio > config.engine_health_seq_scan_ratio_warn_max) {#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/assert-engine-health.js:154 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1654,6 +1686,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-direct-write@23265920758bf06c#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/assert-engine-health.js:225 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1664,6 +1697,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-decides@js:(t) => t.dead_ratio > config.engine_health_dead_tuple_ratio_warn_max && t.n_live_tup > 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/assert-engine-health.js:340 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1674,6 +1708,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-ddl-txn@unparsed:await pool.query(`VACUUM ANALYZE ${quoteIdent(target.table_name)}`);#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/assert-engine-health.js:346 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1684,6 +1719,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-catalog@d7d483e99dc2415e#1",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/compute/assert-global-coverage.js:220 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1694,6 +1730,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-catalog@d7d483e99dc2415e#2",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/compute/assert-global-coverage.js:597 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1704,6 +1741,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-ledger-sql@7ff2aa5a98e25ba4#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/assert-global-coverage.js:603 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1714,6 +1752,7 @@
     {
       "gate": "E",
       "step": "compute-parcel-cost-estimates",
+      "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
       "item": "compute-halt@js:throw new Error(`${TAG} archetype_cost_rates is empty — refusing to run (would produce 0% coverage). Apply migration 205.`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/compute-parcel-cost-estimates.js:63 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1724,6 +1763,7 @@
     {
       "gate": "E",
       "step": "compute-parcel-cost-estimates",
+      "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
       "item": "compute-halt@js:throw new Error(`${TAG} duplicate archetype in archetype_cost_rates: ${r.archetype}`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/compute-parcel-cost-estimates.js:69 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1734,6 +1774,7 @@
     {
       "gate": "E",
       "step": "compute-parcel-cost-estimates",
+      "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
       "item": "compute-halt@js:throw new Error(`${TAG} parcel_cost_lines is empty — refusing to run (would produce 0% line coverage). Apply migration 248.`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/compute-parcel-cost-estimates.js:90 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1744,6 +1785,7 @@
     {
       "gate": "E",
       "step": "compute-parcel-cost-estimates",
+      "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
       "item": "compute-ledger-sql@a47d8d4397192930#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/compute-parcel-cost-estimates.js:98 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1754,6 +1796,7 @@
     {
       "gate": "E",
       "step": "compute-parcel-cost-estimates",
+      "file": "scripts/lib/compute/compute-parcel-cost-estimates.js",
       "item": "compute-ledger-sql@b39a4959068cba91#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/compute-parcel-cost-estimates.js:450 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1764,6 +1807,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-ddl-txn@ae7bf354abe0d81b#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-centreline.js:48 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1774,6 +1818,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-ddl-txn@ae7bf354abe0d81b#2",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-centreline.js:82 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1784,6 +1829,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-ddl-txn@unparsed:return `#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-centreline.js:86 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1794,6 +1840,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-ledger-sql@714ab44e34f7f19f#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-centreline.js:325 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1804,6 +1851,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-ledger-sql@714ab44e34f7f19f#2",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-centreline.js:372 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1814,6 +1862,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-halt@js:throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned source`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-centreline.js:377 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1824,6 +1873,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-halt@js:throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${cl.spec_version} !== ${SPEC_VERSION} — aborting`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-centreline.js:381 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1834,6 +1884,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer features_inserted=${cl.features_inserted} — nothing to enrich against`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-centreline.js:384 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1844,6 +1895,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer source_dataset_version is null/empty — cannot stamp lineage`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-centreline.js:388 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1854,6 +1906,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-ledger-sql@5668172b49fa1b9a#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-heritage.js:54 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1864,6 +1917,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned heritage source`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:61 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1874,6 +1928,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${hl.spec_version} !== ${SPEC_VERSION} — aborting to prevent contract violation`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:65 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1884,6 +1939,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (!reg) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_register sub-block is missing — aborting`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:69 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1894,6 +1950,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (!hcd) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_districts sub-block is missing — aborting`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:70 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1904,6 +1961,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} heritage_register dataset ingested zero features; refusing to enrich`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:72 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1914,6 +1972,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} heritage_districts dataset ingested zero features; refusing to enrich`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:75 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1924,6 +1983,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer drift_check_passed=false — aborting against a churned heritage source`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:78 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1934,6 +1994,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (!reg.source_dataset_version) throw new Error(`${TAG} heritage_register.source_dataset_version is null/empty — cannot stamp lineage`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:80 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1944,6 +2005,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (!hcd.source_dataset_version) throw new Error(`${TAG} heritage_districts.source_dataset_version is null/empty — cannot stamp lineage`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:81 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1954,6 +2016,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (hp.rows[0].n === 0) throw new Error(`${TAG} heritage_properties is empty — aborting (L14)`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:86 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1964,6 +2027,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:87 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1974,6 +2038,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-catalog@9b97ae14cd1eaa94#1",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/compute/enrich-heritage.js:90 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1984,6 +2049,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-halt@js:throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:92 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -1994,6 +2060,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ledger-sql@7b9677a2ad4472fa#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-parcels.js:193 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2004,6 +2071,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ledger-sql@79b2246f84a98d8e#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-parcels.js:228 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2014,6 +2082,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-halt@js:throw new Error(`${TAG} latest ${PRODUCER_NAME} run FAILED — halting (will not enrich against stale zoning)`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:233 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2024,6 +2093,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ledger-sql@2dd550d2c4e9f7ba#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-parcels.js:235 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2034,6 +2104,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-halt@js:throw new Error(`${TAG} no successful ${PRODUCER_NAME} run with zoning_layers_loaded — zoning pipeline not initialised`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:243 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2044,6 +2115,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-halt@js:throw new Error(`${TAG} ${PRODUCER_NAME}.zoning_layers_loaded.base !== true — base zoning missing, cannot enrich`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:248 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2054,6 +2126,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-halt@js:throw new Error(`${TAG} buildPass1ScopeWhere: zoningChanged must be a boolean on a non-full run (got ${JSON.stringify(zoningChanged)})`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:276 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2064,6 +2137,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@unparsed:return `#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:343 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2074,6 +2148,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@fe801e24a4230dcd#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:469 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2084,6 +2159,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:const upd = await client.query(buildUpdateSql(), [stamp]);#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:490 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2094,6 +2170,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@6b896181cbe4eb35#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:492 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2104,6 +2181,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@09567db370b1fa39#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:554 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2114,6 +2192,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@dc7d2a43f7483f5d#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:900 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2124,6 +2203,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:const upd = await client.query(buildMaxBuildUpdateSql());#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:944 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2134,6 +2214,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@a4b4336dfdc4fae3#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:946 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2144,6 +2225,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@5f194c59362a606c#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:964 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2154,6 +2236,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@852022224bdd7f44#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:1092 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2164,6 +2247,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:const upd = await client.query(buildExistingStructureUpdateSql());#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1113 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2174,6 +2258,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:const updScenario = await client.query(buildScenarioUpdateSql());#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1114 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2184,6 +2269,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@4927a5d61901d1e0#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:1150 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2194,6 +2280,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ddl-txn@784133696ac42860#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/enrich-parcels.js:1201 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2204,6 +2291,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@97c5d24c472d2af1#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1332 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2214,6 +2302,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@9f31b85d708f395e#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1339 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2224,6 +2313,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@b746b6f8caa84d16#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1346 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2234,6 +2324,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@c3b0e5f0f7e1bc1d#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1351 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2244,6 +2335,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:const res = await client.query(sql, params);#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1574 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2254,6 +2346,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@239d91e3be0cc253#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1641 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2264,6 +2357,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@38e0787ec5b532f5#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1685 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2274,6 +2368,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@unparsed:`UPDATE parcels p SET ${resetCols}#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1723 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2284,6 +2379,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@e38f9ca69d66ddd2#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1795 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2294,6 +2390,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@a9b98b20dba9350e#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1820 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2304,6 +2401,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-ledger-sql@c0faaeb8d9a1e671#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-parcels.js:1918 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2314,6 +2412,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-direct-write@c0faaeb8d9a1e671#1",
       "disposition": "pending_remediation",
       "why": "G5 compute-direct-write at scripts/lib/compute/enrich-parcels.js:1919 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2324,6 +2423,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-ledger-sql@5668172b49fa1b9a#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/enrich-ravines.js:63 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2334,6 +2434,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned source dataset`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:70 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2344,6 +2445,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${rl.spec_version} !== ${SPEC_VERSION} — aborting to prevent contract violation`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:74 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2354,6 +2456,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer delete_skipped_empty_guard=true — ravines may contain stale orphans; aborting`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:77 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2364,6 +2467,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer drift/mass-delete check failed — aborting against churned ravines`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:80 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2374,6 +2478,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} ravines table is empty — aborting to avoid resetting all parcels' enrichment (L14)`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:87 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2384,6 +2489,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-catalog@9b97ae14cd1eaa94#1",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/compute/enrich-ravines.js:91 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2394,6 +2500,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:93 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2404,6 +2511,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer invalid_geometry_skipped ${geomSkipped}/${featureCount} > ${MAX_INVALID_GEOM_RATIO * 100}% — aborting against an incomplete ravines load`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:108 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2414,6 +2522,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-halt@js:throw new Error(`${TAG} producer source_dataset_version is null/empty — cannot stamp lineage`);#1",
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-ravines.js:113 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2424,6 +2533,7 @@
     {
       "gate": "E",
       "step": "load-address-points",
+      "file": "scripts/lib/compute/load-address-points.js",
       "item": "compute-decides@js:violations: rowsRead < ctx.config.sources_address_points_floor ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-address-points.js:282 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2434,6 +2544,7 @@
     {
       "gate": "E",
       "step": "load-centreline",
+      "file": "scripts/lib/compute/load-centreline.js",
       "item": "compute-decides@js:const driftPassed = countDeltaPct <= ctx.config.load_centreline_count_drift_fail_pct;#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-centreline.js:560 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2444,6 +2555,7 @@
     {
       "gate": "E",
       "step": "load-centreline",
+      "file": "scripts/lib/compute/load-centreline.js",
       "item": "compute-decides@js:if (skippedPct > ctx.config.load_centreline_invalid_geometry_fail_pct) {#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-centreline.js:576 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2454,6 +2566,7 @@
     {
       "gate": "E",
       "step": "load-heritage",
+      "file": "scripts/lib/compute/load-heritage.js",
       "item": "compute-decides@js:const driftBreached = !(countDriftOf(lane) <= cfg.load_heritage_count_drift_fail_pct);#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-heritage.js:495 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2464,6 +2577,7 @@
     {
       "gate": "E",
       "step": "load-heritage",
+      "file": "scripts/lib/compute/load-heritage.js",
       "item": "compute-decides@js:mass_delete_check_passed: !(prior != null && massDeletePct > cfg.load_heritage_mass_delete_fail_pct),#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-heritage.js:518 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2474,6 +2588,7 @@
     {
       "gate": "E",
       "step": "load-massing",
+      "file": "scripts/lib/compute/load-massing.js",
       "item": "compute-decides@js:violations: rr < ctx.config.sources_building_footprints_floor ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-massing.js:158 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2484,6 +2599,7 @@
     {
       "gate": "E",
       "step": "load-massing",
+      "file": "scripts/lib/compute/load-massing.js",
       "item": "compute-decides@js:violations: pct >= ctx.config.massing_skip_rate_max_pct ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-massing.js:206 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2494,6 +2610,7 @@
     {
       "gate": "E",
       "step": "load-massing",
+      "file": "scripts/lib/compute/load-massing.js",
       "item": "compute-decides@js:violations: rate >= ctx.config.massing_batch_error_rate_max_pct ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-massing.js:234 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2504,6 +2621,7 @@
     {
       "gate": "E",
       "step": "load-neighbourhoods",
+      "file": "scripts/lib/compute/load-neighbourhoods.js",
       "item": "compute-decides@js:violations: rs < ctx.config.sources_neighbourhoods_floor ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-neighbourhoods.js:551 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2514,6 +2632,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-decides@js:violations: rowsRead < ctx.config.sources_parcels_floor ? 1 : 0,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-parcels.js:565 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2524,6 +2643,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-decides@js:drift_check_passed: countDeltaPct <= ctx.config.load_ravines_count_drift_fail_pct,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-ravines.js:362 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2534,6 +2654,7 @@
     {
       "gate": "E",
       "step": "load-ravines",
+      "file": "scripts/lib/compute/load-ravines.js",
       "item": "compute-decides@js:mass_delete_check_passed: massDeletePct <= ctx.config.load_ravines_mass_delete_fail_pct,#1",
       "disposition": "pending_remediation",
       "why": "G7 compute-decides at scripts/lib/compute/load-ravines.js:363 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2544,6 +2665,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-ddl-txn@c95f6a280f5be733#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/refresh-snapshot.js:203 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2554,6 +2676,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-ddl-txn@f0fcaf221af6b112#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/compute/refresh-snapshot.js:203 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2564,6 +2687,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-ledger-sql@e230841952758fbf#1",
       "disposition": "pending_remediation",
       "why": "G1 compute-ledger-sql at scripts/lib/compute/refresh-snapshot.js:243 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2574,6 +2698,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-catalog@5117505b38a46b65#1",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/compute/refresh-snapshot.js:256 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2584,6 +2709,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-ddl-txn@call:client = await pool.connect();#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/vocab-coverage.js:53 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2594,6 +2720,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-ddl-txn@b16b431979fc3e05#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/vocab-coverage.js:56 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2604,6 +2731,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-ddl-txn@e16e8cc67fd3f68c#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/vocab-coverage.js:57 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2614,6 +2742,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-catalog@dc2155bbf3d02d8f#1",
       "disposition": "pending_remediation",
       "why": "G3 compute-catalog at scripts/lib/vocab-coverage.js:61 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2624,6 +2753,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-ddl-txn@a46081a556fda027#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/vocab-coverage.js:90 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2634,6 +2764,7 @@
     {
       "gate": "E",
       "step": "vocab-coverage",
+      "file": "scripts/lib/vocab-coverage.js",
       "item": "compute-ddl-txn@call:client.release();#1",
       "disposition": "pending_remediation",
       "why": "G4 compute-ddl-txn at scripts/lib/vocab-coverage.js:94 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2644,6 +2775,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-no-local-numeric-const@const MAX_INVALID_GEOM_RATIO = 0.05;",
       "disposition": "pending_remediation",
       "why": "G9 compute-no-local-numeric-const at scripts/lib/compute/enrich-ravines.js:106 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2654,6 +2786,7 @@
     {
       "gate": "E",
       "step": "enrich-ravines",
+      "file": "scripts/lib/compute/enrich-ravines.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../enrich-ravines.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/enrich-ravines.js:39 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2664,6 +2797,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-no-sql-clock@const UPSERT_SQL = `INSERT INTO engine_health_snapshots",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-engine-health.js:188 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2674,6 +2808,7 @@
     {
       "gate": "E",
       "step": "assert-engine-health",
+      "file": "scripts/lib/compute/assert-engine-health.js",
       "item": "compute-no-swallow@writeFailed = true;",
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/assert-engine-health.js:232 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2684,6 +2819,7 @@
     {
       "gate": "E",
       "step": "load-address-points",
+      "file": "scripts/lib/compute/load-address-points.js",
       "item": "compute-no-swallow@parsed = true;",
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/load-address-points.js:85 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2694,6 +2830,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-clock@const { rows: [caRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-global-coverage.js:117 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2704,6 +2841,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-clock@const { rows: [cmRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-global-coverage.js:207 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2714,6 +2852,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-clock@const { rows: [miscRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-global-coverage.js:516 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2724,6 +2863,7 @@
     {
       "gate": "E",
       "step": "assert-global-coverage",
+      "file": "scripts/lib/compute/assert-global-coverage.js",
       "item": "compute-no-sql-clock@const { rows: [tfdRaw] } = await pool.query(`",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-global-coverage.js:556 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2734,6 +2874,7 @@
     {
       "gate": "E",
       "step": "enrich-heritage",
+      "file": "scripts/lib/compute/enrich-heritage.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../enrich-heritage.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/enrich-heritage.js:32 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2744,6 +2885,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-swallow@return { ceTotal: 0, ceNull: 0, nullPct: 0, tierCount: 0, skip: `cost_estimates check failed: ${err.message}` };",
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/assert-data-bounds.js:435 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2754,6 +2896,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-swallow@return { ghostCount: 0, oldest: null, skip: `Ghost record check failed: ${err.message}` };",
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/assert-data-bounds.js:454 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2764,6 +2907,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@const recentTotalRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day'`);",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:112 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2774,6 +2918,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@const descNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND description IS NULL`);",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:117 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2784,6 +2929,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@const builderNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`);",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:121 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2794,6 +2940,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@const statusNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND status IS NULL`);",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:125 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2804,6 +2951,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@`SELECT COUNT(*) FROM coa_applications WHERE hearing_date > CURRENT_DATE + ($1 * INTERVAL '1 year')`,",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:185 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2814,6 +2962,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@const futureDatesRes = await pool.query(`SELECT COUNT(*) FROM permit_inspections WHERE inspection_date > CURRENT_DATE`);",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:370 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2824,6 +2973,7 @@
     {
       "gate": "E",
       "step": "assert-data-bounds",
+      "file": "scripts/lib/compute/assert-data-bounds.js",
       "item": "compute-no-sql-clock@`SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/assert-data-bounds.js:446 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2834,6 +2984,7 @@
     {
       "gate": "E",
       "step": "load-neighbourhoods",
+      "file": "scripts/lib/compute/load-neighbourhoods.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../load-neighbourhoods.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/load-neighbourhoods.js:33 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2844,6 +2995,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-clock@sql: `SELECT",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/refresh-snapshot.js:66 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2854,6 +3006,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-clock@sql: `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`,",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/refresh-snapshot.js:265 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2864,6 +3017,7 @@
     {
       "gate": "E",
       "step": "refresh-snapshot",
+      "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-clock@const sql = `INSERT INTO ${TABLE} (",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/refresh-snapshot.js:616 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2874,6 +3028,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:64 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2884,6 +3039,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:88 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2894,6 +3050,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:90 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2904,6 +3061,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:92 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2914,6 +3072,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:94 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2924,6 +3083,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/e41da515-5ad1-4bc3-85ea-18ec9e55cd33/resource/108b1080-d048-439f-a9e8-e8d6cd81bddb/download/heritage_register_address_points_wgs84.zip';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:96 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2934,6 +3094,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/37a3c911-0813-4e87-90ed-3b9fa6156a63/resource/8e6b9347-63a8-4dac-91fb-a6491a8c1e5a/download/heritageconservationdistrict.zip';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:98 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2944,6 +3105,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:100 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2954,6 +3116,7 @@
     {
       "gate": "E",
       "step": "assert-schema",
+      "file": "scripts/lib/compute/assert-schema.js",
       "item": "compute-no-literal-url@'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';",
       "disposition": "pending_remediation",
       "why": "G10 compute-no-literal-url at scripts/lib/compute/assert-schema.js:102 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2964,6 +3127,7 @@
     {
       "gate": "E",
       "step": "load-massing",
+      "file": "scripts/lib/compute/load-massing.js",
       "item": "compute-forbidden-require-descriptor@const DECLARED_CHECKS = require('../../load-massing.descriptor.json').checks.map((c) => c.id);",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/load-massing.js:272 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2974,6 +3138,7 @@
     {
       "gate": "E",
       "step": "enrich-parcels",
+      "file": "scripts/lib/compute/enrich-parcels.js",
       "item": "compute-no-sql-clock@`WITH own_last AS (",
       "disposition": "pending_remediation",
       "why": "G6 compute-no-sql-clock at scripts/lib/compute/enrich-parcels.js:194 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2984,6 +3149,7 @@
     {
       "gate": "E",
       "step": "enrich-centreline",
+      "file": "scripts/lib/compute/enrich-centreline.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../enrich-centreline.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/enrich-centreline.js:38 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -2994,6 +3160,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-forbidden-require-descriptor@const DECLARED_CHECKS = require('../../load-parcels.descriptor.json').checks.map((c) => c.id);",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/load-parcels.js:629 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -3004,6 +3171,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-swallow@return { geometry: null, parsed: true };",
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/load-parcels.js:299 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -3014,6 +3182,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-local-numeric-const@const mPerDegLat = 111320;",
       "disposition": "physical_constant",
       "why": "G9 compute-no-local-numeric-const at scripts/lib/compute/load-parcels.js:140 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -3025,6 +3194,7 @@
     {
       "gate": "E",
       "step": "load-parcels",
+      "file": "scripts/lib/compute/load-parcels.js",
       "item": "compute-no-local-numeric-const@const mPerDegLat = 111320;#2",
       "disposition": "physical_constant",
       "why": "G9 compute-no-local-numeric-const at scripts/lib/compute/load-parcels.js:175 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -3036,6 +3206,7 @@
     {
       "gate": "E",
       "step": "load-zoning",
+      "file": "scripts/lib/compute/load-zoning.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../load-zoning.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/load-zoning.js:32 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
@@ -3046,6 +3217,7 @@
     {
       "gate": "E",
       "step": "load-heritage",
+      "file": "scripts/lib/compute/load-heritage.js",
       "item": "compute-forbidden-require-descriptor@const DESCRIPTOR = require('../../load-heritage.descriptor.json');",
       "disposition": "pending_remediation",
       "why": "G12 compute-forbidden-require-descriptor at scripts/lib/compute/load-heritage.js:31 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
