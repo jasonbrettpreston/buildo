@@ -1,0 +1,63 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch80_5/80.5.40.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "80.5.40.40(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(F)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(1)#(1)(G)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "80.5.40.40(2)#whole",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

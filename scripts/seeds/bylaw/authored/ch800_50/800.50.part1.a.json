@@ -1,0 +1,1639 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch800_50/800.50.part1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "800.50(100)#whole",
+   "archetype": "DEFINE",
+   "target": "proposed_building_depth_m",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defines the scenario measurement used by other clauses; the value is a user-supplied scenario value.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "input_fidelity": {
+    "status": "approximates",
+    "why": "The DSL input is a scenario value supplied by the user, not measured from lot geometry.",
+    "evidence_ref": "800.50(100)"
+   }
+  },
+  {
+   "unit_id": "800.50(105)#whole",
+   "archetype": "DEFINE",
+   "target": "proposed_building_length_m",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defines the scenario measurement used by other clauses; the value is a user-supplied scenario value.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": [],
+   "input_fidelity": {
+    "status": "approximates",
+    "why": "The DSL input is a scenario value supplied by the user, not measured from lot geometry.",
+    "evidence_ref": "800.50(105)"
+   }
+  },
+  {
+   "unit_id": "800.50(110)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(115)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(120)#(120)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(120)#(120)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(120)#(120)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(125)#(125)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(125)#(125)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(125)#(125)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(130)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(135)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(140)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(143)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(145)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(15)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(150)#(150)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "135 degrees",
+     "clause": "(150)(A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "two or more streets",
+     "clause": "(150)(A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "corner_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "corner_lot": "Corner Lot means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(150)#(150)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "135 degrees",
+     "clause": "(150)(B)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "corner_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "corner_lot": "Corner Lot means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(155)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "two or more sides",
+     "clause": "(155)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(165)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(170)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(175)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "five children",
+     "clause": "(175)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "twenty-four hours",
+     "clause": "(175)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(180)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one dwelling unit",
+     "clause": "(180)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_house": "Detached House means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "four dwelling units",
+     "clause": "(181)(A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one lot",
+     "clause": "(181)(B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(D)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(E)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(181)#(181)(F)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "detached_houseplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "detached_houseplex": "Detached Houseplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(195)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "3 or more vehicles",
+     "clause": "(195)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(20)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(210)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(215)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "two dwelling units",
+     "clause": "(215)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "duplex"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "duplex": "Duplex means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ]
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(219)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(220)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "dwelling_unit": "Dwelling Unit means"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(225)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(230)#(230)(A)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(230)#(230)(B)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(230)#(230)(C)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "800.50(233)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defined term; informational only, no numeric limit is computed from it.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "800.50(100)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(105)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(110)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(115)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(120)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(125)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(130)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(135)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(140)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(143)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(145)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(15)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(150)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(155)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(165)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(170)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(175)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(180)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(181)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(195)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(20)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(210)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(215)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(219)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(220)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(225)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(230)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  },
+  "800.50(233)": {
+   "explanation": "Defined term in Chapter 800 of Zoning By-law 569-2013; it fixes the meaning of the term wherever it is used and sets no numeric limit itself.",
+   "code_refs": "none"
+  }
+ }
+}

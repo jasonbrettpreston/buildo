@@ -1,0 +1,51 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_48/150.48.50.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.48.50.11(1)#(1)(A)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "displaces": ["150.48.50.10(1)"],
+      "condition": ["lawfully_existing"],
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      }
+    },
+    {
+      "unit_id": "150.48.50.11(1)#(1)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "displaces": ["150.48.50.10(1)"],
+      "condition": [],
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

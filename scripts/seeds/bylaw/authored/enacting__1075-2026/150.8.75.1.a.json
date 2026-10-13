@@ -1,0 +1,128 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:1075-2026/150.8.75.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.8.75.1(1)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": "none",
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "status": "informational",
+        "description": "Amending instruction (By-law 1075-2026, item 34): adds new article 150.8.75, clause 150.8.75.1 and regulation 150.8.75.1(1) to Zoning By-law 569-2013.",
+        "gaps": "Instruction text only; the added regulation is keyed in the (1) unit. The item number 34 is an enacting-by-law section number, not a literal."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "150.8.75.1(1)@1075-2026#(1)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "numeric_expression": [
+        "encroachment_m = 0.9 m @(1)(A)(i)",
+        "encroachment_m = 0.9 m @(1)(A)(ii)",
+        "encroachment_m = 0.9 m @(1)(B)(i)",
+        "encroachment_m = 0.9 m @(1)(B)(ii)"
+      ],
+      "literals_not_expressed": [
+        {
+          "literal": "0.3",
+          "clause": "(1)(A)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "0.3",
+          "clause": "(1)(A)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "2.0",
+          "clause": "(1)(A)(iii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "0.3",
+          "clause": "(1)(B)(i)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "0.3",
+          "clause": "(1)(B)(ii)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "2.0",
+          "clause": "(1)(B)(iii)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          "ancillary_building",
+          "laneway_suite"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "energy_device"
+        ],
+        "evidence": {
+          "ancillary_building": "an ancillary building",
+          "laneway_suite": "a laneway suite",
+          "energy_device": "air conditioning device"
+        }
+      },
+      "calculation_handling": {
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [
+          "has_laneway_suite"
+        ],
+        "status": "not_modelled",
+        "description": "A heating, ventilation and air conditioning device associated with a laneway suite: (A) on the laneway suite building it may encroach up to 0.9 m into a required building setback or front yard setback if no closer than 0.3 m to a lot line, may sit on the roof and exceed the building's maximum height by 2.0 m, and may be on a platform; (B) if ground mounted it may encroach up to 0.9 m into a required building setback or separation distance if no closer than 0.3 m to a lot line, and must be within 2.0 m of a main wall or platform.",
+        "gaps": "The unit holds several limbs; keyed as a LIMIT on encroachment_m (the 0.9 m maximum, one statement per limb that sets it). The 0.3 m lot-line distance in (A)(i), (A)(ii), (B)(i), (B)(ii) is the condition of each encroachment (it could also be read as an encroachment_clearance_m minimum; a LIMIT names one target, so it is listed as not expressed). The 2.0 m in (A)(iii) is a permitted height exceedance for rooftop devices (no DSL target for an exceedance over the height limit) and the 2.0 m in (B)(iii) is a location requirement (within 2.0 m of a main wall or platform); neither has a fitting target, threshold_used_in_application is the closest closed reason. (A)(iv) (may be located on a platform) is a permission with no literal. HVAC device placement is a design fact; not evaluated."
+      },
+      "disclosure": "Heating, ventilation and air conditioning equipment for a laneway suite may project up to 0.9 m into setbacks (staying at least 0.3 m from lot lines), may sit on the roof up to 2.0 m above the height limit, and ground-mounted units must be within 2.0 m of a wall or platform. We do not check equipment placement.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.8.75.1(1)@1075-2026": {
+      "explanation": "By-law 1075-2026 adds a rule for laneway suite heating, ventilation and air conditioning equipment: units mounted on the suite or on the ground may project up to 0.9 m into required setbacks (or, on the ground, into the separation from the house) if they stay at least 0.3 m from any lot line; rooftop units may extend up to 2.0 m above the height limit; units may sit on a deck; and ground-mounted units must be within 2.0 m of a wall or deck.",
+      "code_refs": "none"
+    }
+  }
+}

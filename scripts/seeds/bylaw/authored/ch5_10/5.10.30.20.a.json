@@ -1,0 +1,111 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch5_10/5.10.30.20",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "5.10.30.20(1)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "corner_lot"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "corner_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "any": "front lot line",
+     "corner_lot": "corner lot"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "The owner may select which street side is the front lot line on a corner lot.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "5.10.30.20(2)#whole",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "through_lot"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metre",
+     "clause": "(2)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [
+     "through_lot"
+    ],
+    "uses": [],
+    "evidence": {
+     "any": "front lot line",
+     "through_lot": "through lot"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "On a through lot a lot line abutting a street may be chosen as the front, unless behind a 0.3 m reserve.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "5.10.30.20(1)": {
+   "explanation": "On a corner lot the front lot line may be chosen from one street side.",
+   "code_refs": "none"
+  },
+  "5.10.30.20(2)": {
+   "explanation": "On a through lot a street-facing lot line may be the front, unless a 0.3 m reserve separates it from the street.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.50.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.50.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "front_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["front_landscaping_pct = 100 pct @(1)(A)"]
+    },
+    {
+      "unit_id": "10.5.50.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "front_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["front_landscaping_pct = 50 pct @(1)(B)"]
+    },
+    {
+      "unit_id": "10.5.50.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "front_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["front_landscaping_pct = 60 pct @(1)(C)"]
+    },
+    {
+      "unit_id": "10.5.50.10(1)#(1)(D)",
+      "archetype": "LIMIT",
+      "target": "front_soft_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["front_soft_landscaping_pct = 75 pct @(1)(D)"]
+    },
+    {
+      "unit_id": "10.5.50.10(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "side_street_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["side_street_landscaping_pct = 60 pct @(2)(A)"]
+    },
+    {
+      "unit_id": "10.5.50.10(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "side_street_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["side_street_landscaping_pct = 75 pct @(2)(B)"]
+    },
+    {
+      "unit_id": "10.5.50.10(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["rear_soft_landscaping_pct = 50 pct @(3)(A)"]
+    },
+    {
+      "unit_id": "10.5.50.10(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_soft_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": ["rear_soft_landscaping_pct = 25 pct @(3)(B)"]
+    },
+    {
+      "unit_id": "10.5.50.10(6)#(6)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.50.10(7)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

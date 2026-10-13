@@ -1,0 +1,40 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "600.60.10(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "map_area", "refs": ["Sixplex Overlay Map"]},
+      "literals_not_expressed": [
+        {"literal": "23", "clause": "(1)", "reason": "map_label_value"},
+        {"literal": "1 and 2", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Designates the areas of the Sixplex Overlay Map (Diagrams 1 and 2 of By-law 654-2025) that are subject to the Section 600.60 regulations. It sets no value itself.",
+        "gaps": "The Sixplex Overlay Map geometry is not held, so membership of a lot in the overlay area cannot be tested.",
+        "not_modelled_reason": "map_area_not_held",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "600.60.10(1)": {
+      "explanation": "The sixplex rules in Section 600.60 only apply to land inside the heavy lines of the Sixplex Overlay Map (Diagrams 1 and 2 of By-law 654-2025). A property outside those lines is not covered.",
+      "code_refs": "none"
+    }
+  }
+}

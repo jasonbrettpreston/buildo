@@ -1,0 +1,119 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch220_5/220.5.10.1.part4",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R1.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R1.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 0 units @(8)[T1.R1.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R2.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R2.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 0 units @(8)[T1.R2.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R3.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R3.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units @(8)[T1.R3.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R4.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R4.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 2 units @(8)[T1.R4.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R5.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R5.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 3 units @(8)[T1.R5.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R6.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R6.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 4 units @(8)[T1.R6.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R7.C1]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(8)#(8)[T1.R7.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 5 units @(8)[T1.R7.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(9)#(9)(A)",
+      "archetype": "DEFINE",
+      "target": "loading_spaces",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(9)#(9)(B)",
+      "archetype": "DEFINE",
+      "target": "loading_spaces",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

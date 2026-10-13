@@ -1,0 +1,14 @@
+{
+  "rows": [
+    {
+      "adjudicated_by": "operator",
+      "adoption_id": "adoption-4",
+      "anchor": "**M-56**",
+      "in_scope": 4123,
+      "in_scope_ids_sha256": "581c2533fdc4ddfc52c8fea37b7aa14366f1ee8ffdcf58451c4dfd757da8a466",
+      "kind": "universe_pin",
+      "ruling": "M-56",
+      "spec_ref": "docs/specs/01-pipeline/69a_mcbylaw_register.md"
+    }
+  ]
+}

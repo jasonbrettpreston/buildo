@@ -1,0 +1,21 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_45/150.45.50.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.45.50.1(1)#(1)(A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.45.50.1(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "encroachment_clearance_m",
+      "bound": "min",
+      "numeric_expression": ["encroachment_clearance_m = 6.0 m @(1)(B)"]
+    }
+  ]
+}

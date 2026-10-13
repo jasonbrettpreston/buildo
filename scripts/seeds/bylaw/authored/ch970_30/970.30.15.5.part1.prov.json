@@ -1,0 +1,45 @@
+{
+  "a_seal": {
+    "seal_id": 325,
+    "sha256": "628e62a60effccc25a2dcdeef11003b8eca831048e57769b3e4fc4b73643154f"
+  },
+  "b_run": {
+    "ledger_sha256": "326f7744b614341547ff596c852d29d5c6c44777db91b6e478a5bccee5f4cb9b",
+    "read_paths": [],
+    "run_id": "20261008T211508Z-3f349020",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "144544498d5965ae0520048727bdb590a434ff2a1cf13e08951f2817de7b633f",
+    "b": "983bd7278cbc1f623cce65f3f16e0548a4f104d0a1cf414ada784da3f1771b12"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_30/970.30.15.5.part1",
+  "unit_shas": {
+    "970.30.15.5(1)#(1)(A)": "3b4f8ea4d1b8fd052717a6bf3197b581c47b5de5e7965e207f54a02171c81447",
+    "970.30.15.5(1)#(1)(B)": "760a075de44ed0054ae4002f51ed624a8cf688c6e0e23bd135603382530f5f55",
+    "970.30.15.5(2)#(2)(A)": "43943bc028b44787b6a12693a9e45ffd599c658f293162c917b92f68d759e935",
+    "970.30.15.5(2)#(2)(B)": "ab6ed95275601750e82fd4f1c53d6f7359c84ebb5941b66a4823f87597aa9621",
+    "970.30.15.5(2)#(2)(C)": "99e59093c74ff1ebc7f079e54a01fd0fd3d017fee5a875122f026a7b83d77f52",
+    "970.30.15.5(2)#(2)(D)": "96a13a08fb2486e5786be5f3a928a84f0eeb820f194f99a081fa1f17815a85cb",
+    "970.30.15.5(2)#(2)(E)": "f6f5554e8e20e76997ed58cca6ce3b6936ce3c301ebf2fdb5883df2e3522f402",
+    "970.30.15.5(2)#(2)(F)": "8c8b0d0db57a8f7f66ec3c79fbdb171ece89d682184c6ae7c4d09531a7f0838c",
+    "970.30.15.5(2)#(2)(G)": "3b20b579eea6ee8f664aa6dec0e71e1e343449eaa6a9dfbbfb471e5662767521",
+    "970.30.15.5(3)#(3)(A)": "a9d6e54f4d09d62edc53768835969c91428c52b67cbe0b07fe4bb59948a8c7be",
+    "970.30.15.5(3)#(3)(B)": "c5514130481f8dbc29bde73630cedd8acff745bb1bc558e432da4c1eb8a6071a",
+    "970.30.15.5(3)#(3)(C)": "529874456a145f7d3b72b3f2b2af76bd17b0498bafb07e33da69e495f3a19ceb",
+    "970.30.15.5(3)#(3)(D)": "9633902220f3edc2142440a020f581404a316111c60aedd0cc25653107cef641",
+    "970.30.15.5(3)#(3)(E)": "6834ef9def40490e0272b41ee2f79d4521f1e9696202e5120bde4bb1c2bffdbd"
+  }
+}

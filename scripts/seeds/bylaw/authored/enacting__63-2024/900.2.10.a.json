@@ -1,0 +1,17 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:63-2024/900.2.10", "keyer": "A",
+ "units": [
+  {"unit_id": "900.2.10(912)@63-2024#[instruction]", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "informational", "description": "Enacting instruction that deletes several 900.2.10 exceptions and replaces the prevailing by-law list of exception 912; no regulation of its own.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []},
+  {"unit_id": "900.2.10(912)@63-2024#(912)", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "whole", "refs": []}, "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "informational", "description": "Replacement list of prevailing by-laws and sections for exception 912, further deletions and replacements in other 900.2.10 exceptions, and transitional provisions saving applications filed on or before February 7, 2024.", "gaps": "none", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "900.2.10(912)@63-2024": {"explanation": "Replaces the list of prevailing by-laws and sections for exception 912 and removes or edits several other site specific exceptions. It also protects buildings and structures covered by a building permit, rezoning, minor variance or site plan application filed on or before February 7, 2024.", "code_refs": "none"}}}

@@ -1,0 +1,14 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_45/150.45.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.45.1(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

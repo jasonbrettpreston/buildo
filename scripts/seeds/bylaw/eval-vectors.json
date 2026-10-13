@@ -472,6 +472,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.20.30.40(1)#(A)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "building_type_from": {
         "line": 1259,
         "text": "| Term | Detached house — base fields |",
@@ -1075,6 +1087,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.20.30.40(1)#(B)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "building_type_from": {
         "line": 1531,
         "text": "*Fields — EXISTING (as-built):* `max_buildable_footprint_sqm`, `max_buildable_gfa_sqm` (base; detached-house rules; meaning unchanged)",
@@ -1505,6 +1529,17 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "10.40.40.20(2)",
+        "kind": "eval_mismatch",
+        "reason": "10.40.40.20(2)(A) limits only the extended part (\"if the extended part: (A) has a maximum height of 5.0 metres and one storey\"); the unit keys it as the whole building's height_m / height_storeys, so 1 storey wins. The vector reads the by-law correctly (10.40.40.10(3)#(A)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "10.40.40.20(2)#(2)(A)"
+        ],
+        "wrong_side": "agreed unit (10.40.40.20(2)#(2)(A))"
+      },
       "bylaw_clause": "10.40.40.10(3)#(A)",
       "clause_check": {
         "clause": "10.40.40.10(3)#(A)",
@@ -1690,6 +1725,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.40.30.40(1)#(A)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "bylaw_clause": "10.40.30.40(1)#(A)",
       "clause_check": {
         "clause": "10.40.30.40(1)#(A)",
@@ -2099,6 +2146,17 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "10.40.40.20(2)",
+        "kind": "eval_mismatch",
+        "reason": "10.40.40.20(2)(A) limits only the extended part (\"if the extended part: (A) has a maximum height of 5.0 metres and one storey\"); the unit keys it as the whole building's height_m / height_storeys, so 1 storey wins. The vector reads the by-law correctly (10.40.40.10(3)#(A)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "10.40.40.20(2)#(2)(A)"
+        ],
+        "wrong_side": "agreed unit (10.40.40.20(2)#(2)(A))"
+      },
       "bylaw_clause": "10.40.40.10(3)#(A)",
       "clause_check": {
         "clause": "10.40.40.10(3)#(A)",
@@ -2283,6 +2341,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.40.30.40(1)#(B)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "bylaw_clause": "10.40.30.40(1)#(B)",
       "clause_check": {
         "clause": "10.40.30.40(1)#(B)",
@@ -2786,6 +2856,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.60.40.20(1)#whole",
       "clause_check": {
         "clause": "10.60.40.20(1)#whole",
@@ -2804,6 +2881,7 @@
         "flags": {
           "all_units_front_street": true,
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -2832,6 +2910,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "(absence: no RT building-depth regulation)",
       "clause_check": {
         "checked": false,
@@ -2848,6 +2933,7 @@
         "flags": {
           "all_units_front_street": true,
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -2876,6 +2962,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.60.30.40(1)#(A)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "bylaw_clause": "10.60.30.40(1)#(A)",
       "clause_check": {
         "clause": "10.60.30.40(1)#(A)",
@@ -3360,6 +3458,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.60.40.20(1)#whole",
       "clause_check": {
         "clause": "10.60.40.20(1)#whole",
@@ -3378,6 +3483,7 @@
         "flags": {
           "all_units_front_street": true,
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -3403,6 +3509,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "(absence: no RT building-depth regulation)",
       "clause_check": {
         "checked": false,
@@ -3419,6 +3532,7 @@
         "flags": {
           "all_units_front_street": true,
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -3444,6 +3558,18 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator (two-advisor method, Seat 6, 2026-10-08)",
+        "bylaw_clause": "150.7.60.70(1)",
+        "kind": "eval_mismatch",
+        "reason": "150.7.60.70(1) applies only \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite\"; its (A) / (B) units are keyed on the principal building types with no garden-suite condition, so (B)'s ancillary-building cap \"20 percent\" wins on a lot with no garden suite. The vector reads the by-law correctly (10.60.30.40(1)#(B)); the unit side is wrong. Fix: unit correction (cards QPAIR / QR12).",
+        "ruling": "Spec 68 §9 G-EVAL (b); Spec 69a M-81",
+        "units": [
+          "150.7.60.70(1)#(1)(A)",
+          "150.7.60.70(1)#(1)(B)"
+        ],
+        "wrong_side": "agreed unit (150.7.60.70(1)#(1)(A), 150.7.60.70(1)#(1)(B))"
+      },
       "bylaw_clause": "10.60.30.40(1)#(B)",
       "clause_check": {
         "clause": "10.60.30.40(1)#(B)",
@@ -4122,6 +4248,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.60.40.70(3)",
       "clause_check": {
         "checked": false,
@@ -4137,6 +4270,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -4372,6 +4506,13 @@
       "vector_status": "no_expected:building_type_unstated"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.40.40.10(1)#(B)",
       "clause_check": {
         "clause": "10.40.40.10(1)#(B)",
@@ -4389,6 +4530,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -4408,6 +4550,13 @@
       "vector_status": "no_expected:building_type_unstated"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.60.40.10(1)#(B)",
       "clause_check": {
         "clause": "10.60.40.10(1)#(B)",
@@ -4425,6 +4574,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -4550,6 +4700,13 @@
       "vector_status": "no_expected:building_type_unstated"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.60.40.20(1)#whole",
       "clause_check": {
         "clause": "10.60.40.20(1)#whole",
@@ -4566,6 +4723,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -4783,6 +4941,13 @@
       "vector_status": "by_law_expected"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.20.40.20(1)#whole",
       "clause_check": {
         "clause": "10.20.40.20(1)#whole",
@@ -4799,6 +4964,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },
@@ -4824,6 +4990,13 @@
       "vector_status": "no_expected:building_type_unstated"
     },
     {
+      "adjudication": {
+        "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "kind": "eval_vector",
+        "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
+        "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
+      },
       "bylaw_clause": "10.20.40.30(1)#whole",
       "clause_check": {
         "clause": "10.20.40.30(1)#whole",
@@ -4840,6 +5013,7 @@
         "building_type": null,
         "flags": {
           "corner_lot": false,
+          "lawfully_existing": false,
           "major_street": false,
           "through_lot": false
         },

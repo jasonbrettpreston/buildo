@@ -1,0 +1,53 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_48/150.48.20.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.48.20.1(1)#(1)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "An adult education school"}},
+      "calculation_handling": {"status": "not_modelled", "description": "An adult education school is permitted in a building used as, or originally constructed as, a private or public school.", "gaps": "Adult education use and original construction are not held.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.48.20.1(1)#(1)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "An adult education school"}},
+      "calculation_handling": {"status": "not_modelled", "description": "An adult education school is permitted only if funded by the Provincial or Federal government for one of the listed adult education programs.", "gaps": "Funding status is not a lot or scenario input.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The government funding condition for adult education schools is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.48.20.1(2)#(2)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "first storey", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A day nursery is permitted"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery in a school building is permitted if it is on the first storey.", "gaps": "Which storey a use occupies is not a model target.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The rule that a day nursery in a school building be on the first storey is not evaluated.", "not_an_override": []
+    },
+    {
+      "unit_id": "150.48.20.1(2)#(2)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "40%", "clause": "(2)(B)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A day nursery is permitted"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A day nursery in a school building is permitted if its interior floor area is no more than 40% of the interior floor area of the first storey.", "gaps": "First-storey interior floor area is not held.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The 40% first-storey interior floor area cap on a day nursery in a school building is not evaluated.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.48.20.1(1)": {"explanation": "An adult education school is permitted in a building used as, or originally built as, a private or public school, if it is funded by the Provincial or Federal government for one of the listed adult education programs.", "code_refs": "none"},
+    "150.48.20.1(2)": {"explanation": "A day nursery is permitted in a building used as, or originally built as, a private or public school if it is on the first storey and uses no more than 40% of the interior floor area of the first storey.", "code_refs": "none"}
+  }
+}

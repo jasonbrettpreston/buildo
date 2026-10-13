@@ -1,0 +1,21 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.175.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "5.10.175.1(1)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.175.1(2)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

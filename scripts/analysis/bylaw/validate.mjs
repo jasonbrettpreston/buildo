@@ -14,25 +14,33 @@
 // The validator: loads the committed inputs ONCE (one slice), runs every gate module, computes row states, renders in
 // memory and byte-compares (G-DRIFT), and derives the five lines. Arm states are closed: pass · fail · not_run ·
 // vacuous. `vacuous` = an arm whose input is empty (e.g. the keyer-provenance arm with 0 authored shards): it never
-// makes a gate pass on its own, and once its input exists an unbuilt arm is `not_run`. A gate whose module is not built
-// yet (G-CLAUSE, G-XREF, G-AGREE; S6) is `not_run`, never a PASS (Spec 79's rule).
+// makes a gate pass on its own, and once its input exists an unbuilt arm is `not_run`. The S6 gates G-CLAUSE / G-XREF /
+// G-AGREE run over the authored drafts: G-AGREE resolves the drafts once and its agreed / adjudicated units feed G-CLAUSE
+// and G-XREF (pending drafts never reach them — Spec 68 §4, M-45); a gate that did not run is never a PASS.
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { nowIso } from './clock.mjs';
+import { agreedUnits as agreedUnitsOf, checkAgree, selfTest as agreeSelfTest } from './agree.mjs';
+import { buildIndex, loadAuthored, supersession, unitView, withGeneratedFields } from './authored.mjs';
 import { changeGateState } from './change.mjs';
+import { checkClause, selfTest as clauseSelfTest } from './clause.mjs';
+import { nowIso } from './clock.mjs';
 import { checkCensus } from './census.mjs';
 import { buildReportFromTree, FINDINGS_PATH, selfTest as codeLinkSelfTest } from './code-link.mjs';
 import { checkDefinitions, loadFidelity, selfTest as definitionsSelfTest } from './definitions.mjs';
 import { checkEval, selfTest as evaluateSelfTest } from './evaluate.mjs';
 import { checkExternalFile, selfTest as externalSelfTest } from './external.mjs';
+import { gitIn } from './keyer-b.mjs';
+import { checkKeyerProv, gitLsTree } from './keyer-prov.mjs';
 import { checkProvAll, checkRulingCitations, selfTest as observableSelfTest } from './observable.mjs';
 import { buildTable, escapeMd, JSON_REL, MD_REL, readCommitted, renderAll, renderJson, renderMarkdown, writeFiles } from './render.mjs';
+import { checkShape } from './shape.mjs';
 import { loadSnapshotPages, sliceSnapshot } from './slice.mjs';
 import { cmpSection, sha256 } from './snapshot.mjs';
 import { checkTextSlice, LOCK_FILE, selfTest as standardizedSelfTest } from './standardized.mjs';
 import { checkUniverse, readSpec69Rulings, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
 import { checkFeedsTotality, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
+import { checkXref, selfTest as xrefSelfTest } from './xref.mjs';
 
 export const WORDS = Object.freeze(['STANDARDIZED', 'OBSERVABLE', 'ACCURATE', 'UNDERSTANDABLE', 'SCALABLE']);
 export const GATE_STATES = Object.freeze(['pass', 'fail', 'not_run']);
@@ -55,9 +63,9 @@ export const GATES = deepFreeze([
   { id: 'G-SHAPE', word: 'STANDARDIZED', when: 'pre-commit', built: true, selfTests: ['vocab'] },
   { id: 'G-PROV', word: 'OBSERVABLE', when: 'pre-commit', built: true, selfTests: ['observable'] },
   { id: 'G-DRIFT', word: 'OBSERVABLE', when: 'pre-commit', built: true, selfTests: ['render'] },
-  { id: 'G-CLAUSE', word: 'ACCURATE', when: 'pre-commit', built: false, selfTests: [] },
-  { id: 'G-XREF', word: 'ACCURATE', when: 'pre-commit', built: false, selfTests: [] },
-  { id: 'G-AGREE', word: 'ACCURATE', when: 'pre-commit', built: false, selfTests: [] },
+  { id: 'G-CLAUSE', word: 'ACCURATE', when: 'pre-commit', built: true, selfTests: ['clause'] },
+  { id: 'G-XREF', word: 'ACCURATE', when: 'pre-commit', built: true, selfTests: ['xref'] },
+  { id: 'G-AGREE', word: 'ACCURATE', when: 'pre-commit', built: true, selfTests: ['agree'] },
   { id: 'G-EVAL', word: 'ACCURATE', when: 'pre-commit', built: true, selfTests: ['evaluate'] },
   { id: 'G-CODE', word: 'ACCURATE', when: 'pre-commit', built: true, selfTests: ['code-link'] },
   { id: 'G-READ', word: 'UNDERSTANDABLE', when: 'pre-commit', built: true, selfTests: ['definitions', 'external'] },
@@ -65,6 +73,31 @@ export const GATES = deepFreeze([
   { id: 'G-CHANGE', word: 'SCALABLE', when: 'on_demand', built: true, selfTests: [] },
   { id: 'G-AUDIT', word: 'SCALABLE', when: 'on_demand', built: false, selfTests: [] },
 ]);
+
+/** Spec 69a M-78: the Ch.900 residential exception pages — their in-scope rows are Phase 2 work (Spec 68 §11). */
+export const PHASE2_PAGES = Object.freeze(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
+/** Spec 69a M-78 (by content, dated note 2026-10-08): a row is Phase 2 work when it sits on a Ch.900 exception page, or it
+ * is an enacting amendment of a Ch.900 residential exception (its amended citation, `target` else `article`, is 900.2–900.6
+ * — e.g. 900.2.10@1018-2026, 900.2.10(912)@63-2024). PURE. */
+export function isPhase2Row(r) {
+  if (PHASE2_PAGES.includes(r.page)) return true;
+  return String(r.page).startsWith('enacting:') && /^900\.[2-6]\./.test(String(r.target ?? r.article ?? ''));
+}
+/** Spec 69a M-78 (by content): tally row states per phase ({phase1:{pending, stale, failed, complete}, phase2:{…}}).
+ * `rowOf` is a Map(regulation_id → slice row); a missing row is Phase 1. PURE. */
+export function phaseCounts(rowStatus, rowOf) {
+  const z = () => ({ pending: 0, stale: 0, failed: 0, complete: 0 });
+  const out = { phase1: z(), phase2: z() };
+  for (const [id, st] of Object.entries(rowStatus || {})) {
+    const row = rowOf.get(id);
+    const p = row && isPhase2Row(row) ? out.phase2 : out.phase1;
+    if (st === 'pending') p.pending++;
+    else if (st === 'pending:stale') { p.pending++; p.stale++; }
+    else if (st === 'failed') p.failed++;
+    else if (st === 'complete') p.complete++;
+  }
+  return out;
+}
 
 /** Fixture providers: name → () => {pass, results?|violations?}. Keys must equal the union of GATES[].selfTests. */
 const SELF_TESTS = Object.freeze({
@@ -77,6 +110,9 @@ const SELF_TESTS = Object.freeze({
   definitions: () => definitionsSelfTest(),
   external: () => ({ pass: externalSelfTest() > 0 }), // throws on the first failing case
   universe: () => universeSelfTest(),
+  clause: () => clauseSelfTest(),
+  xref: () => xrefSelfTest(),
+  agree: () => agreeSelfTest(),
 });
 
 /** Registry ⇄ fixture providers, both directions (Spec 68 §8 rule 8). PURE. */
@@ -114,7 +150,9 @@ const arm = (name, state, violations = [], notes = [], extra = {}) => {
   return { checked: null, ...extra, name, state, violations, notes };
 };
 const fromCheck = (name, r, extra = {}) => arm(name, r.pass ? 'pass' : 'fail', r.violations || [], [], { checked: r.checked ?? null, ...extra });
-const fromStatus = (name, r) => arm(name, r.status, r.status === 'fail' ? r.violations || [] : [], [...(r.notes || []), ...(r.status === 'not_run' ? r.violations || [] : [])], { checked: r.checked ?? null });
+/** S6 gates return violation objects {code, id, detail}; the arm and the printer carry text (`code: id detail`). */
+const violationText = (x) => (x && typeof x === 'object' ? `${x.code}: ${x.id}${x.detail ? ` ${x.detail}` : ''}` : String(x));
+const fromStatus = (name, r) => arm(name, r.status, r.status === 'fail' ? (r.violations || []).map(violationText) : [], [...(r.notes || []), ...(r.status === 'not_run' ? (r.violations || []).map(violationText) : [])], { checked: r.checked ?? null });
 /** An arm not built yet: vacuous while its input is empty, not_run once it is not. */
 const unbuilt = (name, inputCount, what) => arm(name, inputCount === 0 ? 'vacuous' : 'not_run', [], [`${inputCount === 0 ? 'vacuous (0 inputs)' : `not built, ${inputCount} input(s) unchecked`}: ${what}`]);
 
@@ -138,20 +176,23 @@ export function wordVerdicts(gates, counts) {
 
 /**
  * The five `--validate` lines + `PHASE 1: DONE|NOT_DONE` (Spec 68 §4). `counts` = {in_scope, complete, pending, stale,
- * failed, draft_failures, disagreements, disclosed_defects}; `extras` = {snapshot_age_days, max_snapshot_age_days,
+ * failed, draft_failures, disagreements, disclosed_defects} plus an optional `phase` (Spec 69a M-78: `phaseCounts`
+ * output — the pending line then splits into phase1 / phase2, and PHASE 1's DONE gate reads phase1 only);
+ * `extras` = {snapshot_age_days, max_snapshot_age_days,
  * findings{ii, iv_unmapped}, eval_mismatches_adjudicated, expert_rulings_against, agreement_rate (null ⇒ n/a)}. PURE.
  */
 export function fiveLines({ gates, counts: c, extras: x }) {
   const t = gateTally(gates);
   const v = wordVerdicts(gates, c);
-  const common = `complete ${c.complete} / in_scope ${c.in_scope}; pending ${c.pending} (stale ${c.stale}); failed ${c.failed}; draft_failures ${c.draft_failures ?? 'unknown'}; disagreements ${c.disagreements ?? 'unknown'}; disclosed_defects ${c.disclosed_defects}; gates pass ${t.pass} / run ${t.run} / total ${t.total}`;
+  const pend = c.phase ? `pending ${c.pending} (phase1 ${c.phase.phase1.pending} / phase2 ${c.phase.phase2.pending}; stale ${c.stale})` : `pending ${c.pending} (stale ${c.stale})`;
+  const common = `complete ${c.complete} / in_scope ${c.in_scope}; ${pend}; failed ${c.failed}; draft_failures ${c.draft_failures ?? 'unknown'}; disagreements ${c.disagreements ?? 'unknown'}; disclosed_defects ${c.disclosed_defects}; gates pass ${t.pass} / run ${t.run} / total ${t.total}`;
   const age = x.snapshot_age_days;
   const ext = {
     OBSERVABLE: `; snapshot_age_days ${age === null || age === undefined ? 'unknown' : age}${typeof age === 'number' && age > x.max_snapshot_age_days ? ` WARN>${x.max_snapshot_age_days}` : ''}`,
     ACCURATE: `; findings ${x.findings.ii + x.findings.iv_unmapped} (ii ${x.findings.ii} · iv unmapped ${x.findings.iv_unmapped}); eval_mismatches_adjudicated ${x.eval_mismatches_adjudicated}; expert_rulings_against ${x.expert_rulings_against}; agreement_rate ${x.agreement_rate === null || x.agreement_rate === undefined ? 'n/a' : x.agreement_rate.toFixed(3)} agreement≠correctness; code_linkage=declared-only`,
   };
   const lines = WORDS.map((w) => `${w}: ${v[w]} (${common}${ext[w] || ''})`);
-  const done = WORDS.every((w) => v[w] === 'PASS') && c.pending === 0 && c.stale === 0 && c.failed === 0 && t.run === t.total && t.pass === t.total && gates['G-AUDIT'] && gates['G-AUDIT'].state === 'pass';
+  const done = WORDS.every((w) => v[w] === 'PASS') && (c.phase ? c.phase.phase1.pending === 0 && c.phase.phase1.stale === 0 && c.phase.phase1.failed === 0 : c.pending === 0 && c.stale === 0 && c.failed === 0) && t.run === t.total && t.pass === t.total && gates['G-AUDIT'] && gates['G-AUDIT'].state === 'pass'; // Spec 69a M-78: PHASE 1 reads the non-Ch.900 rows only; Ch.900 rows are Phase 2 (printed, never blocking DONE)
   lines.push(`PHASE 1: ${done ? 'DONE' : 'NOT_DONE'}`);
   return lines;
 }
@@ -276,8 +317,10 @@ async function runGate(id, body) {
 export async function runGates(I) {
   const gates = {};
   const ctx = {};
-  const agreedUnits = []; // agreed / adjudicated clause units: none before A1 (S6 owns the authored loader)
+  let agreedUnits = []; // agreed / adjudicated clause units, resolved from the authored drafts by the G-AGREE block below
   const authoredN = I.authored.length; // every authored/ file: the input of each unbuilt authored-content arm
+  const shards = loadAuthored(I.root); // loaded ONCE: the G-AGREE resolution, G-PROV's keyer arm and G-TEXT's unit_pins arm all read it
+  const external = readJsonIf(path.join(I.seeds, 'external.json'));
 
   gates['G-PROV'] = await runGate('G-PROV', () => {
     const prov = checkProvAll({ seeds: I.seeds });
@@ -293,7 +336,15 @@ export async function runGates(I) {
     return [
       ...prov.arms.map((a) => fromCheck(a.name, a)),
       fromCheck('ruling_citations', rulings),
-      unbuilt('keyer_provenance', authoredN, 'two distinct keyers, A seal = A draft hash, .a absent from B worktree tree, ledger read paths (§10 stage 5)'),
+      // Spec 68 §9 G-PROV (keyer provenance), §10 stage 5: two distinct keyers, A seal = A draft hash, `.a` absent
+      // from the tree of B's recorded worktree commit, ledger read paths carry no `.a` path (keyer-prov.mjs). The git
+      // witness is read-only; without git the arm is not_run with its own note — never a pass.
+      (() => {
+        const tryGit = (args) => { try { return gitIn(I.root, args).split(/\r?\n/).filter(Boolean); } catch { return undefined; } };
+        const r = checkKeyerProv({ shards, lsTree: gitLsTree(I.root), headTree: tryGit(['ls-tree', '-r', '--name-only', 'HEAD']), staged: tryGit(['diff', '--cached', '--name-only']) });
+        ctx.keyerProv = r;
+        return fromStatus('keyer_provenance', r);
+      })(),
     ];
   });
 
@@ -302,7 +353,27 @@ export async function runGates(I) {
     for (const e of I.snap.enacting || []) pages[`enacting:${e.bylaw}`] = e.text; // as standardized.mjs sliceSeeds
     const r = checkTextSlice({ slice: I.slice, pages, lock: I.sliceLock, expect: { adoption_id: I.snap.adoption_id, normalizer_version: I.snap.normalizer_version } });
     ctx.textDisclosures = r.disclosures;
-    return [fromCheck('slice', r), unbuilt('unit_pins', authoredN, 'each authored unit pinned to its current unit sha, else pending:stale')];
+    // Spec 68 §9 G-TEXT unit pins, §4 (row state): a stale pin is `pending:stale`, counted, never a failure. The arm
+    // reports pass with its note; G-SHAPE folds each row's row_status from the pins (Spec 68 §4, §12 order — G-TEXT runs
+    // before G-SHAPE, so the count is computed here directly). A pin names a unit whose current sha (unitView over the
+    // slice index) differs, or which the slice no longer holds. Superseded units (Spec 69a M-80) are skipped.
+    const index = buildIndex(I.slice);
+    const sup = supersession(shards);
+    const pinned = new Map(); // unit_id → pinned sha (a later shard's pin wins, as in G-SHAPE)
+    for (const s of shards) {
+      if (!s.prov || !s.prov.unit_shas || typeof s.prov.unit_shas !== 'object') continue;
+      for (const [id, sha] of Object.entries(s.prov.unit_shas)) if (!(sup.superseded.has(s.key) && sup.superseded.get(s.key).has(id))) pinned.set(id, sha);
+    }
+    let stale = 0;
+    for (const [id, sha] of pinned) {
+      const view = unitView(index, id);
+      if (!view || view.sha256 !== sha) stale++;
+    }
+    ctx.unitPins = { pinned: pinned.size, stale };
+    return [
+      fromCheck('slice', r),
+      arm('unit_pins', 'pass', [], [`stale ${stale} of ${pinned.size} pinned units (pending:stale, never failing)`], { checked: pinned.size }),
+    ];
   });
 
   gates['G-UNIVERSE'] = await runGate('G-UNIVERSE', async () => {
@@ -313,9 +384,32 @@ export async function runGates(I) {
     return [fromStatus('toc_scope', u), fromStatus('census', census)];
   });
 
-  for (const id of ['G-CLAUSE', 'G-XREF']) {
-    gates[id] = await runGate(id, () => [arm('module', 'not_run', [], ['not built: the authored-field gate module lands with S6 (Spec 68 §9); never a PASS'])]);
-  }
+  // S6 authored-field gates (Spec 68 §9). G-AGREE resolves the drafts once; its agreed / adjudicated units are the
+  // input of G-CLAUSE, G-XREF, G-EVAL and G-SHAPE's feeds arm (pending drafts never reach them — Spec 68 §4, M-45).
+  // Reported at its §12 slot below. `resolveAgree()` memoizes the resolution so G-SHAPE (which runs late) never re-runs it.
+  const inScopeIdsSet = new Set((ctx.universe ? ctx.universe.scoped : []).filter((x) => x.scope === 'in_scope').map((x) => x.regulation_id));
+  let agree = null;
+  const resolveAgree = () => (agree ||= checkAgree({ shards, adjudications: I.adjudications, vocab: I.vocab }));
+  const agreeBody = () => {
+    agree = resolveAgree();
+    ctx.agree = agree;
+    agreedUnits = [...agreedUnitsOf(agree).values()];
+    return [fromStatus('drafts', agree)];
+  };
+  const agreeGate = await runGate('G-AGREE', agreeBody);
+  const units = agree ? agreedUnitsOf(agree) : new Map();
+  gates['G-CLAUSE'] = await runGate('G-CLAUSE', () => {
+    if (!agree) return [arm('agreed_units', 'not_run', [], ['G-AGREE did not run'])];
+    const r = checkClause({ slice: I.slice, units, vocab: I.vocab, adjudications: I.adjudications });
+    ctx.clause = r; // the raw gateResult: G-SHAPE attributes its unit violations to rows (Spec 68 §4 fold)
+    return [fromStatus('agreed_units', r)];
+  });
+  gates['G-XREF'] = await runGate('G-XREF', () => {
+    if (!agree) return [arm('agreed_units', 'not_run', [], ['G-AGREE did not run'])];
+    const r = checkXref({ slice: I.slice, units, vocab: I.vocab, external, inScopeIds: ctx.universe ? inScopeIdsSet : null, adjudications: (I.adjudications && I.adjudications.adjudications) || [] });
+    ctx.xref = r;
+    return [fromStatus('agreed_units', r)];
+  });
 
   gates['G-READ'] = await runGate('G-READ', () => {
     const inScope = new Set((ctx.universe ? ctx.universe.scoped : []).filter((x) => x.scope === 'in_scope').map((x) => x.regulation_id));
@@ -325,11 +419,12 @@ export async function runGates(I) {
     return [fromCheck('definitions', defs), fromCheck('external', ext), unbuilt('explanations', authoredN, 'explanations mention every expression literal, word bound, banned words, cite only cross_refs')];
   });
 
-  gates['G-AGREE'] = await runGate('G-AGREE', () => [arm('module', 'not_run', [], ['not built: the authored-field gate module lands with S6 (Spec 68 §9); never a PASS'])]);
+  gates['G-AGREE'] = agreeGate;
 
   gates['G-EVAL'] = await runGate('G-EVAL', () => {
     const ev = evaluatorVocab(I.vocab);
-    const r = checkEval({ units: agreedUnits, vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
+    // Spec 68 §6: `layer` / `regulation_id` are G — attached here, never keyed (loadCandidates reads `layer`)
+    const r = checkEval({ units: agreedUnits.map(withGeneratedFields), vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
     ctx.evalResult = r;
     const fx = evaluateSelfTest(ev);
     return [fromCheck('expressions_and_vectors', r, { counts: r.counts }), fromCheck('precedence_fixtures', fx)];
@@ -349,7 +444,17 @@ export async function runGates(I) {
     return [
       fromCheck('vocab', v),
       f.checked === 0 ? arm('feeds_totality', 'vacuous', [], ['vacuous (0 agreed LIMIT/PERMIT/PROHIBIT units)']) : fromCheck('feeds_totality', f),
-      unbuilt('schema_and_unit_shape', 1 + I.authored.length, 'JSON Schema on every seed and authored file; §7.3 shape per unit; every authored key resolves; row_status folded from all gate results (S6)'),
+      // Spec 68 §9 G-SHAPE ("JSON Schema on every seed and authored file; §7.3 shape per unit; every authored key
+      // resolves to a row"), §4 (row_status folded from ALL gate results — G-SHAPE runs last among content gates).
+      // checkShape returns gateResult + rows[{regulation_id, row_status, why}]; check() folds those into the table.
+      (() => {
+        const evalGate = ctx.evalResult
+          ? { status: ctx.evalResult.pass === false ? 'fail' : 'pass', violations: (ctx.evalResult.violations || []).map((x) => (typeof x === 'string' ? { code: 'eval', id: x.split(': ')[1] || x, detail: x } : x)) }
+          : undefined;
+        const sh = checkShape({ slice: I.slice, shards, vocab: I.vocab, agree: resolveAgree(), adjudications: I.adjudications, gates: { 'G-CLAUSE': ctx.clause, 'G-XREF': ctx.xref, 'G-EVAL': evalGate }, inScopeIds: ctx.universe ? inScopeIdsSet : null, external });
+        ctx.shape = sh;
+        return fromStatus('schema_and_unit_shape', sh);
+      })(),
     ];
   });
 
@@ -363,10 +468,14 @@ export async function runGates(I) {
   return { gates, ctx, agreedUnits };
 }
 
-/** In-scope row states (Spec 68 §4): no agreed record yet ⇒ pending (M-45); complete only once G-SHAPE folds every gate. */
-function rowStates(scoped) {
+/**
+ * In-scope row states (Spec 68 §4): start from the no-shape fallback (every in-scope row pending, M-45), then fold in
+ * G-SHAPE's `row_status` for every row it decided (Spec 68 §4 row_status fold; Spec 69a M-78 phase counts read this).
+ */
+function rowStates(scoped, shape) {
   const out = {};
   for (const s of scoped) if (s.scope === 'in_scope') out[s.regulation_id] = 'pending';
+  for (const r of (shape && shape.rows) || []) if (r && Object.hasOwn(out, r.regulation_id)) out[r.regulation_id] = r.row_status;
   return out;
 }
 
@@ -378,7 +487,8 @@ export async function check({ root, write = false, now = nowIso }) {
   const I = loadInputs({ root });
   const { gates: g, ctx } = await runGates(I);
   const scoped = ctx.universe ? ctx.universe.scoped : [];
-  const doc = buildTable({ slice: I.slice, scoped, manifest: I.manifest, amendments: I.amendments, vocab: I.vocab, rowStatus: rowStates(scoped), feeds: { checked: ctx.feeds ? ctx.feeds.checked : 0, counts: ctx.feeds ? ctx.feeds.counts : {} } });
+  const rs = rowStates(scoped, ctx.shape); // Spec 68 §4: the G-SHAPE fold decides complete / failed / pending / pending:stale
+  const doc = buildTable({ slice: I.slice, scoped, manifest: I.manifest, amendments: I.amendments, vocab: I.vocab, rowStatus: rs, feeds: { checked: ctx.feeds ? ctx.feeds.checked : 0, counts: ctx.feeds ? ctx.feeds.counts : {} } });
   const files = renderAll(doc);
   const findings = ctx.report ? ctx.report.markdown : null;
   const threw = Object.values(g).some((x) => x.error);
@@ -406,6 +516,7 @@ export async function check({ root, write = false, now = nowIso }) {
     draft_failures: I.authored.length ? null : 0,
     disagreements: I.authored.length ? null : 0,
     disclosed_defects: I.slice.defects.length + ((I.adjudications && I.adjudications.adjudications) || []).filter((a) => a.disclosure_reason && a.disclosure_reason !== 'source_defect').length,
+    phase: phaseCounts(rs, new Map(I.slice.rows.map((r) => [r.regulation_id, r]))), // Spec 69a M-78 (by content)
   };
   const fetched = I.manifest.pages.map((p) => p.fetched_at).filter(Boolean).sort();
   const rep = ctx.report;

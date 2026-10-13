@@ -8,6 +8,7 @@
 // G-CLAUSE. PURE. Runs on agreed / adjudicated units only (agree.mjs agreedUnits()); pending drafts never reach it.
 //
 //   checkClause({slice, units, vocab, adjudications}) → {status, pass, checked, violations, counts}
+//   headerPaths(row, clausePath) → Set(clause path)
 //   selfTest()
 //
 // The cited clause of a statement is the clause its `@path` names (lead-ins + subtree, authored.mjs clauseScope); an
@@ -29,6 +30,7 @@
 //   evidence_not_in_clause      an evidence phrase does not occur in the cited clause
 //   evidence_pattern_mismatch   the vocab entry of the token declares `patterns` and the phrase matches none
 //   any_with_named_type         building type `any` while the clause names a building type no by_type key covers
+//                               (a type named only as an exclusion, "other than a/an <type>", is not named — Spec 69 M-76 A1)
 //   number_uncovered            a digit run / number word the slicer left uncovered and no literals_not_expressed lists
 
 import { DslError, argPathsOf, checkStatement, parseCond, parseExpression, variablesOf } from './dsl.mjs';
@@ -51,7 +53,8 @@ export const REASON_CODES = Object.freeze([
 ]);
 
 const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-const norm = (s) => String(s ?? '').toLowerCase().replace(/[‘’“”"]/g, '"').replace(/\s+/g, ' ').trim();
+// "semi- detached" (a City line-break hyphen) reads as "semi-detached" — applied to text, evidence and patterns alike (A12)
+const norm = (s) => String(s ?? '').toLowerCase().replace(/[‘’“”"]/g, '"').replace(/\s+/g, ' ').replace(/(\w)- (\w)/g, '$1-$2').trim();
 const words = (s) => String(s ?? '').trim().split(/\s+/).filter(Boolean).length;
 const EPS = 1e-9;
 const sameValue = (a, b) => Math.abs(Number(a) - Number(b)) < EPS;
@@ -102,15 +105,18 @@ function licensePhrases(vocab, name) {
   if (i) return Array.isArray(i.licensed_by) ? i.licensed_by : [];
   return null; // unknown: unit_binding reports it
 }
-/** Building-type names as they read in the text ("semi_detached_house" → "semi detached house"; hyphens folded). */
-function namedTypes(text, vocab) {
-  const t = ` ${norm(text).replace(/-/g, ' ')} `;
+/** Building-type names as they read in the text ("semi_detached_house" → "semi detached house"; hyphens folded). A type
+ * named only as an exclusion — "other than a/an <type>" or "except [when|where|if] [located] [inside|in|within] <type>" (the article is optional), including a list "other than a <type>, <type> or a <type>" and a trailing "containing|with|having <type list>" —
+ * is not named (Spec 69 M-76 A1: Spec 68 §6.4 rule 7 `any` stays allowed); the span is removed before matching. */
+export function namedTypes(text, vocab) {
+  const names = Object.keys(vocab.building_type || {}).filter((k) => k !== 'any').map((k) => [k, k.replace(/_/g, ' ')]);
+  const alt = names.map(([, n]) => n).sort((a, b) => b.length - a.length || cmpStr(a, b)).join('|');
+  const list = alt ? String.raw`(?:(?:a|an)\s+)?(?:${alt})(?![a-z])(?:(?:,\s*(?:or\s+|and\s+)?|\s+or\s+|\s+and\s+)(?:(?:a|an)\s+)?(?:${alt})(?![a-z]))*` : null;
+  const lead = String.raw`(?:other than|except(?:\s+(?:when|where|if))?(?:\s+located)?(?:\s+(?:inside|in|within))?)`;
+  const excl = list ? new RegExp(String.raw`${lead}\s+${list}(?:\s+(?:containing|that contains|with|having)\s+${list})?`, 'g') : null;
+  const t = ` ${norm(text).replace(/-/g, ' ')} `.replace(excl || /$^/, ' ');
   const out = [];
-  for (const k of Object.keys(vocab.building_type || {})) {
-    if (k === 'any') continue;
-    const name = k.replace(/_/g, ' ');
-    if (new RegExp(`(?<![a-z])${name}(?![a-z])`).test(t)) out.push(k);
-  }
+  for (const [k, name] of names) if (new RegExp(`(?<![a-z])${name}(?![a-z])`).test(t)) out.push(k);
   return out;
 }
 
@@ -123,13 +129,52 @@ function consolidationExcerpts(adjudications) {
   return m;
 }
 
+const CELL_PATH = /\[T(\d+)\.R(\d+)\.C(\d+)\]/;
+/** Spec 68 section 6 (R2): a data-table cell carries its row and column headers. The clause paths of the header cells
+ * whose text is the cell's row_header (the row's first cell) or one of its column_header parts (header-row cells).
+ * Empty for a clause that is not a table cell. PURE. */
+export function headerPaths(row, clausePath) {
+  const out = new Set();
+  const m = CELL_PATH.exec(clausePath);
+  if (!m) return out;
+  const clauses = row.clauses || [];
+  const cell = clauses.find((c) => c.path === clausePath);
+  if (!cell || cell.column_header === undefined) return out;
+  const prefix = clausePath.slice(0, m.index);
+  const tag = `[T${m[1]}.`;
+  const rowH = String(cell.row_header || '').trim();
+  const colH = String(cell.column_header || '').split(' / ').map((x) => x.trim()).filter(Boolean);
+  for (const c of clauses) {
+    if (c.path === clausePath || !c.path.startsWith(prefix + tag)) continue;
+    const cm = CELL_PATH.exec(c.path);
+    if (!cm) continue;
+    const t = String(c.text || '').trim();
+    if (rowH && cm[3] === '1' && t === rowH) out.add(c.path);
+    else if (c.column_header === '' && colH.includes(t)) out.add(c.path);
+  }
+  return out;
+}
+
+/** Spec 68 section 6 (R2): the texts of the header cells of a table cell, followed one level further - a row-header cell is itself
+ * a cell under its own column header ("500 to 1,999 square metres" under "Gross Floor Area"), so that header's text is a header of the
+ * value cell too. headerPaths() (the literal-binding set) is NOT changed. Empty for a clause that is not a table cell. PURE. */
+export function headerTexts(row, clausePath) {
+  const byPath = new Map((row.clauses || []).map((c) => [c.path, c]));
+  const seen = new Set();
+  const walk = (p) => {
+    for (const hp of headerPaths(row, p)) if (!seen.has(hp)) { seen.add(hp); walk(hp); }
+  };
+  walk(clausePath);
+  return [...seen].sort(cmpStr).map((p) => String(byPath.get(p).text || '').trim()).filter(Boolean);
+}
+
 /** G-CLAUSE over the agreed units. PURE. */
 export function checkClause({ slice, units = new Map(), vocab, adjudications = null } = {}) {
   const v = [];
   const index = buildIndex(slice);
   const dv = dslVocab(vocab);
   const excerpts = consolidationExcerpts(adjudications);
-  const counts = { units: 0, statements: 0, literals_bound: 0, literals_listed: 0, consolidation_mismatch_units: 0 };
+  const counts = { units: 0, statements: 0, literals_bound: 0, literals_listed: 0, consolidation_mismatch_units: 0, heading_duplicates: 0 };
   const accounted = new Map(); // regulation_id → Set(litKey)
   const listedTokens = new Map(); // regulation_id → Set(raw uncovered tokens listed)
   const covered = new Map(); // regulation_id → Set(leaf path)
@@ -157,7 +202,16 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
       m39.get(reg).push(excerptRec);
     }
     const leadIns = row.clauses.filter((c) => c.path !== view.clause_path && view.clause_path.startsWith(c.path)).map((c) => c.text.trim());
-    const unitText = excerpt !== null ? [...leadIns, excerpt].join(' ') : view.text;
+    // A6b: an enacting amendment row (`<citation>@<by-law>`) holds one clause of a consolidation row; that row's lead-ins
+    // ("(8) … may encroach … as follows") govern it as they govern the consolidated clause (Spec 68 §9 G-CLAUSE lead-ins)
+    const enactingLeadIns = [];
+    if (String(reg).includes('@') && typeof row.target === 'string' && row.target.startsWith(String(row.article))) {
+      const P = row.target.slice(String(row.article).length);
+      const first = /^\([0-9A-Za-z]{1,7}\)/.exec(P);
+      const crow = first ? index.rows.get(String(row.article) + first[0]) : null;
+      if (crow) for (const c of crow.clauses || []) if (c.path !== P && P.startsWith(c.path)) enactingLeadIns.push(c.text.trim());
+    }
+    const unitText = excerpt !== null ? [...leadIns, excerpt].join(' ') : [...enactingLeadIns, view.text].join(' ');
 
     /** Find a bound literal in the cited clause; mark it used. */
     const bind = (value, unit, clausePath, what) => {
@@ -173,13 +227,16 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
         return false;
       }
       const scope = clauseScope(row, clausePath);
-      const hit = row.literals.filter((l) => (scope.subtree.has(l.clause_path) || scope.ancestors.has(l.clause_path)) && litMatch(l, value, unit));
+      const hdr = headerPaths(row, clausePath); // Spec 68 section 6: a data-table cell carries its row and column headers
+      const hit = row.literals.filter((l) => (scope.subtree.has(l.clause_path) || scope.ancestors.has(l.clause_path) || hdr.has(l.clause_path)) && litMatch(l, value, unit));
       if (!hit.length) {
         v.push(violation('literal_not_in_clause', id, `${what} ${value}${unit ?? ''} is not a literal of ${row.article}${clausePath}`));
         return false;
       }
-      // the first occurrence not yet used; a value bound more often than it occurs reuses one (no new fact)
-      const free = hit.sort((a, b) => a.start - b.start).find((l) => !acc.has(litKey(l))) || hit[0];
+      // the cited clause's own occurrence first, then a lead-in's (A13: the heading "One Storey" must not take the body's
+      // "one storey"); a value bound more often than it occurs reuses one (no new fact)
+      const sorted = hit.sort((a, b) => a.start - b.start);
+      const free = sorted.find((l) => scope.subtree.has(l.clause_path) && !acc.has(litKey(l))) || sorted.find((l) => !acc.has(litKey(l))) || sorted[0];
       acc.add(litKey(free));
       return true;
     };
@@ -207,14 +264,14 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
       vars.add(s.target);
       for (const x of variablesOf(s.expr)) vars.add(x);
       for (const e of checkStatement(s, dv)) v.push(violation('unit_binding', id, e));
-      const cl = resolveClause(row, s.path);
+      const cl = resolveClause(row, s.path, view.clause_path);
       if (!cl) {
         v.push(violation('cited_clause_unresolved', id, `@${s.path}`));
         continue;
       }
-      for (const p of argPathsOf(s.expr)) if (!resolveClause(row, p)) v.push(violation('cited_clause_unresolved', id, `argument @${p}`));
+      for (const p of argPathsOf(s.expr)) if (!resolveClause(row, p, view.clause_path)) v.push(violation('cited_clause_unresolved', id, `argument @${p}`));
       for (const { lit, path } of boundLiterals(s.expr, null)) {
-        const at = path ? resolveClause(row, path) : cl;
+        const at = path ? resolveClause(row, path, view.clause_path) : cl;
         if (!at) continue; // reported above
         if (bind(lit.value, lit.unit, at.path, 'expression literal')) counts.literals_bound++;
       }
@@ -227,16 +284,17 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
 
     // licensing
     const lowText = norm(unitText);
+    const licText = norm([unitText, ...headerTexts(row, view.clause_path)].join(' ')); // Spec 68 section 6: a table cell carries its row and column headers (licensing only)
     for (const name of [...vars].sort(cmpStr)) {
       const phrases = licensePhrases(vocab, name);
       if (phrases === null) continue; // unknown variable → unit_binding
       if (!phrases.length) v.push(violation('variable_unlicensed', id, `${name}: vocab declares no licensing phrase`));
-      else if (!phrases.some((p) => lowText.includes(norm(p)))) v.push(violation('variable_unlicensed', id, `${name}: none of ${JSON.stringify(phrases)} occurs in the clause`));
+      else if (!phrases.some((p) => licText.includes(norm(p)))) v.push(violation('variable_unlicensed', id, `${name}: none of ${JSON.stringify(phrases)} occurs in the clause`));
     }
 
     // literals_not_expressed
     for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) {
-      const cl = resolveClause(row, e && e.clause);
+      const cl = resolveClause(row, e && e.clause, view.clause_path);
       if (!cl) {
         v.push(violation('cited_clause_unresolved', id, `literals_not_expressed clause ${e && e.clause}`));
         continue;
@@ -297,6 +355,12 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
     const inExcerpt = (p) => [...excerptPaths].some((e) => p.startsWith(e));
     for (const l of row.literals) {
       if (!done.has(l.clause_path) || inExcerpt(l.clause_path) || acc.has(litKey(l))) continue;
+      // A13: the regulation's title-case heading ("(2) One Storey Extension … 12.0 Metres") repeats a value its body states;
+      // once an equal body occurrence is bound, the heading duplicate is accounted (counted), never a second fact
+      if (/[A-Z]/.test(l.raw) && row.clauses.length && l.clause_path === row.clauses[0].path && row.literals.some((o) => o !== l && acc.has(litKey(o)) && sameValue(o.value, l.value) && (o.unit ?? null) === (l.unit ?? null))) {
+        counts.heading_duplicates++;
+        continue;
+      }
       v.push(violation('literal_unaccounted', `${reg}#${l.clause_path}`, `"${l.raw}" is neither used by an expression nor listed in literals_not_expressed`));
     }
     for (const x of row.uncovered_numbers || []) {

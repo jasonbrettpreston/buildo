@@ -1,0 +1,35 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_30/150.30.20.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.30.20.1(1)#(1)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.30.20.1(1)#(1)(B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.30.20.1(1)#(1)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "150.30.20.1(2)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

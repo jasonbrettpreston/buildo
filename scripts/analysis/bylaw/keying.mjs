@@ -11,19 +11,22 @@
 // keyer-b.mjs do the I/O). No clock: dates are passed in.
 //
 //   BATCH_RULES, batchOf(row)                          A1..A7 membership (mirrors S7 validate.mjs planBatches)
+//   OVERLAY_BATCHES, PHASE2_PAGES                      Phase 2 overlays: E5 (top-30 exceptions, explicit membership) and the
+//                                                      Ch.900 pages excluded from a Phase 1 plan (phase2-plan-v2 §K.1 E-5; Spec 69a M-78)
 //   keyingUnits(row)                                   the keyed units of one row (the S0.5 declared unit rule)
-//   planBatch({slice, inScopeIds, batch, maxUnits})    deterministic article shards of one batch
+//   planBatch({slice, inScopeIds, batch, maxUnits, regulationIds, excludePages})   deterministic article shards of one batch
 //   briefCore / buildBriefs({shard, slice, vocab, specText, doubleKeyed, batch})   the two blind briefs + their shas
-//   PROVISIONAL_CONVENTIONS / conventionsBlock(batch)   the A1 keying conventions, in the briefs from A4 (operator to confirm)
+//   KEYING_CONVENTIONS / conventionsBlock(batch)   the A1 keying conventions, RATIFIED 2026-10-08 (Spec 69 M-77), in the briefs from A4
 //   sealDraft({aBytes, usedSealIds})                   A-SEAL: LF-normalized sha256 + the next monotonic seal id
 //   extractReadPaths(ledgerText)                       the read paths of an engine ledger (declared-only arm)
 //   buildProv({...})                                   the <article>.prov.json record (keyer-prov.mjs PROV_FIELDS)
+//   rekeyShard({shard, existingKeys, unitIds?, supersedes})   the next re-key generation <key>~r<n> (Spec 69a M-80)
 //   buildQueue / renderQueueMd / parseAnswers / applyAnswers   the operator adjudication loop (G-AGREE entries)
 //
 // Blindness is structural: a brief is a function of (shard, slice, vocab, Spec 68 text, ⧉ set) only — no draft,
 // no other brief, no code — so neither keyer's brief can carry the other keyer's output. Tests pin it.
 
-import { DOUBLE_KEYED, NARROWED_OUT, AUTHORED_SCHEMA, shardRelPaths, buildIndex, canonicalField, getField, sha256, sortedJson, unitView } from './authored.mjs';
+import { DOUBLE_KEYED, NARROWED_OUT, AUTHORED_SCHEMA, shardRelPaths, buildIndex, canonicalField, getField, sha256, sortedJson, unitView, shardGeneration } from './authored.mjs';
 import { DslError } from './dsl.mjs';
 import { cmpSection } from './snapshot.mjs';
 
@@ -66,6 +69,20 @@ export const BATCH_RULES = Object.freeze([
   { id: 'A6', label: 'existing-building, permission and informational rows (every in-scope row no other batch names)', rest: true },
   { id: 'A7', label: '900.1 + 1.5.7(1) + 600.60 overlay rows', sections: ['900.1', '600.60'], regulation_ids: ['1.5.7(1)'] },
 ]);
+
+/** Phase 2 overlay batches (not a Phase 1 partition, never in BATCH_RULES): E5 = phase2-plan-v2 §K.1 E-5, the top-30
+ * exceptions by INCLUDE-closed residential lots; its membership is the explicit `regulationIds` list the caller reads from
+ * scripts/seeds/bylaw/k7-exceptions.json (k7.mjs). */
+export const OVERLAY_BATCHES = Object.freeze([{ id: 'E5', label: 'Phase 2 entry E-5: top 30 exceptions by INCLUDE-closed residential lots (k7-exceptions.json)' }]);
+/** Spec 69a M-78: the Ch.900 exception pages — Phase 2 work, excluded from a Phase 1 batch plan when asked. */
+export const PHASE2_PAGES = Object.freeze(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
+/** Spec 69a M-78 (by content, note 2026-10-08): a row is Phase 2 work when it sits on a Ch.900 exception page, or it is an
+ * enacting amendment of a Ch.900 residential exception (target 900.2–900.6). PURE. */
+export function isPhase2Row(r) {
+  if (PHASE2_PAGES.includes(r.page)) return true;
+  return String(r.page).startsWith('enacting:') && /^900\.[2-6]\./.test(String(r.target ?? r.article ?? ''));
+}
+
 const underArticle = (article, prefix) => article === prefix || String(article).startsWith(`${prefix}.`);
 /** The batch a slice row belongs to (S7 batchOf, verbatim logic). PURE. */
 export function batchOf(r) {
@@ -85,6 +102,8 @@ export function batchOf(r) {
 
 /** `p` is a proper ancestor path of `q`: a prefix ending at a segment boundary (`(1)` is not an ancestor of `(10)`). */
 export const isAncestorPath = (p, q) => q.length > p.length && q.startsWith(p) && (q[p.length] === '(' || q[p.length] === '[');
+/** The `[T<k>.R<i>` table-row prefix of a clause path (the table key minus its `.C<j>` cell index). */
+const TABLE_ROW_RE = /(\[T\d+\.R\d+)(?=[.\]])/;
 /** The parent of a clause = the longest other clause path that is a proper ancestor of it. */
 function parentOf(c, clauses) {
   let best = null;
@@ -108,22 +127,107 @@ export function keyingUnits(row) {
 }
 
 /**
- * The shards of one batch: one per article (`<page>/<article>`), rows in by-law order; an article with more than
- * `maxUnits` units is cut at row boundaries into `<article>.part<k>` (deterministic). `inScopeIds` = the in-scope
- * regulation ids (universe scoping); rows outside it are never keyed. PURE.
- * @returns {{schema, batch, label, shards:[{key, page, article, regulation_ids, units:[{unit_id, regulation_id, clause_path, sha256}]}]}}
+ * The table-row group key of a unit (OI-3, operator ruling 2026-10-08): the `[T<k>.R<i>` prefix of its clause path.
+ * A unit with no `[T…]` table group is its own group (keyed by its unit id, so it never merges with a neighbour).
+ * PURE.
  */
-export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNITS }) {
-  const rule = BATCH_RULES.find((b) => b.id === batch);
-  if (!rule) throw new KeyingError('batch_unknown', `${batch} is not one of ${BATCH_RULES.map((b) => b.id).join(', ')}`);
+export function rowGroupOf(unit) {
+  const m = TABLE_ROW_RE.exec(String(unit.clause_path || ''));
+  return m ? m[1] : `#${unit.unit_id}`;
+}
+
+/** The units of one row grouped by their table row, order preserved. PURE. */
+export function rowChunkGroups(units) {
+  const groups = [];
+  let cur = null;
+  for (const u of units) {
+    const key = rowGroupOf(u);
+    if (!cur || cur.key !== key) {
+      cur = { key, units: [] };
+      groups.push(cur);
+    }
+    cur.units.push(u);
+  }
+  return groups;
+}
+
+/**
+ * Pack consecutive groups into chunks of ≤ `maxUnits` units; a single group larger than `maxUnits` is its own chunk
+ * (a group — one table row — is never split). PURE.
+ */
+export function packGroups(groups, maxUnits) {
+  const chunks = [];
+  let cur = [];
+  let n = 0;
+  for (const g of groups) {
+    if (cur.length && n + g.units.length > maxUnits) {
+      chunks.push(cur);
+      cur = [];
+      n = 0;
+    }
+    cur.push(...g.units);
+    n += g.units.length;
+    if (n >= maxUnits) {
+      chunks.push(cur);
+      cur = [];
+      n = 0;
+    }
+  }
+  if (cur.length) chunks.push(cur);
+  return chunks;
+}
+
+/**
+ * The shards of one batch: one per article (`<page>/<article>`), rows in by-law order; an article with more than
+ * `maxUnits` units is cut at row boundaries into `<article>.part<k>` (deterministic), and an over-size SINGLE row
+ * (a data table: OI-3, 2026-10-08) is cut at its table-row boundaries into `<...>.c<j>` row-chunk shards carrying
+ * `row_chunk: {of, index, count}`. `inScopeIds` = the in-scope
+ * regulation ids (universe scoping); rows outside it are never keyed. An overlay batch (OVERLAY_BATCHES: E5) takes its
+ * membership from `regulationIds` (must be a non-empty array; every listed id must be an in-scope slice row, else
+ * `batch_member_unknown`) instead of `batchOf`. `excludePages` (array) drops rows whose page is listed and records
+ * `excluded_pages` / `excluded_rows` in the plan (Spec 69a M-78: plan A6 without Ch.900). `phase1` (boolean) drops every
+ * Phase 2 row by content (`isPhase2Row`: Ch.900 pages and enacting amendments of 900.2–900.6) and records `phase1: true`.
+ * hasDrafts(key) → true when that shard key's drafts exist; such a part is kept whole (M2).
+ * PURE.
+ * @returns {{schema, batch, label, max_units, shards:[{key, page, article, regulation_ids, units:[{unit_id, regulation_id, clause_path, sha256}]}]}}
+ */
+export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNITS, regulationIds = null, excludePages = null, phase1 = false, hasDrafts = null }) {
+  const rule = BATCH_RULES.find((b) => b.id === batch) || OVERLAY_BATCHES.find((b) => b.id === batch);
+  if (!rule) throw new KeyingError('batch_unknown', `${batch} is not one of ${[...BATCH_RULES, ...OVERLAY_BATCHES].map((b) => b.id).join(', ')}`);
+  const overlay = OVERLAY_BATCHES.some((b) => b.id === batch);
+  let want = null;
+  if (overlay) {
+    if (!Array.isArray(regulationIds) || !regulationIds.length) throw new KeyingError('batch_members_missing', `${batch} is an overlay batch: pass a non-empty regulationIds list (k7-exceptions.json exceptions[].regulation_id)`);
+    want = new Set(regulationIds);
+  }
+  const skip = excludePages ? new Set(excludePages) : null;
   const index = buildIndex(slice);
   const inScope = inScopeIds instanceof Set ? inScopeIds : new Set(inScopeIds || []);
   const byArticle = new Map();
+  const seen = new Set();
+  let excludedRows = 0;
   for (const r of slice.rows) {
-    if (!inScope.has(r.regulation_id) || batchOf(r) !== batch) continue;
+    if (!inScope.has(r.regulation_id)) continue;
+    if (skip && skip.has(r.page)) {
+      if ((overlay && want.has(r.regulation_id)) || (!overlay && batchOf(r) === batch)) excludedRows++;
+      continue;
+    }
+    if (phase1 && isPhase2Row(r)) {
+      // Spec 69a M-78 by content: a Phase 2 row is skipped whatever its batch (counted like an excluded page)
+      if ((overlay && want.has(r.regulation_id)) || (!overlay && batchOf(r) === batch)) excludedRows++;
+      continue;
+    }
+    if (overlay) {
+      if (!want.has(r.regulation_id)) continue;
+      seen.add(r.regulation_id);
+    } else if (batchOf(r) !== batch) continue;
     const k = `${r.page}/${r.article}`;
     if (!byArticle.has(k)) byArticle.set(k, { page: r.page, article: r.article, rows: [] });
     byArticle.get(k).rows.push(r);
+  }
+  if (overlay) {
+    const unknown = [...want].filter((id) => !seen.has(id)).sort(cmpStr);
+    if (unknown.length) throw new KeyingError('batch_member_unknown', `${batch}: listed but not an in-scope slice row: ${unknown.join(', ')}`);
   }
   const shards = [];
   for (const k of [...byArticle.keys()].sort((x, y) => cmpStr(x.split('/')[0], y.split('/')[0]) || cmpSection(x.split('/')[1], y.split('/')[1]))) {
@@ -149,10 +253,39 @@ export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNI
     if (cur.length) parts.push(cur);
     parts.forEach((p, i) => {
       const art = parts.length > 1 ? `${article}.part${i + 1}` : article;
-      shards.push({ key: `${page}/${art}`, page, article: art, regulation_ids: p.map((x) => x.row.regulation_id), units: p.flatMap((x) => x.units) });
+      const key = `${page}/${art}`;
+      // M2 (operator 2026-10-09): a part already keyed under its unchunked key (drafts on disk) is never re-chunked
+      const keyed = typeof hasDrafts === 'function' && hasDrafts(key) === true;
+      if (p.length === 1 && p[0].units.length > maxUnits && !keyed) {
+        // OI-3 (operator ruling 2026-10-08): a single over-size row (a data table) is cut into row-chunk shards at its
+        // table-row boundaries, so no keyer-A brief carries hundreds of units. Chunk 1 keeps the row explanation in
+        // its brief; every chunk carries `row_chunk` so the briefs split the row fields and the verbatim row.
+        const chunks = packGroups(rowChunkGroups(p[0].units), maxUnits);
+        chunks.forEach((units, j) => {
+          const ck = `${key}.c${j + 1}`;
+          shards.push({
+            key: ck,
+            page,
+            article: `${art}.c${j + 1}`,
+            regulation_ids: [p[0].row.regulation_id],
+            units,
+            row_chunk: { of: key, index: j + 1, count: chunks.length },
+          });
+        });
+        return;
+      }
+      shards.push({ key, page, article: art, regulation_ids: p.map((x) => x.row.regulation_id), units: p.flatMap((x) => x.units) });
     });
   }
-  return { schema: KEYING_SCHEMA, batch, label: rule.label, max_units: maxUnits, shards };
+  return {
+    schema: KEYING_SCHEMA,
+    batch,
+    label: rule.label,
+    max_units: maxUnits,
+    shards,
+    ...(excludePages ? { excluded_pages: excludePages, excluded_rows: excludedRows } : {}),
+    ...(phase1 ? { phase1: true, excluded_rows: excludedRows } : {}),
+  };
 }
 
 /** The repo-relative draft paths of a shard (authored.mjs shardRelPaths — the one key⇄path codec, `:` → `__`). */
@@ -178,7 +311,7 @@ const pickVocab = (vocab, keys) => ['{', keys.filter((k) => Object.hasOwn(vocab,
 /** One output-template line per ⧉ field (filtered by the ⧉ set in force — M-17 note c narrowing changes it). */
 const FIELD_TEMPLATE = Object.freeze({
   archetype: '"archetype": <vocab.archetype>',
-  target: '"target": <a vocab.dsl_target key> | "none"',
+  target: '"target": <a vocab.dsl_target key> | [<key>, <key>, …] (a mixed-measure LIMIT, Spec 69a M-76 A10) | "none"',
   bound: '"bound": "min" | "max" | "exact" | "none"',
   requirement: '"requirement": <vocab.requirement> | "none"',
   instrument: '"instrument": {"kind": <vocab.instrument_kind>, "citation": "<as written>", "municipality": "<as written>"} | "none"',
@@ -197,8 +330,10 @@ const FIELD_TEMPLATE = Object.freeze({
 const FIELD_RULES = `## Field rules (Spec 68 §6, §7; Spec 69 M-17 keying conventions)
 1. Key EVERY unit listed below, exactly once, with exactly the unit_id given. Never add, merge or split units.
 2. Write every field of the template ("none" or [] when unused) — never omit a key (except input_fidelity, see template).
-3. archetype: what the clause does (§7.1 below). target: LIMIT units MUST name one vocab.dsl_target (unit-specific:
-   height_m and height_storeys are different targets); DEFINE units may name the variable they define; otherwise "none".
+3. archetype: what the clause does (§7.1 below). target: LIMIT units MUST name a vocab.dsl_target (unit-specific:
+   height_m and height_storeys are different targets). A mixed-measure clause ("a maximum height of 5.0 metres and one
+   storey") is ONE LIMIT whose target is the LIST of its targets, one statement per target (Spec 69a M-76 A10); never
+   borrow a target for another measure (P4). DEFINE units may name the variable they define; otherwise "none".
 4. bound: LIMIT only ("minimum" → min, "maximum" → max, a fixed value → exact); otherwise "none".
 5. requirement: REQUIRE only. instrument and evaluated_by_us ("no"): PREVAILING only. ranks_layers: PROCEDURAL precedence
    units only (layers: base = Ch.5–800 incl. 10/150/200/800; overlay = Ch.600; exception = Ch.900; provincial).
@@ -238,17 +373,17 @@ function fieldTemplate(doubleKeyed) {
 }
 
 /**
- * The A1 keying conventions (A1 agreement analysis 2026-10-07) — PROVISIONAL until the operator confirms them
- * (.cursor/morning-questions-2026-10-08.md). In the shared brief core from batch A4 on (A1–A3 are never re-keyed).
+ * The A1 keying conventions (A1 agreement analysis 2026-10-07) — RATIFIED by the operator 2026-10-08 (Spec 69 M-73,
+ * M-74, M-77). In the shared brief core from batch A4 on (A1–A3 are never re-keyed).
  */
-export const PROVISIONAL_CONVENTIONS = Object.freeze([
-  'An encroachment with a numeric extent ("may encroach … X m") is LIMIT on encroachment_m, bound max.',
+export const KEYING_CONVENTIONS = Object.freeze([
+  'An encroachment with a numeric extent ("may encroach … X m") is LIMIT on encroachment_m, bound max; an encroachment with no stated extent stays PERMIT (Spec 69 M-73).',
   'A lawfully-existing permission is LIMIT with existing(<target>; enacted(569-2013)) as a max/min argument of the base value.',
   '"Despite 900.1.10(3) … the regulations of this By-law apply" and "Application of this Article" are PROCEDURAL; ranks_layers "base > exception" on that precedence unit only, never on its sub-clauses.',
   'A count limit with no dsl_target (e.g. the number of platforms) is UNUSUAL until vocab adds the target; never borrow an area or height target.',
   'Every LIMIT / DEFINE whose value is computable (including GFA / FSI calculation rules) gets a numeric_expression.',
   'Tag a max/min argument with @<path> only when its literal sits in a different sub-clause than the unit; never put @ on a variable or a by_type arm.',
-  'Write "for each dwelling unit" as × dwelling_units; a value shared by every named building type is one literal, not by_type.',
+  'Write "for each dwelling unit" as × dwelling_units (a count scales m / m2, Spec 69 M-74); a value shared by every named building type is one literal, not by_type.',
   'literals_not_expressed reason precedence: threshold_used_in_application > cross_reference_value > count_or_ordinal_not_a_limit; cite the deepest clause that holds the literal.',
   'application.uses: list dwelling_unit only when the clause regulates the dwelling unit itself (permission, width, count).',
   'application.lot_conditions are exactly the condition tokens.',
@@ -265,13 +400,14 @@ const batchNumber = (batch) => {
 };
 /** The marked conventions block of a batch's briefs ('' before A4 or without a batch). PURE. */
 export function conventionsBlock(batch) {
-  const n = batchNumber(batch);
+  let n = batchNumber(batch);
+  if (OVERLAY_BATCHES.some((b) => b.id === batch)) n = PROVISIONAL_FROM;
   if (n === null || n < PROVISIONAL_FROM) return '';
   return [
-    '## Keying conventions — PROVISIONAL (A1 analysis 2026-10-07; operator to confirm)',
+    '## Keying conventions — RATIFIED (Spec 69 M-77, 2026-10-08)',
     'Apply these where the field rules below leave a choice open:',
-    ...PROVISIONAL_CONVENTIONS.map((c, i) => `P${i + 1}. ${c}`),
-    '',
+    ...KEYING_CONVENTIONS.map((c, i) => `P${i + 1}. ${c}`),
+    'Generated fields (displaces, include_ref, cross_refs, value_form, layer, …) are computed by the generator — never write them, in either draft (Spec 68 §6 G).',
     '',
   ].join('\n');
 }
@@ -290,7 +426,12 @@ function unitsSection(shard, index) {
     if (!row) throw new KeyingError('unit_unresolved', `${rid} is not in the slice`);
     out.push(`### ${rid}${row.article_title ? ` — ${row.article_title}` : ''}`);
     out.push(`clause paths: ${(row.clauses || []).map((c) => c.path).join(' ')}`);
-    out.push('verbatim (DATA):', dataBlock(lf(row.verbatim).trim()));
+    if (shard.row_chunk && shard.row_chunk.index > 1) {
+      // OI-3: the full table row would re-inflate every chunk's brief; only chunk 1 carries it.
+      out.push("verbatim: the full table row is in chunk 1's brief; this chunk keys the units listed below (their texts carry the row/column headers).");
+    } else {
+      out.push('verbatim (DATA):', dataBlock(lf(row.verbatim).trim()));
+    }
     for (const u of shard.units.filter((x) => x.regulation_id === rid)) {
       const v = unitView(index, u.unit_id);
       if (!v || v.sha256 !== u.sha256) throw new KeyingError('unit_stale', `${u.unit_id}: the slice no longer matches the plan (re-plan the batch)`);
@@ -361,7 +502,9 @@ Single-drafted unit fields (A only; Spec 68 §6 "A"; M-17 note d):
 - input_fidelity.why, input_fidelity.evidence_ref (Chapter 800 measurement rows only)
 - not_an_override: [{"phrase": "<as written>", "reason": "<closed reason>"}] | []
 code_refs: \`table.column\` · \`module#dotted.member\` (paths under vocab.code_roots only) · a logic variable; constants carry \`expects\`.
-Rows to explain: ${shard.regulation_ids.join(', ')}.
+${shard.row_chunk && shard.row_chunk.index > 1
+  ? `Rows to explain: none (chunk ${shard.row_chunk.index} of ${shard.row_chunk.count} of ${shard.row_chunk.of}; the row explanation is written in chunk 1) — write "rows": {}.`
+  : `Rows to explain: ${shard.regulation_ids.join(', ')}.`}
 \`\`\`json
 ${pickVocab(vocab, A_ONLY_VOCAB_KEYS)}
 \`\`\`
@@ -462,16 +605,40 @@ export function extractReadPaths(ledgerText) {
 }
 
 /** The <article>.prov.json record (field set = keyer-prov.mjs PROV_FIELDS). PURE. */
-export function buildProv({ shardKey, briefs, seal, bRun, unitShas, model = 'deepseek' }) {
+export function buildProv({ shardKey, briefs, seal, bRun, unitShas, model = 'deepseek', batch = null, supersedes = null }) {
   return {
     schema: AUTHORED_SCHEMA,
     shard: shardKey,
+    ...(batch ? { batch } : {}), // the keying batch (A11: decides whether a generated field in the .b is ignored)
+    ...(supersedes ? { supersedes: { a_sha: supersedes.a_sha, b_sha: supersedes.b_sha, prov_sha: supersedes.prov_sha } } : {}), // Spec 69a M-80
     keyers: { a: { id: KEYER_IDS.a, engine: 'claude' }, b: { id: KEYER_IDS.b, engine: model } },
     briefs: { a: briefs.a, b: briefs.b },
     a_seal: { sha256: seal.sha256, seal_id: seal.seal_id },
     b_run: { run_id: bRun.run_id, ledger_sha256: bRun.ledger_sha256, read_paths: [...bRun.read_paths].sort(cmpStr), worktree_commit: bRun.worktree_commit },
     unit_shas: Object.fromEntries(Object.keys(unitShas).sort(cmpStr).map((k) => [k, unitShas[k]])),
   };
+}
+
+/**
+ * Spec 69a M-80: the next re-key generation of a planned shard. `shard` is the base shard as planned NOW (current unit
+ * shas); `existingKeys` are the plan's shard keys; `unitIds` (optional) re-keys only those units; `supersedes` =
+ * {a_sha, b_sha, prov_sha} of the predecessor's files. Returns the new plan shard (key `<base>~r<n>`). PURE.
+ */
+export function rekeyShard({ shard, existingKeys = [], unitIds = null, supersedes }) {
+  const { base } = shardGeneration(shard.key);
+  const gens = existingKeys.map((k) => shardGeneration(k)).filter((g) => g.base === base).map((g) => g.gen);
+  const gen = Math.max(0, ...gens) + 1;
+  const want = unitIds ? new Set(unitIds) : null;
+  if (want) {
+    const known = new Set(shard.units.map((u) => u.unit_id));
+    const unknown = [...want].filter((id) => !known.has(id)).sort(cmpStr);
+    if (unknown.length) throw new KeyingError('rekey_unit_unknown', `${shard.key}: not planned units: ${unknown.join(', ')}`);
+  }
+  const units = shard.units.filter((u) => !want || want.has(u.unit_id));
+  if (!units.length) throw new KeyingError('rekey_empty', `${shard.key}: no units to re-key`);
+  if (!supersedes || !['a_sha', 'b_sha', 'prov_sha'].every((k) => typeof supersedes[k] === 'string' && /^[0-9a-f]{64}$/.test(supersedes[k]))) throw new KeyingError('rekey_supersedes_missing', `${shard.key}: supersedes needs a_sha, b_sha, prov_sha`);
+  const regs = new Set(units.map((u) => u.regulation_id));
+  return { ...shard, key: `${base}~r${gen}`, units, regulation_ids: shard.regulation_ids.filter((r) => regs.has(r)), rekey_of: gen === 1 ? base : `${base}~r${gen - 1}`, supersedes: { a_sha: supersedes.a_sha, b_sha: supersedes.b_sha, prov_sha: supersedes.prov_sha } };
 }
 
 // ---------------------------------------------------------------- the adjudication queue

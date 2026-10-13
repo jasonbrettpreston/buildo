@@ -1,0 +1,77 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.70",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "5.10.40.70(1)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(3)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(A)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(4)#(4)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(5)#whole",
+      "archetype": "DEFINE",
+      "target": "rear_setback_m",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(6)#(6)(A)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(6)#(6)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "5.10.40.70(7)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

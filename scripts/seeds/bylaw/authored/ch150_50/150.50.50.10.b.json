@@ -1,0 +1,43 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_50/150.50.50.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.50.50.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "landscaping_strip_width_m",
+      "bound": "min",
+      "numeric_expression": [
+        "landscaping_strip_width_m = 1.5 m @(1)(A)"
+      ]
+    },
+    {
+      "unit_id": "150.50.50.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "front_soft_landscaping_pct",
+      "bound": "min",
+      "numeric_expression": [
+        "front_soft_landscaping_pct = 75 pct @(1)(B)"
+      ]
+    },
+    {
+      "unit_id": "150.50.50.10(1)#(1)(C)",
+      "archetype": "LIMIT",
+      "target": "landscaping_strip_width_m",
+      "bound": "min",
+      "numeric_expression": [
+        "landscaping_strip_width_m = 3.0 m @(1)(C)(i)"
+      ]
+    },
+    {
+      "unit_id": "150.50.50.10(2)#whole",
+      "archetype": "LIMIT",
+      "target": "driveway_width_m",
+      "bound": "max",
+      "numeric_expression": [
+        "driveway_width_m = 6.0 m @(2)"
+      ]
+    }
+  ]
+}

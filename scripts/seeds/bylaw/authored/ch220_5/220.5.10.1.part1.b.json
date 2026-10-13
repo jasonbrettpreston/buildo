@@ -1,0 +1,210 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch220_5/220.5.10.1.part1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "220.5.10.1(1)#whole",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(10)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(11)#(11)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(11)#(11)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(11)#(11)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R1.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R1.C2]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R2.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R2.C2]",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R3.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R3.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units @(2)[T1.R3.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R4.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(2)#(2)[T1.R4.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units + 1 units @(2)[T1.R4.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R1.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R1.C2]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R2.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R2.C2]",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R3.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R3.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units @(3)[T1.R3.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R4.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R4.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 2 units @(3)[T1.R4.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R5.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R5.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 3 units @(3)[T1.R5.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R6.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R6.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units + 3 units @(3)[T1.R6.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R7.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R7.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units + 3 units + 1 units @(3)[T1.R7.C2]"]
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R8.C1]",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.1(3)#(3)[T1.R8.C2]",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = 1 units + 3 units + 1 units @(3)[T1.R8.C2]"]
+    }
+  ]
+}

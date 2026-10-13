@@ -1,0 +1,383 @@
+{
+  "adoption_id": "adoption-4",
+  "awaiting_ruling": {},
+  "by_page": {
+    "ch10_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 74,
+      "out_of_scope": 19
+    },
+    "ch10_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 59,
+      "out_of_scope": 16
+    },
+    "ch10_40": {
+      "awaiting_ruling": 0,
+      "in_scope": 52,
+      "out_of_scope": 16
+    },
+    "ch10_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 137,
+      "out_of_scope": 11
+    },
+    "ch10_60": {
+      "awaiting_ruling": 0,
+      "in_scope": 41,
+      "out_of_scope": 16
+    },
+    "ch10_80": {
+      "awaiting_ruling": 0,
+      "in_scope": 51,
+      "out_of_scope": 19
+    },
+    "ch150_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 6,
+      "out_of_scope": 0
+    },
+    "ch150_13": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "ch150_15": {
+      "awaiting_ruling": 0,
+      "in_scope": 6,
+      "out_of_scope": 1
+    },
+    "ch150_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 3,
+      "out_of_scope": 0
+    },
+    "ch150_22": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch150_25": {
+      "awaiting_ruling": 0,
+      "in_scope": 8,
+      "out_of_scope": 0
+    },
+    "ch150_30": {
+      "awaiting_ruling": 0,
+      "in_scope": 5,
+      "out_of_scope": 0
+    },
+    "ch150_45": {
+      "awaiting_ruling": 0,
+      "in_scope": 6,
+      "out_of_scope": 0
+    },
+    "ch150_48": {
+      "awaiting_ruling": 0,
+      "in_scope": 12,
+      "out_of_scope": 0
+    },
+    "ch150_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 16
+    },
+    "ch150_50": {
+      "awaiting_ruling": 0,
+      "in_scope": 7,
+      "out_of_scope": 0
+    },
+    "ch150_7": {
+      "awaiting_ruling": 0,
+      "in_scope": 42,
+      "out_of_scope": 4
+    },
+    "ch150_8": {
+      "awaiting_ruling": 0,
+      "in_scope": 38,
+      "out_of_scope": 3
+    },
+    "ch15_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch1_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 26,
+      "out_of_scope": 0
+    },
+    "ch1_40": {
+      "awaiting_ruling": 0,
+      "in_scope": 27,
+      "out_of_scope": 0
+    },
+    "ch1_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 11
+    },
+    "ch200_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 3,
+      "out_of_scope": 0
+    },
+    "ch200_15": {
+      "awaiting_ruling": 0,
+      "in_scope": 32,
+      "out_of_scope": 0
+    },
+    "ch200_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "ch200_25": {
+      "awaiting_ruling": 0,
+      "in_scope": 20,
+      "out_of_scope": 0
+    },
+    "ch200_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 33,
+      "out_of_scope": 9
+    },
+    "ch220_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "ch220_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 29,
+      "out_of_scope": 2
+    },
+    "ch230_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "ch230_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch230_30": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch230_40": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch230_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 31,
+      "out_of_scope": 0
+    },
+    "ch230_50": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch230_60": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 1
+    },
+    "ch230_80": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 2
+    },
+    "ch230_90": {
+      "awaiting_ruling": 0,
+      "in_scope": 19,
+      "out_of_scope": 0
+    },
+    "ch2_1": {
+      "awaiting_ruling": 0,
+      "in_scope": 4,
+      "out_of_scope": 21
+    },
+    "ch40_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 10,
+      "out_of_scope": 0
+    },
+    "ch5_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 36,
+      "out_of_scope": 6
+    },
+    "ch600_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 7
+    },
+    "ch600_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch600_50": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 1
+    },
+    "ch600_60": {
+      "awaiting_ruling": 0,
+      "in_scope": 8,
+      "out_of_scope": 0
+    },
+    "ch800_50": {
+      "awaiting_ruling": 0,
+      "in_scope": 178,
+      "out_of_scope": 25
+    },
+    "ch80_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch80_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "ch900_1": {
+      "awaiting_ruling": 0,
+      "in_scope": 4,
+      "out_of_scope": 0
+    },
+    "ch900_2": {
+      "awaiting_ruling": 0,
+      "in_scope": 577,
+      "out_of_scope": 0
+    },
+    "ch900_3": {
+      "awaiting_ruling": 0,
+      "in_scope": 1314,
+      "out_of_scope": 0
+    },
+    "ch900_4": {
+      "awaiting_ruling": 0,
+      "in_scope": 320,
+      "out_of_scope": 0
+    },
+    "ch900_5": {
+      "awaiting_ruling": 0,
+      "in_scope": 365,
+      "out_of_scope": 0
+    },
+    "ch900_6": {
+      "awaiting_ruling": 0,
+      "in_scope": 450,
+      "out_of_scope": 0
+    },
+    "ch970_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 27,
+      "out_of_scope": 5
+    },
+    "ch970_30": {
+      "awaiting_ruling": 0,
+      "in_scope": 8,
+      "out_of_scope": 11
+    },
+    "ch995_10": {
+      "awaiting_ruling": 0,
+      "in_scope": 0,
+      "out_of_scope": 1
+    },
+    "ch995_20": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch995_30": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch995_41": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch995_50": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "ch995_60": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "enacting:1018-2026": {
+      "awaiting_ruling": 0,
+      "in_scope": 1,
+      "out_of_scope": 0
+    },
+    "enacting:1075-2026": {
+      "awaiting_ruling": 0,
+      "in_scope": 21,
+      "out_of_scope": 0
+    },
+    "enacting:1207-2026": {
+      "awaiting_ruling": 0,
+      "in_scope": 2,
+      "out_of_scope": 0
+    },
+    "enacting:262-2026": {
+      "awaiting_ruling": 0,
+      "in_scope": 4,
+      "out_of_scope": 0
+    },
+    "enacting:63-2024": {
+      "awaiting_ruling": 0,
+      "in_scope": 4,
+      "out_of_scope": 0
+    },
+    "enacting:842-2025": {
+      "awaiting_ruling": 0,
+      "in_scope": 4,
+      "out_of_scope": 0
+    }
+  },
+  "definitions_in_scope": 178,
+  "in_scope": 4123,
+  "in_scope_ids_sha256": "581c2533fdc4ddfc52c8fea37b7aa14366f1ee8ffdcf58451c4dfd757da8a466",
+  "out_of_scope": {
+    "administrative_no_application_effect": 18,
+    "apartment_amenity_or_waste": 3,
+    "apartment_building_only": 13,
+    "definition_not_used": 25,
+    "deleted_slot": 29,
+    "home_occupation_use": 20,
+    "non_residential_use_condition": 80,
+    "non_residential_zone_parking": 9,
+    "other_zone_category": 27,
+    "parking_aisle_or_marking": 3,
+    "unzoned_or_city_service": 6
+  },
+  "rows": 4356,
+  "ruling": "M-56",
+  "toc": {
+    "awaiting_ruling": 0,
+    "entries": 702,
+    "mapped_chapter": 16,
+    "mapped_page": 636,
+    "page_rule": {
+      "map_rule:zone_labels_from_dataset": 1,
+      "out:chapter_empty": 4,
+      "out:non_residential_use_condition": 13,
+      "out:other_zone_category": 32
+    },
+    "unmapped": 0
+  },
+  "vocab_version": "vocab-v4"
+}

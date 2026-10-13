@@ -1,0 +1,37 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch1_5/1.5.7",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "1.5.7(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "States the territorial scope of the By-law: it applies to all lands in the City of Toronto except lands hatched on the Zoning By-law Map as subject to a Former General Zoning By-law. No numeric value is derived from it.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "1.5.7(1)": {
+      "explanation": "This zoning by-law covers every property in the City of Toronto, except lands shown with diagonal hatching and the name of a former general zoning by-law on the Zoning By-law Map, which stay under that former by-law.",
+      "code_refs": "none"
+    }
+  }
+}

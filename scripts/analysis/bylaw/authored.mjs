@@ -12,7 +12,8 @@
 //   canonicalField(path, value, {unitId}?)   the canonical projection two drafts are compared on (§7.4; rules C1–C6)
 //   buildIndex(slice)                    rows / units / articles / sections / chapters / clause paths of a slice
 //   unitView(index, unitId)              {row, unit_id, clause_path, text, sha256} — a slice leaf or `<reg>#whole`
-//   resolveClause(row, path)             a statement / literal clause path → the row's clause (or null)
+//   resolveClause(row, path, within?)    a statement / literal clause path → the row's clause (or null); `within` (the
+//                                        unit's own clause path) resolves a relative path inside its [SSP]/[PBS] group
 //   clauseScope(row, clausePath)         {paths, text}: the clause's subtree + its ancestors' lead-ins (the cited clause)
 //   resolveCitation(index, citation, external)   a cross-reference citation → {ok, kind, id}
 //   loadAuthored(root)                   the shards of scripts/seeds/bylaw/authored/
@@ -257,6 +258,12 @@ function canonAppliesTo(v) {
   return `${v.part}[${sortedStrs(v.refs)}]`;
 }
 
+/** The targets a unit's `target` names: [] for none, [t] for one, the list for a mixed-measure LIMIT (Spec 69 M-76 A10). */
+export function unitTargets(target) {
+  if (target === undefined || target === null || target === 'none') return [];
+  return Array.isArray(target) ? target.filter((t) => typeof t === 'string' && t !== 'none') : [target];
+}
+
 /**
  * The canonical projection of one ⧉ field (Spec 68 §7.4: drafts agree when their canonical forms are equal).
  * Throws DslError for an unparseable numeric_expression / condition.if (the caller counts a draft failure).
@@ -273,6 +280,7 @@ export function canonicalField(p, value, ctx = {}) {
     case 'ranks_layers': return canonRanks(value);
     case 'applies_to': return canonAppliesTo(value);
     case 'calculation_handling.user_inputs': return `[${sortedStrs(value)}]`;
+    case 'target': return Array.isArray(value) ? `[${sortedStrs(value)}]` : value === null ? 'none' : ws(String(value));
     default: return value === null ? 'none' : ws(typeof value === 'object' ? sortedJson(value) : value);
   }
 }
@@ -286,17 +294,21 @@ export function buildIndex(slice) {
   const articles = new Map();
   const sections = new Set();
   const chapters = new Set();
+  const articleGroups = new Set();
   for (const r of (slice && slice.rows) || []) {
     rows.set(r.regulation_id, r);
     if (!articles.has(r.article)) articles.set(r.article, []);
     articles.get(r.article).push(r.regulation_id);
+    // the 3-part 569-2013 "Article" (10.10.40) above the slicer's 4-part article (10.10.40.1) — Spec 68 §6.4 rule 13
+    const ap = String(r.article).split('.');
+    if (ap.length >= 4) articleGroups.add(ap.slice(0, 3).join('.'));
     if (r.section) {
       sections.add(r.section);
       chapters.add(String(r.section).split('.')[0]);
     }
   }
   for (const u of (slice && slice.units) || []) units.set(u.unit_id, u);
-  return { rows, units, articles, sections, chapters };
+  return { rows, units, articles, articleGroups, sections, chapters };
 }
 
 /** Split `<regulation_id>#<path>`. */
@@ -304,6 +316,23 @@ export function splitUnitId(unitId) {
   const s = String(unitId);
   const k = s.indexOf('#');
   return k < 0 ? { reg: s, path: null } : { reg: s.slice(0, k), path: s.slice(k + 1) };
+}
+
+/** Spec 68 §6 `layer` (G), from the source: Ch.600 → `overlay`; a Ch.900 exception row (900.2.10(n) … 900.6.10(n)) →
+ * `exception`; every other by-law row (incl. 900.1.10) → `base`. `provincial` units come only from external.json. PURE. */
+export function generatedLayer(unitId) {
+  const reg = splitUnitId(unitId).reg;
+  if (/^600\./.test(reg)) return 'overlay';
+  if (/^900\.[2-6]\.10\(/.test(reg)) return 'exception';
+  return 'base';
+}
+
+/** A resolved (agreed / adjudicated) unit with the generated fields the evaluator reads: `regulation_id`, `layer`, and
+ * `exception` (its own regulation) on an exception unit. Returns a new object; never mutates the input. PURE. */
+export function withGeneratedFields(unit) {
+  const reg = splitUnitId(unit.unit_id).reg;
+  const layer = generatedLayer(unit.unit_id);
+  return { ...unit, regulation_id: unit.regulation_id || reg, layer, ...(layer === 'exception' ? { exception: unit.exception || reg } : {}) };
 }
 
 /** A unit as the gates see it: a slice leaf, or `<reg>#whole` (the whole regulation). null when it names nothing. */
@@ -329,8 +358,10 @@ export function unitView(index, unitId) {
  * A clause path as written in a statement / literal entry → the row clause it names. Accepted: the full path
  * (`(3)(A)`), a path relative to the regulation root (`(A)` → `(3)(A)`), `whole` / `#whole` / `` (the root), or the
  * unique clause whose path ends with it. Letter prefixes used by Ch.900 exceptions (SSP, PBS) are kept as written.
+ * `within` (a unit's own clause path) makes a relative path resolve inside that unit's Ch.900 list group first
+ * (`(A)` from `(730)[SSP]` → `(730)[SSP](A)`), so `[SSP]` / `[PBS]` letters are never ambiguous (Spec 68 §9 G-CLAUSE).
  */
-export function resolveClause(row, p) {
+export function resolveClause(row, p, within = null) {
   const clauses = row.clauses || [];
   if (!clauses.length) return null;
   const root = clauses[0];
@@ -338,6 +369,14 @@ export function resolveClause(row, p) {
   if (q === '' || q === WHOLE) return root;
   const exact = clauses.find((c) => c.path === q) || clauses.find((c) => c.path === root.path + q);
   if (exact) return exact;
+  // a path relative to the unit's own Ch.900 list group ([SSP] / [PBS]): "(A)" from "(730)[SSP]" is "(730)[SSP](A)"
+  if (within) {
+    const g = /^(.*?\[[A-Za-z0-9.]+\])/.exec(String(within));
+    if (g) {
+      const inGroup = clauses.find((c) => c.path === g[1] + q);
+      if (inGroup) return inGroup;
+    }
+  }
   const tail = clauses.filter((c) => c.path.endsWith(q));
   return tail.length === 1 ? tail[0] : null;
 }
@@ -365,7 +404,8 @@ export const startOf = (c) => rangesOf(c)[0][0];
 export function resolveCitation(index, citation, external = null) {
   const c = String(citation ?? '').replace(/\s+/g, ' ').trim();
   const ch = /^Chapter (\d{1,3})$/.exec(c);
-  if (ch) return index.chapters.has(ch[1]) ? { ok: true, kind: 'chapter', id: c } : refOrMiss(c, external);
+  // Spec 69a M-95(b): an external.json ref cited exactly as "Chapter N" (Chapter 900 = phase2_exception) wins over the pinned chapter, so an INCLUDE of it is a ref, not a chapter
+  if (ch) { const x = refOrMiss(c, external); return x.ok ? x : index.chapters.has(ch[1]) ? { ok: true, kind: 'chapter', id: c } : x; }
   const m = /^(\d{1,3}(?:\.\d{1,3}){1,3})((?:\([0-9A-Za-z]{1,7}\))*)$/.exec(c.replace(/\s+/g, ''));
   if (!m) return refOrMiss(c, external);
   const [, id, groups] = m;
@@ -379,6 +419,7 @@ export function resolveCitation(index, citation, external = null) {
   }
   if (!groups && index.rows.has(`${id}#article`)) return { ok: true, kind: 'row', id: `${id}#article` };
   if (!groups && index.articles.has(id)) return { ok: true, kind: 'article', id };
+  if (!groups && index.articleGroups && index.articleGroups.has(id)) return { ok: true, kind: 'article', id }; // 3-part Article (Spec 68 §6.4 rule 13)
   if (!groups && index.sections.has(id)) return { ok: true, kind: 'section', id };
   return refOrMiss(c, external);
 }
@@ -406,13 +447,15 @@ export function loadAuthored(root) {
       const m = /^(.+)\.(a|b|prov)\.json$/.exec(f);
       if (!m) continue;
       const key = keyOfShardDir(`${page}/${m[1]}`); // the shard key, not its on-disk spelling (enacting__… → enacting:…)
-      if (!shards.has(key)) shards.set(key, { key, page: keyOfShardDir(page), article: m[1], paths: {}, a: null, b: null, prov: null, a_sha256: null, parse_errors: [] });
+      if (!shards.has(key)) shards.set(key, { key, page: keyOfShardDir(page), article: m[1], paths: {}, a: null, b: null, prov: null, a_sha256: null, b_sha256: null, prov_sha256: null, parse_errors: [] });
       const s = shards.get(key);
       const rel = `${AUTHORED_REL}/${page}/${f}`;
       s.paths[m[2]] = rel;
       const bytes = fs.readFileSync(path.join(dir, f));
       // the seal hashes LF-normalized bytes, so a CRLF checkout (core.autocrlf) of the same commit seals equal
       if (m[2] === 'a') s.a_sha256 = sha256(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'));
+      if (m[2] === 'b') s.b_sha256 = sha256(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'));
+      if (m[2] === 'prov') s.prov_sha256 = sha256(Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'));
       try {
         s[m[2]] = JSON.parse(bytes.toString('utf8'));
       } catch (err) {
@@ -421,4 +464,43 @@ export function loadAuthored(root) {
     }
   }
   return [...shards.values()].sort((a, b) => cmpStr(a.key, b.key));
+}
+
+/** Spec 69a M-80: a re-key generation is `<base>~r<n>`; generation 0 is the base key. PURE. */
+export function shardGeneration(key) {
+  const m = /^(.*)~r([1-9]\d*)$/.exec(String(key));
+  return m ? { base: m[1], gen: Number(m[2]) } : { base: String(key), gen: 0 };
+}
+/** The predecessor key of a generation (`<base>~r<n-1>`, or the base for n = 1); null for generation 0. PURE. */
+export function predecessorKey(key) {
+  const { base, gen } = shardGeneration(key);
+  return gen === 0 ? null : gen === 1 ? base : `${base}~r${gen - 1}`;
+}
+/**
+ * Spec 69a M-80 supersession over loaded shards. `newest`: unit_id → the key of the highest generation (same base)
+ * whose .a lists the unit; `superseded`: shard key → Set(unit ids a newer generation took over); `whole`: shard keys
+ * every one of whose .a units is superseded. A shard with no .a supersedes nothing. PURE.
+ */
+export function supersession(shards = []) {
+  const newest = new Map();
+  const genOf = new Map();
+  for (const s of shards) {
+    const g = shardGeneration(s.key);
+    genOf.set(s.key, g);
+    for (const u of (s.a && Array.isArray(s.a.units) ? s.a.units : [])) {
+      if (!u || typeof u.unit_id !== 'string') continue;
+      const prev = newest.get(u.unit_id);
+      const pg = prev ? genOf.get(prev) : null;
+      if (!prev || (pg.base === g.base && g.gen > pg.gen)) newest.set(u.unit_id, s.key);
+    }
+  }
+  const superseded = new Map();
+  const whole = new Set();
+  for (const s of shards) {
+    const ids = [...new Set([...(s.a && Array.isArray(s.a.units) ? s.a.units : []), ...(s.b && Array.isArray(s.b.units) ? s.b.units : [])].filter((u) => u && typeof u.unit_id === 'string').map((u) => u.unit_id))];
+    const taken = new Set(ids.filter((id) => newest.has(id) && newest.get(id) !== s.key && genOf.get(newest.get(id)).base === genOf.get(s.key).base));
+    if (taken.size) superseded.set(s.key, taken);
+    if (ids.length && taken.size === ids.length) whole.add(s.key);
+  }
+  return { newest, superseded, whole };
 }

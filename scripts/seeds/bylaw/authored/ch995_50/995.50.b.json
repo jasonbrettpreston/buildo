@@ -1,0 +1,14 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch995_50/995.50",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "995.50(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.80",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.40.80(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "R.S.O 1990 c. C.27", "clause": "(1)", "reason": "cross_reference_value"},
+        {"literal": "10 metres", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": ["shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "ancillary_building": "ancillary building",
+          "shoreline_or_top_of_bank": "shoreline hazard limit"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception to the 10 metre separation from a shoreline hazard limit or stable top-of-bank on another lot: an ancillary building on a residential lot is exempt.",
+        "gaps": "The 10 metre value sits in the lead-in of (1), which has no unit of its own. The TRCA line is not held in our lot data.",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.80(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "R.S.O 1990 c. C.27", "clause": "(1)", "reason": "cross_reference_value"},
+        {"literal": "10 metres", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {"any": "building or structure", "shoreline_or_top_of_bank": "shoreline hazard limit"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Exception to the 10 metre separation from a shoreline hazard limit or stable top-of-bank on another lot: conservation works, public utilities and transportation uses are exempt.",
+        "gaps": "The 10 metre value sits in the lead-in of (1), which has no unit of its own. The TRCA line is not held in our lot data.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.80(2)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing", "shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {
+          "any": "building or structure",
+          "lawfully_existing": "lawfully existing building",
+          "shoreline_or_top_of_bank": "shoreline hazard limit"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "description": "A lawfully existing building closer to a shoreline hazard limit or stable top-of-bank than the required separation stays permitted, and may be altered or replaced on the same lot if it is no closer at any point along its main walls.",
+        "gaps": "Needs as-built wall positions and the TRCA line, neither held in our lot data.",
+        "user_inputs": ["lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.40.80(1)": {
+      "explanation": "On Toronto and Region Conservation Authority lands, a building or structure may be no closer than 10 metres to a shoreline hazard limit or stable top-of-bank on another lot. Ancillary buildings on residential lots and conservation works, public utilities and transportation uses are exempt.",
+      "code_refs": "none"
+    },
+    "5.10.40.80(2)": {
+      "explanation": "A lawfully existing building already closer than the required separation to a shoreline hazard limit or stable top-of-bank may stay. It may be altered or replaced on the same lot if it is no closer to the line at any point along its main walls.",
+      "code_refs": "none"
+    }
+  }
+}

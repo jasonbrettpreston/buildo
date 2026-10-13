@@ -11,25 +11,28 @@
 //   displacesOf(index, unitId, vocab, external?) → {targets:[{id, kind, citation, phrase}], unresolved:[{citation, phrase}],
 //                                                  self:[citation], internal:[id], triggers:[{phrase, at, clause_path, n}]}
 //   includeOf(index, unitId, external?)          → {citation, resolved:{ok, kind, id, reason?}} | null
-//   checkXref({slice, units, vocab, external})   → {status, pass, checked, violations, counts}
+//   checkXref({slice, units, vocab, external, inScopeIds?, adjudications?})   → {status, pass, checked, violations, counts}
+//   groupRows(index, resolved, inScopeIds?)      → regulation ids a section / Article include_ref expands to (M-76 A2)
 //   selfTest()
 //
 // A trigger's scope is the unit's own subtree plus its ancestors' lead-ins (a lead-in "Despite …" governs every child).
-// Forward triggers ("Despite", "notwithstanding") take the chain of references that follows them: dotted ids from
+// Forward triggers ("Despite", "notwithstanding", "exempt from") take the chain of references that follows them: dotted ids from
 // slice.mjs extractRefs (incl. the "(3) and (4)" continuation forms) or relative clause refs "(A) and (B) above",
 // "(A) to (L) above", "(i) above" (resolved upward through the unit's ancestors). Backward triggers ("does not apply",
 // "do not apply") take the references between the start of their clause and the trigger. A target inside the unit's
 // own subtree is internal structure (counted, not a displacement); the unit itself / its own row is `displaces_self`.
+// The first reference may follow "the requirements of"; a dotted id followed by " (B) and (C)" (a space, then clause groups) is that id's clauses; a trigger before "the following …:" in a lead-in is answered by each list item's own leading reference chain (A4/A5).
 //
 // Reason codes (closed):
 //   ref_unresolved           a cross-reference of a row with an agreed unit resolves to no row / clause / article /
 //                            section / chapter and no external.json `ref`
+//                            (an enacting row's own instruction citing the regulation it creates resolves to the row — A9, counted self_instruction_refs)
 //   displaces_unresolved     a displacement target resolves to nothing
 //   displaces_self           a unit displaces itself (irreflexive)
 //   displaces_cycle          agreed units displace each other in a cycle
-//   include_unresolved       an INCLUDE unit has no reference, or it resolves to no row (a chapter / article is not a row)
+//   include_unresolved       an INCLUDE unit has no reference, or it resolves to no row (a chapter / article is not a row) — a section / Article include expands to its in-scope rows (Spec 69 M-76 A2); one with none, or whose only in-scope row is the unit's own regulation, is unresolved
 //   include_to_ref           an include_ref resolves to an external `ref` other than a Phase 1 `phase2_exception` ref
-//   include_cycle            INCLUDE units include each other in a cycle
+//   include_cycle            INCLUDE units include each other in a cycle (a group include does not count its own regulation)
 //   trigger_unaccounted      a trigger phrase yields no displacement target and no `not_an_override` entry names it
 //   not_an_override_invalid  a `not_an_override` entry's reason is outside vocab.displacement_triggers.not_an_override,
 //                            or its phrase is not an unaccounted trigger of the unit
@@ -49,7 +52,7 @@ export const REASON_CODES = Object.freeze([
   'not_an_override_invalid',
 ]);
 /** Backward triggers: the displaced provision precedes the phrase ("regulation (A) does not apply"). */
-export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply']);
+export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply', 'apply to prevent', 'will prevent']); // Spec 69a M-94(b) "will prevent"; M-93: the regulations it switches off precede "apply to prevent"
 /** Phase 1 allowance (Spec 68 §6.1): an include_ref may resolve to a `ref` with this reason, counted. */
 export const PHASE1_INCLUDE_REF_REASONS = Object.freeze(['phase2_exception']);
 
@@ -57,6 +60,16 @@ const cmpStr = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const GROUP = '\\([0-9A-Za-z]{1,7}\\)';
 const SEP = '\\s*(?:,\\s*(?:and\\s+|or\\s+|to\\s+)?|and|or|to)\\s*';
 const ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx'];
+
+/** The gap before the first reference of a forward trigger's chain ("Despite the requirements of regulation X", A5). */
+// Spec 69a M-81 R6: `regulations?\s*` tolerates the City's missing space ("regulation10.5.60.20(2)", a counted
+// `ref_missing_space` source defect); "any regulation, prevailing section or prevailing by-law in article 900.2.10"
+// (10.10.20.60(1)(H)) names the article.
+const FIRST_GAP = /^\s+(?:the\s+requirements\s+of\s+)?(?:the\s+[a-z ]{0,60}?\s+(?:in|of)\s+)?(?:any\s+regulation,\s+prevailing\s+section\s+or\s+prevailing\s+by-law\s+in\s+)?(?:articles?\s+|regulations?\s*|sections?\s*|clauses?\s*)?$/i;
+/** The gap between references of one chain ("X and Y", "X, Y or Z"). */
+const NEXT_GAP = /^\s*(?:,\s*)?(?:and|or|to)?\s*(?:regulations?\s*|clauses?\s*)?$/i;
+/** A dotted id followed by " (B) and (C)" — a space, then clause groups (the City's split path, A4). */
+const GROUP_TAIL = /^ ((?:\([0-9A-Za-z]{1,7}\))+(?:\s*(?:,\s*(?:and\s+|or\s+)?|and|or)\s*(?:\([0-9A-Za-z]{1,7}\))+)*)/;
 
 /** Clauses in a unit's trigger scope: its subtree + its ancestors (lead-ins). */
 function scopeClauses(row, clausePath) {
@@ -158,6 +171,29 @@ export function displacesOf(index, unitId, vocab, external = null) {
     if (/^\d+$/.test(g[0])) return resolveCitation(index, `${row2.article}${g.map((s) => `(${s})`).join('')}`, external);
     return { ok: false };
   };
+  /** The chain of dotted refs that starts right after `from` (gap FIRST_GAP, then NEXT_GAP), each with its " (B) and (C)"
+   * tail expanded into the id's clauses when those resolve. Returns [{citation, resolved}]. */
+  const chainFrom = (from, to) => {
+    const refs = (row.refs || []).filter((r) => r.start >= from && r.start < to).sort((a, b) => a.start - b.start);
+    let last = from;
+    const out2 = [];
+    for (const r of refs) {
+      if (!(out2.length === 0 ? FIRST_GAP : NEXT_GAP).test(t.slice(last, r.start))) break;
+      last = r.end;
+      const tail = GROUP_TAIL.exec(t.slice(r.end, to));
+      if (tail) {
+        const groups = tail[1].split(/\s*(?:,\s*(?:and\s+|or\s+)?|and|or)\s*/).filter(Boolean);
+        const ex = groups.map((g) => ({ citation: `${r.citation}${g}`, resolved: resolveCitation(index, `${r.citation}${g}`, external) }));
+        if (ex.every((x) => x.resolved.ok)) {
+          out2.push(...ex);
+          last = r.end + tail[0].length;
+          continue;
+        }
+      }
+      out2.push({ citation: r.citation, resolved: resolveCitation(index, r.citation, external) });
+    }
+    return out2;
+  };
   for (const c of scopeClauses(row, view.clause_path).sort((a, b) => startOf(a) - startOf(b))) {
     const r0 = rangesOf(c)[0];
     const segFrom = r0[0] + (/^\s*\(([0-9A-Za-z]{1,7})\)/.exec(t.slice(r0[0], r0[1])) || [''])[0].length;
@@ -170,22 +206,21 @@ export function displacesOf(index, unitId, vocab, external = null) {
         named = 0;
         if (!backward) {
           // the chain of dotted refs starting right after the phrase
-          const refs = (row.refs || []).filter((r) => r.start >= at + phrase.length && r.start < cc.end).sort((a, b) => a.start - b.start);
-          let last = at + phrase.length;
-          const chain = [];
-          for (const r of refs) {
-            const gap = t.slice(last, r.start);
-            const ok = chain.length === 0
-              ? /^\s+(?:the\s+[a-z ]{0,60}?\s+in\s+)?(?:regulations?\s+|sections?\s+|clauses?\s+)?$/i.test(gap)
-              : /^\s*(?:,\s*)?(?:and|or|to)?\s*(?:regulations?\s+|clauses?\s+)?$/i.test(gap);
-            if (!ok) break;
-            chain.push(r);
-            last = r.end;
-          }
-          for (const r of chain) add(r.citation, resolveCitation(index, r.citation, external), phrase);
+          const chain = chainFrom(at + phrase.length, cc.end);
+          for (const x of chain) add(x.citation, x.resolved, phrase);
           if (!chain.length) {
             const rel = relativeRefs(t.slice(at + phrase.length, cc.end)).filter((x) => x.at <= 1);
             for (const x of rel.slice(0, 1)) for (const g of x.groups) add(`${row.regulation_id}#${g.map((s2) => `(${s2})`).join('')}`, relTarget(row, c.path, g), phrase);
+            // "exempt from the following requirements: (A) the requirements of regulation X; (C) regulation Y …": a lead-in
+            // trigger before "the following …:" is answered by the unit's own list item — its leading reference chain
+            if (!rel.length && c.path !== view.clause_path && view.clause_path.startsWith(c.path) && /^\s+the following\b[^.;:]{0,60}:\s*$/i.test(t.slice(at + phrase.length, cc.end))) {
+              const own = (row.clauses || []).find((y) => y.path === view.clause_path);
+              if (own) {
+                const [oStart, oEnd] = rangesOf(own)[0];
+                const lab = (/^\s*\(([0-9A-Za-z]{1,7})\)/.exec(t.slice(oStart, oEnd)) || [''])[0].length;
+                for (const x of chainFrom(oStart + lab, oEnd)) add(x.citation, x.resolved, phrase);
+              }
+            }
           }
         } else {
           for (const r of (row.refs || []).filter((x) => x.start >= segFrom && x.end <= at)) add(r.citation, resolveCitation(index, r.citation, external), phrase);
@@ -241,13 +276,29 @@ function findCycle(nodes, edges) {
   return found;
 }
 
+/** Spec 69 M-76 A2: the rows a section- or Article-level include_ref names — the in-scope, non-retired rows of that
+ * section (row.section === id) or Article (row.article === id or under it). `inScopeIds` null = every slice row. */
+export function groupRows(index, resolved, inScopeIds = null) {
+  const out = [];
+  for (const r of index.rows.values()) {
+    if (r.retired) continue;
+    if (inScopeIds && !inScopeIds.has(r.regulation_id)) continue;
+    const a = String(r.article);
+    const hit = resolved.kind === 'section' ? String(r.section) === resolved.id : a === resolved.id || a.startsWith(`${resolved.id}.`);
+    if (hit) out.push(r.regulation_id);
+  }
+  return out.sort(cmpStr);
+}
+
 /** G-XREF over the agreed units. PURE. */
-export function checkXref({ slice, units = new Map(), vocab, external = null } = {}) {
+export function checkXref({ slice, units = new Map(), vocab, external = null, inScopeIds = null, adjudications = [] } = {}) {
   const v = [];
+  // Spec 69a M-92 (RC-F): an adjudication of kind `ref_target_absent` (unit = regulation id, citation) discloses a City citation whose target is absent from the pinned text — counted, never a failure
+  const absent = new Set((adjudications || []).filter((e) => e && e.kind === 'ref_target_absent').map((e) => `${e.unit} ${e.citation}`));
   const index = buildIndex(slice);
   const allowed = new Set((vocab.displacement_triggers && vocab.displacement_triggers.not_an_override) || []);
   const phraseCount = ((vocab.displacement_triggers && vocab.displacement_triggers.phrases) || []).length;
-  const counts = { units: 0, displaces: 0, internal_refs: 0, triggers: 0, not_an_override: 0, refs_checked: 0, refs_to_external: 0, include_to_phase2_ref: 0, include_depth_max: 0 };
+  const counts = { units: 0, displaces: 0, internal_refs: 0, triggers: 0, not_an_override: 0, refs_checked: 0, refs_to_external: 0, refs_target_absent: 0, include_to_phase2_ref: 0, include_depth_max: 0, include_group_expansions: 0, include_group_rows: 0, self_instruction_refs: 0 };
   const ids = [...units.keys()].filter((id) => unitView(index, id)).sort(cmpStr);
   const dEdges = new Map();
   const iEdges = new Map();
@@ -268,6 +319,8 @@ export function checkXref({ slice, units = new Map(), vocab, external = null } =
     counts.triggers += d.triggers.length;
     for (const x of d.unresolved) {
       displacedCitations.get(reg).add(x.citation);
+      // Spec 69a M-94(a): a DISAPPLY whose cited regulation is absent from the pinned City text is disclosed (ref_target_absent), counted, never a failure
+      if (absent.has(`${reg} ${x.citation}`)) { counts.refs_target_absent++; continue; }
       v.push(violation('displaces_unresolved', id, `"${x.phrase} ${x.citation}" names nothing`));
     }
     for (const c of d.self) v.push(violation('displaces_self', id, `"${c}" is the unit itself`));
@@ -286,7 +339,17 @@ export function checkXref({ slice, units = new Map(), vocab, external = null } =
     // include_ref
     if (u.archetype === 'INCLUDE') {
       const inc = includeOf(index, id, external);
-      if (!inc.citation || !inc.resolved.ok || !['row', 'unit', 'clause', 'ref'].includes(inc.resolved.kind)) v.push(violation('include_unresolved', id, inc.citation ? `"${inc.citation}" is ${inc.resolved.ok ? `a ${inc.resolved.kind}, not a row` : 'unresolved'}` : 'no reference in the clause'));
+      const group = inc.citation && inc.resolved.ok && (inc.resolved.kind === 'section' || inc.resolved.kind === 'article');
+      if (group) {
+        // Spec 69 M-76 A2: a section / Article include expands to its in-scope rows, excluding the unit's own regulation; transitive + cycle-checked below
+        const rowsIn = groupRows(index, inc.resolved, inScopeIds).filter((r) => r !== reg); // M-76 A2 (P1-Q7c): the unit's own regulation is never part of its own expansion
+        if (!rowsIn.length) v.push(violation('include_unresolved', id, `"${inc.citation}" is a ${inc.resolved.kind} with no in-scope rows`));
+        else {
+          counts.include_group_expansions++;
+          counts.include_group_rows += rowsIn.length;
+          iEdges.set(id, ids.filter((o) => o !== id && units.get(o).archetype === 'INCLUDE' && rowsIn.some((r) => overlaps(r, o))));
+        }
+      } else if (!inc.citation || !inc.resolved.ok || !['row', 'unit', 'clause', 'ref'].includes(inc.resolved.kind)) v.push(violation('include_unresolved', id, inc.citation ? `"${inc.citation}" is ${inc.resolved.ok ? `a ${inc.resolved.kind}, not a row` : 'unresolved'}` : 'no reference in the clause'));
       else if (inc.resolved.kind === 'ref') {
         if (PHASE1_INCLUDE_REF_REASONS.includes(inc.resolved.reason)) counts.include_to_phase2_ref++;
         else v.push(violation('include_to_ref', id, `"${inc.citation}" resolves to external ${inc.resolved.id} (${inc.resolved.reason})`));
@@ -313,8 +376,15 @@ export function checkXref({ slice, units = new Map(), vocab, external = null } =
       done.add(r.citation);
       counts.refs_checked++;
       if (judged.has(r.citation)) continue;
+      // A9: an enacting row's instruction cites the regulation it creates ("adding a new regulation 10.5.40.40(3)(E)") —
+      // that is the row itself (Spec 68 §4 row id `<citation>@<by-law>`), never a dangling reference
+      if (r.clause_path === '[instruction]' && String(reg).includes('@') && row.target && r.citation === row.target) {
+        counts.self_instruction_refs++;
+        continue;
+      }
       const res = resolveCitation(index, r.citation, external);
-      if (!res.ok) v.push(violation('ref_unresolved', reg, `"${r.citation}" (clause ${r.clause_path})`));
+      if (!res.ok && absent.has(`${reg} ${r.citation}`)) counts.refs_target_absent++;
+      else if (!res.ok) v.push(violation('ref_unresolved', reg, `"${r.citation}" (clause ${r.clause_path})`));
       else if (res.kind === 'ref') counts.refs_to_external++;
     }
   }

@@ -1,0 +1,31 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_15/150.15.80.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.15.80.1(1)#(1)(A)",
+      "archetype": "LIMIT", "target": "parking_spaces", "bound": "min",
+      "numeric_expression": ["parking_spaces = 2 units @(1)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "one parking space", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": ["parking_space"], "evidence": {"any": "A group home must", "parking_space": "two parking spaces"}},
+      "calculation_handling": {"status": "partially_modelled", "description": "A group home must have at least two parking spaces, at least one of which complies with the requirements for the zone and building type.", "gaps": "The one space complying with zone and building-type requirements is a cross-reference, not modelled.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.15.80.1(1)#(1)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "one parking space", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": ["parking_space"], "evidence": {"any": "A group home must", "parking_space": "one parking space"}},
+      "calculation_handling": {"status": "not_modelled", "description": "No more than one of a group home's parking spaces may be on the driveway.", "gaps": "No target for the number of parking spaces on a driveway.", "not_modelled_reason": "outside_maxbld_building_types", "user_inputs": []},
+      "disclosure": "The limit of one group-home parking space on the driveway is not evaluated; there is no model target for it.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.15.80.1(1)": {"explanation": "A group home must have at least two parking spaces. At least one must meet the parking requirements for the zone and building type, and no more than one may be on the driveway.", "code_refs": "none"}
+  }
+}

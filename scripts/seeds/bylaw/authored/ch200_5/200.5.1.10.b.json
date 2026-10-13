@@ -1,0 +1,168 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_5/200.5.1.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.5.1.10(1)#(1)(A)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(1)#(1)(B)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(11)#whole",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(13)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(14)#(14)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(14)#(14)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 25.0 pct @(14)(B)"]
+    },
+    {
+      "unit_id": "200.5.1.10(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 5.6 m @(2)(A)"]
+    },
+    {
+      "unit_id": "200.5.1.10(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 5.6 m @(2)(B)"]
+    },
+    {
+      "unit_id": "200.5.1.10(2)#(2)(C)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 6.7 m @(2)(C)"]
+    },
+    {
+      "unit_id": "200.5.1.10(2)#(2)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(2)#(2)(E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "max",
+      "numeric_expression": ["parking_space_length_m = 6.0 m @(3)(A)"]
+    },
+    {
+      "unit_id": "200.5.1.10(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_space_width_m",
+      "bound": "max",
+      "numeric_expression": ["parking_space_width_m = 3.2 m @(3)(B)"]
+    },
+    {
+      "unit_id": "200.5.1.10(4)#whole",
+      "archetype": "DEFINE",
+      "target": "vertical_clearance_m",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(5)#whole",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(6)#(6)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 5.6 m @(6)(A)"]
+    },
+    {
+      "unit_id": "200.5.1.10(6)#(6)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_space_width_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_width_m = 2.6 m @(6)(B)"]
+    },
+    {
+      "unit_id": "200.5.1.10(6)#(6)(C)",
+      "archetype": "LIMIT",
+      "target": "vertical_clearance_m",
+      "bound": "min",
+      "numeric_expression": ["vertical_clearance_m = 2.0 m @(6)(C)"]
+    },
+    {
+      "unit_id": "200.5.1.10(7)#(7)(A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(7)#(7)(B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(7)#(7)(C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "200.5.1.10(8)#whole",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": ["parking_spaces = parking_rate × gfa_m2 @(8)"]
+    },
+    {
+      "unit_id": "200.5.1.10(9)#whole",
+      "archetype": "DEFINE",
+      "target": "parking_spaces",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

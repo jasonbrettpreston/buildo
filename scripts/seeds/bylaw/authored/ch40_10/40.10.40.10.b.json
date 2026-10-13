@@ -1,0 +1,140 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch40_10/40.10.40.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "40.10.40.10(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = overlay(HT) @(1)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 16.0 m @(1)(B)"]
+    },
+    {
+      "unit_id": "40.10.40.10(1)#(1)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.40.10(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = overlay(HT) @(2)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 14.0 m @(2)(B)"]
+    },
+    {
+      "unit_id": "40.10.40.10(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = overlay(HT) @(3)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 11.0 m @(3)(B)"]
+    },
+    {
+      "unit_id": "40.10.40.10(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "min",
+      "numeric_expression": ["height_m = 10.5 m @(4)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(4)#(4)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.40.10(5)#(5)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "min",
+      "numeric_expression": ["height_m = 4.5 m @(5)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(5)#(5)(B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.40.10(5)#(5)(C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.40.10(6)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "40.10.40.10(7)#(7)(A)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "numeric_expression": ["height_storeys = overlay(ST) @(7)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(7)#(7)(B)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "numeric_expression": ["height_storeys = unlimited @(7)(B)"]
+    },
+    {
+      "unit_id": "40.10.40.10(8)#(8)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = overlay(HT) @(8)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(8)#(8)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 20.0 m @(8)(B)"]
+    },
+    {
+      "unit_id": "40.10.40.10(9)#(9)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = overlay(HT) @(9)(A)"]
+    },
+    {
+      "unit_id": "40.10.40.10(9)#(9)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 27.0 m @(9)(B)"]
+    }
+  ]
+}

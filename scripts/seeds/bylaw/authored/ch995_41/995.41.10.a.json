@@ -1,0 +1,49 @@
+{"schema": "bylaw-authored-v1", "shard": "ch995_41/995.41.10", "keyer": "A",
+ "units": [
+  {"unit_id": "995.41.10(1)#(1)(A)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["Diagram 1 of By-law 156-2023", "12 Dwelling Room Special Area"]},
+   "literals_not_expressed": [
+    {"literal": "12", "clause": "(1)(A)", "reason": "count_or_ordinal_not_a_limit"},
+    {"literal": "6", "clause": "(1)(A)", "reason": "cross_reference_value"}],
+   "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "R zone", "any": "dwelling rooms"}},
+   "calculation_handling": {"status": "not_modelled", "description": "In the 12 Dwelling Room Special Area on Diagram 1, up to 12 dwelling rooms are allowed in an R zone instead of 6.", "gaps": "The special-area map and a dwelling-room target are not held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "The dwelling-room limit in this special area is not modelled because the map and a dwelling-room measure are not held.", "not_an_override": []},
+  {"unit_id": "995.41.10(1)#(1)(B)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["Diagram 3 of By-law 156-2023", "6 Dwelling Room Special Area"]},
+   "literals_not_expressed": [
+    {"literal": "6", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"},
+    {"literal": "12", "clause": "(1)(B)", "reason": "cross_reference_value"},
+    {"literal": "25", "clause": "(1)(B)", "reason": "cross_reference_value"}],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "dwelling rooms"}},
+   "calculation_handling": {"status": "not_modelled", "description": "In the 6 Dwelling Room Special Area on Diagram 3, at most 6 dwelling rooms are allowed instead of 12 or 25.", "gaps": "The special-area map and a dwelling-room target are not held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "The dwelling-room limit in this special area is not modelled because the map and a dwelling-room measure are not held.", "not_an_override": []},
+  {"unit_id": "995.41.10(1)#(1)(C)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["6 Dwelling Room Area (R, RD, RS, RT, RM)"]},
+   "literals_not_expressed": [
+    {"literal": "6", "clause": "(1)(C)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "R, RD, RS, RT, RM", "RD": "R, RD, RS, RT, RM", "RS": "R, RD, RS, RT, RM", "RT": "R, RD, RS, RT, RM", "RM": "R, RD, RS, RT, RM", "any": "dwelling rooms"}},
+   "calculation_handling": {"status": "not_modelled", "description": "Outside the special areas, the 6 Dwelling Room Area label applies the zone's 6 dwelling room maximum in R, RD, RS, RT and RM.", "gaps": "The overlay map and a dwelling-room target are not held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "The dwelling-room limit for this map area is not modelled because the map and a dwelling-room measure are not held.", "not_an_override": []},
+  {"unit_id": "995.41.10(1)#(1)(D)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["12 Dwelling Room Area (RA, RAC, RM)"]},
+   "literals_not_expressed": [
+    {"literal": "12", "clause": "(1)(D)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": ["RM"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"RM": "RA, RAC, RM", "any": "dwelling rooms"}},
+   "calculation_handling": {"status": "not_modelled", "description": "Outside the Diagram 3 special area, the 12 Dwelling Room Area label applies the zone's 12 dwelling room maximum in RA, RAC and RM.", "gaps": "The overlay map and a dwelling-room target are not held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "The dwelling-room limit for this map area is not modelled because the map and a dwelling-room measure are not held.", "not_an_override": []},
+  {"unit_id": "995.41.10(1)#(1)(E)", "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["25 Dwelling Room Area (CR, CRE)"]},
+   "literals_not_expressed": [
+    {"literal": "25", "clause": "(1)(E)", "reason": "count_or_ordinal_not_a_limit"}],
+   "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "dwelling rooms"}},
+   "calculation_handling": {"status": "not_modelled", "description": "Outside the Diagram 3 special area, the 25 Dwelling Room Area label applies the zone's 25 dwelling room maximum in CR and CRE.", "gaps": "The overlay map and a dwelling-room target are not held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "The dwelling-room limit for this map area is not modelled because the map and a dwelling-room measure are not held.", "not_an_override": []}
+ ],
+ "rows": {
+  "995.41.10(1)": {"explanation": "The Multi-tenant House Overlay Map labels where the dwelling-room maximum differs: 12 rooms in one R-zone special area, 6 in another, and otherwise the zone's own 6, 12 or 25 room maximum (6 for R-type zones, 12 for RA/RAC/RM, 25 for CR/CRE).", "code_refs": "none"}
+ }}

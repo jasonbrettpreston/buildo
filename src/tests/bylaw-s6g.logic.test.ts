@@ -199,6 +199,236 @@ describe('G-AGREE canonical comparison (Spec 68 §7.4, Spec 69 M-17 notes)', () 
   });
 });
 
+describe('Spec 69 M-76 A1 — a building type named only as an exclusion is not named (G-CLAUSE any_with_named_type)', () => {
+  const fx: Json[] = FX.clauseFixtures();
+  const good = fx.find((f) => f.name.startsWith('good twin: M-76 A1'));
+  const bad = fx.find((f) => f.name.startsWith('any_with_named_type: M-76 A1'));
+  it('exclusion-only text ("other than an ancillary building … other than an apartment building") keyed `any` passes', () => {
+    expect(good).toBeTruthy();
+    const r = CL.checkClause(good!.input);
+    expect(r.violations).toEqual([]);
+  });
+  it('a positively named type still fails, and the excluded type is not reported', () => {
+    expect(bad).toBeTruthy();
+    const r = CL.checkClause(bad!.input);
+    expect(codesOf(r)).toEqual(['any_with_named_type']);
+    const detail = r.violations.map((v: Json) => v.detail).join(' ');
+    expect(detail).toContain('detached_house');
+    expect(detail).toContain('townhouse');
+    expect(detail).not.toContain('ancillary_building');
+  });
+});
+
+describe('Spec 69 M-76 A2 + A3 — section / Article includes and the 3-part Article index (G-XREF)', () => {
+  const fx: Json[] = FX.xrefFixtures();
+  const byName = (p: string) => fx.find((f) => f.name.startsWith(p));
+  it('A3: a 3-part Article id resolves to kind article; an unknown 3-part id stays unresolved', () => {
+    const idx = AU.buildIndex(FX.fixtureSlice());
+    expect(AU.resolveCitation(idx, '10.20.40')).toEqual({ ok: true, kind: 'article', id: '10.20.40' });
+    expect(AU.resolveCitation(idx, '10.99.40').ok).toBe(false);
+  });
+  it('A2: a section include and a 3-part Article include expand (counted), no violation', () => {
+    for (const p of ['good twin: M-76 A2 — a section include', 'good twin: M-76 A2 + A3']) {
+      const f = byName(p);
+      expect(f, p).toBeTruthy();
+      const r = XR.checkXref(f!.input);
+      expect(r.violations).toEqual([]);
+      expect(r.counts.include_group_expansions).toBe(1);
+    }
+  });
+  it('A2: an Article include containing its own regulation is a cycle; one with no in-scope rows is unresolved', () => {
+    expect(codesOf(XR.checkXref(byName('include_cycle: M-76 A2')!.input))).toEqual(['include_cycle']);
+    expect(codesOf(XR.checkXref(byName('include_unresolved: M-76 A2')!.input))).toEqual(['include_unresolved']);
+  });
+  it('A2: groupRows filters by inScopeIds', () => {
+    const idx = AU.buildIndex(FX.fixtureSlice());
+    expect(XR.groupRows(idx, { kind: 'article', id: '10.20.40.70' })).toEqual(['10.20.40.70(3)', '10.20.40.70(4)', '10.20.40.70(6)']);
+    expect(XR.groupRows(idx, { kind: 'article', id: '10.20.40.70' }, new Set(['10.20.40.70(4)']))).toEqual(['10.20.40.70(4)']);
+  });
+});
+
+describe('E-5 gate fix: a relative path resolves inside the unit own [SSP]/[PBS] group (Spec 68 §9 G-CLAUSE)', () => {
+  it('(A) from (252)[SSP] is (252)[SSP](A); without the group it stays ambiguous / unresolved', () => {
+    const row = { clauses: [{ path: '(252)' }, { path: '(252)[SSP]' }, { path: '(252)[SSP](A)' }, { path: '(252)[PBS]' }, { path: '(252)[PBS](A)' }] };
+    expect(AU.resolveClause(row, '(A)', '(252)[SSP]').path).toBe('(252)[SSP](A)');
+    expect(AU.resolveClause(row, '(A)', '(252)[PBS](A)').path).toBe('(252)[PBS](A)');
+    expect(AU.resolveClause(row, '(A)')).toBeNull();
+  });
+});
+
+describe('Spec 69 M-76 A10 — a mixed-measure LIMIT lists several targets (G-SHAPE)', () => {
+  const fx: Json[] = FX.shapeFixtures();
+  const byName = (p: string) => fx.find((f) => f.name.startsWith(p));
+  it('two statements with their two listed targets pass', () => {
+    const r = SH.checkShape(byName('good twin: M-76 A10')!.input);
+    expect(r.violations).toEqual([]);
+  });
+  it('a listed target with no statement / a statement outside the list fails; a DEFINE with a list fails', () => {
+    const r = SH.checkShape(byName('statement_target_mismatch: M-76 A10 — a listed target')!.input);
+    expect(codesOf(r)).toEqual(['statement_target_mismatch']);
+    const details = r.violations.map((v: Json) => v.detail).join(' | ');
+    expect(details).toContain('height_storeys');
+    expect(details).toContain('building_length_m has no statement');
+    expect(codesOf(SH.checkShape(byName('statement_target_mismatch: M-76 A10 — a target list on a DEFINE')!.input))).toEqual(['statement_target_mismatch']);
+  });
+  it('unitTargets and the canonical target are order-independent', () => {
+    expect(AU.unitTargets('none')).toEqual([]);
+    expect(AU.unitTargets('height_m')).toEqual(['height_m']);
+    expect(AU.unitTargets(['height_m', 'height_storeys'])).toEqual(['height_m', 'height_storeys']);
+    expect(AU.canonicalField('target', ['height_storeys', 'height_m'])).toBe(AU.canonicalField('target', ['height_m', 'height_storeys']));
+    expect(AU.canonicalField('target', 'height_m')).toBe('height_m');
+  });
+});
+
+describe('G-XREF A4 / A9 fixtures (Spec 68 §9 G-XREF as written)', () => {
+  const fx: Json[] = FX.xrefFixtures();
+  const byName = (p: string) => fx.find((f) => f.name.startsWith(p));
+  it('A4 good twin displaces 2; A4 red reports displaces_unresolved', () => {
+    const g = XR.checkXref(byName('good twin: A4')!.input);
+    expect(g.violations).toEqual([]);
+    expect(g.counts.displaces).toBe(2);
+    expect(codesOf(XR.checkXref(byName('displaces_unresolved: A4')!.input))).toEqual(['displaces_unresolved']);
+  });
+  it('A9 good twin counts one self-instruction ref; a non-self one stays ref_unresolved', () => {
+    const g = XR.checkXref(byName('good twin: A9')!.input);
+    expect(g.violations).toEqual([]);
+    expect(g.counts.self_instruction_refs).toBe(1);
+    expect(codesOf(XR.checkXref(byName('ref_unresolved: A9')!.input))).toEqual(['ref_unresolved']);
+  });
+});
+
+describe('slicer exclusions A7 / A8 (Spec 68 §6.5 declared spans, vocab.json slicer.anti_vacuity_exclusions)', () => {
+  it('A7: "Ontario Regulation 200/96" yields no literal; A8: an enacting row\'s leading "27." yields none; real literals stay', async () => {
+    const T = await load('scripts/analysis/bylaw/text.mjs');
+    expect(T.extractLiterals('as set out in Ontario Regulation 200/96, for 3.0 metres').map((l: Json) => l.raw)).toEqual(['3.0 metres']);
+    expect(T.extractLiterals('27. Zoning By-law 569-2013, as amended, is further amended so that it reads: (C) a maximum of 0.9 metres').map((l: Json) => l.raw)).toEqual(['0.9 metres']);
+    expect(T.extractLiterals('(2) a maximum of 27. metres').length).toBeGreaterThan(0);
+    expect(T.scanNumbers('Ontario Regulation 200/96').uncovered).toEqual([]);
+  });
+});
+
+describe('G-CLAUSE A12 / A13 / A6b fixtures (Spec 68 §9 G-CLAUSE as written)', () => {
+  const fx: Json[] = FX.clauseFixtures();
+  const byName = (p: string) => fx.find((f) => f.name.startsWith(p));
+  for (const [good, bad, code] of [
+    ['good twin: A13 + M-76 A10', 'literal_unaccounted: A13', 'literal_unaccounted'],
+    ['good twin: A12', 'evidence_pattern_mismatch: A12', 'evidence_pattern_mismatch'],
+    ['good twin: A6b', 'variable_unlicensed: A6b', 'variable_unlicensed'],
+  ] as [string, string, string][]) {
+    it(`${good} passes; ${bad} fails for ${code} only`, () => {
+      expect(byName(good), good).toBeTruthy();
+      expect(CL.checkClause(byName(good)!.input).violations).toEqual([]);
+      expect(codesOf(CL.checkClause(byName(bad)!.input))).toEqual([code]);
+    });
+  }
+});
+
+describe("M-84 — keyer B's generated/single fields are ignored in every batch", () => {
+  const fx: Json[] = FX.shapeFixtures();
+  const byName = (p: string) => fx.find((f) => f.name.startsWith(p));
+  it('a .b generated field passes (counted) in any batch; the same write in the .a draft fails', () => {
+    const g = SH.checkShape(byName('good twin: M-84 — a generated field in a .b draft is ignored')!.input);
+    expect(g.violations).toEqual([]);
+    expect(g.counts.b_generated_ignored).toBe(1);
+    const a4 = SH.checkShape(byName('good twin: M-84 — the same write in an A4 .b is ignored too')!.input);
+    expect(a4.violations).toEqual([]);
+    expect(a4.counts.b_generated_ignored).toBe(1);
+    expect(codesOf(SH.checkShape(byName('generated_field_authored')!.input))).toEqual(['generated_field_authored']);
+  });
+});
+
+describe('Spec 69a M-80 — re-key generations supersede (authored / G-AGREE / G-SHAPE)', () => {
+  it('shardGeneration / predecessorKey', () => {
+    expect(AU.shardGeneration('ch10_40/10.40.40.70')).toEqual({ base: 'ch10_40/10.40.40.70', gen: 0 });
+    expect(AU.shardGeneration('ch10_40/10.40.40.70~r2')).toEqual({ base: 'ch10_40/10.40.40.70', gen: 2 });
+    expect(AU.predecessorKey('a~r1')).toBe('a');
+    expect(AU.predecessorKey('a~r2')).toBe('a~r1');
+    expect(AU.predecessorKey('a')).toBeNull();
+  });
+  it('supersession: the newest generation owns the unit; a partial re-key leaves the other units with the old shard', () => {
+    const g = FX.GOOD['LIMIT×literal'];
+    const m = FX.GOOD['LIMIT×map_lookup'];
+    const old = FX.shardOf([g, m]);
+    const s = AU.supersession([old, FX.rekeyOf(old, [g])]);
+    expect(s.newest.get(g.unit_id)).toBe(`${old.key}~r1`);
+    expect(s.newest.get(m.unit_id)).toBe(old.key);
+    expect([...s.superseded.get(old.key)]).toEqual([g.unit_id]);
+    expect(s.whole.has(old.key)).toBe(false);
+    expect(AU.supersession([old, FX.rekeyOf(old, [g, m])]).whole.has(old.key)).toBe(true);
+  });
+  it('G-AGREE reads the newest drafts; G-SHAPE allows the generation, not an unrelated duplicate', () => {
+    const ag: Json[] = FX.agreeFixtures();
+    const sh: Json[] = FX.shapeFixtures();
+    const f1 = ag.find((f) => f.name.startsWith('good twin: M-80'))!;
+    const r1 = AG.checkAgree(f1.input);
+    expect(r1.status).toBe('pass');
+    expect(f1.expect(r1)).toBe(true);
+    expect(SH.checkShape(sh.find((f) => f.name.startsWith('good twin: M-80'))!.input).violations).toEqual([]);
+    expect(codesOf(SH.checkShape(sh.find((f) => f.name.startsWith('schema_invalid: M-80'))!.input))).toEqual(['schema_invalid']);
+  });
+  it('G-PROV: a wholly superseded shard is not re-checked; supersedes must equal the predecessor files', () => {
+    const fx: Json[] = FX.keyerFixtures();
+    const good = fx.find((f) => f.name.startsWith('good twin: M-80'))!;
+    const r = KP.checkKeyerProv(good.input);
+    expect(r.violations).toEqual([]);
+    expect(r.counts.superseded_shards).toBe(1);
+    for (const f of fx.filter((x) => x.name.startsWith('supersedes_mismatch: M-80'))) expect(codesOf(KP.checkKeyerProv(f.input))).toEqual(['supersedes_mismatch']);
+  });
+});
+
+describe('Spec 69a M-82 Q7 — limit_not_modelled only on UNUSUAL (G-SHAPE)', () => {
+  const fx: Json[] = FX.shapeFixtures();
+  it('passes on UNUSUAL, fails on LIMIT', () => {
+    expect(SH.checkShape(fx.find((f) => f.name.startsWith('good twin: M-82'))!.input).violations).toEqual([]);
+    expect(codesOf(SH.checkShape(fx.find((f) => f.name.startsWith('shape_must_be_none: M-82'))!.input))).toEqual(['shape_must_be_none']);
+    expect(VOCAB.literal_not_expressed_reason).toContain('limit_not_modelled');
+  });
+});
+
+describe('Spec 69 M-75 correction kind — a sealed draft is corrected by a record, never edited', () => {
+  const g = FX.GOOD['LIMIT×literal'];
+  const correctionFor = (field: string, value: unknown, o: Json = {}) => ({ adjudications: [{ id: `COR-${g.unit_id}/${field}`, kind: 'correction', unit: g.unit_id, field, value, reason: 'the clause says so', rule: 'Spec 68 §6.4', adjudicator: 'operator', adjudicated_on: '2026-10-08', ...o }] });
+  const appValue = { zones: ['RS'], building_types: ['any'], lot_conditions: [], uses: [], evidence: { RS: 'in the RS zone' } };
+
+  it('selfTest() covers each new reason code (its fixture fails for that code)', () => {
+    const st = AG.selfTest();
+    const byExpected = new Map((st.results as Json[]).map((x: Json) => [x.expected, x]));
+    for (const code of ['correction_orphan', 'correction_rule_missing', 'correction_duplicate']) {
+      const r = byExpected.get(code)!;
+      expect(r, `no fixture for ${code}`).toBeTruthy();
+      expect(r.ok, `${code} fixture did not fail for its code (got ${JSON.stringify(r.got)})`).toBe(true);
+    }
+  });
+
+  it('a good correction on an A-only field changes the resolved unit and counts.corrections === 1', () => {
+    const r = AG.checkAgree({ shards: [FX.shardOf([g])], adjudications: correctionFor('application', appValue), vocab: VOCAB });
+    expect(r.status).toBe('pass');
+    expect(r.counts.corrections).toBe(1);
+    expect(r.units.get(g.unit_id)!.unit.application.zones).toEqual(['RS']);
+  });
+
+  it('a correction on a pending unit is an orphan', () => {
+    const r = AG.checkAgree({ shards: [{ ...FX.shardOf([g]), b: null }], adjudications: correctionFor('application', appValue), vocab: VOCAB });
+    expect(codesOf(r)).toEqual(['correction_orphan']);
+  });
+
+  it('a correction does not change the sealed draft object passed in', () => {
+    const shards = [FX.shardOf([g])];
+    const before = JSON.parse(JSON.stringify(shards));
+    AG.checkAgree({ shards, adjudications: correctionFor('application', appValue), vocab: VOCAB });
+    expect(shards).toEqual(before);
+  });
+
+  it('M-75 note 2026-10-08: a superseding correction applies, the superseded record is untouched and counted', () => {
+    const f = FX.agreeFixtures().find((x: Json) => x.name.startsWith('good twin: M-75 supersedes'));
+    const before = JSON.stringify(f.input.adjudications);
+    const r = AG.checkAgree(f.input);
+    expect(r.violations).toEqual([]);
+    expect(f.expect(r)).toBe(true);
+    expect(JSON.stringify(f.input.adjudications)).toBe(before);
+  });
+});
+
 describe('closed sets locked both directions against vocab.json', () => {
   it('row_status values G-SHAPE computes == vocab.row_status', () => {
     expect([...SH.ROW_STATUSES].sort()).toEqual([...VOCAB.row_status].sort());
@@ -253,9 +483,44 @@ describe('displacesOf — generated from the clause text through the slice API (
     expect(r.targets).toEqual([]);
     expect(r.triggers.filter((t: Json) => t.n === 0).map((t: Json) => t.phrase)).toEqual(['despite']);
   });
-  it('every vocab trigger phrase that occurs in the fixture text has a fixture above (notwithstanding: 0 occurrences in the pinned pages)', () => {
+  it('every vocab trigger phrase that occurs in the fixture text has a fixture above (notwithstanding: 0 occurrences in the pinned pages; "exempt from": A4; "apply to prevent": M-93 below; "is not subject to the regulations of": 0 occurrences in the fixture text, M-93 live fixture below)', () => {
     const text = FX.fixtureSlice().rows.map((r: Json) => r.verbatim).join('\n');
     const occurs = VOCAB.displacement_triggers.phrases.filter((p: string) => new RegExp(`(?<![A-Za-z])${p}(?![A-Za-z])`).test(text));
-    expect(occurs.sort()).toEqual(['Despite', 'despite', 'do not apply', 'does not apply']);
+    expect(occurs.sort()).toEqual(['Despite', 'apply to prevent', 'despite', 'do not apply', 'does not apply', 'exempt from']);
+  });
+  it('A4: "exempt from the requirements of regulation 10.20.20.100(8) (B) and (C)" → both sibling clauses', () => {
+    expect(d('10.20.20.100(8)#(8)(D)')).toEqual(['10.20.20.100(8)#(8)(B)', '10.20.20.100(8)#(8)(C)']);
+  });
+  describe('Spec 69a M-81 R6 (live slice)', () => {
+    const live = AU.buildIndex(FX.liveSlice());
+    const dl = (unitId: string) => XR.displacesOf(live, unitId, VOCAB, null);
+    it('"Despite regulation10.5.60.20(2), (3), (5) and (6)" (the City dropped the space) names the four rows', () => {
+      const r = dl('10.10.60.20(1)#(1)(A)')!;
+      expect(r.targets.map((t: Json) => t.id)).toEqual(expect.arrayContaining(['10.5.60.20(2)', '10.5.60.20(3)', '10.5.60.20(5)', '10.5.60.20(6)']));
+      for (const t of r.triggers) expect(t.n).toBeGreaterThan(0);
+    });
+    it('(H) "the requirements of any regulation, prevailing section or prevailing by-law in article 900.2.10" displaces the article', () => {
+      expect(dl('10.10.20.60(1)#(1)(H)').targets.map((t: Json) => t.id)).toEqual(['900.2.10']);
+    });
+    it('M-93 "apply to prevent": 200.25.1(3) "None of the provisions of regulations 200.5.10.1(7)(C), … 200.15.10.10(1) apply to prevent the erection or use of a lawfully existing building" displaces the cited regulations (backward trigger)', () => {
+      const r = dl('200.25.1(3)#whole');
+      expect(r.triggers.map((t: Json) => t.phrase)).toEqual(['apply to prevent']);
+      expect(r.targets.map((t: Json) => t.id)).toEqual(expect.arrayContaining(['200.5.10.1(12)', '200.15.1(5)', '200.15.10.10(1)', '200.15.10.5(1)']));
+      for (const t of r.triggers) expect(t.n).toBeGreaterThan(0);
+    });
+    it('M-93 "is not subject to the regulations of": 600.60.30(2) "… is not a fiveplex or sixplex, is not subject to the regulations of Section 600.60, and must comply …" displaces the section', () => {
+      const r = dl('600.60.30(2)#whole');
+      expect(r.triggers.map((t: Json) => t.phrase)).toEqual(['is not subject to the regulations of']);
+      expect(r.targets.map((t: Json) => t.id)).toEqual(['600.60']);
+    });
+    it('good twin: (C) "regulation 10.10.40.1(3) and any regulation … in article 900.2.10" still names only its leading regulation', () => {
+      expect(dl('10.10.20.60(1)#(1)(C)').targets.map((t: Json) => t.id)).toEqual(['10.10.40.1(3)']);
+    });
+  });
+  it('A5: "despite the requirements of Chapter 200" → the chapter (here through an external ref; the fixture slice has no Ch.200 row)', () => {
+    const ext = { entries: [{ id: 'REF-200', kind: 'ref', citation: 'Chapter 200', url: 'https://www.toronto.ca/x', reason: 'outside_page_set' }] };
+    const r = XR.displacesOf(idx, '10.10.80.200(1)#(1)(B)', VOCAB, ext);
+    expect(r.targets.map((t: Json) => t.citation)).toEqual(['Chapter 200']);
+    expect(r.triggers.every((t: Json) => t.n > 0)).toBe(true);
   });
 });

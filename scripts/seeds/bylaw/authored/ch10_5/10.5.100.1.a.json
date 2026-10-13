@@ -1,0 +1,277 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.100.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.5.100.1(1)#(1)(A)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "min",
+      "numeric_expression": ["driveway_width_m = 2.0 m @(1)(A)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum driveway width of 2.0 m in the front yard.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(1)#(1)(B)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "max",
+      "numeric_expression": ["driveway_width_m = 2.6 m @(1)(B)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m < 6.0 m or townhouse_unit_width_m < 6.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": ["frontage_band"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit", "frontage_band": "lot frontage less than"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Maximum front-yard driveway width of 2.6 m for lots under 6.0 m frontage or townhouse units under 6.0 m wide.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(1)#(1)(C)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "max",
+      "numeric_expression": ["driveway_width_m = min(6.0 m @(1)(C)(i); parking_width_m @(1)(C)(iii)) @(1)(C)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≥ 6.0 m and lot_frontage_m ≤ 23.0 m or townhouse_unit_width_m ≥ 6.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "2.6 metres", "clause": "(1)(C)(iv)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": ["frontage_band"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit", "frontage_band": "lot frontage of 6.0 metres"}
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "Maximum driveway width is the lesser of 6.0 m, the cumulative width of side-by-side spaces, the width of a single space, and 2.6 m if all parking is in the rear yard; modelled as the lesser of 6.0 m and the single parking space width.", "gaps": "Cumulative side-by-side parking width and the all-parking-in-rear-yard 2.6 m arm are not modelled; parking width has no Chapter 800 definition.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]},
+      "disclosure": "The cumulative parking width arm and the 2.6 m arm for lots with all parking in the rear yard are not evaluated; the modelled cap is the lesser of 6.0 m and one parking space width.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(1)#(1)(D)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "max",
+      "numeric_expression": ["driveway_width_m = 9.0 m @(1)(D)(i)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m > 23.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "2.6 metres", "clause": "(1)(D)(iii)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": ["frontage_band"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit", "frontage_band": "lot frontage greater than"}
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "Maximum driveway width is the lesser of 9.0 m, the cumulative width of side-by-side spaces behind the front main wall, and 2.6 m if all parking is in the rear yard; modelled as 9.0 m.", "gaps": "Cumulative parking width and the all-parking-in-rear-yard 2.6 m arm are not modelled.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": ["building_type"]},
+      "disclosure": "The parking-space-width arm and the 2.6 m arm for lots with all parking in the rear yard are not evaluated; the modelled cap is 9.0 m.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(2)#(2)(A)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "min",
+      "numeric_expression": ["driveway_width_m = 2.0 m @(2)(A)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Minimum width of 2.0 m for a driveway not in or through the front yard.", "gaps": "none", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(2)#(2)(B)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "max",
+      "numeric_expression": ["driveway_width_m = min(6.0 m @(2)(B)(i); parking_width_m @(2)(B)(ii)) @(2)(B)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "townhouse"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_house": "a detached house", "semi_detached_house": "semi-detached house, or", "duplex": "or duplex, and", "townhouse": "individual townhouse dwelling unit"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Maximum width is the lesser of 6.0 m and the width of the parking spaces.", "gaps": "Parking space width has no Chapter 800 definition and is a scenario value.", "not_modelled_reason": "none", "user_inputs": ["building_type"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(3)#(3)(A)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "min",
+      "numeric_expression": ["driveway_width_m = 2.0 m @(3)(A)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "three or more", "clause": "(3)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "townhouse"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_houseplex": "detached houseplex or", "semi_detached_houseplex": "semi-detached houseplex with", "townhouse": "for a townhouse"}
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "Minimum driveway width of 2.0 m for each lane; the lane count is not a model input.", "gaps": "Per-lane scaling and the three-or-more-dwelling-units proviso for houseplexes are not modelled.", "not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(3)#(3)(B)",
+      "archetype": "LIMIT", "target": "driveway_width_m", "bound": "max",
+      "numeric_expression": ["driveway_width_m = 6.0 m @(3)(B)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "three or more", "clause": "(3)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex", "semi_detached_houseplex", "townhouse"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "detached_houseplex": "detached houseplex or", "semi_detached_houseplex": "semi-detached houseplex with", "townhouse": "for a townhouse"}
+      },
+      "calculation_handling": {"status": "modelled", "description": "Maximum total driveway width of 6.0 m.", "gaps": "The three-or-more-dwelling-units proviso for houseplexes is not applied as a condition.", "not_modelled_reason": "none", "user_inputs": ["building_type", "unit_count"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(6)#(6)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m > 18.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "may have a driveway", "frontage_band": "lot frontage greater than"}
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "A driveway with two points of vehicle access to the same street is permitted when lot frontage exceeds 18.0 m, and (B) also holds.", "gaps": "The front yard landscaping compliance condition in (6)(B) is keyed separately.", "not_modelled_reason": "none", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(6)#(6)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "may have a driveway"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "The two-access driveway also requires the front yard landscaping to comply with Clause 10.5.50.10.", "gaps": "A compliance cross-check on another clause; not a numeric or vocabulary requirement.", "not_modelled_reason": "deferred_phase2", "user_inputs": []},
+      "disclosure": "Whether the front yard landscaping complies with Clause 10.5.50.10 is not checked here; it is a condition on the two-access driveway permission.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(7)#(7)(A)",
+      "archetype": "PERMIT", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m > 18.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "60 dwelling units", "clause": "(7)", "reason": "threshold_used_in_application"},
+        {"literal": "25 or more dwelling units", "clause": "(7)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a residential building", "frontage_band": "lot frontage greater than"}
+      },
+      "calculation_handling": {"status": "partially_modelled", "description": "A hammerhead turnaround driveway is permitted when lot frontage exceeds 18.0 m (alternative to (7)(B)), except for large apartment buildings and subject to front yard landscaping compliance.", "gaps": "The apartment building exclusion (more than 60 units on a major street, 25 or more elsewhere) and the landscaping cross-check are not modelled.", "not_modelled_reason": "needs_user_input", "user_inputs": ["building_type", "unit_count"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(7)#(7)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "27.0 metres", "clause": "(7)(B)", "reason": "threshold_used_in_application"},
+        {"literal": "60 dwelling units", "clause": "(7)", "reason": "threshold_used_in_application"},
+        {"literal": "25 or more dwelling units", "clause": "(7)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "a residential building"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A hammerhead turnaround driveway is permitted when vehicle access is from a street with a right-of-way at least 27.0 m wide.", "gaps": "Street right-of-way width is not a model input.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []},
+      "disclosure": "Hammerhead turnaround driveways on streets with a right-of-way of at least 27.0 m are not evaluated; right-of-way width is not held.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(8)#(8)(A)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "3.0 metres", "clause": "(8)(A)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "hammerhead turnaround must"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A hammerhead turnaround has a maximum width of 3.0 m.", "gaps": "No target for the width of a hammerhead turnaround.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []},
+      "disclosure": "The 3.0 m maximum width of a hammerhead turnaround is not evaluated; there is no model target for it.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(8)#(8)(B)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "4.5 metres", "clause": "(8)(B)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "hammerhead turnaround must"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A hammerhead turnaround extends no more than 4.5 m from one edge of the driveway.", "gaps": "No target for hammerhead extent.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []},
+      "disclosure": "The 4.5 m limit on how far a hammerhead turnaround extends from one driveway edge is not evaluated; there is no model target for it.", "not_an_override": []
+    },
+    {
+      "unit_id": "10.5.100.1(8)#(8)(C)",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "3.0 metres", "clause": "(8)(C)", "reason": "threshold_used_in_application"}],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["any"],
+        "lot_conditions": [], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "hammerhead turnaround must"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "A hammerhead turnaround extends no more than 3.0 m from each opposite driveway edge.", "gaps": "No target for hammerhead extent.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []},
+      "disclosure": "The 3.0 m limit on how far a hammerhead turnaround extends from each opposite driveway edge is not evaluated; there is no model target for it.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.5.100.1(1)": {"explanation": "In the Residential zones, a front-yard driveway for a detached house, semi-detached house, duplex or townhouse unit with its own private driveway must be at least 2.0 m wide. The maximum is 2.6 m for narrow lots (under 6.0 m frontage). For 6.0 to 23.0 m frontage it is the lesser of 6.0 m and the parking widths. Above 23.0 m it is the lesser of 9.0 m and the parking widths.", "code_refs": "none"},
+    "10.5.100.1(2)": {"explanation": "A driveway that is not in or through the front yard must be at least 2.0 m wide, and no wider than the lesser of 6.0 m and the width of the parking spaces.", "code_refs": "none"},
+    "10.5.100.1(3)": {"explanation": "For houseplexes with three or more dwelling units, and townhouses without individual private driveways, a driveway must be at least 2.0 m wide for each lane and no more than 6.0 m wide in total.", "code_refs": "none"},
+    "10.5.100.1(6)": {"explanation": "A lot may have a driveway with two vehicle access points to the same street only if its frontage is over 18.0 m and the front yard landscaping complies with Clause 10.5.50.10.", "code_refs": "none"},
+    "10.5.100.1(7)": {"explanation": "A residential lot may have a hammerhead turnaround driveway if front yard landscaping complies with Clause 10.5.50.10 and either the frontage exceeds 18.0 m or access is from a street with a right-of-way of at least 27.0 m. Large apartment buildings are excluded.", "code_refs": "none"},
+    "10.5.100.1(8)": {"explanation": "A hammerhead turnaround may be at most 3.0 m wide, extend no more than 4.5 m from one driveway edge and no more than 3.0 m from each opposite edge.", "code_refs": "none"}
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_15/200.15.10.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.15.10.10(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": {
+        "tokens": ["lawfully_existing"],
+        "if": "none"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "2",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(1)"
+        },
+        {
+          "literal": "1",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(1)"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": ["parking_space"]
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    }
+  ]
+}

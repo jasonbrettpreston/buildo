@@ -1,0 +1,35 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_48/150.48.60.41", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.48.60.41(1)#whole",
+      "archetype": "LIMIT", "target": "height_m", "bound": "max",
+      "numeric_expression": ["height_m = existing(proposed_height_m; enacted(569-2013)) @(1)"],
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"], "building_types": ["any"], "lot_conditions": ["lawfully_existing"], "uses": [],
+        "evidence": {"R": "Residential Zone category", "RD": "Residential Zone category", "RS": "Residential Zone category", "RT": "Residential Zone category", "RM": "Residential Zone category", "any": "portable classroom building", "lawfully_existing": "lawfully existing portable classroom"}
+      },
+      "calculation_handling": {"status": "not_modelled", "description": "The lawful height of a lawfully existing portable classroom building that exceeds the permitted maximum height becomes its maximum height.", "gaps": "As-built heights of existing buildings are not held; the Residential Apartment, Commercial and IE zone categories are not in the zone vocabulary.", "not_modelled_reason": "existing_building_facts", "user_inputs": ["lawfully_existing_status"]},
+      "disclosure": "none", "not_an_override": []
+    },
+    {
+      "unit_id": "150.48.60.41(2)#whole",
+      "archetype": "REQUIRE", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "comply_or_minor_variance", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "Section 45", "clause": "(2)", "reason": "cross_reference_value"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "addition or extension"}},
+      "calculation_handling": {"status": "not_modelled", "description": "An addition or extension to a lawfully existing portable classroom building must comply with the permitted maximum height or be authorized by a Section 45 Planning Act minor variance.", "gaps": "Existing building facts are not held.", "not_modelled_reason": "existing_building_facts", "user_inputs": []},
+      "disclosure": "none", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.48.60.41(1)": {"explanation": "If a lawfully existing portable classroom building is taller than the permitted maximum height, its lawful height becomes the maximum for that building.", "code_refs": "none"},
+    "150.48.60.41(2)": {"explanation": "An addition or extension to such a building must meet the permitted maximum height or be authorized by a Section 45 Planning Act minor variance.", "code_refs": "none"}
+  }
+}

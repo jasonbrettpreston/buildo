@@ -1,0 +1,56 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "600.60.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": ["dwelling_units_max = 6 units @(1)(A)"]
+    },
+    {
+      "unit_id": "600.60.40(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "600.60.40(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 10.5 m @(2)(A)"]
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

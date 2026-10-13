@@ -1,0 +1,129 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "600.60.20(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone Category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone Category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone Category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone Category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone Category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "apartment building means"
+          },
+          {
+            "token": "detached_houseplex",
+            "evidence": "Detached houseplex means"
+          },
+          {
+            "token": "fiveplex",
+            "evidence": "Fiveplex means a building"
+          },
+          {
+            "token": "sixplex",
+            "evidence": "Sixplex means a building"
+          },
+          {
+            "token": "duplex",
+            "evidence": "a duplex, triplex, fourplex"
+          },
+          {
+            "token": "triplex",
+            "evidence": "duplex, triplex, fourplex"
+          },
+          {
+            "token": "fourplex",
+            "evidence": "triplex, fourplex, fiveplex"
+          },
+          {
+            "token": "detached_house",
+            "evidence": "originally constructed as a detached house"
+          },
+          {
+            "token": "semi_detached_house",
+            "evidence": "a detached house, semi-detached house"
+          },
+          {
+            "token": "townhouse",
+            "evidence": "semi-detached house or townhouse"
+          },
+          {
+            "token": "semi_detached_houseplex",
+            "evidence": "constructed as a semi-detached houseplex"
+          },
+          {
+            "token": "secondary_suite",
+            "evidence": "one or more secondary suites"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "seven or more dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "no more than six dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "five dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "six dwelling units",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "situated entirely on one lot",
+          "reason": "count_or_ordinal_not_a_limit"
+        },
+        {
+          "literal": "at least one dwelling unit",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

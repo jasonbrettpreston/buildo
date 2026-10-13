@@ -1,0 +1,281 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "600.60.40(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": ["dwelling_units_max = 6 units @(1)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["label_value"], "if": "labelled(u) and label(u) < 6 units"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["label_value"],
+        "uses": ["dwelling_unit"],
+        "evidence": {
+          "any": "dwelling units on the lot",
+          "label_value": "numerical value less than",
+          "dwelling_unit": "dwelling units on the lot"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Where the zone label carries the letter u with a value below 6, the maximum number of dwelling units on the lot is raised to 6.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "five", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(1)(B)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "45", "clause": "(1)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "detached_houseplex": "a detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "A detached houseplex with five or six dwelling units is a permitted residential building type if it meets the Residential Zone category regulations and all other requirements, or has a Section 45 minor variance.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 10.5 m @(2)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lowest_level_joists_1_0_to_1_5_m_for_80_pct", "lowest_level_ceiling_2_4_m_for_80_pct", "lowest_level_contains_dwelling_unit"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "five", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(2)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "1.0", "clause": "(2)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "1.5", "clause": "(2)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "80", "clause": "(2)(A)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "2.4", "clause": "(2)(A)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "80", "clause": "(2)(A)(ii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["detached_houseplex"],
+        "lot_conditions": ["lowest_level_joists_1_0_to_1_5_m_for_80_pct", "lowest_level_ceiling_2_4_m_for_80_pct", "lowest_level_contains_dwelling_unit"],
+        "uses": [],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "lowest_level_joists_1_0_to_1_5_m_for_80_pct": "bottom of the ceiling joists",
+          "lowest_level_ceiling_2_4_m_for_80_pct": "floor-to- ceiling height",
+          "lowest_level_contains_dwelling_unit": "wholly or partially contains a dwelling unit"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "The maximum height of a detached houseplex with five or six dwelling units may be raised to 10.5 m when the lowest level meets the joist height, ceiling height and dwelling unit conditions.",
+        "gaps": "The lowest-level joist height, ceiling height and dwelling unit conditions are building design facts we do not hold.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "five", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(3)(A)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["detached_house", "detached_houseplex"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "detached_house": "a detached house",
+          "detached_houseplex": "detached houseplex with",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "A detached house may be converted to a detached houseplex with five or six dwelling units and stay lawfully existing, if the added units are entirely inside the building as it lawfully existed.",
+        "gaps": "Needs facts about the building as it lawfully existed before the permit, which we do not hold.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type", "lawfully_existing_status"]
+      },
+      "disclosure": "The source text of 600.60.40(3)(A) ends with a garbled cross-reference ('(B) and (©'), apparently meaning 600.60.40(3)(B) and (C). The permission is keyed as written.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "45", "clause": "(3)(B)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {
+          "any": "building or structure",
+          "lawfully_existing": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Any addition or extension to a lawfully existing building on a converted lot must meet all other regulations or get a Section 45 minor variance.",
+        "gaps": "Depends on whether the lot is a converted lawfully existing building, which we cannot test from the lot data.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "Extends the meaning of the words lawful, lawfully and lawfully existing beyond the Chapter 800 definitions. The text stops at 'include:' and the list that should follow is missing.",
+        "gaps": "The items the definition includes are missing from the source text.",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "The source text of 600.60.40(3)(C) ends at 'include:' with no items following (lead-in without items), so what the extended meaning of lawfully existing adds cannot be stated.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "600.60.40(3)#(3)(D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["semi_detached_houseplex", "semi_detached_house", "townhouse", "fiveplex", "sixplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "semi_detached_houseplex": "semi-detached houseplex",
+          "semi_detached_house": "semi-detached house or",
+          "townhouse": "a townhouse",
+          "fiveplex": "fiveplex or sixplex",
+          "sixplex": "fiveplex or sixplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "No part of a semi-detached houseplex, semi-detached house or townhouse may be converted to a fiveplex or sixplex by adding dwelling units.",
+        "gaps": "A conversion is a change to an existing building, which we do not hold facts about.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "600.60.40(1)": {
+      "explanation": "Where the zone label has a unit count (the letter u) below 6, up to 6 dwelling units are allowed on the lot. A detached houseplex with five or six dwelling units is a permitted building type in the Residential Zone category if it meets the zone regulations and other requirements, or has a Section 45 minor variance.",
+      "code_refs": "none"
+    },
+    "600.60.40(2)": {
+      "explanation": "A detached houseplex with five or six dwelling units may be up to 10.5 m high if its lowest level has joist bottoms 1.0 to 1.5 m above grade over at least 80 percent of the floor area, at least 2.4 m floor to ceiling over at least 80 percent of that floor area, and wholly or partly contains a dwelling unit.",
+      "code_refs": "none"
+    },
+    "600.60.40(3)": {
+      "explanation": "In the Residential Zone category an existing detached house may be converted to a five or six unit detached houseplex, and stay lawfully existing, if the new units are entirely inside the building as it lawfully existed. Additions must meet all other regulations or get a minor variance. No part of a semi-detached houseplex, semi-detached house or townhouse may be converted to a fiveplex or sixplex. The source text for the definition of lawfully existing in (C) is incomplete.",
+      "code_refs": "none"
+    }
+  }
+}

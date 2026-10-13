@@ -1,0 +1,53 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch200_5/200.5.10.1.part2",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "200.5.10.1(9)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "dwelling_unit"
+    ],
+    "evidence": {
+     "any": "assisted housing",
+     "dwelling_unit": "dwelling unit"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Defines assisted housing for parking purposes.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "200.5.10.1(9)": {
+   "explanation": "Assisted housing means a dwelling unit run by a non-profit or private group with the City.",
+   "code_refs": "none"
+  }
+ }
+}

@@ -1,0 +1,47 @@
+{
+  "a_seal": {
+    "seal_id": 298,
+    "sha256": "f5fdbab14b0ee4bd93010e377dd1803bfd5e3c5127450ff00367f149efa3bb5d"
+  },
+  "b_run": {
+    "ledger_sha256": "1ce5ca1bc3709a6435d0235f809f5357dc6627d8294fc52b79ffa418f8e78f72",
+    "read_paths": [],
+    "run_id": "20261008T211152Z-881785b9",
+    "worktree_commit": "3d6f6e2cfccc01ca6ccc3c3655e6d0906e20052e"
+  },
+  "batch": "A6",
+  "briefs": {
+    "a": "f6363fd9a6f1447499b4aad4729dad4f534ae7d9fa20387cad2a643b24b06b60",
+    "b": "d93679efcae456190496f369233f11acc8f8ad9ab2ba86ccbdc805553d624d21"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch220_5/220.5.10.1.part4",
+  "unit_shas": {
+    "220.5.10.1(8)#(8)[T1.R1.C1]": "1198efa772b5e9ace2fe1cd99f5972a8df102bdb7fe2fcbd31f0d842ffb4b19d",
+    "220.5.10.1(8)#(8)[T1.R1.C2]": "bbf37d76ab3a2d9845725182340ad0d6a3d8005f4be9104c417675f73b51401c",
+    "220.5.10.1(8)#(8)[T1.R2.C1]": "674903a9b8158f40805937216c40e3c59788a117d6f849d6fa932156a08eaf4e",
+    "220.5.10.1(8)#(8)[T1.R2.C2]": "0348338574e42f9d22f57b897cced97c508fdb1e0041671441a85564e4fa49a3",
+    "220.5.10.1(8)#(8)[T1.R3.C1]": "51823d55df0ba62047ebd9a809f2a2a28f8b8d3ba117cdaa16ca93488910d084",
+    "220.5.10.1(8)#(8)[T1.R3.C2]": "6ac936613173286dd613118c2d1d8041962413f603620e2f4e5d970f91a8de0e",
+    "220.5.10.1(8)#(8)[T1.R4.C1]": "a98b306383bf283249840572f63f3d4c2b1f027156879283f190a22d1689434b",
+    "220.5.10.1(8)#(8)[T1.R4.C2]": "066792504cb6cd1ba2b851e769759f400c3fbd11ffa9e3294a07b93d19dfb979",
+    "220.5.10.1(8)#(8)[T1.R5.C1]": "b6beaa22a38a62f0fbf88955cf153baa5eb27d97dc8e8026fc8cf52b561b7613",
+    "220.5.10.1(8)#(8)[T1.R5.C2]": "d83dd99e8f9957458d9c823342c4cb85c3abdc07f62709a283727ba1e95177a8",
+    "220.5.10.1(8)#(8)[T1.R6.C1]": "e36e22daf9b66922676d93652a6472e7dbf5bea9eb5eff46a63b7dde6b125ad7",
+    "220.5.10.1(8)#(8)[T1.R6.C2]": "dd751f8d7fefd4b79113184371dd05b6a1a2b590005d45694d58798c843c1af8",
+    "220.5.10.1(8)#(8)[T1.R7.C1]": "dcfaf26f65d94c9fed9e242a163f72e2e71c36d9e6900752ae85c70d792c968b",
+    "220.5.10.1(8)#(8)[T1.R7.C2]": "ae3adeea064ead45403fb1a0dab3d6506546b2408437cb93d53c9d5e7b959eab",
+    "220.5.10.1(9)#(9)(A)": "38a63db7163425f6f860cc133a334a70605beb155745e5074f7199273aad57f9",
+    "220.5.10.1(9)#(9)(B)": "0bf15edf4381708b6bdd11176283dd6e95ff0dc61362c8ef8b056b97e2986248"
+  }
+}

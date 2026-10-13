@@ -1,0 +1,98 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch230_5/230.5.10.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "230.5.10.11(1)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(2)#whole",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_spaces = existing(bicycle_parking_spaces; enacted(569-2013)) @(2)"]
+    },
+    {
+      "unit_id": "230.5.10.11(3)#whole",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "min",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(4)#(4)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(4)#(4)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(4)#(4)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(5)#(5)(A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(5)#(5)(B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(5)#(5)(C)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(6)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(7)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(8)#(8)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.11(8)#(8)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

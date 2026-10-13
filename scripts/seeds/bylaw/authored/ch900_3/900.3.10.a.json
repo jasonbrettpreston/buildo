@@ -1,0 +1,430 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1462)#(1462)[SSP]",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": [
+        "gfa_m2 = band(lot_area_m2; <408 m2: min(0.6 ratio × lot_area_m2 @(1462)[SSP](A)(i); 204 m2 @(1462)[SSP](A)(i)); ≤697 m2: min(0.5 ratio × lot_area_m2 @(1462)[SSP](A)(ii); 279 m2 @(1462)[SSP](A)(ii)); >697 m2: 0.4 ratio × lot_area_m2) @(1462)[SSP](A)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1462",
+          "any": "permitted building type"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Maximum floor area is the lesser of a share of lot area or a fixed area, banded by lot area (under 408 m2, 408 to 697 m2, over 697 m2). The clause calls this a floor space index but states it as floor area, so it is keyed on gfa_m2.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1462)#(1462)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No prevailing by-laws or sections apply to this exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1463)#(1463)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No site specific provisions apply to this exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1463)#(1463)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 1463",
+          "any": "Prevailing By-laws"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "The lands are also subject to the North York Airport Hazard Map (by-law 7625) and, for 716 Marlee Avenue and 692, 694 and 696 Glengrove Avenue, City of Toronto by-law 1295-2013. These alternate paths are never evaluated.",
+        "gaps": "Only the first prevailing instrument (the Schedule 'D' map) is carried in the instrument field; item (B), by-law 1295-2013 for named addresses, is described here.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "6.5 metres", "clause": "(21)[SSP](A)", "reason": "cross_reference_value"},
+        {"literal": "135 square metres", "clause": "(21)[SSP](C)", "reason": "cross_reference_value"},
+        {"literal": "25%", "clause": "(21)[SSP](C)", "reason": "cross_reference_value"},
+        {"literal": "0.5", "clause": "(21)[SSP](C)", "reason": "cross_reference_value"},
+        {"literal": "4.6 metres", "clause": "(21)[SSP](C)(iii)(a)", "reason": "threshold_used_in_application"},
+        {"literal": "4%", "clause": "(21)[SSP](C)(iii)(c)", "reason": "cross_reference_value"},
+        {"literal": "2 or more storeys", "clause": "(21)[SSP](D)", "reason": "threshold_used_in_application"},
+        {"literal": "15.3 metres", "clause": "(21)[SSP](D)(i)", "reason": "threshold_used_in_application"},
+        {"literal": "0.9 metres", "clause": "(21)[SSP](D)(i)", "reason": "cross_reference_value"},
+        {"literal": "2.1 metres", "clause": "(21)[SSP](D)(i)", "reason": "cross_reference_value"},
+        {"literal": "18.0 metres", "clause": "(21)[SSP](D)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "1.2 metres", "clause": "(21)[SSP](D)(ii)", "reason": "cross_reference_value"},
+        {"literal": "20%", "clause": "(21)[SSP](D)(ii)", "reason": "cross_reference_value"},
+        {"literal": "0.3 metres", "clause": "(21)[SSP](D)(iii)", "reason": "cross_reference_value"},
+        {"literal": "3.0 metres", "clause": "(21)[SSP](D)(iii)", "reason": "cross_reference_value"},
+        {"literal": "3 or more vehicles", "clause": "(21)[SSP](E)", "reason": "threshold_used_in_application"},
+        {"literal": "27.0 metres", "clause": "(21)[SSP](E)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 21",
+          "detached_house": "detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Exception RD 21 holds several separate rules (flat-roof height, building depth, gross floor area with void rules, side yard setbacks by frontage band, and a three-car garage permission). One unit cannot carry them as a single limit.",
+        "gaps": "Each sub-clause (A) to (E) needs its own unit before it can be evaluated.",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "Exception RD 21 sets several site specific rules at once: a 6.5 m height cap for a flat-roofed detached house, a gross floor area cap of 135 m2 plus 25% of lot area (maximum FSI 0.5, with garage and void areas counted), side yard setbacks that depend on lot frontage for houses of 2 or more storeys, and a garage for 3 or more vehicles on lots wider than 27.0 m. These are not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No prevailing by-laws or sections apply to this exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(42)#(42)[SSP]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "118 square metres", "clause": "(42)[SSP](A)(i)", "reason": "cross_reference_value"},
+        {"literal": "25%", "clause": "(42)[SSP](A)(i)", "reason": "cross_reference_value"},
+        {"literal": "0.5", "clause": "(42)[SSP](A)(i)", "reason": "cross_reference_value"},
+        {"literal": "1 storey", "clause": "(42)[SSP](A)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "15.3 metres", "clause": "(42)[SSP](A)(ii)", "reason": "threshold_used_in_application"},
+        {"literal": "0.6 metres", "clause": "(42)[SSP](A)(ii)", "reason": "cross_reference_value"},
+        {"literal": "2.1 metres", "clause": "(42)[SSP](A)(ii)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 42",
+          "detached_house": "detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "A detached house is permitted only if it meets a gross floor area cap (118 m2 plus 25% of lot area, maximum FSI 0.5, garage included) and a side yard rule for second-storey additions over an existing one-storey house. The two conditions are combined in one permission and the second depends on the existing building.",
+        "gaps": "Sub-clauses (A)(i) and (A)(ii) need separate units; (A)(ii) needs as-built facts about the existing house.",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "Exception RD 42 permits a detached house only if the gross floor area (garage included) is at most 118 m2 plus 25% of the lot area, up to an FSI of 0.5, and a second-storey addition over an existing one-storey house keeps the existing side yard setback (at least 0.6 m, aggregate 2.1 m) on lots under 15.3 m frontage. Not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(42)#(42)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No prevailing by-laws or sections apply to this exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[SSP]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["97 Hillmount Avenue", "the lot known as 2980 Weston Road"]},
+      "literals_not_expressed": [
+        {"literal": "1.8 metres", "clause": "(5)[SSP](A)", "reason": "cross_reference_value"},
+        {"literal": "16.6 metres", "clause": "(5)[SSP](C)(i)", "reason": "cross_reference_value"},
+        {"literal": "33 percent", "clause": "(5)[SSP](C)(ii)", "reason": "cross_reference_value"},
+        {"literal": "74 percent", "clause": "(5)[SSP](C)(ii)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 5",
+          "any": "lawfully existing building"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Exception RD 5 combines a 1.8 m minimum side yard setback that replaces 10.20.40.70(3), an address-specific disapplication of 10.5.80.40(2) at 97 Hillmount Avenue, and driveway width and front yard landscaping limits for a lawfully existing building at 2980 Weston Road.",
+        "gaps": "Sub-clauses (A), (B) and (C) need separate units; (B) and (C) apply only to named addresses.",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": []
+      },
+      "disclosure": "Exception RD 5 sets a 1.8 m minimum side yard setback in place of 10.20.40.70(3), disapplies 10.5.80.40(2) at 97 Hillmount Avenue if OMB Order PL100076 is met, and for the existing building at 2980 Weston Road sets a 16.6 m maximum driveway width and minimum front yard landscaping of 33 percent (soft landscaping 74 percent). Not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule `D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 5",
+          "any": "Prevailing By-laws"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "The lands are also subject to the Schedule D Airport Hazard Map of North York zoning by-law 7625. This alternate path is never evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(961)#(961)[SSP]",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_lane", "flanking_lot"],
+        "uses": ["deck_or_platform", "parking_space"],
+        "evidence": {
+          "RD": "Exception RD 961",
+          "any": "Site Specific Provisions",
+          "abuts_lane": "abutting a lane",
+          "flanking_lot": "flanking street",
+          "deck_or_platform": "a platform",
+          "parking_space": "Parking Access"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Exception RD 961 holds two non-numeric rules: a raised platform in a front or rear yard may not encroach into the required setback (replacing 10.5.40.60(1)), and parking access on a lot abutting a lane or flanking street must come from the lane or flanking street.",
+        "gaps": "A prohibition (A) and an access requirement (B) are combined in one unit; each needs its own unit.",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": []
+      },
+      "disclosure": "Exception RD 961 bars a platform higher than the first floor from encroaching into the required front or rear yard setback, and requires parking access from the lane or flanking street on lots that abut one. Not evaluated here.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(961)#(961)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(1)8 of former City of Toronto By-law 438-86", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["380, 382, 384, 386 Rosewell Ave. and part of 1451 Avenue Rd."]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD 961",
+          "any": "Prevailing By-laws"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "For the named Rosewell Ave. and Avenue Rd. lands, Section 12(1)8 of former City of Toronto By-law 438-86, as it stood in 1988, is an alternate compliance path. It is never evaluated.",
+        "gaps": "none",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1462)": {
+      "explanation": "On lots with exception RD 1462, the maximum floor area is the lesser of 0.6 times the lot area or 204 m2 when the lot is under 408 m2, the lesser of 0.5 times the lot area or 279 m2 for lots of 408 to 697 m2, and 0.4 times the lot area for larger lots. No prevailing by-laws apply.",
+      "code_refs": "none"
+    },
+    "900.3.10(1463)": {
+      "explanation": "Exception RD 1463 adds no site specific rules. The lands remain subject to the North York Airport Hazard Map (by-law 7625), and 716 Marlee Avenue and 692, 694 and 696 Glengrove Avenue to City of Toronto by-law 1295-2013. These are not evaluated.",
+      "code_refs": "none"
+    },
+    "900.3.10(21)": {
+      "explanation": "Exception RD 21 sets several site specific rules: a 6.5 m height cap for flat-roofed detached houses, gross floor area of 135 m2 plus 25% of lot area (maximum FSI 0.5) with garages and void areas counted, side yard setbacks that depend on lot frontage for houses of 2 or more storeys, and a garage for 3 or more vehicles on lots wider than 27.0 m. Not evaluated here.",
+      "code_refs": "none"
+    },
+    "900.3.10(42)": {
+      "explanation": "Exception RD 42 permits a detached house only if its gross floor area, garage included, is at most 118 m2 plus 25% of the lot area (up to FSI 0.5), and a second-storey addition over an existing one-storey house keeps the existing side yard setback. Not evaluated here.",
+      "code_refs": "none"
+    },
+    "900.3.10(5)": {
+      "explanation": "Exception RD 5 sets a 1.8 m minimum side yard setback, disapplies 10.5.80.40(2) at 97 Hillmount Avenue under conditions, and sets driveway width and landscaping limits for the existing building at 2980 Weston Road. The Airport Hazard Map of North York by-law 7625 also applies. Not evaluated here.",
+      "code_refs": "none"
+    },
+    "900.3.10(961)": {
+      "explanation": "Exception RD 961 bars raised platforms from encroaching into the required front or rear yard setback and requires parking access from the lane or flanking street where the lot abuts one. A 1988 section of former Toronto by-law 438-86 is an alternate path for named lands. Not evaluated here.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -169,4 +169,7 @@ describe('extractors on the real text', () => {
   it('600.60.40(3): the (A) garble and the (C) omission are disclosed source defects', () => {
     expect(slice.defects.filter((x: Json) => x.regulation_id === '600.60.40(3)').map((x: Json) => [x.clause_path, x.kind])).toEqual([['(3)(A)', 'garbled_character'], ['(3)(C)', 'lead_in_without_items']]);
   });
+  it('Spec 69a M-81 R6: the City\'s missing space after "regulation" / "clause" is a counted ref_missing_space defect (8 rows)', () => {
+    expect(slice.defects.filter((x: Json) => x.kind === 'ref_missing_space').map((x: Json) => x.regulation_id)).toEqual(['10.10.60.20(1)', '900.2.10(114)', '900.3.10(18)', '900.3.10(21)', '900.3.10(244)', '900.5.10(174)', '900.5.10(208)', '900.6.10(38)']);
+  });
 });

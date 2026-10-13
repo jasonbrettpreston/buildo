@@ -1,0 +1,105 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch970_30/970.30.15.5.part1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "970.30.15.5(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_rate",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_rate = 1.0 ratio @(1)(A)"]
+    },
+    {
+      "unit_id": "970.30.15.5(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_rate",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_rate = 0.75 ratio @(1)(B)"]
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(A)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(B)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(C)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(D)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(E)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(F)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(2)#(2)(G)",
+      "archetype": "DEFINE",
+      "target": "interior_floor_area_m2",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(3)#(3)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(3)#(3)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(3)#(3)(C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(3)#(3)(D)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "970.30.15.5(3)#(3)(E)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

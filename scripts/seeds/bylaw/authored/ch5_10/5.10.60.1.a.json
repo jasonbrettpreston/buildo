@@ -1,0 +1,43 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.60.1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.60.1(1)#whole",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"ancillary_building": "that are ancillary"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "Ancillary buildings and structures to a permitted use are allowed if they meet the zone's regulations; the zone limits themselves are keyed in the zone clauses.",
+        "gaps": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.60.1(1)": {
+      "explanation": "Buildings and structures that serve a permitted use on the same lot, such as sheds or garages, are allowed as long as they meet the zone's regulations.",
+      "code_refs": "none"
+    }
+  }
+}

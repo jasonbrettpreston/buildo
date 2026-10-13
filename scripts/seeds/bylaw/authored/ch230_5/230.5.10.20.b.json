@@ -1,0 +1,173 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch230_5/230.5.10.20",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "230.5.10.20(1)#(1)(A)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "max",
+      "numeric_expression": [
+        "bicycle_parking_spaces = 0.5 ratio × bicycle_parking_spaces @(1)(A)"
+      ],
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "bicycle parking spaces required"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "230.5.10.20(1)#(1)(B)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "max",
+      "numeric_expression": [
+        "bicycle_parking_spaces = 0.5 ratio × bicycle_parking_spaces @(1)(B)"
+      ],
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "bicycle parking spaces required"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "230.5.10.20(1)#(1)(C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "bicycle parking space required"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "230.5.10.20(1)#(1)(D)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "owner or occupant must enter"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "230.5.10.20(1)#(1)(E)",
+      "archetype": "DEFINE",
+      "target": "bicycle_parking_spaces",
+      "bound": "none",
+      "numeric_expression": [
+        "bicycle_parking_spaces = bicycle_parking_spaces @(1)(E)"
+      ],
+      "condition": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "bicycle parking spaces required"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    }
+  ]
+}

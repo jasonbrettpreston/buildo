@@ -40,8 +40,10 @@ const KEYWORDS = new Set(['max', 'min', 'band', 'if', 'by_type', 'existing', 'en
 const OPS = { '+': '+', '-': '−', '−': '−', '*': '×', '×': '×', '/': '÷', '÷': '÷' };
 const CMPS = { '<': '<', '<=': '≤', '≤': '≤', '>': '>', '>=': '≥', '≥': '≥', '=': '=' };
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*/;
-// a clause path: optional '#', optional letter prefix (SSP, PBS, whole), then zero or more "(x)" groups
-const CLAUSE_PATH = /^#?(?:[A-Za-z]+)?(?:\([A-Za-z0-9]+\))*/;
+// a clause path: optional '#', optional letter prefix (SSP, PBS, whole), then zero or more "(x)" groups or bracket groups —
+// the Ch.900 list groups [SSP] / [PBS], data-table cells [T2.R4.C2] (Spec 69 M-57) and the enacting [instruction] clause
+// (Spec 68 §6 path ids) and status-variant tags ~under_appeal / ~repeat2 (Spec 69 M-57)
+const CLAUSE_PATH = /^#?(?:[A-Za-z]+)?(?:\([A-Za-z0-9]+\)|\[[A-Za-z0-9.]+\]|~[a-z][a-z0-9_]*)*/; // ~<status> variant tag (Spec 69 M-57)
 
 export class DslError extends Error {
   constructor(code, message) {
@@ -409,6 +411,9 @@ export function combineUnits(op, a, b) {
   if (op === '×') {
     if (a === 'ratio' || a === 'pct') return b;
     if (b === 'ratio' || b === 'pct') return a;
+    // Spec 69 M-74: a count scales a length or area ("6.0 metres for each dwelling unit" → 6.0 m × dwelling_units → m)
+    if (a === 'units' && (b === 'm' || b === 'm2')) return b;
+    if (b === 'units' && (a === 'm' || a === 'm2')) return a;
     if (a === 'm' && b === 'm') return 'm2';
     return null;
   }

@@ -1,0 +1,84 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch220_5/220.5.1.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "220.5.1.10(1)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(3)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(4)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(5)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(6)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.1.10(7)#whole",
+      "archetype": "LIMIT",
+      "target": "vertical_clearance_m",
+      "bound": "min",
+      "numeric_expression": ["vertical_clearance_m = 4.4 m @(7)"]
+    },
+    {
+      "unit_id": "220.5.1.10(8)#(8)(A)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 17.0 m @(8)(A)(i)"]
+    },
+    {
+      "unit_id": "220.5.1.10(8)#(8)(B)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 11.0 m @(8)(B)(i)"]
+    },
+    {
+      "unit_id": "220.5.1.10(8)#(8)(C)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 6.0 m @(8)(C)(i)"]
+    },
+    {
+      "unit_id": "220.5.1.10(8)#(8)(D)",
+      "archetype": "LIMIT",
+      "target": "parking_space_length_m",
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 13.0 m @(8)(D)(i)"]
+    }
+  ]
+}

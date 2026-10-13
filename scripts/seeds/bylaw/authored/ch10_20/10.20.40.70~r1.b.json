@@ -1,0 +1,142 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_20/10.20.40.70~r1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.20.40.70(7)#(7)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; 3.0 m) @(7)(A)"
+      ],
+      "condition": [
+        "depth_band",
+        "through_lot"
+      ],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Buildings"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "townhouse",
+            "evidence": "a townhouse or apartment building"
+          },
+          {
+            "token": "apartment_building",
+            "evidence": "a townhouse or apartment building"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "major_street",
+            "evidence": "abutting a major street"
+          }
+        ],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "36.0 metres",
+          "reason": "threshold_used_in_application",
+          "note": "lot-depth threshold separating (7)(A)(i) from (7)(A)(ii); carried by the if condition"
+        },
+        {
+          "literal": "10.5.40.70(1)",
+          "reason": "cross_reference_value",
+          "note": "the front yard setback required by 10.5.40.70(1) in the 'lesser of' arm (7)(A)(i)(a); that value is not present in this unit's text"
+        },
+        {
+          "literal": "6.0 metres",
+          "reason": "count_or_ordinal_not_a_limit",
+          "note": "(7)(A)(i)(a) and (7)(A)(i)(c) arm value; the through-lot arm is not expressed as a separate expression"
+        },
+        {
+          "literal": "3.0 metres",
+          "reason": "count_or_ordinal_not_a_limit",
+          "note": "(7)(A)(i)(b) arm value; expressed only inside the if expression"
+        }
+      ],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      },
+      "instrument": "none",
+      "requirement": "none",
+      "ranks_layers": []
+    },
+    {
+      "unit_id": "10.20.40.70(7)#(7)(D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 5.5 m @(7)(D)(ii)"
+      ],
+      "condition": [],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Buildings"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "apartment_building",
+            "evidence": "for an apartment building"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "major_street",
+            "evidence": "abutting a major street"
+          }
+        ],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "2.4 metres",
+          "reason": "count_or_ordinal_not_a_limit",
+          "note": "(7)(D)(i) value for main wall portions without primary windows; depends on wall geometry not carried in the lot vector"
+        },
+        {
+          "literal": "7.5 metres",
+          "reason": "count_or_ordinal_not_a_limit",
+          "note": "(7)(D)(iii) value for main wall portions exceeding a 25.0 m building length"
+        },
+        {
+          "literal": "25.0 metres",
+          "reason": "threshold_used_in_application",
+          "note": "building length threshold in (7)(D)(iii); needs a building length input"
+        },
+        {
+          "literal": "3.0 metres",
+          "reason": "count_or_ordinal_not_a_limit",
+          "note": "(7)(D)(iv) corner-lot setback from a side lot line abutting a street; a different target (side_setback_street_m)"
+        }
+      ],
+      "calculation_handling": {
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [
+          "building_type"
+        ]
+      },
+      "instrument": "none",
+      "requirement": "none",
+      "ranks_layers": []
+    }
+  ]
+}

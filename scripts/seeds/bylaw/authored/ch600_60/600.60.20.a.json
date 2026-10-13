@@ -1,0 +1,65 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch600_60/600.60.20",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "600.60.20(1)#(1)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "seven", "clause": "(1)(A)(i)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(1)(A)(ii)(a)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "five", "clause": "(1)(A)(iii)", "reason": "count_or_ordinal_not_a_limit"},
+        {"literal": "six", "clause": "(1)(A)(iv)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R", "RD", "RS", "RT", "RM"],
+        "building_types": ["apartment_building", "detached_houseplex", "duplex", "triplex", "fourplex", "fiveplex", "sixplex", "detached_house", "semi_detached_house", "townhouse", "semi_detached_houseplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Residential Zone Category",
+          "RD": "Residential Zone Category",
+          "RS": "Residential Zone Category",
+          "RT": "Residential Zone Category",
+          "RM": "Residential Zone Category",
+          "apartment_building": "apartment building means",
+          "detached_houseplex": "Detached houseplex means",
+          "duplex": "a duplex, triplex",
+          "triplex": "duplex, triplex, fourplex",
+          "fourplex": "triplex, fourplex, fiveplex",
+          "fiveplex": "Fiveplex means a building",
+          "sixplex": "Sixplex means a building",
+          "detached_house": "detached house, semi-detached",
+          "semi_detached_house": "semi-detached house or",
+          "townhouse": "or townhouse",
+          "semi_detached_houseplex": "semi-detached houseplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "Defines apartment building, detached houseplex, fiveplex and sixplex for Section 600.60 (counts of dwelling units, single lot, not attached, one unit above another). The definitions classify buildings; they set no numeric value.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "600.60.20(1)": {
+      "explanation": "Section 600.60 defines its own building types. An apartment building has seven or more dwelling units. A detached houseplex has up to six dwelling units on one lot, is not attached to a neighbour, and has at least one unit above another. A fiveplex has five units and a sixplex has six, and each counts as a type of detached houseplex, not an apartment building. A house with a secondary suite is not a houseplex.",
+      "code_refs": "none"
+    }
+  }
+}

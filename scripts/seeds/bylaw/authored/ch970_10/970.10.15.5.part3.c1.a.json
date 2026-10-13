@@ -1,0 +1,1750 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch970_10/970.10.15.5.part3.c1",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T1.R1.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T1.R2.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T1.R3.C1]",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "6 a.m.",
+     "clause": "(5)[T1.R3.C1]",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "6 p.m.",
+     "clause": "(5)[T1.R3.C1]",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Defines the AM, PM and Eve time bands used by the occupancy columns; no lot-data effect.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R1.C3]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R2.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R2.C2]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R2.C3]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R2.C4]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R2.C5]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Table title or column heading cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R3.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R3.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1",
+     "clause": "(5)[T2.R3.C2](A)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "2",
+     "clause": "(5)[T2.R3.C2](A)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "3",
+     "clause": "(5)[T2.R3.C2](A)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "1.0",
+     "clause": "(5)[T2.R3.C2](A)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R3.C2](A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "4",
+     "clause": "(5)[T2.R3.C2](B)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "1.5",
+     "clause": "(5)[T2.R3.C2](B)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R3.C2](B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "2.0",
+     "clause": "(5)[T2.R3.C2](C)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R3.C2](C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking rate varies by Policy Area (PA1-PA4 or all other areas); the Policy Area map is not held.",
+    "gaps": "Policy Area membership of the lot is unavailable.",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": []
+   },
+   "disclosure": "The parking rate depends on which Policy Area the lot is in, which is not available, so the rate is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R3.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R3.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R3.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R3.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R3.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "25%",
+     "clause": "(5)[T2.R3.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 25% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R4.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R4.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1",
+     "clause": "(5)[T2.R4.C2](A)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "3.0",
+     "clause": "(5)[T2.R4.C2](A)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R4.C2](A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "2",
+     "clause": "(5)[T2.R4.C2](B)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "4.5",
+     "clause": "(5)[T2.R4.C2](B)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R4.C2](B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "3",
+     "clause": "(5)[T2.R4.C2](C)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "5.5",
+     "clause": "(5)[T2.R4.C2](C)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R4.C2](C)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "4",
+     "clause": "(5)[T2.R4.C2](D)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "5.5",
+     "clause": "(5)[T2.R4.C2](D)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R4.C2](D)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "7.0",
+     "clause": "(5)[T2.R4.C2](E)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R4.C2](E)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking rate varies by Policy Area (PA1-PA4 or all other areas); the Policy Area map is not held.",
+    "gaps": "Policy Area membership of the lot is unavailable.",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": []
+   },
+   "disclosure": "The parking rate depends on which Policy Area the lot is in, which is not available, so the rate is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R4.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "25%",
+     "clause": "(5)[T2.R4.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 25% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R4.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R4.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R4.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R4.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R5.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R5.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_rate = 0.1 ratio @(5)[T2.R5.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum parking rate of 0.1 for each dwelling unit for this land use, which is not a MaxBLD building type.",
+    "gaps": "Land use is outside the building types modelled.",
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R5.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R5.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R5.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R5.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R5.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R5.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R6.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R6.C2]",
+   "archetype": "LIMIT",
+   "target": "parking_rate",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_rate = 0.2 ratio @(5)[T2.R6.C2]"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R6.C2]",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Minimum parking rate of 0.2 per 100 square metres of gross floor area for this land use, which is not a MaxBLD building type.",
+    "gaps": "Land use is outside the building types modelled.",
+    "not_modelled_reason": "outside_maxbld_building_types",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R6.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R6.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R6.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R6.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R6.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R6.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R7.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R7.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Rate is defined by reference to another land use in the table; no number in this cell.",
+    "gaps": "Cross-referenced land-use rate is not followed.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The parking rate for this land use is the rate of another land use in the table and is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R7.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "25%",
+     "clause": "(5)[T2.R7.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 25% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R7.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R7.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R7.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R7.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R8.C1]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "description": "Land-use row label cell; carries no regulation.",
+    "gaps": "none",
+    "not_modelled_reason": "none",
+    "user_inputs": []
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R8.C2]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "1",
+     "clause": "(5)[T2.R8.C2](A)",
+     "reason": "map_label_value"
+    },
+    {
+     "literal": "0.4",
+     "clause": "(5)[T2.R8.C2](A)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R8.C2](A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    },
+    {
+     "literal": "0.8",
+     "clause": "(5)[T2.R8.C2](A)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "1",
+     "clause": "(5)[T2.R8.C2](B)",
+     "reason": "limit_not_modelled"
+    },
+    {
+     "literal": "100",
+     "clause": "(5)[T2.R8.C2](B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking rate varies by Policy Area (PA1-PA4 or all other areas); the Policy Area map is not held.",
+    "gaps": "Policy Area membership of the lot is unavailable.",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": []
+   },
+   "disclosure": "The parking rate depends on which Policy Area the lot is in, which is not available, so the rate is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R8.C3]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R8.C3]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the AM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The AM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R8.C4]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R8.C4]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the PM period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The PM parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "970.10.15.5(5)#(5)[T2.R8.C5]",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "100%",
+     "clause": "(5)[T2.R8.C5]",
+     "reason": "limit_not_modelled"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "building or structure",
+     "parking_space": "street parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "description": "Parking occupancy percentage for the Eve period, used for shared-parking calculations; not a limit on any target.",
+    "gaps": "Occupancy-based shared parking is not modelled.",
+    "not_modelled_reason": "deferred_phase2",
+    "user_inputs": []
+   },
+   "disclosure": "The Eve parking occupancy rate of 100% for this land use is shown for reference and is not applied to the parking requirement.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "970.10.15.5(5)": {
+   "explanation": "Off-street parking must be provided for every building or structure that is erected or enlarged, at the rates in Table 970.10.15.5. Most rates are a minimum number of spaces per 100 square metres of gross floor area or per dwelling unit, and many differ by Policy Area. The table also lists parking occupancy percentages by time of day, which are shown for reference.",
+   "code_refs": "none"
+  }
+ }
+}

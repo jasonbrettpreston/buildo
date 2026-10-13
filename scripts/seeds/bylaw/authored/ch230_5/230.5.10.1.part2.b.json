@@ -1,0 +1,74 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch230_5/230.5.10.1.part2",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "230.5.10.1(6)#(6)(A)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(B)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(D)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(E)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(F)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(6)#(6)(G)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "230.5.10.1(7)#(7)(A)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": [
+        "bicycle_parking_spaces = 0.15 ratio × parking_spaces @(7)(A)"
+      ]
+    },
+    {
+      "unit_id": "230.5.10.1(7)#(7)(B)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": [
+        "bicycle_parking_spaces = 0.10 ratio × parking_spaces @(7)(B)"
+      ]
+    }
+  ]
+}

@@ -217,7 +217,8 @@ const tokenOf = (x) => (typeof x === 'string' ? x : x && typeof x === 'object' ?
 
 /**
  * `feeds` of one clause unit (Spec 69 M-52): structure from the unit's `application` building types through
- * vocab.building_type.structure; aspect from its `target` through vocab.dsl_target.aspect (a unit with no target
+ * vocab.building_type.structure; aspect(s) from its `target` (one, or each of an M-76 A10 list) through
+ * vocab.dsl_target.aspect (a unit with no target
  * takes vocab.feeds.aspect_without_target[archetype]). Generated, never keyed. PURE.
  * @returns {{pairs: {structure: string, aspect: string}[], problems: string[]}}
  */
@@ -230,17 +231,22 @@ export function feedsOf(unit, vocab) {
     if (!bt) problems.push(`feeds_building_type_unknown: ${unit.unit_id} building type ${t}`);
     else structures.add(bt.structure);
   }
-  let aspect = null;
+  const aspects = new Set();
   const target = unit && unit.target;
-  if (target && target !== 'none') {
-    const t = vocab.dsl_target[target];
-    if (!t) problems.push(`feeds_target_unknown: ${unit.unit_id} target ${target}`);
-    else aspect = t.aspect;
+  // a mixed-measure LIMIT lists several targets (Spec 69a M-76 A10): each contributes its aspect
+  const targets = Array.isArray(target) ? target.filter((x) => x && x !== 'none') : target && target !== 'none' ? [target] : [];
+  if (targets.length) {
+    for (const tg of targets) {
+      const t = vocab.dsl_target[tg];
+      if (!t) problems.push(`feeds_target_unknown: ${unit.unit_id} target ${tg}`);
+      else aspects.add(t.aspect);
+    }
   } else {
-    aspect = (vocab.feeds.aspect_without_target || {})[unit && unit.archetype] || null;
+    const a = (vocab.feeds.aspect_without_target || {})[unit && unit.archetype] || null;
+    if (a) aspects.add(a);
   }
   const pairs = [];
-  if (aspect) for (const s of [...structures].sort(cmpStr)) pairs.push({ structure: s, aspect });
+  for (const aspect of [...aspects].sort(cmpStr)) for (const s of [...structures].sort(cmpStr)) pairs.push({ structure: s, aspect });
   return { pairs, problems };
 }
 

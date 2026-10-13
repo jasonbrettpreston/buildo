@@ -6,7 +6,7 @@
 // G-READ external arm over scripts/seeds/bylaw/external.json. checkExternal(doc) is pure over its inputs; with
 // `seeds` it also reads manifest.json and, lazily, the pages/<key>.txt of a row whose url is a pinned by-law page.
 // Validated here: the seven EXT-* rows and `ref` entries (key set + closed reason: phase2_exception ·
-// other_zone_category · dataset_documentation, S12 operator ruling 2026-10-07). Counted, not validated:
+// other_zone_category · dataset_documentation · other_instrument · out_of_scope_section, S12 operator ruling 2026-10-07). Counted, not validated:
 // `model_heuristic` entries (their arm, §6.3, lands with S9's classifier).
 //
 // Reason codes (closed set for the external arm):
@@ -45,7 +45,7 @@ export const EXCERPT_SEPARATOR = ' … ';
 const ROW_KINDS = Object.freeze({ governance_former_bylaw: 'EXT-gov-', provincial_precedence: 'EXT-prov-', risk_reference: 'EXT-risk-' });
 const OTHER_KINDS = Object.freeze({ ref: 'REF-', model_heuristic: 'HEUR-' });
 const STATUSES = Object.freeze(['verified_primary', 'verified_secondary', 'unverified']);
-const REF_REASONS = Object.freeze(['phase2_exception', 'other_zone_category', 'dataset_documentation']);
+const REF_REASONS = Object.freeze(['phase2_exception', 'other_zone_category', 'dataset_documentation', 'other_instrument', 'out_of_scope_section']); // other_instrument: Spec 69a M-79 (a Municipal Code chapter / Official Plan policy; source_sha256 pinned); out_of_scope_section: Spec 69a (R5 P1-Q6b) — a citation into an in-by-law section ruled out of scope (M-37 600.20 / 600.30 / 600.100; M-47 990.10)
 export const FEED_STRUCTURES = Object.freeze(['principal', 'suite', 'ancillary', 'any']);
 export const FEED_ASPECTS = Object.freeze(['envelope', 'landscaping', 'parking_access', 'use_permission', 'lot', 'measurement']);
 // Government hosts (equal to, or a subdomain of, one of these) count as primary.
@@ -54,6 +54,8 @@ export const PRIMARY_HOSTS = Object.freeze(['ontario.ca', 'toronto.ca', 'canada.
 const ROW_KEYS = Object.freeze(['additional_sources', 'authority', 'citation', 'evaluated_by_us', 'excerpt', 'explanation', 'id', 'kind', 'precedence', 'provincial_units', 'risk_feeds', 'source_sha256', 'title', 'url', 'verification_status', 'verified_on']);
 const SOURCE_KEYS = Object.freeze(['citation', 'source_sha256', 'url']);
 const REF_KEYS = Object.freeze(['citation', 'id', 'kind', 'reason', 'url']);
+/** Spec 69a M-79: an `other_instrument` ref also pins the fetched source bytes. */
+const REF_KEYS_PINNED = Object.freeze(['citation', 'id', 'kind', 'reason', 'source_sha256', 'url']);
 const UNIT_KEYS = Object.freeze(['bound', 'bylaw_prevails_citation', 'citation', 'direction_basis', 'limits_bylaw', 'scope', 'target', 'unit', 'unit_id', 'value', 'verbatim']);
 const SCOPE_KEYS = Object.freeze(['applies_to', 'land', 'other_building_contains_unit', 'principal_building_types', 'unit_configurations']);
 // How a provincial unit restrains a by-law (Spec 69 M-55): min_permission = a by-law max may not be below `value`
@@ -272,9 +274,11 @@ export function checkExternal(doc, opts = {}) {
       if (pages.has(pageIdentity(e.url))) pinnedChecked += 1;
       checkRow(e, v, pages);
     } else if (e.kind === 'ref') {
-      const diff = keyDiff(e, REF_KEYS);
-      if (diff.length || !isText(e.citation) || !isHttps(e.url) || !REF_REASONS.includes(e.reason)) {
-        v.push(`external_shape: ${e.id} ref must be {citation, id, kind, reason ∈ ${REF_REASONS.join(' · ')}, url (https)}${diff.length ? ` — ${diff.join(', ')}` : ''}`);
+      const pinned = e.reason === 'other_instrument';
+      const diff = keyDiff(e, pinned ? REF_KEYS_PINNED : REF_KEYS);
+      const shaOk = !pinned || (typeof e.source_sha256 === 'string' && /^[0-9a-f]{64}$/.test(e.source_sha256));
+      if (diff.length || !isText(e.citation) || !isHttps(e.url) || !REF_REASONS.includes(e.reason) || !shaOk) {
+        v.push(`external_shape: ${e.id} ref must be {citation, id, kind, reason ∈ ${REF_REASONS.join(' · ')}, url (https)${pinned ? ', source_sha256 (64 hex; M-79)' : ''}}${diff.length ? ` — ${diff.join(', ')}` : ''}`);
       }
     }
   });

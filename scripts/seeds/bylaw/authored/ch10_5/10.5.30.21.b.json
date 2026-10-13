@@ -1,0 +1,273 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.30.21",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.30.21(1)#whole",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = min(required_lot_frontage_m; existing(lot_frontage_m; enacted(569-2013))) @(1)"
+      ],
+      "condition": [
+        "lawfully_existing"
+      ],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "lawfully existing lot"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "lawfully_existing",
+            "evidence": "lawfully existing lot"
+          }
+        ],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.5.30.21(2)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [
+        "lawfully_existing"
+      ],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "lawfully existing building"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "lawfully_existing",
+            "evidence": "lawfully existing building"
+          }
+        ],
+        "uses": []
+      },
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "10.5.30.21(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 6.0 m @(3)(A)"
+      ],
+      "condition": [
+        "lawfully_existing"
+      ],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "detached_house",
+            "evidence": "detached house or detached houseplex"
+          },
+          {
+            "token": "detached_houseplex",
+            "evidence": "detached house or detached houseplex"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "lawfully_existing",
+            "evidence": "lawfully existing lot"
+          }
+        ],
+        "uses": [
+          {
+            "token": "dwelling_unit",
+            "evidence": "detached house or detached houseplex"
+          }
+        ]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "unit_id": "10.5.30.21(3)#(3)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [
+        "lawfully_existing"
+      ],
+      "applies_to": {
+        "part": "whole"
+      },
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "detached_house",
+            "evidence": "detached house or detached houseplex"
+          },
+          {
+            "token": "detached_houseplex",
+            "evidence": "detached house or detached houseplex"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "lawfully_existing",
+            "evidence": "lawfully existing lot"
+          }
+        ],
+        "uses": [
+          {
+            "token": "dwelling_unit",
+            "evidence": "detached house or detached houseplex"
+          }
+        ]
+      },
+      "requirement": "comply_or_minor_variance",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    }
+  ]
+}

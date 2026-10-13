@@ -1,0 +1,73 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.10",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.40.10(1)#(1)(A)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "Under a federally regulated flight path the permitted height is the lower of this By-law's maximum and the federal maximum. This arm is the By-law's own maximum, which is keyed elsewhere.",
+        "gaps": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.10(1)#(1)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"any": "building or structure"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Under a federally regulated flight path the permitted height is the lower of this By-law's maximum and the Government of Canada's maximum.",
+        "gaps": "Federal flight-path height limits are not held in our lot data.",
+        "user_inputs": []
+      },
+      "disclosure": "If the lot is under a flight path regulated by the Government of Canada, the federal height limit may be lower than the By-law's. We do not hold flight-path limits, so this cap is not applied.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.40.10(1)": {
+      "explanation": "If a lot is under a flight path regulated by the Government of Canada, the maximum building height is the lower of this By-law's maximum and the federal limit. We do not hold flight-path limits, so the federal cap is not applied.",
+      "code_refs": "none"
+    }
+  }
+}

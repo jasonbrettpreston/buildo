@@ -1,0 +1,56 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch220_5/220.5.10.11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "220.5.10.11(1)#whole",
+      "archetype": "LIMIT",
+      "target": "loading_spaces",
+      "bound": "min",
+      "numeric_expression": ["loading_spaces = existing(loading_spaces; enacted(569-2013)) @(1)"]
+    },
+    {
+      "unit_id": "220.5.10.11(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 75.0 pct @(2)(A)"]
+    },
+    {
+      "unit_id": "220.5.10.11(2)#(2)(B)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.11(3)#whole",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.11(4)#(4)(A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.11(4)#(4)(B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "220.5.10.11(5)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

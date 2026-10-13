@@ -1,0 +1,57 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:63-2024/900.2.10~r1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(912)@63-2024#(912)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {"literal": "107", "clause": "(912)(C)", "reason": "threshold_used_in_application"},
+        {"literal": "15", "clause": "(912)(D)", "reason": "threshold_used_in_application"},
+        {"literal": "133-141", "clause": "(912)(E)", "reason": "threshold_used_in_application"},
+        {"literal": "165-171", "clause": "(912)(E)", "reason": "threshold_used_in_application"},
+        {"literal": "140-144", "clause": "(912)(F)", "reason": "threshold_used_in_application"},
+        {"literal": "221", "clause": "(912)(L)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Lists the former by-laws and sections that prevail for this exception area: Sections 12(2) 118 and 12(2) 119 of former City of Toronto By-law 438-86 generally, and site-specific by-laws 165-69 (107 Broadway Avenue), 195-67 (15 Erskine Avenue), 20904 (odd 133-141 and 165-171 Erskine Avenue) and 49-02 (even 140-144 Redpath Avenue). These are alternate compliance paths under former by-laws and are never evaluated.",
+        "gaps": "The former by-law and section texts are not held, so compliance under them is not checked. The unit text also carries trailing amendment instructions (E)-(N) of By-law 63-2024 that delete or amend other 900.2.10 exceptions; they are not part of exception 912 and are not keyed here."
+      },
+      "disclosure": "This exception lets certain former City of Toronto by-laws and sections (By-law 438-86 Sections 12(2) 118 and 119, and site-specific by-laws for addresses on Broadway Avenue, Erskine Avenue and Redpath Avenue) continue to apply as an alternative way to comply. We do not evaluate compliance under those former by-laws.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(912)@63-2024": {
+      "explanation": "By-law 63-2024 rewrote the list of prevailing by-laws for exception 912. Some older City of Toronto rules (Sections 12(2) 118 and 119 of By-law 438-86, and site-specific by-laws for 107 Broadway Avenue, 15 Erskine Avenue, parts of Erskine Avenue and 140-144 Redpath Avenue) can still govern lots in this exception as an alternative to the current zoning by-law. MaxBLD does not check compliance under those older by-laws, so a lot here may have options this analysis does not show.",
+      "code_refs": "none"
+    }
+  }
+}

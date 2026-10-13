@@ -1,0 +1,83 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.40",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "5.10.40.40(1)#whole",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "R.S.O 1990 c. C.27", "clause": "(1)", "reason": "cross_reference_value"}
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": ["shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {"shoreline_or_top_of_bank": "shoreline hazard limit"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "description": "Where the TRCA finds a shoreline hazard limit or stable top-of-bank crossing a lot, the part of the lot below that line is left out of the floor space index calculation.",
+        "gaps": "The TRCA line and the area below it are not held in our lot data.",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "5.10.40.40(2)#whole",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing", "shoreline_or_top_of_bank"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": ["lawfully_existing", "shoreline_or_top_of_bank"],
+        "uses": [],
+        "evidence": {
+          "any": "building or structure",
+          "lawfully_existing": "lawfully existing building",
+          "shoreline_or_top_of_bank": "Shoreline Hazard Limit"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "description": "Regulation 5.10.40.40(1) does not stop a lawfully existing building from being altered or replaced if the resulting floor space index does not increase.",
+        "gaps": "Needs as-built floor area facts and the TRCA line, neither held in our lot data.",
+        "user_inputs": ["lawfully_existing_status"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "5.10.40.40(1)": {
+      "explanation": "On Toronto and Region Conservation Authority lands, the part of a lot below a shoreline hazard limit or stable top-of-bank is not counted when working out the floor space index for that lot.",
+      "code_refs": "none"
+    },
+    "5.10.40.40(2)": {
+      "explanation": "A lawfully existing building below a shoreline hazard limit may be altered or replaced without the floor-area exclusion in 5.10.40.40(1) blocking it, as long as the floor space index does not increase.",
+      "code_refs": "none"
+    }
+  }
+}

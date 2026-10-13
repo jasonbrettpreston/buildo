@@ -1,0 +1,56 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_5/10.5.1.10",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.1.10(1)#whole",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.1.10(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.1.10(3)#(3)(A)",
+      "archetype": "DEFINE",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = label(f) @(3)(A)"]
+    },
+    {
+      "unit_id": "10.5.1.10(3)#(3)(B)",
+      "archetype": "DEFINE",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = label(a) @(3)(B)"]
+    },
+    {
+      "unit_id": "10.5.1.10(3)#(3)(C)",
+      "archetype": "DEFINE",
+      "target": "lot_area_per_unit_min_m2",
+      "bound": "min",
+      "numeric_expression": ["lot_area_per_unit_min_m2 = label(au) @(3)(C)"]
+    },
+    {
+      "unit_id": "10.5.1.10(3)#(3)(D)",
+      "archetype": "DEFINE",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": ["dwelling_units_max = label(u) @(3)(D)"]
+    },
+    {
+      "unit_id": "10.5.1.10(3)#(3)(E)",
+      "archetype": "DEFINE",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = label(d) @(3)(E)"]
+    }
+  ]
+}

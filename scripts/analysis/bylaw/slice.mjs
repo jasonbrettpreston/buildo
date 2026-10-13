@@ -28,9 +28,9 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { normalizeWithMap, pageStructure, rawToNorm } from './html.mjs';
 import { decodePage, parseToc, sha256 } from './snapshot.mjs';
-import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, wordValue } from './text.mjs';
+import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, wordValue } from './text.mjs';
 
-export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, scanNumbers, UNIT_TABLE } from './text.mjs';
+export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, UNIT_TABLE } from './text.mjs';
 
 export const SLICER_VERSION = 'slice-v4';
 
@@ -546,7 +546,11 @@ function makeRow({ input, top, from, to, text, ownerOf, defects }) {
   const refs = extractRefs(verbatim, tags);
   const literals = extractLiterals(verbatim);
   const scan = scanNumbers(verbatim, literals);
+  // Spec 68 §6.5 "by-law numbers": a [PBS] item is a citation of a prevailing by-law / section (numbers, sections,
+  // addresses of its scope) — never a literal.
+  const isLiteralClausePath = (x) => !String(x.clause_path ?? '').includes('[PBS]');
   const rowDefects = defectChars(verbatim).map((d) => ({ clause_path: pathAt(d.index), code: d.code, context: verbatim.slice(Math.max(0, d.index - 40), d.index + 10), index: d.index, kind: 'garbled_character' }));
+  for (const d of refSpaceDefects(verbatim)) rowDefects.push({ clause_path: pathAt(d.index), code: null, context: d.context, index: d.index, kind: 'ref_missing_space' }); // Spec 69a M-81 R6
   for (const c of clauses) {
     if (c.node.children.length) continue;
     const own = c.text.replace(/\[[^\]]*\]/g, '').trim();
@@ -574,7 +578,7 @@ function makeRow({ input, top, from, to, text, ownerOf, defects }) {
     defects: rowDefects,
     end: to,
     kind: definition ? 'definition' : isRoot ? 'article' : 'regulation',
-    literals: literals.map(withPath),
+    literals: literals.map(withPath).filter(isLiteralClausePath),
     number: isRoot ? null : Number(top.symbol),
     page: input.key,
     refs: refs.map(withPath),
@@ -586,7 +590,7 @@ function makeRow({ input, top, from, to, text, ownerOf, defects }) {
     start: from,
     tags: tags.map(withPath),
     ...(definition ? { term: top.title } : {}),
-    uncovered_numbers: scan.uncovered.map(withPath),
+    uncovered_numbers: scan.uncovered.map(withPath).filter(isLiteralClausePath),
     ...(top.variantOf ? { variant_of: `${top.article}(${top.symbol})`, variant_status: status || (top.variantKind === 'repeat' ? 'repeat' : 'unstatused') } : {}),
     verbatim,
   };
@@ -649,7 +653,11 @@ export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
   const seen = new Map();
   for (let i = 0; i < heads.length; i++) {
     const from = heads[i].index;
-    const to = from + text.slice(from, i + 1 < heads.length ? heads[i + 1].index : endAll).trimEnd().length;
+    let own = text.slice(from, i + 1 < heads.length ? heads[i + 1].index : endAll);
+    // the by-law's own later provisions ("32. Nothing in By-law 63-2024 will prevent ...") start at the next section number: the row ends there
+    const tail = new RegExp(`(?<=\\s)${Number(heads[i][1]) + 1}\\. (?=[A-Z])`).exec(own.slice(heads[i][0].length));
+    if (tail) own = own.slice(0, heads[i][0].length + tail.index);
+    const to = from + own.trimEnd().length;
     const verbatim = text.slice(from, to);
     const r = /\breads:\s*/.exec(verbatim);
     const instruction = r ? verbatim.slice(0, r.index + r[0].length) : verbatim;
@@ -701,6 +709,9 @@ export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
     const tags = extractTags(verbatim);
     const literals = extractLiterals(verbatim);
     const withPath = (x) => ({ ...x, clause_path: pathAt(x.start) });
+    // Spec 68 §6.5 "by-law numbers": a [PBS] item is a citation of a prevailing by-law / section (numbers, sections,
+    // addresses of its scope) — never a literal.
+    const isLiteralClausePath = (x) => !String(x.clause_path ?? '').includes('[PBS]');
     rows.push({
       action,
       amendment: { bylaw, section: sectionNo, status },
@@ -711,7 +722,7 @@ export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
       defects: defectChars(verbatim).map((d) => ({ clause_path: pathAt(d.index), code: d.code, context: verbatim.slice(Math.max(0, d.index - 40), d.index + 10), index: d.index, kind: 'garbled_character' })),
       end: to,
       kind: 'enacting_amendment',
-      literals: literals.map(withPath),
+      literals: literals.map(withPath).filter(isLiteralClausePath),
       number: null,
       page,
       refs: extractRefs(verbatim, tags).map(withPath),
@@ -723,7 +734,7 @@ export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
       tags: tags.map(withPath),
       target: target.citation,
       targets_named: [...new Set(named.map((x) => x.citation))],
-      uncovered_numbers: scanNumbers(verbatim, literals).uncovered.map(withPath),
+      uncovered_numbers: scanNumbers(verbatim, literals).uncovered.map(withPath).filter(isLiteralClausePath),
       verbatim,
     });
   }

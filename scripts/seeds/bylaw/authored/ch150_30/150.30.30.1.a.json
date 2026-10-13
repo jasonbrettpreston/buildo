@@ -1,0 +1,19 @@
+{
+  "schema": "bylaw-authored-v1", "shard": "ch150_30/150.30.30.1", "keyer": "A",
+  "units": [
+    {
+      "unit_id": "150.30.30.1(1)#whole",
+      "archetype": "UNUSUAL", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [{"literal": "250 metres", "clause": "(1)", "reason": "threshold_used_in_application"}],
+      "application": {"zones": [], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"any": "A seniors community house"}},
+      "calculation_handling": {"status": "not_modelled", "description": "A seniors community house must be at least 250 m from a lot with a seniors community house, measured lot line to lot line.", "gaps": "Locations of other seniors community houses are not held; separation_m is a same-lot building distance.", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []},
+      "disclosure": "The 250 m minimum distance between seniors community houses is not evaluated; the locations of other such houses are not held.", "not_an_override": []
+    }
+  ],
+  "rows": {
+    "150.30.30.1(1)": {"explanation": "A seniors community house must be at least 250 m, lot line to lot line, from a lot with another seniors community house.", "code_refs": "none"}
+  }
+}

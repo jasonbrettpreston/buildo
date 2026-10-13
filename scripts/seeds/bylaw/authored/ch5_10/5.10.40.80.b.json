@@ -1,0 +1,166 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch5_10/5.10.40.80",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "5.10.40.80(1)#(1)(A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": {
+        "tokens": ["shoreline_or_top_of_bank"],
+        "if": "none"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "10",
+          "reason": "cross_reference_value",
+          "clause": "(1)"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RD",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RS",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RT",
+            "evidence": "Residential Zone category"
+          },
+          {
+            "token": "RM",
+            "evidence": "Residential Zone category"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "ancillary_building",
+            "evidence": "an ancillary building or structure"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "shoreline_or_top_of_bank",
+            "evidence": "shoreline hazard limit or a stable top-of-bank"
+          }
+        ],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "5.10.40.80(1)#(1)(B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": {
+        "tokens": ["shoreline_or_top_of_bank"],
+        "if": "none"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "10",
+          "reason": "cross_reference_value",
+          "clause": "(1)"
+        }
+      ],
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "a building or structure"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "shoreline_or_top_of_bank",
+            "evidence": "shoreline hazard limit or a stable top-of-bank"
+          }
+        ],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "5.10.40.80(2)#whole",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "numeric_expression": [
+        "separation_m = existing(separation_m; enacted(569-2013)) @(2)"
+      ],
+      "condition": {
+        "tokens": ["lawfully_existing", "shoreline_or_top_of_bank"],
+        "if": "none"
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {
+        "part": "whole"
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "a lawfully existing building or structure"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "lawfully_existing",
+            "evidence": "a lawfully existing building or structure"
+          },
+          {
+            "token": "shoreline_or_top_of_bank",
+            "evidence": "closer to a shoreline hazard limit or stable top-of-bank"
+          }
+        ],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": []
+      }
+    }
+  ]
+}

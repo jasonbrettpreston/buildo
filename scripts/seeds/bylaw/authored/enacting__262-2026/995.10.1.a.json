@@ -1,0 +1,12 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:262-2026/995.10.1", "keyer": "A",
+ "units": [
+  {"unit_id": "995.10.1@262-2026#whole", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["the lands subject to this By-law"]},
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "not_modelled", "description": "Map amendment: adds the lands to the Policy Areas Overlay Map with no value.", "gaps": "The lands are not identified by an address or diagram in this text and no map geometry for them is held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "995.10.1@262-2026": {"explanation": "Adds the lands to the Policy Areas Overlay Map with no policy area value.", "code_refs": "none"}}}

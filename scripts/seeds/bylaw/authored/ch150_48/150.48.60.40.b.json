@@ -1,0 +1,21 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch150_48/150.48.60.40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "150.48.60.40(1)#whole",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 4.0 m @(1)"]
+    },
+    {
+      "unit_id": "150.48.60.40(2)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

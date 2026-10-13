@@ -1,0 +1,1100 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch200_5/200.5.1.10",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "200.5.1.10(1)#(1)(A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "50 percent",
+     "clause": "(1)(A)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "40 metres",
+     "clause": "(1)(A)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "parking space rates"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Whether Parking Zone A or B rates apply to the whole lot depends on building coverage and the Parking Zone Overlay Map, which we do not hold."
+   },
+   "disclosure": "Whether Parking Zone A or B rates apply to the whole lot depends on building coverage and the Parking Zone Overlay Map, which we do not hold.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(1)#(1)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "parking space rate"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "map_area_not_held",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The fallback rate for lots that do not meet (A) depends on the Parking Zone Overlay Map, which we do not hold."
+   },
+   "disclosure": "The fallback rate for lots that do not meet (A) depends on the Parking Zone Overlay Map, which we do not hold.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(11)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "portion of a building",
+     "parking_space": "parking space requirements"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Excludes mechanical, storage and parking floor area from gross floor area when calculating parking requirements.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(13)#whole",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "areas used for",
+     "parking_space": "parking spaces must"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Direct unobstructed driveway access to a street or lane cannot be tested from the lot data."
+   },
+   "disclosure": "Direct unobstructed driveway access to a street or lane cannot be tested from the lot data.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(14)#(14)(A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "2",
+     "clause": "(14)(A)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "apartment_building",
+     "detached_house",
+     "semi_detached_house",
+     "townhouse",
+     "detached_houseplex",
+     "semi_detached_houseplex",
+     "secondary_suite",
+     "laneway_suite"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "energy_device"
+    ],
+    "evidence": {
+     "apartment_building": "apartment building",
+     "detached_house": "detached house",
+     "semi_detached_house": "semi-detached house",
+     "townhouse": "semi-detached house, townhouse",
+     "detached_houseplex": "detached houseplex",
+     "semi_detached_houseplex": "semi-detached houseplex",
+     "secondary_suite": "secondary suite",
+     "laneway_suite": "laneway suite",
+     "parking_space": "residential parking spaces",
+     "energy_device": "energized outlet"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "The electric vehicle charging obligation has no matching model target."
+   },
+   "disclosure": "The electric vehicle charging obligation has no matching model target.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(14)#(14)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "25 percent",
+     "clause": "(14)(B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "2",
+     "clause": "(14)(B)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "energy_device"
+    ],
+    "evidence": {
+     "any": "other than those",
+     "parking_space": "parking spaces in",
+     "energy_device": "energized outlet"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "A percentage of spaces that need charging outlets has no matching model target."
+   },
+   "disclosure": "A percentage of spaces that need charging outlets has no matching model target.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(2)#(2)(A)",
+   "archetype": "LIMIT",
+   "target": "parking_space_width_m",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_space_length_m = 5.6 m @(2)(A)",
+    "parking_space_width_m = 2.6 m @(2)(A)",
+    "vertical_clearance_m = 2.0 m @(2)(A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(2)(A)(iv)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "A parking space",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum length, width and vertical clearance of a parking space.",
+    "gaps": "Width increase of 0.3 m per obstructed side needs obstruction facts and is not modelled; the single unit also carries length and clearance statements."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(2)#(2)(B)",
+   "archetype": "LIMIT",
+   "target": "parking_space_width_m",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_space_length_m = 5.6 m @(2)(B)",
+    "parking_space_width_m = 2.9 m @(2)(B)",
+    "vertical_clearance_m = 2.0 m @(2)(B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "6.0 metres",
+     "clause": "(2)(B)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "0.3 metres",
+     "clause": "(2)(B)(iv)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "drive aisle",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Applies when the drive aisle is narrower than 6.0 m.",
+    "gaps": "Drive aisle width and side obstruction are not lot data."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(2)#(2)(C)",
+   "archetype": "LIMIT",
+   "target": "parking_space_length_m",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_space_length_m = 6.7 m @(2)(C)",
+    "parking_space_width_m = 2.6 m @(2)(C)",
+    "vertical_clearance_m = 2.0 m @(2)(C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(2)(C)(iv)",
+     "reason": "cross_reference_value"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "adjacent and parallel",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Applies to a space parallel to its drive aisle.",
+    "gaps": "Parallel layout and side obstruction are not lot data."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(2)#(2)(D)",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(2)(D)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0 metre",
+     "clause": "(2)(D)(ii)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "side of a parking space",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Defines when the side of a parking space counts as obstructed.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(2)#(2)(E)",
+   "archetype": "PERMIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.25 metres",
+     "clause": "(2)(E)(i)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "5.35 metres",
+     "clause": "(2)(E)(ii)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.0 metre",
+     "clause": "(2)(E)(ii)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space",
+     "energy_device"
+    ],
+    "evidence": {
+     "any": "within a parking space",
+     "parking_space": "parking space",
+     "energy_device": "Equipment for the charging"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Charging equipment placement is not lot data.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(3)#(3)(A)",
+   "archetype": "LIMIT",
+   "target": "parking_space_length_m",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_space_length_m = 6.0 m @(3)(A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "maximum dimensions",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum parking space length.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(3)#(3)(B)",
+   "archetype": "LIMIT",
+   "target": "parking_space_width_m",
+   "bound": "max",
+   "numeric_expression": [
+    "parking_space_width_m = 3.2 m @(3)(B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "maximum dimensions",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Maximum parking space width.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(4)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "18.0 centimetres",
+     "clause": "(4)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "vertical clearance",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Says the clearance covers the whole space except a low wheel stop.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(5)#whole",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "secondary_suite",
+     "duplex"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "secondary_suite": "secondary suite",
+     "duplex": "duplex building",
+     "parking_space": "tandem parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Required spaces may not be tandem, except for a secondary suite, group home or duplex.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(6)#(6)(A)",
+   "archetype": "LIMIT",
+   "target": "parking_space_length_m",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_space_length_m = 5.6 m @(6)(A)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "tandem parking space",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum tandem space length.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(6)#(6)(B)",
+   "archetype": "LIMIT",
+   "target": "parking_space_width_m",
+   "bound": "min",
+   "numeric_expression": [
+    "parking_space_width_m = 2.6 m @(6)(B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "tandem parking space",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum tandem space width.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(6)#(6)(C)",
+   "archetype": "LIMIT",
+   "target": "vertical_clearance_m",
+   "bound": "min",
+   "numeric_expression": [
+    "vertical_clearance_m = 2.0 m @(6)(C)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "tandem parking space",
+     "parking_space": "parking space"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "Minimum tandem space vertical clearance.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(7)#(7)(A)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "vacant"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Rates for vacant space depend on the previous use of the building, which we do not hold."
+   },
+   "disclosure": "Rates for vacant space depend on the previous use of the building, which we do not hold.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(7)#(7)(B)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "issued building permit"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Rates for vacant space depend on the land use on the issued building permit, which we do not hold."
+   },
+   "disclosure": "Rates for vacant space depend on the land use on the issued building permit, which we do not hold.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(7)#(7)(C)",
+   "archetype": "UNUSUAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "any": "never been used"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "Not evaluated from the lot data.",
+    "gaps": "Rates for never-used space follow the zone's highest maximum parking requirement, which is not modelled."
+   },
+   "disclosure": "Rates for never-used space follow the zone's highest maximum parking requirement, which is not modelled.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(8)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "gross floor area",
+     "parking_space": "parking space requirement"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Requirement equals gross floor area multiplied by the table rate.",
+    "gaps": "Parking rates are not evaluated, so no expression is drafted."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "200.5.1.10(9)#whole",
+   "archetype": "DEFINE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "one parking space",
+     "clause": "(9)",
+     "reason": "count_or_ordinal_not_a_limit"
+    }
+   ],
+   "application": {
+    "zones": [],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "parking_space"
+    ],
+    "evidence": {
+     "any": "required parking spaces",
+     "parking_space": "parking spaces"
+    }
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "Rounds required spaces down, with a floor of one space.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "200.5.1.10(1)": {
+   "explanation": "Which parking zone rate applies to a lot depends on how much of the street frontage strip is covered by buildings.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(11)": {
+   "explanation": "Mechanical, storage and parking areas do not count as gross floor area when working out required parking.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(13)": {
+   "explanation": "Parking areas need direct, unobstructed driveway access to a street or lane, except stacked or tandem spaces.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(14)": {
+   "explanation": "Parking spaces need electric vehicle charging outlets: Level 2 for housing and suites, 25 percent of spaces otherwise.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(2)": {
+   "explanation": "A standard parking space has set minimum length, width and clearance, with wider sizes beside obstructions or narrow aisles.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(3)": {
+   "explanation": "A parking space may be no longer than 6.0 m and no wider than 3.2 m.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(4)": {
+   "explanation": "Minimum vertical clearance covers the whole parking space except for a low wheel stop.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(5)": {
+   "explanation": "A required space may not be tandem, except for a secondary suite, group home or duplex.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(6)": {
+   "explanation": "A tandem space must be at least 5.6 m long, 2.6 m wide and 2.0 m clear.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(7)": {
+   "explanation": "Parking for vacant space follows its previous use, its permitted use, or the zone's highest-demand use.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(8)": {
+   "explanation": "Where the rate is per gross floor area, the requirement is that area times the table rate.",
+   "code_refs": "none"
+  },
+  "200.5.1.10(9)": {
+   "explanation": "Required parking is rounded down, but never below one space.",
+   "code_refs": "none"
+  }
+ }
+}

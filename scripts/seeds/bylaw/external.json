@@ -382,6 +382,235 @@
       "kind": "ref",
       "reason": "dataset_documentation",
       "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/34927e44-fc11-4336-a8aa-a0dfb27658b7/resource/aa11a6f1-17fd-49b7-bbe4-f381bbc36f94/download/zoning_readme.txt"
+    },
+    {
+      "citation": "Chapter 363",
+      "id": "REF-4",
+      "kind": "ref",
+      "reason": "other_instrument",
+      "source_sha256": "fbbda23a3d65f9790de746f880dbe1449984b5287f2606a1de790b7d6eedfb1c",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_363.pdf"
+    },
+    {
+      "citation": "5.5.2",
+      "id": "REF-5",
+      "kind": "ref",
+      "reason": "other_instrument",
+      "source_sha256": "1ec2aa28eb3fb27a139fd9b0fb5e7e1dd33fec99ddad56d6280c7ddd76d4b8d4",
+      "url": "https://www.toronto.ca/city-government/planning-development/official-plan-guidelines/official-plan/"
+    },
+    {
+      "citation": "15.5.40.40(1)(D)",
+      "id": "REF-6",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter15_5.htm"
+    },
+    {
+      "citation": "30.5.40.40(1)(D)",
+      "id": "REF-7",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter30.htm"
+    },
+    {
+      "citation": "40.5.1.10(3)(A)(i)",
+      "id": "REF-8",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.1.10(3)(A)(ii)",
+      "id": "REF-9",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.1.10(3)(ii)",
+      "id": "REF-10",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.40.40(1)(D)",
+      "id": "REF-11",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.40.40(3)(D)",
+      "id": "REF-12",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.40.40(5)(D)",
+      "id": "REF-13",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "40.5.40.40(9)(C)",
+      "id": "REF-14",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_5.htm"
+    },
+    {
+      "citation": "50.5.40.40(1)(D)",
+      "id": "REF-15",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter50.htm"
+    },
+    {
+      "citation": "50.5.40.40(3)(D)",
+      "id": "REF-16",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter50.htm"
+    },
+    {
+      "citation": "50.5.40.40(5)(D)",
+      "id": "REF-17",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter50.htm"
+    },
+    {
+      "citation": "50.5.40.40(9)(C)",
+      "id": "REF-18",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter50.htm"
+    },
+    {
+      "citation": "60.5.40.40(1)(E)",
+      "id": "REF-19",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter60.htm"
+    },
+    {
+      "citation": "60.5.40.40(1)(G)",
+      "id": "REF-20",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter60.htm"
+    },
+    {
+      "citation": "60.5.80.1(1)(E)",
+      "id": "REF-21",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter60.htm"
+    },
+    {
+      "citation": "60.5.80.10(1)",
+      "id": "REF-22",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter60.htm"
+    },
+    {
+      "citation": "60.5.90.1(1)(E)",
+      "id": "REF-23",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter60.htm"
+    },
+    {
+      "citation": "600.20",
+      "id": "REF-24",
+      "kind": "ref",
+      "reason": "out_of_scope_section",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter600.htm"
+    },
+    {
+      "citation": "600.30",
+      "id": "REF-25",
+      "kind": "ref",
+      "reason": "out_of_scope_section",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter600.htm"
+    },
+    {
+      "citation": "600.100",
+      "id": "REF-26",
+      "kind": "ref",
+      "reason": "out_of_scope_section",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter600.htm"
+    },
+    {
+      "citation": "990.10",
+      "id": "REF-27",
+      "kind": "ref",
+      "reason": "out_of_scope_section",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter990.htm"
+    },
+    {
+      "citation": "40.10.20.40",
+      "id": "REF-28",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_10.htm"
+    },
+    {
+      "citation": "40.10.40.1(1)(C)(i)",
+      "id": "REF-29",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_10.htm"
+    },
+    {
+      "citation": "40.10.40.1(1)(C)(ii)",
+      "id": "REF-30",
+      "kind": "ref",
+      "reason": "other_zone_category",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter40_10.htm"
+    },
+    {
+      "citation": "900.50",
+      "id": "REF-31",
+      "kind": "ref",
+      "reason": "phase2_exception",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter900_1.htm"
+    },
+    {
+      "citation": "Chapter 900",
+      "id": "REF-32",
+      "kind": "ref",
+      "reason": "phase2_exception",
+      "url": "https://www.toronto.ca/zoning/bylaw_amendments/ZBL_NewProvision_Chapter900_1.htm"
+    },
+    {
+      "citation": "Chapter 12",
+      "id": "REF-33",
+      "kind": "ref",
+      "reason": "other_instrument",
+      "source_sha256": "19e0abbf2e24bba99750f236fb1b24f73c0128a6cc788164112fb8c0ed0d5e1d",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_012.pdf"
+    },
+    {
+      "citation": "Chapter 447",
+      "id": "REF-34",
+      "kind": "ref",
+      "reason": "other_instrument",
+      "source_sha256": "0a4157761f891dabe2c6c82a9e72685fb393a2790c2a2032c8012b3e48141b6f",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_447.pdf"
+    },
+    {
+      "citation": "Chapter 492",
+      "id": "REF-35",
+      "kind": "ref",
+      "reason": "other_instrument",
+      "source_sha256": "e040e598e9cc88f7e5837f0799a91289c2e279fb6056d212727c7b4ca31bafd8",
+      "url": "https://www.toronto.ca/legdocs/municode/1184_492.pdf"
     }
   ],
   "schema_version": "external-v1"

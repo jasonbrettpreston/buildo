@@ -1,0 +1,443 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch10_40/10.40.40.70~r1",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "10.40.40.70(1)#whole",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 6.0 m @(1)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["front_averaging_not_applicable"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["front_averaging_not_applicable"],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "required minimum front yard setback",
+          "front_averaging_not_applicable": "does not apply"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum front yard setback of 6.0 m in the RS zone where front-yard averaging (10.5.40.70(1)) does not apply.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(2)#(2)(A)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 7.5 m @(2)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "rear yard setback"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum rear yard setback of 7.5 m; one of two minimums, the greater of (A) and (B) governs because both apply independently.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(2)#(2)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 25 pct × lot_depth_m @(2)(B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "rear yard setback"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum rear yard setback of 25% of the lot depth; the greater of (A) and (B) governs because both minimums apply independently.",
+        "gaps": "The 25 pct literal multiplies a metre-valued variable (lot_depth_m); the grammar has no percentage-of operator, so it is keyed as pct x m.",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(3)#(3)(A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.6 m @(3)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["required_frontage_band"], "if": "required_lot_frontage_m < 6.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "permitted residential building",
+          "required_frontage_band": "required minimum lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback of 0.6 m where the required minimum lot frontage is less than 6.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(3)#(3)(B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(3)(B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["required_frontage_band"], "if": "required_lot_frontage_m ≥ 6.0 m and required_lot_frontage_m < 12.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "permitted residential building",
+          "required_frontage_band": "required minimum lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback of 0.9 m where the required minimum lot frontage is 6.0 m to less than 12.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(3)#(3)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(3)(C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["required_frontage_band"], "if": "required_lot_frontage_m ≥ 12.0 m and required_lot_frontage_m < 15.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "permitted residential building",
+          "required_frontage_band": "required minimum lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback of 1.2 m where the required minimum lot frontage is 12.0 m to less than 15.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(3)#(3)(D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.5 m @(3)(D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["required_frontage_band"], "if": "required_lot_frontage_m ≥ 15.0 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["required_frontage_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "any": "permitted residential building",
+          "required_frontage_band": "required minimum lot frontage"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback of 1.5 m where the required minimum lot frontage is 15.0 m or more.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(3)#(3)(E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.8 m @(3)(E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["non_residential_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "in the RS zone",
+          "non_residential_building": "non-residential building"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback of 1.8 m for a non-residential building.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(4)#(4)(A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; 3.0 m) @(4)(A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street", "depth_band", "through_lot"],
+        "uses": [],
+        "evidence": {
+          "RS": "Despite (1) to (3)",
+          "townhouse": "a townhouse or apartment building",
+          "apartment_building": "townhouse or apartment building",
+          "major_street": "abutting a major street",
+          "depth_band": "for a lot depth",
+          "through_lot": "on a through lot"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "Front yard setback for a townhouse or apartment building on a lot abutting a major street: 6.0 m where lot depth exceeds 36.0 m; otherwise 3.0 m when 10.5.40.70(1) does not apply.",
+        "gaps": "The arms for a lot depth of 36.0 m or less that depend on whether 10.5.40.70(1) applies (the lesser of that setback or 6.0 m) and the through-lot 6.0 m arm are not expressible as DSL conditions; only the depth split and the no-averaging 3.0 m value are modelled.",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(4)#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 7.5 m @(4)(B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["major_street"],
+        "uses": [],
+        "evidence": {
+          "RS": "Despite (1) to (3)",
+          "townhouse": "a townhouse or apartment building",
+          "apartment_building": "townhouse or apartment building",
+          "major_street": "abutting a major street"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Rear yard setback of 7.5 m for a townhouse or apartment building on a lot abutting a major street.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(4)#(4)(C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(4)(C)", "side_setback_m = 7.5 m @(4)(C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street", "all_units_front_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["townhouse"],
+        "lot_conditions": ["major_street", "all_units_front_street"],
+        "uses": [],
+        "evidence": {
+          "RS": "Despite (1) to (3)",
+          "townhouse": "for a townhouse",
+          "major_street": "abutting a major street",
+          "all_units_front_street": "front directly onto a street"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "Townhouse side yard setback on a major street: 0.9 m if all dwelling units front directly onto a street, 7.5 m if they do not.",
+        "gaps": "Whether all dwelling units front directly onto a street is not derivable from lot data and the DSL has no atom for it, so the two arms are keyed as separate statements and selected by a scenario input.",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "10.40.40.70(4)#(4)(D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 2.4 m @(4)(D)",
+        "side_setback_m = 5.5 m @(4)(D)",
+        "side_setback_m = 7.5 m @(4)(D)",
+        "side_setback_street_m = 3.0 m @(4)(D)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["major_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "25.0 metres", "clause": "(4)(D)(iii)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["apartment_building"],
+        "lot_conditions": ["major_street", "corner_lot"],
+        "uses": [],
+        "evidence": {
+          "RS": "Despite (1) to (3)",
+          "apartment_building": "for an apartment building",
+          "major_street": "abutting a major street",
+          "corner_lot": "on a corner lot"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "Apartment building side yard setback on a major street: 2.4 m for main-wall portions without primary windows, 5.5 m for portions with primary windows, 7.5 m for portions exceeding a building length of 25.0 m, and 3.0 m on a corner lot from a side lot line abutting a street.",
+        "gaps": "Primary windows and per-portion main-wall lengths are not held in the lot data, so the wall-portion arms cannot be selected; the corner-lot street-side 3.0 m is keyed to side_setback_street_m.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "10.40.40.70(1)": {
+      "explanation": "In the RS zone the minimum front yard setback is 6.0 metres, unless the front-yard averaging rule in 10.5.40.70(1) applies, in which case that rule sets it instead.",
+      "code_refs": "none"
+    },
+    "10.40.40.70(2)": {
+      "explanation": "The minimum rear yard setback in the RS zone is the greater of 7.5 metres and 25% of the lot depth.",
+      "code_refs": "none"
+    },
+    "10.40.40.70(3)": {
+      "explanation": "The minimum side yard setback in the RS zone depends on the required minimum lot frontage: 0.6 m under 6.0 m, 0.9 m from 6.0 m to under 12.0 m, 1.2 m from 12.0 m to under 15.0 m, and 1.5 m at 15.0 m or more; a non-residential building needs 1.8 m.",
+      "code_refs": "none"
+    },
+    "10.40.40.70(4)": {
+      "explanation": "A townhouse or apartment building on a lot abutting a major street has its own minimum setbacks that replace those in (1) to (3): front 3.0 m to 6.0 m depending on lot depth and context, rear 7.5 m, and side setbacks that vary by building type, window and wall layout, and corner-lot position.",
+      "code_refs": "none"
+    }
+  }
+}

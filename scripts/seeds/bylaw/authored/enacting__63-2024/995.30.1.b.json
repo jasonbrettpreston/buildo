@@ -1,0 +1,14 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:63-2024/995.30.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "995.30.1@63-2024#whole",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

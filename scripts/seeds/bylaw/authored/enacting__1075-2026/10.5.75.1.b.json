@@ -1,0 +1,63 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "enacting:1075-2026/10.5.75.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "10.5.75.1(4)(A)(ii)(b)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.75.1(4)(A)(ii)(b)@1075-2026#(4)(A)(ii)(b)",
+      "archetype": "LIMIT",
+      "target": "height_projection_m",
+      "bound": "max",
+      "numeric_expression": ["height_projection_m = 2.0 m @(4)(A)(ii)(b)"]
+    },
+    {
+      "unit_id": "10.5.75.1(4)(B)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.75.1(4)(B)@1075-2026#(4)(B)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 2.5 m @(4)(B)"]
+    },
+    {
+      "unit_id": "10.5.75.1(6)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.75.1(6)@1075-2026#(6)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "numeric_expression": ["encroachment_m = 0.9 m @(6)"]
+    },
+    {
+      "unit_id": "10.5.75.1(7)@1075-2026#[instruction]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "10.5.75.1(7)@1075-2026#(7)",
+      "archetype": "LIMIT",
+      "target": "encroachment_m",
+      "bound": "max",
+      "numeric_expression": ["encroachment_m = 0.6 m @(7)"]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{"schema": "bylaw-authored-v1", "shard": "enacting:842-2025/995.30.1", "keyer": "A",
+ "units": [
+  {"unit_id": "995.30.1@842-2025#whole", "archetype": "PROCEDURAL", "target": "none", "bound": "none", "numeric_expression": "none",
+   "requirement": "none", "instrument": "none", "evaluated_by_us": "none", "ranks_layers": "none", "condition": "none",
+   "applies_to": {"part": "map_area", "refs": ["the lands"]},
+   "literals_not_expressed": [],
+   "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+   "calculation_handling": {"status": "not_modelled", "description": "Map amendment: adds the lands to the Lot Coverage Overlay Map with no value.", "gaps": "The lands are not identified by an address or diagram in this text and no map geometry for them is held.", "not_modelled_reason": "map_area_not_held", "user_inputs": []},
+   "disclosure": "none", "not_an_override": []}
+ ],
+ "rows": {
+  "995.30.1@842-2025": {"explanation": "Adds the lands to the Lot Coverage Overlay Map with no lot coverage value.", "code_refs": "none"}}}

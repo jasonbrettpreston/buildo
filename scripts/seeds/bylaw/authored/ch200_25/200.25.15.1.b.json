@@ -1,0 +1,91 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch200_25/200.25.15.1",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "200.25.15.1(1)#whole",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "970.10.1(1) and (3), 970.10.15.5(1), (2), (3), (4), (5), Table 970.10.15.5  Parking Space Rates and Parking Space Occupancy, regulations 970.10.15.5(6), (7), (8), (9), (10), (11) and (12), 970.10.15.10(1), (2), (3), (4), (5), and (6), 970.10.15.40(1) and (2), 970.10.15.50(1) and (2), and 970.10.15.60(1), or with the provisions of By-law 569-2013, as amended, as it read prior to July 22, 2022"
+      },
+      "applies_to": {
+        "part": "whole"
+      },
+      "evaluated_by_us": "no",
+      "requirement": "none",
+      "condition": [],
+      "ranks_layers": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.25.15.1(2)#whole",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "970.10.1(2), 970.10.15.5(13), (14), (15), (16), Table 970.10.15.5(1)  Parking Space Rates for Effective Parking Spaces, 970.10.15.5(17) and (18) or with the provisions of By-law 569-2013, as amended, as it read after July 22, 2022, and on or prior to March 31, 2025"
+      },
+      "applies_to": {
+        "part": "whole"
+      },
+      "evaluated_by_us": "no",
+      "requirement": "none",
+      "condition": [],
+      "ranks_layers": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "200.25.15.1(3)#whole",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "term": "\"application for a building permit\"",
+      "input_fidelity": "unknown",
+      "requirement": "none",
+      "condition": [],
+      "ranks_layers": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}
