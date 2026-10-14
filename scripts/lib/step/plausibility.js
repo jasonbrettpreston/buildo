@@ -368,6 +368,114 @@ const MAINTENANCE_SQL = {
 // declared execution.statement_timeout (which prices a different SQL shape entirely).
 const MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000;
 
+// The ONE dead-tuple measurement (S2 F3-3 / Spec 124 R-CG) — shared with the AEH compute via its own pure module.
+const { deadTupleRatio } = require('../dead-tuple-ratio');
+
+/**
+ * runMaintenanceStatement(pool, operation, table, metric, deadRatio, threshold, config, log, tag)
+ * — the "run the statement" block factored out of runMaintenance (S2 F33-A): builds the
+ * operation's SQL, runs it on its OWN dedicated autocommit `pool.connect()` client with a
+ * `SET statement_timeout`, and returns the row object (WARN-on-failure + `log.warn`).
+ * The `unmapped operation` check stays in the caller. Callers must have already decided
+ * the statement SHOULD run (the static path only calls this past its threshold gate).
+ *
+ * @returns {Promise<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>}
+ */
+async function runMaintenanceStatement(pool, operation, table, metric, deadRatio, threshold, config, log, tag) {
+  const timeoutCfgKey = `${table}_maintenance_timeout_minutes`;
+  const timeoutMs = typeof (config || {})[timeoutCfgKey] === 'number'
+    ? config[timeoutCfgKey] * 60000
+    : MAINTENANCE_DEFAULT_TIMEOUT_MS;
+  const startedAt = Date.now();
+  try {
+    // F5 — quoteMaintenanceIdent() moved INSIDE the try: a malformed table name
+    // (defence-in-depth only — AJV already validates it at construction) now
+    // produces a WARN row through the same path as any other failure, never an
+    // uncaught throw out of runMaintenance itself.
+    const buildSql = MAINTENANCE_SQL[operation];
+    const sql = buildSql(quoteMaintenanceIdent(table));
+    // F5 — a dedicated, autocommit client carries its OWN declared ceiling. VACUUM
+    // forbids an enclosing transaction, so this is a bare SET + statement pair, the
+    // same shape executeEntry's own ceiling branch uses minus the BEGIN/COMMIT.
+    const client = await pool.connect();
+    try {
+      await client.query(`SET statement_timeout = ${timeoutMs}`);
+      await client.query(sql);
+    } finally {
+      client.release();
+    }
+    // The per-table success line AEH logged before R-CG moved its VACUUM loop here
+    // (R2 fence, assert-engine-health.js; git show 9abbdcc3^:scripts/quality/assert-engine-health.js:150).
+    if (log && typeof log.info === 'function') log.info(tag, `runMaintenance: ran "${sql}" — dead_ratio ${deadRatio} > ${threshold}`);
+    return {
+      metric, value: deadRatio, threshold, status: 'INFO',
+      note: `ran "${sql}" — dead_ratio ${deadRatio} > ${threshold}`,
+      duration_ms: Date.now() - startedAt,
+    };
+  } catch (err) {
+    const note = `maintenance statement FAILED (ceiling ${timeoutMs}ms): ${err.message}`;
+    if (log) log.warn(tag, `runMaintenance: ${table} ${note}`);
+    return { metric, value: deadRatio, threshold, status: 'WARN', note };
+  }
+}
+
+/**
+ * runDynamicArm(pool, entry, config, log, tag) — R-CG (Spec 124, S2 F3-3, 2026-10-13):
+ * the DYNAMIC `execution.maintenance` target arm (`select: "dead_tuple_ratio"`).
+ * Instead of a fixed `table`, the declaration names a `limit_from_config` logic
+ * variable; at run time every public table with `n_live_tup > 0` AND a dead-tuple
+ * ratio above that threshold becomes a target. ONE `sys_maintenance_selected_<op>`
+ * evidence row is written for the selection, EVEN when nothing is selected — a
+ * zero-selected run and a "the measurement never happened" run must never read alike.
+ *
+ * @returns {Promise<Array<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>>}
+ */
+async function runDynamicArm(pool, entry, config, log, tag) {
+  const out = [];
+  const metric = `sys_maintenance_selected_${entry.operation}`;
+  const threshold = typeof (config || {})[entry.limit_from_config] === 'number'
+    ? config[entry.limit_from_config]
+    : null;
+  if (threshold === null) {
+    return [{
+      metric, value: null, threshold: null, status: 'WARN',
+      note: `skipped — no ${entry.limit_from_config} logic variable declared`,
+    }];
+  }
+  let rows;
+  try {
+    const statRes = await pool.query(
+      'SELECT relname, n_live_tup::bigint AS live, n_dead_tup::bigint AS dead FROM pg_stat_user_tables WHERE schemaname = \'public\' ORDER BY relname',
+    );
+    rows = statRes.rows;
+  } catch (err) {
+    const note = `selector measurement failed: ${err.message}`;
+    if (log) log.warn(tag, `runMaintenance: selector ${note}`);
+    return [{ metric, value: null, threshold, status: 'WARN', note }];
+  }
+  const targets = rows.filter((r) => Number(r.live) > 0 && deadTupleRatio(r.live, r.dead) > threshold);
+  out.push({
+    metric, value: targets.length, threshold, status: 'INFO',
+    note: `${targets.length} of ${rows.length} public tables have dead_ratio > ${threshold}`,
+  });
+  const buildSql = MAINTENANCE_SQL[entry.operation];
+  if (!buildSql) {
+    out.push({
+      metric, value: targets.length, threshold, status: 'WARN',
+      note: `skipped — unmapped operation "${entry.operation}"`,
+    });
+    return out;
+  }
+  for (const t of targets) {
+    out.push(await runMaintenanceStatement(
+      pool, entry.operation, t.relname,
+      `sys_maintenance_${t.relname}_${entry.operation}`,
+      deadTupleRatio(t.live, t.dead), threshold, config, log, tag,
+    ));
+  }
+  return out;
+}
+
 /**
  * runMaintenance(pool, maintenance, config, opts) — EP-D17 (WF3, 2026-09-10, C4) rung
  * (d): the library-owned `execution.maintenance` executor. Before this WF3, the
@@ -403,7 +511,13 @@ const MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000;
  * resulting `dead_ratio` against `config[\`${table}_dead_tuple_ratio_warn_max\`]`,
  * the SAME named tunable the step's own declared `plausibility[]` bound reads
  * (by convention: one measurement, one threshold name, two independent
- * consumers that can never silently disagree about it). Below the threshold —
+ * consumers that can never silently disagree about it). A DYNAMIC item
+ * (`select:"dead_tuple_ratio"`, R-CG — Spec 124, S2 F3-3, 2026-10-13) inverts
+ * the direction: it names a `limit_from_config` logic variable and selects its
+ * targets at run time — every public table with `n_live_tup > 0` whose
+ * dead-tuple ratio exceeds that variable — writing one
+ * `sys_maintenance_selected_<op>` evidence row for the selection even when
+ * nothing is selected. Below the threshold —
  * or the threshold is undeclared for this table — the target is SKIPPED with a
  * stated reason, never silently. At or above it, the declared operation runs,
  * bound by `config[\`${table}_maintenance_timeout_minutes\`]` (default 15 min,
@@ -424,9 +538,10 @@ const MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000;
  * already makes.
  *
  * @param {import('pg').Pool} pool
- * @param {Array<{operation:string, table:string, owned_by:string, why:object}>|'none'|undefined} maintenance
+ * @param {Array<{operation:string, table:string, owned_by:string, why:object}|{operation:string, select:'dead_tuple_ratio', limit_from_config:string, why:object}>|'none'|undefined} maintenance
+ *   — a STATIC item names a fixed `table`; a DYNAMIC item (R-CG, `select:"dead_tuple_ratio"`) names a `limit_from_config` logic variable and selects its targets at run time.
  * @param {Readonly<Record<string, number>>} config - `ctx.config` (resolveConfig's `values`)
- * @param {{log?: {warn: (tag:string, msg:string) => void}, tag?: string}} [opts]
+ * @param {{log?: {warn: (tag:string, msg:string) => void, info?: (tag:string, msg:string) => void}, tag?: string}} [opts]
  * @returns {Promise<Array<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>>}
  */
 async function runMaintenance(pool, maintenance, config, opts = {}) {
@@ -435,6 +550,10 @@ async function runMaintenance(pool, maintenance, config, opts = {}) {
   const tag = opts.tag || '[step/maintenance]';
   const rows = [];
   for (const entry of entries) {
+    if (entry.select === 'dead_tuple_ratio') {
+      rows.push(...await runDynamicArm(pool, entry, config, log, tag));
+      continue;
+    }
     const metric = `sys_maintenance_${entry.table}_${entry.operation}`;
     const cfgKey = `${entry.table}_dead_tuple_ratio_warn_max`;
     const threshold = typeof (config || {})[cfgKey] === 'number' ? config[cfgKey] : null;
@@ -446,9 +565,7 @@ async function runMaintenance(pool, maintenance, config, opts = {}) {
       );
       const r = statRes.rows[0];
       if (r) {
-        const live = Number(r.live) || 0;
-        const dead = Number(r.dead) || 0;
-        deadRatio = (live + dead) > 0 ? Math.round((dead / (live + dead)) * 10000) / 10000 : 0;
+        deadRatio = deadTupleRatio(r.live, r.dead);
       }
     } catch (err) {
       const note = `dead_ratio measurement failed: ${err.message}`;
@@ -469,37 +586,9 @@ async function runMaintenance(pool, maintenance, config, opts = {}) {
       rows.push({ metric, value: deadRatio, threshold, status: 'WARN', note: `skipped — unmapped operation "${entry.operation}"` });
       continue;
     }
-    const timeoutCfgKey = `${entry.table}_maintenance_timeout_minutes`;
-    const timeoutMs = typeof (config || {})[timeoutCfgKey] === 'number'
-      ? config[timeoutCfgKey] * 60000
-      : MAINTENANCE_DEFAULT_TIMEOUT_MS;
-    const startedAt = Date.now();
-    try {
-      // F5 — quoteMaintenanceIdent() moved INSIDE the try: a malformed table name
-      // (defence-in-depth only — AJV already validates it at construction) now
-      // produces a WARN row through the same path as any other failure, never an
-      // uncaught throw out of runMaintenance itself.
-      const sql = buildSql(quoteMaintenanceIdent(entry.table));
-      // F5 — a dedicated, autocommit client carries its OWN declared ceiling. VACUUM
-      // forbids an enclosing transaction, so this is a bare SET + statement pair, the
-      // same shape executeEntry's own ceiling branch uses minus the BEGIN/COMMIT.
-      const client = await pool.connect();
-      try {
-        await client.query(`SET statement_timeout = ${timeoutMs}`);
-        await client.query(sql);
-      } finally {
-        client.release();
-      }
-      rows.push({
-        metric, value: deadRatio, threshold, status: 'INFO',
-        note: `ran "${sql}" — dead_ratio ${deadRatio} > ${threshold}`,
-        duration_ms: Date.now() - startedAt,
-      });
-    } catch (err) {
-      const note = `maintenance statement FAILED (ceiling ${timeoutMs}ms): ${err.message}`;
-      if (log) log.warn(tag, `runMaintenance: ${entry.table} ${note}`);
-      rows.push({ metric, value: deadRatio, threshold, status: 'WARN', note });
-    }
+    rows.push(await runMaintenanceStatement(
+      pool, entry.operation, entry.table, metric, deadRatio, threshold, config, log, tag,
+    ));
   }
   return rows;
 }
@@ -516,4 +605,5 @@ module.exports = {
   runInvariants,
   runPlausibility,
   runMaintenance,
+  deadTupleRatio,
 };

@@ -3,16 +3,55 @@
   "step": "scripts/load-address-points.js",
   "chain": "sources",
   "source_fingerprint": "c4e3dd51837c4fc9ae1689677bd5b14ad837a2abe3f9512e4ddf64c7ec0333bc",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 158,
     "distinct": 17,
     "utility": 8,
-    "tracer_self_ms": 6441.73,
-    "wall_ms": 122968
+    "tracer_self_ms": 4995.653,
+    "wall_ms": 128434
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:address_points",
+            "address_points",
+            "address-points"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
     {
       "fingerprint": "5eebf4a9ff6d7782",
       "kind": "read",
@@ -43,7 +82,7 @@
       "fingerprint": "68563e108d423a94",
       "kind": "write",
       "count": 137,
-      "rowCount": 205,
+      "rowCount": 274,
       "reads": {
         "address_points": [
           "addr_num_normalized",
@@ -86,24 +125,6 @@
       },
       "excluded": [],
       "error": null
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:address_points"
-        ]
-      ]
     },
     {
       "fingerprint": "77d30c21e4d01ffb",
@@ -185,7 +206,7 @@
       "fingerprint": "9184be8b14cc7f3c",
       "kind": "read",
       "count": 1,
-      "rowCount": 525343,
+      "rowCount": 525369,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -211,18 +232,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {
@@ -267,7 +276,7 @@
   ],
   "transactions": [
     {
-      "client": "16200:3",
+      "client": "10468:3",
       "write_fingerprints": [
         "68563e108d423a94",
         "8b9dda5a2430e883",

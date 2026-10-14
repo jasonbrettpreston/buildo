@@ -3,16 +3,43 @@
   "step": "scripts/compute-centroids.js",
   "chain": "sources",
   "source_fingerprint": "35bdeff1bebbeaa1989ad3c63c30d7f78b2a4aa75e683a51790607fc5feb9b25",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 28,
     "distinct": 24,
     "utility": 8,
-    "tracer_self_ms": 5.649,
-    "wall_ms": 30410
+    "tracer_self_ms": 6.625,
+    "wall_ms": 24180
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:compute_centroids",
+            "compute_centroids",
+            "compute-centroids"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "19592461e878698f",
       "kind": "read",
@@ -40,6 +67,18 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
       "error": null
     },
     {
@@ -94,24 +133,6 @@
       "writes": {},
       "excluded": [],
       "error": null
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:compute_centroids"
-        ]
-      ]
     },
     {
       "fingerprint": "77d30c21e4d01ffb",
@@ -257,18 +278,6 @@
       "error": null
     },
     {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
-      "error": null
-    },
-    {
       "fingerprint": "bc2c17fd5bda32be",
       "kind": "read",
       "count": 1,
@@ -298,7 +307,7 @@
       "fingerprint": "e28a4ad36539d928",
       "kind": "write",
       "count": 1,
-      "rowCount": 214,
+      "rowCount": 0,
       "reads": {
         "parcels": [
           "centroid_lat",

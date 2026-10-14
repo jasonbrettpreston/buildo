@@ -361,13 +361,13 @@ describe('WF3 sql-witness DML CTE (RED)', () => {
     });
   });
 
-  it('D20 the committed enrich_parcels retirement DELETE', () => {
-    const src = fs.readFileSync(repoPath('scripts/lib/compute/enrich-parcels.js'), 'utf8');
+  it('D20 the committed enrich_parcels retirement DELETE (S3: now in lib/step/scope-retire.js, with the holder/eligible CTEs)', () => {
+    const src = fs.readFileSync(repoPath('scripts/lib/step/scope-retire.js'), 'utf8');
     const sql = src.slice(
-      src.indexOf(`${BT}WITH victims AS (`) + 1,
+      src.indexOf(`${BT}WITH holder AS (`) + 1,
       src.indexOf(`FROM victims${BT}`) + `FROM victims`.length,
     );
-    expect(sql.startsWith('WITH victims AS (')).toBe(true);
+    expect(sql.startsWith('WITH holder AS (')).toBe(true);
     expectRes(sql, realCatalog(), {
       kind: 'write',
       reads: { enrich_parcels_pass3_scope: ['consumed_at', 'created_at', 'run_id'] },

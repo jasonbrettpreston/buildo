@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "none",
-  "source_fingerprint": "4daa73c827b1769e088e00fa248df36761ecc13977ef58926193dee80042a4cc",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "4e974638db6dd24ea84a6215687851547016d40e82e1f8b061a73e0e985312f2",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
-    "calls": 53,
-    "distinct": 35,
+    "calls": 56,
+    "distinct": 36,
     "utility": 14,
-    "tracer_self_ms": 12.196,
-    "wall_ms": 23336
+    "tracer_self_ms": 9.541,
+    "wall_ms": 496556
   },
   "statements": [
     {
@@ -22,6 +22,33 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
     },
     {
       "fingerprint": "19592461e878698f",
@@ -36,6 +63,83 @@
         "pg_trigger"
       ],
       "error": null
+    },
+    {
+      "fingerprint": "1d2c7f53e482c10a",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:load_centreline",
+            "load_centreline",
+            "load-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ],
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "1d68338a42630d9f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": [
+          "from_intersection_id",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2001bd6cc9d4a455",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC, id DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          2663
+        ]
+      ]
     },
     {
       "fingerprint": "28d4a52d23a33271",
@@ -95,15 +199,27 @@
       "params": [
         [
           "completed",
-          22119,
+          495591,
           null,
-          2453,
-          16054,
+          2663,
+          496535,
           0,
           0,
-          "{\"duration_ms\":16173,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"2ac6f3990d9925171db071303acb1a7d\",\"mode\":\"incremental\",\"skip_reason\":\"version_unchanged_incremental\",\"parcels_recomputed\":16054,\"parcels_updated\":0,\"completed_at\":\"2026-10-09T02:32:12.270Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":14,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct >= 90\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 50\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"pct <= 10\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":\"not measured (mode=incremental)\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":\"version_unchanged_incremental\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_recomputed\",\"value\":16054,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"2ac6f3990d9925171db071303acb1a7d\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":16173,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2580180651918,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2580180651918,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00556859033099,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00556859033099,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":1071,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":4811,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":4816,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":4691,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":4631,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":725.83,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":22118,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":489145,\"code_version\":\"none\",\"centreline_enrich\":{\"spec_version\":\"1.1\",\"source_dataset_version\":\"7e3dd3b94e8509dd09138a6f77b9e0d0\",\"mode\":\"full\",\"parcels_updated\":0,\"parcels_with_zero_centreline_intersections_count\":16055,\"parcels_with_zero_centreline_intersections_pct\":3.2299999999999995,\"parcels_is_corner_lot_true_count\":55901,\"parcels_is_through_lot_true_count\":4993,\"parcels_abuts_laneway_true_count\":75828,\"parcels_primary_frontage_resolved_count\":480480,\"parcels_frontage_priority1_name_match_count\":429894,\"parcels_frontage_priority2_addrrange_match_count\":20721,\"parcels_frontage_priority3_nearest_segment_count\":29865,\"parcels_truncated_pair_count\":30,\"completed_at\":\"2026-10-13T23:28:10.828Z\"},\"config\":{\"enrich_centreline_unlinked_warn_pct\":10,\"enrich_centreline_unlinked_fail_pct\":40,\"enrich_centreline_name_coverage_warn_min_pct\":90,\"enrich_centreline_intersection_null_warn_pct\":50,\"enrich_centreline_address_null_warn_pct\":10,\"enrich_centreline_proximity_m\":20,\"enrich_centreline_abut_m\":13,\"enrich_centreline_through_opposite_tol_deg\":45,\"enrich_centreline_pair_cap\":20,\"enrich_centreline_parallel_tol_deg\":15,\"enrich_centreline_azimuth_sample_m\":10,\"enrich_centreline_round_scale\":10,\"enrich_centreline_heartbeat_minutes\":5,\"enrich_centreline_lock_timeout_ms\":1800000,\"enrich_centreline_phase_timeout_minutes\":240,\"enrich_centreline_corner_share_plausible_min_pct\":8,\"enrich_centreline_corner_share_plausible_max_pct\":14,\"enrich_centreline_through_share_plausible_min_pct\":0.2,\"enrich_centreline_through_share_plausible_max_pct\":3},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":14,\"name\":\"Parcel Centreline Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_zero_centreline_intersections_pct\",\"value\":3.2299999999999995,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 40\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_street_name_normalized_pct\",\"value\":97.89,\"threshold\":\"pct >= 90\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_intersection_id_null_pct\",\"value\":0,\"threshold\":\"pct <= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_address_number_null_pct\",\"value\":2.0100000000000002,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_corner_lot_count\",\"value\":55901,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_is_through_lot_count\",\"value\":4993,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_abuts_laneway_count\",\"value\":75828,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_primary_frontage_resolved_count\",\"value\":480480,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority1_match_count\",\"value\":429894,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority2_match_count\",\"value\":20721,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_frontage_priority3_match_count\",\"value\":29865,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_truncated_pair_count\",\"value\":30,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_mode\",\"value\":\"full\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_skip_reason\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_recomputed\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_source_dataset_version\",\"value\":\"7e3dd3b94e8509dd09138a6f77b9e0d0\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_centreline_duration_ms\",\"value\":489145,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_or_through_has_frontage\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_min_pct\",\"value\":11.2582194608638,\"threshold\":\"value_min 8\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_corner_share_max_pct\",\"value\":11.2582194608638,\"threshold\":\"value_max 14\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_min_pct\",\"value\":1.00556859033099,\"threshold\":\"value_min 0.2\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"centreline_through_share_max_pct\",\"value\":1.00556859033099,\"threshold\":\"value_max 3\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"toronto_centreline\":47330},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_centreline_records_meta_centreline_load_spec_version\",\"pin_id\":\"load_centreline.records_meta.centreline_load.spec_version\",\"predicate\":\"records_meta.centreline_load.spec_version equals \\\"1.1\\\"\",\"observed\":\"1.1\",\"producer_run_id\":2656,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-13T23:06:27.039Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.1\",\"threshold\":\"1.1\",\"note\":\"load_centreline run 2656 (completed @ Tue Oct 13 2026 19:06:27 GMT-0400 (Eastern Daylight Time)): records_meta.centreline_load.spec_version = \\\"1.1\\\" — expected \\\"1.1\\\" — PASS\"},{\"metric\":\"producer_pin_load_centreline_records_meta_centreline_load_features_inserted_nonzero\",\"pin_id\":\"load_centreline.records_meta.centreline_load.features_inserted\",\"predicate\":\"records_meta.centreline_load.features_inserted nonzero\",\"observed\":47330,\"producer_run_id\":2656,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-13T23:06:27.039Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":47330,\"threshold\":\"nonzero\",\"note\":\"load_centreline run 2656 (completed @ Tue Oct 13 2026 19:06:27 GMT-0400 (Eastern Daylight Time)): records_meta.centreline_load.features_inserted = 47330 — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_centreline_records_meta_centreline_load_source_dataset_version_nonzero\",\"pin_id\":\"load_centreline.records_meta.centreline_load.source_dataset_version\",\"predicate\":\"records_meta.centreline_load.source_dataset_version nonzero\",\"observed\":\"7e3dd3b94e8509dd09138a6f77b9e0d0\",\"producer_run_id\":2656,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-13T23:06:27.039Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"7e3dd3b94e8509dd09138a6f77b9e0d0\",\"threshold\":\"nonzero\",\"note\":\"load_centreline run 2656 (completed @ Tue Oct 13 2026 19:06:27 GMT-0400 (Eastern Daylight Time)): records_meta.centreline_load.source_dataset_version = \\\"7e3dd3b94e8509dd09138a6f77b9e0d0\\\" — expected non-empty — PASS\"},{\"metric\":\"sys_centreline_corner_or_through_has_frontage_duration_ms\",\"value\":1067,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_min_pct_duration_ms\",\"value\":5249,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_corner_share_max_pct_duration_ms\",\"value\":5315,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_min_pct_duration_ms\",\"value\":5335,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centreline_through_share_max_pct_duration_ms\",\"value\":5228,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1001.91,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":495587,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
     },
     {
       "fingerprint": "56985cbee4dfe3a3",
@@ -174,68 +290,6 @@
       "error": null
     },
     {
-      "fingerprint": "6fe0fdbe591bd156",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "parcels": [
-          "centreline_dataset_version_when_enriched",
-          "geom"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "714ab44e34f7f19f",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings') AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:load_centreline",
-            "load_centreline",
-            "load-centreline"
-          ]
-        ],
-        [
-          [
-            "sources:enrich_centreline",
-            "enrich_centreline",
-            "enrich-centreline"
-          ]
-        ]
-      ]
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:enrich_centreline"
-        ]
-      ]
-    },
-    {
       "fingerprint": "76533998925a04c0",
       "kind": "read",
       "count": 2,
@@ -266,39 +320,6 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7e20c68440df3857",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "centreline_dataset_version_when_enriched",
-          "geom",
-          "id",
-          "street_name_normalized"
-        ],
-        "toronto_centreline": [
-          "feature_code_desc",
-          "from_intersection_id",
-          "geom",
-          "hi_num_l",
-          "hi_num_r",
-          "id",
-          "linear_name",
-          "linear_name_full",
-          "lo_num_l",
-          "lo_num_r",
-          "parity_l",
-          "parity_r",
-          "to_intersection_id"
-        ]
-      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -353,8 +374,8 @@
     {
       "fingerprint": "9bfd7f400254e558",
       "kind": "write",
-      "count": 2,
-      "rowCount": 2,
+      "count": 3,
+      "rowCount": 3,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -366,30 +387,7 @@
         [
           "centreline_join",
           0,
-          2453
-        ]
-      ]
-    },
-    {
-      "fingerprint": "a47b9456480b80ba",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:enrich_centreline",
-            "enrich_centreline",
-            "enrich-centreline"
-          ],
-          2453
+          2663
         ]
       ]
     },
@@ -400,6 +398,38 @@
       "rowCount": 1,
       "reads": {
         "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ad05138ec9a364ad",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 480480,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
       },
       "writes": {},
       "excluded": [],
@@ -438,15 +468,19 @@
       "error": null
     },
     {
-      "fingerprint": "ba271f702f1828b6",
+      "fingerprint": "b2d013e8bdf1613d",
       "kind": "read",
       "count": 1,
-      "rowCount": 720,
-      "reads": {},
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "street_name_normalized"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -528,7 +562,7 @@
   ],
   "transactions": [
     {
-      "client": "8412:3",
+      "client": "25444:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

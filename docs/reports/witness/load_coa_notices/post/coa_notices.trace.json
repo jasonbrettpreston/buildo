@@ -3,16 +3,43 @@
   "step": "scripts/load-coa-notices.js",
   "chain": "coa_notices",
   "source_fingerprint": "c550b313c460a328f62be96137746eb29c2b2a420e4a63fdfc147531d9e1c375",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 15,
     "distinct": 13,
     "utility": 5,
-    "tracer_self_ms": 17.964,
-    "wall_ms": 2503
+    "tracer_self_ms": 4.275,
+    "wall_ms": 1394
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "coa_notices:load_coa_notices",
+            "load_coa_notices",
+            "load-coa-notices"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "21dd0ae63c63676e",
       "kind": "read",
@@ -23,6 +50,18 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
       "error": null
     },
     {
@@ -50,24 +89,6 @@
         "schema_migrations"
       ],
       "error": null
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "coa_notices:load_coa_notices"
-        ]
-      ]
     },
     {
       "fingerprint": "77d30c21e4d01ffb",
@@ -131,18 +152,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {

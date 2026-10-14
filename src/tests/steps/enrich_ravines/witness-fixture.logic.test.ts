@@ -44,8 +44,13 @@ const stepAnswer = (text: string): Answer | null => {
   // declared table before compute and halt on 0 — this fixture models a POPULATED corpus.
   if (/^SELECT COUNT\(\*\)::bigint AS n FROM \w+$/.test(text.trim())) return { rows: [{ n: '1' }] };
   // readRavineContract: the producer's last completed run carries the versioned contract block.
+  // S1-P (Spec 124 Rule 10) — the RUNNER's declared-pin read (scripts/lib/step/producer.js via readRunHistory),
+  // issued before any phase: the producer's latest baseline run, carrying the pinned stamp.
+  if (text.startsWith('SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs')) {
+    return { rows: [{ id: 101, status: 'completed', started_at: '2026-10-01T00:00:00Z', completed_at: '2026-10-01T00:05:00Z', records_meta: { ravine_load: { spec_version: '1.2', delete_skipped_empty_guard: false, drift_check_passed: true, mass_delete_check_passed: true, feature_count: 10, invalid_geometry_skipped: 0, source_dataset_version: 'fixture-v1' } } }] };
+  }
   if (text.includes('SELECT records_meta FROM pipeline_runs') && text.includes("status = 'completed'")) {
-    return { rows: [{ records_meta: { ravine_load: { spec_version: '1.2', delete_skipped_empty_guard: false, drift_check_passed: true, source_dataset_version: 'fixture-v1' } } }] };
+    return { rows: [{ records_meta: { ravine_load: { spec_version: '1.2', delete_skipped_empty_guard: false, drift_check_passed: true, mass_delete_check_passed: true, feature_count: 10, invalid_geometry_skipped: 0, source_dataset_version: 'fixture-v1' } } }] };
   }
   if (text.includes('COUNT(*)::int AS n FROM ravines')) return { rows: [{ n: 10 }] };      // L14 non-empty source
   if (text.includes('Find_SRID')) return { rows: [{ srid: 4326 }] };                      // SRID guard

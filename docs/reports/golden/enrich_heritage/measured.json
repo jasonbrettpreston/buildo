@@ -2,66 +2,66 @@
   "entries": {
     "heritage_flag_type_agree_flagged_side": {
       "value": 0,
-      "cost_ms": 5428,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 2996,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_flag_type_agree_unflagged_side": {
       "value": 0,
-      "cost_ms": 5512,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 2977,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_date_without_type_count": {
       "value": 0,
-      "cost_ms": 5053,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 3024,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_part_iv_null_date_count": {
       "value": 0,
-      "cost_ms": 5523,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 3071,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_designated_share_max_pct": {
       "value": 2.13801214816247,
-      "cost_ms": 3586,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 1687,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_designated_count_collapse_floor": {
       "value": 10616,
-      "cost_ms": 3400,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 1665,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     },
     "heritage_part_iv_matched_le_source": {
       "value": 0,
-      "cost_ms": 3569,
-      "at": "2026-10-09T02:30:39.021Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2449",
+      "cost_ms": 1435,
+      "at": "2026-10-13T23:08:49.653Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2659",
       "chain": null,
-      "sample_n": 4
+      "sample_n": 6
     }
   }
 }

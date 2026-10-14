@@ -166,15 +166,23 @@ for (const c of Object.keys(BASE_SRC)) {
 // a bespoke query embedded in domain logic.
 // ---------------------------------------------------------------------------
 const PRODUCER_NAME = 'sources:load_zoning'; // Spec 58 producer enrich_parcels consumes (§9)
+const ZONING_PRODUCER_STEP = 'load_zoning'; // = staleness.pins[].step for the zoning contract pin (locked by enrich-parcels-contract-pins.logic.test.ts)
 
-// zoning-change scope (2026-10-06 MED, Spec 65 §2 step 6) — every ledger name each step runs under
-// (operator decision 2: a standalone load_zoning run counts as a zoning change). Frozen literals,
-// pinned equal to scripts/lib/ledger.js slugForms(name, ['sources']) by test (enrich-centreline precedent).
-const ZONING_PRODUCER_FORMS = Object.freeze(['sources:load_zoning', 'load_zoning', 'load-zoning']);
-const ENRICH_SELF_FORMS = Object.freeze(['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels']);
+const ENRICH_SELF_STEP = 'enrich_parcels'; // = this step's own slug for the #12a baseline read
 
 /**
- * Did zoning change since this step's last completed run? ONE read-only ledger statement, DB clock only.
+ * #12b's two JS predicates, ported from the old SQL: a gated skip never counts (tested first: it re-emits the prior run's keys); "wrote" = zoning_rows_changed > 0 when it is a JSON number, and a missing / null / malformed key counts as wrote (fail-safe).
+ */
+function zoningRunWrote(recordsMeta) {
+  const m = recordsMeta || {};
+  if (m.gate && String(m.gate.gated_skip) === 'true') return false;
+  const n = m.zoning_rows_changed;
+  return typeof n === 'number' ? n > 0 : true;
+}
+
+/**
+ * Did zoning change since this step's last completed run? Both reads go through `ctx.producer` (the one
+ * run-history reader); the two JS filters above decide. No direct ledger SQL, no DB clock.
  *  - own runs E: completed / completed_with_warnings, minus a write_skipped_pre_write_warn run (Spec 124
  *    R-BG (iv)); deferred / self_skipped / failed / completed_with_errors / running never advance the
  *    baseline. E_last = latest by completed_at, id.
@@ -184,71 +192,43 @@ const ENRICH_SELF_FORMS = Object.freeze(['sources:enrich_parcels', 'enrich_parce
  *    > 0 when it is a JSON number, and a missing / null / malformed key counts as wrote (fail-safe).
  *    P and E use DIFFERENT status sets on purpose (P over-inclusive, E under-inclusive; both fail-safe).
  *  - changed = no E_last at all (fail-safe: scope all), or some P completed at/after E_last.started_at.
- * Throws on a query error (fail closed, as readZoningContract does): an unreadable ledger never picks a scope.
- * @param {{query: Function}} q - a pool or client
+ * Throws on a read error (fail closed, as readZoningContract does): an unreadable ledger never picks a scope.
+ * @param {{producer: Function}} ctx - the hook context (pool/config/producer), never a bare pool
  * @returns {Promise<{changed: boolean, producer_run_id: number|null, producer_completed_at: Date|null,
- *   own_last_run_id: number|null, own_last_started_at: Date|null, read_at: Date}>}
+ *   own_last_run_id: number|null, own_last_started_at: Date|null}>}
  */
-async function readZoningChange(q) {
-  const { rows } = await q.query(
-    `WITH own_last AS (
-       SELECT id, started_at FROM pipeline_runs
-        WHERE pipeline = ANY($1::text[])
-          AND status IN ('completed', 'completed_with_warnings')
-          AND NOT COALESCE(records_meta -> 'audit_table' -> 'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
-        ORDER BY completed_at DESC, id DESC
-        LIMIT 1
-     ),
-     producer AS (
-       SELECT p.id, p.completed_at FROM pipeline_runs p
-        WHERE p.pipeline = ANY($2::text[])
-          AND p.status NOT IN ('running', 'skipped', 'self_skipped')
-          AND (p.records_meta -> 'gate' ->> 'gated_skip') IS DISTINCT FROM 'true'
-          AND COALESCE(
-                CASE WHEN jsonb_typeof(p.records_meta -> 'zoning_rows_changed') = 'number'
-                     THEN (p.records_meta ->> 'zoning_rows_changed')::numeric > 0 END,
-                true)
-          AND p.completed_at >= (SELECT started_at FROM own_last)
-        ORDER BY p.completed_at DESC, p.id DESC
-        LIMIT 1
-     )
-     SELECT CASE WHEN NOT EXISTS (SELECT 1 FROM own_last) THEN true
-                 ELSE EXISTS (SELECT 1 FROM producer) END AS changed,
-            (SELECT id FROM producer) AS producer_run_id,
-            (SELECT completed_at FROM producer) AS producer_completed_at,
-            (SELECT id FROM own_last) AS own_last_run_id,
-            (SELECT started_at FROM own_last) AS own_last_started_at,
-            now() AS read_at`,
-    [[...ENRICH_SELF_FORMS], [...ZONING_PRODUCER_FORMS]],
-  );
-  return rows[0];
+async function readZoningChange(ctx) {
+  // E — this step's own last baseline run: the R-BG(iv) default set (completed, completed_with_warnings),
+  // warn-skip excluded, completed_at DESC, id DESC.
+  // fail closed: an unreadable ledger never picks a scope (the library rethrows, onError: 'throw').
+  const own = await ctx.producer(ENRICH_SELF_STEP, { onError: 'throw' });
+  if (own.reason === 'MISSING') {
+    return { changed: true, producer_run_id: null, producer_completed_at: null, own_last_run_id: null, own_last_started_at: null }; // no baseline: scope all (fail-safe)
+  }
+  // P — every terminal run that may have committed a write, completed at/after E's start. EXPLICIT wider set
+  // (R-CB), warn-skip NOT excluded (the old CTE had no such filter). Unbounded window by design: the window
+  // is already bounded by completedSince.
+  const window = await ctx.producer(ZONING_PRODUCER_STEP, { statuses: 'terminal', excludeWarnSkip: false, completedSince: own.started_at, limit: Number.MAX_SAFE_INTEGER, onError: 'throw' });
+  const hit = window.rows.find((r) => zoningRunWrote(r.records_meta));
+  return { changed: hit !== undefined, producer_run_id: hit ? hit.id : null, producer_completed_at: hit ? hit.completed_at : null, own_last_run_id: own.sid, own_last_started_at: own.started_at };
 }
 
-async function readZoningContract(pool) {
-  const latest = await pool.query(
-    `SELECT status, records_meta FROM pipeline_runs WHERE pipeline = $1 ORDER BY started_at DESC LIMIT 1`,
-    [PRODUCER_NAME],
-  );
-  if (latest.rows.length && latest.rows[0].status === 'failed') {
+/**
+ * @param {{pool: import('pg').Pool, config: object, producer: Function}} ctx
+ */
+async function readZoningContract(ctx) {
+  // #12c — the "latest producer run FAILED" probe. NOT a baseline read (R-CB): the baseline set would never see a failed run and would silently fall back to an older green one,
+  // so the wider closed terminal set is explicit. Ordered by started_at (the current key), id DESC added by the reader. warn-skip rows are NOT excluded (the old probe had no such filter).
+  const latest = await ctx.producer(ZONING_PRODUCER_STEP, { statuses: 'terminal', orderBy: 'started_at', excludeWarnSkip: false, onError: 'throw' }); // fail closed, as the old pool.query rejection did
+  if (latest.status === 'failed') {
     throw new Error(`${TAG} latest ${PRODUCER_NAME} run FAILED — halting (will not enrich against stale zoning)`);
   }
-  const withMeta = await pool.query(
-    `SELECT records_meta FROM pipeline_runs
-      WHERE pipeline = $1 AND status = 'completed'
-        AND jsonb_typeof(records_meta -> 'zoning_layers_loaded') = 'object'
-      ORDER BY started_at DESC LIMIT 1`,
-    [PRODUCER_NAME],
-  );
-  if (withMeta.rows.length === 0) {
-    throw new Error(`${TAG} no successful ${PRODUCER_NAME} run with zoning_layers_loaded — zoning pipeline not initialised`);
-  }
-  const meta = withMeta.rows[0].records_meta || {};
-  const layers = meta.zoning_layers_loaded || {};
-  if (layers.base !== true) {
-    throw new Error(`${TAG} ${PRODUCER_NAME}.zoning_layers_loaded.base !== true — base zoning missing, cannot enrich`);
-  }
+  // #12d — the newest baseline run that CARRIES zoning_layers_loaded as an object. SAME read identity as the descriptor pin (statuses default, meta_object) so the pin the runner already evaluated and this read see the same run.
+  const withMeta = await ctx.producer(ZONING_PRODUCER_STEP, { metaObject: 'zoning_layers_loaded' });
+  const meta = withMeta.records_meta;
+  const layers = meta.zoning_layers_loaded;
   // Read ONCE per run, before the defer decision (F-9): pass 1 consumes this snapshot via ctx.contract.
-  const zoningChange = await readZoningChange(pool);
+  const zoningChange = await readZoningChange(ctx);
   return {
     layers,
     partial: meta.zoning_partial_load || false,
@@ -341,7 +321,6 @@ function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, zoningChanged, 
   const covJoin = covStale ? '' : 'LEFT JOIN cov_agg ca ON ca.parcel_id = s.parcel_id\n';
 
   return `
-CREATE TEMP TABLE parcel_zoning_enrich ON COMMIT DROP AS
 WITH scope AS (
   SELECT p.parcel_id, p.geom
   FROM parcels p
@@ -466,11 +445,7 @@ async function runPass1(client, ctx, config) {
   }
   const roadDist = Number(config.road_overlay_distance_m);
   const bboxDivisor = Number(config.enrich_parcels_bbox_degree_divisor);
-  await client.query('DROP TABLE IF EXISTS parcel_zoning_enrich');
-  await client.query(
-    buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, zoningChanged: zoningChange ? zoningChange.changed : undefined, staleOverlays: ctx.staleOverlays, bboxDivisor }),
-    [roadDist],
-  );
+  await ctx.tempTable({ name: 'parcel_zoning_enrich', selectSql: buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, zoningChanged: zoningChange ? zoningChange.changed : undefined, staleOverlays: ctx.staleOverlays, bboxDivisor }), params: [roadDist] });
 
   const stats = await client.query(`
     SELECT
@@ -487,9 +462,10 @@ async function runPass1(client, ctx, config) {
   const s = stats.rows[0];
 
   const stamp = ctx.clock.now();
-  const upd = await client.query(buildUpdateSql(), [stamp]);
+  // S3 (Spec 124 R-CA(ii)): the write goes through the library seam ctx.exec(0) — same client, same txn, same order.
+  const upd = await ctx.exec(0, buildUpdateSql(), [stamp]);
   // Stamp heal — the SAME `stamp` (one clock read), so the dedupe skips the rows `upd` just stamped.
-  const restamp = await client.query(buildZoningStampSql(), [stamp]);
+  const restamp = await ctx.exec(5, buildZoningStampSql(), [stamp]);
 
   return {
     scoped: Number(s.scoped),
@@ -552,7 +528,6 @@ function buildMaxBuildSql({ scopeWhere = 'TRUE', full = false, storeyHeight, acc
   const mislinkTolNum = N(mislinkTol, mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT);
   const minDimNum = N(minDim, mb.MAX_BUILD_MIN_DIMENSION_M_DEFAULT);
   return `
-CREATE TEMP TABLE parcel_max_build ON COMMIT DROP AS
 WITH scope AS (
   SELECT p.id AS pid, p.parcel_id, p.geom,
          p.lot_size_sqm::numeric AS lot_size_sqm, p.frontage_m::numeric AS frontage_m, p.depth_m::numeric AS depth_m,
@@ -897,8 +872,7 @@ async function runPass2(client, ctx, config) {
     lanewayMinRearYard: config.laneway_suite_min_rear_yard_m, minSoftPct: config.min_soft_landscaping_pct,
     lanewayStoreys: config.laneway_suite_storeys, gardenStoreys: config.garden_suite_storeys,
   };
-  await client.query('DROP TABLE IF EXISTS parcel_max_build');
-  await client.query(buildMaxBuildSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, storeyHeight, acc, mislinkTol: mislinkTolNum, minDim: minDimNum, lotMinSqm: lotMinNum, lotMaxSqm: lotMaxNum }));
+  await ctx.tempTable({ name: 'parcel_max_build', selectSql: buildMaxBuildSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, storeyHeight, acc, mislinkTol: mislinkTolNum, minDim: minDimNum, lotMinSqm: lotMinNum, lotMaxSqm: lotMaxNum }) });
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -941,9 +915,10 @@ async function runPass2(client, ctx, config) {
                                     OR (length_raw > 0 AND length_raw < ${minDimNum})))::int AS box_excluded_cnt,
       COUNT(*) FILTER (WHERE existing_total_footprint_sqm IS NULL)::int AS zero_link_ghost_cnt
     FROM parcel_max_build`);
-  const upd = await client.query(buildMaxBuildUpdateSql());
+  // S3 (Spec 124 R-CA(ii)): the write goes through the library seam ctx.exec(1) — same client, same txn, same order.
+  const upd = await ctx.exec(1, buildMaxBuildUpdateSql());
   const stamp = ctx.clock.now();
-  await client.query(buildMassingStampSql(), [stamp]);
+  await ctx.exec(5, buildMassingStampSql(), [stamp]);
   return { ...stats.rows[0], updated: upd.rowCount, updatedIds: upd.rows.map((r) => r.id) };
 }
 
@@ -962,7 +937,6 @@ function buildExistingStructureSql({ scopeWhere = 'TRUE', full = false, reno = {
   const mislinkTol = Number(reno.mislinkTol ?? mb.MISLINK_FOOTPRINT_LOT_TOL_DEFAULT);
   const mislinkFlag = mb.MISLINK_FLAG_FOOTPRINT_EXCEEDS_LOT;
   return `
-CREATE TEMP TABLE parcel_existing_struct ON COMMIT DROP AS
 WITH scope AS (
   -- max_buildable_gfa_sqm + max_build_stories were written by the max-build pass earlier in THIS txn.
   SELECT p.id AS pid, p.parcel_id, p.geom, p.lot_size_sqm::numeric AS lot_size_sqm,
@@ -1089,8 +1063,7 @@ async function runPass3(client, ctx, config) {
     bathPct: Number(config.reno_bath_gfa_pct),
     mislinkTol: Number(config.mislink_footprint_lot_tol),
   };
-  await client.query('DROP TABLE IF EXISTS parcel_existing_struct');
-  await client.query(buildExistingStructureSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, reno }));
+  await ctx.tempTable({ name: 'parcel_existing_struct', selectSql: buildExistingStructureSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, reno }) });
   const stats = await client.query(`
     SELECT
       COUNT(*)::int AS scoped,
@@ -1110,8 +1083,9 @@ async function runPass3(client, ctx, config) {
       COUNT(*) FILTER (WHERE cur_est_kitchen_gfa_sqm IS NOT NULL)::int   AS with_kitchen,
       COUNT(*) FILTER (WHERE cur_est_bath_gfa_sqm IS NOT NULL)::int      AS with_bath
     FROM parcel_existing_struct`);
-  const upd = await client.query(buildExistingStructureUpdateSql());
-  const updScenario = await client.query(buildScenarioUpdateSql());
+  // S3 (Spec 124 R-CA(ii)): the write goes through the library seam ctx.exec(2) — same client, same txn, same order.
+  const upd = await ctx.exec(2, buildExistingStructureUpdateSql());
+  const updScenario = await ctx.exec(2, buildScenarioUpdateSql());
   return {
     ...stats.rows[0],
     updated: upd.rowCount,
@@ -1148,7 +1122,6 @@ function buildDecisionScopeWhere({ full = false } = {}) {
  */
 function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
   return `
-  CREATE TEMP TABLE comp_cand ON COMMIT DROP AS
   WITH recent AS (
     SELECT DISTINCT ON (pr.zoning_dominant_parcel_id)
       pr.zoning_dominant_parcel_id AS pid, pr.street_num, pr.street_name,
@@ -1186,20 +1159,6 @@ function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
   WHERE pa.geom IS NOT NULL AND pa.zoning_class IS NOT NULL AND pa.lot_size_sqm > 0;`;
 }
 
-/**
- * Split out of buildCompCandidatesSql (found running commit 7e/2's own G2' golden capture,
- * 2026-09-07): "cannot insert multiple commands into a prepared statement". Once the comps
- * window's as-of-date became a BOUND $N::date parameter (Fold G3/§5.5 seam rewrite, commit 7c),
- * the CREATE TEMP TABLE...AS statement above is issued with a values array, so pg's node driver
- * uses the EXTENDED protocol (a real prepared statement) — which Postgres restricts to exactly
- * ONE command. The legacy script's own equivalent call passed NO params (a bare now()::date
- * literal, simple-protocol, multi-statement-safe), so the CREATE INDEX/ANALYZE pair riding the
- * same semicolon-joined string never tripped this. Issued as its own, parameter-free
- * client.query() call (no values array => simple protocol, multi-statement allowed again).
- */
-function buildCompCandidatesIndexSql() {
-  return `CREATE INDEX comp_cand_gix ON comp_cand USING gist (geom); ANALYZE comp_cand;`;
-}
 
 /**
  * SECURITY — scopeWhere is interpolated verbatim; trusted internal/test predicate only (never user input).
@@ -1328,7 +1287,10 @@ async function runPass4(client, ctx, config) {
   // WF3: RESET stale comp_* on parcels that LOST eligibility (footprint -> NULL, e.g. a heritage-mislink
   // freeze) — the eligible-only reset below skips them, leaving a stale comp_fsi_p50 forever (same gated-pass
   // gap the optconfig reset fixes). Always-on (not just --full).
-  const resetIneligible = await client.query(
+  // S3-E7 (Spec 124 R-CA(ii)): pass-4 writes go through ctx.exec(3) — the declared set_based_join_update target; same client,
+  // same txn, same order. ctx.exec is COUNTER-NEUTRAL (it routes + proves declared); the pass result below is the ONLY
+  // counter source for written[3] (the runner's per-phase fallback), so the counts stay byte-identical to pre-S3.
+  const resetIneligible = await ctx.exec(3,
     `UPDATE parcels p SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
        comp_build_ratio_p50 = NULL, comp_fsi_p50 = NULL
      WHERE (${scopeWhere})
@@ -1336,24 +1298,30 @@ async function runPass4(client, ctx, config) {
        AND p.comp_count IS NOT NULL`);
   // FULL re-run: clear stale comp data for the scope first, so a parcel whose comps disappeared resets.
   if (full) {
-    await client.query(`UPDATE parcels SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
+    await ctx.exec(3, `UPDATE parcels SET comparable_builds = NULL, comp_count = NULL, comp_dominant_build = NULL,
       comp_build_ratio_p50 = NULL, comp_fsi_p50 = NULL WHERE ${eligible} AND (${scopeWhere})`);
   }
   const asOfDate = ctx.clock.asOfDate();
-  await client.query(buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears }), [asOfDate]);
-  await client.query(buildCompCandidatesIndexSql());
+  // The comp_cand index/ANALYZE are separate PARAMETERLESS statements issued by the seam, for the
+  // same reason the CREATE was split out before: once the as-of date is bound the CREATE goes
+  // through pg's extended protocol (a real prepared statement), which Postgres restricts to ONE
+  // command — "cannot insert multiple commands into a prepared statement". The seam also issues
+  // `DROP TABLE IF EXISTS comp_cand` before the CREATE (a no-op in a fresh pass transaction).
+  await ctx.tempTable({ name: 'comp_cand', selectSql: buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears }), params: [asOfDate], index: { name: 'comp_cand_gix', using: 'gist', column: 'geom' }, analyze: true });
   const cand = (await client.query('SELECT count(*)::int AS n FROM comp_cand')).rows[0].n;
-  const upd = await client.query(buildComparableBuildsUpdateSql({ full, scopeWhere, comp }));
+  const upd = await ctx.exec(3, buildComparableBuildsUpdateSql({ full, scopeWhere, comp }));
   // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker; the
   // zero-comp count is real, not hidden as NULL). O4 rows 2+8: there is no incremental skip to keep
   // correct any more — pass 4 recomputes every eligible subject every run.
-  const zeroFilled = await client.query(
+  const zeroFilled = await ctx.exec(3,
     `UPDATE parcels p SET comp_count = 0 WHERE ${eligible} AND p.comp_count IS NULL AND (${scopeWhere})`);
   const dist = (await client.query(
     `SELECT count(*) FILTER (WHERE comp_count > 0)::int AS with_comps,
             count(*) FILTER (WHERE comp_count = 0)::int AS zero_comps,
             count(*) FILTER (WHERE comp_build_ratio_p50 IS NOT NULL)::int AS with_br
      FROM parcels WHERE ${eligible} AND (${scopeWhere})`)).rows[0];
+  // S3-E7: restore the PRE-S3 pg-result reads — the pass result is now the only counter source for written[3]
+  // (ctx.exec is counter-neutral), so `updated` must be the driver rowCount, not the result object.
   return { candidates: cand, updated: upd.rowCount, zero_filled: zeroFilled.rowCount, reset_ineligible: resetIneligible.rowCount || 0, ...dist };
 }
 
@@ -1530,13 +1498,14 @@ function computeOptConfigRow(r) {
 
 /**
  * Batched UPDATE ... FROM (VALUES ...). 12 params/row (11 cols + id). Verbatim SQL shape from
- * :1421-1469 — `pool` param renamed `client` (the runner hands this whatever connection pass 5 runs
- * on; this file never opens/closes it).
- * @param {import('pg').PoolClient|import('pg').Pool} client
+ * :1421-1469 — the first param is the pass-5 ctx (S3, Spec 124): the write goes through
+ * `ctx.flushBatch` (the runner's own short-transaction seam), so this file never touches a
+ * connection and never calls `client.query` for DML; this file never opens/closes anything.
+ * @param {{flushBatch: Function}} ctx the pass-5 ctx (S3)
  * @param {Array} batch
  * @param {Set<number>} [genuineIds]
  */
-async function flushOptConfigBatch(client, batch, genuineIds = new Set()) {
+async function flushOptConfigBatch(ctx, batch, genuineIds = new Set()) {
   if (!batch.length) return 0;
   const cols = OPTCFG_WRITE_COLS;
   const perRow = cols.length + 1;
@@ -1571,7 +1540,7 @@ async function flushOptConfigBatch(client, batch, genuineIds = new Set()) {
     WHERE p.id = d.id
       AND (d.genuine OR d.nearby_changed)
     RETURNING p.id, d.genuine`;
-  const res = await client.query(sql, params);
+  const res = await ctx.flushBatch(sql, params);
   for (const row of res.rows) {
     if (row.genuine) genuineIds.add(row.id);
   }
@@ -1611,10 +1580,10 @@ async function flushOptConfigBatch(client, batch, genuineIds = new Set()) {
  * @param {Date} stamp
  * @param {Set<number>} genuineIds
  * @param {{info:Function,warn:Function,error:Function}} log
- * @param {{ full: boolean, batchSize: number, flushClient: {query: Function} }} opts
+ * @param {{ full: boolean, batchSize: number }} opts
  */
-async function consumePendingScope(client, runId, stats, stamp, genuineIds, log, opts) {
-  const { full, batchSize, flushClient } = opts;
+async function consumePendingScope(client, ctx, runId, stats, stamp, genuineIds, log, opts) {
+  const { full, batchSize } = opts;
   // F10 (output panel, 2026-09-09) — the descriptor declares enrich_parcels_scope_recovery_batch_size
   // on_invalid:"fail" with bounds [100,10000] (scripts/lib/step/config.js resolveConfig), which
   // SHOULD already refuse a bad value before it ever reaches here — but this loop's own
@@ -1637,7 +1606,7 @@ async function consumePendingScope(client, runId, stats, stamp, genuineIds, log,
 
   if (full) {
     const errorIds = Array.from(stats.errorIds || []);
-    const res = await client.query(
+    const res = await ctx.exec(6,
       `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2
          WHERE consumed_at IS NULL AND run_id <> $1 AND parcel_id <> ALL($3::int[])`,
       [runId, stamp, errorIds],
@@ -1678,10 +1647,10 @@ async function consumePendingScope(client, runId, stats, stamp, genuineIds, log,
         }
       }
       if (batchRows.length) {
-        recovered += await flushOptConfigBatch(flushClient, batchRows, genuineIds);
+        recovered += await flushOptConfigBatch(ctx, batchRows, genuineIds);
       }
       if (succeededIds.size) {
-        await client.query(
+        await ctx.exec(6,
           `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE parcel_id = ANY($1::int[]) AND consumed_at IS NULL`,
           [Array.from(succeededIds), stamp],
         );
@@ -1711,7 +1680,7 @@ async function runPass5(client, ctx, config) {
   // autocommit per statement (no outer transaction wraps this function at all
   // anymore), matching the legacy script's own `enrichOptimalConfig(pool, ...)`,
   // where every one of these was ALSO an independent autocommit call.
-  const flushClient = { query: (sql, params) => ctx.flushBatch(sql, params) };
+  // S3 (Spec 124 R-CA(ii)/R-CK): every pass-5 write goes through ctx.exec / ctx.flushBatch — compute never calls client.query for DML.
   const cw = await client.query(`SELECT 1 FROM neighbourhood_build_norms WHERE neighbourhood_id IS NULL AND structure_family = 'all' LIMIT 1`);
   if (!cw.rowCount) {
     throw new Error(`${TAG} optimal-config: no citywide (NULL,'all') neighbourhood_build_norms backstop — run compute_build_norms (permits chain) first`);
@@ -1719,7 +1688,7 @@ async function runPass5(client, ctx, config) {
   const scopeWhere = ctx.scopeWhere;
   const full = ctx.full;
   const resetCols = OPTCFG_WRITE_COLS.map((c) => `${c} = NULL`).join(', ');
-  const reset = await client.query(
+  const reset = await ctx.exec(4,
     `UPDATE parcels p SET ${resetCols}
        WHERE (${scopeWhere})
          AND (p.max_buildable_footprint_sqm IS NULL OR (p.lot_size_sqm > 0) IS NOT TRUE)
@@ -1765,7 +1734,7 @@ async function runPass5(client, ctx, config) {
     if (effMbs != null && rawP50 != null && rawP50 > effMbs) stats.envelope_capped += 1;
     batch.push(row);
     if (batch.length >= batchSize) {
-      stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
+      stats.updated += await flushOptConfigBatch(ctx, batch, stats.genuineIds);
       batch = [];
       // EP-D15 (WF3 C4) — report cumulative progress through the runner-owned seam (if the
       // caller provides one; compute stays JUST compute — the write cadence/connection are
@@ -1774,7 +1743,7 @@ async function runPass5(client, ctx, config) {
     }
   }
   if (batch.length) {
-    stats.updated += await flushOptConfigBatch(flushClient, batch, stats.genuineIds);
+    stats.updated += await flushOptConfigBatch(ctx, batch, stats.genuineIds);
     if (typeof ctx.onProgress === 'function') ctx.onProgress(stats.updated);
   }
 
@@ -1791,15 +1760,14 @@ async function runPass5(client, ctx, config) {
     // "an errored parcel's scope row must survive for a future genuine recovery" principle
     // the rest of this function is built around.
     const thisRunErrorIds = Array.from(stats.errorIds || []);
-    await client.query(
+    await ctx.exec(6,
       `UPDATE enrich_parcels_pass3_scope SET consumed_at = $2 WHERE run_id = $1 AND consumed_at IS NULL AND parcel_id <> ALL($3::int[])`,
       [runId, stamp, thisRunErrorIds],
     );
   }
-  stats.updated += await consumePendingScope(client, runId ?? -1, stats, stamp, stats.genuineIds, ctx.log, {
+  stats.updated += await consumePendingScope(client, ctx, runId ?? -1, stats, stamp, stats.genuineIds, ctx.log, {
     full,
     batchSize: Number(config.enrich_parcels_scope_recovery_batch_size),
-    flushClient,
   });
 
   // EP-D10 fix (pilot 9 commit 8 P1, Spec 123 §3.1 pin-then-fix). enrich_parcels_pass3_scope
@@ -1817,7 +1785,7 @@ async function runPass5(client, ctx, config) {
   // consumed row from every past run, not just this one) — there is no future use for a
   // consumed row once written, and confining the DELETE to this run's own run_id would leave
   // every PRIOR run's already-consumed rows undeleted forever, which is the exact bug being fixed.
-  const pruned = await client.query(`DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL`);
+  const pruned = await ctx.exec(6, `DELETE FROM enrich_parcels_pass3_scope WHERE consumed_at IS NOT NULL`);
   stats.scope_pruned = pruned.rowCount || 0;
   return stats;
 }
@@ -1836,110 +1804,7 @@ async function countScopeRows(client, whereSql) {
 // 2026-09-15) — the step-start stale-cohort floor under enrich_parcels_pass3_scope.
 // ===========================================================================
 
-/**
- * Retire UNCONSUMED scope rows left behind by runs that never reached pass 5.
- *
- * THE RULING THIS EXECUTES IS ALREADY MADE — it is not re-litigated here.
- * `scripts/one-time/wf3-prune-pass3-scope.js` (EP-D14, run once by hand on 2026-09-09)
- * carries it in full: under `--full` (the only live cloud invocation) an unconsumed row
- * belonging to a terminal prior run is **stale, not pending recovery**. Either the parcel is
- * no longer eligible — the next `--full`'s own hand-off INSERT will not re-spool it — or it
- * is still eligible, in which case the next `--full`'s own stream recomputes it in the same
- * invocation. Neither case needs the stale row; deleting it is byte-identical to the legacy
- * per-parcel loop's output, and the one-off's own header records that "nothing here is
- * load-bearing to preserve". What was missing was only that NOTHING DID IT AUTOMATICALLY:
- * the one-off runs when a human notices, so the backlog was unbounded between incidents.
- * This makes the existing ruling ROUTINE. The one-off script stays — it is the operator's
- * incident tool and its dated backup/restore path has no equivalent here, deliberately.
- *
- * FENCES (Regression Guardian §3), each knowingly preserved:
- *  1. `run_id <> $1` — THIS run's own cohort is never touched, so the `errorIds` carve-out
- *     (`parcel_id <> ALL($3::int[])` at :1509/:1684, the marker that lets a future run
- *     genuinely retry a parcel whose engine threw in this run's stream) is untouched by
- *     construction rather than by a second, parallel exclusion list.
- *  2. The one-off's F3 refusal, encoded in SQL instead of in a human's head: retire nothing
- *     while ANY OTHER `enrich_parcels` invocation shows `running`. `r.id <> $3` is
- *     LOAD-BEARING — this step's own `pipeline_runs` row reads `running` for its entire
- *     lifetime, so without the exclusion the guard would always block and this whole
- *     function would be dead code. (Operator ruling 2026-09-15, plan Q4: a row stuck
- *     `running` for hours is NOT auto-closed here. A hygiene DELETE must not be the thing
- *     that decides a run is dead — that is the §3b reaper's job, filed separately. The
- *     consequence is accepted and honest: while a stranded row exists, retirement is
- *     blocked and `scope_retired_rows` reads 0 with the backlog still reported.)
- *  3. Disjoint from the EP-D10 end-of-pass-5 prune by predicate: that one is
- *     `consumed_at IS NOT NULL`, this one is `consumed_at IS NULL`. No overlap, no
- *     double-count, both directions locked in enrich-parcels-optconfig.logic.test.ts.
- *
- * The age cutoff is derived IN SQL from two bound parameters — the runner's injected DB clock
- * (`pipeline.getDbTimestamp`) minus the tunable — never with `new Date(...)` here (Rule 2 /
- * §5.5's compute-no-wall-clock rule: compute stays JUST compute, the clock is the runner's),
- * and never as a `now() - interval '24 hours'` SQL literal: the
- * window is an admin logic variable (`enrich_parcels_scope_retire_after_hours`, Rule 3 —
- * nothing hidden), and a literal would make the tunable inert. Note `created_at DEFAULT
- * now()` returns the TRANSACTION start timestamp and the hand-off INSERT runs inside the
- * shared txn, so this clock dates the shared txn's BEGIN, not the insert — still a usable
- * clock for a 24 h window (a `--full` run is ~3.5-5 h end to end), but it is the txn clock.
- *
- * @param {import('pg').Pool|import('pg').PoolClient} client - autocommit; NOT inside the shared txn
- * @param {{runId: number, ownRunId: number|null, retireAfterHours: number, now: Date}} opts
- * @returns {Promise<{backlog_rows: number, backlog_cohorts: number, retired_rows: number, retired_cohorts: number}>}
- */
-async function retireStaleScope(client, opts) {
-  const { runId, ownRunId = null, retireAfterHours, now } = opts || {};
-  if (!Number.isFinite(retireAfterHours) || retireAfterHours <= 0) {
-    throw new Error(`${TAG} retireStaleScope: retention window must be a positive finite number of hours, got ${retireAfterHours} — check enrich_parcels_scope_retire_after_hours in logic_variables`);
-  }
-  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
-    throw new Error(`${TAG} retireStaleScope: opts.now must be the runner's DB clock (pipeline.getDbTimestamp), got ${String(now)}`);
-  }
-  // Observed BEFORE the DELETE, so the audit rows reconcile:
-  // retired + surviving = backlog_at_step_start (Reality-Check §4 invariant).
-  // The cutoff is returned BY THE DATABASE (derived from the injected clock and the
-  // tunable, the same two parameters the DELETE below uses) so the window that was actually
-  // in force travels onto the audit table with the counts — a reader of the rows alone can
-  // then tell a 0 that means "nothing was old enough" from a 0 that means "the window is
-  // misconfigured". Never re-derived in JS, which would be a second source of truth.
-  const observed = await client.query(
-    `SELECT count(*)::int AS backlog_rows, count(DISTINCT run_id)::int AS backlog_cohorts,
-            ($1::timestamptz - ($2::numeric * interval '1 hour')) AS cutoff_at
-       FROM enrich_parcels_pass3_scope WHERE consumed_at IS NULL`,
-    [now, retireAfterHours],
-  );
-  // ONE statement: the guard, the age bound and the counting all commit or none do, so a
-  // run that dies mid-retirement can never leave a half-retired cohort (idempotent on
-  // replay — a second call simply matches nothing).
-  //
-  // The cutoff is DERIVED IN SQL from two bound parameters — the runner's injected clock
-  // ($2, `pipeline.getDbTimestamp`) minus the tunable ($4) — rather than computed here with
-  // `new Date(...)`: compute stays JUST compute (Rule 2, §5.5's compute-no-wall-clock rule,
-  // enforced by step-conformance.infra.test.ts), and a bare `now() - interval '24 hours'`
-  // literal would make the admin logic variable inert (Rule 3, nothing hidden). Both halves
-  // arrive as parameters; neither is a literal and neither is read from this process's clock.
-  const retired = await client.query(
-    `WITH victims AS (
-       DELETE FROM enrich_parcels_pass3_scope s
-        WHERE s.consumed_at IS NULL
-          AND s.run_id <> $1
-          AND s.created_at < ($2::timestamptz - ($4::numeric * interval '1 hour'))
-          AND NOT EXISTS (
-            SELECT 1 FROM pipeline_runs r
-             WHERE r.status = 'running'
-               AND r.pipeline LIKE '%enrich_parcels'
-               AND ($3::bigint IS NULL OR r.id <> $3))
-       RETURNING s.run_id
-     )
-     SELECT count(*)::int AS retired_rows, count(DISTINCT run_id)::int AS retired_cohorts FROM victims`,
-    [runId, now, ownRunId, retireAfterHours],
-  );
-  return {
-    backlog_rows: observed.rows[0].backlog_rows,
-    backlog_cohorts: observed.rows[0].backlog_cohorts,
-    retired_rows: retired.rows[0].retired_rows,
-    retired_cohorts: retired.rows[0].retired_cohorts,
-    retire_after_hours: retireAfterHours,
-    cutoff_at: observed.rows[0].cutoff_at,
-  };
-}
+// retireStaleScope moved to scripts/lib/step/scope-retire.js (S3, R-CI): runner hygiene, not compute.
 
 async function countUnconsumedBacklog(client) {
   const { rows } = await client.query(
@@ -1948,8 +1813,13 @@ async function countUnconsumedBacklog(client) {
   return rows[0].n;
 }
 
-async function computeDeferScope(client, threshold) {
-  const zoningChange = await readZoningChange(client);
+/**
+ * @param {{pool: import('pg').Pool, config: object}} ctx
+ * @param {number} threshold
+ */
+async function computeDeferScope(ctx, threshold) {
+  const client = ctx.pool;
+  const zoningChange = await readZoningChange(ctx);
   const pass1Where = buildPass1ScopeWhere({ full: false, zoningChanged: zoningChange.changed });
   const massingWhere = buildMassingScopeWhere({ full: false });
   const decisionWhere = buildDecisionScopeWhere({ full: false });
@@ -2470,9 +2340,8 @@ Object.assign(module.exports, {
   ALL_WRITE_COLS,
   OVERLAY_LAYERS,
   readZoningContract,
-  ZONING_PRODUCER_FORMS,
-  ENRICH_SELF_FORMS,
   readZoningChange,
+  zoningRunWrote,
   checks: CHECKS,
   // pass 1
   buildPass1ScopeWhere,
@@ -2495,7 +2364,6 @@ Object.assign(module.exports, {
   COMP_WRITE_COLS,
   buildDecisionScopeWhere,
   buildCompCandidatesSql,
-  buildCompCandidatesIndexSql,
   buildComparableBuildsUpdateSql,
   runPass4,
   // pass 5
@@ -2509,7 +2377,7 @@ Object.assign(module.exports, {
   consumePendingScope,
   runPass5,
   // scope hygiene (EP-PASS3-BACKLOG)
-  retireStaleScope,
+  // retireStaleScope moved to scripts/lib/step/scope-retire.js (S3, R-CI)
   // defer scope
   countScopeRows,
   countUnconsumedBacklog,

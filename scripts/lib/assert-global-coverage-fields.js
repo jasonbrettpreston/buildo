@@ -61,6 +61,7 @@ const LOGIC_VAR_DEFS = [
   { name: 'profiling_coverage_warn_pct', default: 70, min: 0, max: 100, group: 'Coverage & Quality', description: 'assert-global-coverage: coverage >= this integer pct -> WARN, else FAIL (spec 49)' },
   { name: 'vocab_coverage_pass_pct', default: 90, min: 0, max: 100, group: 'Coverage & Quality', description: 'assert-global-coverage: vocabulary coverage >= this integer pct -> PASS (spec 49 §3)' },
   { name: 'vocab_coverage_warn_pct', default: 70, min: 0, max: 100, group: 'Coverage & Quality', description: 'assert-global-coverage: vocabulary coverage >= this integer pct -> WARN, else FAIL (spec 49 §3)' },
+  { name: 'vocab_coverage_statement_timeout_minutes', default: 0.25, min: 0.05, max: 10, group: 'Coverage & Quality', description: 'assert-global-coverage: per-triple READ ONLY snapshot statement_timeout, in minutes (0.25 = 15 s, the former hard-coded default) (Spec 124 R-CH)' },
   { name: 'cost_coverage_pass_pct', default: 55, min: 0, max: 100, group: 'Cost Audit Thresholds', description: 'assert-global-coverage: WF3 F4 archetype-era cost-coverage floor for Step-14 cost_estimates rows -> PASS' },
   { name: 'cost_coverage_warn_pct', default: 50, min: 0, max: 100, group: 'Cost Audit Thresholds', description: 'assert-global-coverage: WF3 F4 cost-coverage floor -> WARN, else FAIL' },
   // IL-3 / DEC-1 (#406) — CoA :360 + permits :1102, one pair, two call sites.

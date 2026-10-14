@@ -305,17 +305,98 @@ function parseDeferMarker(recordsMeta) {
  * must be mirrored in the other.
  *
  * @param {{ wasCancelled: boolean, failedStep: string | null, hasVerdictFails: boolean,
- *           deferredStep: string | null, budgetStopped: boolean, hasVerdictWarns: boolean }} facts
+ *           deferredStep: string | null, budgetStopped: boolean, hasVerdictWarns: boolean,
+ *           stepRowStatuses?: string[] }} facts
  * @returns {'cancelled'|'failed'|'completed_with_errors'|'deferred_to_full'|'completed_with_warnings'|'completed'}
  */
-function resolveChainStatus({ wasCancelled, failedStep, hasVerdictFails, deferredStep, budgetStopped, hasVerdictWarns }) {
+function resolveChainStatus({ wasCancelled, failedStep, hasVerdictFails, deferredStep, budgetStopped, hasVerdictWarns, stepRowStatuses }) {
   if (wasCancelled) return 'cancelled';
   if (failedStep) return 'failed';
   if (hasVerdictFails) return 'completed_with_errors';
   if (deferredStep) return 'deferred_to_full';
   if (budgetStopped) return 'completed_with_warnings';
   if (hasVerdictWarns) return 'completed_with_warnings';
+  // Spec 124 R-CC — when the caller supplies the run's step-row statuses, the
+  // chain status is the same fold over them (failed > completed_with_errors >
+  // completed_with_warnings > completed). `failed` never appears here (it is
+  // the failedStep branch above), so the ladder is a precedence pick.
+  if (Array.isArray(stepRowStatuses) && stepRowStatuses.length > 0) {
+    const rank = { failed: 4, completed_with_errors: 3, completed_with_warnings: 2, completed: 1 };
+    let worst = 'completed';
+    for (const s of stepRowStatuses) {
+      if (rank[s] === undefined) continue;
+      if (rank[s] > rank[worst]) worst = s;
+    }
+    return worst;
+  }
   return 'completed';
+}
+
+/**
+ * Spec 124 R-CC (purity seam S1-R) — THE single fold from a run's
+ * `records_meta.audit_table.rows` to (a) a verdict and (b) the step row's
+ * terminal status. The literal `'completed'` is retired for chain-run step
+ * rows: the status is derived here, never hard-coded (operator 2026-10-12).
+ *
+ * Closed mapping — PASS/SKIP→'completed'; WARN→'completed_with_warnings';
+ * FAIL→'completed_with_errors'; UNKNOWN→'completed_with_warnings'. `null`
+ * recordsMeta, a missing/empty `audit_table`, an unrecognised row status and a
+ * stored-verdict/fold disagreement are all honest WARNs (null ≠ PASS, never
+ * plain 'completed').
+ *
+ * Pure and side-effect-free: returns `{ status, auditRows }` where `auditRows`
+ * are rows to append to the same `records_meta.audit_table.rows` (or log at
+ * warn level when the caller has no row home).
+ *
+ * @param {*} recordsMeta
+ * @returns {{ verdict: 'PASS'|'WARN'|'FAIL'|'SKIP'|'UNKNOWN',
+ *             status: 'completed'|'completed_with_warnings'|'completed_with_errors',
+ *             auditRows: Array<{ metric: string, status: string, detail: object }> }}
+ */
+function stepStatusFromRecordsMeta(recordsMeta) {
+  const auditRows = [];
+  const table = recordsMeta && typeof recordsMeta === 'object' ? recordsMeta.audit_table : null;
+  const rows = table && Array.isArray(table.rows) ? table.rows : null;
+
+  let verdict;
+  if (!table || typeof table !== 'object' || !Array.isArray(table.rows)) {
+    verdict = 'UNKNOWN';
+    auditRows.push({ metric: 'verdict_unavailable', status: 'WARN', detail: { reason: 'missing_audit_table' } });
+  } else if (rows.length === 0) {
+    verdict = 'UNKNOWN';
+    auditRows.push({ metric: 'verdict_unavailable', status: 'WARN', detail: { reason: 'empty_rows' } });
+  } else {
+    const statuses = rows.map((r) => (r && typeof r === 'object') ? r.status : undefined);
+    const known = new Set(['PASS', 'SKIP', 'INFO', 'WARN', 'FAIL']);
+    const unrecognised = statuses.find((s) => !known.has(s));
+    if (unrecognised !== undefined) {
+      verdict = 'UNKNOWN';
+      auditRows.push({ metric: 'verdict_unavailable', status: 'WARN', detail: { reason: `unrecognised_status:${unrecognised}` } });
+    } else if (statuses.includes('FAIL')) {
+      verdict = 'FAIL';
+    } else if (statuses.includes('WARN')) {
+      verdict = 'WARN';
+    } else if (statuses.includes('PASS') || statuses.includes('INFO')) {
+      verdict = 'PASS';
+    } else {
+      // every row is SKIP
+      verdict = 'SKIP';
+    }
+  }
+
+  // Cross-check the stored verdict (no backfill — forward-only, Spec 124 R-CC).
+  const stored = table && typeof table.verdict === 'string' ? table.verdict : null;
+  if (stored !== null && stored !== verdict) {
+    auditRows.push({ metric: 'verdict_mismatch', status: 'WARN', detail: { stored, folded: verdict } });
+  }
+
+  const status = verdict === 'FAIL'
+    ? 'completed_with_errors'
+    : verdict === 'UNKNOWN' || verdict === 'WARN'
+      ? 'completed_with_warnings'
+      : 'completed'; // PASS | SKIP
+
+  return { verdict, status, auditRows };
 }
 
 // ---------------------------------------------------------------------------
@@ -588,7 +669,11 @@ async function run() {
   // stop at the current step boundary (RULING 1/2).
   let deferredStep = null;
   let deferMarkerInfo = null; // { step, scope_count, threshold, ratio } — for the chainError text
-  const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL'
+  const stepVerdicts = {}; // slug → 'PASS' | 'WARN' | 'FAIL' | 'SKIP' | 'UNKNOWN' (written to records_meta.step_verdicts)
+  // Spec 124 R-CC (S1R-4b) — separate slug → step-ROW status map ('completed' |
+  // 'completed_with_warnings' | 'completed_with_errors'). Kept OUT of records_meta:
+  // it exists only to make the chain ladder a 1:1 fold over the same rows.
+  const stepRowStatuses = {};
   // C5 (Spec 48 §3.9) — step_completeness bookkeeping. executedSteps excludes a died/failed step
   // (died_at names it separately) but INCLUDES a deferred step (its own row is rewritten, not
   // missing). skippedGateSteps folds gate-skip + disabled + coming_soon placeholders — all three are
@@ -931,10 +1016,19 @@ async function run() {
         }
       }
 
-      // Extract audit_table verdict for chain-level aggregation
-      if (recordsMeta?.audit_table?.verdict) {
-        stepVerdicts[slug] = recordsMeta.audit_table.verdict;
-      }
+      // Spec 124 R-CC (purity seam S1-R): the step row's status AND the
+      // chain-level step verdict both come from ONE fold over this run's
+      // records_meta.audit_table.rows (stepStatusFromRecordsMeta). The literal
+      // 'completed' is retired — `stepFold.status` is bound into the UPDATE
+      // below. The fold is taken AFTER the telemetry merge so it sees the final
+      // records_meta.
+      const stepFold = stepStatusFromRecordsMeta(recordsMeta);
+      // Spec 124 R-CC (S1R-4b): stepVerdicts holds the VERDICT (PASS/WARN/FAIL/
+      // SKIP/UNKNOWN) — it is what records_meta.step_verdicts, check-chain-verdict.js
+      // and the admin views read. The fold's ROW STATUS goes to the SEPARATE
+      // stepRowStatuses map (never merged into records_meta).
+      stepVerdicts[slug] = stepFold.verdict;
+      stepRowStatuses[slug] = stepFold.status;
 
       // Parse PIPELINE_META line for self-documented reads/writes
       const metaMatches = [...output.matchAll(/PIPELINE_META:(.+)/g)];
@@ -991,15 +1085,28 @@ async function run() {
       console.log(`${stepLabel} — completed (${(durationMs / 1000).toFixed(1)}s)\n`);
 
       if (stepRunId) {
+        // Spec 124 R-CC: status is derived (never the retired literal); the fold's
+        // diagnostic auditRows are appended to this run's own
+        // records_meta.audit_table.rows — the row home IS this UPDATE (it already
+        // writes records_meta at $6), so no logger fallback / TODO(S1-P) is needed.
+        const finalRecordsMeta = stepFold.auditRows.length > 0
+          ? {
+              ...(recordsMeta || {}),
+              audit_table: {
+                ...((recordsMeta && recordsMeta.audit_table) || {}),
+                rows: [ ...(((recordsMeta && recordsMeta.audit_table && recordsMeta.audit_table.rows) || [])), ...stepFold.auditRows ],
+              },
+            }
+          : recordsMeta;
         await pool.query(
           `UPDATE pipeline_runs
-           SET completed_at = NOW(), status = 'completed', duration_ms = $1,
+           SET completed_at = NOW(), status = $7, duration_ms = $1,
                records_total = COALESCE($3, records_total),
                records_new = COALESCE($4, records_new),
                records_updated = COALESCE($5, records_updated),
                records_meta = COALESCE($6::jsonb, records_meta)
            WHERE id = $2`,
-          [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, recordsMeta ? JSON.stringify(recordsMeta) : null]
+          [durationMs, stepRunId, recordsTotal, recordsNew, recordsUpdated, finalRecordsMeta ? JSON.stringify(finalRecordsMeta) : null, stepFold.status]
         );
         // No .catch() — DB failures on step completion must halt the chain
         // (masked disconnects would silently cascade into the next step)
@@ -1090,11 +1197,17 @@ async function run() {
     }
   }
 
-  // Update parent chain row — aggregate step verdicts for chain-level health
+  // Update parent chain row — aggregate step verdicts for chain-level health.
+  // Spec 124 R-CC (S1R-4b): stepVerdicts[slug] is the step VERDICT
+  // (PASS | WARN | FAIL | SKIP | UNKNOWN) — what records_meta.step_verdicts and
+  // check-chain-verdict.js read. The chain status is derived from the verdicts,
+  // which is 1:1 with the fold over the step-row statuses
+  // (FAIL→completed_with_errors, WARN/UNKNOWN→completed_with_warnings).
+  // resolveChainStatus() mirrors this ladder for external unit-testability.
   const chainDurationMs = Date.now() - chainStart;
   const verdictValues = Object.values(stepVerdicts);
   const hasVerdictFails = verdictValues.includes('FAIL');
-  const hasVerdictWarns = verdictValues.includes('WARN');
+  const hasVerdictWarns = verdictValues.includes('WARN') || verdictValues.includes('UNKNOWN');
 
   let chainStatus;
   if (wasCancelled) chainStatus = 'cancelled';
@@ -1104,7 +1217,7 @@ async function run() {
   // chain even if a later step also deferred, but a clean defer must not be swallowed by a WARN.
   else if (deferredStep) chainStatus = 'deferred_to_full';
   // WF3 2026-08-09: an all-PASS budget-stopped chain must NOT read plain 'completed' — the WARN
-  // status is the honest signal and the green allowlist admits it. FAIL verdicts still win above.
+  // status is the honest signal and the green allowlist admits it. Errors still win above.
   else if (budgetStopped) chainStatus = 'completed_with_warnings';
   else if (hasVerdictWarns) chainStatus = 'completed_with_warnings';
   else chainStatus = 'completed';
@@ -1291,6 +1404,7 @@ if (require.main === module) {
 
 module.exports = {
   resolveChainStatus,
+  stepStatusFromRecordsMeta,
   parseDeferMarker,
   spawnStepChild,
   resolveGateExempt,

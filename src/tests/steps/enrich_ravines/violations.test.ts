@@ -79,7 +79,8 @@ describe('enrich_ravines — G-shape + descriptor structure (true from commit 1:
       expect(seeds).toHaveProperty(v.name);
       expect(v.on_invalid).toBe('fail'); // Rule 3 / R-G: every one is verdict-affecting
     }
-    expect(descriptor.config.logic_variables).toHaveLength(8);
+    // S1-P-6: 8 -> 9 (the 5% invalid-geometry bound is now the declared logic variable enrich_ravines_producer_invalid_geom_max_pct, seeded).
+    expect(descriptor.config.logic_variables).toHaveLength(9);
   });
 
   it('the 12 gate-critical structural fences are declared as descriptor DATA, not left to compute prose', () => {
@@ -253,12 +254,17 @@ describe('enrich_ravines — F9 disposition: the retired mechanism, the preserve
   });
 });
 
-describe('enrich_ravines — RV-L3, the config-threading gap this conversion did NOT paper over', () => {
-  it('the invalid-geometry ratio stays a pinned literal (0.05) in compute, NOT a phantom logic variable no code path can read [flips at commit 2b]', () => {
+describe('enrich_ravines — RV-L3 RETIRED (S1-P-6): the invalid-geometry ratio is a declared, config-resolved pin — no pinned literal in compute', () => {
+  it('the 5% bound is the logic variable enrich_ravines_producer_invalid_geom_max_pct, read by a runner-evaluated bound pin; compute carries no MAX_INVALID_GEOM_RATIO / 0.05 and the RV-L3 limitation is gone [flips at commit 2b]', () => {
+    // Fence (was: "stays a pinned literal in compute, NOT a phantom logic variable no code path can read"): RV-L3's premise — no config reaches a contract_read hook — is moot,
+    // because the RUNNER now evaluates the pin with the resolved config (producer.js evaluatePins config, s1p-6b). The variable is therefore NOT phantom: a code path reads it.
     const names = descriptor.config.logic_variables.map((v: { name: string }) => v.name);
-    expect(names).not.toContain('enrich_ravines_producer_invalid_geom_max_pct');
+    expect(names).toContain('enrich_ravines_producer_invalid_geom_max_pct');
+    const pin = descriptor.staleness.pins.find((p: { stamp: string }) => p.stamp === 'records_meta.ravine_load.invalid_geometry_skipped');
+    expect(pin).toMatchObject({ bound: 'pct <= 5', of: 'records_meta.ravine_load.feature_count', limit_from_config: 'enrich_ravines_producer_invalid_geom_max_pct' });
     const src = read(COMPUTE_REL);
-    expect(src).toMatch(/MAX_INVALID_GEOM_RATIO\s*=\s*0\.05/);
+    expect(src).not.toMatch(/MAX_INVALID_GEOM_RATIO|0\.05/);
+    expect(JSON.stringify(descriptor.limitations ?? [])).not.toMatch(/RV-L3/);
   });
 });
 

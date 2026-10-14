@@ -52,10 +52,9 @@
  */
 'use strict';
 
-const { resolveAndCountTriple } = require('../vocab-coverage');
+const { resolveAndCountTripleWithClient } = require('../vocab-coverage');
 const { safeParseIntOrNull } = require('../safe-math');
 const { SKIP_PHASES_SQL } = require('../lifecycle-phase');
-const { readEntityTracingVerdict } = require('../read-entity-tracing-verdict');
 const { CHECK_DEFS, VOCAB_COVERAGE, COA_STRUCTURE_TYPE_VOCAB } = require('../assert-global-coverage-fields');
 
 // ---------------------------------------------------------------------------
@@ -600,12 +599,11 @@ async function loadPermitsBranch(ctx) {
       `);
     const pSchema = parseCountRow(pSchemaRaw);
 
-    const { rows: etRuns } = await pool.query(`
-        SELECT records_meta FROM pipeline_runs
-         WHERE pipeline = 'assert_entity_tracing'
-         ORDER BY started_at DESC LIMIT 1
-      `);
-    const etVerdictNum = readEntityTracingVerdict(etRuns[0]) === 'PASS' ? 1 : 0;
+    // #8 (S1-P-9) — assert_entity_tracing's last recorded outcome. A verdict read, not a baseline (R-CB): every terminal status, so a covered-FAIL run is the latest, never hidden by an older PASS;
+    // ordering key unchanged (started_at). A run with no recorded outcome (failed before writing an audit table) or no run at all reads as not-PASS = 0, as the old 'NO_RUN' did.
+    const etRun = await ctx.producer('assert_entity_tracing', { statuses: 'terminal', orderBy: 'started_at' });
+    if (etRun.reason === 'ERROR') throw new Error(`[assert_global_coverage] assert_entity_tracing outcome read failed: ${etRun.error}`); // fail closed, as the old pool.query rejection did
+    const etVerdictNum = etRun.audit_outcome === 'PASS' ? 1 : 0;
 
     const { rows: leadIntegrity } = await pool.query(`
         SELECT
@@ -687,7 +685,14 @@ async function evalDistribution(ctx, def) {
 
 async function evalVocab(ctx, def) {
   const t = def.vocabTriple;
-  const result = await resolveAndCountTriple(ctx.pool, t, { logWarn: ctx.log.warn });
+  // R-CH / R-CA(i): the vocabulary reads run INSIDE the runner's READ ONLY snapshot
+  // (ctx.readSnapshot: one pinned client, BEGIN TRANSACTION READ ONLY + SET LOCAL
+  // statement_timeout from the descriptor's execution.statement_timeout_minutes_from_config
+  // — vocab_coverage_statement_timeout_minutes, 0.25 min = the former hard-coded 15,000 ms
+  // default, byte-identical) — ONE snapshot per triple, so one triple's timeout cannot
+  // abort another's. NOTE: unlike the old pool wrapper, a connect/BEGIN failure now
+  // PROPAGATES (loud) instead of degrading to `unresolved`.
+  const result = await ctx.readSnapshot((client) => resolveAndCountTripleWithClient(client, t, { logWarn: ctx.log.warn }));
   if (result.unresolved) {
     ctx.report(def.id, { value: null, detail: `unresolved: ${result.unresolved}` });
     return;

@@ -23,6 +23,7 @@ const { runLedgerGateDecision, readPriorRunMeta } = require('../../../scripts/li
 const { slugForms } = require('../../../scripts/lib/ledger.js');
 const { detectInterruptedRetraction } = require('../../../scripts/lib/step/staleness.js');
 const { readLastEnrichedVersion } = require('../../../scripts/lib/compute/enrich-centreline.js');
+const { makeProducer } = require('../../../scripts/lib/step/producer.js');
 const L = () => require('../../../scripts/analysis/capture-ledger.js');
 
 const OWN = 'FX_capled_own';
@@ -104,13 +105,14 @@ describe.skipIf(!dbAvailable())('capture ledger: a `captured` row against the re
   });
 
   it('(b) enrich_centreline readLastEnrichedVersion: a captured row never becomes the version baseline; a completed one does', async () => {
-    const base = await readLastEnrichedVersion(pool);
+    const producer = makeProducer({ pool, chains: ['sources'] });
+    const base = await readLastEnrichedVersion({ producer });
     await insertRun({ pipeline: 'sources:enrich_centreline', status: 'completed', started: '2099-01-01T00:00:00Z', completed: '2099-01-01T00:01:00Z', meta: { centreline_enrich: { source_dataset_version: 'FX-v1' } } });
-    expect(await readLastEnrichedVersion(pool)).toBe('FX-v1');
+    expect(await readLastEnrichedVersion({ producer })).toBe('FX-v1');
     await capture('enrich_centreline', { started: '2099-01-01T00:02:00Z', completed: '2099-01-01T00:03:00Z', summary: { records_meta: { centreline_enrich: { source_dataset_version: 'FX-v2' } } } });
-    expect(await readLastEnrichedVersion(pool)).toBe('FX-v1');
+    expect(await readLastEnrichedVersion({ producer })).toBe('FX-v1');
     await insertRun({ pipeline: 'enrich_centreline', status: 'completed', started: '2099-01-01T00:04:00Z', completed: '2099-01-01T00:05:00Z', meta: { centreline_enrich: { source_dataset_version: 'FX-v3' } } }); // control
-    expect(await readLastEnrichedVersion(pool)).toBe('FX-v3');
+    expect(await readLastEnrichedVersion({ producer })).toBe('FX-v3');
     expect(base === null || typeof base === 'string').toBe(true);
   });
 

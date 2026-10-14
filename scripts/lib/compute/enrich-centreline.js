@@ -20,32 +20,19 @@
  */
 
 // ===========================================================================
-// Names the contract reads by. EC-D10 FIXED (operator ruling R2 = (b), <DATE>): the producer and
-// self reads admit every ledger form of the slug — slugForms(name, ['sources']) in
-// scripts/lib/ledger.js, pinned equal by src/tests/enrich-centreline.logic.test.ts — and both
-// runner success statuses, so a converted standalone run (bare slug, completed_with_warnings) is
-// read (registry-truth Phase 1 item 6; gate #44 FAIL:PRODUCER). PRODUCER_NAME / SELF_NAME stay the
-// chain-prefixed names the HALT messages print.
+// Names the contract reads by. EC-D10 FIXED (the three-form slug expansion): the producer and self
+// reads go through `ctx.producer(slug)`, whose slugForms(name, ['sources']) come from the
+// descriptor (scripts/lib/ledger.js), together with both runner success statuses and the shared
+// warn-skip predicate — so a converted standalone run (bare slug, completed_with_warnings) is read
+// (registry-truth Phase 1 item 6; gate #44 FAIL:PRODUCER). PRODUCER_NAME stays the chain-prefixed
+// name the remaining error message prints.
 // ===========================================================================
 
 const PRODUCER_NAME = 'sources:load_centreline';
-const SELF_NAME = 'sources:enrich_centreline';
-const PRODUCER_FORMS = Object.freeze(['sources:load_centreline', 'load_centreline', 'load-centreline']);
-const SELF_FORMS = Object.freeze(['sources:enrich_centreline', 'enrich_centreline', 'enrich-centreline']);
-// L10 contract pin — DECLARED in this step's descriptor (staleness.pins, LDG-10 class 3), never a
-// hard-coded const here: declared == executed. Read once at require() time (enrich-heritage.js
-// precedent); a missing pin throws at load (fail-closed).
-const DESCRIPTOR = require('../../enrich-centreline.descriptor.json');
-const { pinnedEquals } = require('../staleness-pins');
+// PRODUCER_STEP must equal staleness.pins[].step (locked by src/tests/enrich-centreline-pins.logic.test.ts); both are read through ctx.producer, whose chains come from the descriptor (slugForms).
 const PRODUCER_STEP = 'load_centreline';
-const PIN_STAMP = 'records_meta.centreline_load.spec_version';
-/** The producer spec_version this reader halts on anything but (pinnedSpecVersion = the descriptor pin). */
-const pinnedSpecVersion = () => pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP);
-const SPEC_VERSION = pinnedSpecVersion();
+const SELF_STEP = 'enrich_centreline';
 const TAG = '[enrich-centreline]';
-
-/** Separate DROP for the scoped build (legacy :382): a parameterized query is single-statement. */
-const DROP_TEMP_SQL = 'DROP TABLE IF EXISTS tmp_centreline_enrich';
 
 /**
  * Render a §5 numeric the way the legacy SQL literal was written. The azimuth sample step was
@@ -59,15 +46,15 @@ function sqlFloat(n) {
 /**
  * The §11 CTE chain (9 CTEs), materialized into a temp table so the proximity join and the
  * per-pair azimuth math run ONCE. ONE builder for both modes (retires the legacy
- * `.replace()` string surgery, EC-D7 / LC-4):
- *   - full   — a PARAMETERLESS multi-statement query (`DROP …; CREATE TEMP …`), exactly the
- *              legacy BUILD_TEMP_SQL;
- *   - scoped — no DROP (issued separately, DROP_TEMP_SQL) + the stale-stamp conjunct with the
- *              query's ONE `$1` (= the producer source_dataset_version), exactly the legacy
- *              BUILD_TEMP_SQL_SCOPED.
- * The §5 numerics are INTERPOLATED, never bound (Fold A5): binding would change the full-mode
- * statement from parameterless to parameterized, which the extended protocol refuses for a
- * multi-statement query.
+ * `.replace()` string surgery, EC-D7 / LC-4); it returns ONLY the query, starting at `WITH`:
+ *   - full   — the parameterless SELECT, exactly the legacy BUILD_TEMP_SQL body;
+ *   - scoped — the stale-stamp conjunct with the query's ONE `$1` (= the producer
+ *              source_dataset_version), exactly the legacy BUILD_TEMP_SQL_SCOPED body.
+ * The DDL frame is NOT here (Spec 124 R-BZ G4): both modes go through `ctx.tempTable`, which
+ * issues the DROP then the CREATE TEMP … ON COMMIT DROP in the pass's own transaction — the same
+ * statements, in the same order, as the legacy emit. The §5 numerics are INTERPOLATED, never
+ * bound (Fold A5): they are logic variables, and binding the full-mode statement would change it
+ * from parameterless to parameterized.
  */
 function buildTempSql({ scoped = false } = {}, config) {
   const proximityM = config.enrich_centreline_proximity_m;
@@ -79,13 +66,10 @@ function buildTempSql({ scoped = false } = {}, config) {
   // The legacy SQL comment states the opposite-sides gap as a degree literal (a half-turn minus the
   // tolerance); rendering it from the variable keeps it byte-equal at the default and true under a change.
   const oppositeGapDeg = 180 - oppositeTolDeg;
-  const dropStatement = scoped ? '' : 'DROP TABLE IF EXISTS tmp_centreline_enrich;';
   const scopeConjunct = scoped
     ? '\n    AND (p.centreline_dataset_version_when_enriched IS DISTINCT FROM $1)  -- WF2 P11-1: NULL/stale-stamp parcels only'
     : '';
   return `
-${dropStatement}
-CREATE TEMP TABLE tmp_centreline_enrich ON COMMIT DROP AS
 WITH
 parcel_segments AS MATERIALIZED (
   SELECT
@@ -320,14 +304,18 @@ function buildTallySql(config) {
  * per-parcel column — a stray per-parcel value must not defeat the gate). Prefers
  * `records_meta.centreline_enrich.source_dataset_version`; falls back to the pre-P11
  * `centreline_source_dataset_version` audit row. Ported verbatim (legacy :289-301).
+ *
+ * S1-P-7 — the read goes through `ctx.producer`: the slug forms, the two success statuses,
+ * the shared warn-skip predicate and the `completed_at DESC, id DESC` order are the
+ * producer library's defaults, never a SQL literal here.
+ * @param {{producer: Function}} ctx
+ * @returns {Promise<string|null>}
  */
-async function readLastEnrichedVersion(pool) {
-  const res = await pool.query(
-    `SELECT records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings') AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false) ORDER BY completed_at DESC LIMIT 1`,
-    [SELF_FORMS],
-  );
-  if (res.rows.length === 0) return null;
-  const meta = res.rows[0].records_meta || {};
+async function readLastEnrichedVersion(ctx) {
+  // fail closed, as the old pool.query rejection did: the library rethrows a read error (onError: 'throw').
+  const run = await ctx.producer(SELF_STEP, { onError: 'throw' });
+  if (run.reason === 'MISSING') return null;
+  const meta = run.records_meta || {};
   const fromMeta = (meta.centreline_enrich || {}).source_dataset_version;
   if (fromMeta) return fromMeta;
   const auditRows = ((meta.audit_table || {}).rows) || [];
@@ -362,37 +350,33 @@ function decideCentrelineMode({ lastVersion, currentVersion, staleCount }) {
 }
 
 /**
- * The §9 / DEC-E consumer read protocol — the four legacy HALTs, BEFORE any transaction
- * (legacy :318-338) — followed by the version-skip gate's reads in the legacy order
- * (:496-501): the self read, then the stale count ONLY when the version is unchanged.
- * Returns everything the pass and post_phase need (Fold A1: post_phase has no `contract`,
- * so the pass hands these four keys on through `passRaw`).
+ * The §9 / DEC-E consumer read protocol — the producer-contract HALTs are descriptor pins
+ * (S1-P-7: `staleness.pins[]`, evaluated by the runner's `measureProducerPins` BEFORE this
+ * hook; the four legacy throws are gone) — followed by the version-skip gate's reads in the
+ * legacy order (:496-501): the self read, then the stale count ONLY when the version is
+ * unchanged. Returns everything the pass and post_phase need (Fold A1: post_phase has no
+ * `contract`, so the pass hands these five keys on through `passRaw`).
+ * @param {{pool: import('pg').Pool, config: object, producer: Function}} ctx
+ * @returns {Promise<{sourceDatasetVersion: string, lastVersion: string|null, staleCount: number|null, mode: string, specVersion: string}>}
  */
-async function readCentrelineContract(pool) {
-  const res = await pool.query(
-    `SELECT records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings') AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false) ORDER BY completed_at DESC LIMIT 1`,
-    [PRODUCER_FORMS],
-  );
-  if (res.rows.length === 0) {
-    throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned source`);
-  }
-  const cl = (res.rows[0].records_meta || {}).centreline_load || {};
-  if (cl.spec_version !== SPEC_VERSION) {
-    throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${cl.spec_version} !== ${SPEC_VERSION} — aborting`);
-  }
-  if (!(Number(cl.features_inserted) > 0)) {
-    throw new Error(`${TAG} producer features_inserted=${cl.features_inserted} — nothing to enrich against`);
-  }
+async function readCentrelineContract(ctx) {
+  const pool = ctx.pool;
+  // The consumer read (#9b) — slug forms / statuses / warn-skip / `completed_at DESC, id DESC`
+  // are the producer library's defaults; there is no SQL literal here any more.
+  const run = await ctx.producer(PRODUCER_STEP);
+  const cl = run.records_meta.centreline_load;
   const sourceDatasetVersion = cl.source_dataset_version;
-  if (!sourceDatasetVersion) {
-    throw new Error(`${TAG} producer source_dataset_version is null/empty — cannot stamp lineage`);
-  }
-  const lastVersion = await readLastEnrichedVersion(pool);
+  // No defaults, no guards: the contract is DECLARED as pins (the runner FAILs the run before
+  // this hook), so a missing key here must crash loudly rather than be silently papered over.
+  const lastVersion = await readLastEnrichedVersion(ctx);
   const staleCount = (lastVersion !== null && lastVersion === sourceDatasetVersion)
     ? await countStaleParcels(pool, sourceDatasetVersion)
     : null;
   const mode = decideCentrelineMode({ lastVersion, currentVersion: sourceDatasetVersion, staleCount });
-  return { sourceDatasetVersion, lastVersion, staleCount, mode };
+  // Five keys. The 5th is the producer's OBSERVED spec_version — the runner's pin has proven it
+  // equal to the declared one — and it replaces the deleted SPEC_VERSION constant as the value
+  // stamped into `centreline_enrich.spec_version`.
+  return { sourceDatasetVersion, lastVersion, staleCount, mode, specVersion: cl.spec_version };
 }
 
 // ===========================================================================
@@ -420,22 +404,21 @@ async function assertCentrelineNonEmpty(client) {
  * temp table on the same client.
  */
 async function runCentrelineJoinPass(client, ctx) {
-  const { sourceDatasetVersion, lastVersion, staleCount } = ctx.contract;
+  const { sourceDatasetVersion, lastVersion, staleCount, specVersion } = ctx.contract;
   const mode = ctx.full ? 'full' : ctx.contract.mode;
   if (mode === 'skip') {
-    return { mode, lastVersion, sourceDatasetVersion, staleCount, updated: 0, tally: null };
+    return { mode, lastVersion, sourceDatasetVersion, staleCount, specVersion, updated: 0, tally: null };
   }
   await assertCentrelineNonEmpty(client);
   if (mode === 'incremental') {
-    await client.query(DROP_TEMP_SQL);
-    await client.query(buildTempSql({ scoped: true }, ctx.config), [sourceDatasetVersion]);
+    await ctx.tempTable({ name: 'tmp_centreline_enrich', selectSql: buildTempSql({ scoped: true }, ctx.config), params: [sourceDatasetVersion] });
   } else {
-    await client.query(buildTempSql({ scoped: false }, ctx.config));
+    await ctx.tempTable({ name: 'tmp_centreline_enrich', selectSql: buildTempSql({ scoped: false }, ctx.config) });
   }
   const updated = await ctx.joinUpdate(0, UPDATE_SQL, [sourceDatasetVersion]);
   ctx.onProgress(updated);
   const tally = (await client.query(buildTallySql(ctx.config))).rows[0];
-  return { mode, lastVersion, sourceDatasetVersion, staleCount, updated, tally };
+  return { mode, lastVersion, sourceDatasetVersion, staleCount, specVersion, updated, tally };
 }
 
 // ===========================================================================
@@ -485,6 +468,7 @@ async function computePostPhase(pool, { passRaw, runAt, config }) {
   const join = passRaw.centreline_join || {};
   const mode = join.mode;
   const sourceDatasetVersion = join.sourceDatasetVersion;
+  const specVersion = join.specVersion;
   const updated = Number(join.updated || 0);
   const completedAt = runAt.toISOString();
 
@@ -499,7 +483,7 @@ async function computePostPhase(pool, { passRaw, runAt, config }) {
         parcels_enriched_count: updated,
         centreline_source_dataset_version: sourceDatasetVersion,
         centreline_enrich: {
-          spec_version: SPEC_VERSION,
+          spec_version: specVersion,
           source_dataset_version: sourceDatasetVersion,
           mode,
           skip_reason: skipReason,
@@ -541,7 +525,7 @@ async function computePostPhase(pool, { passRaw, runAt, config }) {
       parcels_enriched_count: updated,
       centreline_source_dataset_version: sourceDatasetVersion,
       centreline_enrich: {
-        spec_version: SPEC_VERSION,
+        spec_version: specVersion,
         source_dataset_version: sourceDatasetVersion,
         mode,
         parcels_updated: updated,
@@ -735,7 +719,6 @@ module.exports = Object.assign(compute, {
   buildTempSql,
   buildTallySql,
   UPDATE_SQL,
-  DROP_TEMP_SQL,
   DIAGNOSTIC_PARCELS_SQL,
   DIAGNOSTIC_CENTRELINE_SQL,
   readCentrelineContract,
@@ -748,8 +731,4 @@ module.exports = Object.assign(compute, {
   pctOf,
   passes,
   PRODUCER_NAME,
-  SELF_NAME,
-  PRODUCER_FORMS,
-  SELF_FORMS,
-  SPEC_VERSION,
 });

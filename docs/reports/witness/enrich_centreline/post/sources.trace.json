@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "4daa73c827b1769e088e00fa248df36761ecc13977ef58926193dee80042a4cc",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "4e974638db6dd24ea84a6215687851547016d40e82e1f8b061a73e0e985312f2",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
-    "calls": 49,
-    "distinct": 32,
+    "calls": 51,
+    "distinct": 33,
     "utility": 14,
-    "tracer_self_ms": 9.673,
-    "wall_ms": 24256
+    "tracer_self_ms": 10.382,
+    "wall_ms": 577814
   },
   "statements": [
     {
@@ -22,6 +22,33 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
     },
     {
       "fingerprint": "19592461e878698f",
@@ -36,6 +63,83 @@
         "pg_trigger"
       ],
       "error": null
+    },
+    {
+      "fingerprint": "1d2c7f53e482c10a",
+      "kind": "read",
+      "count": 3,
+      "rowCount": 3,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:load_centreline",
+            "load_centreline",
+            "load-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ],
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "1d68338a42630d9f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "toronto_centreline": [
+          "from_intersection_id",
+          "to_intersection_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "2001bd6cc9d4a455",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC, id DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_centreline",
+            "enrich_centreline",
+            "enrich-centreline"
+          ],
+          null
+        ]
+      ]
     },
     {
       "fingerprint": "28d4a52d23a33271",
@@ -57,7 +161,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 191,
+      "rowCount": 480480,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -78,6 +182,18 @@
         ]
       },
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
       "error": null
     },
     {
@@ -130,68 +246,6 @@
       "error": null
     },
     {
-      "fingerprint": "6fe0fdbe591bd156",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "parcels": [
-          "centreline_dataset_version_when_enriched",
-          "geom"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "714ab44e34f7f19f",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings') AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:load_centreline",
-            "load_centreline",
-            "load-centreline"
-          ]
-        ],
-        [
-          [
-            "sources:enrich_centreline",
-            "enrich_centreline",
-            "enrich-centreline"
-          ]
-        ]
-      ]
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:enrich_centreline"
-        ]
-      ]
-    },
-    {
       "fingerprint": "76533998925a04c0",
       "kind": "read",
       "count": 2,
@@ -222,39 +276,6 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "7e20c68440df3857",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 191,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "centreline_dataset_version_when_enriched",
-          "geom",
-          "id",
-          "street_name_normalized"
-        ],
-        "toronto_centreline": [
-          "feature_code_desc",
-          "from_intersection_id",
-          "geom",
-          "hi_num_l",
-          "hi_num_r",
-          "id",
-          "linear_name",
-          "linear_name_full",
-          "lo_num_l",
-          "lo_num_r",
-          "parity_l",
-          "parity_r",
-          "to_intersection_id"
-        ]
-      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -307,35 +328,44 @@
       "error": null
     },
     {
-      "fingerprint": "a47b9456480b80ba",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:enrich_centreline",
-            "enrich_centreline",
-            "enrich-centreline"
-          ],
-          null
-        ]
-      ]
-    },
-    {
       "fingerprint": "abe1cf006362be74",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
         "toronto_centreline": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ad05138ec9a364ad",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 480480,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
       },
       "writes": {},
       "excluded": [],
@@ -374,15 +404,19 @@
       "error": null
     },
     {
-      "fingerprint": "ba271f702f1828b6",
+      "fingerprint": "b2d013e8bdf1613d",
       "kind": "read",
       "count": 1,
-      "rowCount": 720,
-      "reads": {},
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "geom",
+          "street_name_normalized"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -464,7 +498,7 @@
   ],
   "transactions": [
     {
-      "client": "13696:3",
+      "client": "22544:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

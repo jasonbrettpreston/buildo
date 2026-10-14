@@ -4,7 +4,9 @@
  * domain (single render path — GROUPS, generated from the seed's declared
  * `admin.group` field; WF2 ADMIN-1 ratchet batch 5 retired the bespoke
  * lifecycle_seq_band_* section in favour of this ONE path), plus
- * income_premium_tiers (JSONB type, seeded via migration 097). Uses
+ * income_premium_tiers (JSONB type, seeded via migration 097), plus any
+ * string-typed variable with a declared enum (S2 F3-2: `pipeline_timezone`),
+ * rendered as a closed-set `<select>` rather than a numeric input. Uses
  * DeltaGuardInput for numeric fields and JsonTiersEditor for the
  * income_premium_tiers JSONB field.
  *
@@ -14,6 +16,7 @@
  */
 
 import type { LogicVariableRow } from '@/lib/admin/control-panel';
+import { LOGIC_VAR_ENUMS } from '@/lib/admin/control-panel';
 import { DeltaGuardInput } from './DeltaGuardInput';
 import { JsonTiersEditor } from './JsonTiersEditor';
 import { useAdminControlsStore } from '../store/useAdminControlsStore';
@@ -136,11 +139,49 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
                 const row = byKey.get(key);
                 if (!row) return null;
 
+                // S2 F3-2 — a string-typed variable with a declared closed
+                // enum renders as a <select>. The DB write enforces the same
+                // set server-side (applyConfigUpdate).
+                const enumValues = LOGIC_VAR_ENUMS[key];
+                if (enumValues) {
+                  return (
+                    <div key={key} className="pt-5">
+                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        {key}
+                        {row.description && (
+                          <span className="ml-1 text-gray-400 normal-case font-normal">
+                            — {row.description}
+                          </span>
+                        )}
+                      </label>
+                      <select
+                        aria-label={key}
+                        className="block w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                        value={typeof row.jsonValue === 'string' ? row.jsonValue : ''}
+                        onChange={(e) => updateDraftLogicVar(key, null, e.target.value)}
+                      >
+                        {enumValues.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
                 if (JSON_KEYS.has(key)) {
                   return (
                     <div key={key} className="sm:col-span-2 lg:col-span-3">
                       <JsonTiersEditor
-                        value={row.jsonValue}
+                        // JSON_KEYS are the JSON-OBJECT variables; the widened
+                        // `jsonValue` union (S2 F3-2 also allows a string for
+                        // string-typed vars) is narrowed here — never a string.
+                        value={
+                          typeof row.jsonValue === 'string'
+                            ? null
+                            : (row.jsonValue as Record<string, number> | null)
+                        }
                         onChange={(val) => updateDraftLogicVar(key, null, val)}
                       />
                     </div>

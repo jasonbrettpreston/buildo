@@ -3,16 +3,42 @@
   "step": "scripts\\load-massing.js",
   "chain": "sources",
   "source_fingerprint": "07af923006804f9430591a078c6454ae06e5800b996e8557af156dbb0bd79b08",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
-    "calls": 96,
-    "distinct": 18,
-    "utility": 10,
-    "tracer_self_ms": 4704.255,
-    "wall_ms": 210917
+    "calls": 98,
+    "distinct": 19,
+    "utility": 12,
+    "tracer_self_ms": 7602.146,
+    "wall_ms": 319579
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:massing",
+            "massing"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "15f9fafa91dc36bc",
       "kind": "read",
@@ -73,6 +99,18 @@
       "error": null
     },
     {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
       "fingerprint": "5eebf4a9ff6d7782",
       "kind": "read",
       "count": 1,
@@ -97,24 +135,6 @@
         "schema_migrations"
       ],
       "error": null
-    },
-    {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:massing"
-        ]
-      ]
     },
     {
       "fingerprint": "77d30c21e4d01ffb",
@@ -191,18 +211,6 @@
       "error": null
     },
     {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
-      "error": null
-    },
-    {
       "fingerprint": "bfd2daef9182271a",
       "kind": "read",
       "count": 1,
@@ -233,7 +241,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 5,
+      "count": 6,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -249,11 +257,21 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "ef589a4a639a791a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
     }
   ],
   "transactions": [
     {
-      "client": "20244:3",
+      "client": "3176:3",
       "write_fingerprints": [
         "26ccff78d2c8f90e"
       ]

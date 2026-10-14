@@ -125,13 +125,36 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     // 7th var, added at commit 8's peel (R1, report §9.6): the dead-tuple check's own
     // `live >= 1000` floor was a bare literal until this peel.
     expect(seeds.engine_health_dead_tuple_min_rows?.default).toBe(1000);
-    // Consumed in compute via ctx.config, never a bare literal (ast-grep compute-no-literal-threshold).
+    // Consumed via ctx.config, never a bare literal (ast-grep compute-no-literal-threshold). S2 (R-BZ G7):
+    // the three *_warn_max bounds of the generic checks moved to the descriptor (`limit_from_config`,
+    // `value_max`), so the LIBRARY compares; the row floors stay compute-bound SQL params.
     const text = computeSource();
-    expect(text).toContain('config.engine_health_dead_tuple_ratio_warn_max');
-    expect(text).toContain('config.engine_health_seq_scan_ratio_warn_max');
+    // The ONE dead-ratio measurement (Spec 124 R-CG, S2 F3-3): the WARN check and the
+    // runner's execution.maintenance dynamic arm read the SAME shared library function;
+    // the VACUUM loop itself is NO LONGER in compute (see the descriptor assertion below).
+    expect(text).toContain('deadTupleRatio(live, dead)');
+    expect(text).toContain("require('../dead-tuple-ratio')"); // the pure shared module, never the runner executor (compute purity closure)
+    const maintenance = ((loadDescriptor() as unknown as { execution: { maintenance?: unknown } }).execution).maintenance;
+    expect(Array.isArray(maintenance) && maintenance[0]).toMatchObject({
+      operation: 'vacuum_analyze',
+      select: 'dead_tuple_ratio',
+      limit_from_config: 'engine_health_dead_tuple_ratio_warn_max',
+    });
+    expect(text, 'compute issues no VACUUM statement (R-CG: execution.maintenance owns it)').not.toMatch(/query\([^)]*VACUUM/);
     expect(text).toContain('config.engine_health_seq_scan_min_rows');
-    expect(text).toContain('config.engine_health_ping_pong_ratio_warn_max');
     expect(text).toContain('config.engine_health_dead_tuple_min_rows');
+    const checks = loadDescriptor().checks;
+    for (const [id, v] of [
+      ['dead_tuple_ratio_high', 'engine_health_dead_tuple_ratio_warn_max'],
+      ['seq_scan_ratio_high', 'engine_health_seq_scan_ratio_warn_max'],
+      ['update_ping_pong_high', 'engine_health_ping_pong_ratio_warn_max'],
+    ] as const) {
+      const c = checks.find((x: { id: string }) => x.id === id) as { limit?: string; limit_from_config?: string } | undefined;
+      expect(c?.limit, id).toBe('value_max 0');
+      expect(c?.limit_from_config, id).toBe(v);
+    }
+    expect(text).not.toContain('config.engine_health_seq_scan_ratio_warn_max');
+    expect(text).not.toContain('config.engine_health_ping_pong_ratio_warn_max');
   });
 
   it('the 2 per-audit-table literals are RESOLVED to WARN severity at commit 7 (AEH-D3/AEH-IL-5/6) — the pre-conversion FAIL label was cosmetic (report §1.2/§9.2), porting it literally would introduce a genuine halt this step never had', () => {
@@ -165,7 +188,7 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(newDateSites.length, 'new Date() must not appear anywhere in the compute').toBe(0);
   });
 
-  it('the VACUUM ANALYZE target set is runtime-discovered, never a hardcoded table list (report §1.4/§4.1 CONTRACT; repointed to the compute at commit 7)', () => {
+  it('the table-discovery sweep is runtime-discovered, never a hardcoded table list (report §1.4/§4.1 CONTRACT; repointed to the compute at commit 7)', () => {
     const text = computeSource();
     expect(text).toContain('Discover all public-schema tables dynamically — no hardcoded list');
     expect(text).not.toMatch(/const MONITORED_TABLES\s*=\s*\[['"]/); // not a literal array of table names
@@ -276,31 +299,26 @@ const FENCES: Fence[] = [
     detect: (t) => {
       const v: string[] = [];
       if (!t.includes('engine_health_ping_pong_ratio_warn_max')) v.push('the ping-pong config var is gone');
-      if (!/review_followups/.test(t)) v.push('the review_followups.md citation is gone from the descriptor why-text');
+      if (!/engine_health_dead_tuple_ratio_warn_max/.test(t)) v.push('the dead-ratio config var is gone');
       if (!/raised from 2 to 10/.test(t)) v.push('the "raised from 2 to 10" rationale text is gone');
       return v;
     },
     revert: (t) => t.replace(/engine_health_ping_pong_ratio_warn_max/g, 'REMOVED'),
   },
   {
-    name: 'AEH-IL-2 — vacuumTargets scope-crash fix (9d9acf7a): the runtime array is declared OUTSIDE any try block, at compute() top level, never reference-before-declaration across a catch boundary',
+    name: 'RETIRED-TO-RUNNER (R-CG): AEH-IL-2 — vacuumTargets scope-crash fix (9d9acf7a): the runtime array is declared OUTSIDE any try block, at compute() top level, never reference-before-declaration across a catch boundary',
     commit: '9d9acf7a',
     detect: (t) => {
       const v: string[] = [];
-      // The new compute is a pure-function rewrite with no try/catch wrapping the
-      // domain-discovery path at all (report §4.1: preserved-in-compute, "the runtime
-      // array becomes an ordinary compute-scoped local" — matching assert_data_bounds's
-      // own IL-2-class disposition for its sibling scope fix). Verified: the declaration
-      // exists, and it precedes its own consuming loop (the VACUUM ANALYZE `for` loop) in
-      // source order — the same "declared where read, never inside a block it escapes"
-      // guarantee 9d9acf7a fixed, re-stated for the new structure.
-      const declIdx = t.indexOf('const vacuumTargets = tableResults.filter(');
-      const loopIdx = t.indexOf('for (const target of vacuumTargets)');
-      if (declIdx === -1) v.push('vacuumTargets is no longer a plain compute-scoped const');
-      else if (loopIdx === -1 || !(declIdx < loopIdx)) v.push('vacuumTargets declaration no longer precedes its own consuming loop');
+      // Spec 124 R-CG (S2 F3-3): the VACUUM ANALYZE loop — and with it the `vacuumTargets`
+      // array that 9d9acf7a hoisted out of its catch boundary — moved to the runner's
+      // `execution.maintenance` dynamic arm. The hazard (a runtime array referenced before
+      // declaration across a catch boundary) cannot recur if the array itself is gone from
+      // compute: the fence now asserts its ABSENCE, not its position.
+      if (/\bconst vacuumTargets\b|vacuumTargets\s*=/.test(t)) v.push('vacuumTargets reintroduced in compute — VACUUM belongs to execution.maintenance (R-CG)');
       return v;
     },
-    revert: (t) => t.replace('const vacuumTargets = tableResults.filter(', 'REMOVED = tableResults.filter('),
+    revert: (t) => t + '\nconst vacuumTargets = [];',
   },
   {
     name: 'AEH-IL-3 — ledger-strand window (P3, f32b1485): the mechanism RETIRES TO THE SHARED LIBRARY at commit 7 (report §3.1 ACCEPT disposition) — this compute contains ZERO ledger code, matching refresh_snapshot\'s own identical retirement',
@@ -394,13 +412,16 @@ describe('assert_engine_health — landed at commit 7 (flipped from it.fails to 
     expect(text).toMatch(/module\.exports/);
   });
 
-  it('the deviations[] entries cover both the VACUUM-tail mechanism (Ask 2, EP-D17 DEFER — NOT a grandfathered.json entry) and the newly-measured execution.shape gap (report §9.1)', () => { // flipped: commit 7
-    const d = loadDescriptor() as unknown as { deviations: 'none' | Array<{ from: string; adjudicated_by: string }> };
+  it('the deviations[] entries cover the newly-measured execution.shape gap (report §9.1); the former VACUUM-tail deviation is RETIRED — execution.maintenance now declares it (Spec 124 R-CG, S2 F3-3)', () => { // flipped: commit 7; deviation retired at S2 F3-3
+    const d = loadDescriptor() as unknown as { deviations: 'none' | Array<{ from: string; adjudicated_by: string }>; execution: { maintenance: unknown } };
     expect(d.deviations).not.toBe('none');
     const deviations = d.deviations as Array<{ from: string; adjudicated_by: string }>;
-    expect(deviations.length).toBeGreaterThanOrEqual(2);
-    expect(deviations.some((dv) => /VACUUM|maintenance/i.test(dv.from))).toBe(true);
+    expect(deviations.length).toBeGreaterThanOrEqual(1);
+    // The runtime-discovered target set is expressed by the dynamic arm (select:"dead_tuple_ratio"),
+    // so the "execution.maintenance's closed per-named-table array shape" deviation no longer applies.
+    expect(deviations.some((dv) => /execution\.maintenance/.test(dv.from))).toBe(false);
     expect(deviations.some((dv) => /execution\.shape/i.test(dv.from))).toBe(true);
+    expect(Array.isArray(d.execution.maintenance)).toBe(true);
   });
 
   // RESOLVED at commit 9 (cutover): the literal "<20 lines" bound this test guessed at commit 6
@@ -422,17 +443,21 @@ describe('assert_engine_health — landed at commit 7 (flipped from it.fails to 
 // 4. Commit 8 peel (review panel on commit 7 — R1/R2, report §9.6)
 // ===========================================================================
 
-describe('assert_engine_health — landed at commit 8 (review panel peels R1/R2)', () => {
-  it('R2: per-table VACUUM success is logged via ctx.log.info, never a bare console.* (Rule 2)', () => {
-    const text = computeSource();
-    expect(text).toMatch(/ctx\.log\.info\(TAG, `VACUUM ANALYZE/);
-    expect(text).not.toMatch(/console\.(log|warn|info)\(/);
+describe('assert_engine_health — landed at commit 8 (review panel peels R1/R2); R2 retargeted to the runner at Spec 124 R-CG (S2 F3-3)', () => {
+  it('R2 (R-CG): per-table VACUUM success is logged by the RUNNER\'s execution.maintenance arm (runMaintenance), and compute still logs nothing via a bare console.*', () => {
+    const src = fs.readFileSync(abs('scripts/lib/step/plausibility.js'), 'utf8');
+    expect(src).toMatch(/log\.info\(tag, `runMaintenance: ran /); // runner's own per-statement success line (R-CG)
+    expect(computeSource()).not.toMatch(/console\.(log|warn|info)\(/);
   });
 
-  it('R2: records_meta declares vacuumed_tables[] alongside the existing tables_vacuumed count', () => {
+  it('R2 (R-CG): the retired vacuum evidence (tables_vacuumed / vacuumed_tables) is gone from compute AND from the descriptor records_meta keys — the evidence is now the runner- written sys_maintenance_* rows', () => {
     const text = computeSource();
-    expect(text).toContain('vacuumed_tables: vacuumedTables');
-    expect(text).toContain('tables_vacuumed: vacuumTargets.length');
+    expect(text).not.toMatch(/vacuumed_tables\s*:/);
+    expect(text).not.toContain('tables_vacuumed');
+    const d = loadDescriptor() as unknown as { emits?: Array<{ key?: string }> };
+    const keys = (d.emits ?? []).map((e) => e.key);
+    expect(keys).not.toContain('tables_vacuumed');
+    expect(keys).not.toContain('vacuumed_tables');
   });
 });
 

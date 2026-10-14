@@ -99,6 +99,8 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader', opts = {}) {
   // lifetime — a latent bug waiting for a refactor to trip.
   let tradeConfigs = structuredClone(FALLBACK_TRADE_CONFIGS);
   let logicVars = structuredClone(FALLBACK_LOGIC_VARS);
+  // R-CM: row stamps; empty when the DB read fails (the seed fallback has no stamps).
+  const logicVarMeta = Object.create(null);
 
   try {
     // ── Trade configurations ─────────────────────────────────
@@ -197,9 +199,17 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader', opts = {}) {
     }
 
     // ── Logic variables ──────────────────────────────────────
+    // R-CM (2026-10-12): the row's `updated_at` rides the SAME statement as its
+    // value, so a priced value and its version stamp are read from one snapshot
+    // and cannot disagree. `logicVarMeta` carries that stamp for every row; it
+    // is additive and read-only for consumers — the stamp is library-owned.
     const { rows: lvRows } = await pool.query(
-      'SELECT variable_key, variable_value, variable_value_json FROM logic_variables',
+      'SELECT variable_key, variable_value, variable_value_json, updated_at FROM logic_variables',
     );
+
+    for (const row of lvRows) {
+      logicVarMeta[row.variable_key] = { updated_at: row.updated_at ?? null };
+    }
 
     if (lvRows.length > 0) {
       // Guard against NaN (e.g. DECIMAL NULL in DB → parseFloat(null) = NaN)
@@ -233,7 +243,8 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader', opts = {}) {
         // JSON-type variables (e.g. income_premium_tiers) store their value in
         // variable_value_json; variable_value holds a sentinel 0. Read the JSON
         // object directly — never try to parse it as a float.
-        if (variable_value_json !== null && typeof variable_value_json === 'object') {
+        // A string-typed var (seed type "string", e.g. pipeline_timezone) stores its value the same way.
+        if (variable_value_json !== null && (typeof variable_value_json === 'object' || typeof variable_value_json === 'string')) {
           logicVars[variable_key] = variable_value_json;
           continue;
         }
@@ -263,7 +274,7 @@ async function loadMarketplaceConfigs(pool, tag = 'config-loader', opts = {}) {
     });
   }
 
-  return { tradeConfigs, logicVars };
+  return { tradeConfigs, logicVars, logicVarMeta };
 }
 
 /**

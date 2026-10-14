@@ -24,6 +24,8 @@ import { describe, expect, it, vi } from 'vitest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const compute = require('../../scripts/lib/compute/enrich-ravines.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require('../../scripts/lib/step/producer');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const descriptor = require('../../scripts/enrich-ravines.descriptor.json');
 
 const GOOD_RL = {
@@ -35,27 +37,29 @@ const GOOD_RL = {
 };
 
 /**
- * The converted `readRavineContract` (RV-L2) issues up to THREE queries where the legacy issued
- * ONE for the same "clean producer" path: the §9/L18 producer-contract SELECT, then (F2/F3,
- * folded in here since the runner gives a contract_read hook no other pre-transaction seam) the
- * L14 ravines-COUNT and the SRID SELECT. A single `mockResolvedValue` (the legacy tests' own
- * shape) would silently misrespond to query 2/3 and either mask or wrongly trip those two new
- * checks. This mock answers BY STATEMENT SHAPE, so each of the three real queries gets the
- * response it actually asks for, and the two new pre-transaction checks stay genuinely exercised
- * (not accidentally satisfied by a generic empty-object row) rather than papered over.
+ * The hook now reads its producer through `ctx.producer(PRODUCER_STEP)` (S1-P-6) — the SAME read
+ * identity the runner's declared pins use (`slugForms(slug, ['sources'])`, the closed baseline
+ * status set, `completed_at DESC, id DESC`) — so the pipeline_runs read is the LIBRARY's
+ * single-sentence `readRunHistory` query, not a hand-rolled SELECT. The pool mock below answers by
+ * STATEMENT SHAPE, so the producer read and the SRID read each get the response they ask for
+ * instead of being satisfied by a generic empty-object row.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makeContractPool(producerRows: any[], opts: { ravinesCount?: number; srid?: number } = {}) {
-  const ravinesCount = opts.ravinesCount ?? 1; // non-empty by default — only the L14 test wants 0
+function makeContractPool(producerRows: any[], opts: { srid?: number } = {}) {
   const srid = opts.srid ?? 4326; // correct by default — only a dedicated test wants a mismatch
   const query = vi.fn(async (sql: string, params?: unknown[]) => {
     void params; // present only so pool.query.mock.calls[0] types as [string, unknown[]]
     if (/FROM pipeline_runs/.test(sql)) return { rows: producerRows };
-    if (/COUNT\(\*\)::int AS n FROM ravines/.test(sql)) return { rows: [{ n: ravinesCount }] };
     if (/Find_SRID/.test(sql)) return { rows: [{ srid }] };
     throw new Error(`makeContractPool: unexpected SQL: ${sql}`);
   });
   return { query };
+}
+
+/** The ctx the runner passes a contract_read hook: the pool AND the shared producer reader. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function contractCtx(pool: any) {
+  return { pool, producer: makeProducer({ pool, chains: ['sources'] }) };
 }
 
 describe('enrich_ravines — descriptor + compute constants', () => {
@@ -72,57 +76,49 @@ describe('enrich_ravines — descriptor + compute constants', () => {
   });
 });
 
-describe('readRavineContract — §9/L18 consumer protocol (F1), folded with L14/SRID (F2/F3, RV-L2)', () => {
-  it('queries the producer by chain-scoped name, completed status, completed_at DESC', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: GOOD_RL } }]);
-    await compute.readRavineContract(pool);
+describe('readRavineContract — §9/L18 consumer protocol through ctx.producer (F1), the SRID guard stays (F3, RV-L2)', () => {
+  it('reads the producer through ctx.producer: slugForms, baseline statuses, completed_at DESC, id DESC', async () => {
+    const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }]);
+    await compute.readRavineContract(contractCtx(pool));
     const [sql, params] = pool.query.mock.calls[0] as [string, unknown[]];
-    expect(sql).toMatch(/status = 'completed'/);
     expect(sql).toMatch(/ORDER BY completed_at DESC/);
-    expect(params).toEqual(['sources:load_ravines']);
+    expect(sql).toMatch(/id DESC/);
+    // The three slug forms, in slugForms order, and the closed baseline status set (R-CB).
+    expect(params[0]).toEqual(['sources:load_ravines', 'load_ravines', 'load-ravines']);
+    expect(params[1]).toEqual(['completed', 'completed_with_warnings']);
   });
 
-  it('returns the source_dataset_version on a clean producer run (ravines non-empty, SRID 4326)', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: GOOD_RL } }]);
-    await expect(compute.readRavineContract(pool)).resolves.toEqual({
+  it('returns the source_dataset_version on a clean producer run (SRID 4326)', async () => {
+    const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }]);
+    await expect(compute.readRavineContract(contractCtx(pool))).resolves.toEqual({
       sourceDatasetVersion: '97b4ac7fb3f9808726a106a4b67083ac',
     });
   });
 
-  it('HALTs when no successful producer run exists', async () => {
-    await expect(compute.readRavineContract(makeContractPool([]))).rejects.toThrow(/no successful sources:load_ravines run/);
+  // S1-P-6: the producer-protocol HALTs are descriptor pins — see
+  // src/tests/enrich-ravines-pins.logic.test.ts. Six `rejects.toThrow` cases lived here (no
+  // successful run, spec_version mismatch, delete_skipped_empty_guard, drift/mass-delete, the
+  // invalid-geometry ratio, null lineage); all six are now DECLARED `staleness.pins[]` rows the
+  // runner evaluates BEFORE this hook (Rule 10), so the coverage moved to the pins file rather
+  // than being deleted.
+
+  // ── F2 (L14) — RETARGETED (S4): now a DECLARED runner guard (guards.empty_source), counted
+  // before any hook or mode decision. Gemini CRIT-1: must halt even with a clean producer run —
+  // a matching version stamp cannot bypass it, because the guard fires first. ──
+  it('HALTs when the ravines table is empty, even with an otherwise-clean producer run → stopped by the declared guards.empty_source (runner, before the hook; S4)', async () => {
+    const declared = descriptor.guards.empty_source;
+    const declaredTables = Array.isArray(declared) ? declared : [declared];
+    expect(declaredTables).toContain('ravines');
+    // The hook is no longer the L14 owner: an empty table does not make it throw.
+    const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }]);
+    await expect(compute.readRavineContract(contractCtx(pool))).resolves.toBeTruthy();
   });
 
-  it('HALTs on spec_version mismatch (frozen contract guard)', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: { ...GOOD_RL, spec_version: '1.1' } } }]);
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/spec_version=1\.1 !== 1\.2/);
-  });
-
-  it('HALTs when the producer suppressed its orphan-prune (delete_skipped_empty_guard)', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: { ...GOOD_RL, delete_skipped_empty_guard: true } } }]);
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/delete_skipped_empty_guard=true/);
-  });
-
-  it('HALTs on a failed drift / mass-delete check (defense-in-depth)', async () => {
-    await expect(compute.readRavineContract(makeContractPool([{ records_meta: { ravine_load: { ...GOOD_RL, drift_check_passed: false } } }]))).rejects.toThrow(/drift\/mass-delete check failed/);
-    await expect(compute.readRavineContract(makeContractPool([{ records_meta: { ravine_load: { ...GOOD_RL, mass_delete_check_passed: false } } }]))).rejects.toThrow(/drift\/mass-delete check failed/);
-  });
-
-  it('HALTs on a null/empty source_dataset_version (no lineage to stamp)', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: { ...GOOD_RL, source_dataset_version: null } } }]);
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/source_dataset_version is null\/empty/);
-  });
-
-  // ── F2 (L14) — folded into this hook, RV-L2: not a runner-enforced guards.empty_source ──
-  it('HALTs when the ravines table is empty, even with an otherwise-clean producer run (L14, Gemini CRIT-1)', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: GOOD_RL } }], { ravinesCount: 0 });
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/ravines table is empty/);
-  });
-
-  // ── F3 (SRID) half — folded into this hook, RV-L2: not a runner-enforced guards.srid ──
+  // ── F3 (SRID) half — folded into this hook, RV-L2: not a runner-enforced guards.srid, and the
+  // ONE throw S1-P-6 deliberately LEAVES in the compute (an own-table guard, not a producer contract) ──
   it('HALTs when parcels.geom SRID is not 4326', async () => {
-    const pool = makeContractPool([{ records_meta: { ravine_load: GOOD_RL } }], { srid: 3857 });
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/SRID is 3857, expected 4326/);
+    const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }], { srid: 3857 });
+    await expect(compute.readRavineContract(contractCtx(pool))).rejects.toThrow(/SRID is 3857, expected 4326/);
   });
 });
 

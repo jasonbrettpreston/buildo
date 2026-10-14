@@ -197,10 +197,7 @@ function buildReads(config) {
         key: 'tradeByType',
         sql: tradeByType.sql,
         params: tradeByType.params,
-        // WF3 F1 ③ — the same JOIN shape, plan-forced immune to the stale
-        // correlation statistic by disabling index scans on this ONE query,
-        // on the pinned client only, reset immediately after (verbatim shape).
-        guc: { set: 'SET enable_indexscan = off', reset: 'RESET enable_indexscan' },
+        // WF3 F1 ③ — runs under enable_indexscan = off: declared in the descriptor's execution.read_gucs (R-CF), issued by the runner.
       },
       {
         key: 'builders',

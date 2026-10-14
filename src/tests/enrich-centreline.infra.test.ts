@@ -37,14 +37,17 @@ const SCRIPT = ['scripts/enrich-centreline.js', 'scripts/lib/compute/enrich-cent
 const requires = (kind: string) => DESCRIPTOR.guards.requires.filter((r: { kind: string }) => r.kind === kind).map((r: { name: string }) => r.name);
 
 describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
-  it('lock 64 + reads the chain-scoped producer sources:load_centreline, completed_at DESC', () => {
+  it('lock 64 + reads the chain-scoped producer sources:load_centreline', () => {
     expect(ec.ADVISORY_LOCK_ID).toBe(64);
     expect(ec.PRODUCER_NAME).toBe('sources:load_centreline');
     expect(SCRIPT).toMatch(/ADVISORY_LOCK_ID\s*=\s*64/);
-    expect(SCRIPT).toMatch(/ORDER BY completed_at DESC/);
-    // L10 — the 1.1 literal is the descriptor's staleness.pins equals (LDG-10 class 3), read by the compute.
-    expect(compute.SPEC_VERSION).toBe('1.1');
-    expect(DESCRIPTOR.staleness.pins).toEqual([expect.objectContaining({ step: 'load_centreline', stamp: 'records_meta.centreline_load.spec_version', equals: '1.1' })]);
+    // L10 — the 1.1 literal is the descriptor's staleness.pins equals (LDG-10 class 3). S1-P-7: the
+    // pin set is DECLARED (the runner evaluates it); the read identity itself is locked in
+    // src/tests/enrich-centreline-pins.logic.test.ts.
+    expect(DESCRIPTOR.staleness.pins).toEqual(expect.arrayContaining([
+      expect.objectContaining({ step: 'load_centreline', stamp: 'records_meta.centreline_load.spec_version', equals: '1.1' }),
+    ]));
+    expect(DESCRIPTOR.staleness.pins).toHaveLength(3);
   });
 
   it('§11 precedent fences: parcel_segments AS MATERIALIZED + geom-validity filter + L30 cap', () => {
@@ -73,10 +76,16 @@ describe('enrich-centreline.js — source contract (Spec 62 §8d)', () => {
     expect(ec.UPDATE_SQL).toMatch(/centreline_dataset_version_when_enriched IS DISTINCT FROM \$1/); // lineage disjunct
   });
 
-  it('contract read is 4-tier + extracts source_dataset_version with a null-guard (G1)', () => {
-    expect(SCRIPT).toContain("spec_version !== SPEC_VERSION"); // tier b
-    expect(SCRIPT).toContain('features_inserted'); // tier c
-    expect(SCRIPT).toContain('source_dataset_version is null/empty'); // G1 null-guard throw
+  it('contract is 3 declared pins + a producer read (S1-P-7)', () => {
+    const pins = DESCRIPTOR.staleness.pins as Array<{ step: string; stamp: string; op?: string }>;
+    const nonzero = pins.filter((p) => p.step === 'load_centreline' && p.op === 'nonzero').map((p) => p.stamp);
+    expect(nonzero).toEqual(expect.arrayContaining([
+      'records_meta.centreline_load.features_inserted',
+      'records_meta.centreline_load.source_dataset_version',
+    ]));
+    // G1 — the lineage stamp is extracted by the hook from the producer read, no null-guard throw.
+    expect(SCRIPT).toContain('centreline_load');
+    expect(SCRIPT).not.toContain('source_dataset_version is null/empty');
   });
 
   it('preconditions: the GIST index + 4 parcels columns + the M-1 functions (G2) — declared as guards.requires', () => {

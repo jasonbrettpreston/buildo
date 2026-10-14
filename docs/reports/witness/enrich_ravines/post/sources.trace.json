@@ -2,22 +2,49 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "source_fingerprint": "7091422d7587da47c66a0c982df1cef3214b1579421bde4998d519c1369c79f3",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "76419f85da6a5cb49c21a04ba95042812ebecaa1fe5467ddb008f79686d7aab4",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 43,
-    "distinct": 32,
+    "distinct": 31,
     "utility": 13,
-    "tracer_self_ms": 11.611,
-    "wall_ms": 30098
+    "tracer_self_ms": 8.258,
+    "wall_ms": 18935
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:enrich_ravines",
+            "enrich_ravines",
+            "enrich-ravines"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "15a0517fc5bfeebb",
       "kind": "write",
       "count": 1,
-      "rowCount": 214,
+      "rowCount": 0,
       "reads": {
         "parcels": [
           "geom",
@@ -55,22 +82,66 @@
       "error": null
     },
     {
-      "fingerprint": "5668172b49fa1b9a",
+      "fingerprint": "1d2c7f53e482c10a",
       "kind": "read",
-      "count": 1,
-      "rowCount": 1,
+      "count": 2,
+      "rowCount": 2,
       "reads": {},
       "writes": {},
       "excluded": [
         "pipeline_runs"
       ],
       "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status = 'completed'\n      ORDER BY completed_at DESC LIMIT 1",
+      "text": "SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC, id DESC LIMIT $3",
       "params": [
         [
-          "sources:load_ravines"
+          [
+            "sources:load_ravines",
+            "load_ravines",
+            "load-ravines"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
         ]
       ]
+    },
+    {
+      "fingerprint": "2001bd6cc9d4a455",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC, id DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_ravines",
+            "enrich_ravines",
+            "enrich-ravines"
+          ],
+          null
+        ]
+      ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
     },
     {
       "fingerprint": "56985cbee4dfe3a3",
@@ -151,24 +222,6 @@
       "error": null
     },
     {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:enrich_ravines"
-        ]
-      ]
-    },
-    {
       "fingerprint": "77d30c21e4d01ffb",
       "kind": "read",
       "count": 1,
@@ -202,7 +255,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 8,
+      "rowCount": 9,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -221,18 +274,6 @@
       "error": null
     },
     {
-      "fingerprint": "9ae4dfa56b357dc8",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "ravines": []
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "9b97ae14cd1eaa94",
       "kind": "read",
       "count": 1,
@@ -241,29 +282,6 @@
       "writes": {},
       "excluded": [],
       "error": null
-    },
-    {
-      "fingerprint": "a47b9456480b80ba",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:enrich_ravines",
-            "enrich_ravines",
-            "enrich-ravines"
-          ],
-          null
-        ]
-      ]
     },
     {
       "fingerprint": "ae62c9718ac8d2ef",
@@ -297,18 +315,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {
@@ -440,7 +446,7 @@
   ],
   "transactions": [
     {
-      "client": "21812:3",
+      "client": "22456:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

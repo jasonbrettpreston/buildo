@@ -33,7 +33,7 @@ interface AdminControlsState {
   /** Re-fetched after a save: updates productionConfig only — does NOT reset draftConfig.
    *  Prevents in-flight edits from being wiped when the save invalidation re-fetches. */
   refreshProductionConfig: (config: MarketplaceConfig) => void;
-  updateDraftLogicVar: (key: string, value: number | null, jsonValue?: Record<string, number> | null) => void;
+  updateDraftLogicVar: (key: string, value: number | null, jsonValue?: Record<string, number> | string | null) => void;
   updateDraftTradeConfig: (tradeSlug: string, patch: Partial<Omit<TradeConfigRow, 'tradeSlug'>>) => void;
   updateDraftScopeCell: (permitType: string, structureType: string, gfaAllocationPercentage: number) => void;
   /** Batch-2 row 2.5 (Spec 88 §2.3 / Spec 124 R-AU): pricing rate table draft edits. */
@@ -87,7 +87,7 @@ export const useAdminControlsStore = create<AdminControlsState>((set, get) => ({
   updateDraftLogicVar(
     key: string,
     value: number | null,
-    jsonValue: Record<string, number> | null = null,
+    jsonValue: Record<string, number> | string | null = null,
   ) {
     set((state) => {
       if (!state.draftConfig) return {};

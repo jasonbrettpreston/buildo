@@ -20,8 +20,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const SQL_WORD = /\b(select|insert|update|delete|with|begin|commit|rollback|set|show|vacuum|analyze|create|drop|alter|truncate)\b/i;
 
 export const CLOSED_RUNNER_TEMPLATES = Object.freeze([
-  Object.freeze({ fingerprint: '4253520a71996e5c', cite: 'scripts/lib/step/index.js:5886', why: 'countTables `SELECT COUNT(*)::bigint AS n FROM ${t}`, t = pg_stat_user_tables (inputs.expect_nonempty)' }),
-  Object.freeze({ fingerprint: 'caf69de66af279fa', cite: 'scripts/lib/step/index.js:5886', why: 'countTables, t = logic_variables (inputs.expect_nonempty)' }),
+  Object.freeze({ fingerprint: '4253520a71996e5c', cite: 'scripts/lib/step/index.js:5988', why: 'countTables `SELECT COUNT(*)::bigint AS n FROM ${t}`, t = pg_stat_user_tables (inputs.expect_nonempty)' }),
+  Object.freeze({ fingerprint: 'caf69de66af279fa', cite: 'scripts/lib/step/index.js:5988', why: 'countTables, t = logic_variables (inputs.expect_nonempty)' }),
   Object.freeze({ fingerprint: 'aeeb008ed29d0e15', cite: 'scripts/lib/step/plausibility.js:163', why: 'executes scripts/enrich-parcels.descriptor.json:2319 plausibility[3].sql (descriptor-authored)' }),
 ]);
 

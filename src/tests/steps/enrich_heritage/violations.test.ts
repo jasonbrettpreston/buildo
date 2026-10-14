@@ -301,24 +301,34 @@ describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
   });
 });
 
-describe('enrich_heritage — unhappy paths, all nine §9 contract HALTs + L14 + SRID declared in one hook [flips at commit 2]', () => {
-  it('readHeritageContract throws a distinct, named error for each contract violation [flips at commit 2]', () => {
+describe('enrich_heritage — unhappy paths: the §9 producer-contract HALTs are DECLARED pins (S1-P-5, runner-evaluated FAIL rows); the hook keeps the SRID throw; the empty-source HALT is the runner guard\'s (L14) [flips at commit 2]', () => {
+  it('readHeritageContract keeps only the SRID throw; every other former §9 HALT fragment is gone from the compute and declared as an evaluated staleness.pins row; empty-source is guards.empty_source (runner, before the hook; S4) [flips at commit 2]', () => {
     const src = read(COMPUTE_REL);
-    const expectedFragments = [
-      'no successful',
-      'spec_version=',
-      'heritage_register sub-block is missing',
-      'heritage_districts sub-block is missing',
-      'ingested zero features',
-      "drift_check_passed=false",
-      'source_dataset_version is null/empty',
-      'heritage_properties is empty',
-      'heritage_districts is empty',
-      'expected 4326',
-    ];
-    for (const frag of expectedFragments) {
-      expect(src, `missing fragment: ${frag}`).toContain(frag);
+    // Fence (was: seven named throws in the hook): each former throw is now one pin row. The compute keeps ONLY the SRID throw (own-table read, not a producer-protocol datum).
+    expect(src).toContain('expected 4326');
+    for (const gone of ['no successful', 'spec_version=', 'sub-block is missing', 'ingested zero features', 'drift_check_passed=false', 'source_dataset_version is null/empty']) {
+      expect(src, `former HALT fragment must be a pin now, not a throw: ${gone}`).not.toContain(gone);
     }
+    const descriptorJson = JSON.parse(read(DESCRIPTOR_REL));
+    const pins: Array<{ step: string; stamp: string; op?: string; equals?: string }> = descriptorJson.staleness.pins;
+    const P = 'records_meta.heritage_load.';
+    const want: Array<[string, string | undefined, string | undefined]> = [
+      [P + 'spec_version', undefined, '1.1'],
+      [P + 'heritage_register.feature_count', 'nonzero', undefined],
+      [P + 'heritage_districts.feature_count', 'nonzero', undefined],
+      [P + 'heritage_register.drift_check_passed', 'true', undefined],
+      [P + 'heritage_districts.drift_check_passed', 'true', undefined],
+      [P + 'heritage_register.source_dataset_version', 'nonzero', undefined],
+      [P + 'heritage_districts.source_dataset_version', 'nonzero', undefined],
+    ];
+    for (const [stamp, op, equals] of want) {
+      const pin = pins.find((p) => p.step === 'load_heritage' && p.stamp === stamp);
+      expect(pin, `missing evaluated pin: ${stamp}`).toBeDefined();
+      expect(pin!.op).toBe(op);
+      expect(pin!.equals).toBe(equals);
+    }
+    // L14 is not this hook's: it is the declared runner guard (counted before any hook).
+    expect(descriptorJson.guards.empty_source).toEqual(['heritage_properties', 'heritage_districts']);
   });
 });
 

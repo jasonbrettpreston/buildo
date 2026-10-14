@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 482 declarable fields
+# The step contract — 20 categories, 490 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -17,9 +17,9 @@
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 35 | 6 | 0 |
 | 3 | `outputs` | 94 | 27 | 1 |
-| 4 | `staleness` | 30 | 9 | 0 |
+| 4 | `staleness` | 36 | 9 | 0 |
 | 5 | `guards` | 21 | 7 | 0 |
-| 6 | `execution` | 74 | 15 | 0 |
+| 6 | `execution` | 75 | 14 | 0 |
 | 7 | `checks` | 35 | 7 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
 | 9 | `plausibility` | 36 | 7 | 0 |
@@ -31,7 +31,7 @@
 | 15 | `recovery` | 18 | 8 | 0 |
 | 16 | `database` | 3 | 1 | 0 |
 | 17 | `counters` | 21 | 3 | 0 |
-| 18 | `config` | 22 | 4 | 0 |
+| 18 | `config` | 23 | 4 | 0 |
 | 19 | `sharing` | 9 | 4 | 0 |
 | 20 | `terminals` | 9 | 3 | 0 |
 
@@ -301,7 +301,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `pins` | list (min 1) of object {step, stamp, equals, why} | — |
+| `pins` | list (min 1) of object {step, stamp, equals, why, op, statuses, meta_object, bound, of, limit_from_config} | — |
 | `pins[].step` | string `^[a-z][a-z0-9_]*$` | † |
 | `pins[].stamp` | string `^(records_meta(\.[a-z_][a-z0-9_]*)+|[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)$` | † |
 | `pins[].equals` | string | — |
@@ -310,6 +310,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `pins[].why.liveness` | `none` \| object {kind, ref} | † |
 | `pins[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `pins[].why.liveness.ref` | string | † |
+| `pins[].op` | `equals` · `nonzero` · `true` | — |
+| `pins[].statuses` | list (min 1) of `completed` · `completed_with_warnings` · `completed_with_errors` · `failed` · `crashed` · `cancelled` | — |
+| `pins[].meta_object` | string `^[a-z][a-z0-9_]*$` | — |
+| `pins[].bound` | string `^pct (<=|>=) [0-9]*\.?[0-9]+$` | — |
+| `pins[].of` | string `^records_meta\.[a-z][a-z0-9_.]*$` | — |
+| `pins[].limit_from_config` | string | — |
 | `trigger` | `none` \| list (min 1) of object {signal, position, external, table, emit_key, style, max_age_days_from_config, variable} | † |
 | `trigger[].signal` | `source_validator` · `content_hash` · `cached_artifact` · `upstream_ledger` · `code_version` · `config_version` · `interval` · `always` | † ! |
 | `trigger[].position` | `pre_acquisition` · `acquisition` · `post_acquisition` · `pre_compute` | † ! |
@@ -427,15 +433,16 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `network.retry_backoff_from_config` | string `^[a-z][a-z0-9_]*$` | — |
 | `network.retries` | integer >= 0 | † |
 | `invocation` | `none` \| map of object {argv, env} | † |
-| `maintenance` | `none` \| list (min 1) of object {operation, table, owned_by, why} | † |
-| `maintenance[].operation` | `vacuum` · `analyze` · `vacuum_analyze` · `reindex` | † ! |
-| `maintenance[].table` | string `^[a-z_][a-z0-9_]*$` | † |
-| `maintenance[].owned_by` | `self` \| string `^[a-z][a-z0-9_]*$` | † |
-| `maintenance[].why` | object {text, liveness} | † |
-| `maintenance[].why.text` | string | † |
-| `maintenance[].why.liveness` | `none` \| object {kind, ref} | † |
-| `maintenance[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
-| `maintenance[].why.liveness.ref` | string | † |
+| `read_gucs` | list of object {read, name, value, why} | — |
+| `read_gucs[].read` | string | † |
+| `read_gucs[].name` | `enable_indexscan` | † |
+| `read_gucs[].value` | `on` · `off` | † |
+| `read_gucs[].why` | object {text, liveness} | † |
+| `read_gucs[].why.text` | string | † |
+| `read_gucs[].why.liveness` | `none` \| object {kind, ref} | † |
+| `read_gucs[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
+| `read_gucs[].why.liveness.ref` | string | † |
+| `maintenance` | `none` \| list (min 1) of OPEN | † |
 
 ### checks
 
@@ -687,11 +694,12 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `logic_variables` | list of object {name, min, max, on_invalid} | † |
+| `logic_variables` | list of object {name, min, max, on_invalid, enum} | † |
 | `logic_variables[].name` | string | † |
 | `logic_variables[].min` | `none` \| number | † |
 | `logic_variables[].max` | `none` \| number | † |
 | `logic_variables[].on_invalid` | `fail` · `default` · `clamp` | † ! |
+| `logic_variables[].enum` | list (min 1) of string | — |
 | `validation` | `strict` · `passthrough` | † ! |
 | `validation_why` | object {text, liveness} | — |
 | `validation_why.text` | string | † |

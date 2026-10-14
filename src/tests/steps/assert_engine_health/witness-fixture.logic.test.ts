@@ -7,7 +7,7 @@
 // docs/reports/witness/assert_engine_health.fixture.json. The fake answers the runtime table-discovery read
 // (`SELECT relname FROM pg_stat_user_tables`) plus the one-pass stats read with two monitored tables
 // (coa_applications, permit_inspections) carrying a 2% dead-tuple ratio — above the seeded warn max (0) — so the
-// compute issues one per-table engine_health_snapshots upsert AND a VACUUM ANALYZE per table.
+// compute issues one per-table engine_health_snapshots upsert and the runner's maintenance arm a VACUUM (ANALYZE) per table.
 // MEASURED: chains coa / sources / deep_scrapes issue the identical statement set (the seeded-with-zeroRow run is
 // chain-agnostic), so permits alone pins the whole statement set.
 // Undeclared reads/writes are RECORDED, never asserted away (converted slug → report-only, Fold 7 ruling 3).
@@ -83,6 +83,8 @@ describe('P1-C4b — assert_engine_health lifecycle on a guarded recording pool 
         return { rows: MONITORED.map((table_name) => ({ table_name, n_live_tup: 1000, n_dead_tup: 20, seq_scan: 5, idx_scan: 50, n_tup_ins: 100, n_tup_upd: 10 })) };
       }
       if (text.includes('n_tup_ins::bigint AS ins')) return { rows: [{ ins: 100, upd: 10, last_autovacuum: null }] };
+      // Spec 124 R-CG (S2 F3-3): the runner's execution.maintenance dynamic arm selects its own targets after compute.
+      if (text.includes('n_dead_tup::bigint AS dead')) return { rows: MONITORED.map((relname) => ({ relname, live: 1000, dead: 20 })) };
       return null;
     };
     const pool = recordingPool(stepAnswer, zeroRow);
@@ -100,7 +102,8 @@ describe('P1-C4b — assert_engine_health lifecycle on a guarded recording pool 
       expect(pool.sql.some((s) => s.includes('INSERT INTO engine_health_snapshots')), 'INSERT INTO engine_health_snapshots must be issued').toBe(true);
       expect(pool.sql.filter((s) => s.includes('INSERT INTO engine_health_snapshots')).length, 'one upsert per discovered table').toBe(MONITORED.length);
       expect(pool.sql.some((s) => s.includes('n_tup_ins::bigint AS n_tup_ins')), 'the one-pass stats read must carry n_tup_ins::bigint').toBe(true);
-      expect(pool.sql.filter((s) => s.includes('VACUUM ANALYZE')).length, 'one VACUUM ANALYZE per monitored table').toBe(MONITORED.length);
+      // R-CG (S2 F3-3): the VACUUM is the runner's dynamic-arm statement now (`VACUUM (ANALYZE) "t"`), one per selected table.
+      expect(pool.sql.filter((s) => s.includes('VACUUM (ANALYZE)')).length, 'one VACUUM (ANALYZE) per monitored table').toBe(MONITORED.length);
     } finally {
       restore();
     }

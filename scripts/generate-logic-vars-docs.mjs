@@ -204,12 +204,15 @@ function adminLabel(v) {
 }
 
 const rows = [];
-// numeric seed vars
+// numeric seed vars (+ the closed-enum string kind, Spec 124 R-CE)
 for (const [key, v] of Object.entries(seed)) {
-  const bounds = v.min !== undefined && v.max !== undefined ? `${v.min} – ${v.max}` : '—';
+  const isString = v.type === 'string' && Array.isArray(v.enum);
+  const bounds = isString
+    ? `one of ${v.enum.join(', ')}`
+    : v.min !== undefined && v.max !== undefined ? `${v.min} – ${v.max}` : '—';
   rows.push({
     key,
-    kind: 'numeric',
+    kind: isString ? 'string' : 'numeric',
     default: v.default,
     bounds,
     source: 'seed',
@@ -256,7 +259,7 @@ defaults below are the seed / migration baselines.
 
 **Cross-refs:** Spec 40 (\`docs/specs/01-pipeline/40_pipeline_system.md\`, config-loader / logicVars contract) · Spec 86 (\`docs/specs/02-web-admin/86_control_panel.md\`, the Control Panel that edits these).
 
-Total: **${rows.length}** logic variables (${numericCount} numeric, ${jsonCount} JSONB).
+Total: **${rows.length}** logic variables (${numericCount} numeric, ${jsonCount} JSONB, ${rows.length - numericCount - jsonCount} string).
 
 ---
 

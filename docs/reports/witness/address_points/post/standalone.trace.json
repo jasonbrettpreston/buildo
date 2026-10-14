@@ -3,16 +3,43 @@
   "step": "scripts/load-address-points.js",
   "chain": "none",
   "source_fingerprint": "c4e3dd51837c4fc9ae1689677bd5b14ad837a2abe3f9512e4ddf64c7ec0333bc",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 160,
     "distinct": 19,
     "utility": 8,
-    "tracer_self_ms": 7086.537,
-    "wall_ms": 144622
+    "tracer_self_ms": 5841.947,
+    "wall_ms": 128265
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:address_points",
+            "address_points",
+            "address-points"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "528151b0515ba432",
       "kind": "write",
@@ -28,15 +55,27 @@
       "params": [
         [
           "completed",
-          141329,
+          125324,
           null,
-          2495,
+          2705,
           0,
           0,
           0,
-          "{\"address_points_load\":{\"duration_ms\":141275,\"rows_read\":525343,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525343,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525343,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525343},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"no_baseline: the prior run recorded no record_fields\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":141330,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"address_points_load\":{\"duration_ms\":125286,\"rows_read\":525369,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525369,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525369,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525369},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"header unchanged (38 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":125322,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
     },
     {
       "fingerprint": "5eebf4a9ff6d7782",
@@ -132,24 +171,6 @@
       "error": null
     },
     {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 2,
-      "rowCount": 2,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:address_points"
-        ]
-      ]
-    },
-    {
       "fingerprint": "77d30c21e4d01ffb",
       "kind": "read",
       "count": 1,
@@ -229,7 +250,7 @@
       "fingerprint": "9184be8b14cc7f3c",
       "kind": "read",
       "count": 1,
-      "rowCount": 525343,
+      "rowCount": 525369,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -255,18 +276,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {
@@ -311,7 +320,7 @@
   ],
   "transactions": [
     {
-      "client": "24168:3",
+      "client": "3880:3",
       "write_fingerprints": [
         "68563e108d423a94",
         "8b9dda5a2430e883",

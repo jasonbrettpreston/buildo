@@ -325,7 +325,8 @@ describe('⑦e — producer-completed gates exclude defer rows (g/b, source-vers
     const pg = require('libpg-query');
     await pg.loadModule();
     const sqls: string[] = [];
-    const pool = { query: async (sql: string) => { sqls.push(sql); return { rows: [] }; } };
+    const paramsSeen: unknown[][] = [];
+    const pool = { query: async (sql: string, params: unknown[] = []) => { sqls.push(sql); paramsSeen.push(params); return { rows: [] }; } };
     await sv.readPriorRunMeta(pool, 'sources:load_ravines');
     await sv.runLedgerGateDecision(pool, { ownSlugs: ['sources:x'], upstreamSlugs: ['sources:y'] });
     type PgNode = Record<string, unknown>;
@@ -360,7 +361,10 @@ describe('⑦e — producer-completed gates exclude defer rows (g/b, source-vers
       return stmt.withClause.ctes.find((c: PgNode) => isObj(c.CommonTableExpr) && c.CommonTableExpr.ctename === name).CommonTableExpr.ctequery;
     };
     expect(sqls.length).toBe(2);
-    expect(preds(pg.parseSync(sqls[0] ?? ''), 'status')).toEqual([IN_SET]);
+    // Purity seam S1-R (2026-10-12): readPriorRunMeta delegates to readRunHistory, so the baseline set is the
+    // bound parameter BASELINE_STATUSES (`status = ANY($2::text[])`) — same set, now pinned on the params.
+    expect(preds(pg.parseSync(sqls[0] ?? ''), 'status')).toEqual(['AEXPR_OP_ANY = [null]']);
+    expect(paramsSeen[0]?.[1]).toEqual(['completed', 'completed_with_warnings']);
     expect(preds(cte(sqls[1], 'own_last'), 'status')).toEqual([IN_SET]);
     expect(preds(cte(sqls[1], 'upstream_since'), 'p.status')).toEqual(
       ['AEXPR_OP <> ["completed"]', 'AEXPR_OP = ["completed"]', 'AEXPR_OP = ["running"]'].sort());

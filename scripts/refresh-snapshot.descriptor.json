@@ -772,6 +772,7 @@
     "statement_timeout": "none",
     "statement_timeout_minutes_from_config": "refresh_snapshot_read_statement_timeout_minutes",
     "phase_deadline_minutes_from_config": "refresh_snapshot_phase_deadline_minutes",
+    "read_gucs": [{ "read": "tradeByType", "name": "enable_indexscan", "value": "off", "why": { "text": "WF3 F1 ③ — the tradeByType JOIN is plan-forced immune to the stale correlation statistic by disabling index scans for this ONE read, on the pinned client only, reset immediately after.", "liveness": { "kind": "file", "ref": "scripts/lib/compute/refresh-snapshot.js" } } }],
     "step_timeout": "15m",
     "batch": "none",
     "on_row_error": "fail_fast",

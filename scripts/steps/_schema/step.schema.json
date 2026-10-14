@@ -2860,6 +2860,50 @@
               },
               "why": {
                 "$ref": "#/definitions/why"
+              },
+              "op": {
+                "enum": [
+                  "equals",
+                  "nonzero",
+                  "true"
+                ],
+                "description": "S1-P (Spec 124 Rule 10): the closed predicate the runner evaluates before any phase/compute (scripts/lib/step/index.js measureProducerPins). Default equals when `equals` is present; nonzero = a non-zero number or non-empty string; true = the literal boolean true."
+              },
+              "statuses": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "completed",
+                    "completed_with_warnings",
+                    "completed_with_errors",
+                    "failed",
+                    "crashed",
+                    "cancelled"
+                  ]
+                },
+                "description": "S1-P / R-CB: the producer runs this pin reads. Absent = the R-BG(iv) baseline {completed, completed_with_warnings}. A verdict or activity read declares its wider terminal set here (measured terminal statuses, pipeline_runs 2026-10-13)."
+              },
+              "meta_object": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "S1-P #12d: only producer runs whose records_meta.<meta_object> is a JSON object qualify (the newest run that carries the key wins — operator 2026-10-13)."
+              },
+              "bound": {
+                "type": "string",
+                "pattern": "^pct (<=|>=) [0-9]*\\.?[0-9]+$",
+                "description": "S1-P-6a (Fold 1 item 2): the closed pct grammar already shared by checks[].limit (definitions/bound, verdict.js PCT_RE). The runner evaluates 100 * <stamp> / <of> against it. Absent op/equals: this IS the predicate."
+              },
+              "of": {
+                "type": "string",
+                "pattern": "^records_meta\\.[a-z][a-z0-9_.]*$",
+                "description": "S1-P-6a: the denominator stamp of a bound pin (a records_meta key path of the same producer run)."
+              },
+              "limit_from_config": {
+                "type": "string",
+                "minLength": 1,
+                "description": "S1-P-6a: names a config.logic_variables[].name whose resolved value replaces the number in `bound` at evaluation time (same rule as checks[].limit_from_config; Spec 124 §7 rung (d))."
               }
             },
             "allOf": [
@@ -2877,10 +2921,147 @@
                     }
                   }
                 }
+              },
+              {
+                "x-rule": "S1-P: an op other than equals carries no equals literal and reads a records_meta stamp",
+                "if": {
+                  "required": [
+                    "op"
+                  ],
+                  "properties": {
+                    "op": {
+                      "enum": [
+                        "nonzero",
+                        "true"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "not": {
+                    "required": [
+                      "equals"
+                    ]
+                  },
+                  "properties": {
+                    "stamp": {
+                      "pattern": "^records_meta\\."
+                    }
+                  }
+                }
+              },
+              {
+                "x-rule": "S1-P: op equals requires the equals literal",
+                "if": {
+                  "required": [
+                    "op"
+                  ],
+                  "properties": {
+                    "op": {
+                      "const": "equals"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "equals"
+                  ]
+                }
+              },
+              {
+                "x-rule": "S1-P: statuses / meta_object only on an evaluated pin (op or equals) — a watermark pin is compared elsewhere",
+                "anyOf": [
+                  {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "statuses"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "meta_object"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "op"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "equals"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "bound"
+                    ]
+                  }
+                ]
+              },
+              {
+                "x-rule": "S1-P-6a: bound requires of, a records_meta stamp, and forbids op/equals",
+                "if": {
+                  "required": [
+                    "bound"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "of"
+                  ],
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "op"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "equals"
+                        ]
+                      }
+                    ]
+                  },
+                  "properties": {
+                    "stamp": {
+                      "pattern": "^records_meta\\."
+                    }
+                  }
+                }
+              },
+              {
+                "x-rule": "S1-P-6a: of / limit_from_config only on a bound pin",
+                "if": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "of"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "limit_from_config"
+                      ]
+                    }
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "bound"
+                  ]
+                }
               }
             ]
           },
-          "x-trust": "executed:scripts/lib/compute/enrich-ravines.js#pinnedSpecVersion",
+          "x-trust": "executed:scripts/lib/step/producer.js#evaluatePins",
+          "x-trust-op": "executed:scripts/lib/step/index.js#measureProducerPins",
           "x-ruling": {
             "rungs_tried": [
               "inputs.reads.steps[].version_pin — inert (zero readers in scripts/lib), classed D by the trust audit, and deleted in the FLEET-2 RE-FREEZE",
@@ -3916,6 +4097,30 @@
             }
           ]
         },
+        "read_gucs": {
+          "x-trust": "executed:scripts/lib/step/index.js#runRecorderPhase",
+          "description": "R-CF: a session GUC one RECORDER read depends on, declared here instead of returned by compute. The runner issues SET <name> = <value> before that read and RESET <name> after it, on the pinned read client. Closed allowlist — a new GUC is a schema edit (RE-FREEZE).",
+          "x-ruling": {
+            "rungs_tried": [
+              "rung (a) keep the compute-returned `guc: {set, reset}` plan property — rejected: compute then authors SET/RESET SQL text, a Spec 124 R-BZ G4 txn/session-control finding (refresh-snapshot.js tradeByType, two ledger rows)",
+              "rung (b) a descriptor-only note with the SQL still in compute — rejected: declared is not enforced (Rule 1)",
+              "rung (c) a generic `reads[].session` free-text field — rejected: an open string would let any SQL in; the allowlist must be closed"
+            ],
+            "why": "Spec 124 R-CF (operator y 2026-10-12, compute-purity seam S2): the one session GUC a RECORDER read depends on (refresh_snapshot tradeByType, enable_indexscan = off, WF3 F1 ③) is declared as descriptor data with closed name/value enums, and the runner issues SET/RESET on the pinned read client. Compute holds no session-control text."
+          },
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["read", "name", "value", "why"],
+            "properties": {
+              "read": { "type": "string", "minLength": 1 },
+              "name": { "enum": ["enable_indexscan"] },
+              "value": { "enum": ["on", "off"] },
+              "why": { "$ref": "#/definitions/why" }
+            }
+          }
+        },
         "maintenance": {
           "x-trust": "executed:scripts/lib/step/index.js#runWithPool",
           "description": "R6: NOT a category — a field. VACUUM ANALYZE on 4 tables across 3 steps; it CONSTRAINS txn_scope (VACUUM cannot run inside a transaction) and targets tables the issuing step does not own, while an ASSERT does it with outputs forced to \"none\".",
@@ -3927,41 +4132,80 @@
               "type": "array",
               "minItems": 1,
               "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "operation",
-                  "table",
-                  "owned_by",
-                  "why"
-                ],
-                "properties": {
-                  "operation": {
-                    "enum": [
-                      "vacuum",
-                      "analyze",
-                      "vacuum_analyze",
-                      "reindex"
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "table",
+                      "owned_by",
+                      "why"
                     ],
-                    "x-frozen": true
-                  },
-                  "table": {
-                    "$ref": "#/definitions/tableName"
-                  },
-                  "owned_by": {
-                    "anyOf": [
-                      {
-                        "const": "self"
+                    "properties": {
+                      "operation": {
+                        "enum": [
+                          "vacuum",
+                          "analyze",
+                          "vacuum_analyze",
+                          "reindex"
+                        ],
+                        "x-frozen": true
                       },
-                      {
-                        "$ref": "#/definitions/slug"
+                      "table": {
+                        "$ref": "#/definitions/tableName"
+                      },
+                      "owned_by": {
+                        "anyOf": [
+                          {
+                            "const": "self"
+                          },
+                          {
+                            "$ref": "#/definitions/slug"
+                          }
+                        ]
+                      },
+                      "why": {
+                        "$ref": "#/definitions/why"
                       }
-                    ]
+                    }
                   },
-                  "why": {
-                    "$ref": "#/definitions/why"
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "select",
+                      "limit_from_config",
+                      "why"
+                    ],
+                    "x-ruling": "R-CG (Spec 124, S2 F3-3 operator 2026-10-13)",
+                    "properties": {
+                      "operation": {
+                        "enum": [
+                          "vacuum",
+                          "analyze",
+                          "vacuum_analyze",
+                          "reindex"
+                        ],
+                        "x-frozen": true
+                      },
+                      "select": {
+                        "enum": [
+                          "dead_tuple_ratio"
+                        ],
+                        "description": "R-CG (S2 F3-3, 2026-10-13): runtime-selected targets — every public table with n_live_tup > 0 and dead/(live+dead) above the named logic variable; one sys_maintenance_selected_<op> evidence row is written even when nothing is selected."
+                      },
+                      "limit_from_config": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]*$"
+                      },
+                      "why": {
+                        "$ref": "#/definitions/why"
+                      }
+                    }
                   }
-                }
+                ]
               }
             }
           ]
@@ -4623,8 +4867,40 @@
                       "clamp"
                     ],
                     "x-frozen": true
+                  },
+                  "enum": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "x-ruling": "R-CE string-typed logic variable (S2 F3-2, operator 2026-10-13)"
                   }
-                }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "required": [
+                        "enum"
+                      ]
+                    },
+                    "then": {
+                      "properties": {
+                        "min": {
+                          "const": "none"
+                        },
+                        "max": {
+                          "const": "none"
+                        },
+                        "on_invalid": {
+                          "const": "fail"
+                        }
+                      }
+                    }
+                  }
+                ]
               }
             },
             "validation": {

@@ -1231,12 +1231,13 @@ describe('closed runner template set (R-BZ)', () => {
     expect(lq.fingerprintSync('SELECT COUNT(*)::bigint AS n FROM logic_variables')).toBe('caf69de66af279fa');
   });
 
-  it('buildRunnerFingerprints covers all 3 closed fingerprints and cites index.js:5886', async () => {
+  it('buildRunnerFingerprints covers all 3 closed fingerprints and cites the countTables line of index.js (derived, not pinned)', async () => {
     const map = await mod.buildRunnerFingerprints();
     expect(map.size).toBeGreaterThanOrEqual(24);
     for (const entry of mod.CLOSED_RUNNER_TEMPLATES) {
       expect(map.has(entry.fingerprint)).toBe(true);
     }
-    expect(map.get('4253520a71996e5c')).toBe('scripts/lib/step/index.js:5886');
+    const countLine = fs.readFileSync(path.resolve(process.cwd(), 'scripts/lib/step/index.js'), 'utf8').split(/\r?\n/).findIndex((l) => l.includes('COUNT(*)::bigint AS n FROM')) + 1;
+    expect(map.get('4253520a71996e5c')).toBe(`scripts/lib/step/index.js:${countLine}`);
   }, 60000);
 });

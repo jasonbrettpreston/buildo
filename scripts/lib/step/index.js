@@ -87,9 +87,60 @@ const {
   generateReset, assertBeforeImageDeclared, assertForceFullAuthorized,
   assertAdvisoryLockAvailable, applyGeneratedReset,
 } = require('./reset');
+// Spec 124 R-BZ G4 — the ctx.tempTable seam (compute owns the SELECT, the seam owns the DDL).
+const { makeTempTable } = require('./temp-table');
+// Spec 124 R-CH / R-CA(i) — the ctx.readSnapshot seam (the compute hands over a reader fn;
+// the runner owns the READ ONLY txn, its isolation and its statement bound).
+const { makeReadSnapshot } = require('./read-snapshot');
+// S1-P (Spec 124 R-BZ G1/G12, Rule 10) — producer reads + declared staleness.pins[] evaluation.
+const { makeProducer, evaluatePins, pinReadKey, producerOptsForPin } = require('./producer');
+// S3 / R-CI (2026-09-15) — the step-start scope retirement moved OUT of compute and into
+// the runner (runner hygiene, not compute). Called THROUGH this object, never destructured,
+// so a test can `vi.spyOn(scopeRetireLib, 'retireStaleScope')`.
+const scopeRetireLib = require('./scope-retire');
 
 /** The `config: "none"` projection — one shared frozen empty object, never a fresh `{}` per run. */
 const EMPTY_CONFIG = Object.freeze(Object.create(null));
+
+// Spec 124 R-CA(ii) / CP-S3 — `ctx.exec`, the ENRICHER pass's GENERIC write seam. WHY IT
+// EXISTS: the enrich pass's own bespoke writes (a scoped UPDATE/INSERT/DELETE authored by
+// compute) must move behind a library seam for the same reason retract/joinUpdate did: so
+// the declared target, the transaction boundary and the counters stay the RUNNER's job
+// (Rule 2) instead of being re-derived inside every conversion commit. It does NOT open a
+// transaction — it runs on whatever client the seams are bound to (the shared-txn client
+// for passes 1–4, the autocommit post-commit client for pass 5), immediately and in order.
+// It is the ONLY generic write seam, and it refuses any statement that is not a single
+// UPDATE/INSERT/DELETE: a generic seam that accepted arbitrary SQL would make the declared
+// write discipline decorative (Rule 1, the same reason joinUpdate refuses INSERT text).
+// A statement starting `WITH` is refused ON PURPOSE (a CTE hides the verb): a caller with a
+// CTE-DELETE uses the library's own retire path, not exec. Pure: all collaborators are
+// injected, so this is driven directly by the S3-E1 test without standing up a runner.
+//
+// S3-E7 (2026-10-14) — COUNTER-NEUTRAL by design: the runner counts a pass's writes from the
+// pass's own returned stats (the per-phase fallback, ≈:5192); ctx.exec only routes the
+// statement through the library and proves its target is declared (R-CK). It never marks a
+// target seam-owned. Counting here DOUBLE-COUNTED write 3 (four statements summed on top of
+// the pass result) and UNDER-COUNTED write 4 (pass 5's flushBatch/recovery writes skipped the
+// fallback); routing without counting is byte-identical to pre-S3 counters.
+function makeExecSeam({ client, seamTarget, tag }) {
+  return async (writesRef, sql, params) => {
+    const spec = seamTarget(writesRef, 'exec');
+    // Classify by the FIRST keyword after leading whitespace and `--` comment lines.
+    const stripped = String(sql).replace(/^(?:\s+|--[^\n]*(?:\n|$))*/, '');
+    const verb = (stripped.match(/^[A-Za-z]+/) || [''])[0].toUpperCase();
+    if (verb !== 'UPDATE' && verb !== 'INSERT' && verb !== 'DELETE') {
+      throw new Error(
+        `${tag} ctx.exec(${writesRef}) — only a single UPDATE/INSERT/DELETE statement is a write; `
+        + `${verb || String(sql).trim().slice(0, 12) || '(empty)'} is not (R-BZ G5)`,
+      );
+    }
+    const res = await client.query(sql, params || []);
+    // COUNTER-NEUTRAL: no `written[...]` bump, no `seamOwned.add(...)`. The pass reports its
+    // own `updated`/`rows_changed` from the result it got back (≈:5192 fallback counts it).
+    void spec;
+    return res;
+  };
+}
 
 /**
  * LW-D11 (2026-08-28) — the CLOSED list of keys the library ever assigns onto `stepCtx`
@@ -104,7 +155,7 @@ const EMPTY_CONFIG = Object.freeze(Object.create(null));
 const STEP_CTX_KEYS = Object.freeze([
   'pool', 'chainId', 'runId', 'descriptor', 'checks', 'log', 'fetch', 'clock', 'config',
   'probePresence', 'acquired', 'written', 'prior', 'overrides', 'gate', 'matched',
-  'cumulative', 'elapsed_ms', 'report',
+  'cumulative', 'elapsed_ms', 'report', 'readSnapshot', 'producer',
 ]);
 
 /**
@@ -851,6 +902,7 @@ async function ingestPrimaries(args) {
     const overrides = staleness.resolveOverrides(descriptor);
     const read = await staleness.readPriorEmitWithPosture(
       pool, ledgerPipelineName(descriptor, args.chainId), null, staleness.priorRunErrorPosture(descriptor),
+      { chains: staleness.declaredChains(descriptor) },
     );
     priorMeta = read.prior; priorError = read.error;
     const timeoutMs = acquire.resolveTimeoutMs(descriptor, args.config);
@@ -1409,6 +1461,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const posture = staleness.priorRunErrorPosture(descriptor);
   const { prior: priorBlock, error: priorError } = await staleness.readPriorEmitWithPosture(
     pool, ledgerPipelineName(descriptor, chainId), emitKey, posture,
+    { chains: staleness.declaredChains(descriptor) },
   );
   // 0x (RE-FREEZE #29): a multi-primary call (ingestPrimaries) passes its primary id as
   // `subKey` and gates against ITS OWN sub-block of the prior emit; a single-primary call
@@ -1921,7 +1974,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
  */
 async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
   const overrides = staleness.resolveOverrides(descriptor);
   // LW-D15 — declared dry-run semantics for the LINK phase too (link_massing declares
   // `override.dry_run: "none"` today, so this is currently inert for it, but the write
@@ -2114,7 +2167,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
  */
 async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
   const overrides = staleness.resolveOverrides(descriptor);
   const dryRun = overrides.dry_run;
   const gate = await resolveLinkGate({ descriptor, pool, prior, ownRunId, tag });
@@ -2447,7 +2500,7 @@ async function runCascadePhase({ descriptor, pool, compute, config, chainId, log
 
   const prior = gatedSkip.gate
     ? gatedSkip.gate.ownLastRecordsMeta
-    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
   // O4 row 6 (operator ruling 2026-10-03) — the cascade routes through resolveLinkGate like the two
   // LINK runners: staleness.mode_select "none" (full_rescan) resolves mode "full" / reason
   // "full_rescan" and refuses a retract "all" target (selectMode would throw on "none"); a tri_state
@@ -2776,7 +2829,7 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
 
   const prior = gatedSkip.gate
     ? gatedSkip.gate.ownLastRecordsMeta
-    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+    : await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `materialize gate: RUN (${gatedSkip.reason})`);
 
@@ -2924,6 +2977,7 @@ async function runLinkColumnPhase({ descriptor, pool, compute, config, chainId, 
   const posture = staleness.priorRunErrorPosture(descriptor);
   const { prior, error: priorError } = await staleness.readPriorEmitWithPosture(
     pool, ledgerPipelineName(descriptor, chainId), null, posture,
+    { chains: staleness.declaredChains(descriptor) },
   );
   if (priorError) {
     log.warn(tag, `prior-run read failed under posture "${posture}" — continuing with NO baseline: ${priorError.message}`);
@@ -3088,7 +3142,7 @@ async function runBackfillPhase({ descriptor, pool, compute, config, chainId, lo
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
 
   const specs = descriptor.outputs.writes;
   const spec = specs[0];
@@ -3289,10 +3343,11 @@ async function runBackfillFullRecompute({ descriptor, pool, compute, config, log
  *   guards.requires          preconditions before the first read (this step
  *                          declares none — R-W is not engaged, no PostGIS)
  *   RLS preflight             assertWritePrivileges
- *   compute.buildReads()      compute AUTHORS the read plan (SQL text + an
- *                          optional session-GUC bracket per "main" step) —
- *                          Rule 2: compute never touches the pool itself, it
- *                          only returns `{main: [{key, sql, params, guc}],
+ *   compute.buildReads()      compute AUTHORS the read plan (SQL text only — a
+ *                          session GUC is DECLARED in the descriptor's
+ *                          `execution.read_gucs`, never returned by compute
+ *                          (R-CF)) — Rule 2: compute never touches the pool
+ *                          itself, it only returns `{main: [{key, sql, params}],
  *                          optional: [{key, sql, params}]}`
  *   the MAIN reads            executed by THIS runner, sequentially, on one
  *                          pinned REPEATABLE READ READ ONLY client — mirrors
@@ -3408,7 +3463,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
 
   const specs = descriptor.outputs.writes;
   const spec = specs[0];
@@ -3452,9 +3507,12 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
       await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
       if (statementTimeoutMs > 0) await snapClient.query(`SET LOCAL statement_timeout = ${statementTimeoutMs}`);
       try {
+        const readGucs = Array.isArray(descriptor.execution && descriptor.execution.read_gucs) ? descriptor.execution.read_gucs : [];
         for (const step of (reads.main || [])) {
           currentReadKey = step.key;
-          if (step.guc) await snapClient.query(step.guc.set);
+          if (step.guc) throw new Error(`${tag} recorder read "${step.key}" returned a guc — a session GUC is declared in execution.read_gucs, never returned by compute (R-CF)`);
+          const g = readGucs.find((x) => x.read === step.key);
+          if (g) await snapClient.query(`SET ${g.name} = ${g.value}`);
           const readStartMs = Date.now();
           try {
             const r = await snapClient.query(step.sql, step.params || []);
@@ -3484,7 +3542,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
             // would itself throw ("current transaction is aborted") and, from inside a
             // `finally`, REPLACE the meaningful error above — swallowed the same way the
             // ROLLBACK below already is, so housekeeping failure never masks the real cause.
-            if (step.guc) await snapClient.query(step.guc.reset).catch(() => {});
+            if (g) await snapClient.query(`RESET ${g.name}`).catch(() => {});
           }
         }
         await snapClient.query('COMMIT');
@@ -4156,7 +4214,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
   const full = process.argv.includes('--full') || overrides.force_full === true || interruptedRetraction.interrupted;
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
-  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null);
+  const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
 
   const specs = descriptor.outputs.writes;
   const written = {};
@@ -4221,8 +4279,13 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // reach it from a pass. `null` when no contract_read hook is declared, so a pass that reads
   // `ctx.contract` on a step with no hook fails loudly rather than reading `undefined` fields.
   let contract = null;
+  // S4 (R-BZ) — hooks get a context, never a bare pool; `config` carries `$meta` (R-CM)
+  // so a hook never reads `logic_variables`. ONE frozen object, shared by the contract
+  // and defer-scope hooks below, so a hook cannot rebind `pool`/`config` for its siblings.
+  // S1-P: hooks read producer runs through `producer`, never `pool`.
+  const hookCtx = Object.freeze({ pool, config, producer: makeProducer({ pool, chains: staleness.declaredChains(descriptor) }) });
   if (contractHook) {
-    contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(pool);
+    contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(hookCtx);
     staleOverlays = new Set(
       (compute.OVERLAY_LAYERS || []).filter((l) => l.col && contract.layers[l.key] === false).map((l) => l.key),
     );
@@ -4241,7 +4304,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
         + '— the accidental escape this row retires (Rule 12).',
       );
     }
-    const scope = await deferFn(pool, deferThreshold);
+    const scope = await deferFn(hookCtx, deferThreshold);
     if (scope.scope_count >= deferThreshold) {
       log.warn(tag, `enrich defer: combined scope ${scope.scope_count} >= threshold ${deferThreshold} (ratio ${scope.ratio})`);
       return {
@@ -4433,16 +4496,17 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // step continues; the counters stay NULL, never 0 — "the retirement did not run" and "the
   // retirement retired nothing" are different states and must not render identically in the
   // audit table (Spec 48 §3.6).
-  let scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null };
+  let scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null, holder_run_id: null, rows_retained: null };
   let scopeRetireError = null;
   const hasScopeLedger = specs.some((s) => s.write_discipline && s.write_discipline.class === 'insert_only_no_retraction');
   if (hasScopeLedger) {
     try {
-      scopeRetire = await compute.retireStaleScope(pool, {
+      scopeRetire = await scopeRetireLib.retireStaleScope(pool, {
         runId: scopeRunId,
         ownRunId,
         retireAfterHours: Number(config.enrich_parcels_scope_retire_after_hours),
         now: runAt,
+        tag,
       });
       if (scopeRetire.retired_rows > 0) {
         log.warn(tag, `scope retirement: ${scopeRetire.retired_rows} unconsumed rows across ${scopeRetire.retired_cohorts} stale cohort(s) retired (backlog at step start: ${scopeRetire.backlog_rows})`);
@@ -4452,7 +4516,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // (scripts/lib/pipeline.js:288); that is what preserves `stack` and the
       // auto-classified `error_type`. A rendered string there drops both silently.
       log.error(tag, err, { phase: 'scope_retire', note: 'scope retirement failed — continuing; the backlog is unchanged and every retirement counter reads NULL, not 0' });
-      scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null };
+      scopeRetire = { backlog_rows: null, backlog_cohorts: null, retired_rows: null, retired_cohorts: null, retire_after_hours: null, cutoff_at: null, holder_run_id: null, rows_retained: null };
       // Observability fold (2026-09-15) — a log line is not observability. The failure
       // gets its OWN errored WARN row on the audit table (§scopeRetireFailureRows), and
       // `scope_backlog_at_step_start` is deliberately left UNREPORTED so it resolves to
@@ -4569,6 +4633,10 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       seamOwned.add(key);
       return n;
     },
+    /** Spec 124 R-CA(ii) / CP-S3 — `ctx.exec`: the ONLY generic write seam (see above).
+     *  S3-E7: COUNTER-NEUTRAL — it routes/validates only; `written`/`seamOwned` are NOT
+     *  passed, so the per-phase fallback (≈:5192) stays the single counter owner. */
+    exec: makeExecSeam({ client, seamTarget, tag }),
   });
 
   // EP-D12 fix (pilot 9 commit 8 P8, 2026-09-08) — a DEDICATED, PRE-ACQUIRED, autocommit
@@ -4647,7 +4715,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // neither was ever capable of firing. `SET LOCAL statement_timeout` is a correct
       // PER-STATEMENT guard and is KEPT; it is not, and never was, a phase bound. The
       // wall-clock phase deadline armed below is what bounds the phase.
-      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, contract, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; }, ...makeWriteSeams(client) };
+      // Spec 124 R-BZ G4 / CP-S2 — `ctx.tempTable` is added HERE and ONLY here: this passCtx
+      // lives inside the shared transaction, which is what a `CREATE TEMP TABLE … ON COMMIT
+      // DROP` needs. The post_commit passCtx deliberately does NOT carry it — that phase
+      // autocommits, so an ON COMMIT DROP temp table would vanish at once.
+      const passCtx = { full, scopeWhere: 'TRUE', staleOverlays, contract, clock, log, config, scopeRunId, onProgress: (n) => { rowsProcessed = n; }, tempTable: makeTempTable(client, tag), ...makeWriteSeams(client) };
       // WF3 enrich_parcels stall incident (2026-09-07, orchestrator observation) — Spec 48 §3.6
       // silence class: with NO per-phase log line, a `--full` run's own stdout goes silent from
       // the single startup INFO line until the whole step finishes (measured live: a real,
@@ -5217,6 +5289,10 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     // Null on every healthy run, so a healthy audit table is unchanged byte for byte.
     phaseDeadline: phaseDeadlineInfo,
     scopeRetireError,
+    // R-CJ (S3, 2026-09-15) — the lock-held signal, rendered as its own WARN row
+    // (§scopeRetireLockHeldRows). Null on every healthy run, so a healthy audit table is
+    // unchanged byte for byte.
+    scopeRetireLockHeld: scopeRetire && scopeRetire.holder_run_id != null ? { holder_run_id: scopeRetire.holder_run_id, rows_retained: scopeRetire.rows_retained } : null,
   };
   } finally {
     // F5 (output panel) — the whole-step periodic heartbeat ticker stops before the
@@ -5778,6 +5854,32 @@ function scopeRetireFailureRows(phaseResults) {
 }
 
 /**
+ * R-CJ (S3, 2026-09-15) — the lock-held signal, said out loud. The scope-ledger retirement
+ * refuses to run while a live peer `enrich_parcels` run holds the ledger; when that guard
+ * trips the retirement is SUPPRESSED and the counters are honest about it: `rows_retained`
+ * is the number of rows the suppressed retirement would have removed (0 stays 0 — "held, and
+ * nothing to do" is still a held lock worth rendering). ONE WARN row when the guard trips,
+ * NO row when it does not, and NO row on `scopeRetireError` — those counters are null, and
+ * the failure already has its own row (§scopeRetireFailureRows).
+ *
+ * @param {Array<{scopeRetireLockHeld?:{holder_run_id:number, rows_retained:number|null}|null}|null>} phaseResults
+ * @returns {Array<object>} zero or one row
+ */
+function scopeRetireLockHeldRows(phaseResults) {
+  const hit = (phaseResults || []).find((p) => p && p.scopeRetireLockHeld);
+  if (!hit) return [];
+  const { holder_run_id, rows_retained } = hit.scopeRetireLockHeld;
+  return [{
+    metric: 'scope_retire_lock_held',
+    value: rows_retained,
+    threshold: 'a live peer enrich_parcels run holds the scope ledger — retirement suppressed; rows_retained = rows it would have retired',
+    status: 'WARN',
+    source: 'gate',
+    detail: { holder_run_id, rows_retained },
+  }];
+}
+
+/**
  * registry-truth fold 10 (operator ruling 2026-10-03) — the soft-retire MEASUREMENT, said
  * out loud on the audit table.
  *
@@ -5941,6 +6043,92 @@ async function measureInputGuards(pool, descriptor) {
 }
 
 /**
+ * The declared PRODUCER pins, measured at the SAME point as the input guards and with the
+ * SAME halt: `staleness.pins[]` entries that declare `op` or `equals` are evaluated against
+ * their producer step's run history, one row per pin. A pin violation (FAIL/MISSING) returns
+ * `{ rows, halt: true }` so the caller dispatches NO phase and runs NO compute, and the
+ * errored FAIL row makes the row-derived verdict FAIL — Rule 10: no compute throw, no new
+ * boolean. A descriptor with no evaluable pin issues ZERO queries and gains ZERO rows.
+ * S1-P (Spec 124 R-BZ G1/G12, Rule 10); library: ./producer.js.
+ * @param {{query: Function}} pool
+ * @param {object} descriptor - the step descriptor whose `staleness.pins[]` are measured
+ * @param {Record<string, number>} [config] - the resolved logic variables (ctx.config), for a pin's limit_from_config
+ */
+async function measureProducerPins(pool, descriptor, config) {
+  const pins = ((descriptor && descriptor.staleness && descriptor.staleness.pins) || [])
+    .filter((p) => p && (p.op !== undefined || p.equals !== undefined || p.bound !== undefined));
+  if (pins.length === 0) return { rows: [], halt: false };
+  const producer = makeProducer({ pool, chains: staleness.declaredChains(descriptor) });
+  const groups = new Map();
+  for (const p of pins) {
+    const k = pinReadKey(p);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(p);
+  }
+  const rows = [];
+  for (const group of groups.values()) {
+    const res = await producer(group[0].step, producerOptsForPin(group[0]));
+    for (const r of evaluatePins(group, { [group[0].step]: res }, config)) {
+      rows.push(r.status === 'FAIL' ? { ...r, source: 'gate', errored: true } : r);
+    }
+  }
+  return { rows, halt: rows.some((r) => r.status === 'FAIL') };
+}
+
+/**
+ * Spec 124 R-CD — execute a compute-returned `write_plan` ({table, sql, rows, report_check}). One
+ * `pool.query(sql, params)` per element of `rows` (autocommit, txn_scope:"none": no BEGIN/COMMIT, no dedicated client),
+ * stopping at the FIRST failing row. Never throws on a statement failure: the outcome is returned. A row counts as
+ * "updated" when `res.rowCount > 0 && res.rows[0].xmax !== '0'` (the plan's SQL ends `RETURNING xmax`).
+ * @param {{query: Function}} pool
+ * @param {{sql: string, rows: Array<unknown[]>}} plan already validated by runWritePlan
+ * @returns {Promise<{executed: number, updated: number, failed: boolean, error: string|null}>}
+ */
+async function executeWritePlan(pool, plan) {
+  let executed = 0;
+  let updated = 0;
+  try {
+    for (const params of plan.rows) {
+      const res = await pool.query(plan.sql, params);
+      executed++;
+      if (res.rowCount > 0 && res.rows[0].xmax !== '0') updated++;
+    }
+  } catch (err) {
+    return { executed, updated, failed: true, error: err.message };
+  }
+  return { executed, updated, failed: false, error: null };
+}
+
+/**
+ * Spec 124 R-CD (Rule 10) — the runner's write seam for a compute-returned `write_plan`. Returns null (and does
+ * NOTHING: no query, no report, `computeResult` untouched) when `computeResult` is null or carries no `write_plan`.
+ * Otherwise validates the plan (a malformed plan THROWS — a compute defect, not an upstream condition), executes it,
+ * merges `records_updated` into `computeResult.records_meta`, observes the outcome through the DECLARED check
+ * `plan.report_check` via `report` (violations 1 + detail=<error message> on a failed row, else 0 + null), and on
+ * failure logs one warning.
+ * @param {{query: Function}} pool
+ * @param {{write_plan?: object, records_meta?: object}|null} computeResult mutated: records_meta gains records_updated
+ * @param {(checkId: string, observation: object) => void} report stepCtx.report
+ * @param {{warn: (tag: string, msg: string) => void}} log
+ * @param {string} tag
+ */
+async function runWritePlan(pool, computeResult, report, log, tag) {
+  const plan = computeResult ? computeResult.write_plan : undefined;
+  if (plan === undefined || plan === null) return null;
+  if (typeof plan !== 'object' || typeof plan.table !== 'string' || plan.table === ''
+    || typeof plan.sql !== 'string' || plan.sql === ''
+    || !Array.isArray(plan.rows) || !plan.rows.every((r) => Array.isArray(r))
+    || typeof plan.report_check !== 'string' || plan.report_check === '') {
+    throw new Error(`${tag} compute returned a malformed write_plan — it requires {table: string, sql: string, rows: unknown[][], report_check: string}`);
+  }
+  const outcome = await executeWritePlan(pool, plan);
+  computeResult.records_meta = { ...(computeResult.records_meta || {}), records_updated: outcome.updated };
+  report(plan.report_check, { violations: outcome.failed ? 1 : 0, detail: outcome.failed ? outcome.error : null });
+  if (outcome.failed) log.warn(tag, `Could not write ${plan.table}: ${outcome.error}`);
+  return outcome;
+}
+
+/**
  * The INGESTOR empty-source refusal: an INGESTOR declaring `guards.empty_source` refuses the
  * WRITE when the acquired source has 0 rows to write (`feature_count === 0`). Refuse only,
  * never skip — the declaration has no skip arm.
@@ -6073,6 +6261,7 @@ function schemaDriftRows(phaseResults) {
 async function readSchemaDriftBaseline(pool, descriptor, chainId) {
   const { prior, error } = await staleness.readPriorEmitWithPosture(
     pool, ledgerPipelineName(descriptor, chainId), null, staleness.priorRunErrorPosture(descriptor),
+    { chains: staleness.declaredChains(descriptor) },
   );
   const rf = prior && prior.acquired && prior.acquired.record_fields;
   return { found: Boolean(prior) && !error, fields: rf && typeof rf === 'object' ? rf : null };
@@ -6207,6 +6396,12 @@ async function runWithPool(runnable, pool, ctx) {
         // globals outright. Defaults here, overridable by the caller's ctx.
         fetch: ctx.fetch || ((input, init) => globalThis.fetch(input, init)),
         clock: ctx.clock || (() => Date.now()),
+        // Spec 124 R-CH / R-CA(i) — the ASSERT compute's READ ONLY snapshot. One call = one
+        // READ ONLY txn; the runner owns the isolation and the declared statement bound, and
+        // hands the compute nothing but a reader — so a compute holds no txn and issues no SET.
+        readSnapshot: makeReadSnapshot({ pool, descriptor, config: configValues, tag: `[${descriptor.identity.name}]` }),
+        // S1-P — the ONE producer reader for compute (R-BZ G1: a compute holds no pipeline_runs SQL).
+        producer: makeProducer({ pool, chains: staleness.declaredChains(descriptor) }),
         // §1.2a P4 — the ONLY way a compute reaches a tunable. Frozen, and
         // projected to the DECLARED names: `validation: "strict"` is not a checker
         // that could be skipped, it is an object that does not have the key.
@@ -6284,6 +6479,11 @@ async function runWithPool(runnable, pool, ctx) {
       // empty guards.empty_source table on a consumer) dispatches NO phase and runs NO compute;
       // its errored FAIL row makes the row-derived verdict FAIL with no new boolean.
       const inputGuard = await measureInputGuards(pool, descriptor);
+      // S1-P — declared producer pins, measured at the SAME point and with the SAME halt: a pin FAIL row is errored,
+      // so the row-derived verdict FAILs and no phase/compute runs (Rule 10 — no new boolean).
+      const pinGuard = await measureProducerPins(pool, descriptor, configValues);
+      inputGuard.rows.push(...pinGuard.rows);
+      if (pinGuard.halt) inputGuard.halt = true;
       if (inputGuard.halt) {
         onlyChecks = new Set();
         onlyWhen = [];
@@ -6513,6 +6713,9 @@ async function runWithPool(runnable, pool, ctx) {
       // paths meant a compute could bypass the declared-check guard above. The
       // return value carries `records_meta` / counters only.
       const computeResult = inputGuard.halt ? null : await runnable.compute(stepCtx);
+      // Spec 124 R-CD — a compute-returned `write_plan` is executed HERE, by the runner, autocommit per row; the outcome
+      // is the declared check's observation (report), never a compute-side write. A compute with no plan: nothing runs.
+      await runWritePlan(pool, computeResult, (id, observation) => stepCtx.report(id, observation), pipeline.log, `[${slug}]`);
       // #52 (fold 19 MQ-A1 (a)) — a when:"pre_write" check is scored from the gate pass that
       // ran BEFORE the write; the final pass's report of the same id is dropped, not double-scored.
       for (const id of Object.keys(preWriteObserved)) observations[id] = preWriteObserved[id];
@@ -6693,6 +6896,7 @@ async function runWithPool(runnable, pool, ctx) {
         // than only in a log line. Both absent on every healthy run.
         ...phaseDeadlineRows([enrich]),
         ...scopeRetireFailureRows([enrich]),
+        ...scopeRetireLockHeldRows([enrich]),
         // fold 10 — the soft-retire MEASUREMENT, rendered on the audit table (§retireAuditRows).
         ...retireAuditRows([ingest]),
         // batch2 P1.1 — compute-supplied literal context rows (stepCtx.contextRow()),
@@ -7038,6 +7242,9 @@ module.exports = {
   resolveLinkGate, // exported for the O4 rows 5/6/7 locks (FLEET-2 dry-merge D9): the real mode path under mode_select "none"
   // P3-C1 #12 + #32 (FLEET-2 A-1) — the input guards, exported for their locks.
   measureInputGuards,
+  measureProducerPins,
+  executeWritePlan,
+  runWritePlan,
   emptySourceRefusal,
   emptySourceRows,
   // P3-C1 #33 (FLEET-2 A-3) — schema drift, exported for its locks.
@@ -7074,8 +7281,12 @@ module.exports = {
   primaryFailureRows,
   phaseDeadlineRows,
   scopeRetireFailureRows,
+  scopeRetireLockHeldRows,
   retireAuditRows,
   makePreWriteGate,
+  // Spec 124 R-CA(ii) / CP-S3 — exported so the exec seam's classification, refusal and
+  // counter bookkeeping can be driven directly, without standing up a whole runner.
+  makeExecSeam,
   generateReset,
   assertBeforeImageDeclared,
   assertForceFullAuthorized,

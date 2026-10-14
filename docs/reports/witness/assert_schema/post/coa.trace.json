@@ -2,17 +2,29 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-schema.js",
   "chain": "coa",
-  "source_fingerprint": "d7200ccc01632c4e540fcbb20e47549923b0ad09cc392f312a07edb8a2606ed7",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "3185fd9170903576400d98e74a1dbea868279d5fcec4a195bd25ac8dc18137aa",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 9,
     "utility": 4,
-    "tracer_self_ms": 3.953,
-    "wall_ms": 1942
+    "tracer_self_ms": 6.579,
+    "wall_ms": 2222
   },
   "statements": [
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
     {
       "fingerprint": "6652815a6eb5fa63",
       "kind": "read",
@@ -49,7 +61,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 297,
+      "rowCount": 300,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -77,18 +89,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {

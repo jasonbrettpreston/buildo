@@ -26,10 +26,10 @@ const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/c
 
 // ── (A) Source-contract ─────────────────────────────────────────────────────
 describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED against descriptor + compute', () => {
-  it('lock 62 + reads the chain-scoped producer sources:load_heritage, completed_at DESC', () => {
+  it('lock 62 + reads the chain-scoped producer sources:load_heritage through ctx.producer (S1-P-5)', () => {
     expect(eh.descriptor.identity.lock).toBe(62);
     expect(compute.PRODUCER_NAME).toBe('sources:load_heritage');
-    expect(COMPUTE_SRC).toMatch(/ORDER BY completed_at DESC/);
+    expect(COMPUTE_SRC).toContain("ctx.producer(PRODUCER_STEP)");
   });
 
   it('§11.1 uses CONTAINMENT (ST_Intersects), NOT the over-matching ST_DWithin radius', () => {
@@ -65,8 +65,10 @@ describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED aga
       'column:parcels.heritage_designation_date',
     ]));
     expect(COMPUTE_SRC).toMatch(/Find_SRID\([^)]*parcels[^)]*geom/);
-    expect(COMPUTE_SRC).toMatch(/COUNT\(\*\)[^;]*FROM heritage_properties/); // L14
-    expect(COMPUTE_SRC).toMatch(/COUNT\(\*\)[^;]*FROM heritage_districts/);
+    // L14's non-empty count now lives in the declared guards.empty_source (runner-evaluated, S4),
+    // not as hand-rolled COUNT probes inside the hook.
+    const emptySource = eh.descriptor.guards.empty_source;
+    expect(emptySource).toEqual(expect.arrayContaining(['heritage_properties', 'heritage_districts']));
   });
 
   it('ENRICHER archetype + emitMeta-equivalent read/write declarations cover all 4 parcels heritage columns', () => {
@@ -96,12 +98,15 @@ describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED aga
     expect(compute.UNLINKED_SQL).toMatch(/NOT EXISTS \(SELECT 1 FROM parcels p WHERE[\s\S]*?ST_Intersects\(p\.geom, hp\.geom\)\)/);
   });
 
-  it('consumer-protocol gate strings (spec_version pin, per-table feature_count, sub-block guards, drift, lineage combine)', () => {
-    expect(COMPUTE_SRC).toContain('spec_version');
-    expect(COMPUTE_SRC).toContain('heritage_register sub-block is missing');
-    expect(COMPUTE_SRC).toContain('ingested zero features');
-    expect(COMPUTE_SRC).toContain('drift_check_passed');
-    expect(COMPUTE_SRC).toMatch(/\$\{reg\.source_dataset_version\}\|\$\{hcd\.source_dataset_version\}/); // lineage combine
+  it('consumer-protocol gate strings now live as descriptor pins (S1-P-5): spec_version + per-table feature_count, drift, lineage combines in the hook', () => {
+    const pinStamps = eh.descriptor.staleness.pins.map((p: { stamp: string }) => p.stamp);
+    expect(pinStamps).toContain('records_meta.heritage_load.spec_version');
+    expect(pinStamps).toContain('records_meta.heritage_load.heritage_register.feature_count');
+    expect(pinStamps).toContain('records_meta.heritage_load.heritage_districts.feature_count');
+    expect(pinStamps).toContain('records_meta.heritage_load.heritage_register.drift_check_passed');
+    expect(pinStamps).toContain('records_meta.heritage_load.heritage_districts.drift_check_passed');
+    // The lineage combine (the ONE thing the hook still derives) reads the two stamps the pins qualify.
+    expect(COMPUTE_SRC).toMatch(/\$\{hl\.heritage_register\.source_dataset_version\}\|\$\{hl\.heritage_districts\.source_dataset_version\}/);
   });
 });
 
@@ -173,7 +178,7 @@ describe.skipIf(!dbAvailable())('enrich-heritage — §11.1 containment join (re
     expect(upd2.rowCount).toBe(0);
   });
 
-  it('readHeritageContract HALTs (L14) when heritage_properties is empty', async () => {
+  it('no producer run -> the declared staleness.pins HALT before the hook (measureProducerPins)', async () => {
     if (!pool) return;
     await pool.query(
       `INSERT INTO heritage_districts (source_id, name, hcd_type, geom, designated_date, source_dataset_version)
@@ -181,13 +186,15 @@ describe.skipIf(!dbAvailable())('enrich-heritage — §11.1 containment join (re
        ON CONFLICT DO NOTHING`,
     );
     await pool.query('DELETE FROM heritage_properties');
-    // No producer contract row exists in this container for 'sources:load_heritage', so the
-    // FIRST halt readHeritageContract reaches is "no successful run" — proving the SAME pre-
-    // transaction hook still refuses cleanly rather than reaching a raw query error. The L14
-    // empty-table halt itself (reached only once the contract read passes) is proven against a
-    // fixture pool in src/tests/enrich-heritage-418.logic.test.ts (H4), which does not need a
-    // live container.
-    expect.assertions(1);
-    await expect(compute.readHeritageContract(pool)).rejects.toThrow();
+    // No producer contract row exists in this container for 'sources:load_heritage'. Under
+    // S1-P-5 the producer contract is DECLARED in staleness.pins[] and the RUNNER (before any
+    // phase or hook) evaluates it: every pin evaluates MISSING and the run HALTs.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { measureProducerPins } = require('../../scripts/lib/step/index.js');
+    const descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-heritage.descriptor.json'), 'utf8'));
+    const r = await measureProducerPins(pool, descriptor);
+    expect(r.halt).toBe(true);
+    expect(r.rows.length).toBeGreaterThan(0);
+    for (const row of r.rows) expect(row.result).toBe('MISSING');
   });
 });

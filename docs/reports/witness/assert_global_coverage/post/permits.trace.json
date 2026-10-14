@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-global-coverage.js",
   "chain": "permits",
-  "source_fingerprint": "ad6782e33af8c77a7421a22e56c1f8d36a2f855096470ad7578b5cb3bd667566",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "41da24d24e291b803d85bb8ebdeeb4573eecefeda730c9bfde6de58cba955c82",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 48,
     "distinct": 30,
     "utility": 17,
-    "tracer_self_ms": 10.327,
-    "wall_ms": 54315
+    "tracer_self_ms": 8.273,
+    "wall_ms": 45611
   },
   "statements": [
     {
@@ -36,6 +36,39 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "16eb6379c778a859",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "permits:assert_entity_tracing",
+            "coa:assert_entity_tracing",
+            "sources:assert_entity_tracing",
+            "assert_entity_tracing",
+            "assert-entity-tracing"
+          ],
+          [
+            "completed",
+            "completed_with_warnings",
+            "completed_with_errors",
+            "failed",
+            "crashed",
+            "cancelled"
+          ],
+          1
+        ]
+      ]
     },
     {
       "fingerprint": "2459262164c928d2",
@@ -210,6 +243,18 @@
       "error": null
     },
     {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
       "fingerprint": "59ae51913c48f52b",
       "kind": "read",
       "count": 1,
@@ -254,20 +299,6 @@
       "error": null
     },
     {
-      "fingerprint": "7ff2aa5a98e25ba4",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "\n        SELECT records_meta FROM pipeline_runs\n         WHERE pipeline = 'assert_entity_tracing'\n         ORDER BY started_at DESC LIMIT 1\n      ",
-      "params": []
-    },
-    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 1,
@@ -308,7 +339,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 20,
+      "rowCount": 21,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -479,18 +510,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {

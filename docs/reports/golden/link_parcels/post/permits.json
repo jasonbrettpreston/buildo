@@ -3,15 +3,15 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-parcels.js",
   "chain": "permits",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "exit_code": 0,
   "signal": null,
   "summary": {
     "records_total": 242416,
-    "records_new": 190,
+    "records_new": 63,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 125540,
+      "duration_ms": 121343,
       "code_version": "v1-knn-boundary-distance",
       "permits_processed": 254045,
       "matches_tier_1_exact": 198053,
@@ -23,9 +23,9 @@
       "no_match_count": 11629,
       "null_coordinate_permits": 11629,
       "street_type_mismatch_count": 0,
-      "permits_watermarked_count": 190,
-      "db_upserted": 190,
-      "permit_parcels_deleted_count": 190,
+      "permits_watermarked_count": 63,
+      "db_upserted": 63,
+      "permit_parcels_deleted_count": 63,
       "config": {
         "spatial_match_max_distance_m": 100,
         "spatial_match_confidence": 0.65,
@@ -39,7 +39,7 @@
       "terminal": "linked_incremental_with_warnings",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+      "code_sha": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 1,
@@ -118,7 +118,7 @@
           },
           {
             "metric": "permit_parcels_written",
-            "value": 190,
+            "value": 63,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -126,7 +126,7 @@
           },
           {
             "metric": "permits_watermarked",
-            "value": 190,
+            "value": 63,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -135,7 +135,7 @@
           {
             "metric": "parcel_retraction_ratio",
             "value": {
-              "deleted": 190,
+              "deleted": 63,
               "derived": 242416,
               "deleted_ratio": 0
             },
@@ -217,7 +217,7 @@
             "metric": "inputs_nonempty",
             "value": {
               "parcels": 496536,
-              "address_points": 525668,
+              "address_points": 525691,
               "parcel_address_points": 526570
             },
             "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
@@ -240,7 +240,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -249,7 +249,34 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 16
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 1
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 14
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 3
             },
             "threshold": null,
@@ -258,7 +285,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -267,169 +294,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 6
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 6
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 6
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 4
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 8
             },
             "threshold": null,
@@ -438,43 +303,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 8
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 4
             },
             "threshold": null,
@@ -483,7 +312,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -492,7 +321,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -501,7 +330,16 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 3
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -510,7 +348,25 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 1
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+              "rows": 2
+            },
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "before_image_written:permit_parcels",
+            "value": {
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 4
             },
             "threshold": null,
@@ -519,34 +375,7 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 4
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
             },
             "threshold": null,
@@ -555,333 +384,45 @@
           {
             "metric": "before_image_written:permit_parcels",
             "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 4
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 13
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 7
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 6
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+              "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
               "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 5
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 6
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 8
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 4
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 3
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 4
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 1
-            },
-            "threshold": null,
-            "status": "INFO"
-          },
-          {
-            "metric": "before_image_written:permit_parcels",
-            "value": {
-              "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-              "rows": 2
             },
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_pp_unique_triple_violations_duration_ms",
-            "value": 337,
+            "value": 124,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_pp_duplicate_permit_pairs_duration_ms",
-            "value": 407,
+            "value": 142,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_pp_spatial_null_coordinate_count_duration_ms",
-            "value": 59,
+            "value": 55,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_spatial_fallback_distance_within_cap_duration_ms",
-            "value": 475,
+            "value": 95,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 1914.03,
+            "value": 1992.31,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 126652,
+            "value": 121676,
             "threshold": null,
             "status": "INFO"
           }
@@ -950,16 +491,16 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=249 (floor 12)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":242416,\"records_new\":190,\"records_updated\":0,\"records_meta\":{\"duration_ms\":125540,\"code_version\":\"v1-knn-boundary-distance\",\"permits_processed\":254045,\"matches_tier_1_exact\":198053,\"matches_tier_1_via_bridge\":196540,\"matches_tier_2_name\":5242,\"matches_tier_3_spatial\":39461,\"matches_tier_3_polygon\":38732,\"matches_tier_3_fallback\":729,\"no_match_count\":11629,\"null_coordinate_permits\":11629,\"street_type_mismatch_count\":0,\"permits_watermarked_count\":190,\"db_upserted\":190,\"permit_parcels_deleted_count\":190,\"config\":{\"spatial_match_max_distance_m\":100,\"spatial_match_confidence\":0.65,\"link_parcels_confidence_address_points_exact\":0.97,\"link_parcels_confidence_exact_address\":0.95,\"link_parcels_confidence_spatial_polygon\":0.9,\"link_parcels_confidence_name_only\":0.8,\"link_parcels_link_rate_warn_pct\":25,\"link_parcels_retraction_ratio_fail_pct\":0.05},\"terminal\":\"linked_incremental_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"spatial_null_coordinate_permits: 11629\"],\"audit_table\":{\"phase\":9,\"name\":\"Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"permits_processed\",\"value\":254045,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_exact_address\",\"value\":198053,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_via_bridge\",\"value\":196540,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_name_only\",\"value\":5242,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_spatial\",\"value\":39461,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_polygon\",\"value\":38732,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"run_matched\",\"value\":242756,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permit_parcels_written\",\"value\":190,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permits_watermarked\",\"value\":190,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcel_retraction_ratio\",\"value\":{\"deleted\":190,\"derived\":242416,\"deleted_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"spatial_null_coordinate_permits\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"street_type_conflict\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":95.41,\"unlinked_pct\":4.59,\"linked\":242416,\"total\":254082},\"threshold\":\"pct <= 25\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"pp_unique_triple_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_duplicate_permit_pairs\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_spatial_null_coordinate_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"spatial_fallback_distance_within_cap\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"address_points\":525668,\"parcel_address_points\":526570},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"permits\":254082},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:permit_parcels.match_type\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":6},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":6},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":6},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":8},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":8},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":13},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":7},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":6},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":5},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":6},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":8},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_unique_triple_violations_duration_ms\",\"value\":337,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_duplicate_permit_pairs_duration_ms\",\"value\":407,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_spatial_null_coordinate_count_duration_ms\",\"value\":59,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_spatial_fallback_distance_within_cap_duration_ms\",\"value\":475,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1914.03,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":126652,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"street_num\",\"street_name\",\"street_type\",\"latitude\",\"longitude\",\"parcel_linked_at\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"geom\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\",\"retired_at\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"],\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"]},\"writes\":{\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"],\"permits\":[\"parcel_linked_at\"]}}\n\n[link_parcels] completed in 126.7s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=255 (floor 12)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcels]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":242416,\"records_new\":63,\"records_updated\":0,\"records_meta\":{\"duration_ms\":121343,\"code_version\":\"v1-knn-boundary-distance\",\"permits_processed\":254045,\"matches_tier_1_exact\":198053,\"matches_tier_1_via_bridge\":196540,\"matches_tier_2_name\":5242,\"matches_tier_3_spatial\":39461,\"matches_tier_3_polygon\":38732,\"matches_tier_3_fallback\":729,\"no_match_count\":11629,\"null_coordinate_permits\":11629,\"street_type_mismatch_count\":0,\"permits_watermarked_count\":63,\"db_upserted\":63,\"permit_parcels_deleted_count\":63,\"config\":{\"spatial_match_max_distance_m\":100,\"spatial_match_confidence\":0.65,\"link_parcels_confidence_address_points_exact\":0.97,\"link_parcels_confidence_exact_address\":0.95,\"link_parcels_confidence_spatial_polygon\":0.9,\"link_parcels_confidence_name_only\":0.8,\"link_parcels_link_rate_warn_pct\":25,\"link_parcels_retraction_ratio_fail_pct\":0.05},\"terminal\":\"linked_incremental_with_warnings\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"spatial_null_coordinate_permits: 11629\"],\"audit_table\":{\"phase\":9,\"name\":\"Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"permits_processed\",\"value\":254045,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_exact_address\",\"value\":198053,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_via_bridge\",\"value\":196540,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_name_only\",\"value\":5242,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_spatial\",\"value\":39461,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_polygon\",\"value\":38732,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"run_matched\",\"value\":242756,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permit_parcels_written\",\"value\":63,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"permits_watermarked\",\"value\":63,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcel_retraction_ratio\",\"value\":{\"deleted\":63,\"derived\":242416,\"deleted_ratio\":0},\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"spatial_null_coordinate_permits\",\"value\":11629,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"street_type_conflict\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate\",\"value\":{\"link_rate_pct\":95.41,\"unlinked_pct\":4.59,\"linked\":242416,\"total\":254082},\"threshold\":\"pct <= 25\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"pp_unique_triple_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_duplicate_permit_pairs\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pp_spatial_null_coordinate_count\",\"value\":0,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"spatial_fallback_distance_within_cap\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"address_points\":525691,\"parcel_address_points\":526570},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"permits\":254082},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:permit_parcels.match_type\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":16},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":14},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":8},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":3},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":2},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":4},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"before_image_written:permit_parcels\",\"value\":{\"path\":\"docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl\",\"rows\":1},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_unique_triple_violations_duration_ms\",\"value\":124,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_duplicate_permit_pairs_duration_ms\",\"value\":142,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pp_spatial_null_coordinate_count_duration_ms\",\"value\":55,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_spatial_fallback_distance_within_cap_duration_ms\",\"value\":95,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1992.31,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":121676,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"permits\":[\"permit_num\",\"revision_num\",\"street_num\",\"street_name\",\"street_type\",\"latitude\",\"longitude\",\"parcel_linked_at\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"geom\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\",\"retired_at\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"],\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"]},\"writes\":{\"permit_parcels\":[\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"confidence\",\"linked_at\"],\"permits\":[\"parcel_linked_at\"]}}\n\n[link_parcels] completed in 121.7s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2462,
+  "pipeline_runs_max_id_before": 2672,
   "table_state": [
     {
       "table": "permit_parcels",
       "row_count": 242416,
       "ceiling_bypassed": "projected",
-      "content_hash": "0ea6465a738456bfc8d41011b9cf07bf",
+      "content_hash": "d637f758c1ae6725f1286f34aec4b9e0",
       "order_by": "explicit",
       "order_columns": [
         "permit_num",
@@ -979,7 +520,7 @@
       "table": "permits",
       "row_count": 254082,
       "ceiling_bypassed": "projected",
-      "content_hash": "bcd03dda45a10c098f5addf401b8a055",
+      "content_hash": "e9c8f47dc340d82cd753124965dba2dc",
       "order_by": "explicit",
       "order_columns": [
         "permit_num",
@@ -995,8 +536,8 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "permit_parcels": 609,
-    "permits": 1010
+    "permit_parcels": 409,
+    "permits": 856
   },
   "table_specs": {
     "permit_parcels": {
@@ -1144,7 +685,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 190
+              "value": 63
             },
             {
               "metric": "permits_watermarked",
@@ -1152,7 +693,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 190
+              "value": 63
             },
             {
               "metric": "parcel_retraction_ratio",
@@ -1161,7 +702,7 @@
               "status": "PASS",
               "threshold": "pct <= 0.05",
               "value": {
-                "deleted": 190,
+                "deleted": 63,
                 "deleted_ratio": 0,
                 "derived": 242416
               }
@@ -1240,7 +781,7 @@
               "status": "INFO",
               "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
               "value": {
-                "address_points": 525668,
+                "address_points": 525691,
                 "parcel_address_points": 526570,
                 "parcels": 496536
               }
@@ -1264,7 +805,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1273,7 +814,34 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 16
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 1
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 14
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 3
               }
             },
@@ -1282,7 +850,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1291,169 +859,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 6
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 6
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 6
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 4
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 8
               }
             },
@@ -1462,43 +868,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 8
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 4
               }
             },
@@ -1507,7 +877,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1516,7 +886,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1525,7 +895,16 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 3
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1534,7 +913,25 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 1
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
+                "rows": 2
+              }
+            },
+            {
+              "metric": "before_image_written:permit_parcels",
+              "status": "INFO",
+              "threshold": null,
+              "value": {
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 4
               }
             },
@@ -1543,34 +940,7 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 4
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
               }
             },
@@ -1579,296 +949,8 @@
               "status": "INFO",
               "threshold": null,
               "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 4
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 13
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 7
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 6
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
+                "path": "docs/reports/golden/link_parcels/before-image/2026-10-13T23-58-15.260Z-permit_parcels.jsonl",
                 "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 5
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 6
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 8
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 4
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 3
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 4
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 1
-              }
-            },
-            {
-              "metric": "before_image_written:permit_parcels",
-              "status": "INFO",
-              "threshold": null,
-              "value": {
-                "path": "docs/reports/golden/link_parcels/before-image/2026-10-09T02-53-02.778Z-permit_parcels.jsonl",
-                "rows": 2
               }
             }
           ],
@@ -1887,7 +969,7 @@
           "spatial_match_confidence": 0.65,
           "spatial_match_max_distance_m": 100
         },
-        "db_upserted": 190,
+        "db_upserted": 63,
         "errors": [],
         "ledger_row": "chain_owned",
         "matches_tier_1_exact": 198053,
@@ -1898,9 +980,9 @@
         "matches_tier_3_spatial": 39461,
         "no_match_count": 11629,
         "null_coordinate_permits": 11629,
-        "permit_parcels_deleted_count": 190,
+        "permit_parcels_deleted_count": 63,
         "permits_processed": 254045,
-        "permits_watermarked_count": 190,
+        "permits_watermarked_count": 63,
         "pool_errors": 0,
         "street_type_mismatch_count": 0,
         "terminal": "linked_incremental_with_warnings",
@@ -1908,7 +990,7 @@
           "spatial_null_coordinate_permits: 11629"
         ]
       },
-      "records_new": 190,
+      "records_new": 63,
       "records_total": 242416,
       "records_updated": 0
     },
@@ -1973,7 +1055,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=249 (floor 12)\",\"tag\":\"[link_parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[link_parcels] target: link_parcels (descriptor.database) → database=postgres user=postgres migrations=255 (floor 12)\",\"tag\":\"[link_parcels]\"}",
       "{\"level\":\"INFO\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\",\"tag\":\"[link_parcels]\"}",
       "[link_parcels] completed in <DUR>"
     ],
@@ -1988,7 +1070,7 @@
           "confidence",
           "linked_at"
         ],
-        "content_hash": "0ea6465a738456bfc8d41011b9cf07bf",
+        "content_hash": "d637f758c1ae6725f1286f34aec4b9e0",
         "order_by": "explicit",
         "order_columns": [
           "permit_num",
@@ -2005,7 +1087,7 @@
           "revision_num",
           "parcel_linked_at"
         ],
-        "content_hash": "bcd03dda45a10c098f5addf401b8a055",
+        "content_hash": "e9c8f47dc340d82cd753124965dba2dc",
         "order_by": "explicit",
         "order_columns": [
           "permit_num",
@@ -2053,7 +1135,7 @@
       }
     ],
     "reason": "zero writes on 2 table(s) [permit_parcels,permits]",
-    "txid_before_run2": 3366140,
+    "txid_before_run2": 3580708,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -2062,11 +1144,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 2463,
+      "id": 2673,
       "recorded_by": "harness"
     },
     {
-      "id": 2464,
+      "id": 2674,
       "recorded_by": "harness"
     }
   ],
@@ -2077,5 +1159,5 @@
     "scripts/link-parcels.js",
     "scripts/link-parcels.notes.json"
   ],
-  "lib_fingerprint": "42eb52a1152e816a8b0d1ddcef29bd87fb6df652bb9da30d6e3fe9fce3cad7f4"
+  "lib_fingerprint": "24df6f49515fef1898f60cf596b3ae3185325e8694a045db16fa73e32cc363e2"
 }

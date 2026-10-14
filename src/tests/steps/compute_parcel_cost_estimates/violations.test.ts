@@ -377,26 +377,37 @@ describe('compute_parcel_cost_estimates — CPCE FOLD A2: readCostContract parce
     });
   }
 
-  it('throws naming parcel_cost_lines + migration 248 on zero rows', async () => {
+  it('parcel_cost_lines zero rows → stopped by the declared guards.empty_source (runner, before the hook; S4)', async () => {
+    // (a) the declared guard names parcel_cost_lines — the runner counts it BEFORE any hook.
+    const descriptorJson = JSON.parse(read(DESCRIPTOR_REL));
+    expect(descriptorJson.guards.empty_source).toContain('parcel_cost_lines');
+    // (b) the hook is no longer the empty-source owner: it may still reject via mergeCostLines,
+    // but never with the retired "parcel_cost_lines is empty" message.
     const compute = loadCompute();
-    await expect(compute.readCostContract(stubPool([]))).rejects.toThrow(/parcel_cost_lines is empty.*migration 248/);
+    let message = '';
+    try {
+      await compute.readCostContract({ pool: stubPool([]) });
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    }
+    expect(message).not.toMatch(/parcel_cost_lines is empty/);
   });
 
   it('throws (via mergeCostLines) on an id unknown to PARCEL_COST_LINES', async () => {
     const compute = loadCompute();
     const badRows = [...SEED_ROWS, { id: 'not_a_line', archetype: 'FB', base_confidence: 'high', fit_permitted_values: null }];
-    await expect(compute.readCostContract(stubPool(badRows))).rejects.toThrow(/mergeCostLines: parcel_cost_lines id is unknown to PARCEL_COST_LINES: not_a_line/);
+    await expect(compute.readCostContract({ pool: stubPool(badRows) })).rejects.toThrow(/mergeCostLines: parcel_cost_lines id is unknown to PARCEL_COST_LINES: not_a_line/);
   });
 
   it('throws (via mergeCostLines) when a structural id has no DB row', async () => {
     const compute = loadCompute();
     const shortRows = SEED_ROWS.filter((r) => r.id !== 'gut');
-    await expect(compute.readCostContract(stubPool(shortRows))).rejects.toThrow(/mergeCostLines: PARCEL_COST_LINES id has no parcel_cost_lines row: gut/);
+    await expect(compute.readCostContract({ pool: stubPool(shortRows) })).rejects.toThrow(/mergeCostLines: PARCEL_COST_LINES id has no parcel_cost_lines row: gut/);
   });
 
   it('a good fixture returns 13 merged lines + linesUpdatedAt (ISO string, from MAX(parcel_cost_lines.updated_at))', async () => {
     const compute = loadCompute();
-    const contract = await compute.readCostContract(stubPool(SEED_ROWS));
+    const contract = await compute.readCostContract({ pool: stubPool(SEED_ROWS) });
     expect(contract.lines).toHaveLength(13);
     const garden = contract.lines.find((l: { id: string }) => l.id === 'garden_suite');
     expect(garden.archetype).toBe('LANE_GARDEN');

@@ -168,7 +168,79 @@
         "stamp": "records_meta.heritage_load.spec_version",
         "equals": "1.1",
         "why": {
-          "text": "Spec 61 §9 contract pin (L10): readHeritageContract HALTs unless the producer's stamped spec_version equals this value; read from this descriptor by scripts/lib/compute/enrich-heritage.js",
+          "text": "Spec 61 §9 contract pin (L10): the runner (measureProducerPins) FAILs the run before any phase unless the producer's stamped spec_version equals this value; the compute no longer reads it.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_register.feature_count",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): register sub-block missing OR zero features ingested",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_districts.feature_count",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): districts sub-block missing OR zero features ingested",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_register.drift_check_passed",
+        "op": "true",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): register drift_check_passed === false",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_districts.drift_check_passed",
+        "op": "true",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): districts drift_check_passed === false",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_register.source_dataset_version",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): empty lineage stamp",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-heritage.js"
+          }
+        }
+      },
+      {
+        "step": "load_heritage",
+        "stamp": "records_meta.heritage_load.heritage_districts.source_dataset_version",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 61 §9 contract (formerly a readHeritageContract throw, now a runner-evaluated FAIL row): empty lineage stamp",
           "liveness": {
             "kind": "file",
             "ref": "scripts/lib/compute/enrich-heritage.js"
@@ -306,7 +378,7 @@
       }
     ],
     "srid": 4326,
-    "empty_source": "heritage_properties",
+    "empty_source": ["heritage_properties", "heritage_districts"],
     "schema_drift": "none"
   },
   "execution": {
@@ -851,8 +923,8 @@
       "check_id": "none"
     },
     {
-      "what": "RV-L2 class — guards.srid and guards.empty_source are DECLARATIVE, not runner-enforced preconditions. scripts/lib/step/index.js has zero references to either field; the real L14/SRID enforcement is folded into the contract_read hook (readHeritageContract), which is guaranteed to run pre-transaction on every invocation.",
-      "measured": "grep -n 'empty_source|guards.srid' scripts/lib/step/index.js — zero hits, 2026-09-20 (same measurement as enrich_ravines' RV-L2).",
+      "what": "RV-L2 class — guards.srid is DECLARATIVE, not runner-enforced: scripts/lib/step/index.js has no consumer for it, so the SRID=4326 assertion stays a hook check folded into contract_read (readHeritageContract), which is guaranteed to run pre-transaction on every invocation. guards.empty_source, by contrast, IS runner-enforced since P3-C1 #32 (2026-10-03): measureInputGuards (scripts/lib/step/index.js) counts every guards.empty_source table (string OR array) before any phase or hook and, on a zero count, writes a FAIL gate row with halt=true and skips every phase — so the L14 'both heritage source tables non-empty' HALTs were removed from the hook (S4) and live in the declared guard.",
+      "measured": "scripts/lib/step/index.js measureInputGuards (runs pre-phase/pre-hook for non-INGESTOR steps; zero rows → FAIL row with halt=true) and src/tests/p3c1-32.logic.test.ts, 2026-10-03.",
       "check_id": "none"
     },
     {
@@ -1089,7 +1161,7 @@
         "terminal": "string"
       },
       "why": {
-        "text": "readHeritageContract threw — the §9 producer-protocol HALT (missing/failed/stale producer, missing sub-block, zero feature_count, drift_check_passed=false, empty lineage) OR the L14 empty-source HALT OR the SRID=4326 assertion, all folded into this ONE pre-transaction hook. PRESERVED: the legacy also halts before any transaction opens for every one of these conditions.",
+        "text": "A producer-contract violation (missing/failed/stale producer, missing sub-block, zero feature_count, drift_check_passed=false, empty lineage) is DECLARED in staleness.pins[] and the runner's producer-pin rows FAIL the run before any phase (Rule 10; S1-P-5 — formerly a readHeritageContract throw). The hook still throws for the L14 empty-source HALT OR the SRID=4326 assertion, both folded into this ONE pre-transaction hook. PRESERVED: the legacy also halts before any transaction opens for every one of these conditions.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/enrich-heritage.js"

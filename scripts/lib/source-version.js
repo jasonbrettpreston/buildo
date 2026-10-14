@@ -136,15 +136,38 @@ const STYLE_CKAN_METADATA = 'ckan-metadata';
  * decide whether "reader failed" degrades to "no baseline" (they typically
  * .catch() → warn → null, which classifyOutcome treats as fail-safe LOAD).
  */
-async function readPriorRunMeta(pool, pipelineName) {
-  const res = await pool.query(
-    `SELECT records_meta FROM pipeline_runs
-      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')
-        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
-      ORDER BY started_at DESC LIMIT 1`,
-    [pipelineName],
-  );
-  return res.rows[0] ? (res.rows[0].records_meta || null) : null;
+async function readPriorRunMeta(pool, pipelineName, { chains: extraChains = [] } = {}) {
+  // Delegates to THE ONE RUN-HISTORY READER (R-BG (iv) baseline filter). The
+  // caller's `pipelineName` may be chain-scoped ("<chain>:<slug>") or a bare
+  // slug: split it so `readRunHistory` matches every declared form (HQ-6 — a
+  // standalone run's bare-slug row is now found by a chain read and vice versa).
+  // `extraChains` lets a MULTI-CHAIN caller thread EVERY declared chain (HQ-6):
+  // a step invoked as {permits, coa} must read both chains' history, not just
+  // the one chain that happens to be in `pipelineName`. The union is de-duped.
+  const raw = typeof pipelineName === 'string' ? pipelineName : '';
+  const sep = raw.lastIndexOf(':');
+  const slug = sep === -1 ? raw : raw.slice(sep + 1);
+  const chains = sep === -1 ? [] : [raw.slice(0, sep)];
+  const rest = Array.isArray(extraChains) ? extraChains : [];
+  for (const c of rest) {
+    if (typeof c === 'string' && c && !chains.includes(c)) chains.push(c);
+  }
+
+  // LAZY require: `scripts/lib/step/ledger.js` only requires `../pipeline`, so a
+  // top-level require would be safe today — but this module is required BY the
+  // step library (`step/staleness.js`), and deferring the require to call time
+  // keeps the reader seam one-directional regardless of future load order.
+  // eslint-disable-next-line global-require
+  const { readRunHistory } = require('./step/ledger');
+
+  const { rows } = await readRunHistory(pool, {
+    slug,
+    chains,
+    orderBy: 'started_at',
+    limit: 1,
+    columns: ['id', 'records_meta'],
+  });
+  return rows[0] ? (rows[0].records_meta || null) : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -316,6 +339,8 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
   // (E-R2). Widening them was measured (2026-10-01) to flip compute_centroids and
   // link_parcel_addresses from RUN to SKIP today. Keep this note out of the SQL text: a
   // status token inside the query would itself satisfy gate #44's PRODUCER pattern.
+  // Spec 124 R-CC keeps this fail-safe (2026-10-12): once chain step rows carry
+  // completed_with_warnings / completed_with_errors, a downstream of such a run RUNs.
   const res = await pool.query(
     `WITH own_last AS (
        SELECT started_at, completed_at, records_meta
@@ -323,7 +348,7 @@ async function runLedgerGateDecision(pool, { ownSlugs, upstreamSlugs, now = null
         WHERE pipeline = ANY($1::text[])
           AND status IN ('completed', 'completed_with_warnings')
           AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{"metric":"write_skipped_pre_write_warn"}]'::jsonb, false)
-        ORDER BY completed_at DESC
+        ORDER BY completed_at DESC, id DESC
         LIMIT 1
      ),
      -- 'skipped' rows ⇒ RUN, deliberately: ANY status other than 'completed'

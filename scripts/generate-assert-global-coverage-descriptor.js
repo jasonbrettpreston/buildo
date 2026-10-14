@@ -328,6 +328,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
     execution: {
       txn_scope: 'none',
       statement_timeout: 'none',
+      statement_timeout_minutes_from_config: 'vocab_coverage_statement_timeout_minutes',
       step_timeout: '15m',
       batch: 'none',
       on_row_error: 'fail_fast',

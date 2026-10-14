@@ -552,8 +552,10 @@ export function detectEngineHealthIssues(
   const anomalies: EngineHealthAnomaly[] = [];
 
   for (const entry of entries) {
-    // Unrounded, exactly as compute/assert-engine-health.js buildTableResults.
-    const deadRatio = entry.n_live_tup > 0 ? entry.n_dead_tup / entry.n_live_tup : 0;
+    // The ONE fleet dead-tuple measurement, dead / (live + dead) (Spec 124 R-CG, S2 F3-3) —
+    // unrounded, the same form as scripts/lib/step/plausibility.js deadTupleRatio.
+    const deadTotal = entry.n_live_tup + entry.n_dead_tup;
+    const deadRatio = deadTotal > 0 ? entry.n_dead_tup / deadTotal : 0;
     const totalScans = entry.seq_scan + entry.idx_scan;
     const seqRatio = totalScans > 0 ? entry.seq_scan / totalScans : 0;
 

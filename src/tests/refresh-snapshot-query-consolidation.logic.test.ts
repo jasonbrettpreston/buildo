@@ -35,6 +35,7 @@ import { describe, expect, it } from 'vitest';
 
 const COMPUTE_REL = 'scripts/lib/compute/refresh-snapshot.js';
 const SRC = readFileSync(join(process.cwd(), COMPUTE_REL), 'utf8');
+const DESC_SRC = readFileSync(join(process.cwd(), 'scripts/refresh-snapshot.descriptor.json'), 'utf8');
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real module's exports, not re-implementing them
 const mod = require(join(process.cwd(), COMPUTE_REL));
 
@@ -96,13 +97,16 @@ describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Sp
     expect(params).toEqual([mod.ACTIVE_PERMIT_STATUSES]);
   });
 
-  it('③ tradeByType is DECLARED to run under session-scoped enable_indexscan=off + RESET — buildReads()\'s own read-plan, executed by the runner (not this compute module)', () => {
+  it('③ tradeByType runs under session-scoped enable_indexscan=off — DECLARED in the descriptor\'s execution.read_gucs (R-CF), issued by the runner; compute returns NO guc and holds no SET/RESET text', () => {
     const reads = mod.buildReads({ snapshot_coa_conf_high: 0.8, coa_match_conf_medium: 0.5 });
     const step = reads.main.find((s: { key: string }) => s.key === 'tradeByType');
     expect(step, 'buildReads().main must declare a tradeByType step').toBeTruthy();
-    expect(step.guc, 'tradeByType must declare a guc bracket').toBeTruthy();
-    expect(step.guc.set).toBe('SET enable_indexscan = off');
-    expect(step.guc.reset).toBe('RESET enable_indexscan');
+    expect(step.guc, 'compute must NOT return a guc — a session GUC is declared in execution.read_gucs (R-CF)').toBeUndefined();
+    const desc = JSON.parse(DESC_SRC);
+    expect(desc.execution.read_gucs).toEqual([
+      { read: 'tradeByType', name: 'enable_indexscan', value: 'off', why: expect.anything() },
+    ]);
+    expect(SRC).not.toMatch(/SET enable_indexscan|RESET enable_indexscan/);
   });
 
   it('the in-code comment states the I/O-pattern rationale and cites Spec 118 §1 (ceiling, not a guess)', () => {

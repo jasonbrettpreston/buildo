@@ -163,7 +163,7 @@
       }
     ],
     "srid": "none",
-    "empty_source": "archetype_cost_rates",
+    "empty_source": ["archetype_cost_rates", "parcel_cost_lines"],
     "schema_drift": "none"
   },
   "execution": {
@@ -316,7 +316,7 @@
     {
       "from": "the legacy's D#3 atomic co-read of the escalation-index VALUE and its version stamp, both from ONE query, inside the lock",
       "why": {
-        "text": "FOLD-V9(2) (binding amendment) — the priced VALUE is now `ctx.config.cost_escalation_index` (declared, LM-D15-validated, hoisted above the lock, per Spec 122 §1.2a P4 — a defaulted/ad hoc re-read would make test 5's literal scan and the engine signature contradict each other). `readCostContract`'s own re-read of the same logic_variables row is retained ONLY for the `index_updated_at` version stamp (emits[]). Because `runEnrichPhase` itself executes inside `pipeline.withAdvisoryLock`, the contract_read hook still runs under the same lock the legacy's D#3 read did — the torn-read window this fence existed to close is not re-opened for the CONCURRENT-EDIT case; the one narrowed difference is that the priced value comes from the step-wide hoisted config rather than a second identical read.",
+        "text": "FOLD-V9(2) (binding amendment) — the priced VALUE is now `ctx.config.cost_escalation_index` (declared, LM-D15-validated, hoisted above the lock, per Spec 122 §1.2a P4 — a defaulted/ad hoc re-read would make test 5's literal scan and the engine signature contradict each other). the `index_updated_at` version stamp (emits[]) now comes from `ctx.config.$meta`, read in the SAME statement as the value (R-CM), so NO compute-side read of `logic_variables` remains at all. Because `runEnrichPhase` itself executes inside `pipeline.withAdvisoryLock`, the contract_read hook still runs under the same lock the legacy's D#3 read did — the torn-read window this fence existed to close is not re-opened for the CONCURRENT-EDIT case; the one narrowed difference is that the priced value comes from the step-wide hoisted config rather than a second identical read.",
         "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
       },
       "adjudicated_by": "Fold-validation round 2, FOLD-V9 (binding amendment), 2026-09-21",

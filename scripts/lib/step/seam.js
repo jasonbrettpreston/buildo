@@ -200,6 +200,12 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
   const metric = `seam_${upstream}_before_${downstream}`;
   const threshold = `${downstream}.started_at >= ${upstream}.completed_at (chain_run_id join, or legacy temporal fallback)`;
 
+  // LAZY require: the shared R-BG (iv) warn-skip predicate (R-CB: a seam read
+  // adopts ONLY the warn-skip exclusion and the `id DESC` tie-break — it keeps
+  // accepting EVERY finished status, completed_with_errors included).
+  // eslint-disable-next-line global-require
+  const { WARN_SKIP_PREDICATE_SQL } = require('./ledger');
+
   // Primary: most recent chain_run_id carried by a completed run of BOTH
   // sides (R-U, Fold B-5) — records_meta.chain_run_id, stamped by the step
   // library (scripts/lib/step/index.js), null for a standalone run.
@@ -210,7 +216,7 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
       WHERE pipeline IN ($1, $2)
         AND records_meta ? 'chain_run_id'
         AND records_meta->>'chain_run_id' IS NOT NULL
-      ORDER BY started_at DESC
+      ORDER BY started_at DESC, id DESC
       LIMIT 40`,
     [upstreamPipeline, downstreamPipeline],
   );
@@ -237,12 +243,16 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
   // Fallback: legacy RUN-level comparison (Fold A-5) — most recent completed
   // row for each slug, no chain_run_id required. Only reached when the
   // primary join found no run sharing a chain_run_id on both sides.
+  // Spec 124 R-CB: a seam read ACCEPTS EVERY FINISHED STATUS
+  // (completed_with_errors included), adopting only the shared warn-skip
+  // predicate.
   const fallbackRes = await pool.query(
     `SELECT pipeline, id, started_at, completed_at
        FROM pipeline_runs
       WHERE pipeline IN ($1, $2)
         AND status IN ('completed', 'completed_with_errors', 'completed_with_warnings')
-      ORDER BY started_at DESC
+        AND ${WARN_SKIP_PREDICATE_SQL}
+      ORDER BY started_at DESC, id DESC
       LIMIT 40`,
     [upstreamPipeline, downstreamPipeline],
   );

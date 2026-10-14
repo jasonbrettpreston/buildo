@@ -72,8 +72,16 @@ function boundOf(v) {
   return v === NONE || v === undefined ? null : v;
 }
 
-/** Why a raw value is unusable — or null when it is fine. */
-function invalidReason(raw, min, max) {
+/**
+ * Why a raw value is unusable — or null when it is fine.
+ *
+ * `allowed` is the optional closed `enum` of a string-typed variable (R-CE): when
+ * present, the ONLY usable value is a member of that list — every numeric bound
+ * below is then unreachable by design (`min`/`max` are pinned to `"none"` by the
+ * schema for an enum variable, and `on_invalid` to `"fail"`).
+ */
+function invalidReason(raw, min, max, allowed) {
+  if (Array.isArray(allowed)) return typeof raw === 'string' && allowed.includes(raw) ? null : 'not_in_enum';
   if (typeof raw !== 'number' || !Number.isFinite(raw)) return 'non_finite';
   if (min !== null && raw < min) return 'below_min';
   if (max !== null && raw > max) return 'above_max';
@@ -85,7 +93,7 @@ function invalidReason(raw, min, max) {
  *
  * @param {import('pg').Pool} pool
  * @param {object} descriptor - already AJV-validated by `pipeline.step()`
- * @returns {Promise<{values: Readonly<Record<string, number>>, stamp: Record<string, number>|null, retiredStatus: Array<{name: string, since: string, why: object, ledger: string, present: boolean}>, probeStatus: Array<{name: string, present: boolean}>}>}
+ * @returns {Promise<{values: Readonly<Record<string, number|string>>, stamp: Record<string, number|string>|null, retiredStatus: Array<{name: string, since: string, why: object, ledger: string, present: boolean}>, probeStatus: Array<{name: string, present: boolean}>}>}
  *   `values` is what becomes `ctx.config`; `stamp` is what becomes
  *   `records_meta.config` (null when the step declares `config: "none"`).
  *   `retiredStatus` (R-A) is every `cfg.retired[]` entry annotated with whether its
@@ -102,7 +110,7 @@ async function resolveConfig(pool, descriptor) {
     return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [], probeStatus: [] };
   }
 
-  const { logicVars } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
+  const { logicVars, logicVarMeta } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
 
   // LM-D15 (Spec 122 §1.2a P4): `logicVars` above is the seed clone overlaid with
   // whatever DB rows exist — a declared name with NO row still resolves through
@@ -175,7 +183,18 @@ async function resolveConfig(pool, descriptor) {
     const min = boundOf(decl.min);
     const max = boundOf(decl.max);
     const raw = logicVars[name];
-    const reason = invalidReason(raw, min, max);
+    const reason = invalidReason(raw, min, max, decl.enum);
+
+    // Defence in depth (R-CE): a string-typed variable (declared `enum`) is
+    // on_invalid "fail" ONLY — the schema's allOf pins it, but a descriptor that
+    // reached here unvalidated (or a future schema regression) must not fall into
+    // the numeric clamp/default arms below, where `enum` has no meaning at all.
+    if (Array.isArray(decl.enum) && decl.on_invalid !== 'fail') {
+      throw new Error(
+        `[${slug}] config: "${name}" declares an enum but on_invalid ${JSON.stringify(decl.on_invalid)} — ` +
+          'a string variable is on_invalid "fail" only (schema-enforced).',
+      );
+    }
 
     if (reason === null) {
       values[name] = raw;
@@ -183,7 +202,9 @@ async function resolveConfig(pool, descriptor) {
       continue;
     }
 
-    const bounds = `[${min === null ? '-inf' : min}, ${max === null ? '+inf' : max}]`;
+    const bounds = Array.isArray(decl.enum)
+      ? `one of ${JSON.stringify(decl.enum)}`
+      : `[${min === null ? '-inf' : min}, ${max === null ? '+inf' : max}]`;
     const seeded = FALLBACK_LOGIC_VARS[name];
 
     if (decl.on_invalid === 'fail') {
@@ -226,7 +247,37 @@ async function resolveConfig(pool, descriptor) {
     stamp[name] = seeded;
   }
 
+  // R-CM: the stamps ride along on `values` (i.e. `ctx.config`) non-enumerably.
+  // Done here, after the projection loop, so every declared name that survived
+  // the presence throw is considered — and before the freeze.
+  attachMeta(values, cfg, logicVarMeta);
+
   return { values: Object.freeze(values), stamp, retiredStatus, probeStatus };
+}
+
+/**
+ * R-CM (2026-10-12, operator): `ctx.config.$meta` carries the DECLARED logic
+ * variables' row stamps — `{ [name]: { updated_at } }` — taken from the SAME
+ * `loadMarketplaceConfigs` call that produced the values, so the priced value
+ * and its version stamp are one snapshot and cannot disagree (a compute that
+ * wants a version stamp must never re-read `logic_variables` itself; Spec 124
+ * R-BZ G1). Only names the descriptor declares AND that have a live row appear;
+ * a `config: "none"` step gets no `$meta` at all. The object is attached to
+ * `values` NON-enumerably, so `stamp`, every config hash, `Object.keys(values)`
+ * and every serialisation stay byte-identical — `$meta` is read by name only.
+ */
+function attachMeta(values, cfg, logicVarMeta) {
+  const meta = Object.create(null);
+  for (const decl of cfg.logic_variables) {
+    const row = logicVarMeta ? logicVarMeta[decl.name] : undefined;
+    if (row !== undefined) meta[decl.name] = Object.freeze({ updated_at: row.updated_at });
+  }
+  Object.defineProperty(values, '$meta', {
+    value: Object.freeze(meta),
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  });
 }
 
 /**
@@ -247,4 +298,4 @@ function retiredVarRow(entry) {
   };
 }
 
-module.exports = { resolveConfig, retiredVarRow };
+module.exports = { resolveConfig, retiredVarRow, invalidReason };

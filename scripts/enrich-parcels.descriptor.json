@@ -1218,7 +1218,20 @@
         "step": "load_zoning",
         "stamp": "records_meta.zoning_layers_loaded",
         "why": {
-          "text": "readZoningContract (scripts/lib/compute/enrich-parcels.js) HALTs unless the latest completed sources:load_zoning run carries zoning_layers_loaded.base === true",
+          "text": "readZoningContract (scripts/lib/compute/enrich-parcels.js) reads the newest completed sources:load_zoning run that carries zoning_layers_loaded as an object; the base-layer contract on it is the op:true pin on .base below (runner-evaluated).",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
+      {
+        "step": "load_zoning",
+        "stamp": "records_meta.zoning_layers_loaded.base",
+        "op": "true",
+        "meta_object": "zoning_layers_loaded",
+        "why": {
+          "text": "Spec 58 §9 contract (formerly readZoningContract throws: no successful run carrying zoning_layers_loaded -> MISSING; base !== true -> FAIL; now runner-evaluated rows before any phase): the newest completed/completed_with_warnings load_zoning run that carries zoning_layers_loaded as an object must have base === true.",
           "liveness": {
             "kind": "file",
             "ref": "scripts/lib/compute/enrich-parcels.js"
@@ -2446,7 +2459,7 @@
       "check_id": "none"
     },
     {
-      "what": "zoning-change scope vs the contract read (F-18): readZoningChange reads every load_zoning ledger form and both success statuses, but readZoningContract still derives zoning_layers_loaded / staleOverlays from the latest COMPLETED sources:load_zoning run only, until #44-clean D7 aligns it (it reuses ZONING_PRODUCER_FORMS). Bounded today: runs 2189 (sources, legacy) and 2282 (standalone) both report all 10 zoning_layers_loaded = true, so the derived staleOverlays is empty either way; divergence needs a standalone load that flips a layer's loaded flag.",
+      "what": "zoning-change scope vs the contract read (F-18, partially superseded by S1-P-8a — 2026-10-13): readZoningChange still reads every load_zoning ledger form and both success statuses, while readZoningContract's #12d layers read now goes through ctx.producer with DEFAULT (baseline) statuses and a required zoning_layers_loaded OBJECT — i.e. the newest completed / completed_with_warnings run that carries the key (a newer run that drops the key no longer wins), and the base !== true verdict is now the declared `records_meta.zoning_layers_loaded.base` op:true pin evaluated by the runner before any phase rather than a throw (#44-clean D7 alignment). ZONING_PRODUCER_FORMS is still re-derived by readZoningChange. Bounded today: runs 2189 (sources, legacy) and 2282 (standalone) both report all 10 zoning_layers_loaded = true, so the derived staleOverlays is empty either way; divergence needs a standalone load that flips a layer's loaded flag.",
       "measured": "pipeline_runs 2189 / 2282 records_meta.zoning_layers_loaded, measured 2026-10-06 (zoning-change-scope WF3 premise)",
       "check_id": "zoning_change_scope"
     }

@@ -7,6 +7,7 @@ import * as path from 'node:path';
 import {
   deltaExceeds50pct,
   LOGIC_VAR_DEFAULTS,
+  LOGIC_VAR_ENUMS,
   ConfigUpdatePayloadSchema,
   LogicVariableUpdateSchema,
   TradeConfigUpdateSchema,
@@ -622,12 +623,19 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'coa_notices_precision_layer2_min',
   'coa_notices_precision_all_min',
   'coa_notices_link_precision_min',
+  // Spec 124 R-CE (S2 F3-2, operator y 2026-10-13) — the first seeded STRING-typed var (closed enum).
+  'pipeline_timezone',
+  // Spec 124 R-CH (purity seam S2, operator y 2026-10-12) — the vocab READ ONLY snapshot bound.
+  'vocab_coverage_statement_timeout_minutes',
+  // S1-P (Spec 124 Rule 3) — the ravines producer invalid-geometry bound (was the 0.05 compute literal).
+  'enrich_ravines_producer_invalid_geom_max_pct',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
   it('contains all expected logic variable keys', () => {
+    // R-CE (S2 F3-2): a string-typed key is in LOGIC_VAR_ENUMS, never the numeric defaults map.
     for (const key of EXPECTED_LOGIC_VAR_KEYS) {
-      expect(LOGIC_VAR_DEFAULTS).toHaveProperty(key);
+      expect(key in LOGIC_VAR_ENUMS ? LOGIC_VAR_ENUMS : LOGIC_VAR_DEFAULTS).toHaveProperty(key);
     }
   });
 
@@ -712,18 +720,29 @@ describe('Schema parity — LOGIC_VAR_DEFAULTS ↔ logic_variables.json ↔ conf
     expect(extra).toHaveLength(0);
   });
 
-  it('LOGIC_VAR_DEFAULTS keys match logic_variables.json keys (both directions)', () => {
-    for (const key of jsonKeys) {
+  // R-CE (S2 F3-2): LOGIC_VAR_DEFAULTS is the NUMERIC defaults map (the Delta Guard compares numbers);
+  // a string-typed seed entry lives in LOGIC_VAR_ENUMS instead. Together they cover the seed exactly.
+  const numericKeys = jsonKeys.filter((k) => (jsonData[k] as { type?: string }).type !== 'string');
+  const stringKeys = jsonKeys.filter((k) => (jsonData[k] as { type?: string }).type === 'string');
+
+  it('every seed entry is numeric or a declared string enum (no third kind)', () => {
+    expect(numericKeys.length + stringKeys.length).toBe(jsonKeys.length);
+    for (const key of stringKeys) expect(LOGIC_VAR_ENUMS, `LOGIC_VAR_ENUMS missing string key: ${key}`).toHaveProperty(key);
+    expect(Object.keys(LOGIC_VAR_ENUMS).sort()).toEqual([...stringKeys].sort());
+  });
+
+  it('LOGIC_VAR_DEFAULTS keys match the numeric logic_variables.json keys (both directions)', () => {
+    for (const key of numericKeys) {
       expect(LOGIC_VAR_DEFAULTS, `LOGIC_VAR_DEFAULTS missing JSON key: ${key}`).toHaveProperty(key);
     }
     for (const key of Object.keys(LOGIC_VAR_DEFAULTS)) {
-      expect(jsonData, `JSON missing LOGIC_VAR_DEFAULTS key: ${key}`).toHaveProperty(key);
+      expect(numericKeys, `LOGIC_VAR_DEFAULTS key not a numeric seed key: ${key}`).toContain(key);
     }
   });
 
   it('LOGIC_VAR_DEFAULTS values match logic_variables.json defaults', () => {
-    for (const [key, meta] of Object.entries(jsonData)) {
-      expect(LOGIC_VAR_DEFAULTS[key]).toBe(meta.default);
+    for (const key of numericKeys) {
+      expect(LOGIC_VAR_DEFAULTS[key]).toBe((jsonData[key] as { default: number | null }).default);
     }
   });
 

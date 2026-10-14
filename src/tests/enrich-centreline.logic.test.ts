@@ -19,6 +19,8 @@ const ROOT = path.resolve(__dirname, '../..');
 const ec = require('../../scripts/lib/compute/enrich-centreline.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const verdict = require('../../scripts/lib/step/verdict.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeTempTable } = require('../../scripts/lib/step/temp-table.js');
 const DESCRIPTOR = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/enrich-centreline.descriptor.json'), 'utf8'));
 const SEEDS = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/logic_variables.json'), 'utf8'));
 const CFG: Record<string, number> = Object.fromEntries(
@@ -131,6 +133,7 @@ describe('reduced modes — Observer-style COMPLETED emission (not a lock SKIP)'
       full: false, config: CFG, onProgress: () => {},
       contract: { sourceDatasetVersion: V, lastVersion: V, staleCount, mode },
       joinUpdate: async () => 3,
+      tempTable: makeTempTable(client, '[test]'),
     };
     const raw = await ec.runCentrelineJoinPass(client, passCtx);
     const post = await ec.computePostPhase(noQuery, { passRaw: { centreline_join: raw }, full: false, runAt: RUN_AT, config: CFG });
@@ -175,8 +178,12 @@ describe('enrich_centreline — EC-D10 fixed: ledger identity of the contract re
   const { slugForms } = require('../../scripts/lib/ledger.js');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { preWriteSkipRows } = require('../../scripts/lib/step/index.js');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { makeProducer } = require('../../scripts/lib/step/producer.js');
   const V = '7b86fe74c3fbee4f073e631e3b17dd91';
-  const PRODUCER = (name: string) => slugForms(name, ['sources']);
+  /** A producer ctx over a fake pool, with the descriptor's chain set (the slugForms expansion). */
+  const producerFor = (p: { query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }> }) =>
+    makeProducer({ pool: p, chains: ['sources'] });
 
   /** The marked-row predicate the fix appends, as a JS stand-in for the SQL @> jsonb containment. */
   const MARKED_PREDICATE = "AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)";
@@ -207,9 +214,7 @@ describe('enrich_centreline — EC-D10 fixed: ledger identity of the contract re
         return { rows: [{ records_meta: { centreline_enrich: { source_dataset_version: V } } }] };
       },
     };
-    await expect(ec.readCentrelineContract(db)).resolves.toMatchObject({ sourceDatasetVersion: V, lastVersion: V, mode: 'skip' });
-    expect(ec.PRODUCER_FORMS).toEqual(PRODUCER('load_centreline'));
-    expect(ec.SELF_FORMS).toEqual(slugForms('enrich_centreline', ['sources']));
+    await expect(ec.readCentrelineContract({ pool: db, producer: producerFor(db) })).resolves.toMatchObject({ sourceDatasetVersion: V, lastVersion: V, mode: 'skip' });
     const ledgerReads = calls.filter((c) => /FROM pipeline_runs/.test(c.sql));
     expect(ledgerReads).toHaveLength(2);
     const producerRead = ledgerReads[0];
@@ -218,10 +223,14 @@ describe('enrich_centreline — EC-D10 fixed: ledger identity of the contract re
     const selfRead = ledgerReads[1];
     expect(selfRead).toBeDefined();
     if (!selfRead) throw new Error('expected the self ledger read to be present');
-    expect(producerRead.params[0]).toEqual(ec.PRODUCER_FORMS);
-    expect(selfRead.params[0]).toEqual(ec.SELF_FORMS);
+    expect(producerRead.params[0]).toEqual(slugForms('load_centreline', ['sources']));
+    expect(producerRead.params[1]).toEqual(['completed', 'completed_with_warnings']);
+    expect(selfRead.params[0]).toEqual(slugForms('enrich_centreline', ['sources']));
+    expect(selfRead.params[1]).toEqual(['completed', 'completed_with_warnings']);
     for (const c of ledgerReads) {
-      expect(c.sql).toMatch(/pipeline = ANY\(\$1::text\[\]\) AND status IN \('completed', 'completed_with_warnings'\)/);
+      // The producer library's own SELECT: the slug forms and the status set are BOUND params
+      // ($1::text[] / $2::text[]), never SQL literals — asserted by value via params[0]/params[1].
+      expect(c.sql).toMatch(/pipeline = ANY\(\$1::text\[\]\) AND status = ANY\(\$2::text\[\]\)/);
       // gate #44 PRODUCER predicate (witness.mjs COMPLETED_ONLY_RE / COMPLETED_ANY_RE)
       expect(/status\s*=\s*'completed'/i.test(c.sql) && !/completed_with_warnings/i.test(c.sql)).toBe(false);
       // AMENDMENT: the skip_write preserve-and-WARN exclusion rides on the status filter (both reads).

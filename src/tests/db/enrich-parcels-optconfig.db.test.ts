@@ -216,12 +216,12 @@ describe.skipIf(!dbAvailable())('Spec 78 §Phase-3A enrich-parcels optimal-confi
       P(52),
     ];
     const genuineIds1 = new Set<number>();
-    const n1 = await ep.flushOptConfigBatch(pool, [row], genuineIds1);
+    const n1 = await ep.flushOptConfigBatch({ flushBatch: (s: string, p?: unknown[]) => pool.query(s, p) }, [row], genuineIds1);
     expect(n1).toBe(1);
     expect(genuineIds1.has(P(52))).toBe(true);
 
     const genuineIds2 = new Set<number>();
-    const n2 = await ep.flushOptConfigBatch(pool, [row], genuineIds2);
+    const n2 = await ep.flushOptConfigBatch({ flushBatch: (s: string, p?: unknown[]) => pool.query(s, p) }, [row], genuineIds2);
     expect(n2).toBe(0);
     expect(genuineIds2.size).toBe(0);
   });

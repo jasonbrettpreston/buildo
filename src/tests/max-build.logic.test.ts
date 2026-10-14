@@ -211,7 +211,9 @@ describe('max-build — enrich-parcels second-pass SQL plumbing', () => {
     // values below are the legacy defaults (scripts/seeds/logic_variables.json), acc:{}
     // falls back to scripts/lib/max-build.js's own DEFAULT constants per-field.
     const sql = ep.buildMaxBuildSql({ storeyHeight: 3, acc: {}, mislinkTol: 0.05, minDim: 3 });
-    expect(sql).toMatch(/CREATE TEMP TABLE parcel_max_build/);
+    // S2 (R-BZ G4): ctx.tempTable owns the frame
+    expect(sql.trim()).toMatch(/^WITH\b/);
+    expect(sql).not.toMatch(/CREATE TEMP/);
     expect(sql).toMatch(/parcel_buildings pb JOIN building_footprints bf/);
     // WF3-B: buffer side inset is party-wall-scaled (side_count/2.0); ravine_red still added separately.
     expect(sql).toMatch(/ST_Buffer\(geom::geography, -\(side_setback \* side_count \/ 2\.0 \+ ravine_red\)\)/);

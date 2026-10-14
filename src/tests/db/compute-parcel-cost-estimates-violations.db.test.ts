@@ -93,7 +93,7 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
   // ── test 12 (a)/(b) — the two contract_read HALTs, transaction-scoped (BEGIN/ROLLBACK — the
   // shared archetype_cost_rates table is never actually mutated outside this rolled-back txn) ──
   describe('test 12(a)/(b) — readCostContract HALTs', () => {
-    it('empty archetype_cost_rates HALTs with a named error citing migration 205', async () => {
+    it('an empty rates/lines table is stopped by the declared guard (S4), not the hook', async () => {
       const client: PoolClient = await pool.connect();
       try {
         await client.query('BEGIN');
@@ -103,22 +103,33 @@ describe.skipIf(!dbAvailable())('compute_parcel_cost_estimates — live-DB viola
         // (both tables are restored on ROLLBACK; nothing outside this txn is mutated).
         await client.query('DELETE FROM parcel_cost_lines');
         await client.query('DELETE FROM archetype_cost_rates');
-        await expect(compute.readCostContract(client)).rejects.toThrow(/archetype_cost_rates is empty.*migration 205/i);
+        // readCostContract no longer HALTs on emptiness — the declared guards.empty_source stops
+        // the run before the hook is ever reached (runner-side lock:
+        // src/tests/p3c1-32.logic.test.ts). It may still reject from mergeCostLines; what matters
+        // is that the message is NOT the retired "is empty" hook error.
+        let message: string | null = null;
+        try {
+          await compute.readCostContract({ pool: client });
+        } catch (err) {
+          message = String((err as Error).message);
+        }
+        expect(message ?? '').not.toMatch(/is empty/);
+        // …and the stop is declared, not hook-enforced.
+        expect(descriptor.guards.empty_source).toEqual(['archetype_cost_rates', 'parcel_cost_lines']);
       } finally {
         await client.query('ROLLBACK');
         client.release();
       }
     });
 
-    it('a duplicate archetype key HALTs with a named error (stub result — archetype is the real PRIMARY KEY, so a genuine duplicate row is schema-impossible; readCostContract\'s check is defensive code for that fact, and the RED must construct the case, not find it live)', async () => {
-      const real = (await pool.query('SELECT archetype, cost_per_sqm::float8, cost_adjustment_factor::float8, escalation_index_base::float8 FROM archetype_cost_rates')).rows;
-      const dupRow = { ...real[0] };
-      const stubClient = { query: async (sql: string) => (sql.includes('FROM archetype_cost_rates') ? { rows: [...real, dupRow] } : pool.query(sql)) };
-      await expect(compute.readCostContract(stubClient)).rejects.toThrow(/duplicate archetype/i);
+    it('archetype uniqueness is the PRIMARY KEY (R-CL): a duplicate is schema-impossible, so no compute check exists', async () => {
+      const { rows } = await pool.query(`SELECT pg_get_constraintdef(oid) AS d FROM pg_constraint WHERE conrelid = 'archetype_cost_rates'::regclass AND contype = 'p'`);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].d).toBe('PRIMARY KEY (archetype)');
     });
 
     it('GREEN — the real, unmutated archetype_cost_rates loads clean (12 archetypes, no throw)', async () => {
-      const contract = await compute.readCostContract(pool);
+      const contract = await compute.readCostContract({ pool: pool });
       expect(Object.keys(contract.rates).length).toBeGreaterThanOrEqual(12);
     });
   });

@@ -1451,7 +1451,11 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
       if (computeReq) src += '\n' + fs.readFileSync(abs(`scripts/lib/compute/${computeReq[1]}.js`), 'utf8');
       expect(src.includes(EMIT_KEY), `${file} (incl. its required compute module) never reads ${EMIT_KEY}`).toBe(true);
       for (const f of CONSUMED_FIELDS) {
-        expect(src.includes(f), `${file} (incl. its required compute module) does not read ${f}`).toBe(true);
+        // S1-P-6: the producer-protocol reads moved from the compute to the consumer's declared staleness.pins[] (runner-evaluated). A field is "read" when the compute
+        // names it OR the consumer's own descriptor declares a pin on EMIT_KEY.<field> (fence: the 7-field contract is still consumed — now by the runner, not a hook throw).
+        const pinStamps: string[] = (JSON.parse(fs.readFileSync(abs('scripts/enrich-ravines.descriptor.json'), 'utf8')).staleness?.pins ?? []).flatMap((p: { stamp: string; of?: string }) => [p.stamp, p.of ?? '']); // `of` = the bound pin's denominator stamp (feature_count)
+        const read = src.includes(f) || pinStamps.includes(`records_meta.${EMIT_KEY}.${f}`);
+        expect(read, `${file} (incl. its required compute module, or a declared staleness pin) does not read ${f}`).toBe(true);
         expect(descriptorText.includes(f), `the descriptor never declares consumed field ${f} (D-6: the 7-field contract)`).toBe(true);
       }
     }

@@ -194,9 +194,11 @@ function resolveOverrides(descriptor, env, argv) {
  * @param {import('pg').Pool} pool
  * @param {string} pipelineName - the chain-scoped slug run-chain records
  * @param {string|null} emitKey - `emits[0].key`; null returns the whole records_meta
+ * @param {{chains?: string[]}} [opts] - forwarded to readPriorRunMeta; `chains`
+ *   is the step's FULL declared chain list (HQ-6 multi-chain history read)
  */
-async function readPriorEmit(pool, pipelineName, emitKey) {
-  const meta = await sourceVersion.readPriorRunMeta(pool, pipelineName);
+async function readPriorEmit(pool, pipelineName, emitKey, opts) {
+  const meta = await sourceVersion.readPriorRunMeta(pool, pipelineName, opts);
   if (!meta) return null;
   if (!emitKey) return meta;
   const block = meta[emitKey];
@@ -230,9 +232,9 @@ function priorRunErrorPosture(descriptor) {
  *
  * @returns {Promise<{prior: object|null, error: Error|null}>}
  */
-async function readPriorEmitWithPosture(pool, pipelineName, emitKey, posture) {
+async function readPriorEmitWithPosture(pool, pipelineName, emitKey, posture, opts) {
   try {
-    return { prior: await readPriorEmit(pool, pipelineName, emitKey), error: null };
+    return { prior: await readPriorEmit(pool, pipelineName, emitKey, opts), error: null };
   } catch (err) {
     if (posture !== POSTURE_WARN_ROW) throw err;
     return { prior: null, error: err instanceof Error ? err : new Error(String(err)) };
@@ -489,7 +491,7 @@ async function detectInterruptedRetraction(pool, descriptor, { ownRunId = null }
     `WITH own_last_completed AS (
        SELECT started_at FROM pipeline_runs
         WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')
-        ORDER BY started_at DESC LIMIT 1
+        ORDER BY started_at DESC, id DESC LIMIT 1
      )
      SELECT p.id, p.pipeline, p.status, p.started_at
        FROM pipeline_runs p
@@ -621,10 +623,14 @@ async function selectMode({ descriptor, pool, prior, argv, env, ownRunId = null 
  * @param {object} descriptor
  * @returns {{own: string[], upstream: string[]}}
  */
+function declaredChains(descriptor) {
+  const inv = descriptor && descriptor.execution && descriptor.execution.invocation;
+  return inv && inv !== NONE ? Object.keys(inv) : [];
+}
+
 function deriveLedgerSlugs(descriptor) {
   const slug = descriptor.identity.name;
-  const inv = descriptor.execution && descriptor.execution.invocation;
-  const chains = inv && inv !== NONE ? Object.keys(inv) : [];
+  const chains = declaredChains(descriptor);
   const own = [...new Set(slugForms(slug, chains))];
   const steps = (descriptor.inputs && descriptor.inputs.reads && descriptor.inputs.reads.steps) || [];
   const upstream = [...new Set(steps.flatMap((s) => slugForms(s.step, chains)))];
@@ -743,6 +749,7 @@ module.exports = {
   preAcquisitionDecision,
   skipCheckDecision,
   deriveLedgerSlugs,
+  declaredChains,
   ledgerGatedSkip,
   gateRecordsMeta,
   // 0y §3c: the all-primaries skip decision (pure). Exported so the 0y gate suite and the

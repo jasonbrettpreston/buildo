@@ -33,7 +33,7 @@ const runChain = readFileSync(
 
 describe('run-chain.js — verdict cascade contract', () => {
   it('captures audit_table.verdict from each step into stepVerdicts map', () => {
-    expect(runChain).toMatch(/stepVerdicts\[slug\]\s*=\s*recordsMeta\.audit_table\.verdict/);
+    expect(runChain).toMatch(/stepVerdicts\[slug\]\s*=\s*stepFold\.verdict/); // R-CC (2026-10-12)
   });
 
   it('aggregates step verdicts to derive chain-level health', () => {

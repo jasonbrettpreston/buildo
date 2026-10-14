@@ -462,20 +462,20 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
   // their POST goldens were recaptured with a forced-change cohort (records_updated 1000 / 954),
   // and the same commit deleted their two `nonzero:*` ledger rows.
   const KNOWN_RED_FIRST = [
-    // re-pinned 2026-10-10 fleet-night-3 recapture: compute_centroids:parcels, enrich_heritage:parcels and
-    // enrich_ravines:parcels ledger rows were removed (the recapture closed them, real nonzero captures exist now).
-    'compute_parcel_cost_estimates:parcels',
+    // re-pinned 2026-10-14 H5 recapture night 4 (operator "A"): compute_centroids/enrich_heritage/enrich_ravines
+    // :parcels are dated ledger rows again (tonight's sources POSTs wrote 0, no upstream change), and the
+    // compute_parcel_cost_estimates:parcels, geocode_permits:permits and link_parcel_addresses:parcel_address_points
+    // rows were deleted (R-BA: real nonzero captures exist now).
+    'compute_centroids:parcels',
+    'enrich_heritage:parcels',
     'enrich_parcels:enrich_parcels_pass3_scope',
     'enrich_parcels:parcels',
-    'geocode_permits:permits',
+    'enrich_ravines:parcels',
     // FLEET-2 §5 (2026-10-06): link_massing's two targets were ledgered pending_recapture (A31). CLOSED by WF2
     // link_massing nonzero-close: the healing cohort POST `post/cohort-heal.json` proves each table through its own
     // records_meta key (cohort.json count_path: parcel_buildings <- links_updated, parcels <- parcels_flagged_lost_link),
     // and the same commit deleted both ledger rows.
-    // re-pinned 2026-10-10 fleet-night-3 recapture: link_parcel_addresses:parcel_address_points is the new HQ-1
-    // dated ledger row (the old "sources POST writes 36 new links" CLOSED note is stale — that POST is now a gated skip).
     'link_neighbourhoods:permits',
-    'link_parcel_addresses:parcel_address_points',
     'link_parcels:permit_parcels',
     'link_parcels:permits',
     'link_wsib:entities',

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/refresh-snapshot.js",
   "chain": "none",
-  "source_fingerprint": "580a9efd569897560acc8d3fc247649353d51e8bc2daf1b57b41751943775d82",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "981e2945314ed37b681b85748923cf9a14c7ed7f3443ce7ae4bb095d534dd1e0",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 55,
     "distinct": 47,
     "utility": 15,
-    "tracer_self_ms": 46.731,
-    "wall_ms": 34110
+    "tracer_self_ms": 10.231,
+    "wall_ms": 25485
   },
   "statements": [
     {
@@ -38,6 +38,36 @@
       "writes": {},
       "excluded": [],
       "error": null
+    },
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "permits:refresh_snapshot",
+            "coa:refresh_snapshot",
+            "sources:refresh_snapshot",
+            "deep_scrapes:refresh_snapshot",
+            "refresh_snapshot",
+            "refresh-snapshot"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
     },
     {
       "fingerprint": "11bea12b3eccbb50",
@@ -155,15 +185,27 @@
       "params": [
         [
           "completed",
-          31944,
+          24639,
           null,
-          2436,
+          2642,
           1,
           0,
           1,
-          "{\"duration_ms\":31894,\"neighbourhood_count\":174191,\"active_permits\":191500,\"read_timings\":[{\"key\":\"permitsScalar\",\"elapsed_ms\":5383,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"trades\",\"elapsed_ms\":9161,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tradeByType\",\"elapsed_ms\":3483,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"builders\",\"elapsed_ms\":2,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"parcels\",\"elapsed_ms\":1605,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"coa\",\"elapsed_ms\":459,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tagBreakdown\",\"elapsed_ms\":2077,\"row_count\":91,\"phase\":\"main\"},{\"key\":\"sync\",\"elapsed_ms\":3,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"massing\",\"elapsed_ms\":279,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"schemaColumnCounts\",\"elapsed_ms\":51,\"row_count\":5,\"phase\":\"optional\"},{\"key\":\"sla\",\"elapsed_ms\":431,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"inspections\",\"elapsed_ms\":3,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"costEst\",\"elapsed_ms\":213,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"coaFunnel\",\"elapsed_ms\":429,\"row_count\":1,\"phase\":\"optional\"}],\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5,\"refresh_snapshot_read_statement_timeout_minutes\":5,\"refresh_snapshot_phase_deadline_minutes\":12},\"terminal\":\"recorded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":61.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33400,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"permits\":254082,\"permit_trades\":1784196,\"entities\":3948,\"permit_parcels\":242416,\"coa_applications\":33400,\"sync_runs\":63,\"building_footprints\":427077,\"parcel_buildings\":534989,\"permit_inspections\":816,\"cost_estimates\":274398,\"lead_parcels\":271953,\"trade_forecasts\":1100888},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.03,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":31958,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":24600,\"neighbourhood_count\":174191,\"active_permits\":191500,\"read_timings\":[{\"key\":\"permitsScalar\",\"elapsed_ms\":3929,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"trades\",\"elapsed_ms\":10170,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tradeByType\",\"elapsed_ms\":3005,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"builders\",\"elapsed_ms\":3,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"parcels\",\"elapsed_ms\":1019,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"coa\",\"elapsed_ms\":154,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tagBreakdown\",\"elapsed_ms\":281,\"row_count\":91,\"phase\":\"main\"},{\"key\":\"sync\",\"elapsed_ms\":2,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"massing\",\"elapsed_ms\":177,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"schemaColumnCounts\",\"elapsed_ms\":50,\"row_count\":5,\"phase\":\"optional\"},{\"key\":\"sla\",\"elapsed_ms\":371,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"inspections\",\"elapsed_ms\":3,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"costEst\",\"elapsed_ms\":164,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"coaFunnel\",\"elapsed_ms\":368,\"row_count\":1,\"phase\":\"optional\"}],\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5,\"refresh_snapshot_read_statement_timeout_minutes\":5,\"refresh_snapshot_phase_deadline_minutes\":12},\"terminal\":\"recorded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":61.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33400,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"permits\":254082,\"permit_trades\":1784196,\"entities\":3948,\"permit_parcels\":242416,\"coa_applications\":33400,\"sync_runs\":63,\"building_footprints\":427077,\"parcel_buildings\":535039,\"permit_inspections\":816,\"cost_estimates\":274398,\"lead_parcels\":271886,\"trade_forecasts\":1100888},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.04,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":24638,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
     },
     {
       "fingerprint": "616628a9341190fa",
@@ -419,24 +461,6 @@
       "error": null
     },
     {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "permits:refresh_snapshot"
-        ]
-      ]
-    },
-    {
       "fingerprint": "77737e907db982db",
       "kind": "read",
       "count": 1,
@@ -609,18 +633,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {
@@ -807,7 +819,7 @@
   ],
   "transactions": [
     {
-      "client": "24536:2",
+      "client": "9856:2",
       "write_fingerprints": [
         "73f5d76ba8569f71"
       ]

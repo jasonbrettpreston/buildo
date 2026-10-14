@@ -43,9 +43,34 @@ const compute = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { resolveConfig } = require(path.join(REPO_ROOT, 'scripts/lib/step/config.js'));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { assertRequirements, streamOverClient } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
+const { assertRequirements, streamOverClient, makeExecSeam } = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeTempTable } = require(path.join(REPO_ROOT, 'scripts/lib/step/temp-table.js'));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require(path.join(REPO_ROOT, 'scripts/lib/step/producer.js'));
 
 const silentLog = { info() {}, warn() {}, error() {}, debug() {} };
+const TAG = '[enrich-parcels-harness]';
+
+/**
+ * H5 (S1-P / S2 / S3): the seams the runner binds onto a pass ctx (scripts/lib/step/index.js
+ * passCtx + makeExecSeam): `ctx.tempTable` (S2), `ctx.exec` (S3, counter-neutral) and
+ * `ctx.producer` (S1-P). They are built from the LIBRARY factories, not stubs, so a live-DB test
+ * runs the same seam code as the runner. `seamTarget` mirrors the runner's declared-target
+ * refusal: an undeclared outputs.writes index throws.
+ */
+function seamsFor(client) {
+  const seamTarget = (writesRef, seam) => {
+    const spec = (descriptor.outputs.writes || [])[writesRef];
+    if (!spec) throw new Error(`${TAG} ctx.${seam}(${writesRef}) — not a declared outputs.writes index`);
+    return spec;
+  };
+  return {
+    tempTable: makeTempTable(client, TAG),
+    exec: makeExecSeam({ client, seamTarget, tag: TAG }),
+    producer: makeProducer({ pool: client, chains: ['sources'] }),
+  };
+}
 
 /** Resolved once per test-DB connection object — the same `logic_variables` snapshot the real runner reads. */
 const configCache = new WeakMap();
@@ -58,9 +83,10 @@ async function baseConfig(poolOrClient) {
   return cached;
 }
 
-function makeCtx({ scopeWhere, full, config, contract = null, extra }) {
+function makeCtx({ client, scopeWhere, full, config, contract = null, extra }) {
   const now = new Date();
   return {
+    ...seamsFor(client),
     full: !!full,
     scopeWhere,
     staleOverlays: new Set(),
@@ -89,14 +115,14 @@ function splitOpts(opts) {
 async function contractFor(client, full, explicit) {
   if (explicit !== undefined) return explicit;
   if (full) return null;
-  return { zoning_change: await compute.readZoningChange(client) };
+  return { zoning_change: await compute.readZoningChange({ producer: makeProducer({ pool: client, chains: ['sources'] }) }) };
 }
 
 async function runSharedPass(passFn, client, opts) {
   const { scopeWhere, full, contract, configOverrides } = splitOpts(opts);
   const base = await baseConfig(client);
   const config = { ...base, ...configOverrides };
-  const ctx = makeCtx({ scopeWhere, full, config, contract: await contractFor(client, full, contract) });
+  const ctx = makeCtx({ client, scopeWhere, full, config, contract: await contractFor(client, full, contract) });
   return passFn(client, ctx, config);
 }
 
@@ -139,6 +165,7 @@ async function enrichOptimalConfig(pool, opts) {
       }
     };
     const ctx = makeCtx({
+      client: writeClient,
       scopeWhere,
       full,
       config,

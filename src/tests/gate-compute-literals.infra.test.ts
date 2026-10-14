@@ -191,7 +191,8 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
     expect(out.orphans).toEqual([]);
     expect(out.unallowed).toEqual([]);
     expect(out.pass).toBe(true);
-    expect(out.allowed.length).toBeGreaterThanOrEqual(143);
+    // Every gate-E ledger row is consumed by exactly one live finding (V3: rows only close as seams retire them).
+    expect(out.allowed.length).toBe(ledger.loadLedger(REPO_ROOT).rows.filter((r: { gate?: string }) => r.gate === 'E').length);
   }, 120000);
 
   // -------------------------------------------------------------------------
@@ -213,10 +214,10 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
 describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
   const loadRows = () => ledger.loadLedger(REPO_ROOT).rows;
 
-  it('V1: the live ledger is frozen — 0 freeze problems, ≥143 purity rows', () => {
+  it('V1: the live ledger is frozen — 0 freeze problems, ≤143 purity rows (V3: rows only close — seams delete them; a row removed while its site remains is caught by T3)', () => {
     const rows = loadRows();
     expect(gateE.purityRowFreeze(rows)).toEqual([]);
-    expect(rows.filter((r: object) => gateE.isPurityRow(r)).length).toBeGreaterThanOrEqual(143);
+    expect(rows.filter((r: object) => gateE.isPurityRow(r)).length).toBeLessThanOrEqual(143);
   });
 
   it('V2: a purity row filed on a later date is a freeze problem (RED)', () => {

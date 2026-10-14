@@ -1529,6 +1529,16 @@
       "group": "Coverage & Quality"
     }
   },
+  "vocab_coverage_statement_timeout_minutes": {
+    "default": 0.25,
+    "type": "number",
+    "description": "assert-global-coverage: per-triple READ ONLY snapshot statement_timeout, in minutes (0.25 = 15 s, the former hard-coded default). CONSUMED by assert_global_coverage.",
+    "min": 0.05,
+    "max": 10,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
   "lifecycle_issued_stall_days": {
     "default": 730,
     "type": "number",
@@ -4377,6 +4387,16 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "enrich_ravines_producer_invalid_geom_max_pct": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Producer-contract bound (S1-P, Spec 124 Rule 1/3): the most load_ravines may skip as invalid geometry, as a percent of its feature_count (records_meta.ravine_load.invalid_geometry_skipped / feature_count), before enrich_ravines refuses to join against the load. Evaluated by the runner as a declared staleness.pins bound before any phase. Ported from the bare compute literal MAX_INVALID_GEOM_RATIO = 0.05 (5%). CONSUMED by enrich_ravines.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "enrich_ravines_heartbeat_minutes": {
     "default": 5,
     "type": "number",
@@ -5760,7 +5780,7 @@
   "engine_health_dead_tuple_ratio_warn_max": {
     "default": 0.1,
     "type": "number",
-    "description": "assert-engine-health: per-table dead-tuple ratio (n_dead_tup / n_live_tup, tables with >= 1000 live rows only) WARN ceiling — ratio above this value warns and is also the auto-VACUUM ANALYZE trigger threshold. Ported verbatim from the pre-conversion DEAD_TUPLE_RATIO constant (0.10). CONSUMED by assert_engine_health.",
+    "description": "assert-engine-health: per-table dead-tuple ratio dead/(live+dead) (the ONE fleet measurement, shared with runMaintenance — Spec 124 R-CG, S2 F3-3 2026-10-13; tables with >= engine_health_dead_tuple_min_rows live rows for the WARN check) WARN ceiling — a ratio above this value warns and is also the execution.maintenance dynamic-arm VACUUM ANALYZE trigger. 0.10 ported from the pre-conversion DEAD_TUPLE_RATIO constant (then dead/live). CONSUMED by assert_engine_health.",
     "min": 0,
     "max": 1,
     "admin": {
@@ -6976,5 +6996,12 @@
     "admin": {
       "group": "CoA Decision Notices"
     }
+  },
+  "pipeline_timezone": {
+    "default": "UTC",
+    "type": "string",
+    "enum": ["UTC", "America/Toronto"],
+    "description": "The IANA zone a step derives a calendar date in from ctx.clock (Spec 124 R-CE, S2 F3-2, operator 2026-10-13). UTC = the measured dev DB session zone, so today's snapshot_date values are unchanged; America/Toronto is the operator's alternative. String-typed (closed enum, on_invalid fail). CONSUMED by assert_engine_health (S2, H5).",
+    "admin": { "group": "Pipeline Clock" }
   }
 }

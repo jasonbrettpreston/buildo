@@ -30,6 +30,8 @@
 // src/tests/db/compute-parcel-cost-estimates-violations.db.test.ts and enrich-ravines.skip.db.test.ts.)
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { Pool, PoolClient } from 'pg';
+import fs from 'node:fs';
+import path from 'node:path';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -38,12 +40,19 @@ const compute = require('../../../scripts/lib/compute/enrich-centreline.js');
 const { slugForms } = require('../../../scripts/lib/ledger.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { preWriteSkipRows } = require('../../../scripts/lib/step/index.js');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require('../../../scripts/lib/step/producer.js');
 
-// The real exported name lists the SQL matches — seeded rows use exactly these, and this file
-// asserts they still equal the ledger's own slugForms expansion, so a future rename cannot drift
-// the fixture away from production.
-const PRODUCER_FORMS: string[] = compute.PRODUCER_FORMS;
-const SELF_FORMS: string[] = compute.SELF_FORMS;
+// A producer ctx over a pool/client, with the descriptor's chain set — the SAME slugForms expansion
+// the compute's reads now issue, so a future rename cannot drift the fixture away from production.
+const producerFor = (p: Pool | PoolClient) => makeProducer({ pool: p, chains: ['sources'] });
+const PRODUCER_FORMS: string[] = slugForms('load_centreline', ['sources']);
+const SELF_FORMS: string[] = slugForms('enrich_centreline', ['sources']);
+// The producer contract's declared spec_version — the descriptor's own pin value (the deleted
+// `compute.SPEC_VERSION` constant's successor), read from the shipped descriptor so the fixture
+// cannot drift from the declaration.
+const DESCRIPTOR = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../scripts/enrich-centreline.descriptor.json'), 'utf8'));
+const SPEC_VERSION: string = (DESCRIPTOR.staleness?.pins || []).find((p: { stamp?: string }) => p.stamp === 'records_meta.centreline_load.spec_version')?.equals;
 const PRODUCER_NAME = 'sources:load_centreline';
 const SELF_NAME = 'sources:enrich_centreline';
 
@@ -65,7 +74,7 @@ const MARKED_ROWS = preWriteSkipRows([{ writeSkippedPreWriteWarn: true, failedPr
 
 const PRODUCER_META = (version: string) => ({
   centreline_load: {
-    spec_version: compute.SPEC_VERSION,
+    spec_version: SPEC_VERSION,
     features_inserted: 42,
     source_dataset_version: version,
   },
@@ -113,7 +122,7 @@ describe.skipIf(!dbAvailable())('enrich_centreline contract reads — EC-D10 liv
     pool = getTestPool() as Pool;
   });
 
-  it('seeds by exactly the real name lists (PRODUCER_FORMS / SELF_FORMS === slugForms of the chain names)', () => {
+  it('seeds by the slugForms of the chain names', () => {
     // Not a DB assertion — it pins the fixture to the production name set. If the compute ever
     // changes the forms without the ledger, this file must be revisited, not silently pass.
     expect(PRODUCER_FORMS).toEqual(slugForms('load_centreline', ['sources']));
@@ -132,10 +141,10 @@ describe.skipIf(!dbAvailable())('enrich_centreline contract reads — EC-D10 liv
       await insertRun(client, { pipeline: SELF_NAME, status: 'completed', completedAt: T1, recordsMeta: SELF_META(V1) });
       await insertRun(client, { pipeline: SELF_NAME, status: 'completed_with_warnings', completedAt: T2, recordsMeta: SELF_META(V2) });
 
-      const contract = await compute.readCentrelineContract(client);
+      const contract = await compute.readCentrelineContract({ pool: client, producer: producerFor(client) });
       expect(contract.sourceDatasetVersion).toBe(V2);
 
-      const lastVersion = await compute.readLastEnrichedVersion(client);
+      const lastVersion = await compute.readLastEnrichedVersion({ producer: producerFor(client) });
       expect(lastVersion).toBe(V2);
     });
   });
@@ -151,10 +160,10 @@ describe.skipIf(!dbAvailable())('enrich_centreline contract reads — EC-D10 liv
       await insertRun(client, { pipeline: SELF_NAME, status: 'completed', completedAt: T3, recordsMeta: { ...MARKED_META, ...SELF_META(V3) } });
       await insertRun(client, { pipeline: SELF_NAME, status: 'completed_with_warnings', completedAt: T4, recordsMeta: { ...MARKED_META, ...SELF_META(V4) } });
 
-      const contract = await compute.readCentrelineContract(client);
+      const contract = await compute.readCentrelineContract({ pool: client, producer: producerFor(client) });
       expect(contract.sourceDatasetVersion).toBe(V1);
 
-      const lastVersion = await compute.readLastEnrichedVersion(client);
+      const lastVersion = await compute.readLastEnrichedVersion({ producer: producerFor(client) });
       expect(lastVersion).toBe(V1);
     });
   });
@@ -172,10 +181,10 @@ describe.skipIf(!dbAvailable())('enrich_centreline contract reads — EC-D10 liv
       await insertRun(client, { pipeline: SELF_NAME, status: 'failed', completedAt: T3, recordsMeta: SELF_META(V3) });
       await insertRun(client, { pipeline: SELF_NAME, status: 'running', completedAt: T4, recordsMeta: SELF_META(V4) });
 
-      const contract = await compute.readCentrelineContract(client);
+      const contract = await compute.readCentrelineContract({ pool: client, producer: producerFor(client) });
       expect(contract.sourceDatasetVersion).toBe(V1);
 
-      const lastVersion = await compute.readLastEnrichedVersion(client);
+      const lastVersion = await compute.readLastEnrichedVersion({ producer: producerFor(client) });
       expect(lastVersion).toBe(V1);
     });
   });

@@ -730,7 +730,7 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(at('definitions.requirement.properties.kind').enum as string[]).toContain('trigger');
     const pins = at('properties.staleness.properties.pins') as { type?: string; 'x-trust'?: string; 'x-ruling'?: { rungs_tried?: unknown[] } };
     expect(pins.type).toBe('array');
-    expect(pins['x-trust']).toBe('executed:scripts/lib/compute/enrich-ravines.js#pinnedSpecVersion');
+    expect(pins['x-trust']).toBe('executed:scripts/lib/step/producer.js#evaluatePins');
     expect(Array.isArray(pins['x-ruling']?.rungs_tried) && (pins['x-ruling']?.rungs_tried?.length ?? 0) > 0).toBe(true);
   });
 });

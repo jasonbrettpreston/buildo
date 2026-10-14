@@ -66,7 +66,9 @@ describe('existing-structure — SQL plumbing (separate pass)', () => {
   const sql = ep.buildExistingStructureSql({});
 
   it('uses the separate prim/allb CTEs + oriented envelope, NOT ST_Union, NOT the max-build massing CTE', () => {
-    expect(sql).toMatch(/CREATE TEMP TABLE parcel_existing_struct/);
+    // S2 (R-BZ G4): ctx.tempTable owns the frame
+    expect(sql.trim()).toMatch(/^WITH\b/);
+    expect(sql).not.toMatch(/CREATE TEMP/);
     expect(sql).toMatch(/prim AS \([\s\S]*WHERE pb\.is_primary = true/);
     expect(sql).toMatch(/allb AS \([\s\S]*FILTER \(WHERE NOT pb\.is_primary\)/);
     expect(sql).toMatch(/ST_OrientedEnvelope/);

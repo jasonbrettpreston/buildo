@@ -134,9 +134,15 @@ export async function buildInventory({ root }) {
   // Witness (operator ruling Q6 2026-10-07; Spec 68 §6.4 rule 8 "parsed, never executed"): the fingerprint of the
   // STATIC render (spans → placeholder) looked up in the recorded sql-witness traces. No builder is loaded or run, so
   // a builder whose spans change the statement shape (an interpolated fragment) is not witnessed and stays evidence R.
-  const witnessOf = (rel, fn, step, externals = new Map()) => {
+  // A builder whose SELECT the step runs through `ctx.tempTable` (S2) is executed wrapped as
+  // `CREATE TEMP TABLE <name> ON COMMIT DROP AS <select>`, the exact form at scripts/lib/step/temp-table.js:50.
+  // The recorded trace holds that wrapped statement, so the fingerprint wraps the render the same way.
+  const asTempTable = (name, sql) => (name && !/^\s*CREATE\b/i.test(sql)
+    ? 'CREATE TEMP TABLE ' + name + ' ON COMMIT DROP AS' + (sql.startsWith('\n') ? '' : '\n') + sql
+    : sql);
+  const witnessOf = (rel, fn, step, externals = new Map(), tempTable = null) => {
     try {
-      const fp = libpg().fingerprintSync(builderOf(rel, fn, externals).render.sql); // the same render the chain uses
+      const fp = libpg().fingerprintSync(asTempTable(tempTable, builderOf(rel, fn, externals).render.sql)); // the same render the chain uses
       const set = traceFps.get(step) || new Set();
       return set.has(fp)
         ? { witnessed: true, fingerprint: fp, traces: decl.witness_traces[step] || [] }
@@ -165,12 +171,14 @@ export async function buildInventory({ root }) {
       const externals = new Map();
       for (const t of p.temp_inputs || []) {
         const tb = builderOf(p.file, t.builder);
-        if (tb.lineage.creates) externals.set(tb.lineage.creates, tb.lineage.root);
-        info.witness[t.builder] = witnessOf(p.file, t.builder, p.step);
+        // `temp_table` names a temp table the step creates through ctx.tempTable (the builder returns only the SELECT).
+        const created = tb.lineage.creates || t.temp_table || null;
+        if (created) externals.set(created, tb.lineage.root);
+        info.witness[t.builder] = witnessOf(p.file, t.builder, p.step, new Map(), t.temp_table || null);
       }
       const b = builderOf(p.file, p.builder, externals);
       info.builderKey = b.key;
-      info.witness[p.builder] = witnessOf(p.file, p.builder, p.step, externals);
+      info.witness[p.builder] = witnessOf(p.file, p.builder, p.step, externals, p.temp_table || null);
       for (const c of b.lineage.root.order) if (stepWrites.has(c)) info.columns.push(c);
     } else if (p.kind === 'js_array') {
       const cols = exportedConst(files, p.file, p.columns_const);

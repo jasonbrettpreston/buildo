@@ -39,6 +39,10 @@ const stalenessLib = require(join(process.cwd(), 'scripts/lib/step/staleness.js'
 const acquireLib = require(join(process.cwd(), 'scripts/lib/step/acquire.js'));
 // EP-D17 (WF3, 2026-09-10) — the ceiling/duration/concurrency/maintenance executor.
 const plausibilityLib = require(join(process.cwd(), 'scripts/lib/step/plausibility.js'));
+// EP-PASS3-BACKLOG (WF3, 2026-09-15) — the step-start stale-cohort retirement is now its OWN
+// library, called by the runner through the module object; the compute no longer exports
+// `retireStaleScope`. Tests install the seam with `vi.spyOn(scopeRetireLib, 'retireStaleScope')`.
+const scopeRetireLib = require(join(process.cwd(), 'scripts/lib/step/scope-retire.js'));
 
 const FIXTURES = join(process.cwd(), 'scripts/steps/_schema/fixtures');
 const ASSERT_SCHEMA = require(join(FIXTURES, 'valid/assert_schema.descriptor.json'));
@@ -4349,6 +4353,10 @@ describe('runEnrichPhase — per-target counters come from execution.phases[].wr
 // ---------------------------------------------------------------------------
 
 describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
+  // M6 installs `vi.spyOn(scopeRetireLib, 'retireStaleScope')` (the retirement is a module-level
+  // library now, not a compute member); restore the real implementation after each test.
+  afterEach(() => { vi.restoreAllMocks(); });
+
   interface FakeClient { query: (text: string, values?: unknown[]) => Promise<unknown>; release: () => void }
 
   function poolP(rowCounts: Array<{ re: RegExp; rowCount: number }> = []) {
@@ -4713,9 +4721,12 @@ describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
     const poolB = poolP();
     const d = baseDescriptor() as unknown as Record<string, unknown>;
     (d.outputs as { writes: unknown[] }).writes.push({ table: 'fixture_scope', key: 'id', write_discipline: { class: 'insert_only_no_retraction' } });
+    // The retirement is a MODULE-LEVEL library now (`scripts/lib/step/scope-retire.js`), called by the
+    // runner through the module object; install the seam with `vi.spyOn` before the run rather than as a
+    // member of the compute object.
+    vi.spyOn(scopeRetireLib, 'retireStaleScope').mockImplementation(async () => ({ backlog_rows: 8, backlog_cohorts: 2, retired_rows: 5, retired_cohorts: 1, retire_after_hours: 24, cutoff_at: new Date('2026-09-14T00:00:00.000Z') }));
     const compute = {
       ...bareCompute({ geocode: { updated: 1 } }),
-      retireStaleScope: async () => ({ backlog_rows: 8, backlog_cohorts: 2, retired_rows: 5, retired_cohorts: 1, retire_after_hours: 24, cutoff_at: new Date('2026-09-14T00:00:00.000Z') }),
     };
     const resB = await stepLib.runEnrichPhase(argsP(d, poolB, compute, { enrich_parcels_scope_retire_after_hours: 24 }) as never) as { matched: Record<string, unknown> };
     expect(resB.matched.scope_backlog_at_step_start).toBe(8);

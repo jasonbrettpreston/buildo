@@ -42,7 +42,10 @@ describe('comps candidate-set SQL', () => {
   });
   it('build_ratio = imagery roof footprint ÷ max-build; geom GiST index for the kNN (index now a SEPARATE statement, EP-D bugfix commit 7e/2 — "cannot insert multiple commands into a prepared statement" once the as-of-date became a bound param)', () => {
     expect(sql).toContain('imagery_roof_footprint_sqm / pa.max_buildable_footprint_sqm');
-    expect(ep.buildCompCandidatesIndexSql()).toContain('USING gist (geom)');
+    // S2 (R-BZ G4): the GiST index + ANALYZE are now the seam's job —
+    //   ctx.tempTable({ index: { name: 'comp_cand_gix', using: 'gist', column: 'geom' }, analyze: true })
+    // — so the compute no longer exposes (or renders) an index statement at all.
+    expect(ep.buildCompCandidatesIndexSql).toBeUndefined();
   });
 });
 
@@ -109,7 +112,20 @@ describe('comps kNN UPDATE SQL', () => {
         return { rows: [{ n: 0, with_comps: 0, zero_comps: 0, with_br: 0 }], rowCount: 0 };
       },
     };
-    await ep.runPass4(client, { scopeWhere: 'TRUE', full: false, clock: { asOfDate: () => '2026-10-03' } }, CONFIG);
+    // S2 (R-BZ G4): the pass materialises its temp table through the ctx.tempTable seam, so the
+    // ctx must carry it; the real seam is makeTempTable(client, tag) in scripts/lib/step/temp-table.js.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { makeTempTable } = require('../../scripts/lib/step/temp-table.js') as {
+      makeTempTable: (
+        client: { query: (text: string, params?: unknown[]) => Promise<unknown> },
+        tag: string,
+      ) => unknown;
+    };
+    await ep.runPass4(
+      client,
+      { scopeWhere: 'TRUE', full: false, clock: { asOfDate: () => '2026-10-03' }, tempTable: makeTempTable(client, '[test]'), exec: (_ref: number, s: string) => client.query(s) },
+      CONFIG,
+    );
     const preClears = sql.filter((s) => s.includes('UPDATE parcels SET comparable_builds = NULL'));
     expect(
       preClears.some((s) => !s.includes('p.max_buildable_footprint_sqm IS NULL')),

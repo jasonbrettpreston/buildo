@@ -2,17 +2,44 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "none",
-  "source_fingerprint": "7091422d7587da47c66a0c982df1cef3214b1579421bde4998d519c1369c79f3",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "76419f85da6a5cb49c21a04ba95042812ebecaa1fe5467ddb008f79686d7aab4",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
     "calls": 47,
-    "distinct": 35,
+    "distinct": 34,
     "utility": 13,
-    "tracer_self_ms": 34.005,
-    "wall_ms": 44498
+    "tracer_self_ms": 12.251,
+    "wall_ms": 20336
   },
   "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:enrich_ravines",
+            "enrich_ravines",
+            "enrich-ravines"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
     {
       "fingerprint": "15a0517fc5bfeebb",
       "kind": "write",
@@ -55,6 +82,56 @@
       "error": null
     },
     {
+      "fingerprint": "1d2c7f53e482c10a",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, status, started_at, completed_at, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY completed_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "sources:load_ravines",
+            "load_ravines",
+            "load-ravines"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "2001bd6cc9d4a455",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC, id DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
+      "params": [
+        [
+          [
+            "sources:enrich_ravines",
+            "enrich_ravines",
+            "enrich-ravines"
+          ],
+          2623
+        ]
+      ]
+    },
+    {
       "fingerprint": "528151b0515ba432",
       "kind": "write",
       "count": 1,
@@ -69,33 +146,27 @@
       "params": [
         [
           "completed",
-          42989,
+          19244,
           null,
-          2418,
+          2623,
           496535,
           0,
           0,
-          "{\"duration_ms\":19752,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":19752,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":9159,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":9157,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":9170,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":12980,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":12914,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":13750,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":13011,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":11552.97,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":42979,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":13756,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100,\"enrich_ravines_producer_invalid_geom_max_pct\":5},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":13756,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_spec_version\",\"pin_id\":\"load_ravines.records_meta.ravine_load.spec_version\",\"predicate\":\"records_meta.ravine_load.spec_version equals \\\"1.2\\\"\",\"observed\":\"1.2\",\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.2\",\"threshold\":\"1.2\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \\\"1.2\\\" — expected \\\"1.2\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero\",\"pin_id\":\"load_ravines.records_meta.ravine_load.source_dataset_version\",\"predicate\":\"records_meta.ravine_load.source_dataset_version nonzero\",\"observed\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"nonzero\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \\\"97b4ac7fb3f9808726a106a4b67083ac\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard\",\"pin_id\":\"load_ravines.records_meta.ravine_load.delete_skipped_empty_guard\",\"predicate\":\"records_meta.ravine_load.delete_skipped_empty_guard equals \\\"false\\\"\",\"observed\":false,\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":false,\"threshold\":\"false\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \\\"false\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.drift_check_passed\",\"predicate\":\"records_meta.ravine_load.drift_check_passed true\",\"observed\":true,\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.mass_delete_check_passed\",\"predicate\":\"records_meta.ravine_load.mass_delete_check_passed true\",\"observed\":true,\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound\",\"pin_id\":\"load_ravines.records_meta.ravine_load.invalid_geometry_skipped\",\"predicate\":\"records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5\",\"observed\":0,\"producer_run_id\":2620,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-13T22:35:38.711Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":0,\"threshold\":\"pct <= 5\",\"note\":\"load_ravines run 2620 (completed_with_warnings @ Tue Oct 13 2026 18:35:38 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":2068,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":1985,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":1997,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":3046,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":3023,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":3360,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":3213,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":25803.41,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":19243,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
     {
-      "fingerprint": "5668172b49fa1b9a",
+      "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 1,
+      "rowCount": 726,
       "reads": {},
       "writes": {},
       "excluded": [
-        "pipeline_runs"
+        "logic_variables"
       ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status = 'completed'\n      ORDER BY completed_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:load_ravines"
-        ]
-      ]
+      "error": null
     },
     {
       "fingerprint": "56985cbee4dfe3a3",
@@ -195,24 +266,6 @@
       "error": null
     },
     {
-      "fingerprint": "74217f283e595bf5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "SELECT records_meta FROM pipeline_runs\n      WHERE pipeline = $1 AND status IN ('completed', 'completed_with_warnings')\n        AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)\n      ORDER BY started_at DESC LIMIT 1",
-      "params": [
-        [
-          "sources:enrich_ravines"
-        ]
-      ]
-    },
-    {
       "fingerprint": "77d30c21e4d01ffb",
       "kind": "read",
       "count": 1,
@@ -246,7 +299,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 8,
+      "rowCount": 9,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -260,18 +313,6 @@
       "count": 1,
       "rowCount": 0,
       "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "9ae4dfa56b357dc8",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "ravines": []
-      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -302,30 +343,7 @@
         [
           "ravine_join",
           0,
-          2418
-        ]
-      ]
-    },
-    {
-      "fingerprint": "a47b9456480b80ba",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pipeline_runs"
-      ],
-      "error": null,
-      "text": "WITH own_last_completed AS (\n       SELECT started_at FROM pipeline_runs\n        WHERE pipeline = ANY($1::text[]) AND status IN ('completed', 'completed_with_warnings')\n        ORDER BY started_at DESC LIMIT 1\n     )\n     SELECT p.id, p.pipeline, p.status, p.started_at\n       FROM pipeline_runs p\n      WHERE p.pipeline = ANY($1::text[])\n        AND p.status IN ('running', 'crashed')\n        AND p.started_at > COALESCE((SELECT started_at FROM own_last_completed), '-infinity'::timestamptz)\n        AND ($2::integer IS NULL OR p.id <> $2::integer)\n      ORDER BY p.started_at DESC\n      LIMIT 1",
-      "params": [
-        [
-          [
-            "sources:enrich_ravines",
-            "enrich_ravines",
-            "enrich-ravines"
-          ],
-          2418
+          2623
         ]
       ]
     },
@@ -361,18 +379,6 @@
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "ba271f702f1828b6",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 720,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "logic_variables"
-      ],
       "error": null
     },
     {
@@ -504,7 +510,7 @@
   ],
   "transactions": [
     {
-      "client": "25032:3",
+      "client": "9624:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

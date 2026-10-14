@@ -65,7 +65,7 @@
 //     differential against commit 5's `pre/*.json`, comparator honours the declared non-determinism
 //     inventory (a)-(g) + the Fold A1 correction + the EP-D9/EP-D10 pins
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -91,6 +91,17 @@ const MANIFEST_REL = 'scripts/manifest.json';
 const GOLDEN_DIR_REL = 'docs/reports/golden/enrich_parcels';
 const REPORT_REL = 'docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md';
 const SPEC_78_REL = 'docs/specs/01-pipeline/78_optimal_lot_configuration.md';
+
+/**
+ * The stale-cohort retirement now lives in its OWN library (`scripts/lib/step/scope-retire.js`,
+ * CommonJS) and the runner calls it through the MODULE OBJECT (`scopeRetireLib.retireStaleScope(...)`),
+ * not off the compute object. `vi.spyOn(scopeRetireLib, 'retireStaleScope')` therefore intercepts the
+ * real call site — the compute fixture no longer carries a `retireStaleScope` member.
+ */
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
+const scopeRetireLib = require(path.join(REPO_ROOT, 'scripts/lib/step/scope-retire.js')) as {
+  retireStaleScope: (pool: unknown, opts: Record<string, unknown>) => Promise<Record<string, number>>;
+};
 
 /** S1 — the step's advisory lock (already true today). */
 const LOCK_ID = 65;
@@ -794,6 +805,11 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
     scopeRetireFailureRows: (results: Array<Record<string, unknown>>) => Array<Record<string, unknown>>;
   };
 
+  // The retirement is installed per test via `vi.spyOn(scopeRetireLib, 'retireStaleScope')` (see
+  // `fakeCompute`); restore the REAL implementation after every test so one test's spy never leaks
+  // into the next.
+  afterEach(() => { vi.restoreAllMocks(); });
+
   interface FakePoolOpts {
     interruptedRow?: { id: number; pipeline: string; status: string; started_at: string } | null;
     // WF3 enrich_parcels double-run incident (2026-09-07) — default true so every EXISTING
@@ -959,27 +975,31 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
   interface FakePassResult { [k: string]: unknown }
   interface FakeCompute {
     OVERLAY_LAYERS: unknown[];
-    readZoningContract: (pool: unknown) => Promise<{ layers: Record<string, boolean>; partial: boolean; baseCommittedAfterOverlayFailed: boolean }>;
-    computeDeferScope: (pool: unknown, threshold: number) => Promise<{ scope_count: number; threshold: number; ratio: number; perPass: Record<string, number> }>;
+    readZoningContract: (ctx: { pool: unknown; config: unknown }) => Promise<{ layers: Record<string, boolean>; partial: boolean; baseCommittedAfterOverlayFailed: boolean }>;
+    computeDeferScope: (ctx: { pool: unknown; config: unknown }, threshold: number) => Promise<{ scope_count: number; threshold: number; ratio: number; perPass: Record<string, number> }>;
     computeAggregateRecordsUpdated: () => number;
-    retireStaleScope: (client: unknown, opts: Record<string, unknown>) => Promise<Record<string, number>>;
     passes: Array<{ name: string; txn: string; run: (client: unknown, ctx: Record<string, unknown>, config: Record<string, unknown>) => Promise<FakePassResult> }>;
   }
 
   /** Records every phase invocation `{name, txn}` in call order — the phase-ordering witness. */
   function fakeCompute(passLog: Array<{ name: string; txn: string }>, opts: { deferScopeCount?: number; passImpl?: Record<string, (client: unknown, ctx: Record<string, unknown>) => Promise<FakePassResult>>; retireStaleScope?: (client: unknown, o: Record<string, unknown>) => Promise<Record<string, number>> } = {}): FakeCompute {
     const names = ['zoning', 'max_build', 'existing_structure', 'comparable_builds', 'optimal_config'];
+    // EP-PASS3-BACKLOG (WF3, 2026-09-15) — the step-start stale-cohort retirement. The
+    // retirement now lives in `scripts/lib/step/scope-retire.js` and the runner calls it
+    // through the MODULE OBJECT (`scopeRetireLib.retireStaleScope(pool, opts)`), so the
+    // seam this fixture installs is a `vi.spyOn` on that library method, NOT a member of
+    // the returned compute object. The fake returns the shape the runner folds into
+    // `matched`; the REAL SQL/predicate behaviour is locked separately against a fake
+    // client in the "retireStaleScope" describe block below (this fixture only proves the
+    // runner CALLS it, before the shared transaction opens).
+    vi.spyOn(scopeRetireLib, 'retireStaleScope').mockImplementation(
+      opts.retireStaleScope ?? (async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 })),
+    );
     return {
       OVERLAY_LAYERS: [],
       readZoningContract: async () => ({ layers: { base: true }, partial: false, baseCommittedAfterOverlayFailed: false }),
       computeDeferScope: async () => ({ scope_count: opts.deferScopeCount ?? 0, threshold: 1000, ratio: 0, perPass: {} }),
       computeAggregateRecordsUpdated: () => 0,
-      // EP-PASS3-BACKLOG (WF3, 2026-09-15) — the step-start stale-cohort retirement. The
-      // fake returns the shape the runner folds into `matched`; the REAL SQL/predicate
-      // behaviour is locked separately against a fake client in the
-      // "retireStaleScope" describe block below (this fixture only proves the runner
-      // CALLS it, before the shared transaction opens).
-      retireStaleScope: opts.retireStaleScope ?? (async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 })),
       passes: names.map((name, i) => ({
         name,
         txn: i < 4 ? 'shared' : 'post_commit',
@@ -2084,7 +2104,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2094,6 +2114,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const flushClient = { query };
     await ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: true, batchSize: 1000, flushClient },
     );
@@ -2110,7 +2131,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2120,6 +2141,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const flushClient = { query };
     await ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: false, batchSize: 1000, flushClient },
     );
@@ -2138,7 +2160,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2147,6 +2169,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const stats: Record<string, unknown> = { errors: 1, errorIds: new Set<number>([2]) };
     await ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: true, batchSize: 1000, flushClient: { query } },
     );
@@ -2159,7 +2182,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2169,6 +2192,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
     const recovered = await ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: false, batchSize: 2, flushClient: { query } },
     );
@@ -2185,7 +2209,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2194,6 +2218,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
     await ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: false, batchSize: 2, flushClient: { query } },
     );
@@ -2206,7 +2231,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, 'scripts/lib/compute/enrich-parcels.js')) as {
       consumePendingScope: (
-        client: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
+        client: unknown, ctx: unknown, runId: number, stats: Record<string, unknown>, stamp: Date,
         genuineIds: Set<number>, log: unknown, opts: { full: boolean; batchSize: number; flushClient: unknown },
       ) => Promise<number>;
     };
@@ -2214,6 +2239,7 @@ describe('consumePendingScope — EP-D14 query-count lock (the load-bearing one)
     const stats: Record<string, unknown> = { errors: 0, errorIds: new Set<number>() };
     await expect(ep.consumePendingScope(
       { query } as unknown as { query: typeof query },
+      { exec: (_ref: number, s: string, p?: unknown[]) => query(s, p), flushBatch: (s: string, p?: unknown[]) => query(s, p) },
       999, stats, new Date('2026-09-09T00:00:00.000Z'), new Set(), { warn: () => {}, info: () => {}, error: () => {} },
       { full: false, batchSize: badBatchSize, flushClient: { query } },
     )).rejects.toThrow(/batchSize must be a positive finite number/);
@@ -2331,6 +2357,8 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
       scopeRunId: OWN_RUN_ID,
       clock: { now: () => new Date('2026-09-08T12:00:00.000Z') },
       log: { warn: () => {}, info: () => {}, error: () => {} },
+      exec: (_ref: number, s: string, p?: unknown[]) => client.query(s, p),
+      flushBatch: (s: string, p?: unknown[]) => client.query(s, p),
     };
     const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200, enrich_parcels_scope_recovery_batch_size: 1000 };
 
@@ -2363,6 +2391,8 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
       scopeRunId: OWN_RUN_ID,
       clock: { now: () => new Date('2026-09-09T12:00:00.000Z') },
       log: { warn: () => {}, info: () => {}, error: () => {} },
+      exec: (_ref: number, s: string, p?: unknown[]) => client.query(s, p),
+      flushBatch: (s: string, p?: unknown[]) => client.query(s, p),
     };
     const config = { enrich_parcels_optcfg_batch_size: 500, enrich_parcels_pass5_stream_batch_size: 200, enrich_parcels_scope_recovery_batch_size: 1000 };
     await ep.runPass5(client, passCtx, config);
@@ -2387,6 +2417,9 @@ describe('runPass5 pruning DELETE — genuine BEHAVIOURAL lock (pilot 9 commit 8
 // the SAME pair of functions, resolved by name instead of by hardcode.
 
 describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2 Phase 0.10) — the declaration matches the compute and the config', () => {
+  // The one test here that runs the runner installs `vi.spyOn(scopeRetireLib, 'retireStaleScope')`
+  // (the retirement is a module-level library now); restore the real implementation afterwards.
+  afterEach(() => { vi.restoreAllMocks(); });
   it('the descriptor declares BOTH hooks, naming this step\'s own two compute exports', () => {
     const d = loadDescriptor();
     const hooks = (d.execution as unknown as { enrich_hooks?: { contract_read?: string; defer_scope?: { export?: string; threshold_from_config?: string } } }).enrich_hooks;
@@ -2438,17 +2471,21 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     };
     const record = async (t: string) => { sql.push(t); return answer(t); };
     const pool = { sql, query: record, connect: async () => ({ query: record, release: () => {} }) };
+    // The retirement is a MODULE-LEVEL library now (`scripts/lib/step/scope-retire.js`), called by the
+    // runner through the module object — install the seam with `vi.spyOn` before the run rather than as
+    // a member of the inline compute object.
+    vi.spyOn(scopeRetireLib, 'retireStaleScope').mockImplementation(async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 }));
+    let seen: unknown = null;
     const compute = {
       OVERLAY_LAYERS: [],
-      readZoningContract: async (p: unknown) => { calls.push(`readZoningContract(${p === pool ? 'pool' : 'OTHER'})`); return { layers: {} }; },
-      computeDeferScope: async (p: unknown, threshold: number) => { calls.push(`computeDeferScope(${p === pool ? 'pool' : 'OTHER'},${threshold})`); return { scope_count: 0, threshold, ratio: 0 }; },
+      readZoningContract: async (ctx: { pool: unknown; config: unknown }) => { seen = ctx; calls.push(`readZoningContract(ctx.pool=${ctx && ctx.pool === pool ? 'pool' : 'OTHER'};config=${ctx && ctx.config ? 'yes' : 'no'})`); return { layers: {} }; },
+      computeDeferScope: async (ctx: { pool: unknown; config: unknown }, threshold: number) => { calls.push(`computeDeferScope(ctx.pool=${ctx && ctx.pool === pool ? 'pool' : 'OTHER'};config=${ctx && ctx.config ? 'yes' : 'no'},${threshold})`); return { scope_count: 0, threshold, ratio: 0 }; },
       computeAggregateRecordsUpdated: () => 0,
       // batch-2 Phase 0.10b — the THIRD declared hook. Recorded in the same `calls` log as
       // its two siblings, which is what makes the ordering claim in the assertion below a
       // measurement rather than a comment: the two pre-phase hooks fire BEFORE phase 1, and
       // `post_phase` fires exactly ONCE, AFTER it.
       computePostPhase: async (p: unknown) => { calls.push(`computePostPhase(${p === pool ? 'pool' : 'OTHER'})`); return { matched: { zone_class_pct: 0 }, compute: { total_parcels_scanned: 0, records_new_aggregate: 0, records_updated_aggregate: 0 } }; },
-      retireStaleScope: async () => ({ backlog_rows: 0, backlog_cohorts: 0, retired_rows: 0, retired_cohorts: 0 }),
       passes: [{ name: 'zoning', txn: 'shared', run: async () => { calls.push('phase:zoning'); return { scoped: 0, updated: 0, updatedIds: [] }; } }],
     };
     await stepLib.runEnrichPhase({
@@ -2469,7 +2506,8 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       preWriteGate: null,
       ownRunId: 4242,
     });
-    expect(calls).toEqual(['readZoningContract(pool)', 'computeDeferScope(pool,1000)', 'phase:zoning', 'computePostPhase(pool)']);
+    expect(calls).toEqual(['readZoningContract(ctx.pool=pool;config=yes)', 'computeDeferScope(ctx.pool=pool;config=yes,1000)', 'phase:zoning', 'computePostPhase(pool)']);
+    expect(Object.isFrozen(seen)).toBe(true);
   });
 
   it('M5 (batch-2 Phase 0.10b) — computePostPhase reproduces the RETIRED runner literal exactly: the same 21 domain keys from the same expressions, and the same 3-key aggregate block', async () => {
@@ -2720,7 +2758,7 @@ describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driv
   it('runPass2 threads config.max_build_lot_min_sqm/max_build_lot_max_sqm into buildMaxBuildSql (emit is config-driven end to end)', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real compute module under test
     const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
-      runPass2: (client: { query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, ctx: { scopeWhere: string; full: boolean; clock: { now: () => Date } }, config: Record<string, number>) => Promise<unknown>;
+      runPass2: (client: { query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }> }, ctx: { scopeWhere: string; full: boolean; clock: { now: () => Date }; tempTable: unknown; exec: unknown }, config: Record<string, number>) => Promise<unknown>;
     };
     let capturedSql = '';
     const client = guard.wrap({
@@ -2742,7 +2780,18 @@ describe('S0.1 — max_build_lot_min_sqm / max_build_lot_max_sqm are config-driv
       laneway_suite_max_gfa_sqm: 60, laneway_suite_min_lot_sqm: 270, laneway_suite_min_rear_yard_m: 5,
       min_soft_landscaping_pct: 0.3, laneway_suite_storeys: 1, garden_suite_storeys: 1,
     };
-    await ep.runPass2(client, { scopeWhere: 'TRUE', full: true, clock: { now: () => new Date('2026-09-21T00:00:00.000Z') } }, config);
+    // S2 (R-BZ G4): runPass2 materialises parcel_max_build through the ctx.tempTable seam, so the
+    // ctx must carry it. The seam issues the `CREATE TEMP TABLE parcel_max_build ...` text through
+    // THIS fake client (the arm above still matches); the real seam is makeTempTable in
+    // scripts/lib/step/temp-table.js.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { makeTempTable } = require(path.join(REPO_ROOT, 'scripts/lib/step/temp-table.js')) as {
+      makeTempTable: (
+        client: { query: (text: string, params?: unknown[]) => Promise<unknown> },
+        tag: string,
+      ) => unknown;
+    };
+    await ep.runPass2(client, { scopeWhere: 'TRUE', full: true, clock: { now: () => new Date('2026-09-21T00:00:00.000Z') }, tempTable: makeTempTable(client, '[test]'), exec: (_ref: number, sql: string, params?: unknown[]) => (client.query as (s: string, p?: unknown[]) => Promise<unknown>)(sql, params) }, config);
     expect(capturedSql, 'runPass2 must have issued the parcel_max_build CREATE').not.toBe('');
     expect(capturedSql).toContain('best_area < 321');
     expect(capturedSql).toContain('best_area > 4321');
@@ -2935,38 +2984,45 @@ describe('zoning-change scope (2026-10-06 MED) — L-logic locks', () => {
     }
   });
 
-  it('producer / own slug forms are derived from slugForms (operator decision 2: both ledger names count)', () => {
+  it('producer / own slug forms are derived from slugForms (operator decision 2: both ledger names count) — now by the ONE reader, ctx.producer (S1-P-8b: the compute exports no form lists)', async () => {
     const m = raw();
-    expect([...m.ZONING_PRODUCER_FORMS]).toEqual(slugForms('load_zoning', ['sources']));
-    expect([...m.ENRICH_SELF_FORMS]).toEqual(slugForms('enrich_parcels', ['sources']));
-  });
-
-  it('readZoningChange — ONE bound statement; R-BG(iv) own baseline incl. completed_with_warnings; explicit no-own-run arm (F-5); producer status set deliberately differs from the own set (F-3)', async () => {
-    const m = raw();
+    expect(m.ZONING_PRODUCER_FORMS).toBeUndefined();
+    expect(m.ENRICH_SELF_FORMS).toBeUndefined();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { makeProducer } = require(abs('scripts/lib/step/producer.js')) as { makeProducer: (d: { pool: unknown; chains: string[] }) => (s: string, o?: object) => Promise<unknown> };
     const calls: Array<{ sql: string; params: unknown[] }> = [];
-    const row = { changed: true, producer_run_id: 7, producer_completed_at: null, own_last_run_id: null, own_last_started_at: null, read_at: null };
-    const out = await m.readZoningChange({ query: async (sql: string, params: unknown[]) => { calls.push({ sql, params }); return { rows: [row] }; } });
-    expect(calls).toHaveLength(1);
-    const sql = calls[0]!.sql.replace(/\s+/g, ' ');
-    expect(sql).toContain('completed_with_warnings');
-    expect(sql).toContain('NOT EXISTS (SELECT 1 FROM own_last)');
-    expect(sql).toMatch(/status IN \('completed', 'completed_with_warnings'\)/);
-    expect(sql).toMatch(/status NOT IN \('running', 'skipped', 'self_skipped'\)/);
-    expect(calls[0]!.params).toEqual([[...m.ENRICH_SELF_FORMS], [...m.ZONING_PRODUCER_FORMS]]);
-    expect(out).toEqual(row);
+    const producer = makeProducer({ pool: { query: async (sql: string, params: unknown[]) => { calls.push({ sql, params }); return { rows: [] }; } }, chains: ['sources'] });
+    await producer('load_zoning');
+    await producer('enrich_parcels');
+    expect(calls[0]!.params[0]).toEqual(slugForms('load_zoning', ['sources']));
+    expect(calls[1]!.params[0]).toEqual(slugForms('enrich_parcels', ['sources']));
   });
 
-  it('readZoningContract returns zoning_change (read once, before the defer decision, F-9)', async () => {
+  it('readZoningChange — reads through ctx.producer (no SQL of its own); R-BG(iv) own baseline incl. completed_with_warnings; no-own-run arm (F-5) scopes all; producer window uses the explicit terminal set (F-3) — full matrix in enrich-parcels-zoning-change.logic.test.ts', async () => {
     const m = raw();
-    const pool = {
-      query: async (sql: string) => {
-        if (sql.includes('own_last')) return { rows: [{ changed: false, producer_run_id: null, producer_completed_at: null, own_last_run_id: 1, own_last_started_at: null, read_at: null }] };
-        if (sql.includes('zoning_layers_loaded')) return { rows: [{ records_meta: { zoning_layers_loaded: { base: true } } }] };
-        return { rows: [{ status: 'completed', records_meta: {} }] };
-      },
+    const miss = { reason: 'MISSING', sid: null, status: null, started_at: null, completed_at: null, records_meta: null, rows: [] };
+    const seen: Array<[string, unknown]> = [];
+    const out = await m.readZoningChange({ producer: async (slug: string, o?: unknown) => { seen.push([slug, o]); return miss; } });
+    // fence (was: SQL NOT EXISTS (SELECT 1 FROM own_last) -> changed): no own baseline run => scope all, fail-safe
+    expect(out).toEqual({ changed: true, producer_run_id: null, producer_completed_at: null, own_last_run_id: null, own_last_started_at: null });
+    expect(seen).toEqual([['enrich_parcels', { onError: 'throw' }]]); // default (baseline) status set for E (only the fail-closed onError), never a literal in the compute
+    const d = new Date('2026-01-01T00:00:00Z');
+    seen.length = 0;
+    const out2 = await m.readZoningChange({ producer: async (slug: string, o?: unknown) => { seen.push([slug, o]); return slug === 'enrich_parcels' ? { reason: 'FOUND', sid: 4, status: 'completed', started_at: d, completed_at: d, records_meta: {}, rows: [] } : { reason: 'FOUND', rows: [{ id: 7, completed_at: d, records_meta: {} }] }; } });
+    expect(out2).toMatchObject({ changed: true, producer_run_id: 7, own_last_run_id: 4 });
+    expect(seen[1]![1]).toMatchObject({ statuses: 'terminal', excludeWarnSkip: false, completedSince: d }); // P deliberately wider than E
+  });
+
+  it('readZoningContract returns zoning_change (read once, before the defer decision, F-9) — via ctx.producer', async () => {
+    const m = raw();
+    const d = new Date('2026-01-01T00:00:00Z');
+    const producer = async (slug: string, o: { metaObject?: string } = {}) => {
+      if (slug === 'enrich_parcels') return { reason: 'FOUND', sid: 1, status: 'completed', started_at: d, completed_at: d, records_meta: {}, rows: [] };
+      if (o.metaObject) return { reason: 'FOUND', sid: 2, status: 'completed', records_meta: { zoning_layers_loaded: { base: true } }, rows: [] };
+      return { reason: 'FOUND', sid: 3, status: 'completed', records_meta: { zoning_rows_changed: 0 }, rows: [{ id: 3, completed_at: d, records_meta: { zoning_rows_changed: 0 } }] };
     };
-    const contract = await m.readZoningContract(pool);
-    expect(contract.zoning_change).toEqual({ changed: false, producer_run_id: null, producer_completed_at: null, own_last_run_id: 1, own_last_started_at: null, read_at: null });
+    const contract = await m.readZoningContract({ pool: {}, producer });
+    expect(contract.zoning_change).toEqual({ changed: false, producer_run_id: null, producer_completed_at: null, own_last_run_id: 1, own_last_started_at: d });
     expect(contract.layers).toEqual({ base: true });
   });
 

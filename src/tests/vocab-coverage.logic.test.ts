@@ -10,11 +10,12 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const LIB_PATH = path.resolve(__dirname, '../../scripts/lib/vocab-coverage.js');
+const LIB_PATH = path.resolve(__dirname, '../../scripts/lib/vocab-coverage-pool.js');
+const CORE_PATH = path.resolve(__dirname, '../../scripts/lib/vocab-coverage.js'); // S2 (R-CH): the SQL moved to the core
 
 describe('vocab-coverage.js — resolveAndCountTriple', () => {
   let content: string;
-  beforeAll(() => { content = readFileSync(LIB_PATH, 'utf-8'); });
+  beforeAll(() => { content = `${readFileSync(LIB_PATH, 'utf-8')}\n${readFileSync(CORE_PATH, 'utf-8')}`; });
 
   it('exports resolveAndCountTriple', () => {
     expect(content).toMatch(/module\.exports = \{ resolveAndCountTriple \}/);

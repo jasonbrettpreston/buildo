@@ -51,12 +51,23 @@ async function applyLogicVariables(pool) {
   let inserted = 0;
 
   for (const [key, meta] of entries) {
-    const result = await pool.query(
-      `INSERT INTO logic_variables (variable_key, variable_value, description)
+    // String-typed variables (seed `type: "string"`, e.g. pipeline_timezone, R-CE)
+    // take the same storage shape as JSON-typed vars: sentinel 0 in variable_value,
+    // the value itself in variable_value_json (migration 219). Every other entry
+    // keeps the numeric statement byte-identical.
+    const result = meta.type === 'string'
+      ? await pool.query(
+        `INSERT INTO logic_variables (variable_key, variable_value, variable_value_json, description)
+         VALUES ($1, 0, to_jsonb($2::text), $3)
+         ON CONFLICT (variable_key) DO NOTHING`,
+        [key, meta.default, meta.description ?? null],
+      )
+      : await pool.query(
+        `INSERT INTO logic_variables (variable_key, variable_value, description)
        VALUES ($1, $2, $3)
        ON CONFLICT (variable_key) DO NOTHING`,
-      [key, meta.default, meta.description ?? null],
-    );
+        [key, meta.default, meta.description ?? null],
+      );
     inserted += result.rowCount ?? 0;
   }
 

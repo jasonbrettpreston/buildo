@@ -38,7 +38,7 @@ const { Pool } = require('pg');
 // from the client at 10s catches a dead peer fast without adding meaningful
 // traffic on a healthy, minutes-long batch connection).
 const POOL_KEEPALIVE_INITIAL_DELAY_MS = 10000;
-const { resolveAndCountTriple } = require('./vocab-coverage');
+const { resolveAndCountTriple } = require('./vocab-coverage-pool');
 const { resolveSslConfig, stripSslParams } = require('./ssl-config');
 const { REQUIRED_PG_VARS } = require('./resolve-db');
 

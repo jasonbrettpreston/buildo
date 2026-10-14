@@ -31,6 +31,8 @@ import path from 'path';
 import crypto from 'crypto';
 import Module from 'module';
 import { witnessGuard } from '../_witness-guard';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require('../../../../scripts/lib/step/producer.js') as { makeProducer: (d: { pool: unknown; chains: string[] }) => (s: string, o?: object) => Promise<unknown> };
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 // P1-C4a fixture guard (Fold 7): every statement on a wrapped handle is resolved against this
@@ -103,6 +105,12 @@ function loadDescriptor(): AnyObj {
 function loadCompute(): AnyObj {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require(artifact(COMPUTE_REL));
+}
+/** The REAL ctx.tempTable seam (Spec 124 R-BZ G4), loaded the same way as the compute. */
+function makeTempTableFor(client: AnyObj, tag: string): AnyObj {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const seam: AnyObj = require(abs('scripts/lib/step/temp-table.js'));
+  return seam.makeTempTable(client, tag);
 }
 /** Defaults from the seed file; a missing seed row is a named ① red. */
 function seededConfig(): Record<string, number> {
@@ -333,13 +341,16 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
   it('B4 compute — at default config the SQL builder is byte-equal to the legacy full / scoped / UPDATE strings, no .replace() surgery (flips at: commit ②)', () => {
     const c = loadCompute();
     const cfg = seededConfig();
-    expect(c.buildTempSql({ scoped: false }, cfg)).toBe(oracle.BUILD_TEMP_SQL);
-    expect(c.buildTempSql({ scoped: true }, cfg)).toBe(oracle.BUILD_TEMP_SQL_SCOPED);
+    // S2 (R-BZ G4): the DDL frame moved to ctx.tempTable; frame + query is still byte-equal to the legacy strings.
+    const FRAME = 'CREATE TEMP TABLE tmp_centreline_enrich ON COMMIT DROP AS';
+    expect('\nDROP TABLE IF EXISTS tmp_centreline_enrich;\n' + FRAME + c.buildTempSql({ scoped: false }, cfg)).toBe(oracle.BUILD_TEMP_SQL);
+    expect('\n\n' + FRAME + c.buildTempSql({ scoped: true }, cfg)).toBe(oracle.BUILD_TEMP_SQL_SCOPED);
+    expect(c.buildTempSql({ scoped: false }, cfg)).toMatch(/^\nWITH\n/);
     expect(c.UPDATE_SQL).toBe(oracle.UPDATE_SQL);
     expect(fs.readFileSync(abs(COMPUTE_REL), 'utf8')).not.toMatch(/\.replace\(\s*['"`]/);
   });
 
-  it('B5 compute — contract_read keeps the four HALTs and returns {sourceDatasetVersion, lastVersion, staleCount, mode}; staleCount only when unchanged (flips at: commit ②)', async () => {
+  it('B5 compute — contract_read reads through ctx.producer (the four producer HALTs are now descriptor pins) and returns {sourceDatasetVersion, lastVersion, staleCount, mode, specVersion}; staleCount only when unchanged (flips at: commit ②)', async () => {
     const c = loadCompute();
     const producer = { records_meta: { centreline_load: { spec_version: '1.1', features_inserted: 5, source_dataset_version: V } } };
     const self = (ver: string) => ({ records_meta: { centreline_enrich: { source_dataset_version: ver } } });
@@ -353,13 +364,16 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
       });
       return { ...fake, db: guard.wrap(fake.db) };
     };
+    // S1-P-7: the hook takes ctx.producer (the one run-history reader); the 5th key specVersion is the producer's observed (pin-proven) stamp.
+    const ctxFor = (d: { db: unknown }) => ({ pool: d.db, producer: makeProducer({ pool: d.db, chains: ['sources'] }) });
     const unchanged = db(self(V), 24426);
-    await expect(c.readCentrelineContract(unchanged.db)).resolves.toEqual({ sourceDatasetVersion: V, lastVersion: V, staleCount: 24426, mode: 'incremental' });
+    await expect(c.readCentrelineContract(ctxFor(unchanged))).resolves.toEqual({ sourceDatasetVersion: V, lastVersion: V, staleCount: 24426, mode: 'incremental', specVersion: '1.1' });
     expect(unchanged.calls).toHaveLength(3);
     const changed = db(self(V_NEW), 0);
-    await expect(c.readCentrelineContract(changed.db)).resolves.toMatchObject({ lastVersion: V_NEW, staleCount: null, mode: 'full' });
+    await expect(c.readCentrelineContract(ctxFor(changed))).resolves.toMatchObject({ lastVersion: V_NEW, staleCount: null, mode: 'full' });
     expect(changed.calls).toHaveLength(2);
-    await expect(c.readCentrelineContract(fakeDb(() => ({ rows: [] })).db)).rejects.toThrow(/no successful sources:load_centreline run/);
+    // Fence (was: throw /no successful sources:load_centreline run/): the no-run HALT is now the runner's MISSING pin rows (enrich-centreline-pins.logic.test.ts); a violated pin never reaches the hook, so a hook reached with no run crashes loudly (no defaults).
+    await expect(c.readCentrelineContract(ctxFor(fakeDb(() => ({ rows: [] }))))).rejects.toThrow(TypeError);
   });
 
   it('B6 compute — the pass: mode = ctx.full ? full : contract.mode; per-mode statements equal the legacy engine; passRaw carries the four hand-off keys (flips at: commit ②)', async () => {
@@ -374,6 +388,7 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
         full, config: cfg, onProgress: () => {},
         contract: { sourceDatasetVersion: V, lastVersion: V, staleCount: 7, mode },
         joinUpdate: async (ref: number, sql: string, params: unknown[]) => { ju.push({ ref, sql, params }); return 3; },
+        tempTable: makeTempTableFor(db, '[test]'),
       };
       const raw = await c.runCentrelineJoinPass(db, passCtx);
       return { raw, calls, ju };
@@ -388,14 +403,22 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     expect(fs.readFileSync(abs(ORACLE_REL), 'utf8')).toContain(`(await client.query('${PROBE}')).rows.length === 0`);
     const legacyScoped = await oracleEngineCalls(true);
     const inc = await runPass(false, 'incremental');
-    expect(inc.calls.map((q) => q.sql)).toEqual([PROBE, legacyScoped[0]?.sql, legacyScoped[1]?.sql, legacyScoped[3]?.sql]);
+    expect(inc.calls.map((q) => q.sql.trim())).toEqual([PROBE, legacyScoped[0]?.sql.trim(), legacyScoped[1]?.sql.trim(), legacyScoped[3]?.sql.trim()]);
     expect(inc.calls[2]?.params).toEqual([V]);
     expect(inc.ju).toEqual([{ ref: 0, sql: oracle.UPDATE_SQL, params: [V] }]);
     expect(inc.raw).toMatchObject({ mode: 'incremental', lastVersion: V, sourceDatasetVersion: V, staleCount: 7, updated: 3 });
     const legacyFull = await oracleEngineCalls(false);
     const forced = await runPass(true, 'skip');
-    expect(forced.calls.map((q) => q.sql)).toEqual([PROBE, legacyFull[0]?.sql, legacyFull[2]?.sql]);
-    expect(forced.calls[1]?.params ?? []).toEqual([]);
+    // WHY TWO STATEMENTS NOW (S2, R-BZ G4): the legacy engine sent ONE multi-statement query
+    // `DROP …; CREATE TEMP …` over the SIMPLE protocol; the ctx.tempTable seam sends the SAME two
+    // statements separately, inside the SAME transaction. So the CREATE is index 2, not index 1.
+    const f = forced.calls.map((q) => q.sql.trim());
+    expect(f[0]).toBe(PROBE);
+    expect(f[1]).toBe('DROP TABLE IF EXISTS tmp_centreline_enrich');
+    expect(f[1] + ';\n' + f[2]).toBe(legacyFull[0]?.sql.trim());
+    expect(f[3]).toBe(legacyFull[2]?.sql.trim());
+    expect(f).toHaveLength(4);
+    expect(forced.calls[2]?.params ?? []).toEqual([]);
     expect(forced.raw.mode).toBe('full');
   });
 
@@ -404,11 +427,11 @@ describe('enrich_centreline — PART B: the converted step (RED at ①, flips at
     const cfg = seededConfig();
     const legacy = oracleReducedSummary('skip', 0, 0).records_meta.centreline_enrich;
     const reduced = fakeDb(() => { throw new Error('reduced mode must not query'); });
-    const passRaw = { centreline_join: { mode: 'skip', lastVersion: V, sourceDatasetVersion: V, staleCount: 0, updated: 0, tally: null } };
+    const passRaw = { centreline_join: { mode: 'skip', specVersion: '1.1', lastVersion: V, sourceDatasetVersion: V, staleCount: 0, updated: 0, tally: null } };
     const r = await c.computePostPhase(guard.wrap(reduced.db), { passRaw, full: false, runAt: RUN_AT, config: cfg });
     expect(r.matched.centreline_enrich).toEqual({ ...legacy, completed_at: RUN_AT.toISOString() });
     const row = { geom_total: 486530, invalid_geom: 0, name_pop: 486080, addr_pop: 486530, node_null: 0, total: 47318, n: 486530 };
-    const fullRaw = { centreline_join: { mode: 'full', lastVersion: V, sourceDatasetVersion: V, staleCount: null, updated: 3, tally: { ...TALLY_ROW, intersecting: 472002 } } };
+    const fullRaw = { centreline_join: { mode: 'full', specVersion: '1.1', lastVersion: V, sourceDatasetVersion: V, staleCount: null, updated: 3, tally: { ...TALLY_ROW, intersecting: 472002 } } };
     const f = await c.computePostPhase(guard.wrap(fakeDb(() => ({ rows: [row] })).db), { passRaw: fullRaw, full: true, runAt: RUN_AT, config: cfg });
     expect(Object.keys(f.matched.centreline_enrich).sort()).toEqual([...FULL_SHAPE_KEYS].sort());
     expect(f.matched.centreline_enrich.parcels_with_zero_centreline_intersections_pct).toBe(2.9899999999999998);

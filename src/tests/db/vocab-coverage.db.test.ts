@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { PoolClient } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { resolveAndCountTriple } = require('../../../scripts/lib/vocab-coverage');
+const { resolveAndCountTriple } = require('../../../scripts/lib/vocab-coverage-pool');
 
 const pool = getTestPool()!;
 

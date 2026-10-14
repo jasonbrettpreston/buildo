@@ -165,12 +165,13 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     for (const [id, file] of Object.entries(SPEC_FILES)) {
       specTexts[id] = fs.readFileSync(path.join(SPEC_DIR, file), 'utf8');
     }
-    const ids = mod.extractRegisterRulingIds(specTexts['124']);
+    // M20 (H5) moved R-AJ..R-AP to a 124a LIVE REGISTER section, so the register is read from both.
+    const ids = mod.extractRegisterRulingIds(specTexts['124'], specTexts['124a']);
     // GREEN — every id batch-2 Phase 0.8 allocated must resolve NOW, off a REAL
     // §5 row, not a fixture. (The plan's own draft named `R-AM` as the dangling
     // case; the block shifted one letter when the concurrent enrich-runner WF took
     // R-AK, so the ratified block is R-AL..R-AP — recorded, not silently renumbered.)
-    expect(ids.has('R-AN'), 'R-AN must be a real §5 register row after batch-2 Phase 0.8').toBe(true);
+    expect(ids.has('R-AN'), 'R-AN must be a real register row (§5, or 124a LIVE REGISTER since M20)').toBe(true);
     for (const real of ['R-AL', 'R-AM', 'R-AN', 'R-AO', 'R-AP']) {
       expect(ids.has(real), `${real} must be a real §5 register row`).toBe(true);
     }
@@ -224,10 +225,10 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     expect(run.stderr).toContain('arm(vi) UNDECLARED MOVE — 124a heading');
   });
 
-  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M18) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
+  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M18, M20) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; to_spec: string; content_sha256: string | null }[] };
     const into124a = manifest.moves.filter((m) => m.to_spec === '124a');
-    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17', 'M18']);
+    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17', 'M18', 'M20']);
     for (const m of into124a) expect(m.content_sha256, `${m.id} must carry the hash --refresh recorded`).toMatch(/^[0-9a-f]{64}$/);
 
     const green = makeFixtureTree();

@@ -23,21 +23,42 @@ import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { dbAvailable, getTestPool } from './db/setup-testcontainer';
 
+declare const __filename: string;
+declare const __dirname: string;
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const descriptor = require('../../scripts/enrich-ravines.descriptor.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const compute = require('../../scripts/lib/compute/enrich-ravines.js');
+// S4: the empty-source HALT is owned by the DECLARED guard, measured pre-compute by the runner.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const runner = require('../../scripts/lib/step/index.js');
+const ravinesDescriptor = descriptor;
+
+/**
+ * The ctx a contract_read hook receives from the runner: the pool AND the shared producer reader
+ * (`ctx.producer`) — S1-P-6 moved the producer read onto it, so a hook call without one is a real
+ * TypeError, never a silently-skipped contract.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const runnerProducer = (p: any) =>
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('../../scripts/lib/step/producer').makeProducer({ pool: p, chains: ['sources'] });
 
 const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/enrich-ravines.js'), 'utf8');
 const SHELL_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-ravines.js'), 'utf8');
 
 // ── (A) Source-contract ─────────────────────────────────────────────────────
 describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () => {
-  it('lock 60 (descriptor + shell source-text agreement) + reads the chain-scoped producer sources:load_ravines, completed_at DESC', () => {
+  it('lock 60 (descriptor + shell source-text agreement) + reads the chain-scoped producer sources:load_ravines through the library', () => {
     expect(descriptor.identity.lock).toBe(60);
     expect(SHELL_SRC).toMatch(/ADVISORY_LOCK_ID\s*=\s*60/);
     expect(COMPUTE_SRC).toContain("'sources:load_ravines'");
-    expect(COMPUTE_SRC).toMatch(/ORDER BY completed_at DESC/);
+    // S1-P-6: the producer read is the LIBRARY's (`ctx.producer` → readRunHistory), so the
+    // `completed_at DESC, id DESC` order and the status set are the library's, not this file's
+    // text — the compute can no longer carry a hand-rolled ledger SELECT (locked below).
+    expect(COMPUTE_SRC).toContain('ctx.producer(PRODUCER_STEP)');
+    expect(COMPUTE_SRC).toContain("const PRODUCER_STEP = 'load_ravines'");
   });
 
   it('§11.1 SQL: ST_Intersects boolean + index-accelerated LATERAL KNN (materialized centroid), geom-scoped, PORTED VERBATIM (F5)', () => {
@@ -82,11 +103,26 @@ describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () 
     ]);
   });
 
-  it('consumer-protocol gate strings present (spec_version pin, empty-guard, drift, lineage) — F1, ported verbatim', () => {
-    expect(COMPUTE_SRC).toContain('spec_version');
-    expect(COMPUTE_SRC).toContain('delete_skipped_empty_guard');
-    expect(COMPUTE_SRC).toContain('mass_delete_check_passed');
-    expect(COMPUTE_SRC).toContain('source_dataset_version is null/empty');
+  it('consumer-protocol gate strings are no longer IN THE COMPUTE — they are descriptor pins the runner evaluates (S1-P-6, Rule 10)', () => {
+    // The six producer-protocol conditions (spec_version, delete_skipped_empty_guard, drift,
+    // mass_delete_check_passed, the invalid-geometry ratio, the empty lineage) are DECLARED
+    // `staleness.pins[]` rows: the compute must not carry their predicates as source text.
+    const pinStamps = descriptor.staleness.pins.map((p: { stamp: string }) => p.stamp);
+    expect(pinStamps).toEqual(
+      expect.arrayContaining([
+        'records_meta.ravine_load.spec_version',
+        'records_meta.ravine_load.source_dataset_version',
+        'records_meta.ravine_load.delete_skipped_empty_guard',
+        'records_meta.ravine_load.drift_check_passed',
+        'records_meta.ravine_load.mass_delete_check_passed',
+        'records_meta.ravine_load.invalid_geometry_skipped',
+      ]),
+    );
+    expect(COMPUTE_SRC).not.toMatch(/spec_version|delete_skipped_empty_guard|drift_check_passed|mass_delete_check_passed|invalid_geometry_skipped/);
+    expect(COMPUTE_SRC).not.toMatch(/pinnedEquals|staleness-pins|\.descriptor\.json|MAX_INVALID_GEOM_RATIO|0\.05/);
+    // ...and the L14 / SRID sentences that DO stay are still readable in the hook's own doc block.
+    expect(COMPUTE_SRC).toContain('guards.empty_source');
+    expect(COMPUTE_SRC).toMatch(/Find_SRID/);
   });
 
   it('#418 Layer-1 is RETIRED AS A MECHANISM (F9) — no standalone stale-count early return; Layer-2 stays embedded in the ONE statement', () => {
@@ -162,7 +198,7 @@ describe.skipIf(!dbAvailable())('enrich_ravines — §11.1 spatial join (real Po
     expect(upd2.rowCount).toBe(0);
   });
 
-  it('readRavineContract HALTs (L14) when the ravines table is empty, even with a valid producer run on record', async () => {
+  it('declared guards.empty_source HALTs (L14) when the ravines table is empty; readRavineContract is no longer the L14 owner', async () => {
     // A valid producer fixture, so the L14 halt is genuinely isolated from the producer-protocol
     // halts F1 also folds into this same hook (RV-L2).
     await pool.query(
@@ -177,7 +213,16 @@ describe.skipIf(!dbAvailable())('enrich_ravines — §11.1 spatial join (real Po
       })],
     );
     await pool.query('DELETE FROM ravines');
-    expect.assertions(1);
-    await expect(compute.readRavineContract(pool)).rejects.toThrow(/ravines table is empty/);
+    expect.assertions(3);
+    // (a) S4: readRavineContract is no longer the L14 owner — with an empty `ravines` it still
+    // resolves (the producer fixture above keeps it isolated from the producer-protocol pins,
+    // which the RUNNER evaluates; S1-P-6 — the hook reads its producer through ctx.producer).
+    await expect(compute.readRavineContract({ pool, producer: runnerProducer(pool) })).resolves.toBeDefined();
+    // (b) The real stop is the DECLARED `guards.empty_source`: the runner counts `ravines` and
+    // halts the run pre-compute with an errored FAIL row naming it.
+    const g = await runner.measureInputGuards(pool, ravinesDescriptor);
+    expect(g.halt).toBe(true);
+    const failRow = g.rows.find((r: { status?: string }) => r.status === 'FAIL');
+    expect(failRow?.value).toBe('empty: ravines');
   });
 });

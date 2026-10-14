@@ -38,9 +38,16 @@ import { describe, it, expect } from 'vitest';
 const eh = require('../../scripts/enrich-heritage.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const compute = require('../../scripts/lib/compute/enrich-heritage.js');
+// S1-P-5 — the hook now reads its producer through ctx.producer; tests build it with makeProducer.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require('../../scripts/lib/step/producer');
 
-describe('H4 — RE-DERIVED against readHeritageContract (RV-L2: L14 folded into the pre-transaction hook)', () => {
-  it('throws when heritage_properties is empty (heritage_districts non-empty)', async () => {
+const HERITAGE_DESCRIPTOR = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-heritage.descriptor.json'), 'utf8'),
+);
+
+describe('H4 — RETARGETED: the empty-source HALT is a declared runner guard (guards.empty_source), NOT the hook', () => {
+  it('heritage_properties is empty → stopped by the declared guards.empty_source (runner, before the hook; S4)', async () => {
     const stubPool = {
       query: async (sql: string) => {
         if (sql.includes('FROM pipeline_runs')) {
@@ -55,10 +62,13 @@ describe('H4 — RE-DERIVED against readHeritageContract (RV-L2: L14 folded into
         return { rows: [{ srid: 4326 }] };
       },
     };
-    await expect(compute.readHeritageContract(stubPool)).rejects.toThrow(/heritage_properties is empty/);
+    // (a) the declared guard names this table — the runner counts it BEFORE any hook (S4).
+    expect(HERITAGE_DESCRIPTOR.guards.empty_source).toContain('heritage_properties');
+    // (b) the hook is no longer the L14 owner: an empty table does not make it throw.
+    await expect(compute.readHeritageContract({ pool: stubPool, producer: makeProducer({ pool: stubPool, chains: ['sources'] }) })).resolves.toBeTruthy();
   });
 
-  it('throws when heritage_districts is empty (heritage_properties non-empty)', async () => {
+  it('heritage_districts is empty → stopped by the declared guards.empty_source (runner, before the hook; S4)', async () => {
     const stubPool = {
       query: async (sql: string) => {
         if (sql.includes('FROM pipeline_runs')) {
@@ -73,7 +83,10 @@ describe('H4 — RE-DERIVED against readHeritageContract (RV-L2: L14 folded into
         return { rows: [{ srid: 4326 }] };
       },
     };
-    await expect(compute.readHeritageContract(stubPool)).rejects.toThrow(/heritage_districts is empty/);
+    // (a) the declared guard names this table — the runner counts it BEFORE any hook (S4).
+    expect(HERITAGE_DESCRIPTOR.guards.empty_source).toContain('heritage_districts');
+    // (b) the hook is no longer the L14 owner: an empty table does not make it throw.
+    await expect(compute.readHeritageContract({ pool: stubPool, producer: makeProducer({ pool: stubPool, chains: ['sources'] }) })).resolves.toBeTruthy();
   });
 
   it('resolves (and returns the combined datasetVersion) once the producer contract + both tables are non-empty + SRID is 4326', async () => {
@@ -91,7 +104,7 @@ describe('H4 — RE-DERIVED against readHeritageContract (RV-L2: L14 folded into
         return { rows: [{ srid: 4326 }] };
       },
     };
-    await expect(compute.readHeritageContract(stubPool)).resolves.toEqual({ datasetVersion: 'reg1|hcd1' });
+    await expect(compute.readHeritageContract({ pool: stubPool, producer: makeProducer({ pool: stubPool, chains: ['sources'] }) })).resolves.toEqual({ datasetVersion: 'reg1|hcd1' });
   });
 
   it('runs pre-transaction, on EVERY invocation (declared as execution.enrich_hooks.contract_read, called by the runner above the phase loop) — L14 now holds on the run\'s only path (the legacy\'s "both paths" framing retired with the branch it described)', () => {

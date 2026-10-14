@@ -442,7 +442,11 @@ describe('readPriorRunMeta — started_at DESC standardization', () => {
     // src/tests/db/source-version-ledger-gate.db.test.ts (live selection).
     expect(captured.sql).toMatch(/ORDER BY started_at DESC/);
     expect(captured.sql).not.toMatch(/completed_at/);
-    expect(captured.params).toEqual(['sources:load_ravines']);
+    // Purity seam S1-R (2026-10-12, Spec 124 R-BG(iv)/HQ-6): readPriorRunMeta delegates to
+    // readRunHistory — params are [every name form, the baseline status set, limit]; a
+    // standalone run's bare-slug row is now found by a chain read and vice versa.
+    expect(captured.sql).toMatch(/ORDER BY started_at DESC, id DESC/);
+    expect(captured.params).toEqual([['sources:load_ravines', 'load_ravines', 'load-ravines'], ['completed', 'completed_with_warnings'], 1]);
   });
   it('R8: the real readPriorRunMeta + runLedgerGateDecision SQL carries no FAIL:PRODUCER at gate #44 (negative control: own_last without the warned status is RED)', async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

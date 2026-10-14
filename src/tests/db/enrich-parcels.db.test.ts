@@ -26,6 +26,12 @@ import { dbAvailable, getTestPool } from './setup-testcontainer';
 // `resolveConfig()` the real runner uses) and the exact successor mapping.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { enrichParcels, assertPreconditions, compute } = require('./_lib/enrich-parcels-harness');
+// S1-P-8b — readZoningChange now takes the hook ctx (`{producer}`), the same shape the runner
+// builds for contract_read/defer_scope (scripts/lib/step/index.js), never a bare pool/client.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeProducer } = require('../../../scripts/lib/step/producer');
+/** The hook ctx `readZoningChange` expects, wired to the CALLER's client (txn visibility). */
+const zoningChangeOf = (c: PoolClient) => compute.readZoningChange({ producer: makeProducer({ pool: c, chains: ['sources'] }) });
 
 const TEST_PARCEL = 990_000_000; // test parcel_id range — isolated by ROLLBACK
 const TEST_SRC = 990_000_000;    // test source_id range for zoning fixtures
@@ -128,7 +134,7 @@ async function insRun(
 }
 /** Pass 1's live incremental scope over the fixture, under the ledger answer the run would read. */
 async function ledgerScopeCount(c: PoolClient): Promise<number> {
-  const zc = await compute.readZoningChange(c);
+  const zc = await zoningChangeOf(c);
   return scopeCount(c, compute.buildPass1ScopeWhere({ full: false, zoningChanged: zc.changed }));
 }
 const WROTE = { gate: { gated_skip: false }, zoning_rows_changed: 1 };
@@ -393,7 +399,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await c.query(`UPDATE parcels SET zoning_enriched_at = '2000-01-02' WHERE parcel_id = $1`, [TEST_PARCEL + 52]);
         await c.query(`UPDATE zoning_bylaw_areas SET source_dataset_version = '2000-01-03' WHERE source_id = $1`, [TEST_SRC + 52]);
         await insRun(c, SELF, 'completed', '1 day', '1 day 1 minute');
-        expect((await compute.readZoningChange(c)).changed).toBe(false);
+        expect((await zoningChangeOf(c)).changed).toBe(false);
         expect(await ledgerScopeCount(c)).toBe(0);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
@@ -503,7 +509,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await buildSeed(c, TEST_SRC + 70, TEST_PARCEL + 70);
         await c.query(`UPDATE zoning_bylaw_areas SET fsi_max = 2.5, source_dataset_version = '2000-01-01' WHERE source_id = $1`, [TEST_SRC + 70]);
         await insRun(c, PRODUCER, 'completed_with_warnings', '2 days', '2 days 1 minute', WROTE);
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         expect(await ledgerScopeCount(c)).toBe(1);
         await enrichParcels(c, { scopeWhere: SCOPE, full: false });
         expect(Number((await getParcel(c, TEST_PARCEL + 70)).bylaw_max_fsi)).toBe(2.5);
@@ -550,7 +556,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await buildSeed(c, TEST_SRC + 74, TEST_PARCEL + 74);
         await insRun(c, PRODUCER, 'completed', '2 days', '2 days 1 minute', WROTE);
         await insRun(c, SELF, 'completed', '3 days', '3 days 1 minute');
-        expect((await compute.readZoningChange(c)).changed).toBe(false);
+        expect((await zoningChangeOf(c)).changed).toBe(false);
         expect(await ledgerScopeCount(c)).toBe(0);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
@@ -561,8 +567,10 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
       try {
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 75, TEST_PARCEL + 75);
-        await c.query(`DELETE FROM pipeline_runs WHERE pipeline = ANY($1::text[])`, [compute.ENRICH_SELF_FORMS]);
-        const zc = await compute.readZoningChange(c);
+        // S1-P-8b — the own-slug form list moved to the producer library's slugForms(enrich_parcels,
+        // ['sources']); the deleted ENRICH_SELF_FORMS export is replaced by the literal forms here.
+        await c.query(`DELETE FROM pipeline_runs WHERE pipeline = ANY($1::text[])`, [['sources:enrich_parcels', 'enrich_parcels', 'enrich-parcels']]);
+        const zc = await zoningChangeOf(c);
         expect(zc.changed).toBe(true);
         expect(zc.own_last_run_id).toBeNull();
         await c.query('ROLLBACK');
@@ -576,11 +584,13 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 76, TEST_PARCEL + 76);
         await insRun(c, PRODUCER, 'completed_with_warnings', '2 days', '2 days 1 minute', WROTE);
-        const s1 = await compute.computeDeferScope(c, 1000);
+        // S1-P-8b — computeDeferScope needs the hook ctx too (its readZoningChange call goes through
+        // ctx.producer); the count queries still run on `client = ctx.pool`.
+        const s1 = await compute.computeDeferScope({ pool: c, producer: makeProducer({ pool: c, chains: ['sources'] }) }, 1000);
         expect(s1.zoning_change.changed).toBe(true);
         expect(s1.perPass.pass1).toBe(Number((await c.query('SELECT count(*)::int AS n FROM parcels WHERE geom IS NOT NULL')).rows[0].n));
         await insRun(c, SELF, 'completed', '3 days', '3 days 1 minute');
-        const s2 = await compute.computeDeferScope(c, 1000);
+        const s2 = await compute.computeDeferScope({ pool: c, producer: makeProducer({ pool: c, chains: ['sources'] }) }, 1000);
         expect(s2.zoning_change.changed).toBe(false);
         expect(s2.perPass.pass1).toBe(Number((await c.query('SELECT count(*)::int AS n FROM parcels WHERE geom IS NOT NULL AND zoning_enriched_at IS NULL')).rows[0].n));
         await c.query('ROLLBACK');
@@ -593,7 +603,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 77, TEST_PARCEL + 77);
         await insRun(c, PRODUCER, 'completed_with_warnings', '2 days', '2 days 1 minute', { gate: { gated_skip: false }, zoning_rows_changed: 0 });
-        expect((await compute.readZoningChange(c)).changed).toBe(false);
+        expect((await zoningChangeOf(c)).changed).toBe(false);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
     });
@@ -604,7 +614,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 78, TEST_PARCEL + 78);
         await insRun(c, PRODUCER, 'completed', '2 days', '2 days 1 minute', { gate: { gated_skip: true }, zoning_rows_changed: 195 });
-        expect((await compute.readZoningChange(c)).changed).toBe(false);
+        expect((await zoningChangeOf(c)).changed).toBe(false);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
     });
@@ -622,7 +632,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await insRun(c, SELF, 'failed', '3 days', '3 days 1 minute', {});
         await insRun(c, SELF, 'completed_with_errors', '3 days', '3 days 1 minute', {});
         await insRun(c, SELF, 'completed_with_warnings', '3 days', '3 days 1 minute', { audit_table: { rows: [{ metric: 'write_skipped_pre_write_warn', status: 'WARN' }] } });
-        const zc = await compute.readZoningChange(c);
+        const zc = await zoningChangeOf(c);
         expect(zc.changed).toBe(true);
         expect(zc.own_last_run_id).toBe(eId);
         await c.query('ROLLBACK');
@@ -639,10 +649,10 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await enrichParcels(c, { scopeWhere: SCOPE, full: true });
         await insRun(c, SELF, 'completed', '1 day', '1 day 10 minutes');
         const P = await insRun(c, PRODUCER, 'completed', '23 hours', '1 day 5 minutes', WROTE);
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query(`DELETE FROM pipeline_runs WHERE id = $1`, [P]);
         await insRun(c, PRODUCER, 'completed', '23 hours', '1 day', WROTE);
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
     });
@@ -655,10 +665,10 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await buildSeed(c, TEST_SRC + 81, TEST_PARCEL + 81);
         const P = await insRun(c, PRODUCER, 'failed', '2 days', '2 days 1 minute', {});
         await c.query(`UPDATE pipeline_runs SET records_new = 3 WHERE id = $1`, [P]);
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query(`DELETE FROM pipeline_runs WHERE id = $1`, [P]);
         await insRun(c, PRODUCER, 'crashed', '2 days', '2 days 1 minute', null);
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
     });
@@ -668,7 +678,7 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
       try {
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 82, TEST_PARCEL + 82);
-        expect((await compute.readZoningChange(c)).changed).toBe(false);
+        expect((await zoningChangeOf(c)).changed).toBe(false);
         await shiftParcel(c, TEST_PARCEL + 82, box(3, 3, 4, 4));
         expect(await ledgerScopeCount(c)).toBe(1);
         await c.query('ROLLBACK');
@@ -682,10 +692,10 @@ describe.skipIf(!dbAvailable())('Spec 65 enrich-parcels — live DB (migration 1
         await c.query('BEGIN');
         await buildSeed(c, TEST_SRC + 83, TEST_PARCEL + 83);
         const P = await insRun(c, PRODUCER, 'completed', '2 days', '2 days 1 minute', { gate: { gated_skip: false }, zoning_rows_changed: null });
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query(`DELETE FROM pipeline_runs WHERE id = $1`, [P]);
         await insRun(c, PRODUCER, 'completed', '2 days', '2 days 1 minute', { gate: { gated_skip: false }, zoning_rows_changed: 'x' });
-        expect((await compute.readZoningChange(c)).changed).toBe(true);
+        expect((await zoningChangeOf(c)).changed).toBe(true);
         await c.query('ROLLBACK');
       } finally { await c.query('ROLLBACK').catch(() => {}); c.release(); } // rollback even when an assertion threw (no open txn leaks to the next test)
     });

@@ -233,11 +233,18 @@ function visitStmtKinds(node, visit) {
  * compute-owned staging table, and the `SELECT … FROM tmp_x` three screens later is NOT an
  * undeclared relation — it never leaves the session (the DDL itself is already a G4 site).
  *
- * Two arms, the same closed set the resolver's rule reads:
+ * The two sources of a session temp are (a) `CREATE TEMP TABLE` text inside a literal and
+ * (b) a literal-named `ctx.tempTable({ name: '<literal>' })` call (Spec 124 R-BZ G2/G4, CP-S2).
+ * Three arms, the same closed set the resolver's rule reads:
  *   · AST — every `CreateStmt` / `CreateTableAsStmt` whose relation is TEMP (`relpersistence
  *     === 't'`, or a `pg_temp.` schema), whatever literal it sits in; and
  *   · lexical — `CREATE TEMP(ORARY)? TABLE <name>` (or `CREATE TABLE pg_temp.<name>`) over the
- *     text of EVERY literal, so a CREATE the grammar rejects is still a name the file owns.
+ *     text of EVERY literal, so a CREATE the grammar rejects is still a name the file owns; and
+ *   · AST — every `ctx.tempTable({ name: <string literal> })` call, the S2 seam that moved the
+ *     DDL out of compute. The callee is exactly the Identifier `ctx` receiving `.tempTable`, the
+ *     seam's only name here: `foo.tempTable(…)`, `this.tempTable(…)` and `ctx.x.tempTable(…)` add
+ *     nothing. Only a LITERAL name declares a temp: a computed name, a spread or a missing `name`
+ *     adds nothing — the set stays closed.
  *
  * A SHADOW is never exempt: a temp whose name is one of the control/ledger tables
  * (`RUNNER_OWNED`, the resolver's own list) stays judgeable as G1/G2 — the resolver's
@@ -262,6 +269,35 @@ export function collectFileTemps(sf, literals) {
       const n = createTargetName(kind, inner);
       if (n && !isControl(n)) names.add(n);
     });
+  }
+  if (sf) {
+    const walk = (node) => {
+      if (ts.isCallExpression(node)) {
+        const callee = node.expression;
+        if (
+          ts.isPropertyAccessExpression(callee) &&
+          callee.name.getText(sf) === 'tempTable' &&
+          ts.isIdentifier(callee.expression) &&
+          callee.expression.getText(sf) === 'ctx'
+        ) {
+          const arg = node.arguments[0];
+          if (arg && ts.isObjectLiteralExpression(arg)) {
+            const prop = arg.properties.find(
+              (p) => ts.isPropertyAssignment(p) && p.name.getText(sf) === 'name',
+            );
+            if (prop) {
+              const init = prop.initializer;
+              if (ts.isStringLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init)) {
+                const n = bareRelationName(init.text);
+                if (n && !isControl(n)) names.add(n);
+              }
+            }
+          }
+        }
+      }
+      ts.forEachChild(node, walk);
+    };
+    walk(sf);
   }
   return names;
 }

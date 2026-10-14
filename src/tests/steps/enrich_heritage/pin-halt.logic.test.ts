@@ -1,23 +1,30 @@
-// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6 (LDG-10 class 3 — pins declared in the reading step)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6 (LDG-10 — pins declared in the reading step)
 // SPEC LINK: docs/specs/01-pipeline/61_source_heritage_properties.md §9 (L10 contract pin, "1.1")
 //
-// LDG-10 T12 — the enrich_heritage contract HALT is FAIL-CLOSED and reads its pin from the DESCRIPTOR
-// (staleness.pins), never a hard-coded const: a producer stamp other than the declared `equals` HALTs by
-// name; a descriptor with no pin (or a pin with no `equals`) throws instead of passing.
+// LDG-10 T12 — the enrich_heritage spec_version contract is the DESCRIPTOR pin, fail-closed, and (S1-P) is evaluated by the
+// RUNNER, not thrown by the compute. Fence retained from the pre-S1-P lock: the pin value lives only in
+// the descriptor (declared == executed — the compute carries no hard-coded const and no descriptor require);
+// a producer stamp other than the declared `equals` is a FAIL row (halt) naming the stamp, never a pass.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 const compute = require('../../../../scripts/lib/compute/enrich-heritage.js') as {
-  readHeritageContract: (pool: unknown) => Promise<{ datasetVersion: string }>;
-  SPEC_VERSION: string;
+  readHeritageContract: (ctx: unknown) => Promise<unknown>;
+  SPEC_VERSION?: string;
 };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { pinnedEquals } = require('../../../../scripts/lib/staleness-pins.js') as {
-  pinnedEquals: (descriptor: unknown, step: string, stamp: string) => string;
+const { evaluatePins, makeProducer } = require('../../../../scripts/lib/step/producer.js') as {
+  evaluatePins: (pins: unknown[], res: Record<string, unknown>, cfg?: object) => Array<{ result: string; status: string; pin_id: string }>;
+  makeProducer: (d: { pool: unknown; chains: string[] }) => unknown;
 };
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const DESCRIPTOR = require('../../../../scripts/enrich-heritage.descriptor.json');
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+const STEP = 'load_heritage';
+const STAMP = 'records_meta.heritage_load.spec_version';
+const EXPECTED = '1.1';
+const SRC = readFileSync(require.resolve('../../../../scripts/lib/compute/enrich-heritage.js'), 'utf8');
+const PIN = (DESCRIPTOR.staleness.pins as Array<{ step: string; stamp: string; equals?: string }>).find((p) => p.step === STEP && p.stamp === STAMP);
 
 function poolWith(specVersion: string) {
   return {
@@ -29,46 +36,49 @@ function poolWith(specVersion: string) {
           heritage_districts: { feature_count: 5, drift_check_passed: true, source_dataset_version: 'd1' },
         } } }] };
       }
-      if (text.includes('FROM heritage_properties')) return { rows: [{ n: 3 }] };
-      if (text.includes('FROM heritage_districts')) return { rows: [{ n: 3 }] };
       if (text.includes('Find_SRID')) return { rows: [{ srid: 4326 }] };
       return { rows: [] };
     },
   };
 }
 
+const found = (specVersion: string) => ({
+  reason: 'FOUND', sid: 1, status: 'completed', completed_at: 't',
+  records_meta: { heritage_load: { spec_version: specVersion } },
+});
+
 describe('enrich_heritage — the contract pin is the descriptor pin, fail-closed (LDG-10 T12)', () => {
-  it('the compute pin IS the descriptor staleness.pins equals (declared == executed), and it is the L10 contract value 1.1', () => {
-    expect(compute.SPEC_VERSION).toBe(pinnedEquals(DESCRIPTOR, 'load_heritage', 'records_meta.heritage_load.spec_version'));
-    expect(compute.SPEC_VERSION).toBe('1.1');
+  it('the descriptor declares the spec_version pin (declared == executed) at the contract value ' + EXPECTED, () => {
+    expect(PIN, 'spec_version pin must be declared').toBeDefined();
+    expect(PIN!.equals).toBe(EXPECTED);
   });
 
-  it('RED: a producer stamping spec_version 9.9 HALTS by name', async () => {
-    await expect(compute.readHeritageContract(poolWith('9.9'))).rejects.toThrow(/sources:load_heritage\.spec_version=9\.9 !== 1\.1/);
+  it('RED: a producer stamping spec_version 9.9 is a runner pin FAIL row naming the stamp (the halt moved out of the compute)', () => {
+    const rows = evaluatePins([PIN], { [STEP]: found('9.9') });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.result).toBe('FAIL');
+    expect(rows[0]!.status).toBe('FAIL');
+    expect(rows[0]!.pin_id).toContain(STAMP);
   });
 
-  it('RED: pins ABSENT throws (never passes)', () => {
-    const noPins = { ...DESCRIPTOR, staleness: { ...DESCRIPTOR.staleness, pins: undefined } };
-    expect(() => pinnedEquals(noPins, 'load_heritage', 'records_meta.heritage_load.spec_version')).toThrow(/no staleness\.pins row/);
+  it('GREEN: the matching stamp is a PASS row', () => {
+    expect(evaluatePins([PIN], { [STEP]: found(EXPECTED) })[0]!.result).toBe('PASS');
   });
 
-  it('RED: a pin with no equals throws (a watermark pin cannot be a contract literal)', () => {
-    const noEquals = { ...DESCRIPTOR, staleness: { ...DESCRIPTOR.staleness, pins: [{ step: 'load_heritage', stamp: 'records_meta.heritage_load.spec_version' }] } };
-    expect(() => pinnedEquals(noEquals, 'load_heritage', 'records_meta.heritage_load.spec_version')).toThrow(/no `equals`/);
+  it('RED: no producer run at all is MISSING (FAIL) — the former "no successful run" HALT', () => {
+    const rows = evaluatePins([PIN], { [STEP]: { reason: 'MISSING', sid: null, status: null, completed_at: null, records_meta: null } });
+    expect(rows[0]!.result).toBe('MISSING');
+    expect(rows[0]!.status).toBe('FAIL');
   });
 
-  it('RED: the compute carries NO hard-coded spec_version const — the pin is read from the descriptor (declared == executed)', () => {
-    const src = readFileSync(require.resolve('../../../../scripts/lib/compute/enrich-heritage.js'), 'utf8');
-    expect(src).not.toMatch(/const SPEC_VERSION = '[0-9.]+'/);
-    expect(src).toContain('pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP)');
+  it('RED: the compute carries NO hard-coded spec_version const, no descriptor require, no pinnedEquals, and exports no SPEC_VERSION', () => {
+    expect(SRC).not.toMatch(/const SPEC_VERSION = /);
+    expect(SRC).not.toMatch(/pinnedEquals|\.descriptor\.json/);
+    expect(compute.SPEC_VERSION).toBeUndefined();
   });
 
-  it('GREEN: the real descriptor + a matching 1.1 stamp does not throw and returns the combined lineage version', async () => {
-    await expect(compute.readHeritageContract(poolWith('1.1'))).resolves.toEqual({ datasetVersion: 'r1|d1' });
-  });
-
-  it('the compute source still carries the literal spec_version= (violations.test.ts:309 source-string lock)', () => {
-    const src = readFileSync('scripts/lib/compute/enrich-heritage.js', 'utf8');
-    expect(src).toContain('spec_version=');
+  it('the hook no longer halts on a wrong spec_version itself (the runner pin owns that verdict) and reads the producer through ctx.producer', async () => {
+    const pool = poolWith('9.9');
+    await expect(compute.readHeritageContract({ pool, producer: makeProducer({ pool, chains: ['sources'] }) })).resolves.toMatchObject({ datasetVersion: 'r1|d1' });
   });
 });

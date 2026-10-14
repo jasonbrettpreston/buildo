@@ -3,74 +3,74 @@
     "dist_bylaw_max_fsi": {
       "value": "2 outliers (worst 2.00)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_max_build_fsi": {
       "value": "811 outliers (worst 5.93)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_footprint_coverage": {
       "value": "12 outliers (worst 1.05)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_max_build_height_m": {
       "value": "129 outliers (worst 75.00)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_newbuild_cost_per_sqm": {
       "value": "0 outliers",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_opt_aor_gfa_sqm": {
       "value": "3198 outliers (worst 5137.98)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_comp_fsi_p50": {
       "value": "211 outliers (worst 6.62)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     },
     "dist_lot_size_sqm": {
       "value": "4381 outliers (worst 543499.59)",
       "cost_ms": 0,
-      "at": "2026-10-09T03:20:29.422Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2478",
+      "at": "2026-10-14T00:27:04.370Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2688",
       "chain": null,
-      "sample_n": 6
+      "sample_n": 8
     }
   }
 }

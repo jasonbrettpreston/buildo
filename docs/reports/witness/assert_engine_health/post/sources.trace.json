@@ -2,25 +2,27 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "sources",
-  "source_fingerprint": "8955ea6c013158d28f5b66b41156c1c2a6fcd4465ee942f2d699360bd5d7e610",
-  "git_head": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
+  "source_fingerprint": "a9a333a3e62466d422054b54254ce54aa6b81c1a8907ac8b5acfe2fd0131b524",
+  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
   "header": {
     "processes": 1,
-    "calls": 132,
-    "distinct": 17,
-    "utility": 6,
-    "tracer_self_ms": 35.086,
-    "wall_ms": 2199
+    "calls": 137,
+    "distinct": 20,
+    "utility": 5,
+    "tracer_self_ms": 72.773,
+    "wall_ms": 2437
   },
   "statements": [
     {
-      "fingerprint": "0143dca5b5aa8bf0",
-      "kind": "utility",
+      "fingerprint": "018abfe6b1e0291a",
+      "kind": "read",
       "count": 1,
       "rowCount": 0,
       "reads": {},
       "writes": {},
-      "excluded": [],
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
       "error": null
     },
     {
@@ -32,37 +34,6 @@
         "coa_applications": []
       },
       "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "23265920758bf06c",
-      "kind": "write",
-      "count": 115,
-      "rowCount": 10,
-      "reads": {
-        "engine_health_snapshots": [
-          "dead_ratio",
-          "idx_scan",
-          "n_dead_tup",
-          "n_live_tup",
-          "seq_ratio",
-          "seq_scan"
-        ]
-      },
-      "writes": {
-        "engine_health_snapshots": [
-          "captured_at",
-          "dead_ratio",
-          "idx_scan",
-          "n_dead_tup",
-          "n_live_tup",
-          "seq_ratio",
-          "seq_scan",
-          "snapshot_date",
-          "table_name"
-        ]
-      },
       "excluded": [],
       "error": null
     },
@@ -82,7 +53,19 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 112,
+      "rowCount": 114,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "3dbf2e2b1ad7c545",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 4,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -99,6 +82,18 @@
       "writes": {},
       "excluded": [
         "pg_stat_user_tables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 726,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
       ],
       "error": null
     },
@@ -138,11 +133,54 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 7,
+      "rowCount": 8,
       "reads": {},
       "writes": {},
       "excluded": [
         "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "a12d5c67e93c52db",
+      "kind": "write",
+      "count": 117,
+      "rowCount": 10,
+      "reads": {
+        "engine_health_snapshots": [
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan"
+        ]
+      },
+      "writes": {
+        "engine_health_snapshots": [
+          "captured_at",
+          "dead_ratio",
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "seq_ratio",
+          "seq_scan",
+          "snapshot_date",
+          "table_name"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a37b37a75a1fd130",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
       ],
       "error": null
     },
@@ -169,14 +207,14 @@
       "error": null
     },
     {
-      "fingerprint": "ba271f702f1828b6",
+      "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 720,
+      "rowCount": 114,
       "reads": {},
       "writes": {},
       "excluded": [
-        "logic_variables"
+        "pg_stat_user_tables"
       ],
       "error": null
     },
@@ -219,7 +257,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 115,
+      "rowCount": 117,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -230,7 +268,7 @@
   ],
   "transactions": [],
   "autocommit_writes": [
-    "23265920758bf06c"
+    "a12d5c67e93c52db"
   ],
   "touched": {
     "reads": {

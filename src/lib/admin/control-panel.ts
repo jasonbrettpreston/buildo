@@ -25,8 +25,13 @@ export interface LogicVariableRow {
   key: string;
   /** Numeric value (null if this is a JSON-type variable like income_premium_tiers) */
   value: number | null;
-  /** JSON value for non-numeric variables (null for numeric-only variables) */
-  jsonValue: Record<string, number> | null;
+  /**
+   * JSON value for non-numeric variables (null for numeric-only variables).
+   * Two shapes share this column: a JSON object (`income_premium_tiers`) and a
+   * bare JSON string (`pipeline_timezone`, S2 F3-2 — a string-typed variable
+   * with a closed enum is a JSON-typed variable whose jsonValue is a string).
+   */
+  jsonValue: Record<string, number> | string | null;
   description: string | null;
   updatedAt: string;
 }
@@ -106,8 +111,8 @@ export interface ConfigUpdatePayload {
     key: string;
     /** Updated numeric value (null if updating a JSON variable) */
     value?: number | null;
-    /** Updated JSON value (null to clear) */
-    jsonValue?: Record<string, number> | null;
+    /** Updated JSON value (null to clear) — a JSON object, or a bare JSON string for a string-typed variable */
+    jsonValue?: Record<string, number> | string | null;
   }>;
   tradeConfigs?: Array<{
     tradeSlug: string;
@@ -165,10 +170,13 @@ export interface ResyncPostResponse {
 export const LogicVariableUpdateSchema = z.object({
   key: z.string().min(1).max(100),
   value: z.number().finite().nullable().optional(),
-  jsonValue: z.record(z.string(), z.number().finite()).nullable().optional(),
+  jsonValue: z
+    .union([z.record(z.string(), z.number().finite()), z.string().min(1).max(64)])
+    .nullable()
+    .optional(),
 }).refine(
   (d) => !(typeof d.value === 'number' && d.jsonValue !== null && d.jsonValue !== undefined),
-  { message: 'Provide either value (numeric) or jsonValue (JSON object), not both' },
+  { message: 'Provide either value (numeric) or jsonValue (JSON object or string), not both' },
 );
 
 /** Validates a single trade_config update in the diff payload. */
@@ -271,10 +279,39 @@ export const ConfigUpdatePayloadSchema = z.object({
 //   the same JSON (WF3-0 seed refactor).
 // ─────────────────────────────────────────────────────────────────────────────
 
-type _LogicVarEntry = { readonly default: number; readonly type: string; readonly description?: string; readonly min?: number; readonly max?: number };
+type _LogicVarEntry = {
+  readonly default: number | string;
+  readonly type: string;
+  readonly description?: string;
+  readonly min?: number;
+  readonly max?: number;
+  /** Closed value set for string-typed variables (S2 F3-2, e.g. pipeline_timezone). */
+  readonly enum?: readonly string[];
+};
 
+/**
+ * Numeric defaults ONLY — every string-defaulted variable (`pipeline_timezone`)
+ * is filtered out here, so `deltaExceeds50pct` (which subtracts these) never
+ * sees a string. NULL defaults are preserved verbatim (a seeded
+ * `lifecycle_seq_band_*_max` with `default: null` still produces a key, exactly
+ * as before). Rebuilt from the same seed JSON in one pass.
+ */
 export const LOGIC_VAR_DEFAULTS: Record<string, number> = Object.fromEntries(
-  (Object.entries(_logicVarsJson) as Array<[string, _LogicVarEntry]>).map(([k, v]) => [k, v.default]),
+  (Object.entries(_logicVarsJson) as Array<[string, _LogicVarEntry]>)
+    .filter(([, v]) => typeof v.default !== 'string')
+    .map(([k, v]) => [k, v.default as number]),
+);
+
+/**
+ * The declared closed enum for every string-typed logic variable (S2 F3-2).
+ * e.g. `{ pipeline_timezone: ['UTC', 'America/Toronto'] }`. The GlobalConfigCard
+ * renders a `<select>` from this map, and `applyConfigUpdate` enforces the same
+ * closed set server-side — the UI is not the only guard.
+ */
+export const LOGIC_VAR_ENUMS: Record<string, readonly string[]> = Object.fromEntries(
+  (Object.entries(_logicVarsJson) as Array<[string, _LogicVarEntry]>)
+    .filter(([, v]) => v.type === 'string' && Array.isArray(v.enum) && v.enum.length > 0)
+    .map(([k, v]) => [k, v.enum as readonly string[]]),
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -314,7 +351,7 @@ export async function loadAllConfigs(pool: Pool): Promise<MarketplaceConfig> {
   const { rows: lvRows } = await pool.query<{
     variable_key: string;
     variable_value: string | null;
-    variable_value_json: Record<string, number> | null;
+    variable_value_json: Record<string, number> | string | null;
     description: string | null;
     updated_at: Date;
   }>(
@@ -461,6 +498,17 @@ export async function applyConfigUpdate(
     // ── logic_variables updates ──────────────────────────────────────
     if (payload.logicVariables?.length) {
       for (const lv of payload.logicVariables) {
+        // S2 F3-2 — a string-typed variable's value is a closed enum. The
+        // <select> constrains the UI, but the DB write must refuse an
+        // out-of-set value too (the API is reachable without the UI).
+        if (typeof lv.jsonValue === 'string') {
+          const allowed = LOGIC_VAR_ENUMS[lv.key];
+          if (!allowed || !allowed.includes(lv.jsonValue)) {
+            throw new Error(
+              `logic_variables.${lv.key}: "${lv.jsonValue}" is not one of its declared enum values`,
+            );
+          }
+        }
         const { rowCount } = await client.query(
           `UPDATE logic_variables
               SET variable_value      = COALESCE($2, variable_value),
@@ -471,7 +519,14 @@ export async function applyConfigUpdate(
                 (variable_value IS DISTINCT FROM $2 AND $2 IS NOT NULL)
                 OR (variable_value_json IS DISTINCT FROM $3)
               )`,
-          [lv.key, lv.value ?? null, lv.jsonValue ?? null],
+          [
+            lv.key,
+            lv.value ?? null,
+            // A bare JS string sent to a jsonb column is not valid JSON text
+            // (`UTC` is invalid; `"UTC"` is). Stringify BOTH shapes — node-pg
+            // already stringified objects, so object behaviour is unchanged.
+            lv.jsonValue == null ? null : JSON.stringify(lv.jsonValue),
+          ],
         );
         rowsUpdated += rowCount ?? 0;
       }

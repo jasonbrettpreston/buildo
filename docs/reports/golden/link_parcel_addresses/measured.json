@@ -1,49 +1,49 @@
 {
   "entries": {
     "rows": {
-      "value": 526570,
-      "cost_ms": 47,
-      "at": "2026-10-09T03:16:32.192Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2475",
+      "value": 526595,
+      "cost_ms": 39,
+      "at": "2026-10-14T00:22:31.223Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2685",
       "chain": null,
-      "sample_n": 7
+      "sample_n": 10
     },
     "multi_parcel_address_count": {
-      "value": 1163,
-      "cost_ms": 210,
-      "at": "2026-10-09T03:16:32.192Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2475",
+      "value": 1164,
+      "cost_ms": 153,
+      "at": "2026-10-14T00:22:31.223Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2685",
       "chain": null,
-      "sample_n": 7
+      "sample_n": 10
     },
     "dup_count": {
       "value": 0,
-      "cost_ms": 177,
-      "at": "2026-10-09T03:16:32.192Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2475",
+      "cost_ms": 164,
+      "at": "2026-10-14T00:22:31.223Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2685",
       "chain": null,
-      "sample_n": 7
+      "sample_n": 10
     },
     "fanout_max_noncondo": {
       "value": 155,
-      "cost_ms": 1912,
-      "at": "2026-10-09T03:16:32.192Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2475",
+      "cost_ms": 1440,
+      "at": "2026-10-14T00:22:31.223Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2685",
       "chain": null,
-      "sample_n": 7
+      "sample_n": 10
     },
     "land_entrance_count": {
-      "value": 741,
-      "cost_ms": 53,
-      "at": "2026-10-09T03:16:32.192Z",
-      "commit": "c498a7bb26714f4d8dc79f8911b3f8d0cb2a627b",
-      "run_id": "2475",
+      "value": 745,
+      "cost_ms": 59,
+      "at": "2026-10-14T00:22:31.223Z",
+      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "run_id": "2685",
       "chain": null,
-      "sample_n": 7
+      "sample_n": 10
     }
   }
 }

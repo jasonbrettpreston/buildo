@@ -537,6 +537,7 @@
   "execution": {
     "txn_scope": "none",
     "statement_timeout": "none",
+    "statement_timeout_minutes_from_config": "vocab_coverage_statement_timeout_minutes",
     "step_timeout": "15m",
     "batch": "none",
     "on_row_error": "fail_fast",
@@ -8098,6 +8099,12 @@
         "name": "vocab_coverage_warn_pct",
         "min": 0,
         "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "vocab_coverage_statement_timeout_minutes",
+        "min": 0.05,
+        "max": 10,
         "on_invalid": "fail"
       },
       {

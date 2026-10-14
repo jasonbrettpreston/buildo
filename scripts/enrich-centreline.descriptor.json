@@ -176,7 +176,25 @@
         "stamp": "records_meta.centreline_load.spec_version",
         "equals": "1.1",
         "why": {
-          "text": "Spec 62 §9 contract pin (L10): readCentrelineContract HALTs unless the producer's stamped spec_version equals this value; read from this descriptor by scripts/lib/compute/enrich-centreline.js",
+          "text": "Spec 62 §9 contract pin (L10): the runner (measureProducerPins) FAILs the run before any phase unless the producer's stamped spec_version equals this value.",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-centreline.js" }
+        }
+      },
+      {
+        "step": "load_centreline",
+        "stamp": "records_meta.centreline_load.features_inserted",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 62 §9 contract (formerly a readCentrelineContract throw, now a runner-evaluated FAIL row): the producer must have inserted features — nonzero. With no producer run at all the pin is MISSING, which FAILs the run (the old 'no successful run' HALT).",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-centreline.js" }
+        }
+      },
+      {
+        "step": "load_centreline",
+        "stamp": "records_meta.centreline_load.source_dataset_version",
+        "op": "nonzero",
+        "why": {
+          "text": "Spec 62 §9 contract (formerly a readCentrelineContract throw, now a runner-evaluated FAIL row): the producer must have stamped a non-empty lineage source_dataset_version — a null/empty stamp cannot be stamped into centreline_enrich.",
           "liveness": { "kind": "file", "ref": "scripts/lib/compute/enrich-centreline.js" }
         }
       }
@@ -1294,7 +1312,7 @@
         "terminal": "string"
       },
       "why": {
-        "text": "readCentrelineContract threw one of the four legacy HALTs (no completed producer run, spec_version != 1.1, features_inserted <= 0, empty source_dataset_version) before any transaction opened — PRESERVED (legacy :318-338).",
+        "text": "The runner's producer-pin rows (staleness.pins[]: records_meta.centreline_load.spec_version/features_inserted/source_dataset_version) FAILed the run before any transaction opened — the four legacy readCentrelineContract HALTs (no completed producer run, spec_version != 1.1, features_inserted <= 0, empty source_dataset_version) became DECLARED pins (S1-P-7; legacy :318-338).",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/enrich-centreline.js"

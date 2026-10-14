@@ -245,7 +245,7 @@ export const GET = withApiEnvelope(async function GET() {
           table_name: r.table_name,
           n_live_tup: live,
           n_dead_tup: dead,
-          dead_ratio: live > 0 ? Math.round((dead / live) * 10000) / 10000 : 0,
+          dead_ratio: (live + dead) > 0 ? Math.round((dead / (live + dead)) * 10000) / 10000 : 0, // ONE measurement, Spec 124 R-CG (S2 F3-3)
           seq_scan: seq,
           idx_scan: idx,
           seq_ratio: (seq + idx) > 0 ? Math.round((seq / (seq + idx)) * 10000) / 10000 : 0,

@@ -628,25 +628,26 @@ describe('Engine Health CQA Tier 3', () => {
     expect(descriptor.counters.records_updated?.source).toBe('records_meta.records_updated');
   });
 
-  it('auto-triggers VACUUM ANALYZE on tables exceeding the dead-tuple threshold (now config-driven, Rule 3)', () => {
-    const source = fs.readFileSync(
-      path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
+  it('auto-triggers VACUUM ANALYZE on tables exceeding the dead-tuple threshold — declared execution.maintenance dynamic arm, run by the runner (Spec 124 R-CG, S2 F3-3)', () => {
+    const descriptor = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '../../scripts/quality/assert-engine-health.descriptor.json'),
       'utf-8'
-    );
-    expect(source).toContain('VACUUM ANALYZE');
-    expect(source).toContain('config.engine_health_dead_tuple_ratio_warn_max');
+    )) as { execution: { maintenance: unknown } };
+    expect(descriptor.execution.maintenance).toEqual([
+      expect.objectContaining({ operation: 'vacuum_analyze', select: 'dead_tuple_ratio', limit_from_config: 'engine_health_dead_tuple_ratio_warn_max' }),
+    ]);
+    const lib = fs.readFileSync(path.join(__dirname, '../../scripts/lib/step/plausibility.js'), 'utf-8');
+    expect(lib).toContain('async function runDynamicArm(');
+    expect(lib).toContain('vacuum_analyze: (t) => `VACUUM (ANALYZE) ${t}`');
   });
 
-  it('vacuumTargets is declared before its own consuming loop (AEH-IL-2, the 9d9acf7a scope-crash fix — re-stated for the pure-function rewrite, no try/catch spans the declaration)', () => {
+  it('RETIRED-TO-RUNNER (R-CG): AEH-IL-2 (9d9acf7a vacuumTargets scope-crash) cannot recur — the compute holds no vacuumTargets array and issues no VACUUM', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
-    const declIdx = source.indexOf('const vacuumTargets = tableResults.filter(');
-    const loopIdx = source.indexOf('for (const target of vacuumTargets)');
-    expect(declIdx).toBeGreaterThan(-1);
-    expect(loopIdx).toBeGreaterThan(-1);
-    expect(declIdx).toBeLessThan(loopIdx);
+    expect(source).not.toMatch(/\bconst vacuumTargets\b|vacuumTargets\s*=/);
+    expect(source).not.toMatch(/query\([^)]*VACUUM/);
   });
 
   it('recordsUpdated is derived from the write loop and threaded through to records_meta/counters (scope bug fix, re-stated: no reference-before-assignment across a catch boundary)', () => {
@@ -654,8 +655,13 @@ describe('Engine Health CQA Tier 3', () => {
       path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
       'utf-8'
     );
-    expect(source).toContain('recordsUpdated');
-    expect(source).toContain('records_updated: recordsUpdated');
+    // Spec 124 R-CD (S2): the compute returns a write_plan and issues no DML; the RUNNER executes it per-row
+    // autocommit and threads the updated count into records_meta.records_updated (the descriptor counter source).
+    expect(source).toContain('write_plan');
+    expect(source).not.toMatch(/pool\.query\(UPSERT_SQL/);
+    const runner = fs.readFileSync(path.join(__dirname, '../../scripts/lib/step/index.js'), 'utf-8');
+    expect(runner).toContain('async function runWritePlan(');
+    expect(runner).toContain('records_updated: outcome.updated');
   });
 });
 
@@ -746,7 +752,8 @@ describe('Engine health has ONE threshold source (POST-B1-2)', () => {
       'utf-8'
     );
     expect(compute).toContain('pg_stat_user_tables');
-    expect(compute).toContain('config.engine_health_dead_tuple_ratio_warn_max');
+    // engine_health_dead_tuple_ratio_warn_max is read by the descriptor (value_max limit_from_config + the
+    // R-CG maintenance arm), never by the compute; the row floor stays a compute-bound SQL param.
     expect(compute).toContain('config.engine_health_dead_tuple_min_rows');
   });
 });

@@ -115,52 +115,65 @@
       "sources": { "argv": [], "env": { "PIPELINE_CHAIN": "sources" } },
       "deep_scrapes": { "argv": [], "env": { "PIPELINE_CHAIN": "deep_scrapes" } }
     },
-    "maintenance": "none"
+    "maintenance": [
+      {
+        "operation": "vacuum_analyze",
+        "select": "dead_tuple_ratio",
+        "limit_from_config": "engine_health_dead_tuple_ratio_warn_max",
+        "why": {
+          "text": "Spec 124 R-CG (S2 F3-3, operator 2026-10-13): the chain-tail VACUUM ANALYZE of every public table whose dead/(live+dead) exceeds engine_health_dead_tuple_ratio_warn_max (and n_live_tup > 0) — formerly a compute-side loop; the runner selects and runs it after compute and writes one sys_maintenance_selected_vacuum_analyze row even when nothing is selected, plus one WARN row per failed statement.",
+          "liveness": { "kind": "file", "ref": "scripts/lib/step/plausibility.js" }
+        }
+      }
+    ]
   },
 
   "checks": [
     {
       "id": "dead_tuple_ratio_high",
       "kind": "bound",
-      "expect": { "reports": "count of tables (live >= engine_health_dead_tuple_min_rows) whose dead-tuple ratio exceeds engine_health_dead_tuple_ratio_warn_max" },
-      "limit": "viol == 0",
+      "expect": { "reports": "max dead-tuple ratio dead/(live+dead) over tables (live >= engine_health_dead_tuple_min_rows); WARN when it exceeds engine_health_dead_tuple_ratio_warn_max" },
+      "limit": "value_max 0",
+      "limit_from_config": "engine_health_dead_tuple_ratio_warn_max",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:118-124, DEAD_TUPLE_RATIO=0.10). Never blocking — report §1.2 measured this threshold never reached the halt; declaring severity:FAIL here (rather than WARN) would introduce a real halt (RUN_STATUS.FAILED) this step never had. The `live >= 1000` floor (R1, review panel commit 7 → peel commit 8, report §9.6) was itself a bare literal until this peel — externalized as engine_health_dead_tuple_min_rows below (byte-identical default 1000), the same convention seq_scan_ratio_high's own min-rows floor already used.",
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:118-124, DEAD_TUPLE_RATIO=0.10). Never blocking — report §1.2 measured this threshold never reached the halt; declaring severity:FAIL here (rather than WARN) would introduce a real halt (RUN_STATUS.FAILED) this step never had. The `live >= 1000` floor (R1, review panel commit 7 → peel commit 8, report §9.6) was itself a bare literal until this peel — externalized as engine_health_dead_tuple_min_rows below (byte-identical default 1000), the same convention seq_scan_ratio_high's own min-rows floor already used. S2 (R-BZ G7): compute reports the max ratio; the library compares it (value_max), compute no longer decides.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
       }
     },
     {
       "id": "seq_scan_ratio_high",
       "kind": "bound",
-      "expect": { "reports": "count of tables (live >= engine_health_seq_scan_min_rows) whose sequential-scan ratio exceeds engine_health_seq_scan_ratio_warn_max" },
-      "limit": "viol == 0",
+      "expect": { "reports": "max sequential-scan ratio over tables (live >= engine_health_seq_scan_min_rows); WARN when it exceeds engine_health_seq_scan_ratio_warn_max" },
+      "limit": "value_max 0",
+      "limit_from_config": "engine_health_seq_scan_ratio_warn_max",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:127-132, SEQ_SCAN_RATIO=0.80, SEQ_SCAN_MIN_ROWS=10000).",
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:127-132, SEQ_SCAN_RATIO=0.80, SEQ_SCAN_MIN_ROWS=10000). S2 (R-BZ G7): compute reports the max ratio; the library compares it (value_max), compute no longer decides.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
       }
     },
     {
       "id": "update_ping_pong_high",
       "kind": "bound",
-      "expect": { "reports": "count of tables whose cumulative update/insert ratio exceeds engine_health_ping_pong_ratio_warn_max" },
-      "limit": "viol == 0",
+      "expect": { "reports": "max cumulative update/insert ratio over tables; WARN when it exceeds engine_health_ping_pong_ratio_warn_max" },
+      "limit": "value_max 0",
+      "limit_from_config": "engine_health_ping_pong_ratio_warn_max",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:134-139, PING_PONG_RATIO=10 — AEH-IL-1: raised from 2 to 10 at 8c9e64d7, 2026-03-21, because dimensional tables naturally run 5-6x and the spec's own >2x bound produced chronic false-positive WARNs; Spec 41's table still declares >2x, a spec-vs-code drift named at commit 1, resolved at commit 9's spec-diff, not silently here).",
+        "text": "Ported by predicate from the pre-conversion file's generic per-table loop (:134-139, PING_PONG_RATIO=10 — AEH-IL-1: raised from 2 to 10 at 8c9e64d7, 2026-03-21, because dimensional tables naturally run 5-6x and the spec's own >2x bound produced chronic false-positive WARNs; Spec 41's table still declares >2x, a spec-vs-code drift named at commit 1, resolved at commit 9's spec-diff, not silently here). S2 (R-BZ G7): compute reports the max ratio; the library compares it (value_max), compute no longer decides.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
       }
     },
@@ -226,21 +239,6 @@
         "text": "Nothing Hidden (Rule 1). Pre-conversion :185-188 caught this non-fatally with only a console.warn — invisible to records_meta. Preserved as non-fatal (table may not exist yet, report §4.1 CONTRACT) but now a visible WARN row rather than a silent console line.",
         "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
       }
-    },
-    {
-      "id": "engine_health_vacuum_failed",
-      "kind": "bound",
-      "expect": { "reports": "count of tables whose VACUUM ANALYZE failed this run" },
-      "limit": "viol == 0",
-      "severity": "WARN",
-      "blocking": false,
-      "when": "post",
-      "chains": "all",
-      "accept_until": "none",
-      "why": {
-        "text": "Nothing Hidden (Rule 1). Pre-conversion :151-153 caught each VACUUM failure non-fatally with only a console.warn per table — invisible to records_meta. Now a visible WARN row.",
-        "liveness": { "kind": "table", "ref": "engine_health_snapshots" }
-      }
     }
   ],
 
@@ -263,26 +261,15 @@
 
   "emits": [
     { "key": "tables_checked", "type": "int", "consumers": [] },
-    { "key": "tables_vacuumed", "type": "int", "consumers": [] },
-    { "key": "vacuumed_tables", "type": "array", "consumers": [] },
     { "key": "records_updated", "type": "int", "consumers": [] },
     { "key": "engine_health", "type": "array", "consumers": ["src/components/FreshnessTimeline.tsx"] }
   ],
 
   "deviations": [
     {
-      "from": "execution.maintenance's closed per-named-table array shape (step.schema.json:1370-1387)",
-      "why": {
-        "text": "This step's VACUUM ANALYZE target set (vacuumTargets) is discovered AT RUNTIME from pg_stat_user_tables, not enumerable at descriptor-authoring time as execution.maintenance's array requires (one row per NAMED table) — forcing a static enumeration would silently reintroduce the hardcoded-list defect the step's own design explicitly rejects (:72-79, \"Discover all public-schema tables dynamically — no hardcoded list\"). Ask 2 / Fold 1 (binding, .cursor/batch1_i3_assert_engine_health_active_task.md): keep the chain-tail VACUUM loop verbatim, compute-owned, declared here via deviations[] rather than execution.maintenance — the SAME mechanism EP-D17's 2026-09-10 DEFER already established for this exact file (review_followups.md:3480: \"do NOT hoist the vacuum decision into the chain head, do NOT touch assert-engine-health.js or run-chain.js beyond the telemetry fold\"). Spec 43 (:142,:150) independently names this file as the deliberate, still-OPEN \"chain-tail VACUUM owner\".",
-        "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
-      },
-      "adjudicated_by": "Fold 1 (grounder, 2026-09-13), .cursor/batch1_i3_assert_engine_health_active_task.md",
-      "date": "2026-09-13"
-    },
-    {
       "from": "execution.shape — left undeclared rather than \"recorder\"",
       "why": {
-        "text": "runRecorderPhase (scripts/lib/step/index.js) mechanically supports exactly ONE write statement per run (one buildRow/buildWriteSql/executeRecorderUpsert call) — this step's real write is N rows (one per runtime-discovered table) plus a separate VACUUM maintenance loop, a shape runRecorderPhase cannot express without a runtime-library change (a RE-FREEZE decision, out of this commit's authority per Operating Boundaries — step.schema.json is frozen). Leaving execution.shape undeclared matches the pattern the 3 live ASSERT descriptors already use (assert-data-bounds/assert-schema/assert-global-coverage): none of isIngestStep/isLinkStep/…/isRecorderStep/isEnrichStep match an undeclared shape (only isIngestStep keeps a legacy structural inference, gated on an external URL read this step has none of), so the runtime falls through to calling compute(ctx) directly with full ctx.pool access — exactly what this step's self-managed reads/writes/VACUUM loop needs. identity.archetype stays \"RECORDER\" (the operator's classification ruling); execution.shape is a separate, runtime-EXECUTION axis neither the red suite nor R-PACE-1's archetype-eligibility count reads.",
+        "text": "runRecorderPhase (scripts/lib/step/index.js) mechanically supports exactly ONE write statement per run (one buildRow/buildWriteSql/executeRecorderUpsert call) — this step's real write is N rows (one per runtime-discovered table) plus a separate VACUUM maintenance pass, the latter now the runner's execution.maintenance dynamic arm (Spec 124 R-CG, S2 F3-3) rather than a compute-side loop — a shape runRecorderPhase cannot express without a runtime-library change (a RE-FREEZE decision, out of this commit's authority per Operating Boundaries — step.schema.json is frozen). Leaving execution.shape undeclared matches the pattern the 3 live ASSERT descriptors already use (assert-data-bounds/assert-schema/assert-global-coverage): none of isIngestStep/isLinkStep/…/isRecorderStep/isEnrichStep match an undeclared shape (only isIngestStep keeps a legacy structural inference, gated on an external URL read this step has none of), so the runtime falls through to calling compute(ctx) directly with full ctx.pool access — exactly what this step's self-managed reads/writes need. identity.archetype stays \"RECORDER\" (the operator's classification ruling); execution.shape is a separate, runtime-EXECUTION axis neither the red suite nor R-PACE-1's archetype-eligibility count reads.",
         "liveness": { "kind": "file", "ref": "scripts/lib/compute/assert-engine-health.js" }
       },
       "adjudicated_by": "This commit (batch1 I3 commit 7) — a newly-measured architecture finding, reported rather than silently worked around; not yet operator-ratified as a general pattern.",
@@ -302,7 +289,7 @@
       "check_id": "none"
     },
     {
-      "what": "execution.shape is left UNDECLARED (not \"recorder\") — this step's real write is N rows over a runtime-discovered table set plus a VACUUM maintenance loop, a shape runRecorderPhase cannot express (report §9.1). Restated here (R3, commit 8 peel) so the fact is visible wherever limitations[]/deviations[] are rendered (registry, step-validate --write), not deviations[]-prose-only.",
+      "what": "execution.shape is left UNDECLARED (not \"recorder\") — this step's real write is N rows over a runtime-discovered table set (the VACUUM maintenance pass is now the runner's execution.maintenance dynamic arm, Spec 124 R-CG, S2 F3-3), a shape runRecorderPhase cannot express (report §9.1). Restated here (R3, commit 8 peel) so the fact is visible wherever limitations[]/deviations[] are rendered (registry, step-validate --write), not deviations[]-prose-only.",
       "measured": "report §9.1; deviations[] entry \"execution.shape — left undeclared rather than \\\"recorder\\\"\" above carries the full grounds.",
       "check_id": "none"
     }
@@ -349,7 +336,8 @@
       { "name": "engine_health_ping_pong_ratio_warn_max", "min": 0, "max": 10000, "on_invalid": "fail" },
       { "name": "engine_health_insp_dead_tuple_fail_pct", "min": 0, "max": 100, "on_invalid": "fail" },
       { "name": "engine_health_insp_update_insert_fail_ratio", "min": 0, "max": 10000, "on_invalid": "fail" },
-      { "name": "engine_health_dead_tuple_min_rows", "min": 0, "max": 100000000, "on_invalid": "fail" }
+      { "name": "engine_health_dead_tuple_min_rows", "min": 0, "max": 100000000, "on_invalid": "fail" },
+      { "name": "pipeline_timezone", "min": "none", "max": "none", "enum": ["UTC", "America/Toronto"], "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,
@@ -393,7 +381,7 @@
     {
       "id": "failed_exception", "kind": "fail_error", "status": "failed",
       "records_meta": { "audit_table": "object", "terminal": "string" },
-      "why": { "text": "A genuine uncaught exception (DB connectivity, a malformed query in the table-discovery or stat-scan reads) — the ONLY thing that has ever halted this step (report §1.2). The per-table VACUUM and snapshot-write loops are NOT this terminal's trigger — both are non-fatal by design (engine_health_vacuum_failed / engine_health_write_failed WARN checks instead).", "liveness": { "kind": "check", "ref": "engine_health_vacuum_failed" } }
+      "why": { "text": "A genuine uncaught exception (DB connectivity, a malformed query in the table-discovery or stat-scan reads) — the ONLY thing that has ever halted this step (report §1.2). The snapshot-write loop is NOT this terminal's trigger — it is non-fatal by design (engine_health_write_failed WARN check). The VACUUM pass is the runner's execution.maintenance dynamic arm (Spec 124 R-CG), whose failures are sys_maintenance_* WARN rows.", "liveness": { "kind": "check", "ref": "engine_health_write_failed" } }
     }
   ]
 }

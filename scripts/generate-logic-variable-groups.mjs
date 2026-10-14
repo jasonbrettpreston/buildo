@@ -129,6 +129,7 @@ const GROUP_ORDER = [
       "profiling_coverage_warn_pct",
       "vocab_coverage_pass_pct",
       "vocab_coverage_warn_pct",
+      "vocab_coverage_statement_timeout_minutes",
       "zoning_class_coverage_pass_pct",
       "zoning_class_coverage_warn_pct",
       "coa_neighbourhood_coverage_pass_pct",
@@ -407,6 +408,7 @@ const GROUP_ORDER = [
       "parcel_sanity_realized_fsi_p90_max",
       "enrich_ravines_distance_coverage_pass_pct",
       "enrich_ravines_distance_coverage_warn_pct",
+      "enrich_ravines_producer_invalid_geom_max_pct",
       "enrich_heritage_address_levenshtein_threshold",
       "enrich_heritage_unlinked_point_warn_pct",
       "enrich_heritage_unlinked_point_fail_pct",
@@ -917,6 +919,12 @@ const GROUP_ORDER = [
       "coa_notices_precision_layer2_min",
       "coa_notices_precision_all_min",
       "coa_notices_link_precision_min"
+    ]
+  },
+  {
+    "label": "Pipeline Clock",
+    "keys": [
+      "pipeline_timezone"
     ]
   }
 ];

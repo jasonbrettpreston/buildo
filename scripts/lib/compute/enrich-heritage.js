@@ -26,65 +26,31 @@
 // ===========================================================================
 
 const PRODUCER_NAME = 'sources:load_heritage';
-// L10 contract pin — DECLARED in this step's descriptor (staleness.pins, LDG-10 class 3), never a
-// hard-coded const here: declared == executed. Read once at require() time (load-heritage.js precedent);
-// a missing pin throws at load (fail-closed).
-const DESCRIPTOR = require('../../enrich-heritage.descriptor.json');
-const { pinnedEquals } = require('../staleness-pins');
+// Must equal the staleness.pins[].step of this descriptor (locked by
+// src/tests/enrich-heritage-pins.logic.test.ts); the SAME read identity the runner's pins use.
 const PRODUCER_STEP = 'load_heritage';
-const PIN_STAMP = 'records_meta.heritage_load.spec_version';
-/** The producer spec_version this reader halts on anything but (pinnedSpecVersion = the descriptor pin). */
-const pinnedSpecVersion = () => pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP);
-const SPEC_VERSION = pinnedSpecVersion();
 const TAG = '[enrich_heritage]';
 
 /**
- * §9 producer-protocol HALT, ported verbatim (9 throws, all before any transaction): producer
- * missing, spec_version mismatch, either sub-block missing, either feature_count <= 0, either
- * drift_check_passed === false, either source_dataset_version empty. Combines the two lineage
- * strings deterministically as `<register>|<districts>`.
+ * §9 producer-protocol consumer — reads the already-qualified producer run; the 9 producer-contract
+ * HALTs are descriptor pins (S1-P-5). Combines the two lineage strings deterministically as
+ * `<register>|<districts>`.
  *
  * L14 (folded in here, RV-L2 precedent) — a wiped heritage source must HALT even when matching
  * version stamps would otherwise satisfy the write's own zero-scope fast path.
  *
  * The SRID=4326 assertion (§3.10 half of F3/F4) — REQUIREMENT_PROBES has no "srid" kind, so this
  * one clause cannot move to guards.requires and is folded in here instead.
+ * @param {{pool: import('pg').Pool, config: object, producer: (slug: string, opts?: object) => Promise<object>}} ctx
  */
-async function readHeritageContract(pool) {
-  const res = await pool.query(
-    `SELECT records_meta FROM pipeline_runs
-      WHERE pipeline = $1 AND status = 'completed'
-      ORDER BY completed_at DESC LIMIT 1`,
-    [PRODUCER_NAME],
-  );
-  if (res.rows.length === 0) {
-    throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned heritage source`);
-  }
-  const hl = (res.rows[0].records_meta || {}).heritage_load || {};
-  if (hl.spec_version !== SPEC_VERSION) {
-    throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${hl.spec_version} !== ${SPEC_VERSION} — aborting to prevent contract violation`);
-  }
-  const reg = hl.heritage_register;
-  const hcd = hl.heritage_districts;
-  if (!reg) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_register sub-block is missing — aborting`);
-  if (!hcd) throw new Error(`${TAG} producer records_meta.heritage_load.heritage_districts sub-block is missing — aborting`);
-  if (!(Number(reg.feature_count) > 0)) {
-    throw new Error(`${TAG} heritage_register dataset ingested zero features; refusing to enrich`);
-  }
-  if (!(Number(hcd.feature_count) > 0)) {
-    throw new Error(`${TAG} heritage_districts dataset ingested zero features; refusing to enrich`);
-  }
-  if (reg.drift_check_passed === false || hcd.drift_check_passed === false) {
-    throw new Error(`${TAG} producer drift_check_passed=false — aborting against a churned heritage source`);
-  }
-  if (!reg.source_dataset_version) throw new Error(`${TAG} heritage_register.source_dataset_version is null/empty — cannot stamp lineage`);
-  if (!hcd.source_dataset_version) throw new Error(`${TAG} heritage_districts.source_dataset_version is null/empty — cannot stamp lineage`);
+async function readHeritageContract(ctx) {
+  const pool = ctx.pool;
+  // Producer contract (spec_version, counts, drift flags, lineage) is DECLARED in the descriptor's staleness.pins[] and evaluated by the runner BEFORE this
+  // hook (Rule 10); a violated pin never reaches here. The hook only READS the already-qualified run — no defaults, no guard: a missing key must crash loudly, never stamp garbage.
+  const run = await ctx.producer(PRODUCER_STEP);
+  const hl = run.records_meta.heritage_load;
 
-  // L14 — both heritage source tables must be non-empty on EVERY invocation.
-  const hp = await pool.query('SELECT COUNT(*)::int AS n FROM heritage_properties');
-  const hd = await pool.query('SELECT COUNT(*)::int AS n FROM heritage_districts');
-  if (hp.rows[0].n === 0) throw new Error(`${TAG} heritage_properties is empty — aborting (L14)`);
-  if (hd.rows[0].n === 0) throw new Error(`${TAG} heritage_districts is empty — aborting (L14)`);
+  // L14 — both heritage source tables non-empty: enforced by the declared guards.empty_source (runner, before this hook; S4).
 
   // §3.10 SRID guard — parcels.geom must be 4326 (no ST_Transform path in this compute).
   const srid = await pool.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid");
@@ -92,7 +58,7 @@ async function readHeritageContract(pool) {
     throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
   }
 
-  const datasetVersion = `${reg.source_dataset_version}|${hcd.source_dataset_version}`;
+  const datasetVersion = `${hl.heritage_register.source_dataset_version}|${hl.heritage_districts.source_dataset_version}`;
   return { datasetVersion };
 }
 
@@ -444,5 +410,4 @@ module.exports = Object.assign(compute, {
   buildHeritageMeta,
   passes,
   PRODUCER_NAME,
-  SPEC_VERSION,
 });

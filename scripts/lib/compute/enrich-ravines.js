@@ -33,59 +33,40 @@
 // ===========================================================================
 
 const PRODUCER_NAME = 'sources:load_ravines';
-// L10 contract pin — DECLARED in this step's descriptor (staleness.pins, LDG-10 class 3), never a
-// hard-coded const here: declared == executed. Read once at require() time (load-heritage.js precedent);
-// a missing pin throws at load (fail-closed). Ruling C-9 keeps the ravines contract at 1.2.
-const DESCRIPTOR = require('../../enrich-ravines.descriptor.json');
-const { pinnedEquals } = require('../staleness-pins');
+// Must equal staleness.pins[].step in the descriptor (locked by src/tests/enrich-ravines-pins.logic.test.ts).
 const PRODUCER_STEP = 'load_ravines';
-const PIN_STAMP = 'records_meta.ravine_load.spec_version';
-/** The producer spec_version this reader halts on anything but (pinnedSpecVersion = the descriptor pin). */
-const pinnedSpecVersion = () => pinnedEquals(DESCRIPTOR, PRODUCER_STEP, PIN_STAMP);
-const SPEC_VERSION = pinnedSpecVersion();
 const TAG = '[enrich_ravines]';
 
 /**
- * F1 (00902695) — the §9/L18 producer-protocol HALT, ported verbatim. Six throws, all before
- * any transaction: producer missing, spec_version mismatch, delete_skipped_empty_guard,
- * drift/mass-delete check failure, invalid-geometry ratio over the externalized threshold, and
- * an empty/missing source_dataset_version.
+ * F1 (00902695) — the §9/L18 producer-protocol consumer. The producer-protocol HALTs are
+ * descriptor pins (S1-P-6): producer missing, spec-version mismatch, the orphan-prune-suppression flag,
+ * drift/mass-delete check failure, the invalid-geometry ratio bound (its 5% now the declared
+ * logic variable enrich_ravines_producer_invalid_geom_max_pct) and an empty/missing
+ * source_dataset_version are DECLARED `staleness.pins[]` rows on this step's descriptor,
+ * evaluated by the runner BEFORE any phase or hook (Rule 10 — a violation is a FAIL row, never
+ * a throw). A violated pin never reaches this function.
  *
  * F2 (92ee03b9, Gemini CRIT-1) — L14: a wiped ravines table must HALT even when matching
- * version stamps would otherwise satisfy the #418 skip. Folded in here (RV-L2) because there
- * is no other pre-transaction, always-run mechanism in the ENRICHER runner to carry it.
+ * version stamps would otherwise satisfy the #418 skip. Enforced by the declared
+ * guards.empty_source (runner, before this hook; S4 — measured pre-phase for non-INGESTOR
+ * steps), not folded in here.
  *
  * F3 (00902695, DEC-F §3.10) half — the SRID=4326 assertion. The three GIST-index /
  * PostGIS-extension / migration-168-column halves of F3/F4 are declared via `guards.requires`
  * instead (REQUIREMENT_PROBES has no "srid" kind, so this one clause cannot move there).
+ * @param {{pool: import('pg').Pool, config: object, producer: (slug: string, opts?: object) => Promise<object>}} ctx
  */
-async function readRavineContract(pool) {
-  const res = await pool.query(
-    `SELECT records_meta FROM pipeline_runs
-      WHERE pipeline = $1 AND status = 'completed'
-      ORDER BY completed_at DESC LIMIT 1`,
-    [PRODUCER_NAME],
-  );
-  if (res.rows.length === 0) {
-    throw new Error(`${TAG} no successful ${PRODUCER_NAME} run — cannot enrich without a versioned source dataset`);
-  }
-  const rl = (res.rows[0].records_meta || {}).ravine_load || {};
-  if (rl.spec_version !== SPEC_VERSION) {
-    throw new Error(`${TAG} ${PRODUCER_NAME}.spec_version=${rl.spec_version} !== ${SPEC_VERSION} — aborting to prevent contract violation`);
-  }
-  if (rl.delete_skipped_empty_guard === true) {
-    throw new Error(`${TAG} producer delete_skipped_empty_guard=true — ravines may contain stale orphans; aborting`);
-  }
-  if (rl.drift_check_passed === false || rl.mass_delete_check_passed === false) {
-    throw new Error(`${TAG} producer drift/mass-delete check failed — aborting against churned ravines`);
-  }
+async function readRavineContract(ctx) {
+  const pool = ctx.pool;
+  // Producer contract (the spec-version stamp, the guard/drift flags, the invalid-geometry ratio and the
+  // lineage stamp) is DECLARED in the descriptor's staleness.pins[] and evaluated by the runner
+  // BEFORE this hook (Rule 10); a violated pin never reaches here. The hook only READS the
+  // already-qualified run — no defaults, no guard: a missing key must crash loudly, never stamp
+  // garbage.
+  const run = await ctx.producer(PRODUCER_STEP);
+  const rl = run.records_meta.ravine_load;
 
-  // L14 — ravines must be non-empty on EVERY invocation (Gemini CRIT-1: this must HALT even
-  // when a matching version stamp would otherwise make the write a no-op).
-  const cnt = await pool.query('SELECT COUNT(*)::int AS n FROM ravines');
-  if (cnt.rows[0].n === 0) {
-    throw new Error(`${TAG} ravines table is empty — aborting to avoid resetting all parcels' enrichment (L14)`);
-  }
+  // L14 — ravines non-empty: enforced by the declared guards.empty_source (runner, before this hook; S4).
 
   // §3.10 SRID guard — parcels.geom must be 4326 (no ST_Transform path in this compute).
   const srid = await pool.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid");
@@ -93,26 +74,7 @@ async function readRavineContract(pool) {
     throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
   }
 
-  // RV-L3 (descriptor limitations[]) — NOT config-driven. `execution.enrich_hooks.contract_read`
-  // is resolved and called by the runner as `hookFn(pool)` ONLY (scripts/lib/step/index.js,
-  // verified against BOTH this step's own legacy call site and enrich_parcels' identical
-  // `readZoningContract(pool)` signature) — no `config` argument reaches a contract-read hook
-  // today. Threading it through would be a SECOND runner change beyond Ask A2's authorized
-  // one-line `passCtx.contract` addition, so the ratio stays the pinned pre-conversion literal
-  // (0.05) rather than being declared as a logic variable no code path can ever read (Rule 12:
-  // "a declared guard that cannot arm is a violation").
-  const featureCount = Number(rl.feature_count) || 0;
-  const geomSkipped = Number(rl.invalid_geometry_skipped) || 0;
-  const MAX_INVALID_GEOM_RATIO = 0.05;
-  if (featureCount > 0 && geomSkipped / featureCount > MAX_INVALID_GEOM_RATIO) {
-    throw new Error(`${TAG} producer invalid_geometry_skipped ${geomSkipped}/${featureCount} > ${MAX_INVALID_GEOM_RATIO * 100}% — aborting against an incomplete ravines load`);
-  }
-
-  const sourceDatasetVersion = rl.source_dataset_version;
-  if (!sourceDatasetVersion) {
-    throw new Error(`${TAG} producer source_dataset_version is null/empty — cannot stamp lineage`);
-  }
-  return { sourceDatasetVersion };
+  return { sourceDatasetVersion: rl.source_dataset_version };
 }
 
 // ===========================================================================
@@ -348,5 +310,4 @@ module.exports = Object.assign(compute, {
   buildRavineMeta,
   passes,
   PRODUCER_NAME,
-  SPEC_VERSION,
 });

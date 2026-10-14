@@ -40,6 +40,171 @@ const RUN_STATUS = Object.freeze({
 });
 
 /**
+ * R-BG (iv) — the PRIOR-RUN BASELINE status set: the two statuses that mean
+ * "this run finished and its records_meta is a usable baseline". Never
+ * `completed_with_errors`.
+ *
+ * ⚠️ READER-SIDE ONLY, AND ONLY FOR BASELINES. Spec 124 R-CB (operator
+ * 2026-10-12, purity seam S1 OQ-1): R-BG(iv) governs prior-run baselines only —
+ * this set belongs to `readRunHistory`. An ordering/seam read is NOT a baseline
+ * and accepts every finished status (`{completed, completed_with_warnings,
+ * completed_with_errors}` — a covered FAIL run is a finished run, 122a:572),
+ * adopting only the shared warn-skip predicate and the `id DESC` tie-break.
+ * Applying this set to a seam read would hide a covered FAIL run from ordering,
+ * which is the defect R-CB names.
+ */
+const BASELINE_STATUSES = Object.freeze(['completed', 'completed_with_warnings']);
+
+/**
+ * The R-BG (iv) "preserve-and-WARN run is never a baseline" predicate, VERBATIM
+ * from `scripts/lib/source-version.js` `readPriorRunMeta` (~:140-146, the SQL as
+ * written today). Parameter-free and shared by `readRunHistory` (a baseline
+ * read) and `checkSeam` (an ordering read) per R-CB, so the two homes cannot
+ * drift: `@>` containment means a row whose `records_meta.audit_table.rows`
+ * carries the `write_skipped_pre_write_warn` marker is a preserve-and-WARN run,
+ * not a measurement. `COALESCE(..., false)` keeps a row with no `records_meta`
+ * at all (NULL → false) INCLUDED — absent meta is not a skip marker.
+ */
+const WARN_SKIP_PREDICATE_SQL =
+  "NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false)";
+
+/** The reader's default column list — the projection whitelist (`columns` ⊆ this). */
+const RUN_HISTORY_COLUMNS = Object.freeze([
+  'id',
+  'pipeline',
+  'status',
+  'started_at',
+  'completed_at',
+  'records_meta',
+]);
+
+/** The ordering keys a caller may name; anything else is a typo, not a default. */
+const RUN_HISTORY_ORDER_BY = Object.freeze(['completed_at', 'started_at']);
+
+/**
+ * THE ONE RUN-HISTORY READER (R-BG (iv) baseline filter; Spec 124 R-CB).
+ *
+ * ⚠️ PURE — A READER, NEVER A WRITER. It performs exactly one SELECT: it never
+ * INSERTs/UPDATEs/DELETEs, and in particular it NEVER writes the `baseline_absent`
+ * row. Writing that row is the CALLER's business (a reader that mutates the table
+ * it reads cannot be reasoned about, and would make "no baseline" indistinguishable
+ * from "baseline read failed"). Locked by the purity case in
+ * `src/tests/ledger-reader.logic.test.ts` (every SQL the pool sees is a SELECT).
+ *
+ * The two `chains`/`slugForms` mechanics mirror `deriveLedgerSlugs`
+ * (`scripts/lib/step/staleness.js:626-635`): a slug is matched in every declared
+ * chain-prefixed form, plus the bare and hyphenated forms — a standalone run or a
+ * legacy writer may use either (R-CB's HEADLINE case, HQ-6: a bare
+ * `load_coa_notices` standalone run IS found for a step declaring chain `sources`).
+ *
+ * `slugForms` is required LAZILY, INSIDE the function. `scripts/lib/ledger.js`
+ * requires `step/index.js` lazily (on first use), and `step/index.js` re-exports
+ * this module — so a TOP-LEVEL `require('../ledger')` here would create a load
+ * cycle at require time. Deferring it to call time breaks the cycle; the
+ * require is also cheap (Node memoises it).
+ *
+ * @param {import('pg').Pool} pool
+ * @param {{slug:string, chains?:string[], statuses?:string[], orderBy?:'completed_at'|'started_at', limit?:number, excludeWarnSkip?:boolean, columns?:string[], completedSince?:Date|string|number, metaObject?:string}} opts
+ * @param {Date|string|number} [opts.completedSince] Bounds the read to runs completed at or AFTER
+ *   this instant (emitted as `completed_at >= $N::timestamptz`). WHY: #12b's "producer runs since my
+ *   own last start" activity read (enrich-parcels zoning).
+ * @param {string} [opts.metaObject] A `records_meta` key that must be a JSON OBJECT on the row,
+ *   emitted as `jsonb_typeof(records_meta -> $N::text) = 'object'` with the KEY BOUND, never interpolated.
+ *   WHY: #12d keeps today's fallback — the newest run that CARRIES the key wins (operator 2026-10-13, "reverse").
+ * @returns {Promise<{rows:object[], forms:string[]}>} `forms` is the deduped slug
+ *   expansion actually queried — returned so a caller reporting a `baseline_absent`
+ *   row can state WHICH spellings it looked for, rather than re-deriving them.
+ */
+async function readRunHistory(pool, opts) {
+  const o = opts || {};
+
+  if (typeof o.slug !== 'string' || o.slug.length === 0) {
+    throw new Error('readRunHistory: `slug` is REQUIRED (a non-empty string)');
+  }
+
+  // `require` is not shadowed — deliberately LAZY (see the doc comment above).
+  // eslint-disable-next-line global-require
+  const { slugForms } = require('../ledger');
+  const forms = [...new Set(slugForms(o.slug, o.chains || []))];
+
+  const statuses = o.statuses === undefined ? BASELINE_STATUSES : o.statuses;
+  if (!Array.isArray(statuses) || statuses.length === 0 || !statuses.every((s) => typeof s === 'string' && s.length > 0)) {
+    throw new Error('readRunHistory: `statuses` must be a NON-EMPTY array of strings');
+  }
+
+  const orderBy = o.orderBy === undefined ? 'completed_at' : o.orderBy;
+  if (!RUN_HISTORY_ORDER_BY.includes(orderBy)) {
+    throw new Error(`readRunHistory: \`orderBy\` must be one of ${RUN_HISTORY_ORDER_BY.join(', ')} — got ${JSON.stringify(o.orderBy)}`);
+  }
+
+  // Clamp a too-small/float limit, but REFUSE a non-number: `NaN` and `undefined`
+  // in a LIMIT would be a silently unbounded read, the one outcome a bounded
+  // baseline read must never have.
+  const rawLimit = o.limit === undefined ? 1 : o.limit;
+  if (typeof rawLimit !== 'number' || Number.isNaN(rawLimit)) {
+    throw new Error(`readRunHistory: \`limit\` must be a number — got ${JSON.stringify(o.limit)}`);
+  }
+  const limit = Math.max(1, Math.floor(rawLimit));
+
+  // WHITELIST, not sanitisation: an unknown column is a typo (`*` injection would
+  // let a caller read columns this reader was never scoped to expose).
+  const columns = o.columns === undefined ? [...RUN_HISTORY_COLUMNS] : o.columns;
+  if (
+    !Array.isArray(columns) ||
+    columns.length === 0 ||
+    !columns.every((c) => RUN_HISTORY_COLUMNS.includes(c))
+  ) {
+    throw new Error(`readRunHistory: \`columns\` must be a non-empty subset of ${RUN_HISTORY_COLUMNS.join(', ')}`);
+  }
+
+  const excludeWarnSkip = o.excludeWarnSkip === undefined ? true : !!o.excludeWarnSkip;
+
+  // #12b — "producer runs since my own last start" activity read. Accept a Date, an
+  // ISO string, or finite epoch ms; bind it as an ISO string so the `::timestamptz`
+  // cast is unambiguous. Anything else (incl. NaN, an invalid Date, '') is a THROW.
+  let completedSinceIso = null;
+  if (o.completedSince !== undefined) {
+    const v = o.completedSince;
+    const asDate = v instanceof Date ? v : (typeof v === 'string' || typeof v === 'number') && v !== '' ? new Date(v) : null;
+    if (!asDate || Number.isNaN(asDate.getTime())) {
+      throw new Error('readRunHistory: `completedSince` must be a Date, ISO string or epoch ms');
+    }
+    completedSinceIso = asDate.toISOString();
+  }
+
+  // #12d — the newest run that CARRIES the key wins (operator 2026-10-13, "reverse").
+  // A key is a bare identifier and is BOUND, never interpolated (injection guard).
+  let metaObjectKey = null;
+  if (o.metaObject !== undefined) {
+    if (typeof o.metaObject !== 'string' || !/^[a-z][a-z0-9_]*$/.test(o.metaObject)) {
+      throw new Error('readRunHistory: `metaObject` must be a records_meta key (^[a-z][a-z0-9_]*$)');
+    }
+    metaObjectKey = o.metaObject;
+  }
+
+  // New params append AFTER $3 (limit), in the order completedSince then metaObject,
+  // and only when present — so with neither option the SQL text and params array are
+  // BYTE-IDENTICAL to before this option pair existed.
+  const params = [forms, [...statuses], limit];
+  let sql =
+    `SELECT ${columns.join(', ')} FROM pipeline_runs` +
+    ' WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[])' +
+    (excludeWarnSkip ? ` AND ${WARN_SKIP_PREDICATE_SQL}` : '');
+  if (completedSinceIso !== null) {
+    params.push(completedSinceIso);
+    sql += ` AND completed_at >= $${params.length}::timestamptz`;
+  }
+  if (metaObjectKey !== null) {
+    params.push(metaObjectKey);
+    sql += ` AND jsonb_typeof(records_meta -> $${params.length}::text) = 'object'`;
+  }
+  sql += ` ORDER BY ${orderBy} DESC, id DESC LIMIT $3`;
+
+  const res = await pool.query(sql, params);
+  return { rows: res.rows, forms };
+}
+
+/**
  * Does THIS process own the ledger row?
  *
  * @param {string|null} chainId - PIPELINE_CHAIN, or null when standalone
@@ -130,4 +295,12 @@ async function finalizeLedgerRow(pool, runId, outcome) {
   }
 }
 
-module.exports = { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow };
+module.exports = {
+  RUN_STATUS,
+  BASELINE_STATUSES,
+  WARN_SKIP_PREDICATE_SQL,
+  readRunHistory,
+  ownsLedgerRow,
+  openLedgerRow,
+  finalizeLedgerRow,
+};

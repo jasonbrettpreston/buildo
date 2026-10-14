@@ -22,13 +22,15 @@
  *
  * FOLD-V9(2) (binding amendment) — the escalation-index VALUE the engine prices with is
  * `ctx.config.cost_escalation_index` (declared, LM-D15-validated, hoisted above the lock),
- * NOT a second ad hoc read inside `readCostContract`. `readCostContract` re-reads
- * `logic_variables.updated_at` for the SAME row purely as an `emits[]` version stamp. Because
+ * NOT a second ad hoc read inside `readCostContract`. R-CM (2026-10-12) — the index VERSION
+ * STAMP is likewise NOT re-read here: it comes from `ctx.config.$meta['cost_escalation_index']`,
+ * the frozen, NON-enumerable stamp map the config loader builds in the SAME statement that read
+ * the value (scripts/lib/config-loader.js), so value and stamp can never disagree. Because
  * `runEnrichPhase` itself executes inside `pipeline.withAdvisoryLock` (scripts/lib/step/index.js
  * :4497→:4767), `readCostContract` still runs INSIDE the lock — F11's atomic-read fence is
- * preserved in substance (the whole hook runs under the same lock the legacy's D#3 read did),
- * with the one declared difference that the priced VALUE is the hoisted-and-validated config
- * value rather than a second raw read of the same row (deviations[]).
+ * preserved, and is in fact held MORE TIGHTLY than by the old re-read: the stamp now travels
+ * with the priced value rather than being fetched by a second query that could observe a
+ * different row version (deviations[]).
  */
 
 const { buildParcelCostMenu, PARCEL_COST_LINES, mergeCostLines } = require('../parcel-cost');
@@ -46,29 +48,49 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * R-CM — the config-version stamp for a declared logic variable.
+ *
+ * The library reads each declared variable's `updated_at` and stashes it on the SAME config
+ * object it stamps the value onto, under a frozen, NON-enumerable `$meta` map
+ * (`{ <variable_key>: { updated_at } }`, scripts/lib/config-loader.js). Reading the stamp from
+ * `ctx.config.$meta` in the same statement as the priced VALUE is what keeps the two from
+ * disagreeing (R-CM) — the old `logic_variables` re-read could observe a different row version.
+ * Returns `null` only when the row is absent, which is exactly the NULL the retired subquery
+ * `(SELECT updated_at FROM logic_variables WHERE variable_key = ...)` returned for a missing row.
+ *
+ * @param {object} config a config object that may carry a `$meta` stamp map
+ * @param {string} name the declared logic-variable key
+ * @returns {Date|null}
+ */
+function metaStamp(config, name) {
+  const m = config && config.$meta && config.$meta[name];
+  return m ? m.updated_at : null;
+}
+
 // ===========================================================================
-// §9-class contract — F1/F2 empty-rates + duplicate-archetype HALT, folded pre-phase (RV-L2
-// precedent: `guards.requires[{kind:"table_non_empty"}]` is AJV-invalid and declarative-only
-// regardless, so the real enforcement lives here). Runs on the step's own pool, inside the
-// advisory lock, before the phase loop (`execution.enrich_hooks.contract_read`).
-// ===========================================================================
-async function readCostContract(pool) {
+// §9-class contract — folded pre-phase. Runs on the step's own pool,
+// inside the advisory lock, before the phase loop (`execution.enrich_hooks.contract_read`).
+// F1/F2 empty-source enforcement (archetype_cost_rates, parcel_cost_lines) is NOT here any more:
+// both tables are listed in the descriptor's `guards.empty_source` and the runner counts them
+// (measureInputGuards) before any hook, halting the run with a FAIL gate row on zero rows
+// (R-BZ G8; S4). The duplicate-archetype check is NOT here any more either: only
+// producer-contract halts remain in this hook — empties are the declared guard's, uniqueness is
+// the `archetype_cost_rates` PRIMARY KEY's (R-CL; S4).
+/**
+ * @param {{pool: import('pg').Pool, config: object}} ctx
+ */
+async function readCostContract(ctx) {
+  const pool = ctx.pool;
   const ratesRes = await pool.query(
     `SELECT archetype, cost_per_sqm::float8 AS cost_per_sqm,
             cost_adjustment_factor::float8 AS cost_adjustment_factor,
             escalation_index_base::float8 AS escalation_index_base
        FROM archetype_cost_rates`,
   );
-  if (ratesRes.rows.length === 0) {
-    throw new Error(`${TAG} archetype_cost_rates is empty — refusing to run (would produce 0% coverage). Apply migration 205.`);
-  }
   const rates = {};
-  const seen = new Set();
+  // Uniqueness: archetype is the PRIMARY KEY (migration 205) — the DB enforces it (S4, R-CL).
   for (const r of ratesRes.rows) {
-    if (seen.has(r.archetype)) {
-      throw new Error(`${TAG} duplicate archetype in archetype_cost_rates: ${r.archetype}`);
-    }
-    seen.add(r.archetype);
     rates[r.archetype] = {
       cost_per_sqm: r.cost_per_sqm,
       cost_adjustment_factor: r.cost_adjustment_factor,
@@ -79,16 +101,13 @@ async function readCostContract(pool) {
   // FOLD A2 (batch-2 row 2.5, Spec 88 §2.3, Spec 124 R-AU) — the EDITABLE half of the catalogue
   // (archetype / base_confidence / fit_permitted_values) now lives in the parcel_cost_lines DB
   // table; mergeCostLines re-joins it with the frozen PARCEL_COST_LINES structural bindings by id.
-  // A zero-row table is the same HALT shape as the empty-rates guard above: pricing with no
-  // catalogue would produce a 0-line menu on every parcel.
+  // Non-emptiness of this table is enforced by the declared guards.empty_source (runner, before
+  // this hook; S4) — pricing with no catalogue would produce a 0-line menu on every parcel.
   const linesRes = await pool.query(
     `SELECT id, archetype, base_confidence, fit_permitted_values
        FROM parcel_cost_lines
       ORDER BY id`,
   );
-  if (linesRes.rows.length === 0) {
-    throw new Error(`${TAG} parcel_cost_lines is empty — refusing to run (would produce 0% line coverage). Apply migration 248.`);
-  }
   const lines = mergeCostLines(PARCEL_COST_LINES, linesRes.rows);
 
   // F9/D#2 — rates_as_of reads MAX(updated_at), NOT MAX(as_of_date) (a cost_per_sqm correction
@@ -98,8 +117,9 @@ async function readCostContract(pool) {
   const sigRes = await pool.query(
     `SELECT
        (SELECT MAX(updated_at) FROM archetype_cost_rates) AS rates_as_of,
-       (SELECT updated_at FROM logic_variables WHERE variable_key = 'cost_escalation_index') AS index_updated_at,
+       $1::timestamptz AS index_updated_at,
        (SELECT MAX(updated_at) FROM parcel_cost_lines) AS cost_lines_updated_at`,
+    [metaStamp(ctx.config, 'cost_escalation_index')],
   );
   const sig = sigRes.rows[0];
   // compute-no-wall-clock (Spec 122 §5.5 (3)) bans `new Date(...)` in a compute module — the
@@ -450,8 +470,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
   const freshRes = await pool.query(
     `WITH d AS (
        SELECT (SELECT max(as_of_date) FROM archetype_cost_rates)                       AS rates_as_of,
-              (SELECT updated_at::date FROM logic_variables
-                 WHERE variable_key = 'cost_escalation_index')                         AS index_as_of,
+              $2::timestamptz::date                                                    AS index_as_of,
               $1::timestamptz                                                          AS run_at
      )
      SELECT
@@ -464,7 +483,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
           + EXTRACT(MONTH FROM age(run_at::date, index_as_of)))::int END AS index_age_months,
        (rates_as_of IS NOT NULL AND rates_as_of > run_at::date) AS rates_future
      FROM d`,
-    [runAt],
+    [runAt, metaStamp(config, 'cost_escalation_index')],
   );
   const fresh = freshRes.rows[0];
   const maxRateAsOf = fresh.rates_as_of;
