@@ -7,17 +7,17 @@
 - code_link version: 1
 - code_roots source: vocab.json `code_roots`
 - authored rows read: 0 (pending 0) · heuristic rows read: 0
-- input `docs/specs/00-architecture/01_database_schema.md` sha256 `fc6c072e5dbbc4cb`
+- input `docs/specs/00-architecture/01_database_schema.md` sha256 `83c6c7f6d88b50c6`
 - input `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
-- input `scripts/lib/compute/enrich-parcels.js` sha256 `a439a8f4856a34d7`
+- input `scripts/lib/compute/enrich-parcels.js` sha256 `8b59ee1b9e4f6ba6`
 - input `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - input `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - input `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
-- input `scripts/lib/zoning-precedence.js` sha256 `b244072ff4e230d0`
+- input `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - input `scripts/seeds/bylaw/external.json` sha256 `23ab08b99383271d`
-- input `scripts/seeds/bylaw/vocab.json` sha256 `7727def3e79a1275`
-- input `scripts/seeds/logic_variables.json` sha256 `b88c37eb26d6665d`
-- input `src/lib/db/generated/schema.ts` sha256 `e334d512b14f85a1`
+- input `scripts/seeds/bylaw/vocab.json` sha256 `def634b213fdcaa7`
+- input `scripts/seeds/logic_variables.json` sha256 `8ca07ae0c763530b`
+- input `src/lib/db/generated/schema.ts` sha256 `b59e2a243bbcd0c5`
 
 ## Summary
 
@@ -45,7 +45,7 @@ None.
 `class` is the gate class (from row `code_refs` and `model_heuristic` rows). `proposed` is read from the code comments
 for the operator to confirm at S9 — it never sets the class: `by_law_cited` (the comment cites a clause) · `by_law_claimed_unsourced`
 (the comment or its section header claims a by-law source with no clause; the operator classifies, F-2) · `heuristic` with a
-proposed `heuristic_reason`. Inline disclosure: 259 numeric literals outside named constants and 24 decimal numbers
+proposed `heuristic_reason`. Inline disclosure: 276 numeric literals outside named constants and 24 decimal numbers
 inside string/SQL text are not classified (see blind spots).
 
 | # | Module | Member | Value | Line | Class | Proposed | Evidence | Logic variable |
@@ -200,7 +200,7 @@ inside string/SQL text are not classified (see blind spots).
 | Module | Named constants | Inline numeric literals | Decimals in string/SQL text |
 |---|---|---|---|
 | `scripts/lib/build-norms.js` | 6 | 0 | 0 |
-| `scripts/lib/compute/enrich-parcels.js` | 0 | 185 | 22 |
+| `scripts/lib/compute/enrich-parcels.js` | 0 | 202 | 22 |
 | `scripts/lib/max-build.js` | 105 | 14 | 2 |
 | `scripts/lib/optimal-config.js` | 20 | 44 | 0 |
 | `scripts/lib/parcel-cost.js` | 2 | 16 | 0 |

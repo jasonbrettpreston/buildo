@@ -1,0 +1,307 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "bylaw-round-record-v1",
+  "$comment": "McBylaw Phase 2 validation round record (phase2-plan-v2 §V 'one runner, one record'). Written by scripts/analysis/bylaw/validate-round.mjs to scripts/seeds/bylaw/validation/rounds/<n>.json (never overwritten; a re-run is a new round id). Round verdict: fail if any element or oracle fails; pass only if every one passes; otherwise not_run. Locked by src/tests/bylaw-validate-round.infra.test.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "round",
+    "mode",
+    "validate_round_version",
+    "git_head",
+    "pins",
+    "prereg_status",
+    "db",
+    "elements",
+    "oracles",
+    "verdict",
+    "disclosures"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bylaw-round-record-v1"
+    },
+    "round": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mode": {
+      "enum": [
+        "dry_run",
+        "round"
+      ]
+    },
+    "validate_round_version": {
+      "type": "string"
+    },
+    "git_head": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table_version",
+        "adoption_id",
+        "table_sha256",
+        "evaluator_version",
+        "vocab_version",
+        "oracle_b_sha",
+        "prereg_path",
+        "prereg_sha",
+        "class_catalogue_sha",
+        "w1_shards_sha"
+      ],
+      "properties": {
+        "table_version": {
+          "type": "string"
+        },
+        "adoption_id": {
+          "type": "string"
+        },
+        "table_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evaluator_version": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "vocab_version": {
+          "type": "string"
+        },
+        "oracle_b_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "prereg_path": {
+          "type": "string"
+        },
+        "prereg_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "class_catalogue_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "w1_shards_sha": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "prereg_status": {
+      "enum": [
+        "committed",
+        "missing",
+        "mismatched"
+      ]
+    },
+    "db": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "read",
+            "not_run"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "db_not_requested",
+            "db_error"
+          ]
+        },
+        "database": {
+          "type": "string"
+        },
+        "transaction_read_only": {
+          "const": true
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "measurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "stale_pins"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "stale_pins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/element"
+      }
+    },
+    "oracles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "properties": {
+        "A": {
+          "$ref": "#/definitions/verdicted"
+        },
+        "B": {
+          "$ref": "#/definitions/verdicted"
+        },
+        "C": {
+          "$ref": "#/definitions/verdicted"
+        },
+        "D": {
+          "$ref": "#/definitions/verdicted"
+        },
+        "E": {
+          "$ref": "#/definitions/verdicted"
+        }
+      }
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_run"
+      ]
+    },
+    "disclosures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "reason": {
+      "enum": [
+        "measurements_absent",
+        "stale_pin",
+        "step_not_built",
+        "oracle_unavailable",
+        "input_absent",
+        "input_schema_mismatch",
+        "table_mismatch",
+        "no_preregistered_threshold",
+        "threshold_not_preregistered",
+        "heldout_commitment_missing",
+        "heldout_reveal_absent",
+        "second_seat_absent",
+        "prereg_not_committed",
+        "heldout_population_changed"
+      ]
+    },
+    "verdicted": {
+      "type": "object",
+      "required": [
+        "verdict"
+      ],
+      "properties": {
+        "verdict": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ]
+        },
+        "reason": {
+          "$ref": "#/definitions/reason"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "not_run"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    "element": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/verdicted"
+        },
+        {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "enum": [
+                "prereg",
+                "k7r_class_map_total",
+                "oracle_b_independence",
+                "probe_ranks",
+                "k7r_split",
+                "k3_a",
+                "k3_b",
+                "k3_c",
+                "k3_d",
+                "k3_e",
+                "k3_f",
+                "k3_g",
+                "heldout",
+                "double_check"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

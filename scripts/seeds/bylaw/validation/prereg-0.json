@@ -1,0 +1,291 @@
+{
+  "$comment": "Pre-registration for McBylaw Phase 2 validation round 0 = P2-0, the K7-R re-run (phase2-plan-v2 §K.2, §K.3, §K.4, §V-4, §V-6). Committed BEFORE the round; validate-round.mjs records prereg_status from HEAD's blob of this path. Edits after a round has run need a new round id. Schema: prereg.schema.json. Locked by src/tests/bylaw-validate-round.infra.test.ts.",
+  "schema": "bylaw-prereg-v1",
+  "round": 0,
+  "plan_ref": ".cursor/mcbylaw/phase2-plan-v2.md §K.1 E-6, §K.2 (a)-(d), §K.3, §K.4, §V",
+  "k7r": {
+    "codes_source": "scripts/analysis/bylaw/evaluate.mjs NOT_EVALUATED_CODES (24 codes at 2d7b0d84, M-60 hardened)",
+    "lot_gates": [
+      "none",
+      "no_569_2013_zone",
+      "ambiguous_zone",
+      "lot_metric_missing",
+      "label_exception_mismatch",
+      "label_unparsed",
+      "exception_closure_unauthored"
+    ],
+    "lot_gates_source": "phase2-plan-v2 §A.1 L13 lot_gate set (Layer 2 only, never passed to the evaluator); moves to scripts/seeds/bylaw/layer2-map.json at P2-4, which then becomes the lock's source",
+    "extra_keys": [
+      "not_modelled:target_not_keyed"
+    ],
+    "classes": {
+      "i": "planned-unkeyed: work a named plan step will key (K.2 a)",
+      "ii": "structural: missing data dependency, input, grammar form or map (K.2 a: everything else unavailable)",
+      "i_if_planned": "class i only where planned_keying names the (zone, target) pair, else class ii (K.2 a)",
+      "not_unavailable": "not an unavailable item (a value, a conflict, or lot gate none)"
+    },
+    "class_map": {
+      "all_arguments_displaced": "ii",
+      "all_map_arguments_absent": "ii",
+      "ambiguous_zone": "ii",
+      "band_no_match": "ii",
+      "by_type_unlisted": "ii",
+      "condition_unknown": "ii",
+      "displaced_argument_not_found": "ii",
+      "division_by_zero": "ii",
+      "enactment_date_unknown": "ii",
+      "exception_closure_unauthored": "i",
+      "exception_not_authored": "i",
+      "existing_building_facts": "ii",
+      "expression_error": "ii",
+      "label_exception_mismatch": "ii",
+      "label_letter_unknown": "ii",
+      "label_unparsed": "ii",
+      "label_value_absent": "ii",
+      "lot_metric_missing": "ii",
+      "map_area_not_held": "ii",
+      "map_value_absent": "ii",
+      "missing_input": "ii",
+      "named_lots_only": "ii",
+      "needs_user_input": "ii",
+      "no_569_2013_zone": "ii",
+      "no_candidate": "ii",
+      "none": "not_unavailable",
+      "not_modelled:target_not_keyed": "i_if_planned",
+      "referenced_target_conflict": "ii",
+      "target_cycle": "ii",
+      "unlimited_in_arithmetic": "ii",
+      "unregulated_in_arithmetic": "ii"
+    },
+    "notes": {
+      "needs_user_input": "class (ii) until the scenario-class catalogue (scripts/seeds/bylaw/scenario-classes.json, Q12) is ratified (operator 2026-10-14, Q2 a); then re-mapped by a new prereg",
+      "not_modelled:target_not_keyed": "class (i) only when the item's exception is a member of the generated W1 shard plan (planned_keying_source, step P2-5); otherwise class (ii)"
+    },
+    "planned_keying_source": {
+      "path": "scripts/seeds/bylaw/w1-shards.json",
+      "blob_sha": "31cf70ebad6bb3bc96dd4ce02e5aa608f43de8e3",
+      "step": "P2-5",
+      "grain": "exception",
+      "rule": "planned exceptions = members[].regulation_id of the GENERATED W1 shard plan (keying-cli.mjs plan --batch W1), read by path; blob_sha pins it (git blob id of the LF file). blob_sha null (placeholder until the re-planned file lands), the file absent, or a different sha => k7r_split not_run:stale_pin (fail closed). Never a hand-written list (operator 2026-10-14, Q1 a)"
+    },
+    "keyed_scope": {
+      "definition": "items of wave 0 (the Phase 1 keyed table) + the 30 E-5 exceptions; an item outside counts toward the original K7 only",
+      "exceptions_source": "scripts/seeds/bylaw/k7-exceptions.json exceptions[] (top_n = 30)"
+    },
+    "kill": {
+      "ii_item_max": 0.05,
+      "ii_lot_max": 0.05,
+      "i_plus_ii_max": 0.2,
+      "i_plus_ii_weights": [
+        "item",
+        "lot"
+      ],
+      "comparator": "greater_than",
+      "post_hoc": true,
+      "post_hoc_basis": "the 5 % line was chosen after the trial's (ii) baseline of 352 / 102,960 = 0.34 % (phase2-plan-v2 §K.2 d, MATRIX §5); the report prints the original K7 beside K7-R",
+      "original_k7": {
+        "threshold": 0.2,
+        "scope": "all_items",
+        "weight": "item"
+      }
+    },
+    "probe": {
+      "seed": "mcbylaw-prereg-0-k7r-probe-2026-10-14",
+      "rank_from": 31,
+      "rank_to": 220,
+      "n": 10,
+      "ranks": [
+        34,
+        78,
+        82,
+        106,
+        112,
+        134,
+        142,
+        158,
+        187,
+        188
+      ],
+      "rule": "ranks rank_from..rank_to ordered by sha256('<seed>:<rank>') hex ascending, the first n taken, then sorted numerically (validate-round.mjs probeRanks); rank = wave-1 rank by INCLUDE-closed residential lots (Spec 69 M-15, k7.mjs ordering); each sampled exception is read only far enough to classify every clause as expressible or not in the current grammar",
+      "kill": "any clause class with no grammar form => a named grammar extension in P2-4 before wave 1, not a kill of the plan (K.2 c)"
+    }
+  },
+  "k3": [
+    {
+      "id": "k3_a",
+      "measures": "b2 cells and bytes/row at TS = targets x {principal, suite, ancillary} with scenario classes inside the row, against K5",
+      "limits": [
+        {
+          "key": "steady_layer2_bytes_share_of_db",
+          "max": 0.1,
+          "source": ".cursor/mcbylaw/phase2-panel/data-measured.md:157 K5 \"projected steady Layer 2 (rows + indexes) >10 % of DB ... at the operator-set TS -> reject that shape\" (TRIAL-REPORT.md:10: thresholds as fixed in §5)"
+        }
+      ]
+    },
+    {
+      "id": "k3_b",
+      "measures": "ms/lot and ms/cell with the hardened evaluator (M-60(f) enumeration)",
+      "limits": [
+        {
+          "key": "full_resolve_s",
+          "max": 1800,
+          "source": ".cursor/mcbylaw/phase2-panel/data-measured.md:158 K5 \"Full re-resolve >30 min local\""
+        },
+        {
+          "key": "incremental_s",
+          "max": 300,
+          "source": ".cursor/mcbylaw/phase2-panel/data-measured.md:158 K5 \"incremental >5 min\""
+        },
+        {
+          "key": "ms_per_lot_100k_over_20k",
+          "max": 2,
+          "source": ".cursor/mcbylaw/phase2-panel/data-measured.md:158 K5 \"100 K-lot ms/lot >2x the 20 K figure -> reject the linear model\""
+        }
+      ],
+      "missing_sources": "ms/cell has no budget in any source (K5 sets none); recorded, not judged — not invented"
+    },
+    {
+      "id": "k3_c",
+      "measures": "I12 static-closure misses (lots) with the hardened inputs[] union the static key; the trial's 602 must be 0",
+      "limits": [
+        {
+          "key": "i12_static_miss_lots",
+          "max": 0,
+          "source": ".cursor/mcbylaw/phase2-plan-v2.md §K.3 (c) \"the trial's 602-lot static miss must be 0\""
+        }
+      ]
+    },
+    {
+      "id": "k3_d",
+      "measures": "WAL bytes of a no-change run with the anti-join prefilter and table_version out of the guard",
+      "limits": [
+        {
+          "key": "wal_per_run_share_of_db",
+          "max": 0.1,
+          "source": ".cursor/mcbylaw/phase2-panel/data-measured.md:158 K5 \"WAL/run >10 % of DB\""
+        }
+      ]
+    },
+    {
+      "id": "k3_e",
+      "measures": "evaluable share per target",
+      "limits": []
+    },
+    {
+      "id": "k3_f",
+      "measures": "the K7-R splits, item- and lot-weighted (judged by the k7r_split element)",
+      "limits": []
+    },
+    {
+      "id": "k3_g",
+      "measures": "every count the plan's invariants cite (I1, I5, I6, I7 bases), regenerated by the script cited beside it",
+      "limits": []
+    }
+  ],
+  "oracles": {
+    "A": {
+      "available": false,
+      "what": "production resolve_bylaws",
+      "verdict": "not_run",
+      "reason": "step_not_built",
+      "basis": "phase2-plan-v2 §V-2: available at P2-8"
+    },
+    "B": {
+      "available": true,
+      "what": "independent per-lot resolver scripts/analysis/bylaw/oracle-b/ vs the production evaluator (compare.mjs); labelled resolver agreement, never accuracy (R-ORACLE)",
+      "pass_rule": "0 unadjudicated A/B disagreements (V-5: majority never decides)"
+    },
+    "C": {
+      "available": true,
+      "what": "CoA decision notices, required-by-by-law side (lane I, scripts/analysis/bylaw/oracle-c.mjs)",
+      "contract": {
+        "input": "--oracle-c <path to an oracle C round record>",
+        "schema": "oracle-c-round-v1",
+        "requires": [
+          "oracle_c_version",
+          "inputs.provisions.sha256",
+          "summary.n",
+          "summary.by_answer.match",
+          "summary.by_answer.mismatch",
+          "summary.by_answer.not_comparable"
+        ],
+        "table_binding": "inputs.provisions.sha256 must equal this round's pins.table_sha256, else not_run:table_mismatch",
+        "verdict": "Phase 2 is report-only (P2-12, Q8): counts recorded, verdict not_run:no_preregistered_threshold until a prereg sets the SC-5 target"
+      },
+      "pass_rule": "none in Phase 2 (report-only)"
+    },
+    "D": {
+      "available": false,
+      "what": "expert examiner's stratified sample (G-AUDIT, Phase 1 S14, unbuilt)",
+      "verdict": "not_run",
+      "reason": "oracle_unavailable",
+      "basis": "operator 2026-10-14: no expert audit soon. D stays not_run on every round and is disclosed; the accuracy bar is now oracle C plus an operator law-text sample (C-9 (c)). An element not run is never a PASS"
+    },
+    "E": {
+      "available": true,
+      "what": "shadow diff vs current production values (field-map.json columns), closed classifier §V-2 E",
+      "pass_rule": "layer2_defect = 0 and unexplained = 0"
+    }
+  },
+  "heldout": {
+    "commitment_sha256": "bfec8acc94416c9d7bbc07c5121af816190674b798cc21b4112bfb4a2a8086ed",
+    "draw": {
+      "database": "postgres",
+      "strata": "zoning_class in vocab.json zone",
+      "n_per_stratum": 300,
+      "order": "sha256(salt:parcel_id) ascending, n_per_stratum lowest per stratum, exhaustive when the stratum is smaller",
+      "per_stratum": {
+        "R": {
+          "population": 104544,
+          "drawn": 300
+        },
+        "RD": {
+          "population": 236072,
+          "drawn": 300
+        },
+        "RM": {
+          "population": 54869,
+          "drawn": 300
+        },
+        "RS": {
+          "population": 29683,
+          "drawn": 300
+        },
+        "RT": {
+          "population": 14926,
+          "drawn": 300
+        }
+      },
+      "population_sha256": "a2d41e378012f75fc1b4af65191b45e53e7812ce66dbe5139678ad1b9d33d87b",
+      "validate_round_version": "validate-round-v1"
+    },
+    "rule": "the operator runs `validate-round.mjs commit-heldout --round=0` (salt ONLY from env MCBYLAW_HELDOUT_SALT, never written): per residential zone stratum (vocab.json zone), the n_per_stratum parcels with the lowest sha256(salt:parcel_id), exhaustive when the stratum is smaller; writes commitment_sha256 = sha256(sorted ids joined by LF + LF + salt) and the draw parameters here; verified at reveal (--heldout-reveal, same env salt, re-drawn from the DB); revealed sets join regression-pool.json; round 0 reuses the trial's published K-sample ids for K-measurements (not held-out). The other V-4 strata (waves, overlays, structures, classes) need Layer 2 and are drawn in later rounds",
+    "seed_custody": "operator_declared_only",
+    "n_per_stratum": 300,
+    "salt_env": "MCBYLAW_HELDOUT_SALT"
+  },
+  "double_check": {
+    "rule": "phase2-plan-v2 §K.4: a second Claude seat re-runs validate-round against the same pins and DB counts; any difference > 0 on a deterministic number fails the round (--second-seat <record>)",
+    "deterministic_paths": [
+      "pins",
+      "db.counts",
+      "elements[k7r_split].counts",
+      "elements[k3_*].counts",
+      "oracles.B.counts",
+      "oracles.E.counts"
+    ],
+    "tolerance": 0
+  },
+  "db_counts": {
+    "transaction": "read_only",
+    "reads": [
+      "current_database()",
+      "parcels: count(*)",
+      "parcels: count(*) where zoning_class in vocab.json zone (residential, by zone)"
+    ]
+  },
+  "k3_sources": {
+    ".cursor/mcbylaw/phase2-panel/data-measured.md": "346300eadfdefbc5795d8881ab17a3b83ed995c70954c88f1bdb884c4b997413",
+    ".cursor/mcbylaw/phase2-trial/TRIAL-REPORT.md": "95793aebd69f0929c5d6d0cce3f02a9984d51e5e8ef3957708b1ef4478ae5250"
+  }
+}

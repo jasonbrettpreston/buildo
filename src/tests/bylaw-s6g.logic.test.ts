@@ -385,6 +385,16 @@ describe('Spec 69a M-82 Q7 — limit_not_modelled only on UNUSUAL (G-SHAPE)', ()
   });
 });
 
+// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-107 (operator 2026-10-14, a partly modelled LIMIT)
+describe('Spec 69a M-107 — lot_condition_arm_not_modelled only on LIMIT (G-SHAPE)', () => {
+  const fx: Json[] = FX.shapeFixtures();
+  it('passes on LIMIT, fails on UNUSUAL', () => {
+    expect(SH.checkShape(fx.find((f) => f.name.startsWith('good twin: M-107'))!.input).violations).toEqual([]);
+    expect(codesOf(SH.checkShape(fx.find((f) => f.name.startsWith('shape_must_be_none: M-107'))!.input))).toEqual(['shape_must_be_none']);
+    expect(VOCAB.literal_not_expressed_reason).toContain('lot_condition_arm_not_modelled');
+  });
+});
+
 describe('Spec 69 M-75 correction kind — a sealed draft is corrected by a record, never edited', () => {
   const g = FX.GOOD['LIMIT×literal'];
   const correctionFor = (field: string, value: unknown, o: Json = {}) => ({ adjudications: [{ id: `COR-${g.unit_id}/${field}`, kind: 'correction', unit: g.unit_id, field, value, reason: 'the clause says so', rule: 'Spec 68 §6.4', adjudicator: 'operator', adjudicated_on: '2026-10-08', ...o }] });

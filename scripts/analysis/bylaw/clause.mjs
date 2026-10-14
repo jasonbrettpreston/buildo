@@ -169,12 +169,26 @@ export function headerTexts(row, clausePath) {
 }
 
 /** G-CLAUSE over the agreed units. PURE. */
+/**
+ * A literal is the OWN header id of a Ch.900 exception row (`900.<k>.10(N)`, k = 2..6): it sits in the row's root clause,
+ * its value is N, and the row text before it is exactly "(N) Exception <ZONE> ". Anything else (the same number in the
+ * body, another exception's number, a non-Ch.900 row) is not. PURE.
+ */
+export function isOwnExceptionHeader(row, l) {
+  const m = /^900\.[2-6]\.10\((\d+)\)$/.exec(String(row && row.regulation_id));
+  if (!m || !l || !row.clauses || !row.clauses.length || l.clause_path !== row.clauses[0].path) return false;
+  if (l.unit !== null && l.unit !== undefined) return false;
+  if (Number(l.value) !== Number(m[1]) || String(l.raw) !== m[1]) return false;
+  const before = String(row.verbatim || '').slice(0, l.start);
+  return new RegExp(`^\\(${m[1]}\\)\\s*Exception\\s+[A-Z]+\\s+$`).test(before);
+}
+
 export function checkClause({ slice, units = new Map(), vocab, adjudications = null } = {}) {
   const v = [];
   const index = buildIndex(slice);
   const dv = dslVocab(vocab);
   const excerpts = consolidationExcerpts(adjudications);
-  const counts = { units: 0, statements: 0, literals_bound: 0, literals_listed: 0, consolidation_mismatch_units: 0, heading_duplicates: 0 };
+  const counts = { units: 0, statements: 0, literals_bound: 0, literals_listed: 0, consolidation_mismatch_units: 0, heading_duplicates: 0, exception_header_ids: 0 };
   const accounted = new Map(); // regulation_id → Set(litKey)
   const listedTokens = new Map(); // regulation_id → Set(raw uncovered tokens listed)
   const covered = new Map(); // regulation_id → Set(leaf path)
@@ -359,6 +373,12 @@ export function checkClause({ slice, units = new Map(), vocab, adjudications = n
       // once an equal body occurrence is bound, the heading duplicate is accounted (counted), never a second fact
       if (/[A-Z]/.test(l.raw) && row.clauses.length && l.clause_path === row.clauses[0].path && row.literals.some((o) => o !== l && acc.has(litKey(o)) && sameValue(o.value, l.value) && (o.unit ?? null) === (l.unit ?? null))) {
         counts.heading_duplicates++;
+        continue;
+      }
+      // orchestrator 2026-10-14 Q-E = b (narrow): a Ch.900 exception's OWN header id ("(N) Exception <ZONE> N") is a
+      // regulation number, which the brief says to ignore — exempt and counted; every other number still accounts
+      if (isOwnExceptionHeader(row, l)) {
+        counts.exception_header_ids++;
         continue;
       }
       v.push(violation('literal_unaccounted', `${reg}#${l.clause_path}`, `"${l.raw}" is neither used by an expression nor listed in literals_not_expressed`));

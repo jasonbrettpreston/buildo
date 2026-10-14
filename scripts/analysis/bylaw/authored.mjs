@@ -58,6 +58,8 @@ export function shardRelPaths(key) {
   return { a: `${p}.a.json`, b: `${p}.b.json`, prov: `${p}.prov.json` };
 }
 export const WHOLE = 'whole';
+/** `p` is a proper ancestor clause path of `q`: a prefix ending at a segment boundary (`(1)` is not an ancestor of `(10)`). */
+export const isAncestorPath = (p, q) => q.length > p.length && q.startsWith(p) && (q[p.length] === '(' || q[p.length] === '[');
 /** Gate state (Spec 68 §4): closed; a gate not run is never a PASS. */
 export const GATE_STATES = Object.freeze(['pass', 'fail', 'not_run']);
 
@@ -479,7 +481,9 @@ export function predecessorKey(key) {
 /**
  * Spec 69a M-80 supersession over loaded shards. `newest`: unit_id → the key of the highest generation (same base)
  * whose .a lists the unit; `superseded`: shard key → Set(unit ids a newer generation took over); `whole`: shard keys
- * every one of whose .a units is superseded. A shard with no .a supersedes nothing. PURE.
+ * every one of whose .a units is superseded. A shard with no .a supersedes nothing. A unit is also superseded by a
+ * proper DESCENDANT clause of the same row listed in another shard's .a (grain refinement: leaf supersedes its coarser
+ * ancestor across shard keys; a sibling or other non-ancestor is never superseded). PURE.
  */
 export function supersession(shards = []) {
   const newest = new Map();
@@ -494,13 +498,48 @@ export function supersession(shards = []) {
       if (!prev || (pg.base === g.base && g.gen > pg.gen)) newest.set(u.unit_id, s.key);
     }
   }
+  // Grain refinement (proposed Spec 69a R3, orchestrator 2026-10-14, operator Q2 leaf grain): a unit is also superseded
+  // when ANOTHER shard's .a lists a proper descendant clause of it in the same row (a finer-grain re-key), whatever its key.
+  // The SAME unit keyed in two shards of different bases is resolved only when both are sealed: the newer A seal wins
+  // (the W1 leaf-grain re-key of an E-5 unit that was already a leaf). An unsealed duplicate stays a G-SHAPE violation.
+  const sealOf = new Map(shards.map((s) => [s.key, s.prov && s.prov.a_seal && Number.isSafeInteger(s.prov.a_seal.seal_id) ? s.prov.a_seal.seal_id : null]));
+  const keyedPaths = new Map(); // regulation_id → [{path, key}] of every .a unit
+  for (const s of shards) {
+    for (const u of (s.a && Array.isArray(s.a.units) ? s.a.units : [])) {
+      if (!u || typeof u.unit_id !== 'string') continue;
+      const { reg, path: p } = splitUnitId(u.unit_id);
+      if (p === null || p === WHOLE) continue;
+      if (!keyedPaths.has(reg)) keyedPaths.set(reg, []);
+      keyedPaths.get(reg).push({ path: p, key: s.key });
+    }
+  }
+  const newerSeal = (x, y) => sealOf.get(x) !== null && sealOf.get(y) !== null && sealOf.get(x) > sealOf.get(y);
+  const refined = (id, key) => {
+    const { reg, path: p } = splitUnitId(id);
+    if (p === null || p === WHOLE) return false;
+    return (keyedPaths.get(reg) || []).some((x) => x.key !== key && (isAncestorPath(p, x.path) || (x.path === p && shardGeneration(x.key).base !== shardGeneration(key).base && newerSeal(x.key, key))));
+  };
   const superseded = new Map();
   const whole = new Set();
   for (const s of shards) {
     const ids = [...new Set([...(s.a && Array.isArray(s.a.units) ? s.a.units : []), ...(s.b && Array.isArray(s.b.units) ? s.b.units : [])].filter((u) => u && typeof u.unit_id === 'string').map((u) => u.unit_id))];
-    const taken = new Set(ids.filter((id) => newest.has(id) && newest.get(id) !== s.key && genOf.get(newest.get(id)).base === genOf.get(s.key).base));
+    const taken = new Set(ids.filter((id) => (newest.has(id) && newest.get(id) !== s.key && genOf.get(newest.get(id)).base === genOf.get(s.key).base) || refined(id, s.key)));
     if (taken.size) superseded.set(s.key, taken);
     if (ids.length && taken.size === ids.length) whole.add(s.key);
   }
-  return { newest, superseded, whole };
+  // rowsSuperseded: shard key → Set(regulation_id) whose row fields that shard wrote are retired, because every unit the
+  // shard keyed for that row is superseded (one view for G-SHAPE's row-field owner, so a row never counts twice)
+  const rowsSuperseded = new Map();
+  for (const s of shards) {
+    const taken = superseded.get(s.key);
+    if (!taken || !s.a || !s.a.rows || typeof s.a.rows !== 'object') continue;
+    const unitsOfRow = new Map();
+    for (const u of Array.isArray(s.a.units) ? s.a.units : []) if (u && typeof u.unit_id === 'string') {
+      const { reg } = splitUnitId(u.unit_id);
+      unitsOfRow.set(reg, [...(unitsOfRow.get(reg) || []), u.unit_id]);
+    }
+    const rows = Object.keys(s.a.rows).filter((rid) => (unitsOfRow.get(rid) || []).length && unitsOfRow.get(rid).every((id) => taken.has(id)));
+    if (rows.length) rowsSuperseded.set(s.key, new Set(rows));
+  }
+  return { newest, superseded, whole, rowsSuperseded };
 }

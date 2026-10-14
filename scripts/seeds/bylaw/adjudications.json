@@ -42750,6 +42750,680 @@
           "reason": "cross_reference_value"
         }
       ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "archetype",
+      "id": "ADJ-disagreement-150.7.75.1(1)#(1)(B)-archetype",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-98974b9c: answer other — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): Same device rule as 10.5.75.1(4)(A) (adjudicated LIMIT height_projection_m max, 1.2 m for 'other'); garden-suite ancillary variant. Needs the agreed numeric_expression 'none' corrected to 'height_projection_m = 1.2 m @(1)(B)' (M-75 correction), else archetype/target/expression are incoherent.",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "target",
+      "id": "ADJ-disagreement-150.7.75.1(1)#(1)(B)-target",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-01c37a9b: answer other — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): height_m (B) is the building height; the clause bounds a device's projection above it: height_projection_m (precedent 10.5.75.1(4)(A)).",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": "height_projection_m"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-150.7.75.1(1)#(1)(B)-bound",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-cca7fcf6: answer B — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked)",
+      "unit": "150.7.75.1(1)#(1)(B)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-150.45.50.1(1)#(1)(B)-target",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-d9aab221: answer A — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): Keep A (none). B (encroachment_clearance_m) fails G-CLAUSE variable_unlicensed: the clause says \"no closer to a lot line abutting a street than\", which matches none of the vocab licence patterns. The 2026-10-09 LIMIT/min adjudication therefore cannot be keyed coherently without a vocab change; recommended M-75 corrections: archetype -> UNUSUAL, bound -> none, literals_not_expressed 6.0 metres limit_not_modelled (a day-nursery play area in the RA category; no MaxBLD feed). Alternative (needs a ratified vocab $changes row): add the licence pattern and answer B.",
+      "unit": "150.45.50.1(1)#(1)(B)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-150.45.50.1(1)#(1)(B)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-391d6daf: answer A — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): As Q-A6-d9aab221.",
+      "unit": "150.45.50.1(1)#(1)(B)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "target",
+      "id": "ADJ-disagreement-150.50.20.1(1)#(1)(B)-target",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-584f9f16: answer A — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): Keep A. Archetype was adjudicated PERMIT (2026-10-09) but PERMIT x literal is not an allowed value form (G-SHAPE value_form_not_allowed); the 2026-10-13 R7-011 correction made sibling (1)(C) LIMIT to \"mirror sibling (1)(B)\". Needs an M-75 correction: (1)(B) archetype -> LIMIT.",
+      "unit": "150.50.20.1(1)#(1)(B)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "a",
+      "field": "bound",
+      "id": "ADJ-disagreement-150.50.20.1(1)#(1)(B)-bound",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-dd29ce22: answer A — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): As Q-A6-584f9f16.",
+      "unit": "150.50.20.1(1)#(1)(B)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-970.10.15.5(5)#(5)[T2.R89.C2]-numeric_expression",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-21ab3456: answer B — operator 2026-10-14 Q1 (lane E recommendation, compliance-checked): Archetype/target/bound were adjudicated LIMIT parking_rate min (2026-10-09, Q3), so none is incoherent; B. Needs an M-75 correction to the A-field literals_not_expressed: 100 square metres rate_base (precedent T2.R85/R86/R88.C2), 2750 square metres threshold_used_in_application (limit_not_modelled is UNUSUAL-only, M-82).",
+      "unit": "970.10.15.5(5)#(5)[T2.R89.C2]"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.75.1(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: agreed none incoherent with LIMIT height_projection_m max; precedent 10.5.75.1(4)(A)",
+      "rule": "Spec 68 section 7.3; Spec 69a M-75",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": [
+        "height_projection_m = 1.2 m @(1)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.75.1(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: the 1.2 m is now expressed (height_projection_m = 1.2 m); a real limit is never also listed as cross_reference_value",
+      "rule": "Spec 69a M-102; Spec 68 section 6.4 rule 6; Spec 69a M-75",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-150.50.20.1(1)#(1)(B)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: PERMIT x literal not an allowed value form; mirrors the R7-011 sibling (1)(C) correction",
+      "rule": "Spec 68 section 9 G-SHAPE; Spec 69a M-75",
+      "unit": "150.50.20.1(1)#(1)(B)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-970.10.15.5(5)#(5)[T2.R89.C2]/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: LIMIT unit: rate base + step threshold, each occurring twice in the cell",
+      "rule": "Spec 68 section 9 G-CLAUSE; Spec 69a M-75, M-82",
+      "unit": "970.10.15.5(5)#(5)[T2.R89.C2]",
+      "value": [
+        {
+          "clause": "(5)[T2.R89.C2]",
+          "literal": "100 square metres",
+          "reason": "rate_base"
+        },
+        {
+          "clause": "(5)[T2.R89.C2]",
+          "literal": "100 square metres",
+          "reason": "rate_base"
+        },
+        {
+          "clause": "(5)[T2.R89.C2]",
+          "literal": "2750 square metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(5)[T2.R89.C2]",
+          "literal": "2750 square metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-150.45.50.1(1)#(1)(B)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: LIMIT cannot be keyed: no licensed target for \"no closer to a lot line abutting a street than\"",
+      "rule": "Spec 68 section 7.1 / section 9 G-SHAPE + G-CLAUSE; Spec 69a M-75, M-82, M-102",
+      "unit": "150.45.50.1(1)#(1)(B)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-150.45.50.1(1)#(1)(B)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: UNUSUAL carries no bound",
+      "rule": "Spec 68 section 7.1 / section 9 G-SHAPE + G-CLAUSE; Spec 69a M-75, M-82, M-102",
+      "unit": "150.45.50.1(1)#(1)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.45.50.1(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: UNUSUAL limit not modelled (M-82)",
+      "rule": "Spec 68 section 7.1 / section 9 G-SHAPE + G-CLAUSE; Spec 69a M-75, M-82, M-102",
+      "unit": "150.45.50.1(1)#(1)(B)",
+      "value": [
+        {
+          "clause": "(1)(B)",
+          "literal": "6.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "target",
+      "id": "ADJ-disagreement-970.10.15.5(16)#(16)[T2.R3.C2]-target",
+      "kind": "disagreement",
+      "reason": "A6 queue Q-A6-ea5ff2d1: answer other — operator 2026-10-14 Q3: Spec 69a M-85(b) names this item: a None cell on a rate column is keyed unregulated on the rate target, never a none target; parking_rate as the sibling cells T2.R2/R8/R10.C2 of the same column",
+      "unit": "970.10.15.5(16)#(16)[T2.R3.C2]",
+      "value": "parking_rate"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-970.10.15.5(16)#(16)[T2.R3.C2]/application",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1: evidence >= 2 words inside the cited clause",
+      "rule": "Spec 68 section 9 G-CLAUSE evidence rule; Spec 69a M-75",
+      "unit": "970.10.15.5(16)#(16)[T2.R3.C2]",
+      "value": {
+        "building_types": [
+          "detached_house",
+          "semi_detached_house",
+          "townhouse",
+          "duplex",
+          "triplex",
+          "fourplex"
+        ],
+        "evidence": {
+          "detached_house": "Detached House",
+          "duplex": "Detached House, Semi-detached House, Townhouse, Duplex, Triplex or Fourplex",
+          "dwelling_unit": "Dwelling Unit in",
+          "fourplex": "Detached House, Semi-detached House, Townhouse, Duplex, Triplex or Fourplex",
+          "semi_detached_house": "Semi-detached House",
+          "townhouse": "Detached House, Semi-detached House, Townhouse, Duplex, Triplex or Fourplex",
+          "triplex": "Detached House, Semi-detached House, Townhouse, Duplex, Triplex or Fourplex"
+        },
+        "lot_conditions": [],
+        "uses": [
+          "dwelling_unit"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-970.10.15.5(16)#(16)[T2.R3.C2]/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q3: a None rate cell states the by-law requires none: unregulated (M-85(b))",
+      "rule": "Spec 69a M-85(b), M-54, M-75",
+      "unit": "970.10.15.5(16)#(16)[T2.R3.C2]",
+      "value": [
+        "parking_rate = unregulated @(16)[T2.R3.C2]"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "archetype",
+      "id": "ADJ-disagreement-150.7.75.1(2)@1075-2026#(2)-archetype",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-00686ea8: answer other — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.7.75.1(2)@1075-2026#(2)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-150.7.75.1(2)@1075-2026#(2)-target",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-d37354ce: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.7.75.1(2)@1075-2026#(2)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-150.7.75.1(2)@1075-2026#(2)-bound",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-db9930ce: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.7.75.1(2)@1075-2026#(2)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-150.7.75.1(2)@1075-2026#(2)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-4d6e9328: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.7.75.1(2)@1075-2026#(2)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "archetype",
+      "id": "ADJ-disagreement-150.8.75.1(1)@1075-2026#(1)-archetype",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-42383449: answer other — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.8.75.1(1)@1075-2026#(1)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "target",
+      "id": "ADJ-disagreement-150.8.75.1(1)@1075-2026#(1)-target",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-6ae60289: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.8.75.1(1)@1075-2026#(1)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "bound",
+      "id": "ADJ-disagreement-150.8.75.1(1)@1075-2026#(1)-bound",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-48d9d0ba: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.8.75.1(1)@1075-2026#(1)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "b",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-150.8.75.1(1)@1075-2026#(1)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "A3 queue Q-A3-f4a9a69b: answer B — operator 2026-10-14 Q1 = (a): Spec 69a M-102 mixed bound directions reaches the encroachment + clearance pair (M-106); the unit is UNUSUAL",
+      "unit": "150.8.75.1(1)@1075-2026#(1)"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.75.1(2)@1075-2026#(2)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1 = (a): UNUSUAL unit; every limit literal (encroachment 0.9 m, clearance 0.3 m, roof exceedance and main-wall distance 2.0 m) is limit_not_modelled",
+      "rule": "Spec 69a M-102, M-106, M-82 Q7; Spec 68 section 6.4 rule 6; Spec 69a M-75",
+      "unit": "150.7.75.1(2)@1075-2026#(2)",
+      "value": [
+        {
+          "clause": "(2)(A)(i)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(A)(i)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(A)(ii)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(A)(ii)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(A)(iii)",
+          "literal": "2.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(B)(i)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(B)(i)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(B)(ii)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(B)(ii)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(2)(B)(iii)",
+          "literal": "2.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.8.75.1(1)@1075-2026#(1)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q1 = (a): UNUSUAL unit; every limit literal (encroachment 0.9 m, clearance 0.3 m, roof exceedance and main-wall distance 2.0 m) is limit_not_modelled",
+      "rule": "Spec 69a M-102, M-106, M-82 Q7; Spec 68 section 6.4 rule 6; Spec 69a M-75",
+      "unit": "150.8.75.1(1)@1075-2026#(1)",
+      "value": [
+        {
+          "clause": "(1)(A)(i)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(A)(i)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(A)(ii)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(A)(ii)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(A)(iii)",
+          "literal": "2.0 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(B)(i)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(B)(i)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(B)(ii)",
+          "literal": "0.9 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(B)(ii)",
+          "literal": "0.3 metres",
+          "reason": "limit_not_modelled"
+        },
+        {
+          "clause": "(1)(B)(iii)",
+          "literal": "2.0 metres",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "decision": "value",
+      "field": "numeric_expression",
+      "id": "ADJ-disagreement-10.10.40.70(5)#(5)(A)-numeric_expression",
+      "kind": "disagreement",
+      "reason": "A2 queue Q-A2-4bfcc089: answer other — operator 2026-10-14 Q2 = (b), Spec 69a M-107 (partly modelled LIMIT): Both drafts wrong: A does not parse (inline @ inside if) and drops arm (a); B states (a) as a flat 6.0 m (drops 'the lesser of'), mislabels (ii) as (i)(ii), and uses labelled(through_lot), which is not a label letter (dsl checkStatement: unknown_label_letter). Arm (i)(c) through-lot 6.0 m has no expression form in the current grammar (lot conditions live in the unit condition facet); disclosed as a gap, same reading as the agreed sibling 10.20.40.70(7)(A).",
+      "unit": "10.10.40.70(5)#(5)(A)",
+      "value": [
+        "front_setback_m = min(abutting_front_setback_m; 6.0 m) @(5)(A)(i)(a)",
+        "front_setback_m = if(lot_depth_m <= 36.0 m; 3.0 m; front_setback_m) @(5)(A)(i)(b)",
+        "front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; front_setback_m) @(5)(A)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.70(5)#(5)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 = (b): the through-lot arm (i)(c) is a lot-condition branch the DSL cannot express; the (i)(a) 6.0 m is now expressed (min(...; 6.0 m)), so it is no longer listed; a real limit is never cross_reference_value (M-102)",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "unit": "10.10.40.70(5)#(5)(A)",
+      "value": [
+        {
+          "clause": "(5)(A)(i)(c)",
+          "literal": "6.0 metres",
+          "reason": "lot_condition_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(5)#(5)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 = (b): the gaps text names the one inexpressible arm; the lesser-of arm is now expressed",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "unit": "10.10.40.70(5)#(5)(A)",
+      "value": {
+        "description": "Front yard on a major street: lot depth 36.0 m or less: the lesser of the 10.5.40.70(1) setback or 6.0 m where 10.5.40.70(1) applies, else 3.0 m; deeper than 36.0 m: 6.0 m.",
+        "gaps": "The through-lot arm (i)(c) (6.0 m) is a lot-condition branch the DSL cannot express (M-107): on a through lot the front setback is not_evaluated, never a guessed value.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.70(7)#(7)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 = (b): the through-lot 6.0 m is the inexpressible lot-condition arm, not a threshold; the other two entries are unchanged",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "supersedes": "COR-10.20.40.70(7)#(7)(A)/literals_not_expressed",
+      "unit": "10.20.40.70(7)#(7)(A)",
+      "value": [
+        {
+          "clause": "(7)(A)(i)(c)",
+          "literal": "6.0 metres",
+          "reason": "lot_condition_arm_not_modelled"
+        },
+        {
+          "clause": "(7)(A)(ii)",
+          "literal": "36.0 metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(7)(A)(ii)",
+          "literal": "6.0 metres",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.70(7)#(7)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 (a): the agreed if(depth > 36; 6.0; 3.0) returned a guessed 3.0 m where the 10.5.40.70(1) lesser-of arm applies (M-107 forbids a guessed value); the A2 three-statement form of the identical clause 10.10.40.70(5)(A)",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "unit": "10.20.40.70(7)#(7)(A)",
+      "value": [
+        "front_setback_m = min(abutting_front_setback_m; 6.0 m) @(7)(A)(i)(a)",
+        "front_setback_m = if(lot_depth_m <= 36.0 m; 3.0 m; front_setback_m) @(7)(A)(i)(b)",
+        "front_setback_m = if(lot_depth_m > 36.0 m; 6.0 m; front_setback_m) @(7)(A)(ii)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.70(7)#(7)(A)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 (a): the (ii) 36.0 m and 6.0 m are now expressed; only the through-lot arm stays listed",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "supersedes": "COR-10.20.40.70(7)#(7)(A)/literals_not_expressed~s1",
+      "unit": "10.20.40.70(7)#(7)(A)",
+      "value": [
+        {
+          "clause": "(7)(A)(i)(c)",
+          "literal": "6.0 metres",
+          "reason": "lot_condition_arm_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.70(7)#(7)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q2 (a): the gaps text names the one inexpressible arm; the lesser-of arm is now expressed",
+      "rule": "Spec 69a M-107, M-75; Spec 68 section 6.4 rule 6",
+      "unit": "10.20.40.70(7)#(7)(A)",
+      "value": {
+        "description": "Front yard on a major street: lot depth 36.0 m or less: the lesser of the 10.5.40.70(1) setback or 6.0 m where 10.5.40.70(1) applies, else 3.0 m; deeper than 36.0 m: 6.0 m.",
+        "gaps": "The through-lot arm (i)(c) (6.0 m) is a lot-condition branch the DSL cannot express (M-107): on a through lot the front setback is not_evaluated, never a guessed value.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-970.10.15.5(16)#(16)[T2.R5.C2]/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q3: same M-85(b) gap as T2.R3.C2: the Secondary Suite rate cell reads None; never a none target",
+      "rule": "Spec 69a M-85(b), M-108, M-54, M-75",
+      "unit": "970.10.15.5(16)#(16)[T2.R5.C2]",
+      "value": "parking_rate"
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-970.10.15.5(16)#(16)[T2.R5.C2]/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 Q3: a None rate cell states the by-law requires none: unregulated (M-85(b))",
+      "rule": "Spec 69a M-85(b), M-108, M-54, M-75",
+      "unit": "970.10.15.5(16)#(16)[T2.R5.C2]",
+      "value": [
+        "parking_rate = unregulated @(16)[T2.R5.C2]"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.5.40.60(1)#(1)(F)/condition",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 oracle C card R2-3: (F)(i) allows 1.5 m only \"if the side yard abuts a street\"; the condition was omitted",
+      "rule": "Spec 69a M-128, M-75; Spec 68 section 6 condition, section 9 G-CLAUSE",
+      "unit": "10.5.40.60(1)#(1)(F)",
+      "value": {
+        "tokens": [
+          "side_yard_abuts_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.5.40.60(1)#(1)(F)/application",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 oracle C card R2-3: the condition token is named in application.lot_conditions with the clause words as evidence",
+      "rule": "Spec 69a M-128, M-75; Spec 68 section 6 condition, section 9 G-CLAUSE",
+      "unit": "10.5.40.60(1)#(1)(F)",
+      "value": {
+        "building_types": [
+          "any"
+        ],
+        "evidence": {
+          "R": "Residential Zone category",
+          "RD": "Residential Zone category",
+          "RM": "Residential Zone category",
+          "RS": "Residential Zone category",
+          "RT": "Residential Zone category",
+          "deck_or_platform": "such as a deck",
+          "side_yard_abuts_street": "side yard abuts a street"
+        },
+        "lot_conditions": [
+          "side_yard_abuts_street"
+        ],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "zones": [
+          "R",
+          "RD",
+          "RS",
+          "RT",
+          "RM"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-14",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.60(1)#(1)(F)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-14 oracle C card R2-3: gaps text updated: the street-abutment test is now keyed",
+      "rule": "Spec 69a M-128, M-75; Spec 68 section 6 condition, section 9 G-CLAUSE",
+      "unit": "10.5.40.60(1)#(1)(F)",
+      "value": {
+        "description": "In a side yard, a platform with its floor higher than the first storey may extend up to 1.5 m into the required side yard setback only where the side yard abuts a street; otherwise it may not encroach at all.",
+        "gaps": "Applies only to a platform whose floor is at / above the first storey; platform floor height is a design fact with no token or DSL input. The 1.5 m applies under condition side_yard_abuts_street (M-128); (1)(F)(ii) states no literal: where the side yard does not abut a street the unit does not apply and the required side yard setback stands unreduced. The 0.3 m in the stem is the applicability test.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
     }
   ]
 }

@@ -31,7 +31,7 @@
 //   field_missing              an agreed unit / its row omits an authored field ("none" is written, never omitted)
 //   vocab_value_unknown        an authored value outside its vocab.json list
 //   shape_required_missing     a §7.3 required field of the unit's archetype is "none" / empty
-//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit)
+//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit; M-107: `lot_condition_arm_not_modelled` on a non-LIMIT unit)
 //   value_form_not_allowed     the generated value_form is outside the archetype's allowed forms (§7.3)
 //   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10)
 //   modelled_without_inputs    calculation_handling `modelled` with an overlay / existing(…) we do not hold, or
@@ -255,6 +255,8 @@ function shapeProblems(u, index, vocab, external) {
   }
   // Spec 69a M-82 (Q7): `limit_not_modelled` names a real limit the unit does not model — only an UNUSUAL unit may say so
   for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'limit_not_modelled' && a !== 'UNUSUAL') p.push(['shape_must_be_none', `literals_not_expressed reason limit_not_modelled on ${a} (only UNUSUAL may use it — Spec 69a M-82)`]);
+  // Spec 69a M-107: `lot_condition_arm_not_modelled` discloses the inexpressible lot-condition arm of a partly modelled LIMIT — only a LIMIT may say so
+  for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'lot_condition_arm_not_modelled' && a !== 'LIMIT') p.push(['shape_must_be_none', `literals_not_expressed reason lot_condition_arm_not_modelled on ${a} (only LIMIT may use it — Spec 69a M-107)`]);
   return p;
 }
 
@@ -300,6 +302,7 @@ export function checkShape({ slice, shards = [], vocab, agree = null, adjudicati
     if (s.a && isMap(s.a.rows)) {
       for (const [rid, r] of Object.entries(s.a.rows)) {
         if (!index.rows.has(rid)) v.push(violation('authored_orphan', rid, `${s.key}: rows.${rid} names no slice row`));
+        if (sup.rowsSuperseded.has(s.key) && sup.rowsSuperseded.get(s.key).has(rid)) continue; // every unit this shard keyed for the row is superseded (M-80 / grain re-key): its row fields are retired
         else if (rowFields.has(rid) && !sameBase(rowFieldShard.get(rid), s.key)) v.push(violation('schema_invalid', rid, `row fields written in two shards (${s.key})`));
         // M-80: a newer generation of the same shard rewrites the row fields; the newest generation wins
         if (!rowFields.has(rid) || shardGeneration(s.key).gen >= shardGeneration(rowFieldShard.get(rid)).gen) {

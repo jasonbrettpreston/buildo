@@ -115,7 +115,8 @@ describe('keyer-B runner: ordering and blindness (fail closed, before the engine
     git(main, 'add', p.a);
     git(main, 'commit', '-q', '-m', 'A committed too early');
     const bRoot = path.join(TMP, 'kb-leak');
-    const commit = B.ensureKeyerBWorktree({ mainRoot: main, bRoot });
+    // built at HEAD on purpose (the default is now blindCommit, which would never pick this leaky commit — W1 2026-10-14)
+    const commit = B.ensureKeyerBWorktree({ mainRoot: main, bRoot, commit: git(main, 'rev-parse', 'HEAD') });
     expect(KP.gitLsTree(bRoot)(commit)).toContain(p.a);
     const calls: Json[] = [];
     const aBytes = fs.readFileSync(path.join(main, p.a));

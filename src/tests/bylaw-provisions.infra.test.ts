@@ -83,21 +83,43 @@ describe('pinned page set equals the rulings (Spec 68 §6.4 rule 1; Spec 69 M-37
   });
 });
 
-describe('determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/, clock.mjs exempt', () => {
-  const files = [
-    'scripts/generate-bylaw-provisions.mjs',
-    ...fs.readdirSync(path.join(ROOT, 'scripts/analysis/bylaw')).filter((f) => f.endsWith('.mjs')).map((f) => `scripts/analysis/bylaw/${f}`),
-  ].filter((f) => !f.endsWith('/clock.mjs'));
+// Phase 2 plan E-6 (R-DET, REDTEAM A17): the lock walks scripts/analysis/bylaw/** recursively (oracle-b/ included —
+// a flat readdirSync missed every subdirectory) and the ban list adds the other clock / entropy / host sources.
+describe('determinism grep lock (Spec 68 §10): generator + scripts/analysis/bylaw/** (recursive), clock.mjs exempt', () => {
+  const walk = (rel: string): string[] =>
+    fs.readdirSync(path.join(ROOT, rel), { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+      .flatMap((d) => (d.isDirectory() ? walk(`${rel}/${d.name}`) : d.name.endsWith('.mjs') ? [`${rel}/${d.name}`] : []));
+  const files = ['scripts/generate-bylaw-provisions.mjs', ...walk('scripts/analysis/bylaw')].filter((f) => f !== 'scripts/analysis/bylaw/clock.mjs');
+  it('the walk reaches oracle-b/ (the recursion is real)', () => {
+    expect(files.filter((f) => f.startsWith('scripts/analysis/bylaw/oracle-b/')).length).toBeGreaterThanOrEqual(3);
+  });
   const banned: [string, RegExp][] = [
     ['process.exit()', /process\.exit\s*\(/],
     ['new Date', /new Date\b/],
+    ['bare Date()', /(?<![\w.$])Date\s*\(/],
+    ['Reflect.construct(Date', /Reflect\.construct\s*\(\s*Date\b/],
     ['Date.now', /Date\.now\s*\(/],
+    ['performance.now', /performance\.now\s*\(/],
+    ['process.hrtime', /process\.hrtime\b/],
     ['Math.random', /Math\.random/],
+    ['crypto.random*', /crypto\.random\w*/],
+    ['os module', /from\s+['"](node:)?os['"]|require\s*\(\s*['"](node:)?os['"]\s*\)|import\s*\(\s*['"](node:)?os['"]\s*\)/],
     ['locale API', /toLocale\w*\s*\(|\bIntl\./],
     ['file mtime', /\.(mtime|mtimeMs|ctime|birthtime)\b/],
     ['empty catch', /catch\s*(\([^)]*\))?\s*\{\s*\}/],
   ];
-  it.each(files)('%s has no clock, locale, mtime, process.exit or empty catch', (f) => {
+  it('each new ban catches its pattern (no vacuous regex)', () => {
+    const hits = (src: string): string[] => banned.filter(([, re]) => re.test(src)).map(([n]) => n);
+    expect(hits('const t = Date();')).toEqual(['bare Date()']);
+    expect(hits('Reflect.construct(Date, [])')).toEqual(['Reflect.construct(Date']);
+    expect(hits('performance.now()')).toEqual(['performance.now']);
+    expect(hits('process.hrtime.bigint()')).toEqual(['process.hrtime']);
+    expect(hits('crypto.randomUUID()')).toEqual(['crypto.random*']);
+    expect(hits("import os from 'node:os';")).toEqual(['os module']);
+    expect(hits("const os = require('os');")).toEqual(['os module']);
+    expect(hits('x.toDate(); parseDate(y); new Set()')).toEqual([]);
+  });
+  it.each(files)('%s has no clock, entropy, host, locale, mtime, process.exit or empty catch', (f) => {
     const text = fs.readFileSync(path.join(ROOT, f), 'utf8');
     for (const [name, re] of banned) expect({ file: f, banned: name, hit: re.test(text) }).toEqual({ file: f, banned: name, hit: false });
   });

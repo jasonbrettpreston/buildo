@@ -92,9 +92,22 @@ One row per variance item. Column contract: see `migrations/252_coa_notice_varia
 
 The step does not link. The consumer path is `application_number → coa_applications.lead_id → lead_parcels` (G1: 141/164 spike notices, `address_points_exact`, unique), with `retired_at IS NULL`. Link precision is measured at cutover (§12): a mechanical proxy (`zoning_as_stated` class vs the linked parcel's zone string) plus a seeded 50-notice sample read by a seat other than the plan author. Verdicts go to `scripts/seeds/coa-notices/link-precision-<extractor_version>.json` (`variance_key` + verdict only). Pre-registered: precision ≥ 0.95, else Spec 72 treats the source as `coa_link`-suspect (report-only).
 
+* **Oracle C link and lot inputs (dated 2026-10-14, operator; Spec 69 M-127).** `link_status ∈ {linked_unique, ambiguous, unlinked}`. The zone-class proxy is reported and never drops items. Lot inputs come only from the existing parcel columns `frontage_m`, `depth_m`, `lot_size_sqm` and `is_corner_lot`. They only select branches, are never compared, and decide nothing within 5 % (BAND_MARGIN) of a threshold.
+
 ## 8. Law at the hearing date (D8, consumer contract)
 
 The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cited required value is the law as City staff read it that day, whatever the outcome; refused notices are equally valid. For a 2017 hearing the consumer compares only when every `[ By-law: … ]` tag on the cited unit has a verified `amendments.json` status and `in_force_on` (or `enacted_on` for a triggered in-force) ≤ `hearing_date`. Otherwise: `not_comparable:law_changed_after_hearing` or `not_comparable:amendment_status_unverified`. Untagged units are "presumed unchanged". That is **declared-only**, labelled in every round record (Q10 offers a Wayback law-as-of sample). `qualified = true` rows are compared against the notice's own `zoning_as_stated` first (G13). `cited_bylaw ≠ 569-2013` ⇒ `not_comparable:former_bylaw`.
+
+**Rulings (operator 2026-10-14).** The rulings themselves live in Spec 69a; this entry states how the oracle C comparison treats them.
+* **Q1 (Spec 69 M-106).** A unit that pairs an encroachment maximum with a lot-line clearance minimum mixes bound directions, so it is UNUSUAL (M-102). UNUSUAL units are not compared.
+* **Q2 (Spec 69 M-107).** A LIMIT whose only inexpressible arm is a lot-condition branch (e.g. the through-lot 6.0 m of 10.10.40.70(5)(A)) is partly modelled. Only its modelled arms are compared. A notice that falls on the disclosed arm is `not_comparable:lot_input_required`.
+* **Oracle C law-at-date and reasons (operator 2026-10-14; the full text is in each Spec 69 row).**
+  * A change is dated without a verified status by a by-law number year, or an order qualifier date, that falls after the hearing; `d8_basis` gains `order_qualifier_date` (M-120).
+  * A citation presumes its unit's condition except for a `*_not_applicable` token, a governing lot operand, or `citation_condition_conflict` (M-121).
+  * Exception or former-density context is `exception_cited` / `zone_label_missing`. This is pre-registered for round 3 (M-122).
+  * An end-of-regulation tag group is regulation-level for D8, and every round prints the census. Refinement (a′) (only when it is the regulation's only tag group) is pre-registered for round 3 (M-123).
+  * The ordered `not_comparable` set, with `lot_input_unavailable:<input>` over 11 inputs, is fixed by M-124, and a mismatch is adjudicated as `coa_mismatch` (M-125).
+* **"Presumed unchanged" is falsified twice (operator 2026-10-14).** Oracle C round 2 measured two untagged or mis-bound changes since 2017: R2-1 (10.40.40.70(3)) and R2-2 (10.10.40.80(1)(B), 5.0 m in 2017 against 5.5 m today). The label stays declared-only, its detected rate (2 of 37 rows reached) is disclosed in every round, and 10.10.40.80(1) joins the Q10 Wayback sample.
 
 ## 9. Write order, idempotency, recovery (D9)
 
@@ -201,6 +214,10 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 - **City bulk request (Q12, operator 2026-10-07: recorded, no work now).** Ask the City of Toronto for a machine-readable table of minor variances (application number, by-law, regulation, required and proposed values, decision). If granted it becomes source family 2, a CSV adapter writing the same columns (§11 second-source path), and it would extend the oracle from ~1,450 lots (2017 PDFs) to ~20,000.
 - **Citation-first targeting (operator 2026-10-09, Path 2).** For 569-2013 items, take the topic from the cited section joined to the McBylaw Phase 1 provisions in the Phase 2 comparison harness (the ingestor keeps storing `regulation_id_as_cited` verbatim, T-IND unchanged); the keyword target becomes a fallback and cross-check. Registered as a Phase 2 plan item.
 - A Wayback law-as-of sample for 2017 (Q10), so the "presumed unchanged" consumer label can become measured.
+- **Oracle C (dated 2026-10-14, operator).**
+  * The comparison scope is citation-first, on the agreed unit view without the evaluator, pre-registered and deterministic (Spec 69 M-118).
+  * The keyword target never breaks a tie inside one unit: `target_ambiguous`, pre-registered for round 3 (M-119).
+  * Accuracy evidence is oracle C plus an operator law-text sample while D is `not_run` (M-126; M-114).
 
 ---
 

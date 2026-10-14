@@ -80,8 +80,12 @@ export function exceptionIndex(slice, groups = []) {
   return { byId, refCounts };
 }
 
-/** The k7-exceptions.json document. PURE. Throws K7Error on a census it cannot rank against. */
-export function buildK7({ census, slice, adoptionId, groups = [] }) {
+/**
+ * The INCLUDE-closed ranking (Spec 69 M-15) shared by buildK7 and the wave-1 shard planner (keying.mjs planWave1).
+ * Returns {index, refCounts, includedBy, lotsOf, ranked:[{closed, direct, e, exception, zone}], directRank, byZoneN, direct};
+ * `ranked` is every candidate with closed lots > 0, in rank order (wave 1 = the first WAVE1_SIZE). PURE.
+ */
+export function rankExceptions({ census, slice, groups = [] }) {
   if (!census || !Array.isArray(census.backlog) || !(Number(census.excepted?.lots) > 0)) throw new K7Error('census_invalid: census.json has no backlog[] or no positive excepted.lots');
   const { byId: index, refCounts } = exceptionIndex(slice, groups);
   const byZoneN = new Map([...index.values()].map((e) => [key(e.zone, e.exception), e]));
@@ -113,6 +117,12 @@ export function buildK7({ census, slice, adoptionId, groups = [] }) {
   for (const b of census.backlog) if (!byZoneN.has(key(b.zone, Number(b.exception_number)))) cands.push({ closed: Number(b.lots), direct: Number(b.lots), e: null, exception: Number(b.exception_number), zone: b.zone });
   const ranked = cands.filter((c) => c.closed > 0).sort((a, b) => b.closed - a.closed || b.direct - a.direct || cmpStr(a.zone, b.zone) || a.exception - b.exception);
   const directRank = new Map(rankDirect.map((b, i) => [key(b.zone, Number(b.exception_number)), i + 1]));
+  return { byZoneN, direct, directRank, includedBy, index, lotsOf, rankDirect, ranked, refCounts };
+}
+
+/** The k7-exceptions.json document. PURE. Throws K7Error on a census it cannot rank against. */
+export function buildK7({ census, slice, adoptionId, groups = [] }) {
+  const { byZoneN, direct, directRank, includedBy, index, lotsOf, rankDirect, ranked, refCounts } = rankExceptions({ census, slice, groups });
   const wave1 = ranked.slice(0, WAVE1_SIZE);
   const top = wave1.slice(0, TOP_N);
   const missing = [];

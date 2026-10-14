@@ -7,7 +7,8 @@
 // The keyer-B RUNNER: one shard → one DeepSeek engine run in a separate git worktree, fail-closed on every ordering and
 // blindness precondition. I/O module (git, fs, child process); every dependency is injectable for the tests.
 //
-//   ensureKeyerBWorktree({mainRoot, bRoot, commit, git})       create the detached B worktree once; → its HEAD commit
+//   blindCommit({mainRoot, git})                              the newest commit whose tree holds no .a.json (parent of the first .a commit)
+//   ensureKeyerBWorktree({mainRoot, bRoot, commit, git})       create the detached B worktree once (default at blindCommit); → its HEAD commit
 //   assertBlind({bRoot, commit, aPaths, lsTree, git, fs})       the witness, before B runs (throws KeyingError)
 //   runKeyerB({bRoot, shard, briefB, seal, aSha, runEngine, …})  seal check → witness → brief → engine → collect (+ DSL parse;
 //                                                               an unparseable draft re-runs the same brief, maxAttempts 2)
@@ -36,12 +37,32 @@ export function gitIn(cwd, args) {
 }
 
 /**
- * The keyer-B worktree: created detached at `commit` (default: the main tree's HEAD, which never holds an uncommitted
- * A draft) when absent; an existing one is used at its own HEAD (the witness below decides whether it is blind).
+ * The newest BLIND commit for a new keyer-B worktree: HEAD while no `.a.json` was ever committed; otherwise the parent of
+ * the first commit that added one (the A1–E-5 keyer-B tree sat at 3d6f6e2c, before any draft landed). Since A1's drafts
+ * are committed, HEAD's tree holds every committed `.a` and assertBlind (rightly) refuses it (W1 2026-10-14:
+ * a_present_in_b_worktree). Fail-closed: the chosen commit's tree is re-listed and must hold no `.a.json`.
+ */
+export function blindCommit({ mainRoot, git = gitIn }) {
+  const firstA = git(mainRoot, ['log', '--diff-filter=A', '--format=%H', '--reverse', 'HEAD', '--', `:(glob)${AUTHORED_REL}/**/*.a.json`]).split('\n').filter(Boolean)[0];
+  if (!firstA) return git(mainRoot, ['rev-parse', 'HEAD']);
+  let at;
+  try {
+    at = git(mainRoot, ['rev-parse', '--verify', `${firstA}^`]);
+  } catch (err) {
+    throw new KeyingError('no_blind_commit', `the first .a commit ${firstA.slice(0, 12)} has no parent (${String(err && err.message).split('\n')[0]})`);
+  }
+  const leaked = git(mainRoot, ['ls-tree', '-r', '--name-only', at, '--', AUTHORED_REL]).split('\n').filter((p) => A_DRAFT.test(p));
+  if (leaked.length) throw new KeyingError('no_blind_commit', `${at.slice(0, 12)} still holds ${leaked.length} .a drafts`);
+  return at;
+}
+
+/**
+ * The keyer-B worktree: created detached at `commit` (default: blindCommit — a commit whose tree holds no `.a.json`)
+ * when absent; an existing one is used at its own HEAD (the witness below decides whether it is blind).
  */
 export function ensureKeyerBWorktree({ mainRoot, bRoot, commit = null, git = gitIn, fs = nodeFs }) {
   if (!fs.existsSync(path.join(bRoot, '.git'))) {
-    const at = commit || git(mainRoot, ['rev-parse', 'HEAD']);
+    const at = commit || blindCommit({ mainRoot, git });
     git(mainRoot, ['worktree', 'add', '--detach', bRoot, at]);
   }
   return git(bRoot, ['rev-parse', 'HEAD']);

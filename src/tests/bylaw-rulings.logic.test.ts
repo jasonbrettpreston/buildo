@@ -280,6 +280,13 @@ describe('Spec 69a M-87..M-92 — R5 rulings (vocab members, rate_base, ref_targ
     expect([green.violations, green.counts.refs_target_absent]).toEqual([[], 1]);
     expect(checkXref({ ...f.input, adjudications: [{ ...adj[0], citation: 'other' }] }).violations.map((x: Json) => x.code)).toEqual(['ref_unresolved']); // pinned to the exact unit + citation
   });
+  it('M-125: coa_mismatch is a vocab adjudication kind', () => {
+    expect(PVOCAB.adjudication_kind).toContain('coa_mismatch');
+  });
+  it('M-128: side_yard_abuts_street is a lot_condition token licensed by the clause words, distinct from flanking_lot', () => {
+    expect(PVOCAB.lot_condition.side_yard_abuts_street).toEqual({ patterns: ['side yard abuts a street'] });
+    expect(PVOCAB.lot_condition.flanking_lot).toEqual({ patterns: ['flanking'] });
+  });
   it('M-101: instrument_not_published_online is a vocab adjudication kind and source_defect kind', () => {
     expect(PVOCAB.adjudication_kind).toContain('instrument_not_published_online');
     expect(PVOCAB.disclosure_reason.source_defect).toContain('instrument_not_published_online');

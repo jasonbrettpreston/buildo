@@ -253,6 +253,12 @@ export function checkAgree({ shards = [], adjudications = null, vocab = null, do
     const wid = winner.id ?? id;
     const rec = units.get(winner.unit);
     if (!rec || (rec.state !== 'agreed' && rec.state !== 'adjudicated') || getField(rec.unit, winner.field) === undefined) {
+      // a correction of a draft a re-key superseded (M-80 generation or the grain re-key) is retired by supersession —
+      // kept as history and counted, exactly like a superseded disagreement ADJ; never an orphan, never deleted
+      if (rekeyedUnits.has(winner.unit) && (!rec || (rec.state !== 'agreed' && rec.state !== 'adjudicated'))) {
+        counts.adjudications_superseded++;
+        continue;
+      }
       v.push(violation('correction_orphan', wid, `${winner.unit} ${winner.field} is not an agreed / adjudicated field`));
       continue;
     }
