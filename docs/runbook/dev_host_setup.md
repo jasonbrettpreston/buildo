@@ -19,6 +19,7 @@ PowerShell) to the Mac mini. Every value below was measured on that day unless m
 | Python | 3.11 venv at `~/.venvs/buildo` (`scripts/requirements.txt` + `requirements-dev.txt`); provides both `python` and `python3` |
 | Browser | Google Chrome (`brew install --cask google-chrome`) — `scripts/aic-scraper-nodriver.py` drives it |
 | Other | `supabase/tap/supabase`, `gh` |
+| GitHub auth | `gh auth login` (GitHub.com → HTTPS → web browser) then `gh auth setup-git`. Without it `git push` hangs silently waiting for a username (2026-10-15). Inside Claude Code's `!` shell the prompts are not shown: the one-time device code lands in the background task's output file — enter it at https://github.com/login/device. |
 
 PATH line (in `~/.zshrc`):
 ```
