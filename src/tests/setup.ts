@@ -1,6 +1,8 @@
 // SPEC LINK: docs/specs/00_engineering_standards.md
 // Vitest global setup
 // Configure test environment defaults
+import { afterAll } from 'vitest';
+import { installBeforeImageSandbox, removeBeforeImageSandbox } from './helpers/before-image-sandbox';
 
 // Suppress noisy console.error/warn in tests unless debugging
 if (!process.env.DEBUG_TESTS) {
@@ -24,3 +26,11 @@ if (!process.env.DEBUG_TESTS) {
 
 // Set test environment variables
 (process.env as Record<string, string>).NODE_ENV = 'test';
+
+// R-M before-image files written by a test go to a per-file os.tmpdir() sandbox, never into
+// docs/reports/golden/<slug>/before-image/ (WF3 before-image test leak). Lock:
+// src/tests/before-image-test-isolation.infra.test.ts.
+installBeforeImageSandbox();
+afterAll(() => {
+  removeBeforeImageSandbox();
+});

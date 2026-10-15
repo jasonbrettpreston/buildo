@@ -2964,6 +2964,8 @@ describe('LW-D17 — write.writeBeforeImage / buildBeforeImageSelectSql (R-M / L
   const SCRATCH_DIR = join(process.cwd(), 'docs', 'reports', 'golden', SLUG);
 
   afterEach(() => {
+    // before-image first: setup.ts sandboxes that subtree, so removing SCRATCH_DIR alone would not clear it.
+    fs.rmSync(join(SCRATCH_DIR, 'before-image'), { recursive: true, force: true });
     fs.rmSync(SCRATCH_DIR, { recursive: true, force: true });
   });
 
@@ -3007,7 +3009,9 @@ describe('LW-D17 — write.writeBeforeImage / buildBeforeImageSelectSql (R-M / L
     const result = await writeLib.writeBeforeImage(client, plan, [], SLUG, new Date());
     expect(result).toEqual({ written: false });
     expect(queryCalled, 'no scope to mirror means no query either — nothing to read').toBe(false);
-    expect(fs.existsSync(SCRATCH_DIR), 'no directory should even be created').toBe(false);
+    // The probe names the before-image dir itself: src/tests/setup.ts sandboxes that subtree, so a
+    // probe of SCRATCH_DIR alone would pass even if the library created the dir (in the sandbox).
+    expect(fs.existsSync(join(SCRATCH_DIR, 'before-image')), 'no directory should even be created').toBe(false);
   });
 
   it('writeBeforeImage writes an empty JSONL file (not a missing one) when the scope matches zero rows', async () => {
