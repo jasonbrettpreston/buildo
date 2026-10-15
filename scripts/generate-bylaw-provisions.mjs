@@ -45,6 +45,7 @@ import { writeSliceLock } from './analysis/bylaw/standardized.mjs';
 import { refreshUnconsolidated } from './analysis/bylaw/unconsolidated.mjs';
 import { acceptUniverse, universeInputs, UniverseError } from './analysis/bylaw/universe.mjs';
 import { check, GATES, planBatches, selfTest } from './analysis/bylaw/validate.mjs';
+import { twinsLine } from './analysis/bylaw/twins.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const FLAG_MODES = ['refresh', 'adopt', 'accept', 'refresh-census', 'amendments', 'check', 'validate', 'write', 'self-test', 'plan-batches'];
@@ -120,6 +121,8 @@ async function runCheck(mode) {
   for (const e of r.errors) console.error(`  ${e}`);
   for (const rel of r.drift) console.log(`  drift ${rel}: differs from the in-memory regeneration — run node scripts/generate-bylaw-provisions.mjs --write`);
   console.log(`  report-only docs/reference/bylaw-code-findings.md ${r.findingsStale ? 'STALE (never a blocker; --write refreshes it)' : 'current'}`);
+  console.log(r.twins ? twinsLine(r.twins) : '  report-only twins: not_run (G-AGREE did not resolve the drafts)');
+  if (mode === 'validate' && r.twins) for (const g of r.twins.list.filter((x) => x.kind !== 'same')) console.log(`    twin ${g.kind} [${g.fields.join(', ')}] ${g.units.join(' · ')}`);
   if (mode === 'write') console.log(r.written ? `  wrote ${Object.keys(r.files).sort().join(', ')} and docs/reference/bylaw-code-findings.md` : '  nothing written: a gate threw (exit 2)');
   for (const l of r.renderShaLines) console.log(l);
   return r.code;

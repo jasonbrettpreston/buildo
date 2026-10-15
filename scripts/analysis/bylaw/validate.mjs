@@ -40,6 +40,7 @@ import { cmpSection, sha256 } from './snapshot.mjs';
 import { checkTextSlice, LOCK_FILE, selfTest as standardizedSelfTest } from './standardized.mjs';
 import { checkUniverse, readSpec69Rulings, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
 import { checkFeedsTotality, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
+import { twinsFromUnits } from './twins.mjs';
 import { checkXref, selfTest as xrefSelfTest } from './xref.mjs';
 
 export const WORDS = Object.freeze(['STANDARDIZED', 'OBSERVABLE', 'ACCURATE', 'UNDERSTANDABLE', 'SCALABLE']);
@@ -531,6 +532,9 @@ export async function check({ root, write = false, now = nowIso }) {
   const lines = fiveLines({ gates, counts, extras });
   const errors = Object.values(gates).filter((x) => x.error).map((x) => x.error);
   const findingsStale = findings !== null && committed[FINDINGS_PATH] !== findings;
+  // twins key alike (report-only, Spec 68 §9): identical clause text keyed differently across zones. Never a gate, never
+  // an input of exitCode / fiveLines; null when G-AGREE did not resolve the drafts.
+  const twins = ctx.agree ? twinsFromUnits({ units: agreedUnitsOf(ctx.agree), slice: I.slice }) : null;
   return {
     code: exitCode({ gates, counts, drift }),
     written: write && !threw,
@@ -542,6 +546,7 @@ export async function check({ root, write = false, now = nowIso }) {
     findingsStale,
     gates,
     lines,
+    twins,
     renderShaLines: Object.keys(files).sort().map((rel) => `render ${rel} sha256 ${sha256(Buffer.from(files[rel], 'utf8'))}`),
     scoped: (() => {
       const byId = new Map(I.slice.rows.map((r) => [r.regulation_id, r]));

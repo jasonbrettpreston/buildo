@@ -14,11 +14,13 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import * as validateRaw from '../../scripts/analysis/bylaw/validate.mjs';
 import * as splitRaw from '../../scripts/analysis/spec-split-check.mjs';
+import * as twinsRaw from '../../scripts/analysis/bylaw/twins.mjs';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .mjs module surface
 const ROOT = process.cwd();
 // Static imports (Spec 68 §9 placement: the infra test statically imports check() / selfTest()); the .mjs surface is untyped.
-const { check, selfTest, GATES, GATE_STATES, registryViolations } = validateRaw as unknown as Json;
+const { check, selfTest, GATES, GATE_STATES, registryViolations, exitCode, fiveLines } = validateRaw as unknown as Json;
+const { twinsLine } = twinsRaw as unknown as Json;
 const { SPEC_FILES } = splitRaw as unknown as Json;
 const CLI = path.join(ROOT, 'scripts/generate-bylaw-provisions.mjs');
 
@@ -164,7 +166,25 @@ describe('determinism (Spec 68 §10): --check under a different TZ and locale gi
     expect(shas.length).toBe(2);
     const strip = (t: string) => t.replace(/snapshot_age_days \d+( WARN>\d+)?/, 'snapshot_age_days N');
     expect(r.stdout.split('\n').filter((l) => /^[A-Z ]+[0-9]?: /.test(l)).map(strip)).toEqual(real.lines.map(strip));
+    // twins key alike (report-only, Spec 68 §9): the spawned line equals the in-process report
+    expect(r.stdout.split('\n')).toContain(twinsLine(real.twins));
   }, SPAWN_BUDGET_MS * 3 + 1_000);
+});
+
+describe('twins key alike: a report-only arm on the real snapshot (Spec 68 §9; process row, proposed)', () => {
+  it('check() carries the twins report; its classes partition the groups', () => {
+    const t = real.twins;
+    expect(t).toBeTruthy();
+    expect(t.groups).toBeGreaterThan(0);
+    expect(t.groups).toBe(t.list.length);
+    expect(t.differ).toBe(t.value + t.label_only);
+    expect(t.list.filter((g: Json) => g.kind === 'same').length).toBe(t.groups - t.differ);
+  });
+  it('never changes the exit code or a word verdict: exitCode / fiveLines take no twins input', () => {
+    expect(real.code).toBe(exitCode({ gates: real.gates, counts: real.counts, drift: real.drift }));
+    expect(fiveLines({ gates: real.gates, counts: real.counts, extras: real.extras })).toEqual(real.lines);
+    expect(Object.keys(real.gates)).not.toContain('G-TWINS');
+  });
 });
 
 describe('S8 registrations', () => {
