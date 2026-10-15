@@ -18,6 +18,10 @@
 //   checkGrainGroup / leafUnits({row, index, slice, groups})   W1 LEAF-CLAUSE grain + the group-unit grain rule (operator Q2 2026-10-14)
 //   planWave1({slice, inScopeIds, ranking, e5Ids, maxUnits}) / wave1Seed   W1 shards: shard 0 = the E-5 30, then ≈ 25 units
 //                                                      by lot weight, INCLUDE targets first (phase2-plan-v2 §D.2, P2-5) → w1-shards.json
+//   planWave({batch, …, satisfiedBy, held, drafted}) / waveSeed   W1 (= planWave1) and W2 (P2-7: no shard 0; INCLUDE
+//                                                      targets must be W1 members; W2_HELD rows held) → w2-shards.json
+//   wave1Groups / checkHolds                           the Q-F lead-in-group freeze (drafted rows keep their groups);
+//                                                      an amended-pending hold is valid only while its by-law is unsliced
 //   briefCore / buildBriefs({shard, slice, vocab, specText, doubleKeyed, batch})   the two blind briefs + their shas
 //   KEYING_CONVENTIONS / conventionsBlock(batch)   the A1 keying conventions, RATIFIED 2026-10-08 (Spec 69 M-77), in the briefs from A4
 //   sealDraft({aBytes, usedSealIds})                   A-SEAL: LF-normalized sha256 + the next monotonic seal id
@@ -82,6 +86,8 @@ export const OVERLAY_BATCHES = Object.freeze([
   // W1 = phase2-plan-v2 P2-5 / §D.2, run through the Phase 1 door before P2-0 (operator Q3 2026-10-14); LEAF-CLAUSE grain
   // (operator Q2 2026-10-14); planned by planWave1, never planBatch.
   { id: 'W1', label: 'Phase 2 wave 1 (P2-5): the top 220 exceptions by INCLUDE-closed residential lots at leaf grain; shard 0 = the E-5 30 re-keyed' },
+  // W2 = phase2-plan-v2 P2-7 (operator 2026-10-14: tooling now, keying after W1 lands); planned by planWave, never planBatch.
+  { id: 'W2', label: 'Phase 2 wave 2 (P2-7): the INCLUDE-closed ranks after the top 220 with closed lots ≥ census.min_direct_lots, at leaf grain; no shard 0' },
 ]);
 /** Spec 69a M-78: the Ch.900 exception pages — Phase 2 work, excluded from a Phase 1 batch plan when asked. */
 export const PHASE2_PAGES = Object.freeze(['ch900_2', 'ch900_3', 'ch900_4', 'ch900_5', 'ch900_6']);
@@ -191,7 +197,7 @@ export function packGroups(groups, maxUnits) {
  * @returns {{schema, batch, label, max_units, shards:[{key, page, article, regulation_ids, units:[{unit_id, regulation_id, clause_path, sha256}]}]}}
  */
 export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNITS, regulationIds = null, excludePages = null, phase1 = false, hasDrafts = null }) {
-  if (batch === WAVE1_BATCH) throw new KeyingError('batch_planner', `${WAVE1_BATCH} is planned by planWave1 (leaf grain, lot-weight shards), not planBatch`);
+  if (batch in WAVES) throw new KeyingError('batch_planner', `${batch} is planned by ${batch === WAVE1_BATCH ? 'planWave1' : 'planWave'} (leaf grain, lot-weight shards), not planBatch`);
   const rule = BATCH_RULES.find((b) => b.id === batch) || OVERLAY_BATCHES.find((b) => b.id === batch);
   if (!rule) throw new KeyingError('batch_unknown', `${batch} is not one of ${[...BATCH_RULES, ...OVERLAY_BATCHES].map((b) => b.id).join(', ')}`);
   const overlay = OVERLAY_BATCHES.some((b) => b.id === batch);
@@ -291,8 +297,36 @@ export function planBatch({ slice, inScopeIds, batch, maxUnits = DEFAULT_MAX_UNI
 // ---------------------------------------------------------------- wave 1 (W1): leaf grain + lot-weight shards
 
 export const WAVE1_BATCH = 'W1';
+export const WAVE2_BATCH = 'W2';
 /** phase2-plan-v2 §D.2: "≈ 25 units each by lot weight". */
 export const W1_SHARD_UNITS = 25;
+/** The wave batches planWave plans: key suffix / refusal-code prefix, whether shard 0 (the E-5 30) exists, and the
+ * earlier wave whose members satisfy an INCLUDE target (phase2-plan-v2 P2-5, P2-7). */
+export const WAVES = Object.freeze({
+  W1: Object.freeze({ suffix: 'w1', shard0: true, prior: null }),
+  W2: Object.freeze({ suffix: 'w2', shard0: false, prior: 'W1' }),
+});
+/**
+ * Wave-2 rows HELD out of keying (operator 2026-10-14 Q-W2d = a; proposed Spec 69a "amended, pending"): each has an
+ * unconsolidated amendment in a pinned enacting by-law the slicer does not yet slice (slice.mjs SLICED_ENACTING; the
+ * P2-2 lands arm), so its pinned page text is superseded for the amended clause. Measured by the W2-PLAN lane
+ * (`lands.mjs` / `peek.mjs`, 2026-10-14): 206-2026 rewrites the [PBS] list of 1007 and 1299; 650-2026 that of 317.
+ * checkHolds refuses a hold once its by-law is sliced (the hold must then be retired, never kept silently).
+ */
+export const W2_HELD = Object.freeze([
+  Object.freeze({ regulation_id: '900.3.10(1007)', reason: 'amended_pending', by: '206-2026' }),
+  Object.freeze({ regulation_id: '900.3.10(1299)', reason: 'amended_pending', by: '206-2026' }),
+  Object.freeze({ regulation_id: '900.3.10(317)', reason: 'amended_pending', by: '650-2026' }),
+]);
+/** The holds that are no longer valid: an `amended_pending` hold needs its by-law pinned (`pinned`, the enacting
+ * manifest's captures) and not sliced (`sliced`, SLICED_ENACTING). → ['w2_hold_stale: …'] (empty = all valid). PURE. */
+export function checkHolds({ held = [], pinned = [], sliced = [] }) {
+  const pin = new Set(pinned);
+  const sl = new Set(sliced);
+  return held
+    .filter((h) => h.reason === 'amended_pending' && (!pin.has(h.by) || sl.has(h.by)))
+    .map((h) => `w2_hold_stale: ${h.regulation_id} is held for ${h.by}, which is ${sl.has(h.by) ? 'now sliced (retire the hold)' : 'not a pinned enacting capture'}`);
+}
 /** Closed refusal codes of the grain rule (operator Q2 2026-10-14). */
 export const GRAIN_CODES = Object.freeze(['grain_group_mixed', 'grain_group_incomplete', 'grain_group_not_ancestor']);
 
@@ -418,6 +452,38 @@ export function leadInGroups({ row, slice, vocab, rowLeaves = null }) {
   return out;
 }
 
+/**
+ * The W1 lead-in groups (Q-F (a), orchestrator 2026-10-14; mirrors M2): every member row in rank order gets
+ * leadInGroups() under the CURRENT vocab, EXCEPT a row in a shard of `priorSeed` (the committed w1-shards.json) whose
+ * drafts exist (`hasDrafts(key)`): that row keeps the groups it was first planned with (rebuilt from
+ * priorSeed.lead_in_groups), so a growing vocab never re-cuts a drafted shard. PURE.
+ * (Copied from the uncommitted Q-F hunk of Buildo-wt-mcbylaw-p2; `code` added so W2 refuses as w2_drafted_shard_moved.)
+ */
+export function wave1Groups({ ranking, slice, vocab, priorSeed = null, hasDrafts = () => false, code = 'w1_drafted_shard_moved' }) {
+  const frozenRows = new Set(((priorSeed && priorSeed.shards) || []).filter((s) => hasDrafts(s.key) === true).flatMap((s) => s.regulation_ids));
+  const rowOf = new Map(slice.rows.map((r) => [r.regulation_id, r]));
+  const leavesOf = (rid) => (slice.units || []).filter((u) => u.regulation_id === rid);
+  const prior = new Map();
+  for (const g of (priorSeed && priorSeed.lead_in_groups) || []) {
+    const k = g.unit_id.indexOf('#');
+    const rid = g.unit_id.slice(0, k);
+    if (!prior.has(rid)) prior.set(rid, []);
+    prior.get(rid).push({ ...g, regulation_id: rid, clause_path: g.unit_id.slice(k + 1) });
+  }
+  return ranking.flatMap((e) => {
+    const row = rowOf.get(e.regulation_id);
+    if (!row) return [];
+    if (!frozenRows.has(e.regulation_id)) return leadInGroups({ row, slice, vocab });
+    return (prior.get(e.regulation_id) || []).map((g) => {
+      const c = (row.clauses || []).find((x) => x.path === g.clause_path);
+      const pos = new Map((row.clauses || []).map((x, i) => [x.path, i]));
+      const leaves = leavesOf(row.regulation_id).filter((u) => isAncestorPath(g.clause_path, u.clause_path)).sort((a, b) => (pos.get(a.clause_path) ?? Infinity) - (pos.get(b.clause_path) ?? Infinity));
+      if (!c || leaves.length !== g.leaves) throw new KeyingError(code, `${g.unit_id}: the frozen lead-in group no longer matches the slice (${leaves.length} leaves, planned ${g.leaves})`);
+      return { regulation_id: row.regulation_id, clause_path: g.clause_path, lead_in: String(c.text).trim(), matched: g.matched, leaves: leaves.map((u) => ({ unit_id: u.unit_id, archetype: 'LIMIT', target: g.target, bound: g.bound })) };
+    });
+  });
+}
+
 /** The lettered-clause key of a unit inside a Ch.900 list group (`(7)[SSP](C)`): a by_type list is never split. PURE. */
 const letterGroupOf = (u) => {
   const m = /^(.*?\]\([^)]*\))/.exec(String(u.clause_path || ''));
@@ -434,15 +500,38 @@ const letterGroupOf = (u) => {
  * rankExceptions). Refuses: a member that is not an in-scope slice row (w1_member_unknown), an E-5 id outside the wave
  * (w1_e5_not_in_wave), an E-5 member that INCLUDEs a non-E-5 wave member (w1_include_order). PURE.
  */
-export function planWave1({ slice, inScopeIds, ranking, e5Ids = [], maxUnits = W1_SHARD_UNITS, groups = [] }) {
+export function planWave1(args) {
+  return planWave({ ...args, batch: WAVE1_BATCH });
+}
+
+/**
+ * The shard plan of one wave batch (WAVES): W1 exactly as planWave1 documents. W2 (phase2-plan-v2 P2-7): no shard 0
+ * (an `e5Ids` list is refused: w2_no_shard0); shards 1…N keyed `.w2-s<NN>`; an INCLUDE target outside the wave must be
+ * a member of the prior wave (`satisfiedBy` = the W1 member ids) and is recorded in `include.satisfied`, else refused
+ * (w2_include_outside_w1); `held` = [{regulation_id, reason, by}] rows are removed from the ranking before planning and
+ * recorded in `held` (a hold on a non-member or without a reason: w2_held_unknown); an INCLUDE into a held row is
+ * therefore refused too. `drafted` = the first-planned seed records {key, unit_ids} of shards whose drafts exist: each
+ * must re-plan to the same key and units (Q-F / M2), else <prefix>_drafted_shard_moved. PURE.
+ */
+export function planWave({ batch, slice, inScopeIds, ranking, e5Ids = [], maxUnits = W1_SHARD_UNITS, groups = [], satisfiedBy = [], held = [], drafted = [] }) {
+  const wave = WAVES[batch];
+  if (!wave) throw new KeyingError('batch_unknown', `${batch} is not a wave batch (${Object.keys(WAVES).join(', ')})`);
+  const p = wave.suffix;
   const index = buildIndex(slice);
   const inScope = inScopeIds instanceof Set ? inScopeIds : new Set(inScopeIds || []);
-  const rank = new Map((ranking || []).map((e) => [e.regulation_id, e]));
+  const ranked = new Map((ranking || []).map((e) => [e.regulation_id, e]));
+  const badHold = (held || []).filter((h) => !h || !ranked.has(h.regulation_id) || typeof h.reason !== 'string' || !h.reason.trim()).map((h) => (h && h.regulation_id) || '?').sort(cmpStr);
+  if (badHold.length) throw new KeyingError(`${p}_held_unknown`, `a hold names no wave member or carries no reason: ${badHold.join(', ')}`);
+  const heldIds = new Set((held || []).map((h) => h.regulation_id));
+  const rank = new Map([...ranked].filter(([id]) => !heldIds.has(id)));
   const unknown = [...rank.keys()].filter((id) => !index.rows.has(id) || !inScope.has(id)).sort(cmpStr);
-  if (unknown.length) throw new KeyingError('w1_member_unknown', `not an in-scope slice row: ${unknown.join(', ')}`);
+  if (unknown.length) throw new KeyingError(`${p}_member_unknown`, `not an in-scope slice row: ${unknown.join(', ')}`);
+  if (!wave.shard0 && (e5Ids || []).length) throw new KeyingError(`${p}_no_shard0`, `${batch} has no shard 0; got e5Ids ${e5Ids.join(', ')}`);
   const e5 = new Set(e5Ids);
   const stray = [...e5].filter((id) => !rank.has(id)).sort(cmpStr);
-  if (stray.length) throw new KeyingError('w1_e5_not_in_wave', stray.join(', '));
+  if (stray.length) throw new KeyingError(`${p}_e5_not_in_wave`, stray.join(', '));
+  const prior = new Set(satisfiedBy || []);
+  const satisfied = [];
   const leavesBy = new Map();
   for (const u of slice.units || []) if (rank.has(u.regulation_id)) leavesBy.set(u.regulation_id, [...(leavesBy.get(u.regulation_id) || []), u]);
 
@@ -461,7 +550,8 @@ export function planWave1({ slice, inScopeIds, ranking, e5Ids = [], maxUnits = W
     state.set(id, 'open');
     for (const t of [...new Set(rank.get(id).includes || [])].sort(cmpStr)) {
       if (!rank.has(t)) {
-        outside.push(`${id} → ${t}`);
+        if (wave.prior && prior.has(t)) satisfied.push(`${id} → ${t}`);
+        else outside.push(`${id} → ${t}`);
         continue;
       }
       edges++;
@@ -471,8 +561,9 @@ export function planWave1({ slice, inScopeIds, ranking, e5Ids = [], maxUnits = W
     seq.push(id);
   };
   for (const e of [...rank.values()].sort((a, b) => a.rank - b.rank || cmpStr(a.regulation_id, b.regulation_id))) visit(e.regulation_id);
+  if (wave.prior && outside.length) throw new KeyingError(`${p}_include_outside_${WAVES[wave.prior].suffix}`, `INCLUDE targets neither in ${batch} nor in ${wave.prior}: ${[...outside].sort(cmpStr).join(', ')}`);
   const badOrder = [...e5].flatMap((id) => (rank.get(id).includes || []).filter((t) => rank.has(t) && !e5.has(t)).map((t) => `${id} → ${t}`)).sort(cmpStr);
-  if (badOrder.length) throw new KeyingError('w1_include_order', `an E-5 (shard 0) member INCLUDEs a later wave member: ${badOrder.join(', ')}`);
+  if (badOrder.length) throw new KeyingError(`${p}_include_order`,`an E-5 (shard 0) member INCLUDEs a later wave member: ${badOrder.join(', ')}`);
   const seqAt = new Map(seq.map((id, i) => [id, i]));
 
   const pack = (ids) => {
@@ -514,7 +605,7 @@ export function planWave1({ slice, inScopeIds, ranking, e5Ids = [], maxUnits = W
   };
   const toShard = (s, waveShard, part) => {
     const article = index.rows.get(s.members[0].id).article;
-    const suffix = waveShard === 0 ? `w1-s00.p${String(part).padStart(2, '0')}` : `w1-s${String(waveShard).padStart(2, '0')}`;
+    const suffix = waveShard === 0 ? `${p}-s00.p${String(part).padStart(2, '0')}` : `${p}-s${String(waveShard).padStart(2, '0')}`;
     return {
       key: `${s.page}/${article}.${suffix}`,
       page: s.page,
@@ -530,15 +621,27 @@ export function planWave1({ slice, inScopeIds, ranking, e5Ids = [], maxUnits = W
   const s0 = pack(seq.filter((id) => e5.has(id))).map((s, j) => toShard(s, 0, j + 1));
   const rest = pack(seq.filter((id) => !e5.has(id))).map((s, j) => toShard(s, j + 1, null));
   const shards = [...s0, ...rest];
+  // Q-F (a) / M2: a drafted shard (`drafted` = its first-planned seed records {key, unit_ids}) must re-plan to the SAME
+  // key and units; anything else is refused, never silently re-chunked
+  const byKey = new Map(shards.map((s) => [s.key, s.units.map((u) => u.unit_id).join('|')]));
+  const moved = (drafted || []).filter((d) => byKey.get(d.key) !== (d.unit_ids || []).join('|')).map((d) => d.key).sort(cmpStr);
+  if (moved.length) throw new KeyingError(`${p}_drafted_shard_moved`, `drafted shards would change: ${moved.join(', ')} (freeze their rows with wave1Groups)`);
   const sum = (xs) => xs.reduce((t, s) => t + s.units.length, 0);
+  const base = { schema: KEYING_SCHEMA, batch, label: OVERLAY_BATCHES.find((b) => b.id === batch).label, grain: 'leaf', max_units: maxUnits };
+  const include = { cycles: [...new Set(cycles)].sort(cmpStr), edges, outside_wave: outside.sort(cmpStr) };
+  if (wave.shard0) {
+    // W1: the committed w1-shards.json shape, unchanged (prereg-0 pins its blob)
+    return { ...base, include, totals: { exceptions: rank.size, e5_exceptions: e5.size, units: sum(shards), shard0_units: sum(s0), shard0_parts: s0.length, shards: shards.length, wave_shards: rest.length }, shards };
+  }
+  const heldOut = (held || [])
+    .map((h) => ({ ...h, closed_lots: ranked.get(h.regulation_id).closed_lots, rank: ranked.get(h.regulation_id).rank }))
+    .sort((a, b) => a.rank - b.rank || cmpStr(a.regulation_id, b.regulation_id))
+    .map((h) => Object.fromEntries(Object.keys(h).sort(cmpStr).map((k) => [k, h[k]])));
   return {
-    schema: KEYING_SCHEMA,
-    batch: WAVE1_BATCH,
-    label: OVERLAY_BATCHES.find((b) => b.id === WAVE1_BATCH).label,
-    grain: 'leaf',
-    max_units: maxUnits,
-    include: { cycles: [...new Set(cycles)].sort(cmpStr), edges, outside_wave: outside.sort(cmpStr) },
-    totals: { exceptions: rank.size, e5_exceptions: e5.size, units: sum(shards), shard0_units: sum(s0), shard0_parts: s0.length, shards: shards.length, wave_shards: rest.length },
+    ...base,
+    include: { ...include, prior_wave: wave.prior, satisfied: satisfied.sort(cmpStr) },
+    held: heldOut,
+    totals: { exceptions: rank.size, held_exceptions: heldOut.length, units: sum(shards), shards: shards.length, wave_shards: rest.length },
     shards,
   };
 }
@@ -562,6 +665,25 @@ export function wave1Seed({ plan, ranking, adoptionId, census, groups = [] }) {
     members: ranking.map((e) => ({ closed_lots: e.closed_lots, direct_lots: e.direct_lots ?? null, includes: [...(e.includes || [])].sort(cmpStr), rank: e.rank, regulation_id: e.regulation_id })),
     shards: plan.shards.map((s) => ({ key: s.key, lot_weight: s.lot_weight, ...(s.part ? { part: s.part } : {}), regulation_ids: s.regulation_ids, ...(s.row_chunk ? { row_chunk: s.row_chunk } : {}), unit_ids: s.units.map((u) => u.unit_id), units: s.units.length, wave_shard: s.wave_shard })),
     totals: plan.totals,
+  };
+}
+
+export const W2_SHARDS_REL = 'scripts/seeds/bylaw/w2-shards.json';
+/** The seed paths of the wave batches (`keying-cli plan --batch W1|W2 [--check]`). */
+export const WAVE_SHARDS_REL = Object.freeze({ W1: W1_SHARDS_REL, W2: W2_SHARDS_REL });
+/**
+ * The committed shard plan of a wave batch: W1 = wave1Seed (unchanged); W2 = the same record plus `held` (the rows
+ * held out with their reason) and the prior-wave INCLUDE satisfaction in `include`; `members` = the planned members
+ * (holds excluded). PURE.
+ */
+export function waveSeed(args) {
+  const { plan, ranking, adoptionId, census, minDirectLots = null } = args;
+  if (plan.batch === WAVE1_BATCH) return wave1Seed(args);
+  const s = wave1Seed(args);
+  return {
+    ...s,
+    $comment: `GENERATED by \`node scripts/analysis/bylaw/keying-cli.mjs plan --batch ${plan.batch}\` from census.json (${census && census.adoption_id}), w1-shards.json (the wave-1 members) and the slice of ${adoptionId}. Do not edit. Wave 2 = the INCLUDE-closed ranks after the top ${ranking.length ? ranking[0].rank - 1 : '?'} whose closed lots are ≥ census.min_direct_lots (${minDirectLots}) (Spec 69 M-15; k7.mjs rankExceptions; phase2-plan-v2 P2-7), keyed at LEAF-CLAUSE grain in shards of ≤ ${plan.max_units} units, one page per shard, no shard 0. Every INCLUDE target is a wave-1 member (include.satisfied). Rows with an unconsolidated amendment in a pinned but unsliced enacting by-law are held (held[], reason amended_pending) and never keyed from superseded page text. Lead-in groups as wave 1 (lead_in_groups).`,
+    held: plan.held,
   };
 }
 

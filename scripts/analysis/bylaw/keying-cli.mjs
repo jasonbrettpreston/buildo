@@ -24,6 +24,8 @@
 //   plan    --batch W1 [--max-units 25] [--check]        wave 1 at LEAF grain (operator Q2 2026-10-14): shard 0 = the E-5 30, then
 //           ≈ 25-unit shards by INCLUDE-closed lot weight, targets first → plan.json + scripts/seeds/bylaw/w1-shards.json
 //           (--check: exit 1 when w1-shards.json is stale)
+//   plan    --batch W2 [--max-units 25] [--check]        wave 2 (P2-7): the ranks after 220 with closed ≥ census.min_direct_lots, leaf
+//           grain, no shard 0; INCLUDE targets must be W1 members; W2_HELD rows held → scripts/seeds/bylaw/w2-shards.json
 //   briefs  --batch W1 --wave-shard 0,1                   only those wave shards (shard 0 = all its parts)
 //   recipe  --batch W1 [--wave-shard 0,1] [--b-root <dir>]   keyer A / seal / keyer B commands per shard + the blind B worktree → RECIPE.md
 //
@@ -33,10 +35,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { loadAuthored, shardGeneration } from './authored.mjs';
 import { nowIso } from './clock.mjs';
-import { KEYER_IDS, KeyingError, OVERLAY_BATCHES, batchAgree, leadInGroups, W1_SHARDS_REL, WAVE1_BATCH, applyAnswers, buildBriefs, buildProv, buildQueue, draftSha, parseAnswers, planBatch, planWave1, rekeyShard, renderQueueMd, sealDraft, shardPaths, shardSlug, wave1Seed } from './keying.mjs';
+import { KEYER_IDS, KeyingError, OVERLAY_BATCHES, batchAgree, checkHolds, W1_SHARDS_REL, W2_HELD, WAVE1_BATCH, WAVES, WAVE_SHARDS_REL, applyAnswers, buildBriefs, buildProv, buildQueue, draftSha, parseAnswers, planBatch, planWave, rekeyShard, renderQueueMd, sealDraft, shardPaths, shardSlug, wave1Groups, waveSeed } from './keying.mjs';
 import { WAVE1_SIZE, rankExceptions } from './k7.mjs';
 import { blindCommit, engineEnv, ensureKeyerBWorktree, readEnvKey, runKeyerB, spawnEngine } from './keyer-b.mjs';
-import { CLAUSE_GROUPS, loadSnapshotPages, sliceSnapshot } from './slice.mjs';
+import { CLAUSE_GROUPS, SLICED_ENACTING, loadSnapshotPages, sliceSnapshot } from './slice.mjs';
 import { stableStringify } from './snapshot.mjs';
 import { parseRulings, scopeRows, universeInputs } from './universe.mjs';
 
@@ -132,34 +134,69 @@ async function main() {
   };
   const onDisk = () => new Map(loadAuthored(root).map((s) => [s.key, s]));
 
-  if (cmd === 'plan' && batch === WAVE1_BATCH) {
+  if (cmd === 'plan' && batch in WAVES) {
     // W1 (phase2-plan-v2 P2-5 §D.2; operator Q2/Q3 2026-10-14): wave 1 = the top WAVE1_SIZE by INCLUDE-closed lots
     // (k7.mjs rankExceptions over the committed census + the live slice); shard 0 = the E-5 30 of k7-exceptions.json.
+    // W2 (P2-7; operator 2026-10-14): the ranks after WAVE1_SIZE with closed lots ≥ census.min_direct_lots (Spec 69 M-15);
+    // no shard 0; INCLUDE targets satisfied by the committed w1-shards.json members; W2_HELD rows held (checkHolds).
     const ctx = context(root);
     const seeds = path.join(root, 'scripts', 'seeds', 'bylaw');
     const census = readJson(path.join(seeds, 'census.json'), null);
-    const k7 = readJson(path.join(seeds, 'k7-exceptions.json'), null);
-    const e5Ids = k7 && Array.isArray(k7.exceptions) ? k7.exceptions.map((e) => e.regulation_id) : [];
-    if (!e5Ids.length || e5Ids.some((id) => !id)) throw new KeyingError('batch_members_missing', 'k7-exceptions.json has no complete exceptions[] (run k7.mjs --write)');
-    const wave = rankExceptions({ census, slice: ctx.slice, groups: CLAUSE_GROUPS }).ranked.slice(0, WAVE1_SIZE);
+    const ranked = rankExceptions({ census, slice: ctx.slice, groups: CLAUSE_GROUPS }).ranked;
+    const seedRel = WAVE_SHARDS_REL[batch];
+    let e5Ids = [];
+    let wave;
+    let satisfiedBy = [];
+    let held = [];
+    const minDirectLots = census && Number(census.min_direct_lots);
+    if (batch === WAVE1_BATCH) {
+      const k7 = readJson(path.join(seeds, 'k7-exceptions.json'), null);
+      e5Ids = k7 && Array.isArray(k7.exceptions) ? k7.exceptions.map((e) => e.regulation_id) : [];
+      if (!e5Ids.length || e5Ids.some((id) => !id)) throw new KeyingError('batch_members_missing', 'k7-exceptions.json has no complete exceptions[] (run k7.mjs --write)');
+      wave = ranked.slice(0, WAVE1_SIZE);
+    } else {
+      if (!(minDirectLots > 0)) throw new KeyingError('w2_threshold_missing', 'census.json has no positive min_direct_lots (Spec 69 M-15)');
+      const w1 = readJson(path.join(root, W1_SHARDS_REL), null);
+      if (!w1 || !Array.isArray(w1.members)) throw new KeyingError('w2_w1_missing', `${W1_SHARDS_REL} is absent (plan --batch W1 first)`);
+      satisfiedBy = w1.members.map((m) => m.regulation_id);
+      // W1's committed members must be the top WAVE1_SIZE of the same ranking, else W2 would overlap or skip a rank
+      const top = ranked.slice(0, WAVE1_SIZE).map((c) => (c.e ? c.e.regulation_id : `${c.zone} ${c.exception}`));
+      if (top.join('\n') !== satisfiedBy.join('\n')) throw new KeyingError('w2_w1_mismatch', `${W1_SHARDS_REL} members differ from the current top ${WAVE1_SIZE} (re-check plan --batch W1)`);
+      wave = ranked.slice(WAVE1_SIZE).filter((c) => c.closed >= minDirectLots);
+      const manifest = readJson(path.join(seeds, 'enacting', 'manifest.json'), {});
+      const stale = checkHolds({ held: W2_HELD, pinned: Object.keys((manifest && manifest.captures) || {}), sliced: SLICED_ENACTING });
+      if (stale.length) throw new KeyingError('w2_hold_stale', stale.join('; '));
+      held = W2_HELD.map((h) => ({ ...h }));
+    }
+    const p = WAVES[batch].suffix;
     const unsliced = wave.filter((c) => !c.e).map((c) => `${c.zone} ${c.exception}`);
-    if (unsliced.length) throw new KeyingError('w1_member_unknown', `wave-1 exceptions not on the pinned pages: ${unsliced.join(', ')}`);
-    const ranking = wave.map((c, i) => ({ closed_lots: c.closed, direct_lots: c.direct, includes: [...c.e.includes].sort(), rank: i + 1, regulation_id: c.e.regulation_id }));
-    // lead-in groups (orchestrator 2026-10-14 Q-A = a): declared mechanically per member, grain-checked in leafUnits
-    const groups = ranking.flatMap((e) => leadInGroups({ row: ctx.slice.rows.find((r) => r.regulation_id === e.regulation_id), slice: ctx.slice, vocab: ctx.vocab }));
-    const plan = planWave1({ slice: ctx.slice, inScopeIds: ctx.inScope, ranking, e5Ids, groups, maxUnits: args.maxUnits ? Number(args.maxUnits) : undefined });
-    const seed = stableStringify(wave1Seed({ plan, ranking, adoptionId: ctx.adoptionId, census, groups }));
-    const seedFile = path.join(root, W1_SHARDS_REL);
+    if (unsliced.length) throw new KeyingError(`${p}_member_unknown`, `wave exceptions not on the pinned pages: ${unsliced.join(', ')}`);
+    const rank0 = batch === WAVE1_BATCH ? 0 : WAVE1_SIZE;
+    const all = wave.map((c, i) => ({ closed_lots: c.closed, direct_lots: c.direct, includes: [...c.e.includes].sort(), rank: rank0 + i + 1, regulation_id: c.e.regulation_id }));
+    const heldIds = new Set(held.map((h) => h.regulation_id));
+    const ranking = all.filter((e) => !heldIds.has(e.regulation_id));
+    // lead-in groups (orchestrator 2026-10-14 Q-A = a): declared mechanically per member, grain-checked in leafUnits.
+    // Q-F (a) / M2: rows of a shard whose drafts exist keep their first-planned groups (from the committed seed).
+    const priorSeed = readJson(path.join(root, seedRel), null);
+    const hasDrafts = (key) => fs.existsSync(path.join(root, shardPaths(key).a));
+    const groups = wave1Groups({ ranking, slice: ctx.slice, vocab: ctx.vocab, priorSeed, hasDrafts, code: `${p}_drafted_shard_moved` });
+    const drafted = ((priorSeed && priorSeed.shards) || []).filter((s) => hasDrafts(s.key));
+    const plan = planWave({ batch, slice: ctx.slice, inScopeIds: ctx.inScope, ranking: all, e5Ids, groups, satisfiedBy, held, drafted, maxUnits: args.maxUnits ? Number(args.maxUnits) : undefined });
+    const seed = stableStringify(waveSeed({ plan, ranking, adoptionId: ctx.adoptionId, census, groups, minDirectLots }));
+    const seedFile = path.join(root, seedRel);
     const t = plan.totals;
-    const summary = `${WAVE1_BATCH}: ${t.exceptions} exceptions, ${t.units} units (leaf grain; ${groups.length} lead-in groups), shard 0 = ${t.e5_exceptions} E-5 exceptions / ${t.shard0_units} units in ${t.shard0_parts} parts, then ${t.wave_shards} shards; INCLUDE edges ${plan.include.edges}, outside the wave ${plan.include.outside_wave.length}, cycles ${plan.include.cycles.length}`;
+    const summary =
+      batch === WAVE1_BATCH
+        ? `${WAVE1_BATCH}: ${t.exceptions} exceptions, ${t.units} units (leaf grain; ${groups.length} lead-in groups), shard 0 = ${t.e5_exceptions} E-5 exceptions / ${t.shard0_units} units in ${t.shard0_parts} parts, then ${t.wave_shards} shards; INCLUDE edges ${plan.include.edges}, outside the wave ${plan.include.outside_wave.length}, cycles ${plan.include.cycles.length}`
+        : `${batch}: ${t.exceptions} exceptions (+ ${t.held_exceptions} held: ${plan.held.map((h) => `${h.regulation_id} ${h.reason} ${h.by}`).join(', ')}), ${t.units} units (leaf grain; ${groups.length} lead-in groups) in ${t.shards} shards (${plan.shards.filter((s) => s.row_chunk).length} row_chunk); INCLUDE edges in-wave ${plan.include.edges}, satisfied by ${plan.include.prior_wave} ${plan.include.satisfied.length}, cycles ${plan.include.cycles.length}`;
     if (args.check) {
       const cur = fs.existsSync(seedFile) ? fs.readFileSync(seedFile, 'utf8') : null;
-      console.log(cur === seed ? `${W1_SHARDS_REL}: current — ${summary}` : `STALE (rerun plan --batch ${WAVE1_BATCH}): ${W1_SHARDS_REL}`);
+      console.log(cur === seed ? `${seedRel}: current — ${summary}` : `STALE (rerun plan --batch ${batch}): ${seedRel}`);
       return cur === seed ? 0 : 1;
     }
     writeLf(planFile, stableStringify(plan));
     writeLf(seedFile, seed);
-    console.log(`${summary} → ${path.relative(root, planFile)} + ${W1_SHARDS_REL}`);
+    console.log(`${summary} → ${path.relative(root, planFile)} + ${seedRel}`);
     return 0;
   }
   if (cmd === 'recipe') {
