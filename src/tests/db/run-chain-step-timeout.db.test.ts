@@ -62,9 +62,14 @@ describe.skipIf(!dbAvailable())('run-chain.js — WF3 F2 step-timeout end-to-end
   /** Writes a fixture manifest with ONE step whose sleep duration + ceiling are caller-controlled. */
   function writeFixtureManifest(opts: { sleepMs: number; stepTimeoutMinutes: number }) {
     const scriptPath = path.join(tmpDir, 'sleep-step.js');
+    // Spec 124 R-CC (H5, 2026-10-12): a step's status is folded from its audit_table — a summary
+    // with NO audit_table is an honest WARN (completed_with_warnings), never plain 'completed'. The
+    // fixture therefore reports one PASS row, like a real step, so "completes normally" still means
+    // 'completed' and this file keeps proving only the ceiling behaviour.
+    const summary = { records_total: 0, records_meta: { audit_table: { verdict: 'PASS', rows: [{ metric: 'fixture_sleep_ok', value: 0, threshold: 'n/a', status: 'PASS' }] } } };
     writeFileSync(
       scriptPath,
-      `setTimeout(() => { console.log('PIPELINE_SUMMARY:' + JSON.stringify({records_total: 0})); process.exit(0); }, ${opts.sleepMs});\n`,
+      `setTimeout(() => { console.log('PIPELINE_SUMMARY:' + ${JSON.stringify(JSON.stringify(summary))}); process.exit(0); }, ${opts.sleepMs});\n`,
     );
     const manifest = {
       version: 1,

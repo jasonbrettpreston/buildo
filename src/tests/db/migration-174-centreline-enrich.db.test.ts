@@ -22,12 +22,17 @@ const ecDescriptor = require('../../../scripts/enrich-centreline.descriptor.json
 const ecSeeds = require('../../../scripts/seeds/logic_variables.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { probeRequirement } = require('../../../scripts/lib/step/index.js');
+// H5 (2d7b0d84) moved the compute's temp-table DDL behind the ctx.tempTable seam (CP-S2, R-BZ G4);
+// the adapter builds it with the runner's own factory (step/index.js passCtx), bound to the same client.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { makeTempTable } = require('../../../scripts/lib/step/temp-table.js');
 const ecCfg = Object.fromEntries(Object.entries(ecSeeds).filter(([k]) => k.startsWith('enrich_centreline_')).map(([k, v]) => [k, (v as { default: number }).default]));
 const ec = {
   enrichCentreline: (c: PoolClient, { sourceDatasetVersion }: { sourceDatasetVersion: string }) => ecCompute.runCentrelineJoinPass(c, {
     full: true, config: ecCfg, onProgress: () => {},
     contract: { sourceDatasetVersion, lastVersion: null, staleCount: null, mode: 'full' },
     joinUpdate: async (_ref: number, sql: string, params: unknown[]) => (await c.query(sql, params)).rowCount,
+    tempTable: makeTempTable(c, '[enrich_centreline]'),
   }),
   assertPreconditions: async (c: PoolClient) => {
     for (const r of ecDescriptor.guards.requires) {

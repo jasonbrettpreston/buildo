@@ -100,6 +100,15 @@ async function inRolledBackTxn(pool: Pool, body: (client: PoolClient) => Promise
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Hermetic against suite order: enrich-parcels-incremental.db.test.ts seeds a PERSISTENT
+    // `sources:load_zoning` completed run at NOW() (its "harmless baseline"), which is newer than
+    // this file's fixed 2026-10-13 windows and wins every newest-run read. Hide every load_zoning
+    // run — bare and chain-prefixed slug forms — inside this transaction (no FK references
+    // pipeline_runs; the ROLLBACK restores them).
+    await client.query(
+      `DELETE FROM pipeline_runs WHERE pipeline = ANY($1) OR split_part(pipeline, ':', 2) = ANY($1)`,
+      [slugForms(STEP)],
+    );
     await body(client);
   } finally {
     await client.query('ROLLBACK');
