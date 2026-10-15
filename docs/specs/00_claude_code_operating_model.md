@@ -56,11 +56,14 @@ These are categories we never want executed without explicit human confirmation.
 PreToolUse hook on Edit/Write further enforces that an active task must exist before
 any file is modified — preventing ad-hoc edits that bypass the planning gate.
 
-The global audit hook (see `~/.claude/hooks/audit-command.ps1`) logs every bash and
-PowerShell tool call with timestamp and session ID to a daily file. High-risk patterns
-(destructive flags, secret file access) are routed to a separate flagged log for weekly
-review. The log is not a blocker — it is an audit trail for when something breaks and
-you need to retrace what happened.
+The audit trail is Claude Code's own session transcripts (`~/.claude/projects/<path-key>/*.jsonl`):
+every tool call — not just shell calls — with its timestamp, session ID, input and result.
+Retired 2026-10-15 with the move to the Mac mini (Spec 124 R-CQ): the Windows-only global
+hook `~/.claude/hooks/audit-command.ps1`, which logged Bash/PowerShell calls to a daily file
+and routed high-risk patterns to a flagged log. The transcripts are a superset of what it
+recorded at no runtime cost; destructive patterns are already stopped up front by the
+permissions denylist above and Claude Code's auto-mode classifier. The trail is not a
+blocker — it is for retracing what happened when something breaks.
 
 The principle here is simple: anything you have to remember to do, you will eventually
 forget. Anything enforced by a hook, a denylist, or a pre-commit gate keeps working
@@ -189,7 +192,7 @@ Organized by domain. Effectiveness ratings: **Guaranteed** (fires every time, no
 | Type error introduced mid-session (before commit) | Stop hook — typecheck after every response | Fires automatically, no prompting | **High** — 3–10s latency, catches drift early |
 | Edit without an active task on disk | PreToolUse hook — check-active-task.mjs | Blocks Edit/Write tool calls | **Guaranteed** — cannot be bypassed |
 | `rm -rf`, force-push, `.env` read/write | Permissions denylist | Claude Code layer rejects the tool call | **Guaranteed** for listed patterns |
-| Bash command matching high-risk pattern | Audit hook — audit-command.ps1 | Logged to flagged log, not blocked | **High** audit trail — not a blocker |
+| Any tool call (retracing what happened) | Claude Code session transcripts (`~/.claude/projects/<path-key>/*.jsonl`; the Windows `audit-command.ps1` hook retired 2026-10-15, R-CQ) | Recorded, not blocked | **High** audit trail — not a blocker |
 | Spec-vs-code drift (intent vs implementation) | Pre-review self-checklist (WF1/WF2) | Claude walks spec behavioral contract against actual diff, PASS/FAIL per item | **Medium** — catches obvious gaps; adversarial review catches subtler ones |
 | Unknown unknowns in the implementation | Gemini + DeepSeek adversarial review | Agents generate their own checklist from spec — no implementor bias | **Medium** — strong on structural patterns, weaker on domain business logic |
 | Error path coverage, naming inconsistency, dead code introduced | Code Reviewer agent (worktree isolation) | Fresh repo read, independent checklist | **Medium** — good signal-to-noise, occasional false positives |
@@ -254,6 +257,13 @@ These are real risks with no automated enforcement today. Process or manual revi
 
 ## 8. Full Toolset Reference
 
+**Host (2026-10-15):** Mac mini — macOS, zsh, 24 GB, 12 cores; Docker = OrbStack (12 CPU /
+18 GB cap); local Supabase on Postgres 17 at `127.0.0.1:54322`. Concurrency, fork caps and
+the memory floor are Spec 124 R-CQ (summarised in Spec 08 §C.6.5); toolchain, DB restore and
+the machine-move checklist are `docs/runbook/dev_host_setup.md`. Measured there: `npm run
+typecheck` 7 s; full `npm run test` 68 s at the pre-push cap of 8 forks (the Windows PC took
+17.5 min at 2).
+
 Every tool we use, what it does, which domain it governs, and its time cost per invocation.
 Time costs are approximate and measured on this machine; they inform which tools belong in
 automated hooks vs. manual steps.
@@ -265,7 +275,7 @@ These run at the start of a session or before generating an active task — not 
 | Check | What It Does | When | Domain | Time Cost |
 |-------|-------------|------|--------|-----------|
 | **`node scripts/ai-env-check.mjs`** | Reads live environment state: DB connectivity, migration status, pipeline run recency, env var presence. Surfaces mismatches between what the code assumes and what is actually running. | Start of every task (Prime Directive §6) | All | 2–5s |
-| **`pg_isready -h localhost -p 5432`** | Confirms PostgreSQL is accepting connections before any DB-dependent work begins. WF11 gate — if not ready, boot sequence runs before proceeding. | WF11 / Backend tasks | Backend/Pipeline | <1s |
+| **`pg_isready -h 127.0.0.1 -p 54322`** (local Supabase; 5432 is the retired Docker cold spare) | Confirms PostgreSQL is accepting connections before any DB-dependent work begins. WF11 gate — if not ready, boot sequence runs before proceeding. | WF11 / Backend tasks | Backend/Pipeline | <1s |
 | **Domain file read** (`.claude/domain-admin.md`, `scripts/CLAUDE.md`, or `.claude/domain-crossdomain.md`) | Loads the tooling stack and never-violate rules for the declared domain. Prevents wrong library choices (e.g. `useEffect` for fetching in Admin, bare `new Pool()` in Backend). | After domain declaration, before active task | Depends on mode | 1–3s |
 | **Engineering standards read** (`docs/specs/00_engineering_standards.md`) | Loads error handling, DB, logging, dual-path, pipeline safety, and plan compliance rules. Required reading for all Admin and Backend tasks before the plan is written. | Before every active task | All | 2–5s |
 | **Feature spec read** (`docs/specs/[feature].md`) | Loads the behavioral contract, operating boundaries, and edge cases for the specific feature being built or changed. The plan compliance gate cannot pass without this. | Before every active task | All | 2–5s |
@@ -290,8 +300,9 @@ These run at the start of a session or before generating an active task — not 
 |------|-------------|--------|-----------|
 | **Stop hook** (`.claude/settings.json`) | Runs `npm run typecheck` after every Claude response. Catches type errors before they compound across multiple edits. | All | 3–10s |
 | **PreToolUse hook — active task check** (`.claude/settings.json`) | Blocks Edit/Write tool calls unless `.cursor/active_task.md` exists. Prevents ad-hoc edits that bypass the planning gate. | All | <1s |
-| **PreToolUse hook — audit log** (`~/.claude/hooks/audit-command.ps1`) | Logs every Bash/PowerShell tool call to `~/.claude/audit/YYYY-MM-DD.log`. Flags high-risk patterns (rm -rf, force-push, .env access) to a separate file for weekly review. | All (global) | <1s |
-| **Husky pre-commit** | Runs `npm run typecheck && npm run lint && npm run test` on every commit. Nothing reaches the repo without passing all three. | All | 30–90s |
+| **Session transcripts** (`~/.claude/projects/<path-key>/*.jsonl`) | Claude Code's own record of every tool call (timestamp, session ID, input, result) — the audit trail. Replaced the Windows-only `audit-command.ps1` PreToolUse hook, retired 2026-10-15 (R-CQ). | All (global) | 0s (passive) |
+| **Husky pre-commit** | Cheap gates + `npm run typecheck && npm run lint` + `vitest related <staged files>` at 4 forks (Spec 124 R-AG, R-CQ). | All | 30–90s |
+| **Husky pre-push** | `step-validate --staged/--all --fast`, `spec-split-check`, typecheck, then the FULL `npm run test` at 8 forks (R-CQ). | All | ~2–3 min (suite 68 s) |
 | **Permissions denylist** (`.claude/settings.json`) | Blocks `rm -rf`, git force-push, and `.env` reads/writes at the Claude Code permission layer. Requires explicit user approval to override. | All | 0s (passive) |
 
 ### Skills (Slash Commands)

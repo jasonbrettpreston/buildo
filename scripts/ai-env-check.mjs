@@ -3,7 +3,7 @@
 // AI Environment Pre-Flight Check
 // Runs before any workflow to orient the AI to the current machine state.
 //
-// Checks: Node.js, TypeScript, PostgreSQL (from env vars), Git state,
+// Checks: Node.js, TypeScript, PostgreSQL (from env vars), Git state, host memory (R-CQ),
 //         .env presence, pipeline library, and core DB tables.
 //
 // Usage: node scripts/ai-env-check.mjs
@@ -14,6 +14,7 @@ import { existsSync, readFileSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { X509Certificate } from 'crypto';
+import hostMemory from './lib/host-memory.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -320,5 +321,17 @@ if (dbUrl) {
 } else {
   console.log('⚠  PostGIS target: skipped (DATABASE_URL not set)');
 }
+
+// 8. Host memory floor (Spec 124 R-CQ, 2026-10-15): memory_pressure free % before a
+// DB-lane job or a full suite. Report-only: never throws, never aborts.
+let memoryProbe = null;
+if (process.platform === 'darwin') {
+  try {
+    memoryProbe = execFileSync('memory_pressure', ['-Q'], { encoding: 'utf-8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] });
+  } catch {
+    memoryProbe = null;
+  }
+}
+console.log(hostMemory.hostMemoryLine(process.platform, memoryProbe));
 
 console.log('\n--- Done ---');

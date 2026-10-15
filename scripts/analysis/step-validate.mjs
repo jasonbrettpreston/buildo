@@ -1179,11 +1179,10 @@ export function parseForkCapFromHookText(hookText) {
  * this for the full suite the same way — `VITEST_MIN_FORKS`/`VITEST_MAX_FORKS`
  * are the variables vitest's forks pool actually reads; `VITEST_MAX_WORKERS`
  * is ignored (CLAUDE.md Prime Directive 5, `hooks-composition.infra.test.ts`).
- * The cap is whatever `.husky/pre-push` carries — MIN=2/MAX=2 since Spec 124
- * R-BV (2026-10-11): the 2026-09-16 `onTaskUpdate` timeout at two forks
- * (`review_followups.md` HIGH row) was cured by suite-speed step 1 (feafc74c),
- * measured by two clean 2-fork full suites. Never above two (the 2026-09-21
- * memory kill).
+ * The cap is whatever `.husky/pre-push` carries — MIN=8/MAX=8 since Spec 124
+ * R-CQ (2026-10-15, Amends R-BV, Mac mini 24 GB / 12 cores; never above ten).
+ * Before that, MIN=2/MAX=2 under R-BV (2026-10-11) on the Windows PC, whose
+ * "never above two" came from the 2026-09-21 WSL memory kill.
  * DEFAULT only — an operator (or CI) who already set either var in the env this
  * process inherited is never clobbered, so a caller can still widen the cap.
  * `hookText` is injectable (default: a live read of `.husky/pre-push`) so

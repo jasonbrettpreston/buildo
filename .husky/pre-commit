@@ -42,7 +42,7 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
     # lander's `vitest related` run never caught it — it surfaced only at a
     # later full run). Run every converted step's violation suite too.
     echo "pre-commit: scripts/lib/step|compute staged — running the full src/tests/steps/ suite (gate J2)" && \
-    VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src/tests/steps/ --run || exit 1
+    VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 npx vitest src/tests/steps/ --run || exit 1
   fi && \
   if [ -z "$RELATED_FILES" ]; then
     # Code Reviewer 2026-09-14: `vitest related` on a non-source file (package.json, a
@@ -55,10 +55,11 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
     # xargs rejects (`xargs: invalid option -- d`); `tr | xargs -0` works on GNU and BSD.
     # VITEST_MAX_FORKS is the real cap for vitest's default `forks` pool — VITEST_MAX_WORKERS
     # is not read by vitest at all (measured 2026-09-14; a 4-fork run was OS-killed for memory).
-    # VITEST_MIN_FORKS=1 is required alongside the cap: vitest derives its default minForks from
+    # VITEST_MIN_FORKS is required alongside the cap: vitest derives its default minForks from
     # the CPU count (12 here) and throws "minThreads and maxThreads must not conflict" otherwise.
-    # ONE fork for `related` (2026-09-16, I5 commit 9): at two forks the step-conformance suite
-    # (498 tests) died on `[vitest-worker]: Timeout calling "onTaskUpdate"` on FOUR consecutive
-    # attempts with zero test failures; at one fork it passed 498/498 in 281 s. Pre-push keeps two.
-    printf '%s\n' "$RELATED_FILES" | tr '\n' '\0' | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 xargs -0 npx vitest related --run
+    # History: ONE fork for `related` from 2026-09-16 (I5 commit 9: at two forks the step-conformance
+    # suite died on `[vitest-worker]: Timeout calling "onTaskUpdate"`; suite-speed step 1 removed that
+    # cause, R-BV). R-CQ (Spec 124, 2026-10-15, Mac mini): FOUR forks here and for the J2 steps run
+    # above; pre-push runs eight; never above ten.
+    printf '%s\n' "$RELATED_FILES" | tr '\n' '\0' | VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 xargs -0 npx vitest related --run
   fi

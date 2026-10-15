@@ -21,6 +21,7 @@ orphaned `running` row · **§3c temporary compute resize for a cloud proof (Spe
 | `58_zoning_first_deploy_spike.md` | Spec 58 `load_zoning` first-deploy spike & profiling |
 | `65_enrich_parcels_spike.md` | Spec 65 `enrich-parcels.js` first-deploy spike & data profiling |
 | `66_enrich_permits_spike.md` | Spec 66 `enrich-permits.js` data profiling & first-deploy spike |
+| `dev_host_setup.md` | Dev host (Mac mini) set-up, local DB restore from a dump, and the machine-move checklist of everything git does not carry (Spec 124 R-CQ) |
 | `db_rebuild_2026-06-10.md` | Full DB rebuild — 2026-06-10 drift recovery |
 | `db_rebuild_post_p2.md` | DB `--force` rebuild after Spec 80 v-next Phase 2 |
 | `engine-brief-template.md` | DeepSeek Execution Engine (SUB-ENG-1) brief front matter + multi-worktree launch recipe (Spec 08 §B/§C, F14) |

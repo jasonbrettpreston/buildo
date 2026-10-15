@@ -161,7 +161,7 @@ The comparison date is `hearing_date`, never CKAN `decision_date` (G3). The cite
 
 * Standalone chain **`coa_notices` = [`load_coa_notices`]**, operator-triggered. It is not in `chain_coa`: that chain is daily and CKAN-gated, and a toronto.ca failure must not stop the lead pipeline. It is not in `DISPATCHABLE_CHAINS` and is absent from `CHAIN_WORKFLOWS`, so cloud dispatch is impossible (ACC-1 `local_only`, Q6). Ordering against the `coa` chain is **declared-only**: `stepUpstreams` keeps same-chain producers only (`scripts/lib/ledger.js:160-161`), so no ORDER row exists for it.
 * **Runtime (inferred until P0.2):** 69 docs × (3 s pace + 2–5 s download + extraction) ≈ 8–15 min; ≈ 0.4 GB per full acquisition, one document in memory at a time; ≈ 12K rows in one transaction. An unchanged manifest skips and transfers 0 bytes.
-* **Sequence after commit A** (heavy steps are scheduled by the operator in the night H lane, never run by a seat):
+* **Sequence after commit A** (DB-writing steps are scheduled by the operator in the dev-DB writer lane, one at a time — Spec 124 R-CQ, which retired the night "H lane" on 2026-10-15 — never run by a seat):
   1. Commit B: RE-FREEZE #32, descriptor, notes, frozen shell, logic variables, chain wiring and the fleet recapture of the 27 converted steps (83 POST captures, gate #39), in one H-lane slot.
   2. Operator ruling on §5 (b) × C3; registration of the C3/C7a thresholds.
   3. `build-manifest --discover/--pin/--measure` (P0.1/P0.2/P0.4/P0.6), then the committed manifest (T-MAN-committed flips).

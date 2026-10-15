@@ -86,10 +86,18 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     // four times running with zero test failures; at one fork it passed 498/498 in 281 s.
     // Pre-push followed the same day: the full suite at two forks hit the same timeout on the
     // same file (push of 7853342f, 2 errors / 0 failures), so BOTH hooks pin one fork.
-    expect(stripComments(PRE_COMMIT)).toMatch(/\bVITEST_MAX_FORKS=1\b/);
-    // 2026-10-11 R-BV: pre-push back to TWO forks (measured, see .husky/pre-push); pre-commit stays at one.
-    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=2 VITEST_MAX_FORKS=2 npm run test\b/);
-    expect(stripComments(PRE_PUSH)).not.toMatch(/\bVITEST_MAX_FORKS=([3-9]|\d{2,})\b/); // R-BV: never above 2 (4 forks was OS-killed)
+    // 2026-10-11 R-BV: pre-push back to TWO forks (measured on the Windows PC).
+    // 2026-10-15 R-CQ (Amends R-BV, Mac mini 24 GB / 12 cores): pre-push EIGHT, pre-commit FOUR
+    // (both `related` and the J2 steps run), never above TEN (cores − 2) — measured, see .husky/pre-push.
+    const preCommitCaps = [...stripComments(PRE_COMMIT).matchAll(/\bVITEST_MIN_FORKS=(\d+) VITEST_MAX_FORKS=(\d+)\b/g)];
+    expect(preCommitCaps.length).toBe(2);
+    for (const [, min, max] of preCommitCaps) {
+      expect([min, max]).toEqual(['4', '4']);
+    }
+    expect(stripComments(PRE_PUSH)).toMatch(/\bVITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test\b/);
+    for (const hook of [PRE_COMMIT, PRE_PUSH]) {
+      expect(stripComments(hook)).not.toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/); // R-CQ: never above 10
+    }
     for (const hook of [PRE_COMMIT, PRE_PUSH]) {
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
@@ -133,9 +141,9 @@ describe('hooks-composition (R-AG) — pre-push', () => {
     expect(PRE_PUSH).toMatch(/\bnpm run typecheck\b/);
   });
 
-  it('RED — a tampered pre-push raised to four forks trips the R-BV never-above-2 lock', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=2\b/, 'VITEST_MAX_FORKS=4');
-    expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=([3-9]|\d{2,})\b/);
+  it('RED — a tampered pre-push raised to twelve forks trips the R-CQ never-above-10 lock', () => {
+    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8\b/, 'VITEST_MAX_FORKS=12');
+    expect(stripComments(tampered)).toMatch(/\bVITEST_MAX_FORKS=(1[1-9]|[2-9]\d|\d{3,})\b/);
   });
 
   it('GREEN — invokes the full suite exactly once per push', () => {
@@ -143,7 +151,7 @@ describe('hooks-composition (R-AG) — pre-push', () => {
   });
 
   it('RED — a tampered pre-push with the full-suite invocation stripped is caught', () => {
-    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=2 npm run test\b/, 'true');
+    const tampered = PRE_PUSH.replace(/VITEST_MAX_FORKS=8 npm run test\b/, 'true');
     expect(invokesFullSuite(tampered)).toBe(false);
   });
 
@@ -219,7 +227,7 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
   });
 
   it('RED — a tampered pre-commit with the J2 lib-suite invocation stripped is caught', () => {
-    const tampered = PRE_COMMIT.replace(/VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 npx vitest src\/tests\/steps\/ --run \|\| exit 1/, 'true');
+    const tampered = PRE_COMMIT.replace(/VITEST_MIN_FORKS=4 VITEST_MAX_FORKS=4 npx vitest src\/tests\/steps\/ --run \|\| exit 1/, 'true');
     expect(stripComments(tampered)).not.toMatch(/vitest src\/tests\/steps\/ --run/);
   });
 

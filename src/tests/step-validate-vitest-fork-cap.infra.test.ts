@@ -48,16 +48,16 @@ async function loadModule() {
 }
 
 describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-source-of-truth on .husky/pre-push)', () => {
-  it('GREEN — the live .husky/pre-push carries MIN=2/MAX=2 (R-BV, operator-ruled 2026-10-11 after two clean 2-fork full suites)', () => {
-    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=2\b/);
-    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=2\b/);
+  it('GREEN — the live .husky/pre-push carries MIN=8/MAX=8 (R-CQ amends R-BV, operator-ruled 2026-10-15 on the Mac mini after two clean 8-fork full suites)', () => {
+    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MIN_FORKS=8\b/);
+    expect(LIVE_PRE_PUSH).toMatch(/\bVITEST_MAX_FORKS=8\b/);
   });
 
-  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=2/MAX=2, R-BV)', async () => {
+  it('GREEN — an env with neither var set gets the default parsed straight off the LIVE .husky/pre-push (MIN=8/MAX=8, R-CQ)', async () => {
     const { vitestChildEnv } = await loadModule();
     const out = vitestChildEnv({ PATH: '/usr/bin' });
-    expect(out.VITEST_MIN_FORKS).toBe('2');
-    expect(out.VITEST_MAX_FORKS).toBe('2');
+    expect(out.VITEST_MIN_FORKS).toBe('8');
+    expect(out.VITEST_MAX_FORKS).toBe('8');
     // never mutates the caller's object (selfTest()/a suite can reuse a base fixture)
     expect(out).not.toBe({ PATH: '/usr/bin' });
   });
@@ -79,18 +79,18 @@ describe('step-validate.mjs — runVitest() fork cap (vitestChildEnv, single-sou
   });
 
   it('GREEN — an explicit caller value for VITEST_MAX_FORKS is never clobbered', async () => {
-    const { vitestChildEnv } = await loadModule();
+    const { vitestChildEnv, parseForkCapFromHookText } = await loadModule();
     const out = vitestChildEnv({ VITEST_MAX_FORKS: '4' });
     expect(out.VITEST_MAX_FORKS).toBe('4');
-    // the untouched sibling variable still gets its default off the live hook
-    expect(out.VITEST_MIN_FORKS).toBe('2');
+    // the untouched sibling variable still gets its default off the live hook (derived, not pinned)
+    expect(out.VITEST_MIN_FORKS).toBe(parseForkCapFromHookText(LIVE_PRE_PUSH).min);
   });
 
   it('GREEN — an explicit caller value for VITEST_MIN_FORKS is never clobbered', async () => {
-    const { vitestChildEnv } = await loadModule();
+    const { vitestChildEnv, parseForkCapFromHookText } = await loadModule();
     const out = vitestChildEnv({ VITEST_MIN_FORKS: '3' });
     expect(out.VITEST_MIN_FORKS).toBe('3');
-    expect(out.VITEST_MAX_FORKS).toBe('2');
+    expect(out.VITEST_MAX_FORKS).toBe(parseForkCapFromHookText(LIVE_PRE_PUSH).max);
   });
 
   it('GREEN — both explicit caller values are preserved together', async () => {

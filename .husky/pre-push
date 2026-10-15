@@ -23,6 +23,10 @@
 # R-BV (Spec 124, 2026-10-11): back to TWO forks after suite-speed step 1 (shared child-process runs)
 # removed the long synchronous spawns that starved the worker — two clean 2-fork full suites measured
 # (17.3 / 17.5 min vs 35 min at one fork, 0 onTaskUpdate errors). Pre-commit stays at one fork.
+# R-CQ (Spec 124, 2026-10-15, Amends R-BV): the host is now a Mac mini (24 GB, 12 cores; the
+# memory limits above were the Windows PC's WSL VM). EIGHT forks here, FOUR in pre-commit, never
+# above TEN (cores − 2, room for the DB lane and seats). Measured: an 11-fork full suite ran in
+# 71 s with memory_pressure free ≥ 59 % and 0 swapouts; two concurrent 11-fork suites ≥ 40 % free.
 #
 # Fold GC-4 (2026-09-25, gate G Ask 2 ruling) — `--staged --fast` alone never
 # catches a `scripts/lib/step/**` change whose ripple lands on a step NOT
@@ -31,4 +35,4 @@
 # row, so it must be caught here, fleet-wide, before the push completes —
 # `--staged`'s job is scoping what commit-time gates apply to; it is not a
 # substitute for the fleet-wide freshness sweep. Measured 2026-09-26: ~19s.
-node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=2 VITEST_MAX_FORKS=2 npm run test
+node scripts/analysis/step-validate.mjs --staged --fast && node scripts/analysis/step-validate.mjs --all --fast && node scripts/analysis/spec-split-check.mjs --check && npm run typecheck && VITEST_MIN_FORKS=8 VITEST_MAX_FORKS=8 npm run test
