@@ -20,6 +20,7 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import Ajv from 'ajv';
 import { createExecMemo, prefetchJob } from './helpers/exec-memo';
+import { notLookedReasons, type StepValidateRun } from './helpers/step-validate-run';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const ITEMS_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/programme-items.json');
@@ -327,17 +328,26 @@ describe('step-validate.mjs — programme section', () => {
   it('RED-proof (EP-D13-adjacent, P9) — when the VALIDATED step IS the blocked slug, it still hard-stops (the GREEN test above is a real scope narrowing, not a blanket suppression)', () => {
     let threw = false;
     let out = '';
+    let run: StepValidateRun = { status: 0, signal: null, stdout: '' };
     try {
       out = memo.execFileSync('node', [STEP_VALIDATE, '--step=compute_centroids', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
         env: { ...process.env, BUILDO_PROGRAMME_ITEMS_PATH: BAD_FIXTURE },
       });
+      run = { status: 0, signal: null, stdout: out };
     } catch (err) {
       threw = true;
-      out = String((err as { stdout?: string }).stdout ?? '');
+      const e = err as { stdout?: string, status?: number | null, signal?: string | null, code?: string };
+      out = String(e.stdout ?? '');
+      run = { status: e.status ?? null, signal: e.signal ?? null, error: e.code ? { code: e.code } : null, stdout: out };
     }
+    // LM-D14 (WF3 lane D4 sweep, 2026-10-14): a killed or crashed run also
+    // "throws" and has no #9 line, so `threw` + the not.toMatch below passed
+    // on an empty stdout (measured: 5 s timeout -> status null, SIGTERM, 0 bytes).
+    expect(notLookedReasons(run, 1)).toEqual([]);
     expect(threw, 'the NAMED slug\'s own --fast run must still hard-stop').toBe(true);
+    expect(out).toMatch(/#9: unmet cutover_prereq blocking an already-converted slug: compute_centroids/);
     expect(out).not.toMatch(/#9:[^\n]*informational — does not name a slug in this run/);
   });
 

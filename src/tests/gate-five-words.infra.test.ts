@@ -31,6 +31,8 @@ import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import * as stepValidateRaw from '../../scripts/analysis/step-validate.mjs';
 import { createExecMemo } from './helpers/exec-memo';
+import { readConvertedJson } from '../../scripts/analysis/gates/converted-set.mjs';
+import { notLookedReasons } from './helpers/step-validate-run';
 
 const memo = createExecMemo(); // T5 and T5b run the identical `--all --fast` once — see helpers/exec-memo.ts
 
@@ -171,12 +173,14 @@ describe('gate V — the five-word verdict is derived only from the mapped gates
       const run = memo.spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
-        timeout: 180_000,
+        timeout: 420_000, // a direct run measured 214 s (2026-10-14); 180 s killed it
         maxBuffer: 64 * 1024 * 1024,
       });
+      // LM-D14: the run completed and printed a row for every converted step.
+      expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
       const stdout = `${run.stdout || ''}`;
       const blocks = stdout.split('### Five-word verdict').slice(1);
-      expect(blocks.length, `no five-word blocks parsed from stdout:\n${stdout.slice(0, 2000)}`).toBeGreaterThan(0);
+      expect(blocks.length, `five-word blocks < converted steps in stdout:\n${stdout.slice(0, 2000)}`).toBeGreaterThanOrEqual(readConvertedJson(REPO_ROOT).converted.length);
       for (const block of blocks) {
         for (const word of WORDS) {
           const m = block.match(new RegExp(`\\|\\s*${word}\\s*\\|\\s*(PASS|FAIL)\\s*\\|`));
@@ -189,9 +193,10 @@ describe('gate V — the five-word verdict is derived only from the mapped gates
       const run = memo.spawnSync('node', [SCRIPT_REL, '--all', '--fast'], {
         cwd: REPO_ROOT,
         encoding: 'utf8',
-        timeout: 180_000,
+        timeout: 420_000, // same key as T5: served from the memo when T5's run completed
         maxBuffer: 64 * 1024 * 1024,
       });
+      expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
       const stdout = `${run.stdout || ''}`;
       const summaryIdx = stdout.indexOf('[step-validate] summary:');
       expect(summaryIdx, `no summary section in stdout:\n${stdout.slice(0, 2000)}`).toBeGreaterThan(-1);
