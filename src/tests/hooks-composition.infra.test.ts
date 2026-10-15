@@ -77,7 +77,7 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
     expect(invokesFullSuite(PRE_COMMIT)).toBe(false);
   });
 
-  it('GREEN — both hooks cap vitest with VITEST_MAX_FORKS (the variable vitest reads) and never the no-op VITEST_MAX_WORKERS; pre-commit passes only src/ + scripts/ source files, one per line via xargs -d', () => {
+  it('GREEN — both hooks cap vitest with VITEST_MAX_FORKS (the variable vitest reads) and never the no-op VITEST_MAX_WORKERS; pre-commit passes only src/ + scripts/ source files, NUL-separated via `tr | xargs -0` (portable: BSD xargs has no -d)', () => {
     // Code Reviewer 2026-09-14: VITEST_MAX_WORKERS is not read by vitest 2.x (forks pool) —
     // every "capped" run was uncapped; a 4-fork suite was OS-killed for memory. And
     // `vitest related <non-source file>` falls back to a WIDE run, so the filter is load-bearing.
@@ -94,7 +94,10 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
       expect(stripComments(hook)).not.toMatch(/VITEST_MAX_WORKERS/);
     }
     expect(stripComments(PRE_COMMIT)).toMatch(/grep -E '\^\(src\|scripts\)\/\.\*\\\.\(ts\|tsx\|js\|mjs\)\$'/);
-    expect(stripComments(PRE_COMMIT)).toMatch(/xargs -d '\\n' npx vitest related --run/);
+    // WF3 B1 (2026-10-15, Mac mini): BSD/macOS xargs rejects -d (`xargs: invalid option -- d`), so the
+    // related run is NUL-separated — `tr '\n' '\0' | xargs -0` keeps paths with spaces intact on GNU and BSD.
+    expect(stripComments(PRE_COMMIT)).toMatch(/tr '\\n' '\\0' \| VITEST_MIN_FORKS=\d+ VITEST_MAX_FORKS=\d+ xargs -0 npx vitest related --run/);
+    expect(stripComments(PRE_COMMIT)).not.toMatch(/xargs -d/);
     expect(stripComments(PRE_COMMIT)).not.toMatch(/vitest related \$[A-Z_]+/); // no unquoted word-split expansion
   });
 
@@ -113,12 +116,12 @@ describe('hooks-composition (R-AG) — pre-commit', () => {
   });
 
   it('RED — a tampered pre-commit that reintroduces a bare `vitest run` is caught by invokesFullSuite', () => {
-    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=1 xargs -d '\\n' npx vitest related --run/, 'npx vitest run');
+    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=\d+ xargs -0 npx vitest related --run/, 'npx vitest run');
     expect(invokesFullSuite(tampered)).toBe(true);
   });
 
   it('RED — a tampered pre-commit with `vitest related` stripped out entirely is caught by invokesVitestRelated', () => {
-    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=1 xargs -d '\\n' npx vitest related --run/, 'true');
+    const tampered = PRE_COMMIT.replace(/VITEST_MAX_FORKS=\d+ xargs -0 npx vitest related --run/, 'true');
     expect(invokesVitestRelated(tampered)).toBe(false);
   });
 });

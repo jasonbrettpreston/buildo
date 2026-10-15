@@ -50,14 +50,15 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
     # skip — so only src/** and scripts/** source files are ever passed to it.
     echo "pre-commit: no staged src/ or scripts/ source files — skipping the related-tests run"
   else
-    # One path per line, xargs -d keeps paths with spaces intact (POSIX sh has no arrays).
+    # One path per line, converted to NUL-separated for `xargs -0`, keeps paths with spaces intact
+    # (POSIX sh has no arrays). WF3 B1 (2026-10-15, Mac mini): was `xargs -d '\n'`, which BSD/macOS
+    # xargs rejects (`xargs: invalid option -- d`); `tr | xargs -0` works on GNU and BSD.
     # VITEST_MAX_FORKS is the real cap for vitest's default `forks` pool — VITEST_MAX_WORKERS
     # is not read by vitest at all (measured 2026-09-14; a 4-fork run was OS-killed for memory).
     # VITEST_MIN_FORKS=1 is required alongside the cap: vitest derives its default minForks from
     # the CPU count (12 here) and throws "minThreads and maxThreads must not conflict" otherwise.
-    printf '%s\n' "$RELATED_FILES" |    # ONE fork for `related` (2026-09-16, I5 commit 9): at two forks the step-conformance suite
+    # ONE fork for `related` (2026-09-16, I5 commit 9): at two forks the step-conformance suite
     # (498 tests) died on `[vitest-worker]: Timeout calling "onTaskUpdate"` on FOUR consecutive
     # attempts with zero test failures; at one fork it passed 498/498 in 281 s. Pre-push keeps two.
-    printf '%s
-' "$RELATED_FILES" | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 xargs -d '\n' npx vitest related --run
+    printf '%s\n' "$RELATED_FILES" | tr '\n' '\0' | VITEST_MIN_FORKS=1 VITEST_MAX_FORKS=1 xargs -0 npx vitest related --run
   fi
