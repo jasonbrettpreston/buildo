@@ -32,6 +32,8 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import * as capturesRaw from '../../scripts/analysis/gates/captures.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
+import { readConvertedJson } from '../../scripts/analysis/gates/converted-set.mjs';
+import { notLookedReasons } from './helpers/step-validate-run';
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
 
@@ -576,9 +578,12 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     });
 
     it('T6e: live — step-validate.mjs --all --fast reports no registry-level gate-G failure', () => {
+      // 420 s + notLookedReasons: a killed run (old 180 s < measured 214 s) has
+      // an empty stdout, which the `not.toMatch` below passes vacuously (LM-D14).
       const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
-        cwd: REPO_ROOT, encoding: 'utf8', timeout: 180_000,
+        cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000,
       });
+      expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
       const stdout = `${run.stdout || ''}`;
       expect(stdout).not.toMatch(/#38:.*FAIL|#39:.*FAIL|#40:.*FAIL/);
     });

@@ -22,6 +22,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as gateF from '../../scripts/analysis/gates/score-floor.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
+import { readConvertedJson } from '../../scripts/analysis/gates/converted-set.mjs';
+import { notLookedReasons, parseSummaryScores } from './helpers/step-validate-run';
 
 const REPO_ROOT = process.cwd();
 
@@ -120,15 +122,13 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
   // `{gate:'F', step:'link_massing', item:'score'}` ledger row instead — this
   // suite asserts a fully clean fleet, no exemption needed.
   it('T6: live — every converted step scores >= 14/17 or has a gate-F score row; 0 orphans', () => {
+    // timeout 420 s: a direct run measured 214 s (2026-10-14); the old 180 s
+    // killed it, leaving 0 rows. notLookedReasons names any such run (LM-D14).
     const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', '--all', '--fast'], {
-      cwd: REPO_ROOT, encoding: 'utf8', timeout: 180_000,
+      cwd: REPO_ROOT, encoding: 'utf8', timeout: 420_000,
     });
-    const stdout = `${run.stdout || ''}`;
-    const scores: Array<{ slug: string, total: number, maxTotal: number }> = [];
-    for (const m of stdout.matchAll(/^\s*(\S+): (\d+)\/17 hard-stop=/gm)) {
-      scores.push({ slug: m[1] as string, total: Number(m[2]), maxTotal: 17 });
-    }
-    expect(scores.length).toBeGreaterThan(0);
+    expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
+    const scores = parseSummaryScores(`${run.stdout || ''}`);
     const { rows } = ledger.loadLedger(REPO_ROOT);
     const out = gateF.checkScoreFloor(scores, rows);
     expect(out.orphans).toEqual([]);
@@ -155,6 +155,44 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
     );
     expect(out.violations.map((v) => v.step)).toEqual(['massing']);
     expect(out.allowed.map((a) => a.violation.step)).toEqual(['link_massing']);
+  });
+
+  // -------------------------------------------------------------------------
+  // T6c — ANTI-VACUITY (Spec 124 §7 LM-D14, WF3 lane D4 2026-10-14): a live
+  // `--all --fast` run "looked" only if it completed AND printed a score row
+  // for at least every converted step. The summary prints at the END of the
+  // run, so a timed-out spawn (measured: status null, SIGTERM, ETIMEDOUT,
+  // 0 rows) leaves nothing to assert against. Both directions, fixtures only.
+  // -------------------------------------------------------------------------
+  describe('T6c: notLookedReasons — a run that did not complete is never green', () => {
+    const rows = (n: number) => Array.from({ length: n }, (_, i) => `  s${i}: 16/17 hard-stop=false #44-attributed=0 | X`).join('\n');
+    const done = (stdout: string, status: number | null = 0) => ({ status, signal: null, stdout });
+    it('T6c-1: complete run with >= converted rows -> [] (looked)', () => {
+      expect(notLookedReasons(done(`[step-validate] summary:\n${rows(3)}\n`), 3)).toEqual([]);
+      expect(notLookedReasons(done(`[step-validate] summary:\n${rows(3)}\n`, 1), 3)).toEqual([]);
+    });
+    it('T6c-2: timed-out spawn (measured shape) -> not looked', () => {
+      const r = notLookedReasons({ status: null, signal: 'SIGTERM', error: { code: 'ETIMEDOUT' }, stdout: '' }, 3);
+      expect(r.join(' ')).toMatch(/ETIMEDOUT/);
+      expect(r.join(' ')).toMatch(/SIGTERM/);
+    });
+    it('T6c-3: maxBuffer kill -> not looked', () => {
+      expect(notLookedReasons({ status: null, signal: 'SIGTERM', error: { code: 'ENOBUFS' }, stdout: 'x' }, 3).join(' ')).toMatch(/ENOBUFS/);
+    });
+    it('T6c-4: crash before the summary -> not looked', () => {
+      expect(notLookedReasons(done('boom', 1), 3).join(' ')).toMatch(/no summary/);
+    });
+    it('T6c-5: fewer score rows than converted steps -> not looked', () => {
+      expect(notLookedReasons(done(`[step-validate] summary:\n${rows(2)}\n`), 3).join(' ')).toMatch(/2 score rows < 3 converted/);
+    });
+    it('T6c-6: an unexpected exit code -> not looked', () => {
+      expect(notLookedReasons(done(`[step-validate] summary:\n${rows(3)}\n`, 2), 3).join(' ')).toMatch(/exit 2/);
+    });
+    it('T6c-7: parseSummaryScores reads the summary row format', () => {
+      expect(parseSummaryScores('  link_massing: 16/17 hard-stop=false #44-attributed=0 | W')).toEqual([
+        { slug: 'link_massing', total: 16, maxTotal: 17 },
+      ]);
+    });
   });
 
   // -------------------------------------------------------------------------
