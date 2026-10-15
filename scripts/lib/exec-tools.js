@@ -44,7 +44,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
-const { resolveConfinedPath, toRepoRelativePosix, isSecretDenied, PathDeniedError } = require('./exec-path');
+const { resolveConfinedPath, realpathDeepestAncestor, toRepoRelativePosix, isSecretDenied, PathDeniedError } = require('./exec-path');
 const { scrubbedEnv } = require('./exec-env');
 const { redactForModel } = require('./exec-ledger');
 const { captureWorktree } = require('./exec-worktree');
@@ -177,9 +177,13 @@ function bashTokenResolvesUnderLedgerDir(repoRoot, tok, ledgerDirAbs) {
     return false;
   }
   const candidate = path.isAbsolute(tok) ? path.normalize(tok) : path.resolve(repoRoot, tok);
+  // Deepest-existing-ancestor realpath, not a leaf realpath: a not-yet-existing
+  // file under the ledger dir must still resolve to the ledger dir's canonical
+  // spelling (WF3 B2 2026-10-15: on macOS `/var/...` vs `/private/var/...` the
+  // leaf-only form fell back to the raw path and missed the fence).
   let real;
   try {
-    real = fs.realpathSync(candidate);
+    real = realpathDeepestAncestor(candidate);
   } catch {
     real = candidate;
   }

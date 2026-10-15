@@ -21,6 +21,28 @@ class PathDeniedError extends Error {
 }
 
 /**
+ * realpathDeepestAncestor(absPath) — `fs.realpathSync` of the DEEPEST EXISTING
+ * ancestor of an absolute path, with the not-yet-existing remainder re-joined.
+ * One canonical form for paths that may not exist yet, so two spellings of the
+ * same location compare equal (macOS: `/var/...` vs `/private/var/...`; a
+ * symlink or junction in any existing segment). Throws only if even the
+ * existing ancestor cannot be resolved.
+ */
+function realpathDeepestAncestor(absPath) {
+  let ancestor = absPath;
+  while (!fs.existsSync(ancestor)) {
+    const parent = path.dirname(ancestor);
+    if (parent === ancestor) {
+      break; // reached filesystem root without finding anything that exists
+    }
+    ancestor = parent;
+  }
+  const realAncestor = fs.realpathSync(ancestor);
+  const suffix = path.relative(ancestor, absPath);
+  return suffix ? path.join(realAncestor, suffix) : realAncestor;
+}
+
+/**
  * resolveConfinedPath(repoRoot, inputPath) — §C.1.3: resolve via
  * `fs.realpathSync` on the DEEPEST EXISTING ancestor (so a symlink/junction
  * escape is caught even for a not-yet-existing target, e.g. a new file to
@@ -35,23 +57,12 @@ function resolveConfinedPath(repoRoot, inputPath) {
   }
   const candidate = path.isAbsolute(inputPath) ? path.normalize(inputPath) : path.resolve(repoRoot, inputPath);
 
-  let ancestor = candidate;
-  while (!fs.existsSync(ancestor)) {
-    const parent = path.dirname(ancestor);
-    if (parent === ancestor) {
-      break; // reached filesystem root without finding anything that exists
-    }
-    ancestor = parent;
-  }
-
-  let realAncestor;
+  let resolved;
   try {
-    realAncestor = fs.realpathSync(ancestor);
+    resolved = realpathDeepestAncestor(candidate);
   } catch (err) {
     throw new PathDeniedError('PATH_OUTSIDE_REPO', `unable to resolve path: ${err.message}`);
   }
-  const suffix = path.relative(ancestor, candidate);
-  const resolved = suffix ? path.join(realAncestor, suffix) : realAncestor;
 
   const realRepoRoot = fs.realpathSync(repoRoot);
   const isInside = resolved === realRepoRoot || resolved.startsWith(realRepoRoot + path.sep);
@@ -118,6 +129,7 @@ function isSecretDenied(relPosixPath, globs) {
 
 module.exports = {
   resolveConfinedPath,
+  realpathDeepestAncestor,
   toRepoRelativePosix,
   isSecretDenied,
   globToRegExp,

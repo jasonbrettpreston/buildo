@@ -29,7 +29,7 @@ const { scrubbedEnv } = require('./lib/exec-env');
 const { safeParsePositiveInt } = require('./lib/safe-math');
 const { parseBrief } = require('./lib/exec-brief');
 const { acquireClaim, releaseClaim, ClaimConflictError } = require('./lib/exec-claims');
-const { resolveConfinedPath, PathDeniedError } = require('./lib/exec-path');
+const { resolveConfinedPath, realpathDeepestAncestor, PathDeniedError } = require('./lib/exec-path');
 const { normalizeGlob, isAnchoredGlob } = require('./lib/exec-glob');
 
 const ENGINE_VERSION = '0.1.0-phase1';
@@ -329,7 +329,15 @@ function secretEnvDirs(repoRoot) {
   const seen = new Set();
   const dirs = [];
   for (const dir of candidates) {
-    const key = process.platform === 'win32' ? path.resolve(dir).toLowerCase() : path.resolve(dir);
+    // Canonical key (WF3 B2 2026-10-15): git reports realpaths, the caller may
+    // not (macOS `/var/...` vs `/private/var/...`), so de-dup on the realpath.
+    let canonical;
+    try {
+      canonical = realpathDeepestAncestor(path.resolve(dir));
+    } catch {
+      canonical = path.resolve(dir);
+    }
+    const key = process.platform === 'win32' ? canonical.toLowerCase() : canonical;
     if (!seen.has(key)) {
       seen.add(key);
       dirs.push(dir);
