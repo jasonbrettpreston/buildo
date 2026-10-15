@@ -1,5 +1,6 @@
 import type { StepDescription } from '@/lib/admin/funnel';
 import { getRangeStatus, STEP_EXPECTED_RANGES } from '@/lib/admin/funnel';
+import { ENGINE_HEALTH_DEFAULTS, type EngineHealthThresholds } from '@/lib/quality/types';
 
 // ---------------------------------------------------------------------------
 // Funnel accordion sub-components — extracted from FreshnessTimeline.tsx
@@ -63,8 +64,12 @@ function RangeBadge({ value, range }: { value: number; range?: [number, number] 
   return <span className="text-[7px] px-1 py-0.5 rounded bg-red-50 text-red-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2717'}</span>;
 }
 
-/** Renders T1/T2/T4/T6 telemetry inline — displayed in Performance Metrics section after audit table */
-export function TelemetrySection({ telemetry, stepSlug }: { telemetry: TelemetryData; stepSlug?: string }) {
+/**
+ * Renders T1/T2/T4/T6 telemetry inline — displayed in Performance Metrics section after audit table.
+ * `thresholds` = the engine_health_* logic variables resolved by /api/quality (Spec 26 §3.4); the T6
+ * amber colouring reads them, never a literal. Absent (before the fetch lands) → the seeded defaults.
+ */
+export function TelemetrySection({ telemetry, stepSlug, thresholds = ENGINE_HEALTH_DEFAULTS }: { telemetry: TelemetryData; stepSlug?: string; thresholds?: EngineHealthThresholds | undefined }) {
   const tables = Object.keys(telemetry.counts ?? {});
   if (tables.length === 0) return null;
 
@@ -126,11 +131,11 @@ export function TelemetrySection({ telemetry, stepSlug }: { telemetry: Telemetry
             {/* T6: Engine health badges */}
             {engine && (
               <div className="flex flex-wrap gap-2">
-                <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.dead_ratio > 0.10 && engine.n_live_tup >= 1000 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
+                <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.dead_ratio > thresholds.engine_health_dead_tuple_ratio_warn_max && engine.n_live_tup >= thresholds.engine_health_dead_tuple_min_rows ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
                   Dead: {(engine.dead_ratio * 100).toFixed(1)}%
                 </span>
-                {engine.n_live_tup >= 10000 && (
-                  <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.seq_ratio > 0.80 ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
+                {engine.n_live_tup >= thresholds.engine_health_seq_scan_min_rows && (
+                  <span className={`text-[8px] px-1 py-0.5 rounded font-medium tabular-nums ${engine.seq_ratio > thresholds.engine_health_seq_scan_ratio_warn_max ? 'bg-amber-100 text-amber-700' : 'bg-gray-50 text-gray-500'}`}>
                     Seq: {(engine.seq_ratio * 100).toFixed(1)}%
                   </span>
                 )}

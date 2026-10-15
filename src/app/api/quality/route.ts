@@ -216,6 +216,9 @@ export const GET = withApiEnvelope(async function GET() {
     // predicates are byte-for-byte the step's (`buildTableResults`). Spec 26 §3.4.
     let engineHealthEntries: EngineHealthEntry[] = [];
     let engineHealthAnomalies: EngineHealthAnomaly[] = [];
+    // Never throws (see its doc), so it resolves outside the pg_stat try: the
+    // payload carries the thresholds even when pg_stat_user_tables is unreadable.
+    const thresholds = await loadEngineHealthThresholds();
     try {
       const engineRows = await query<{
         table_name: string;
@@ -252,7 +255,6 @@ export const GET = withApiEnvelope(async function GET() {
         };
       });
 
-      const thresholds = await loadEngineHealthThresholds();
       engineHealthAnomalies = detectEngineHealthIssues(engineHealthEntries, thresholds);
     } catch (err) {
       // pg_stat_user_tables may be unreadable (permissions, a fresh DB) — the
@@ -269,6 +271,7 @@ export const GET = withApiEnvelope(async function GET() {
     const enginePayload: EngineHealthPayload = {
       engineHealth: engineHealthEntries,
       engineHealthAnomalies,
+      engineHealthThresholds: thresholds,
     };
 
     return NextResponse.json({

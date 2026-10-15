@@ -746,6 +746,42 @@ describe('Engine health has ONE threshold source (POST-B1-2)', () => {
     );
   });
 
+  // WF3 2026-10-14 (lane D3, .cursor/wf3_admin_dead_ratio_literal_active_task.md): the UI still carried its own
+  // amber-colouring literals (dead_ratio > 0.10, n_live_tup >= 1000, seq_ratio > 0.80, n_live_tup >= 10000) — a
+  // THIRD threshold source the Control Panel could not tune ("nothing hidden"). They now arrive from /api/quality's
+  // resolved `engineHealthThresholds`.
+  it('the admin UI colours engine health from the resolved thresholds, never a literal (nothing hidden)', () => {
+    for (const rel of ['../components/FreshnessTimeline.tsx', '../components/funnel/FunnelPanels.tsx']) {
+      const src = fs.readFileSync(path.join(__dirname, rel), 'utf-8');
+      expect(src, `${rel}: dead_ratio compared to a literal`).not.toMatch(/dead_ratio\s*[<>]=?\s*\d/);
+      expect(src, `${rel}: seq_ratio compared to a literal`).not.toMatch(/seq_ratio\s*[<>]=?\s*\d/);
+      expect(src, `${rel}: n_live_tup floor is a literal`).not.toMatch(/n_live_tup\s*[<>]=?\s*\d/);
+      expect(src, `${rel}: must read the logic variable`).toContain('engine_health_dead_tuple_ratio_warn_max');
+    }
+  });
+
+  // Operator 2026-10-14 (Q1 = a): amber == WARN. The AEH table's Dead % cell applies the same min-rows floor as
+  // the WARN check (Spec 41 §Engine health "tables with ≥ engine_health_dead_tuple_min_rows live rows only") and the
+  // T6 badge, so a small table is never amber when nothing warns.
+  it('every Dead % amber predicate applies engine_health_dead_tuple_min_rows (amber == WARN)', () => {
+    for (const rel of ['../components/FreshnessTimeline.tsx', '../components/funnel/FunnelPanels.tsx']) {
+      const src = fs.readFileSync(path.join(__dirname, rel), 'utf-8');
+      const predicates = src.match(/dead_ratio > thresholds\.engine_health_dead_tuple_ratio_warn_max[^?]*\?/g) ?? [];
+      expect(predicates.length, `${rel}: no Dead % predicate found`).toBeGreaterThan(0);
+      for (const p of predicates) expect(p, `${rel}: ${p}`).toMatch(/n_live_tup >= thresholds\.engine_health_dead_tuple_min_rows/);
+    }
+  });
+
+  it('the resolved thresholds are wired route → dashboard → FreshnessTimeline → every TelemetrySection', () => {
+    expect(routeSource).toMatch(/engineHealthThresholds:\s*thresholds/);
+    const dashboard = fs.readFileSync(path.join(__dirname, '../components/DataQualityDashboard.tsx'), 'utf-8');
+    expect(dashboard).toMatch(/engineHealthThresholds=\{data\?\.engineHealthThresholds\}/);
+    const timeline = fs.readFileSync(path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8');
+    const sections = timeline.match(/<TelemetrySection\b[^>]*>/g) ?? [];
+    expect(sections.length).toBeGreaterThan(0);
+    for (const tag of sections) expect(tag).toContain('thresholds={thresholds}');
+  });
+
   it('INVERSE ARM (must stay GREEN): the step still owns discovery and still reads its thresholds from ctx.config', () => {
     const compute = fs.readFileSync(
       path.join(__dirname, '../../scripts/lib/compute/assert-engine-health.js'),
@@ -808,8 +844,36 @@ describe('GET /api/quality — engine health uses the logic_variables threshold 
     return (await res.json()) as {
       engineHealth: { table_name: string }[];
       engineHealthAnomalies: { table: string; type: string; threshold: number }[];
+      engineHealthThresholds?: Record<string, number>;
     };
   }
+
+  it('emits the resolved thresholds in the payload, so the UI colours with the logic variable (WF3 D3)', async () => {
+    stubPool({
+      statRows: [healthyStatRow],
+      logicVarRows: seededLogicVarRows({ engine_health_dead_tuple_ratio_warn_max: '0.02' }),
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealthThresholds?.engine_health_dead_tuple_ratio_warn_max).toBe(0.02);
+    expect(Object.keys(body.engineHealthThresholds ?? {}).sort()).toEqual(
+      Object.keys(qualityTypes.ENGINE_HEALTH_DEFAULTS).sort()
+    );
+  });
+
+  it('INVERSE: an unreadable pg_stat_user_tables still emits the resolved thresholds', async () => {
+    mockQuery.mockImplementation(async (text: string) => {
+      if (text.includes('pg_stat_user_tables')) throw new Error('permission denied');
+      if (text.includes('logic_variables')) return seededLogicVarRows({ engine_health_dead_tuple_ratio_warn_max: '0.05' });
+      return [];
+    });
+
+    const body = await callRoute();
+
+    expect(body.engineHealth).toEqual([]);
+    expect(body.engineHealthThresholds?.engine_health_dead_tuple_ratio_warn_max).toBe(0.05);
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();

@@ -935,7 +935,7 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
   // The threshold is named, not quoted: the literal lives in the
   // engine_health_dead_tuple_ratio_warn_max logic variable (Spec 26 §3.4).
   assert_engine_health: {
-    behavior: 'Discovers every public-schema table at runtime and records dead tuples, seq scans, and update ping-pong for each. Auto-VACUUMs tables exceeding the engine_health_dead_tuple_ratio_warn_max logic variable. Snapshots one row per table to engine_health_snapshots (87 tables measured 2026-09-14). The admin dashboard does NOT read that snapshot — /api/quality runs its own live pg_stat_user_tables query over a curated 11-table list (Spec 26 §3.4); the two share their thresholds, not their data.',
+    behavior: 'Discovers every public-schema table at runtime and records dead tuples, seq scans, and update ping-pong for each. After the compute, the runner (execution.maintenance dynamic arm, Spec 124 R-CG) VACUUM ANALYZEs every table with live rows whose dead/(live+dead) exceeds the engine_health_dead_tuple_ratio_warn_max logic variable — the step itself does not VACUUM. Snapshots one row per table to engine_health_snapshots (87 tables measured 2026-09-14). The admin dashboard does NOT read that snapshot — /api/quality runs its own live pg_stat_user_tables query over a curated 11-table list (Spec 26 §3.4); the two share their thresholds, not their data.',
     summary: { records_total: [50, 150], records_new: [0, 0], records_updated: [0, 150] },
     mutations: { engine_health_snapshots: { ins: [0, 150], upd: [0, 150], del: [0, 0] } },
     row_delta: { engine_health_snapshots: [0, 150] },

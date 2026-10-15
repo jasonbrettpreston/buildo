@@ -488,7 +488,7 @@ export interface EngineHealthAnomaly {
  * consciously decided what to do with it.
  */
 export interface EngineHealthThresholds {
-  /** Dead-tuple ratio (n_dead_tup / n_live_tup) WARN ceiling. */
+  /** Dead-tuple ratio dead / (live + dead) WARN ceiling (Spec 124 R-CG — one measurement). */
   engine_health_dead_tuple_ratio_warn_max: number;
   /** Minimum live rows before the dead-tuple ratio is evaluated at all. */
   engine_health_dead_tuple_min_rows: number;
@@ -603,6 +603,11 @@ export function detectEngineHealthIssues(
 export interface EngineHealthPayload {
   engineHealth: EngineHealthEntry[];
   engineHealthAnomalies: EngineHealthAnomaly[];
+  /**
+   * The thresholds the detector applied, resolved live from `logic_variables`. The admin UI colours its
+   * engine-health cells with these instead of carrying its own literals (WF3 2026-10-14, "nothing hidden").
+   */
+  engineHealthThresholds: EngineHealthThresholds;
 }
 
 // ---------------------------------------------------------------------------

@@ -57,6 +57,7 @@ import type {
   VolumeAnomaly,
   SchemaDriftAlert,
   SystemHealthSummary,
+  EngineHealthThresholds,
 } from '@/lib/quality/types';
 
 interface AdminStats {
@@ -90,6 +91,8 @@ interface ExtendedQualityResponse {
   anomalies: VolumeAnomaly[];
   schemaDrift: SchemaDriftAlert[];
   health: SystemHealthSummary;
+  /** The engine_health_* logic variables, resolved live by /api/quality (Spec 26 §3.4). */
+  engineHealthThresholds?: EngineHealthThresholds;
 }
 
 const POLL_INTERVAL_MS = 5000;
@@ -548,6 +551,7 @@ export function DataQualityDashboard() {
             onTrigger={triggerPipeline}
             slaTargets={SLA_TARGETS}
             funnelData={funnelData}
+            engineHealthThresholds={data?.engineHealthThresholds}
             disabledPipelines={new Set(
               Object.entries(stats?.pipeline_schedules ?? {})
                 .filter(([, s]) => s.enabled === false)

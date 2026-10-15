@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { FunnelRowData } from '@/lib/admin/funnel';
 import { FUNNEL_SOURCE_BY_SLUG, STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, getRangeStatus, resolveAuditPct, resolveAuditPctFromHistory } from '@/lib/admin/funnel';
 import type { AuditPctHistoryResolution } from '@/lib/admin/funnel';
+import { ENGINE_HEALTH_DEFAULTS, type EngineHealthThresholds } from '@/lib/quality/types';
 import { CircularBadge, DataFlowTile, TelemetrySection, Sparkline, type SparklineRun, type TelemetryData } from './funnel/FunnelPanels';
 // Spec 47: scripts/manifest.json is the single source of truth for chain step lists.
 // Spec 33 §7 / line 81: the web admin DERIVES from it, never hand-duplicates (precedent:
@@ -237,6 +238,7 @@ interface FreshnessTimelineProps {
   dbSchemaMap?: Record<string, string[]> | undefined;
   /** T3: Fast approximate row counts from pg_class.reltuples */
   liveTableCounts?: Record<string, number> | undefined;
+  engineHealthThresholds?: EngineHealthThresholds | undefined; // engine_health_* logic vars from /api/quality (Spec 26 §3.4)
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -403,7 +405,8 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap, liveTableCounts }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap, liveTableCounts, engineHealthThresholds }: FreshnessTimelineProps) {
+  const thresholds = engineHealthThresholds ?? ENGINE_HEALTH_DEFAULTS; // engine-health colouring: logic vars, never a literal
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   // Bug Fix 1: optimisticToggles for immediate visual feedback on toggle click
@@ -1240,10 +1243,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                                 <tr key={t.table_name} className="border-t border-gray-50">
                                                   <td className="pr-2 py-0.5 font-mono text-gray-700">{t.table_name}</td>
                                                   <td className="px-2 py-0.5 text-right text-gray-600">{t.n_live_tup.toLocaleString()}</td>
-                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.dead_ratio > 0.10 ? 'text-amber-700' : 'text-gray-500'}`}>
+                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.dead_ratio > thresholds.engine_health_dead_tuple_ratio_warn_max && t.n_live_tup >= thresholds.engine_health_dead_tuple_min_rows ? 'text-amber-700' : 'text-gray-500'}`}>
                                                     {(t.dead_ratio * 100).toFixed(1)}%
                                                   </td>
-                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.n_live_tup >= 10000 && t.seq_ratio > 0.80 ? 'text-amber-700' : 'text-gray-500'}`}>
+                                                  <td className={`px-2 py-0.5 text-right font-medium ${t.n_live_tup >= thresholds.engine_health_seq_scan_min_rows && t.seq_ratio > thresholds.engine_health_seq_scan_ratio_warn_max ? 'text-amber-700' : 'text-gray-500'}`}>
                                                     {(t.seq_ratio * 100).toFixed(1)}%
                                                   </td>
                                                 </tr>
@@ -1257,7 +1260,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     {(() => {
                                       const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                                       if (!telemetry) return null;
-                                      return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />;
+                                      return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />;
                                     })()}
                                   </div>
                                 );
@@ -1276,7 +1279,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 return (
                                   <div className="mt-3">
                                     <ColumnarAuditTable key={`audit-${atIdx}`} cat={cat} wrapperClass="" />
-                                    {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />}
+                                    {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />}
                                   </div>
                                 );
                               }
@@ -1333,7 +1336,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       </table>
                                     </div>
                                   )}
-                                  {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />}
+                                  {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />}
                                 </div>
                               );
                             })()}
@@ -1415,7 +1418,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               {(() => {
                                 const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                                 if (!telemetry) return null;
-                                return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} />;
+                                return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />;
                               })()}
                             </div>
                           );
