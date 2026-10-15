@@ -9,7 +9,20 @@
 //   src/tests/bylaw-oracle-c.logic.test.ts.
 // * Determinism (Spec 68 §10 lock): no clock, no randomness; every output list is sorted.
 
-export const ORACLE_C_VERSION = 'oracle-c-2'; // round 2: pre-registration .cursor/mcbylaw/oracle-c/prereg-round-2.txt (R2-1 … R2-8)
+export const ORACLE_C_VERSION = 'oracle-c-3'; // newest rule set; a round's own version is RULES[round].version
+
+/**
+ * Rule set per round (each pre-registered before the round ran: .cursor/mcbylaw/oracle-c/prereg-round-<n>.txt).
+ * Round 2 (R2-1 … R2-8) is the default when ctx.rules is absent, so a round-2 re-run is unchanged.
+ * Round 3 (R3-1 … R3-3; Spec 69a M-119, M-122, M-123 note) replaces three round-2 behaviours:
+ *   keyword_within_unit       true → false: the keyword target no longer picks between two targets of one unit (C-2)
+ *   exception_ref_not_comparable, former_density_unknown: exception / former-density context is not comparable (C-5)
+ *   end_tag 'a' → 'a_prime': an end-of-regulation tag is regulation-level only when it is the only tag group (C-6 (a′))
+ */
+export const RULES = Object.freeze({
+  2: Object.freeze({ version: 'oracle-c-2', keyword_within_unit: true, exception_ref_not_comparable: false, former_density_unknown: false, end_tag: 'a' }),
+  3: Object.freeze({ version: 'oracle-c-3', keyword_within_unit: false, exception_ref_not_comparable: true, former_density_unknown: true, end_tag: 'a_prime' }),
+});
 
 export const ANSWERS = Object.freeze(['match', 'mismatch', 'not_comparable']);
 
@@ -32,6 +45,13 @@ export const PROPOSED_REASONS = Object.freeze([
   'citation_condition_conflict', 'lot_input_unavailable',
   'citation_absent', 'exception_cited', 'row_out_of_scope', 'row_pending', 'clause_not_in_table', 'target_ambiguous',
   'zone_label_missing', 'lot_input_required', 'branch_unresolved',
+]);
+// Exception mode (a later round; compareExceptionItem): the closed reasons in evaluation order. No citation clause is
+// joined, so clause_not_in_table / citation_condition_conflict cannot occur; exception_ref_unparsed is PROPOSED vocab.
+export const EXCEPTION_REASONS = Object.freeze([
+  'citation_absent', 'former_bylaw', 'exception_ref_unparsed', 'parse_failed', 'row_not_in_table', 'row_out_of_scope', 'row_pending',
+  'target_not_modelled', 'target_ambiguous', 'law_changed_after_hearing', 'amendment_status_unverified', 'zone_unparsed',
+  'zone_label_missing', 'lot_input_required', 'lot_input_unavailable', 'branch_unresolved',
 ]);
 // D6 reasons this round cannot produce (no parcel link in round 1): reported as not_run.
 export const REASONS_NOT_RUN = Object.freeze(['lot_gate']);
@@ -155,6 +175,7 @@ export function buildTable({ provisions, shards, adjudications = [], targets = {
       regulation_id: r.regulation_id, scope: r.scope, row_status: r.row_status,
       amendments: (r.amendments || []).map((t) => ({ bylaw: t.bylaw, clause_path: t.clause_path, qualifier: t.qualifier || null })), units: [],
       clauses: (r.clauses || []).map((c) => ({ path: c.path, leaf: Boolean(c.leaf) })), verbatim_tail: String(r.verbatim || '').slice(-300),
+      tag_groups: (String(r.verbatim || '').match(/\[\s*By-law:/g) || []).length, // R3-3: printed [ By-law: … ] groups
     });
   }
   for (const [unitId, { a, b, shard }] of [...newest.entries()].sort((p, q) => cmpStr(p[0], q[0]))) {
@@ -201,6 +222,8 @@ function evalAtom(atom, facts) {
     const has = label[m[2]] != null;
     // a truncated string, or one with no parameter group at all (class-only / prose), states no label facts
     if (!has && (facts.zone_truncated || facts.zone_class_only)) return null;
+    // R3-2 (b): a former-by-law density token (Z<n>) with no 569 d label states no d fact
+    if (!has && m[2] === 'd' && facts.zone_former_density) return null;
     return m[1] ? !has : has;
   }
   m = /^(\w+)\s*(<|≤|>|≥|=)\s*(\d+(?:\.\d+)?)\s*\w*$/.exec(atom);
@@ -265,10 +288,12 @@ export function lawAtHearing(tags, statuses, hearingDate) {
 /**
  * R2-2 (C-6 (a)): the tags of a MULTI-leaf regulation printed by the City as the last bracket group of its verbatim
  * and bound by the slicer to the last clause. For law-at-date they are regulation-level. Returns their keys, sorted.
+ * rule 'a_prime' (R3-3, C-6 (a′)): only when that end group is the regulation's only printed tag group.
  */
-export function endOfRegulationTags(row) {
+export function endOfRegulationTags(row, rule = 'a') {
   const leaves = (row.clauses || []).filter((c) => c.leaf);
   if (leaves.length < 2) return [];
+  if (rule === 'a_prime' && row.tag_groups !== 1) return [];
   const m = /\[\s*By-law:\s*([^\]]+?)\s*\]\s*$/.exec(String(row.verbatim_tail || ''));
   if (!m) return [];
   const printed = m[1];
@@ -280,16 +305,21 @@ export function endOfRegulationTags(row) {
 }
 
 /** R2-2 census: complete in-scope rows that rely on the end-of-regulation reading, and their tags. */
-export function endTagCensus(table) {
+export function endTagCensus(table, rule = 'a') {
   const rows = [];
   for (const row of [...table.rows.values()].sort((p, q) => cmpStr(p.regulation_id, q.regulation_id))) {
     if (row.scope !== 'in_scope' || row.row_status !== 'complete') continue;
-    const keys = endOfRegulationTags(row);
+    const keys = endOfRegulationTags(row, rule);
     if (keys.length) rows.push({ regulation_id: row.regulation_id, tags: keys });
   }
   const multiLeafTagged = [...table.rows.values()].filter((r) => r.scope === 'in_scope' && r.row_status === 'complete'
     && r.clauses.filter((c) => c.leaf).length > 1 && r.amendments.length).length;
-  return { rows_relying: rows.length, complete_multi_leaf_rows_with_tags: multiLeafTagged, rows };
+  return { rule, rows_relying: rows.length, complete_multi_leaf_rows_with_tags: multiLeafTagged, rows };
+}
+
+/** R3-2 (b): a former-by-law density token (Z<n>, e.g. "R & R4 Z1.0") in a zone string. */
+export function hasFormerDensity(raw) {
+  return /(^|[^A-Za-z])Z ?\d+(\.\d+)?/.test(String(raw || ''));
 }
 
 // ------------------------------------------------------------------ one item
@@ -374,34 +404,39 @@ function holderOf(row, u, target) {
   return null;
 }
 
-/**
- * Compare one coa_notice_variances row with the table.
- * @param {object} item  the row (snake_case columns; required_value numeric); round 2 adds item.lot =
- *   {link_status, lot_frontage_m, lot_depth_m, lot_area_m2, corner_lot} and item.link_proxy (runner, D7 link)
- * @param {{table, statuses, targets, parseZone}} ctx
- */
-export function compareItem(item, ctx) {
-  const z = ctx.parseZone(item.zoning_as_stated);
-  const zoneParsed = Boolean(z && z.class);
-  const zoneTruncated = zoneIsTruncated(item.zoning_as_stated);
-  const lotIn = item.lot || { link_status: 'unlinked' };
-  const linked = lotIn.link_status === 'linked_unique';
-  const base = {
+/** The item fields every answer carries (both modes). */
+function baseOf(item, z, zoneTruncated, lotIn) {
+  return {
     variance_key: item.variance_key, application_number: item.application_number, hearing_date: item.hearing_date,
     cited: item.regulation_id_as_cited || null, zone_class: zoneClassOf(z), qualified: Boolean(item.qualified),
     zone_truncated: zoneTruncated, has_exception_ref: Boolean(item.exception_ref), keyword_target: item.target_status === 'mapped' ? item.target : null,
     notice_value: item.required_value == null ? null : Number(item.required_value), notice_unit: item.required_unit || null,
     link_status: LINK_STATUSES.includes(lotIn.link_status) ? lotIn.link_status : 'unlinked', link_proxy: item.link_proxy || null,
   };
+}
+
+/**
+ * Compare one coa_notice_variances row with the table.
+ * @param {object} item  the row (snake_case columns; required_value numeric); round 2 adds item.lot =
+ *   {link_status, lot_frontage_m, lot_depth_m, lot_area_m2, corner_lot} and item.link_proxy (runner, D7 link)
+ * @param {{table, statuses, targets, parseZone, rules?}} ctx  rules = RULES[round] (default RULES[2])
+ */
+export function compareItem(item, ctx) {
+  const rules = ctx.rules || RULES[2];
+  const z = ctx.parseZone(item.zoning_as_stated);
+  const zoneTruncated = zoneIsTruncated(item.zoning_as_stated);
+  const lotIn = item.lot || { link_status: 'unlinked' };
+  const base = baseOf(item, z, zoneTruncated, lotIn);
   const nc = (reason, extra = {}) => ({ ...base, target: base.keyword_target, answer: 'not_comparable', reason, ...extra });
 
   if (!item.cited_bylaw) return nc('citation_absent');
   // R2-6: a former-section citation form is a former by-law citation, whatever by-law number the parser attached
   if (item.cited_bylaw !== '569-2013' || item.citation_kind === 'former_bylaw_section') return nc('former_bylaw');
   if (item.citation_kind !== 'chapter_regulation' || !item.regulation_id_as_cited) return nc('exception_cited');
+  // R3-2 (a), C-5: an exception beside the regulation displaces the base rule
+  if (rules.exception_ref_not_comparable && item.exception_ref) return nc('exception_cited');
   const fam = UNIT_FAMILY[item.required_unit];
   if (item.parse_status !== 'pair' || item.required_value == null || !fam) return nc('parse_failed');
-  const noticeCanon = Number(item.required_value) * fam[1];
 
   const cit = splitCitation(item.regulation_id_as_cited);
   const row = cit && (ctx.table.rows.get(cit.regulation_id) || ctx.table.rows.get(`${cit.article}#article`));
@@ -430,22 +465,41 @@ export function compareItem(item, ctx) {
   if (!branches.length) return nc('target_not_modelled', rowBase);
   const targets = [...new Set(branches.map((b) => b.st.target))].sort(cmpStr);
   if (targets.length > 1) {
-    if (base.keyword_target && targets.includes(base.keyword_target)) branches = branches.filter((b) => b.st.target === base.keyword_target);
-    else return nc('target_ambiguous', { ...rowBase, table_targets: targets });
+    if (!(base.keyword_target && targets.includes(base.keyword_target))) return nc('target_ambiguous', { ...rowBase, table_targets: targets });
+    const kept = branches.filter((b) => b.st.target === base.keyword_target);
+    // R3-1, C-2: the keyword may drop whole units, never choose between two targets of one unit
+    if (!rules.keyword_within_unit) {
+      const split = [...new Set(kept.map((b) => b.u.unit_id))]
+        .some((id) => new Set(branches.filter((b) => b.u.unit_id === id).map((b) => b.st.target)).size > 1);
+      if (split) return nc('target_ambiguous', { ...rowBase, table_targets: targets });
+    }
+    branches = kept;
   }
-  const target = branches[0].st.target;
+  return decide({ item, ctx, rules, z, zoneTruncated, lotIn, base, row, rowBase, branches, noticeCanon: Number(item.required_value) * fam[1], fam, mode: 'citation' });
+}
+
+/**
+ * The shared tail of both modes: the R2-1 (b) operand-holder swap, D8 with the round's end-tag rule, branch selection on
+ * label facts and lot inputs, and the value comparison. mode 'citation' pins a single candidate by the citation (its
+ * condition presumed, R2-1 exceptions); mode 'exception' pins nothing: a candidate whose condition is unknown needs an
+ * input (lot_input_unavailable:<input>) and one whose condition is false does not apply.
+ */
+function decide({ item, ctx, rules, z, zoneTruncated, lotIn, base, row, rowBase, branches: candidates, noticeCanon, fam, mode }) {
+  const zoneParsed = Boolean(z && z.class);
+  const linked = lotIn.link_status === 'linked_unique';
+  const target = candidates[0].st.target;
   // R2-1 (b): a unit that is one operand of a sibling's greater-of / lesser-of is replaced by the governing expression
   const seen = new Set();
-  branches = branches.map((b) => (b.st.form === 'literal' ? holderOf(row, b.u, target) || b : b))
+  let branches = candidates.map((b) => (b.st.form === 'literal' ? holderOf(row, b.u, target) || b : b))
     .filter((b) => { const k = `${b.u.unit_id}|${b.st.expr}`; if (seen.has(k)) return false; seen.add(k); return true; });
   const unitIds = [...new Set(branches.map((b) => b.u.unit_id))].sort(cmpStr);
   // D8 sensitivity (diagnostic only): every tag on the row applies
   const rowLaw = lawAtHearing(row.amendments, ctx.statuses, item.hearing_date);
-  const tbl = { ...rowBase, target, unit_ids: unitIds, bound_table: [...new Set(branches.map((b) => b.u.bound))].sort(cmpStr).join('|') || null,
+  const tbl = { ...rowBase, ...(mode === 'exception' ? { mode } : {}), target, unit_ids: unitIds, bound_table: [...new Set(branches.map((b) => b.u.bound))].sort(cmpStr).join('|') || null,
     d8_row_level: rowLaw ? rowLaw.reason : 'comparable' };
 
-  // D8 with R2-2: subtree tags plus the regulation-level end-of-regulation tags
-  const endKeys = endOfRegulationTags(row);
+  // D8 with R2-2 / R3-3: subtree tags plus the regulation-level end-of-regulation tags of the round's rule
+  const endKeys = endOfRegulationTags(row, rules.end_tag);
   const keyOf = (t) => t.bylaw || `order:${t.qualifier}`;
   const subtree = row.amendments.filter((t) => branches.some((b) => pathCompatible(t.clause_path, b.u.path)));
   const tags = [...subtree, ...row.amendments.filter((t) => endKeys.includes(keyOf(t)) && !subtree.includes(t))];
@@ -456,23 +510,34 @@ export function compareItem(item, ctx) {
     return { ...base, ...tbl, answer: 'not_comparable', reason: law.reason, d8_basis: law.basis, d8_bylaws: law.bylaws, d8_end_tag: d8EndTag };
   }
 
-  // branch selection: a single candidate is pinned by the citation (its condition presumed, R2-1 exceptions);
-  // otherwise three-valued on label facts and the linked parcel's inputs. A label absent from a TRUNCATED zone string is
-  // unknown, never "not labelled".
-  const labelFacts = { zone_parsed: zoneParsed, zone_truncated: zoneTruncated, zone_class_only: Boolean(z && z.status !== 'full_569'), label: zoneParsed ? { f: z.f, a: z.a, u: z.u, d: z.d } : {} };
+  // branch selection: three-valued on label facts and the linked parcel's inputs. A label absent from a TRUNCATED or
+  // class-only zone string (or a d absent beside a former-density token, R3-2 (b)) is unknown, never "not labelled".
+  const formerDensity = Boolean(rules.former_density_unknown && zoneParsed && z.d == null && hasFormerDensity(item.zoning_as_stated));
+  const labelFacts = { zone_parsed: zoneParsed, zone_truncated: zoneTruncated, zone_class_only: Boolean(z && z.status !== 'full_569'),
+    zone_former_density: formerDensity, label: zoneParsed ? { f: z.f, a: z.a, u: z.u, d: z.d } : {} };
   const facts = { ...labelFacts, lot: linked ? lotIn : null };
-  if (branches.length === 1) {
+  const unresolved = new Set();
+  let unavailable = null;
+  const needInput = (input) => { unresolved.add('lot_input_unavailable'); if (!unavailable || cmpStr(input, unavailable) < 0) unavailable = input; };
+  if (mode === 'citation' && branches.length === 1) {
     // R2-1 (c): a pinned unit whose condition is false on the notice's own label facts
     if (!displacedByLotInput(branches[0].u.condition) && evalCondition(branches[0].u.condition, labelFacts) === false) {
       return { ...base, ...tbl, answer: 'not_comparable', reason: 'citation_condition_conflict' };
     }
-  } else {
+  }
+  // R3-2 (b), C-5: candidates that need label(d) beside a former-density zone string are not compared
+  const needsD = (b) => (b.st.form === 'label' && b.st.key === 'd') || /labelled\(d\)/.test(String((b.u.condition && b.u.condition.if) || ''));
+  if (formerDensity && branches.some(needsD)) return { ...base, ...tbl, answer: 'not_comparable', reason: 'zone_label_missing' };
+  if (mode === 'exception') {
+    const vals = branches.map((b) => evalCondition(b.u.condition, facts));
+    if (!vals.some((v) => v !== false)) return { ...base, ...tbl, answer: 'not_comparable', reason: 'branch_unresolved', table_values: [] };
+    branches.forEach((b, i) => { if (vals[i] === null) needInput(unavailableInput((b.u.condition && b.u.condition.if) || '', linked)); });
+    branches = branches.filter((b, i) => vals[i] !== false);
+  } else if (branches.length > 1) {
     const kept = branches.filter((b) => evalCondition(b.u.condition, facts) !== false);
     if (kept.length) branches = kept;
   }
   const values = [];
-  const unresolved = new Set();
-  let unavailable = null;
   for (const b of branches) {
     const st = b.st;
     if (displacedByLotInput(b.u.condition)) unresolved.add('lot_input_required');
@@ -487,7 +552,7 @@ export function compareItem(item, ctx) {
       if (g.kind === 'literal') values.push({ canon: g.value * UNIT_FAMILY[g.unit][1], show: `${fmtNum(g.value)} ${g.unit}`, via_lot: true });
       else if (g.kind === 'lot_governs') unresolved.add('lot_input_required');
       else if (g.kind === 'unknown') unresolved.add('branch_unresolved');
-      else { unresolved.add('lot_input_unavailable'); if (!unavailable || cmpStr(g.input, unavailable) < 0) unavailable = g.input; }
+      else needInput(g.input);
     }
   }
   const sel = { ...tbl, unit_ids: [...new Set(branches.map((b) => b.u.unit_id))].sort(cmpStr) };
@@ -521,6 +586,54 @@ export function compareItem(item, ctx) {
   };
 }
 
+// ------------------------------------------------------------------ exception mode (a later round)
+
+/** '900.3.10.(37)' | '900.3.10(37)' → '900.3.10(37)' (the Ch.900 exception row id); null for any other form (e.g. 'RD5'). */
+export function normalizeExceptionRef(ref) {
+  const m = /^\s*(900(?:\.\d+)+)\.?\s*\((\d+)\)\s*$/.exec(String(ref || ''));
+  return m ? `${m[1]}(${m[2]})` : null;
+}
+
+/** The exception-mode universe: an item with an exception reference beside an exception or a chapter citation. */
+export function inExceptionMode(item) {
+  return Boolean(item && item.exception_ref) && ['exception_clause', 'chapter_regulation'].includes(item.citation_kind);
+}
+
+/**
+ * Exception mode: an exception-cited notice item vs its Ch.900 exception row (W1 rows once they land; until then the
+ * rows are pending and every item is row_pending). No clause is cited, so the keyword target selects the statements
+ * (same family); everything after the join is the round's shared tail with nothing pinned. Closed reasons:
+ * EXCEPTION_REASONS. A pure function; the caller filters the universe with inExceptionMode.
+ */
+export function compareExceptionItem(item, ctx) {
+  if (!inExceptionMode(item)) throw new Error(`compareExceptionItem: ${item && item.variance_key} is not in exception mode`);
+  const rules = ctx.rules || RULES[2];
+  const z = ctx.parseZone(item.zoning_as_stated);
+  const zoneTruncated = zoneIsTruncated(item.zoning_as_stated);
+  const lotIn = item.lot || { link_status: 'unlinked' };
+  const base = { ...baseOf(item, z, zoneTruncated, lotIn), exception_ref: item.exception_ref };
+  const nc = (reason, extra = {}) => ({ ...base, mode: 'exception', target: base.keyword_target, answer: 'not_comparable', reason, ...extra });
+
+  if (!item.cited_bylaw) return nc('citation_absent');
+  if (item.cited_bylaw !== '569-2013') return nc('former_bylaw');
+  const regId = normalizeExceptionRef(item.exception_ref);
+  if (!regId) return nc('exception_ref_unparsed');
+  const fam = UNIT_FAMILY[item.required_unit];
+  if (item.parse_status !== 'pair' || item.required_value == null || !fam) return nc('parse_failed');
+  const row = ctx.table.rows.get(regId);
+  if (!row) return nc('row_not_in_table');
+  const rowBase = { regulation_id: row.regulation_id };
+  if (row.scope !== 'in_scope') return nc('row_out_of_scope', rowBase);
+  if (row.row_status !== 'complete') return nc('row_pending', rowBase);
+  const family = [];
+  for (const u of row.units) for (const st of u.statements) if (UNIT_FAMILY[st.target_unit] && UNIT_FAMILY[st.target_unit][0] === fam[0]) family.push({ u, st });
+  const targets = [...new Set(family.map((b) => b.st.target))].sort(cmpStr);
+  if (!base.keyword_target) return nc(targets.length ? 'target_ambiguous' : 'target_not_modelled', { ...rowBase, table_targets: targets });
+  const branches = family.filter((b) => b.st.target === base.keyword_target);
+  if (!branches.length) return nc('target_not_modelled', { ...rowBase, table_targets: targets });
+  return decide({ item, ctx, rules, z, zoneTruncated, lotIn, base, row, rowBase, branches, noticeCanon: Number(item.required_value) * fam[1], fam, mode: 'exception' });
+}
+
 // ------------------------------------------------------------------ statistics
 
 /** Wilson score interval at 95 % (z = 1.96). null when n = 0. */
@@ -541,7 +654,7 @@ const sortObj = (o) => Object.fromEntries(Object.keys(o).sort(cmpStr).map((k) =>
 export function summarize(results, opts = {}) {
   const rs = [...results].sort((p, q) => cmpStr(String(p.variance_key), String(q.variance_key)));
   const by_answer = { match: 0, mismatch: 0, not_comparable: 0 };
-  const by_reason = Object.fromEntries(REASONS.map((r) => [r, 0]));
+  const by_reason = Object.fromEntries((opts.reasons || REASONS).map((r) => [r, 0])); // exception mode: EXCEPTION_REASONS
   const by_target = {};
   const by_zone_class = {};
   const by_qualified = {};
