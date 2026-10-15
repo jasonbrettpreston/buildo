@@ -947,6 +947,12 @@ describe('SUB-ENG-1 Phase 2 — safety fences (Spec 08 §C)', () => {
       const result = spawnSync(process.execPath, [cliPath, '--brief', briefPath, '--provider=deepseek', '--transcript', transcriptPath, '--ledger-dir', ledgerDir], {
         cwd: repo, env: scrubbedChildEnv(), encoding: 'utf8',
       });
+      // LM-D14 (WF3 lane D4, 2026-10-14): a CLI that crashed before running also
+      // has no downgrade line, so prove the run completed (measured: exit 0,
+      // last stdout line = summary JSON with status "completed"; a downgrade
+      // reports "delegated_to_claude").
+      expect(result.status, `stdout=${result.stdout}\nstderr=${result.stderr}`).toBe(0);
+      expect(JSON.parse(`${result.stdout || ''}`.trim().split('\n').pop() || '{}').status).toBe('completed');
       expect(result.stderr).not.toContain('provider downgraded to claude');
     });
   });
