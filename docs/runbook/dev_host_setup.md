@@ -47,6 +47,10 @@ export PATH="/opt/homebrew/opt/node@24/bin:/opt/homebrew/opt/libpq/bin:$HOME/.ve
    npm 11 prints "install scripts not covered by allowScripts" for ~16 packages; the ones that
    matter (`@ast-grep/cli`, `esbuild`, `sharp`, `@sentry/cli`) ship prebuilt arm64 binaries and work
    without their postinstall — check with `npx sg --version`.
+   **Mobile:** `cd mobile && npm ci --legacy-peer-deps` — exactly as `.github/workflows/mobile-ci.yml`
+   does. The committed lockfile omits peer dependencies by design; a plain `npm ci` fails with
+   ERESOLVE (react-dom 19.3.1 peer vs react 19.1.0) and a plain `npm install` rewrites the lockfile
+   (~790 lines) — never commit that rewrite. `admin-lead-schemas.contract.test.ts` needs these deps.
 3. Env files — the operator moves them (never through git or a bundle): `.env`, `.env.local`,
    `mobile/.env`, `mobile/.env.local`.
 4. Worktrees: `git worktree add ~/<name> <branch>`, then `git apply --index staged.patch`,
