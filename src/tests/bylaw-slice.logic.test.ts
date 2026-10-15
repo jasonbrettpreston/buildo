@@ -225,6 +225,29 @@ describe('Spec 68 §6.5 "by-law numbers": [PBS] literals are citations, never li
   });
 });
 
+// Ruling M-135 (b), operator 2026-10-14: a former-by-law section cited inside a [PBS] PREVAILING item is a citation of
+// that instrument, never a 569-2013 ref (same gate as isLiteralClausePath). Locked both directions.
+describe('M-135 (b): extractRefs output drops former-by-law citations inside a [PBS] item only', () => {
+  const FORMER = '(B) On 115 Torbarrie Rd,, Section 64.16(51) of the former City of North York zoning by-law 7625.';
+  const refsAt = (text: string, clausePath: string) => SL.extractRefs(text).map((r: Json) => ({ ...r, clause_path: clausePath }));
+  const kept = (text: string, clausePath: string) => (SL.dropPrevailingFormerRefs ? SL.dropPrevailingFormerRefs(text, refsAt(text, clausePath)) : [{ citation: 'helper missing' }]).map((r: Json) => r.citation);
+  it('a former-by-law section cited inside [PBS] is not a 569-2013 ref', () => {
+    expect(kept(FORMER, '(166)[PBS](B)')).toEqual([]);
+    expect(kept('(A) Sections 64.17(7), 64.17(16), and 64.17(23) of the City of North York zoning by-law 7625.', '(210)[PBS](A)')).toEqual([]);
+    expect(kept('(A) On 31 George Webster Rd., Section 7.6.4.3, of the former Borough of East York zoning by-law 6752.', '(99)[PBS](A)')).toEqual([]);
+    expect(kept('(A) Section 64.14-B(3) of the City of North York zoning by-law 7625.', '(678)[PBS](A)')).toEqual([]);
+  });
+  it('the same citation form OUTSIDE [PBS] is still extracted', () => {
+    expect(kept(FORMER, '(166)[SSP](B)')).toEqual(['64.16(51)']);
+    expect(kept(FORMER, '(1)(A)')).toEqual(['64.16(51)']);
+  });
+  it('a 569-2013 citation inside [PBS] is still extracted', () => {
+    expect(kept('(C) Despite Regulation 10.5.40.10(1), the height of a building is the distance; (D) In addition to Regulation 10.10.20.20(1) of By-law 1144-2023.', '(110)[PBS](C)')).toEqual(['10.5.40.10(1)', '10.10.20.20(1)']);
+    expect(kept('(A) The lands must comply with exception 900.2.10(7). (B) On 1041 College St., former City of Toronto By-law 1136-2010.', '(36)[PBS](A)')).toEqual(['900.2.10(7)']);
+    expect(kept('(A) Regulation 10.5.40.10(1) of the City of Toronto Zoning By-law 569-2013.', '(9)[PBS](A)')).toEqual(['10.5.40.10(1)']);
+  });
+});
+
 describe('G-TEXT: one known-bad fixture per reason code, each with its good twin', () => {
   it('selfTest() passes: every known-bad fixture fails for its own reason, every good twin passes', () => {
     const r = ST.selfTest();

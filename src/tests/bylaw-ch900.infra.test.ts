@@ -87,6 +87,19 @@ describe('the slicer on the real exception pages (G-TEXT)', () => {
     expect(phrases).toBeGreaterThan(500);
     expect(missing).toEqual([]);
   });
+  it('ruling M-135 (b): no [PBS] former-by-law citation is a ref; the [PBS] 569-2013 refs and the [SSP] former-by-law refs stay', () => {
+    const at = (id: string) => (slice.rows.find((r: Json) => r.regulation_id === id)?.refs || []).map((x: Json) => `${x.clause_path} ${x.citation}`);
+    expect(at('900.5.10(166)').filter((x: string) => x.includes('64.16(51)'))).toEqual([]); // the interim ref_target_absent case
+    const pbs = slice.rows.flatMap((r: Json) => r.refs.filter((x: Json) => String(x.clause_path).includes('[PBS]')).map((x: Json) => `${r.regulation_id} ${x.citation}`));
+    expect(pbs.sort()).toEqual([
+      '900.2.10(110) 10.5.40.10(1)', '900.2.10(110) 10.10.20.20(1)', '900.2.10(110) 10.10.40.10(1)', '900.2.10(110) 10.5.40.10(3)', '900.2.10(110) 10.5.40.10(3)(G)',
+      '900.2.10(110) 10.5.40.40(4)', '900.2.10(110) 10.5.40.40(4)', '900.2.10(110) 10.10.40.50(1)(A)', '900.2.10(110) 10.10.40.50(1)(B)', '900.2.10(110) 800.50(15)',
+      '900.2.10(110) 10.5.40.70', '900.2.10(110) 600.10.10', '900.2.10(110) 10.10.40.70(1)', '900.2.10(110) 10.10.40.70(3)', '900.2.10(110) 10.5.40.60',
+      '900.2.10(110) 200.5.10(1)', '900.2.10(110) 200.15.10.10(1)', '900.2.10(110) 200.15.10.10(2)', '900.2.10(110) 200.5.10.1',
+      '900.2.10(35) 900.2.10(7)', '900.2.10(36) 900.2.10(7)',
+    ].sort());
+    expect(at('900.6.10(99)')).toContain('(99)[SSP](A) 7.6.4.3'); // outside [PBS]: still extracted
+  });
 });
 
 describe('k7-exceptions.json — the wave-1 top 30 by INCLUDE-closed residential lots (Spec 69 M-15, plan E-5; generated, deterministic)', () => {

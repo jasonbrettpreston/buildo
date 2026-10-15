@@ -308,3 +308,24 @@ export function extractRefs(text, skip = []) {
   return out.sort((a, b) => a.start - b.start || cmpStr(a.citation, b.citation));
 }
 
+/** A by-law of a former municipality named after a citation: "of the former City of North York zoning by-law 7625". */
+const FORMER_BYLAW = /\bof\s+(?:the\s+)?(?:former\s+)?(?:City|Borough|Town|Village|Township)\s+of\s+[A-Za-z][\w' ]*?\s+(?:zoning\s+)?by-law\s+(\d{1,5}(?:-\d{2,4})?)\b/i;
+
+/** Does the text after `ref`, to the end of its item (";", ". ", "[" or the end), name a by-law other than 569-2013? PURE. */
+export function citesFormerBylaw(text, ref) {
+  const tail = text.slice(ref.end);
+  const stop = tail.search(/;|\.(?=\s|$)|\[/);
+  const m = FORMER_BYLAW.exec(stop < 0 ? tail : tail.slice(0, stop));
+  return Boolean(m) && m[1] !== '569-2013';
+}
+
+/**
+ * Spec 69a M-135 (b): a former-by-law section cited inside a [PBS] PREVAILING item ("Section 64.16(51) of the former
+ * City of North York zoning by-law 7625") is a citation of that instrument, never a 569-2013 ref — the same [PBS] gate
+ * as slice.mjs isLiteralClausePath (Spec 68 §6.5 "by-law numbers"). `refs` carry clause_path. A 569-2013 citation in
+ * [PBS], and any citation outside [PBS], is kept. PURE.
+ */
+export function dropPrevailingFormerRefs(text, refs) {
+  return refs.filter((r) => !(String(r.clause_path ?? '').includes('[PBS]') && citesFormerBylaw(text, r)));
+}
+

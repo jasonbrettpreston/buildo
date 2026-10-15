@@ -28,9 +28,9 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { normalizeWithMap, pageStructure, rawToNorm } from './html.mjs';
 import { decodePage, parseToc, sha256 } from './snapshot.mjs';
-import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, wordValue } from './text.mjs';
+import { LEVELS, REF_AFTER, REF_BEFORE, ROMAN, cmpStr, defectChars, dropPrevailingFormerRefs, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, wordValue } from './text.mjs';
 
-export { breakBefore, defectChars, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, UNIT_TABLE } from './text.mjs';
+export { breakBefore, defectChars, dropPrevailingFormerRefs, exclusionSpans, extractLiterals, extractRefs, extractTags, parseClauses, refSpaceDefects, scanNumbers, UNIT_TABLE } from './text.mjs';
 
 export const SLICER_VERSION = 'slice-v4';
 
@@ -581,7 +581,7 @@ function makeRow({ input, top, from, to, text, ownerOf, defects }) {
     literals: literals.map(withPath).filter(isLiteralClausePath),
     number: isRoot ? null : Number(top.symbol),
     page: input.key,
-    refs: refs.map(withPath),
+    refs: dropPrevailingFormerRefs(verbatim, refs.map(withPath)), // Spec 69a M-135 (b)
     regulation_id,
     retired: input.status === 'retired',
     ...(input.status === 'retired' ? { retired_ruling: input.ruling } : {}),
@@ -725,7 +725,7 @@ export function sliceEnacting({ bylaw, text, scope, status = 'not_verified' }) {
       literals: literals.map(withPath).filter(isLiteralClausePath),
       number: null,
       page,
-      refs: extractRefs(verbatim, tags).map(withPath),
+      refs: dropPrevailingFormerRefs(verbatim, extractRefs(verbatim, tags).map(withPath)), // Spec 69a M-135 (b)
       regulation_id: id,
       retired: false,
       section: sec,
