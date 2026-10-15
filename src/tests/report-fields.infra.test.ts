@@ -19,6 +19,31 @@ const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8').repl
 let r: Json = {};
 beforeAll(async () => { r = await RF.run({ root: ROOT, mode: 'check' }); }, 120_000);
 
+// The ratified kind names (operator Q-P3-6 (a), 2026-10-14): the generator's KINDS equal the closed set written in
+// Spec 69a M-69 and Spec 78 §6.3, both directions, read from the spec text so a rename on either side goes red.
+describe('report-field kinds = the M-69 closed set', () => {
+  const backticked = (s: string) => [...s.matchAll(/`([a-z_]+)`/g)].map((m) => m[1]!).sort();
+  it('69a M-69: "closed `kind` — … — or a closed retirement reason"', () => {
+    const row = read('docs/specs/01-pipeline/69a_mcbylaw_register.md').split('\n').find((l) => l.startsWith('| **M-69** |'))!;
+    const m = row.match(/closed `kind` —(.*?)— or a closed retirement reason/);
+    expect(m).not.toBeNull();
+    const spec = backticked(m![1]!);
+    expect(spec.length).toBeGreaterThan(0);
+    expect([...RF.KINDS].sort()).toEqual(spec);
+  });
+  it('Spec 78 §6.3: "`kind` ∈ {…} (M-69)"', () => {
+    const m = read('docs/specs/01-pipeline/78_optimal_lot_configuration.md').match(/`kind` ∈ \{([^}]*)\} \(M-69\)/);
+    expect(m).not.toBeNull();
+    expect([...RF.KINDS].sort()).toEqual(backticked(m![1]!));
+  });
+  it('every decl kind_default is in the set', () => {
+    const decl = JSON.parse(read(RF.DECL_PATH));
+    const defaults = (decl.producers as Json[]).map((p) => p.kind_default).filter(Boolean);
+    expect(defaults.length).toBeGreaterThan(0);
+    for (const k of defaults) expect(RF.KINDS).toContain(k);
+  });
+});
+
 describe('report-field inventory on the real tree', () => {
   it('the generator module loads', () => {
     expect(RF.importError).toBeUndefined();

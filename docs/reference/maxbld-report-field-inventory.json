@@ -7085,7 +7085,7 @@
       "inline_literals": [],
       "inputs": [],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "Comparable builds",
       "label_how": "label_attr",
       "layer2_reason": "empirical",
@@ -7604,7 +7604,7 @@
       ],
       "inputs": [],
       "json_key": "headline",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "headline",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -7871,7 +7871,7 @@
         }
       ],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "Typical FSI (p50)",
       "label_how": "label_attr",
       "layer2_reason": "empirical",
@@ -8086,7 +8086,7 @@
         }
       ],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "Dominant build",
       "label_how": "label_attr",
       "layer2_reason": "empirical",
@@ -8306,7 +8306,7 @@
         }
       ],
       "json_key": "address",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "address",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -8527,7 +8527,7 @@
         }
       ],
       "json_key": "permit_fsi",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "FSI",
       "label_how": "own_text",
       "layer2_reason": "empirical",
@@ -8748,7 +8748,7 @@
         }
       ],
       "json_key": "structure_family",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "structure_family",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -8948,7 +8948,7 @@
         }
       ],
       "json_key": "work_type",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "work_type",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -9151,7 +9151,7 @@
         }
       ],
       "json_key": "permit_gfa_sqm",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "permit_gfa_sqm",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -9335,7 +9335,7 @@
         }
       ],
       "json_key": "coa_decision",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": "coa_decision",
       "label_how": "path",
       "layer2_reason": "empirical",
@@ -10057,7 +10057,7 @@
         }
       ],
       "json_key": "max_build.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "New build (max)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -10849,7 +10849,7 @@
         }
       ],
       "json_key": "coa_build.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "New build (Committee of Adjustment)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "coa_variance (reaches the declared CoA twin opt_coa_gfa_sqm; a variance is not a by-law target)",
@@ -11375,7 +11375,7 @@
         }
       ],
       "json_key": "addition.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Addition",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -11869,7 +11869,7 @@
         }
       ],
       "json_key": "gut.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Gut renovation",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -12670,7 +12670,7 @@
         }
       ],
       "json_key": "garden_suite.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Garden suite",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -13588,7 +13588,7 @@
         }
       ],
       "json_key": "laneway_suite.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Laneway suite",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -14543,7 +14543,7 @@
         }
       ],
       "json_key": "garage.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Garage",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -15350,7 +15350,7 @@
         }
       ],
       "json_key": "solar_max.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Solar (full roof)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -16093,7 +16093,7 @@
         }
       ],
       "json_key": "solar_coa.total",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Solar (CoA envelope)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": null,
@@ -16617,7 +16617,7 @@
         }
       ],
       "json_key": "basement.per_sqm",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Basement finish",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -17109,7 +17109,7 @@
         }
       ],
       "json_key": "basement_underpin.per_sqm",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Basement underpin",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -17620,7 +17620,7 @@
         }
       ],
       "json_key": "kitchen.per_sqm",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Kitchen (per m²)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -18143,7 +18143,7 @@
         }
       ],
       "json_key": "bath.per_sqm",
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": "Bathroom (per m²)",
       "label_how": "COST_LINE_LABELS",
       "layer2_reason": "empirical",
@@ -20328,7 +20328,7 @@
     },
     {
       "path": "scripts/surfaces/_schema/report-fields.decl.json",
-      "sha256": "55a16daebb5221a5"
+      "sha256": "bf41c6f0c132a19e"
     },
     {
       "path": "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json",
@@ -21311,7 +21311,7 @@
         }
       ],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -24875,7 +24875,7 @@
         }
       ],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "no_mapped_input",
@@ -25316,7 +25316,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -25801,7 +25801,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -26286,7 +26286,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -26790,7 +26790,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -27536,7 +27536,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "coa_variance (reaches the declared CoA twin opt_coa_gfa_sqm; a variance is not a by-law target)",
@@ -28318,7 +28318,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -29198,7 +29198,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -30088,7 +30088,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -30692,7 +30692,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -31196,7 +31196,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -32002,7 +32002,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -32823,7 +32823,7 @@
         }
       ],
       "json_key": null,
-      "kind": "cost",
+      "kind": "cost_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -33338,7 +33338,7 @@
         }
       ],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -33531,7 +33531,7 @@
       "inline_literals": [],
       "inputs": [],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -33628,7 +33628,7 @@
       "inline_literals": [],
       "inputs": [],
       "json_key": null,
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -34041,7 +34041,7 @@
         }
       ],
       "json_key": "build_ratio",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": null,
@@ -34294,7 +34294,7 @@
         }
       ],
       "json_key": "distance_m",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -34474,7 +34474,7 @@
         }
       ],
       "json_key": "frontage_m",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -34654,7 +34654,7 @@
         }
       ],
       "json_key": "lot_sqm",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -34853,7 +34853,7 @@
         }
       ],
       "json_key": "storeys",
-      "kind": "empirical",
+      "kind": "empirical_ref",
       "label": null,
       "label_how": "not rendered",
       "layer2_reason": "empirical",
@@ -34912,8 +34912,7 @@
   "provisional": [
     "Home: generator lives under Spec 126 tooling (scripts/surfaces/_schema/report-fields.decl.json + scripts/analysis/report-fields.mjs); McBylaw consumes layer2_targets + constants as the Phase 3 parity worklist (design §4.2 recommendation; not ratified).",
     "SQL source: chains come from a STATIC render of the builder template (spans → placeholder, parsed by libpg-query; no JS executed). Witness (evidence W): the static render fingerprint found in a recorded sql-witness trace (operator ruling Q6 2026-10-07, Spec 68 §6.4 rule 8: no builder is loaded or run). A builder whose spans change the statement shape is not witnessed and its fields show evidence R.",
-    "JS def-use depth: calls are followed 4 levels deep (design §2 G3' says one level; one level cannot reach mainBuildGfa from computeOptConfigRow). A deeper call is cut and the field is evidence I.",
-    "Kind names: `empirical` / `cost` are the caller-briefed short forms of M-69's `empirical_ref` / `cost_ref`."
+    "JS def-use depth: calls are followed 4 levels deep (design §2 G3' says one level; one level cannot reach mainBuildGfa from computeOptConfigRow). A deeper call is cut and the field is evidence I."
   ],
   "raw_rendered": [
     "match.address @ mobile/app/(app)/parcel-tool/[parcelId].tsx:83",
