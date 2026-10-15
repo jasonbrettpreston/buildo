@@ -368,6 +368,19 @@ function rankedLayers(rl) {
 }
 
 // ---------------------------------------------------------------- applicability
+// condition.if string → its parsed AST (or the DslError it throws), parsed once per string, not once per applies()
+// call; the AST is only read (as the PARSED statement ASTs are). Perf only, outputs unchanged.
+const PARSED_COND = new Map();
+function parsedCond(src) {
+  if (typeof src !== 'string') return parseCond(src);
+  let e = PARSED_COND.get(src);
+  if (!e) {
+    try { e = { c: parseCond(src) }; } catch (err) { if (!(err instanceof DslError)) throw err; e = { err }; }
+    PARSED_COND.set(src, e);
+  }
+  if (e.err) throw e.err;
+  return e.c;
+}
 // {ok:true} | {ok:false, why} | {ok:null, reason}
 export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace = []) {
   const C = ctxOf(ctx);
@@ -409,7 +422,7 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   }
   if (cond && cond !== 'none' && cond.if && cond.if !== 'none') {
     let c;
-    try { c = parseCond(cond.if); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
+    try { c = parsedCond(cond.if); } catch (err) { if (err instanceof DslError) return { ok: null, reason: `expression_error:${err.code}` }; throw err; }
     const r = evCond(c, { C, lot, trace, reads, resolveVariable, argEdits: {} });
     if (r === false) return { ok: false, why: `condition ${cond.if}` };
     if (r !== true) unknown = unknown || r.ne;
@@ -470,17 +483,16 @@ function provincialScope(lot, p, C, reads, trace) {
 /** Rule 1: base units of the lot's zone (by chapter), overlay and provincial units, the lot's exception units INCLUDE-expanded. */
 export function loadCandidates(lot, units) {
   const out = []; const seen = new Set(); const log = []; let depthMax = 0;
-  units = sortCandidates(units); // declared total order first, so a duplicate unit_id never resolves by input order
+  units = Array.isArray(units) ? sortedOf(units) : sortCandidates(units); // declared total order first, so a duplicate unit_id never resolves by input order
   const add = (u) => { if (!seen.has(u.unit_id)) { seen.add(u.unit_id); out.push(u); } else if (!out.includes(u)) log.push(`duplicate unit_id ${u.unit_id} ignored (first in the declared order kept)`); };
   for (const u of units) {
     if (u.layer === 'base') { const z = chapterZone(u.regulation_id || splitRef(u.unit_id).reg); if (!z || z === lot.zone) add(u); }
     else if (u.layer === 'overlay' || u.layer === 'provincial') add(u);
   }
-  const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
   const visit = (exc, depth, stack) => {
     if (stack.includes(exc)) { log.push(`INCLUDE cycle ${[...stack, exc].join(' → ')}`); return; }
     depthMax = Math.max(depthMax, depth);
-    for (const u of units.filter((x) => x.layer === 'exception' && excOf(x) === exc)) {
+    for (const u of exceptionUnits(units, exc)) {
       add(u);
       if (u.archetype === 'INCLUDE' && u.include_ref) { log.push(`INCLUDE ${u.unit_id} → ${u.include_ref} (depth ${depth + 1})`); visit(splitRef(u.include_ref).reg, depth + 1, [...stack, exc]); }
     }
@@ -496,6 +508,55 @@ const unitSortKey = (u) => { if (!UNIT_SORT.has(u)) UNIT_SORT.set(u, stableJson(
 /** The declared total order on candidates (layer rank, unit_id, then content): every result is independent of input order. */
 export function sortCandidates(cands) {
   return [...(cands || [])].sort((a, b) => ((LAYER_RANK[a.layer] ?? 0) - (LAYER_RANK[b.layer] ?? 0)) || cmpStr(String(a.unit_id), String(b.unit_id)) || cmpStr(unitSortKey(a), unitSortKey(b)));
+}
+// Per-array derived data (perf only, outputs unchanged): the sorted order, the exception-unit index and the per-target
+// static sets of one candidates / units array. An entry is reused only while the array still holds the same unit
+// objects in the same order (checked against a snapshot on every lookup), so an array changed between calls is
+// recomputed. Unit objects are treated as immutable, as PARSED / UNIT_SORT already do.
+const ARRAY_INFO = new WeakMap();
+const excOfUnit = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
+function sameUnits(a, b) {
+  if (a.length !== b.length) return false;
+  for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return false;
+  return true;
+}
+function infoOf(arr) {
+  const i = ARRAY_INFO.get(arr);
+  if (i && (i.snap === arr || sameUnits(i.snap, arr))) return i;
+  const n = { snap: [...arr], sorted: null, excIndex: null, statics: new Map(), pre: null };
+  ARRAY_INFO.set(arr, n);
+  return n;
+}
+// Two lots with the same candidate units (same zone, same exception closure) share ONE frozen sorted array, so its
+// per-target static sets are computed once, not once per lot. Keyed by the input's unit-object sequence (a per-object
+// counter, cache key only, never output); bounded to the SORTED_CACHE_MAX most recently used sequences.
+const UNIT_KEY = new WeakMap(); let unitKeyNext = 0;
+const unitKey = (u) => { if (!UNIT_KEY.has(u)) UNIT_KEY.set(u, unitKeyNext++); return UNIT_KEY.get(u); };
+const SORTED_BY_CONTENT = new Map();
+const SORTED_CACHE_MAX = 64;
+/** The declared-order copy of `arr`, frozen (never handed to a caller) and cached with its own info entry. */
+function sortedOf(arr, i = infoOf(arr)) {
+  if (!i.sorted) {
+    const key = arr.map(unitKey).join(',');
+    let s = SORTED_BY_CONTENT.get(key);
+    if (s) SORTED_BY_CONTENT.delete(key); // re-inserted below as most recently used
+    else {
+      s = Object.freeze(sortCandidates(arr));
+      ARRAY_INFO.set(s, { snap: s, sorted: s, excIndex: null, statics: new Map(), pre: null });
+      if (SORTED_BY_CONTENT.size >= SORTED_CACHE_MAX) SORTED_BY_CONTENT.delete(SORTED_BY_CONTENT.keys().next().value);
+    }
+    SORTED_BY_CONTENT.set(key, s);
+    i.sorted = s;
+  }
+  return i.sorted;
+}
+/** = arr.filter((u) => u.layer === 'exception' && excOfUnit(u) === exc), from an index built once per array. */
+function exceptionUnits(arr, exc, i = infoOf(arr)) {
+  if (!i.excIndex) {
+    i.excIndex = new Map();
+    for (const u of arr) if (u.layer === 'exception') { const k = excOfUnit(u); if (!i.excIndex.has(k)) i.excIndex.set(k, []); i.excIndex.get(k).push(u); }
+  }
+  return i.excIndex.get(exc) || [];
 }
 /**
  * The reported reason when several are possible: a declared priority, never first-seen — building type first (M-50
@@ -513,10 +574,16 @@ export function effective(lot, target, candidates, ctx, _env = {}) {
   if (!lot || !lot.zone || (C.zones.size && !C.zones.has(lot.zone))) return NE_RESULT('no_569_2013_zone', { trace: ['rule 0: the lot has no 569-2013 residential zone'], inputs: ['zone'] });
   const depth = (_env.depth || 0) + 1;
   if (depth > 8) return NE_RESULT('target_cycle');
-  const gate = lotGate(lot, target, candidates, C);
+  // a nested call (memo present: same lot label / exception, same sorted candidates) reuses the gate per target
+  const gateKey = _env.memo ? `gate\u0000${target}` : null;
+  const info = Array.isArray(candidates) ? infoOf(candidates) : null; // validated once per call
+  if (gateKey && !_env.memo.has(gateKey)) _env.memo.set(gateKey, lotGate(lot, target, candidates, C, info));
+  const gate = gateKey ? _env.memo.get(gateKey) : lotGate(lot, target, candidates, C, info);
   if (gate) return gate;
-  const cands = _env.sorted ? candidates : sortCandidates(candidates);
-  const r = effResolve(lot, target, cands, C, { ...(_env), depth, sorted: true });
+  const cands = _env.sorted ? candidates : info ? sortedOf(candidates, info) : sortCandidates(candidates);
+  // memo: one per TOP-LEVEL call (lot-dependent results are never kept across calls, so a changed lot is re-read);
+  // nested calls share it through _env (perf only, outputs unchanged)
+  const r = effResolve(lot, target, cands, C, { ...(_env), depth, sorted: true, memo: _env.memo || new Map() });
   return { ...r, inputs: [...new Set([...(r.inputs || []), ...GATE_READS])].sort(cmpStr) };
 }
 
@@ -526,12 +593,12 @@ export function effective(lot, target, candidates, ctx, _env = {}) {
  * closure, not authored for `target` → exception_not_authored:<exception>, for EVERY target, base included (a base
  * value under an unread exception may be the wrong law). null when the lot passes.
  */
-function lotGate(lot, target, candidates, C) {
+function lotGate(lot, target, candidates, C, info = null) {
   const inputs = [...GATE_READS, 'zone'].sort(cmpStr);
   const letters = lot.label && typeof lot.label === 'object' ? Object.keys(lot.label) : [];
   const unknownLetters = letters.filter((l) => !Object.hasOwn(C.units.label, l)).sort(cmpStr);
   if (unknownLetters.length) return NE_RESULT(`label_letter_unknown:${unknownLetters[0]}`, { trace: [`ruling (e): label letter(s) ${unknownLetters.join(', ')} outside the grammar (vocab.label_letter) — not evaluated, never read as absent`], inputs });
-  const exc = exceptionNotAuthored(lot, target, candidates, C);
+  const exc = exceptionNotAuthored(lot, target, candidates, C, info);
   if (exc) return NE_RESULT(`exception_not_authored:${exc}`, { trace: [`ruling (d): exception ${exc} (the lot's exception or one it INCLUDEs) is not authored for ${target} — no layer resolves on this lot`], inputs });
   return null;
 }
@@ -560,24 +627,109 @@ function effResolve(lot, target, cands, C, _env) {
   return NE_RESULT('needs_user_input:building_type', { trace, per_type: per, inputs: ins });
 }
 
+/**
+ * The lot-independent unit sets effCore needs for one (sorted candidates, target): computed once per candidates array
+ * and target (ARRAY_INFO, snapshot-checked), not once per effCore call. provTrace = the rule-1 lines for provincial-layer units that lack
+ * limits_bylaw / scope; consideredOrdered = value units ∪ displacers ∪ procedural units, in the candidates order.
+ */
+function staticSets(candidates, target) {
+  const pre = preOf(candidates);
+  let valueUnits = pre.valueByTarget.get(target) || [];
+  // a provincial-layer unit comes only from external.json through provincialUnits(): it must carry limits_bylaw + scope
+  const provTrace = [];
+  for (const u of valueUnits) if (u.layer === 'provincial' && !(u.provincial && LIMITS[u.provincial.limits_bylaw])) provTrace.push(`rule 1: ${u.unit_id} is a provincial-layer unit without limits_bylaw / scope (not from external.json) — never a candidate`);
+  valueUnits = valueUnits.filter((u) => u.layer !== 'provincial' || (u.provincial && LIMITS[u.provincial.limits_bylaw]));
+  // refMatch is null unless the two regulation ids are equal, so only value units of the ref's regulation are tried
+  const byReg = new Map();
+  for (const v of valueUnits) { const k = splitRef(v.unit_id).reg; if (!byReg.has(k)) byReg.set(k, []); byReg.get(k).push(v); }
+  const refsValue = (u) => (u.displaces || []).some((ref) => (byReg.get(splitRef(ref).reg) || []).some((v) => v !== u && refMatch(ref, v.unit_id)));
+  const { procs, prevailing } = pre;
+  // = candidates.filter(non-PROCEDURAL ∧ refsValue ∧ target): a unit without displaces[] never refsValue
+  const displacers = pre.displacing.filter((u) => refsValue(u) && (!hasTarget(u) || unitTargets(u.target).includes(target)));
+  const considered = new Set([...valueUnits, ...displacers, ...procs]);
+  // = candidates.filter((u) => considered.has(u)): the candidates order, by position (a repeated unit object keeps the filter)
+  const consideredOrdered = pre.repeated ? candidates.filter((u) => considered.has(u)) : [...considered].sort((a, b) => pre.pos.get(a) - pre.pos.get(b));
+  const valueSet = new Set(valueUnits);
+  return { valueSet, provTrace, procs, prevailing, consideredOrdered, ...displacementPairs(consideredOrdered, procs, valueSet) };
+}
+const tryRef = (ref, id) => { try { return { m: refMatch(ref, id) }; } catch (err) { return { err }; } };
+/**
+ * resolveSet's rule-3 and rule-2 loops visit (unit, ref, unit) triples in a fixed order and keep those whose both units
+ * are in the applicable set A. Everything they test before A is lot- and world-independent, so the qualifying triples
+ * are listed once here, in the same order; resolveSet walks the list keeping the triples inside A. An error the
+ * original loop would throw is recorded at its place and thrown only when the loop would have reached it.
+ */
+function displacementPairs(consideredOrdered, procs, valueSet) {
+  const r3 = []; // {u, ref, p} with refMatch(ref, p) === 'full', or {u, p, err}
+  for (const u of consideredOrdered) {
+    try {
+      for (const ref of u.displaces || []) for (const p of procs) {
+        const t = tryRef(ref, p.unit_id);
+        if (t.err) r3.push({ u, p, err: t.err });
+        else if (t.m === 'full') r3.push({ u, ref, p });
+      }
+    } catch (err) { r3.push({ u, p: null, err }); }
+  }
+  const r2 = []; // {d, ref, v, m} passing every A-independent test, or {d, v, err}
+  for (const d of consideredOrdered) {
+    try {
+      if (!(d.displaces || []).length) continue;
+      for (const ref of d.displaces) for (const v of consideredOrdered) {
+        if (v === d || v.archetype === 'PROCEDURAL' || !valueSet.has(v)) continue;
+        const t = tryRef(ref, v.unit_id);
+        if (t.err) { r2.push({ d, v, err: t.err }); continue; }
+        if (!t.m) continue;
+        if (hasTarget(d) && !unitTargets(d.target).some((x) => unitTargets(v.target).includes(x))) continue;
+        r2.push({ d, ref, v, m: t.m });
+      }
+    } catch (err) { r2.push({ d, v: null, err }); }
+  }
+  return { r3, r2 };
+}
+/**
+ * The target-independent part, one pass over a candidates array: value units per target (LIMIT / DEFINE with a parsed
+ * statement for it, candidates order), procedural / prevailing units, the non-procedural units that displace, positions.
+ */
+function preOf(candidates) {
+  const i = infoOf(candidates);
+  if (i.pre) return i.pre;
+  const valueByTarget = new Map(); const procs = []; const prevailing = []; const displacing = []; const pos = new Map(); let repeated = false;
+  candidates.forEach((u, k) => {
+    if (pos.has(u)) repeated = true; else pos.set(u, k);
+    if (u.archetype === 'LIMIT' || u.archetype === 'DEFINE') {
+      for (const t of new Set(statementsOf(u).filter((s) => !s.error).map((s) => s.target))) {
+        if (!valueByTarget.has(t)) valueByTarget.set(t, []);
+        valueByTarget.get(t).push(u);
+      }
+    }
+    if (u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length) procs.push(u);
+    if (u.archetype === 'PREVAILING') prevailing.push(u);
+    if (u.archetype !== 'PROCEDURAL' && u.displaces) displacing.push(u); // a falsy displaces never refsValue
+  });
+  i.pre = { valueByTarget, procs, prevailing, displacing, pos, repeated };
+  return i.pre;
+}
+
 function effCore(lot, target, candidates, C, env) {
   const trace = []; const disclosures = []; const reads = new Set(['zone']);
-  const resolveVariable = (name) => (name === target ? null : effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true }));
-  let valueUnits = candidates.filter((u) => (u.archetype === 'LIMIT' || u.archetype === 'DEFINE') && parsedFor(u, target).length);
-  // a provincial-layer unit comes only from external.json through provincialUnits(): it must carry limits_bylaw + scope
-  for (const u of valueUnits) if (u.layer === 'provincial' && !(u.provincial && LIMITS[u.provincial.limits_bylaw])) trace.push(`rule 1: ${u.unit_id} is a provincial-layer unit without limits_bylaw / scope (not from external.json) — never a candidate`);
-  valueUnits = valueUnits.filter((u) => u.layer !== 'provincial' || (u.provincial && LIMITS[u.provincial.limits_bylaw]));
-  const refsValue = (u) => (u.displaces || []).some((ref) => valueUnits.some((v) => v !== u && refMatch(ref, v.unit_id)));
-  const procs = candidates.filter((u) => u.archetype === 'PROCEDURAL' && rankedLayers(u.ranks_layers).length);
-  const displacers = candidates.filter((u) => u.archetype !== 'PROCEDURAL' && refsValue(u) && (!hasTarget(u) || unitTargets(u.target).includes(target)));
-  const prevailing = candidates.filter((u) => u.archetype === 'PREVAILING');
+  // a nested target's effective() depends only on (lot, candidates, C, depth, scenario) — inside one top-level call the
+  // lot differs only by the M-50 scenario building_type and candidates / C are fixed — so it is resolved once per
+  // (depth, scenario, building_type, name) instead of once per unit × undecided world × scenario (perf, outputs unchanged)
+  const resolveVariable = (name) => {
+    if (name === target) return null;
+    const key = `${env.depth}\u0000${env.inScenario ? 1 : 0}\u0000${lot.building_type ?? ''}\u0000${name}`;
+    if (!env.memo.has(key)) env.memo.set(key, effective(lot, name, candidates, C, { depth: env.depth, inScenario: env.inScenario, sorted: true, memo: env.memo }));
+    return env.memo.get(key);
+  };
+  const statics = infoOf(candidates).statics; // per (candidates array, target): lot-independent
+  if (!statics.has(target)) statics.set(target, staticSets(candidates, target));
+  const { valueSet, provTrace, prevailing, consideredOrdered, r3, r2 } = statics.get(target);
+  trace.push(...provTrace);
 
   // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
   // every condition input read is recorded (reads → result.inputs; the values → the trace)
-  const considered = new Set([...valueUnits, ...displacers, ...procs]);
   const A = new Set(); const unknown = [];
-  for (const u of candidates) {
-    if (!considered.has(u)) continue;
+  for (const u of consideredOrdered) {
     const t = [];
     const a = applies(lot, u, C, resolveVariable, reads, t);
     if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
@@ -589,7 +741,7 @@ function effCore(lot, target, candidates, C, env) {
     if (a.ok === true) disclosures.push(`alternate compliance path under ${u.unit_id} — not evaluated (rule 5)`);
     else if (a.ok === null) disclosures.push(`alternate compliance path under ${u.unit_id} may apply (${a.reason}) — not evaluated (rule 5)`);
   }
-  const base = { lot, target, candidates, C, resolveVariable, valueUnits, procs, reads };
+  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2 };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -615,7 +767,7 @@ function effCore(lot, target, candidates, C, env) {
 }
 
 /** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
-function exceptionNotAuthored(lot, target, candidates, C) {
+function exceptionNotAuthored(lot, target, candidates, C, info = null) {
   if (!lot.exception) return null;
   const excOf = (u) => u.exception || u.regulation_id || splitRef(u.unit_id).reg;
   const ok = (s) => s === 'authored' || (s && s.status === 'authored') || (s && s.status === 'partial' && Array.isArray(s.targets) && s.targets.includes(target));
@@ -626,7 +778,7 @@ function exceptionNotAuthored(lot, target, candidates, C) {
     const e = queue.shift();
     if (seen.has(e)) continue;
     seen.add(e);
-    const us = candidates.filter((u) => u.layer === 'exception' && excOf(u) === e);
+    const us = Array.isArray(candidates) ? exceptionUnits(candidates, e, info || infoOf(candidates)) : candidates.filter((u) => u.layer === 'exception' && excOf(u) === e);
     if (!us.length || !ok(C.authored[e]) || us.some(pending)) return e;
     for (const u of us) if (u.archetype === 'INCLUDE' && u.include_ref) queue.push(splitRef(u.include_ref).reg);
   }
@@ -634,13 +786,15 @@ function exceptionNotAuthored(lot, target, candidates, C) {
 }
 
 /** Rules 3, 2, 1 (unit check), 7 / 7a, 4, 4a, the provincial restraint (rule 4, M-55) over one applicable set A. */
-function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, procs, reads }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2 }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
-  const sortedA = candidates.filter((u) => A.has(u));
+  const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
   const immune = new Map();
-  for (const u of sortedA) for (const ref of u.displaces || []) for (const p of procs) {
-    if (A.has(p) && refMatch(ref, p.unit_id) === 'full') {
+  for (const { u, p, err } of r3) { // = for u of sortedA, ref of u.displaces, p of procs: A.has(p) && refMatch(ref, p) === 'full'
+    if (!A.has(u) || (p && !A.has(p))) continue;
+    if (err) throw err;
+    {
       const top = Math.max(...rankedLayers(p.ranks_layers).map((l) => LAYER_RANK[l] ?? 0));
       immune.set(u.unit_id, Math.max(immune.get(u.unit_id) ?? -1, top + 0.5));
       trace.push(`rule 3: ${u.unit_id} displaces ${p.unit_id} → ranks above ${rankedLayers(p.ranks_layers).join(', ')}`);
@@ -652,13 +806,10 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, p
   // displacer naming an argument takes that argument's place, and the rewritten unit carries the higher of the two
   // layers (Spec 68 §7.5 rule 2, stated with the §7.4 worked example: HT 12.0 → 12.0 m; Spec 69 M-60)
   const dropped = new Set(); const consumed = new Set(); const edits = new Map(); // unit_id → {path: null|AST}
-  for (const d of sortedA) {
-    if (!(d.displaces || []).length) continue;
-    for (const ref of d.displaces) for (const v of sortedA) {
-      if (v === d || v.archetype === 'PROCEDURAL' || !valueUnits.includes(v)) continue;
-      const m = refMatch(ref, v.unit_id);
-      if (!m) continue;
-      if (hasTarget(d) && !unitTargets(d.target).some((t) => unitTargets(v.target).includes(t))) continue;
+  for (const { d, v, m, err } of r2) { // = for d of sortedA, ref of d.displaces, v of sortedA (the A-independent tests: displacementPairs)
+    if (!A.has(d) || (v && !A.has(v))) continue;
+    if (err) throw err;
+    {
       if (m === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
       if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
@@ -680,8 +831,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueUnits, p
     if (bad) trace.push(`rule 1: ${u.unit_id} unit of measure ≠ ${target} (${tUnit}) — G-CLAUSE failure, never a candidate`);
     return !bad;
   };
-  const T = sortedA.filter((u) => valueUnits.includes(u) && u.layer !== 'provincial' && !dropped.has(u.unit_id) && !consumed.has(u.unit_id)).filter(unitOk);
-  const prov = sortedA.filter((u) => valueUnits.includes(u) && u.layer === 'provincial').filter(unitOk);
+  const T = sortedA.filter((u) => valueSet.has(u) && u.layer !== 'provincial' && !dropped.has(u.unit_id) && !consumed.has(u.unit_id)).filter(unitOk);
+  const prov = sortedA.filter((u) => valueSet.has(u) && u.layer === 'provincial').filter(unitOk);
   if (!T.length) {
     for (const p of prov) trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law unit for ${target} (a provincial unit is never additional)`);
     // rule 7a (M-54 note 2026-10-07; Spec 69 M-60): unregulated BY ABSENCE only when (i) a verified ruling covers
