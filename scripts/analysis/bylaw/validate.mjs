@@ -486,10 +486,10 @@ function rowStates(scoped, shape) {
  */
 export async function check({ root, write = false, now = nowIso }) {
   const I = loadInputs({ root });
-  const { gates: g, ctx } = await runGates(I);
+  const { gates: g, ctx, agreedUnits } = await runGates(I);
   const scoped = ctx.universe ? ctx.universe.scoped : [];
   const rs = rowStates(scoped, ctx.shape); // Spec 68 §4: the G-SHAPE fold decides complete / failed / pending / pending:stale
-  const doc = buildTable({ slice: I.slice, scoped, manifest: I.manifest, amendments: I.amendments, vocab: I.vocab, rowStatus: rs, feeds: { checked: ctx.feeds ? ctx.feeds.checked : 0, counts: ctx.feeds ? ctx.feeds.counts : {} } });
+  const doc = buildTable({ slice: I.slice, scoped, manifest: I.manifest, amendments: I.amendments, vocab: I.vocab, rowStatus: rs, feeds: { checked: ctx.feeds ? ctx.feeds.checked : 0, counts: ctx.feeds ? ctx.feeds.counts : {} }, agreedUnits });
   const files = renderAll(doc);
   const findings = ctx.report ? ctx.report.markdown : null;
   const threw = Object.values(g).some((x) => x.error);
@@ -577,6 +577,11 @@ export function renderSelfTest() {
   t('render: no Status line; escaped verbatim cannot open a comment or split a cell', !/\*\*Status/.test(a[MD_REL]) && !a[MD_REL].includes('<!--') && escapeMd('a|b') === 'a\\|b');
   t('render: canonical JSON round-trips', renderJson(JSON.parse(a[JSON_REL])) === a[JSON_REL]);
   t('render: a hand edit is drift (byte compare fails)', a[MD_REL].replace('pending', 'complete') !== renderMarkdown(buildTable(mk(rows))));
+  // Lane NAMED-ADDR-2 ruling: row.named_units is derived from the raw ref by named-addresses.mjs, never hand-edited.
+  const named = { unit_id: `${rows[0].regulation_id}#(1)`, applies_to: { part: 'named_addresses', refs: ['the odd numbered addresses of 2549B-2551B Dundas St. W.'] }, instrument: 'none' };
+  const nj = renderJson(buildTable({ ...mk(rows), agreedUnits: [named] }));
+  const edited = nj.replace('"from_key":"2549B"', '"from_key":"2547B"');
+  t('render: a hand edit of a derived named address is drift (byte compare fails)', nj.includes('"from_key":"2549B"') && edited !== nj && edited !== renderJson(buildTable({ ...mk(rows), agreedUnits: [named] })));
   const gs = (state, over = {}) => Object.fromEntries(GATES.map((g) => [g.id, { state: over[g.id] || state }]));
   const zero = { in_scope: 2, complete: 0, pending: 2, stale: 0, failed: 0, draft_failures: 0, disagreements: 0, disclosed_defects: 0 };
   const x = { snapshot_age_days: 0, max_snapshot_age_days: 90, findings: { ii: 0, iv_unmapped: 0 }, eval_mismatches_adjudicated: 0, expert_rulings_against: 0, agreement_rate: null };

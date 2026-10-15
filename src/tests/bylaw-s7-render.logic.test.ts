@@ -114,8 +114,9 @@ describe('renderer contract (S7)', () => {
     expect(top).toEqual([...top].sort());
   });
 
-  it('table-level validated_against = adoption + generator / slicer / normalizer / vocab versions, never a timestamp', () => {
-    expect(doc.validated_against).toEqual({ adoption_id: 'adoption-1', generator_version: R.GENERATOR_VERSION, normalizer_version: 'norm-v1', slicer_version: 'slice-v1', vocab_version: 'vocab-v1' });
+  it('table-level validated_against = adoption + generator / slicer / normalizer / vocab / named-addr versions, never a timestamp', () => {
+    // named_addr_version: lane NAMED-ADDR-2 (row.named_units is derived by named-addresses.mjs at that version)
+    expect(doc.validated_against).toEqual({ adoption_id: 'adoption-1', generator_version: R.GENERATOR_VERSION, named_addr_version: 'named-addr-v1', normalizer_version: 'norm-v1', slicer_version: 'slice-v1', vocab_version: 'vocab-v1' });
     expect(json).not.toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
     expect(md).toContain('adoption-1');
   });

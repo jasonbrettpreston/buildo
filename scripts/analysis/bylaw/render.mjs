@@ -15,6 +15,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { deriveUnitNamed, NAMED_ADDR_VERSION } from './named-addresses.mjs';
 import { cmpSection, writeAtomic } from './snapshot.mjs';
 
 export const GENERATOR_VERSION = 'bylaw-provisions-v1';
@@ -49,9 +50,13 @@ const cmpPage = (a, b) => cmpSection(a.section ?? '', b.section ?? '') || cmpStr
 
 /**
  * The table document from the generated inputs. `rowStatus` = {regulation_id: state} for in-scope rows; `feeds` =
- * {checked, counts{"structure/aspect": n}} over agreed units. Deterministic: any input order gives the same document.
+ * {checked, counts{"structure/aspect": n}} over agreed units. `agreedUnits` = the agreed / adjudicated units (G-AGREE;
+ * pending drafts never reach the table, M-45): a row whose units name addresses or a former-instrument citation carries
+ * `named_units` = [deriveUnitNamed(unit)] sorted by unit_id (operator ruling, lane NAMED-ADDR-2: the raw strings stay
+ * authoritative, the parse is regenerated here and never hand-edited — G-DRIFT); a row naming nothing carries no key.
+ * Deterministic: any input order gives the same document.
  */
-export function buildTable({ slice, scoped, manifest, amendments, vocab, rowStatus = {}, feeds = { checked: 0, counts: {} } }) {
+export function buildTable({ slice, scoped, manifest, amendments, vocab, rowStatus = {}, feeds = { checked: 0, counts: {} }, agreedUnits = [] }) {
   const sectionPages = (manifest.pages || []).filter((p) => p.role === 'section').sort(cmpPage);
   const pageOrder = new Map(sectionPages.map((p, i) => [p.key, i]));
   // Enacting by-law text (Spec 69 M-36; captured under R5) is sliced as its own pseudo-page `enacting:<bylaw>`;
@@ -69,6 +74,13 @@ export function buildTable({ slice, scoped, manifest, amendments, vocab, rowStat
   const rowIds = new Set((slice.rows || []).map((r) => r.regulation_id));
   const orphanUnits = [...unitsByRow.keys()].filter((id) => !rowIds.has(id));
   if (orphanUnits.length) throw new Error(`render: ${orphanUnits.length} clause unit group(s) name no row (e.g. ${orphanUnits[0]})`);
+  const namedByRow = new Map();
+  for (const d of agreedUnits.map(deriveUnitNamed).filter(Boolean).sort((a, b) => cmpStr(a.unit_id, b.unit_id))) {
+    const rid = String(d.unit_id).split('#')[0];
+    if (!rowIds.has(rid)) throw new Error(`render: named unit ${d.unit_id} names no row`);
+    if (!namedByRow.has(rid)) namedByRow.set(rid, []);
+    namedByRow.get(rid).push(d);
+  }
   const rows = [...(slice.rows || [])]
     .sort((a, b) => (pageOrder.get(a.page) ?? 1e9) - (pageOrder.get(b.page) ?? 1e9) || cmpStr(a.page, b.page) || a.start - b.start || cmpStr(a.regulation_id, b.regulation_id))
     .map((r) => {
@@ -101,6 +113,7 @@ export function buildTable({ slice, scoped, manifest, amendments, vocab, rowStat
         term: r.term ?? null,
         verbatim: r.verbatim,
       };
+      if (namedByRow.has(r.regulation_id)) out.named_units = namedByRow.get(r.regulation_id);
       return out;
     });
   const pages = {};
@@ -138,6 +151,7 @@ export function buildTable({ slice, scoped, manifest, amendments, vocab, rowStat
     validated_against: {
       adoption_id: manifest.adoption_id,
       generator_version: GENERATOR_VERSION,
+      named_addr_version: NAMED_ADDR_VERSION,
       normalizer_version: manifest.normalizer_version,
       slicer_version: slice.slicer_version,
       vocab_version: (vocab && vocab.version) || null,
@@ -184,7 +198,9 @@ export function renderMarkdown(doc) {
   L.push('> byte-compares). Gate states and the five lines are printed by `--check` / `--validate`, never stored here.');
   L.push('> A `pending` row is not yet authored: never quote it to a buyer as authoritative (Spec 69 P-1).');
   L.push('');
-  L.push(`- validated_against: ${v.adoption_id} · generator ${v.generator_version} · slicer ${v.slicer_version} · normalizer ${v.normalizer_version} · vocab ${v.vocab_version ?? '—'}`);
+  L.push(`- validated_against: ${v.adoption_id} · generator ${v.generator_version} · slicer ${v.slicer_version} · normalizer ${v.normalizer_version} · vocab ${v.vocab_version ?? '—'} · named-addr ${v.named_addr_version ?? '—'}`);
+  const named = doc.rows.flatMap((r) => r.named_units || []);
+  L.push(`- named units (derived from the raw refs / citation, never hand-edited): ${named.length} · refs ${named.reduce((n, u) => n + u.refs.length, 0)} · citations ${named.filter((u) => u.citation).length}`);
   L.push(`- rows ${c.rows} · in scope ${c.in_scope} · out of scope ${c.out_of_scope} · awaiting a ruling ${c.awaiting_ruling} · unscoped ${c.unscoped} · clause units ${c.units} · source defects disclosed ${c.disclosed_defects}`);
   L.push(`- row states (in scope): complete ${s.complete} · pending ${s.pending} (stale ${s['pending:stale']}) · failed ${s.failed}`);
   const pairs = Object.entries(doc.feeds.counts);

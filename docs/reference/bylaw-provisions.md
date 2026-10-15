@@ -5,7 +5,8 @@
 > byte-compares). Gate states and the five lines are printed by `--check` / `--validate`, never stored here.
 > A `pending` row is not yet authored: never quote it to a buyer as authoritative (Spec 69 P-1).
 
-- validated_against: adoption-4 · generator bylaw-provisions-v1 · slicer slice-v4 · normalizer norm-v1 · vocab vocab-v4
+- validated_against: adoption-4 · generator bylaw-provisions-v1 · slicer slice-v4 · normalizer norm-v1 · vocab vocab-v4 · named-addr named-addr-v1
+- named units (derived from the raw refs / citation, never hand-edited): 60 · refs 120 · citations 53
 - rows 4356 · in scope 4123 · out of scope 233 · awaiting a ruling 0 · unscoped 0 · clause units 27964 · source defects disclosed 161
 - row states (in scope): complete 1125 · pending 2998 (stale 0) · failed 0
 - feeds (Spec 69 M-52), over 987 agreed LIMIT/PERMIT/PROHIBIT unit(s): ancillary/envelope 59 · ancillary/landscaping 2 · ancillary/parking_access 1 · ancillary/use_permission 20 · any/envelope 169 · any/landscaping 7 · any/lot 22 · any/parking_access 158 · any/use_permission 149 · principal/envelope 138 · principal/landscaping 4 · principal/lot 25 · principal/parking_access 38 · principal/use_permission 118 · suite/envelope 67 · suite/landscaping 4 · suite/parking_access 4 · suite/use_permission 44
