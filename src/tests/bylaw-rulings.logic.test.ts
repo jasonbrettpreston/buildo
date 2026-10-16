@@ -382,8 +382,10 @@ describe('Spec 69a M-87..M-92 — R5 rulings (vocab members, rate_base, ref_targ
     const sc = PVOCAB.scenario_class_units.detached_houseplex_5_6;
     expect([sc.house_units, sc.ancillary_units, sc.outside_or_unheld]).toEqual([{ min: 5, max: 6, evaluated_at: 6 }, 0, 'not_evaluated:map_area_not_held']);
     const dc = PVOCAB.design_choice_disclosure;
-    expect(dc.default_overrides.individual_private_driveway.taken_as).toBe(true);
-    expect(dc.default_overrides.no_individual_private_driveway.disclosure).toBe('If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m.');
+    // M-176(1) supersedes the M-173(2) driveway default: no driveway is assumed (5.0 m answered), 6.0 m is disclosed
+    expect(dc.default_overrides.individual_private_driveway.taken_as).toBe(false);
+    expect(dc.default_overrides.no_individual_private_driveway.taken_as).toBe(true);
+    expect(dc.default_overrides.individual_private_driveway.disclosure).toBe('If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m.');
     for (const rr of ['10.10.40.10(2)', '10.20.40.10(2)', '10.40.40.10(2)', '10.80.40.10(2)']) for (const c of ['(A)', '(B)']) expect(Object.keys(dc.unit_sentences)).toContain(`${rr}#(2)${c}`);
     // M-174: entrance height (4) + dormers (8) + 10.80.30.10(1)(B) (1)
     expect(Object.keys(dc.unit_sentences).filter((k) => k !== '$comment')).toHaveLength(21);

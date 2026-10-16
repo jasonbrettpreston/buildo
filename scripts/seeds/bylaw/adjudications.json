@@ -70054,6 +70054,173 @@
           "building_type"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.1(3)#(3)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "operator ruling 2026-10-15 (M-176(1)): \"as per townhouse unit width we just assume no driveway\"; the 5.0 m arm is answered and the 6.0 m arm is the disclosed trade-off",
+      "rule": "Spec 69a M-176(1) (supersedes the M-173(2) default), M-75",
+      "supersedes": "COR-10.80.40.1(3)#(3)(A)/calculation_handling",
+      "unit": "10.80.40.1(3)#(3)(A)",
+      "value": {
+        "description": "Each townhouse dwelling unit must be at least 5.0 m wide where it has no individual private driveway leading directly to its front.",
+        "gaps": "Applies only under no_individual_private_driveway (design choice). By M-176(1) (build more) no individual private driveway is assumed, so this 5.0 m is answered; (B) 6.0 m is the disclosed trade-off (vocab design_choice_disclosure.default_overrides).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.8.60.70(1)#(1)(B)/target",
+      "kind": "correction",
+      "reason": "operator y 2026-10-16 (envelope review; M-179(1)): \"all ancillary buildings combined … 30 percent\" bounds the ancillary buildings together, never the lot overall coverage",
+      "rule": "Spec 69a M-179(1), M-151, M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.8.60.70(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "follows the target correction (M-179(1))",
+      "rule": "Spec 69a M-179(1), M-151, M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": [
+        "ancillary_coverage_pct = 30 pct @(1)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(6)#(6)(B)/condition",
+      "kind": "correction",
+      "reason": "envelope review 2026-10-16 finding 7: the arm applies on a corner lot only where the suite has a parking space with vehicle access from the flanking street; the token is already in application.lot_conditions",
+      "rule": "Spec 69a M-172(3), M-75; Spec 68 §6 condition",
+      "unit": "150.7.60.20(6)#(6)(B)",
+      "value": {
+        "tokens": [
+          "corner_lot",
+          "garage_entrance_faces_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(6)#(6)(C)/condition~s1",
+      "kind": "correction",
+      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
+      "rule": "Spec 69a M-179(2), M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/condition",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "tokens": [
+          "corner_lot"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
+      "rule": "Spec 69a M-179(2), M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/application.lot_conditions",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": [
+        "corner_lot"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(6)#(6)(C)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
+      "rule": "Spec 69a M-179(2), M-75; Spec 68 §6.4 rule 7",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/application.evidence",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "corner_lot": "Corner Lot",
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(2)#(2)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
+      "rule": "Spec 69a M-149, M-172(3), M-75",
+      "unit": "150.7.60.20(2)#(2)(C)",
+      "value": {
+        "description": "If the rear lot line abuts a lot in the Residential Zone category and the garden suite building has openings such as windows in its rear main wall above 4.0 m above average grade, the (B) rear yard setback of 1.5 m is increased by 1.5 m.",
+        "gaps": "Scope not tested (M-149): the rear lot line abutting a Residential-zone lot, and rear-wall openings above 4.0 m (a design choice, suite_wall_openings). Restrictive (raises the (B) 1.5 m by 1.5 m), so it is disclosed, never applied to the maximum (M-172(3), M-177(3)). The first 1.5 m is the (B) value being increased.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "suite_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(2)#(2)(C)/disclosure",
+      "kind": "correction",
+      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
+      "rule": "Spec 69a M-149, M-172(3), M-75",
+      "unit": "150.7.60.20(2)#(2)(C)",
+      "value": "If the garden suite has openings such as windows in its rear main wall more than 4.0 m above average grade and the rear lot line abuts a residential lot: the minimum rear yard setback is 3.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(5)#(5)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
+      "rule": "Spec 69a M-149, M-172(3), M-75",
+      "unit": "150.7.60.20(5)#(5)(A)",
+      "value": {
+        "description": "Despite 10.5.60.20(3) and (6) and 10.10.60.20(1), where the side lot line does not abut a street and the side main wall has openings such as doors or windows, the garden suite's minimum side yard setback is the greater of 1.5 m or 10 percent of the lot frontage, to a maximum of 3.0 m.",
+        "gaps": "Scope not tested (M-149): a side lot line not abutting a street, and openings in the side main wall (a design choice, suite_wall_openings). Restrictive (a 1.5 m floor instead of (B)'s 0.6 m), so it is disclosed, never applied to the maximum (M-172(3), M-177(3)); (B) answers. 'To a maximum of 3.0 metres' read as capping the 10 percent amount.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "has_garden_suite",
+          "suite_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-16",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(5)#(5)(A)/disclosure",
+      "kind": "correction",
+      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
+      "rule": "Spec 69a M-149, M-172(3), M-75",
+      "unit": "150.7.60.20(5)#(5)(A)",
+      "value": "If the garden suite has doors or windows in a side main wall facing a side lot line that does not abut a street: that side yard setback is at least the greater of 1.5 m or 10% of the lot frontage, to a maximum of 3.0 m."
     }
   ]
 }

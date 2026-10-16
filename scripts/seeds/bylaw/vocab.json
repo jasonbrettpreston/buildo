@@ -80,6 +80,7 @@
       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
+    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
@@ -609,14 +610,14 @@
       "bedroom_count": "the dwelling units have the bedroom counts the rule names"
     },
     "default_overrides": {
-      "$comment": "Spec 69a M-173: operator choices that override the M-172 'permissive taken as met' default for a design-choice token.",
+      "$comment": "Spec 69a M-173 / M-176(1): operator choices that fix the direction of a design-choice token pair. M-176(1) (2026-10-15, build more) supersedes M-173(2): no individual private driveway is assumed, so the 5.0 m townhouse unit width is answered and the 6.0 m arm is the disclosed trade-off.",
       "individual_private_driveway": {
-        "taken_as": true,
-        "why": "operator 2026-10-15: assume an individual private driveway (the larger 6.0 m townhouse unit width is answered)"
+        "taken_as": false,
+        "disclosure": "If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m."
       },
       "no_individual_private_driveway": {
-        "taken_as": false,
-        "disclosure": "If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m."
+        "taken_as": true,
+        "why": "operator 2026-10-15 (M-176(1)): assume no individual private driveway (the smaller 5.0 m townhouse unit width is answered; the maximum build)"
       }
     },
     "unit_sentences": {
