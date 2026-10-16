@@ -492,7 +492,7 @@ describe('prove-red — the shape rule fires on the unconverted corpus', () => {
     ).toEqual([]);
   });
 
-  it('every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json, minus declared pending)', () => {
+  it('every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (28 minus converted.json, minus declared pending)', () => {
     // The sources chain is the C-track corpus. `reconcile` (A3) is a 28th entry
     // in the chain but is deliberately NOT a pipeline.step() file — it is the
     // Step-0 reaper, written to the Spec 47 skeleton — so the count below is
@@ -502,10 +502,11 @@ describe('prove-red — the shape rule fires on the unconverted corpus', () => {
     const conversionCorpus = SOURCES_STEP_FILES.filter(
       (f) => f !== 'scripts/reconcile-runs.js' && !convertedSet.has(f) && !pendingSet.has(f),
     );
-    // 27 = the C-track corpus; each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is
+    // 27 = the C-track corpus, 28 since H6 A2 2026-10-16 added the NET-NEW link_parcel_abutments to the chain
+    // (pending per Spec 124 R-CS, so pendingInScope removes it again); each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is
     // over files NOT in converted.json), and each declared-pending file is staged out ahead of its cutover.
     const pendingInScope = SOURCES_STEP_FILES.filter((f) => pendingSet.has(f) && !convertedSet.has(f)).length;
-    expect(conversionCorpus).toHaveLength(27 - convertedSet.size - pendingInScope);
+    expect(conversionCorpus).toHaveLength(28 - convertedSet.size - pendingInScope);
     const byFile = new Map(report.report_only.map((f) => [f.file, f.violations]));
     for (const f of conversionCorpus) {
       const violations = byFile.get(f) ?? [];

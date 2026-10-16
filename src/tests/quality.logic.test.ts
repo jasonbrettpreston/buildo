@@ -520,10 +520,11 @@ describe('Pipeline Registry', () => {
     // head of chain_sources; the only writer of pipeline_runs.status = 'crashed'.
     // +1 load_coa_notices (Spec 129 §12, commit B)
     // +1 load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(70);
+    // +1 link_parcel_abutments (Spec 130, H6 A2 2026-10-16)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(71);
   });
 
-  it('groups are correct: 16 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 16 ingest, 23 link, 17 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -546,8 +547,9 @@ describe('Pipeline Registry', () => {
     // +1 classify: compute_parcel_cost_estimates (Spec 88 P1 2026-06-30)
     // +1 ingest: load_coa_notices (Spec 129 §12, commit B)
     // +1 ingest: load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
+    // +1 link: link_parcel_abutments (Spec 130, H6 A2 2026-10-16)
     expect(groups.filter((g) => g === 'ingest')).toHaveLength(16);
-    expect(groups.filter((g) => g === 'link')).toHaveLength(22);
+    expect(groups.filter((g) => g === 'link')).toHaveLength(23);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(18); // +dispatch_notifications (P25 25A, group 'classify')
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
     expect(groups.filter((g) => g === 'quality')).toHaveLength(12); // +assert_parcel_sanity (WF2); +reconcile (Spec 122 §7.4 / A3, S3 2026-08-24)

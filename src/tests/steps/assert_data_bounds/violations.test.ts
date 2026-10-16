@@ -207,8 +207,8 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     expect(permits).not.toContain('link_massing'); // FLEET-2 2.1: permits length is the manifest's own; the membership fence replaces the hand count
     expect(coa.indexOf('assert_data_bounds'), 'coa chain position').toBe(coa.indexOf('refresh_snapshot') + 1); // after the gate and the snapshot
     expect(coa.length).toBe(16);
-    expect(sources.indexOf('assert_data_bounds'), 'sources chain position').toBe(26); // 27 of 28
-    expect(sources.length).toBe(28);
+    expect(sources.indexOf('assert_data_bounds'), 'sources chain position').toBe(27); // 28 of 29 (H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates)
+    expect(sources.length).toBe(29);
     expect(deepScrapes.indexOf('assert_data_bounds'), 'deep_scrapes chain position').toBe(4); // 5 of 7
     expect(deepScrapes.length).toBe(7);
   });

@@ -1164,7 +1164,7 @@
       "phase": {
         "permits": 28,
         "coa": 12,
-        "sources": 24,
+        "sources": 25,
         "deep_scrapes": 4
       },
       "audit_table": "one",

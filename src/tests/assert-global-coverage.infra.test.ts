@@ -190,9 +190,10 @@ describe('manifest.json — chain wiring', () => {
     const covIdx = sourcesChain.indexOf('assert_global_coverage');
     // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
     expect(sourcesChain[covIdx - 1]).toBe('refresh_snapshot');
-    expect(sourcesChain[covIdx - 2]).toBe('compute_parcel_cost_estimates');
+    expect(sourcesChain[covIdx - 2]).toBe('link_parcel_abutments'); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
+    expect(sourcesChain[covIdx - 3]).toBe('compute_parcel_cost_estimates');
     expect(sourcesChain[covIdx + 1]).toBe('assert_parcel_sanity');
-    expect(sourcesChain).toHaveLength(28);
+    expect(sourcesChain).toHaveLength(29);
   });
 
   it('assert_global_coverage comes after assert_entity_tracing in permits chain', () => {

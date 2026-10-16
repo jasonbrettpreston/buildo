@@ -809,3 +809,4 @@ Every new step and every conversion walks this list before its first capture. Ea
 8. **The harness overwrites only tracked goldens:** stage the previous capture by path before `--overwrite`.
 9. **Runbook stop bounds quote the governing spec's population** (Spec 65:302 bounds residential lots, not all parcels).
 10. **Host:** local Supabase DSM `mmap`; worktree DB env via `DOTENV_CONFIG_PATH` for one process; `db:generate` on a restored DB is spliced, not taken whole (`docs/runbook/dev_host_setup.md` §4).
+11. **A recapture repeats the original capture's flags.** A capture records its own `invariants_file`; retaking it without `--invariants=<that file>` falls back to the descriptor's invariants and drops the rest, which G8 reads as unexplained diffs (refresh_snapshot, H6 A2, 2026-10-16). Read `invariants_file`, `chain` and `args` from the previous capture first.

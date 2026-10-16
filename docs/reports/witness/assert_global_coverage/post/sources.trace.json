@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-global-coverage.js",
   "chain": "sources",
-  "source_fingerprint": "41da24d24e291b803d85bb8ebdeeb4573eecefeda730c9bfde6de58cba955c82",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "06d8f25d3fefd6b3a5abfa02dcc00af7f45390be07caa419178bebe23bb81fdb",
+  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
   "header": {
     "processes": 1,
     "calls": 14,
     "distinct": 13,
     "utility": 5,
-    "tracer_self_ms": 3.341,
-    "wall_ms": 23796
+    "tracer_self_ms": 0.857,
+    "wall_ms": 3651
   },
   "statements": [
     {
@@ -43,7 +43,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 734,
       "reads": {},
       "writes": {},
       "excluded": [

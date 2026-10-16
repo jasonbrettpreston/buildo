@@ -679,6 +679,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   link_parcel_addresses:{ summary: 'Populates parcel↔address_points spatial bridge via ST_Within (WF1 Phase 2c)', table: 'parcel_address_points' },
   link_neighbourhoods:  { summary: 'Spatially links permits to neighbourhood boundaries', table: 'permits' },
   link_massing:         { summary: 'Links permits to 3D building footprints via parcel intersection', table: 'parcel_buildings' },
+  link_parcel_abutments: { summary: 'Links each parcel to the parcels that abut it (shared boundary, neighbour building, estimated front setback) for McBylaw front-yard averaging', table: 'parcel_abutments' },
   link_coa:             { summary: 'Links CoA applications to building permits by address and ward', table: 'coa_applications' },
   link_coa_to_parcels:  { summary: 'Tier 1a/1b address-matches CoA applications to parcels; bundled neighbourhood lookup + lat/lng back-fill', table: 'lead_parcels' },
   classify_coa_scope:   { summary: 'Description-keyword classifier producing coa_type_class + project_type + scope_tags per Spec 42 §6.6.D', table: 'coa_applications' },

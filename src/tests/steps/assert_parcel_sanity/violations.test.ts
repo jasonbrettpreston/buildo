@@ -324,11 +324,11 @@ describe('5. unhappy paths (descriptor-declared facts true at commit 1; runtime 
 });
 
 describe('6. chain wiring (fact, unchanged by this conversion)', () => {
-  it('chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 28 (FLEET-2 manifest variant c2)', () => {
+  it('chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 29 (FLEET-2 manifest variant c2; +link_parcel_abutments, H6 A2 2026-10-16)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const manifest = require('../../../../scripts/manifest.json');
     const chain: string[] = manifest.chains.sources;
-    expect(chain).toHaveLength(28);
+    expect(chain).toHaveLength(29);
     const idx = (s: string) => chain.indexOf(s);
     expect(idx('compute_parcel_cost_estimates')).toBeLessThan(idx('refresh_snapshot'));
     expect(idx('refresh_snapshot')).toBeLessThan(idx('assert_global_coverage'));

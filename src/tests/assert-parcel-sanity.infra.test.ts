@@ -190,6 +190,6 @@ describe('manifest.json — assert_parcel_sanity wiring (unchanged by the conver
     // adjacency (refresh_snapshot right after assert_parcel_sanity, c8b36470) was a splice, not a fence.
     expect(chain[chain.indexOf('assert_global_coverage') - 1]).toBe('refresh_snapshot');
     expect(chain.indexOf('compute_parcel_cost_estimates')).toBeLessThan(chain.indexOf('refresh_snapshot'));
-    expect(chain).toHaveLength(28);
+    expect(chain).toHaveLength(29); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
   });
 });

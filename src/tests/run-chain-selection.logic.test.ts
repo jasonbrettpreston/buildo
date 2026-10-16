@@ -200,11 +200,11 @@ describe('resolveExternalRunId — the first NON-FLAG positional, proven on real
 });
 
 describe('the live `sources` chain — the partial dispatch this WF exists to enable', () => {
-  it('position 15 is `massing`, so `--from=massing` is exactly the 14-step tail run 35140032614 never reached', () => {
+  it('position 15 is `massing`, so `--from=massing` is exactly the 15-step tail (14 when run 35140032614 never reached it; +link_parcel_abutments, H6 A2 2026-10-16)', () => {
     const sources = MANIFEST.chains.sources!;
     expect(sources[14], 'if the manifest changes, the runbook dispatch line must change with it').toBe('massing');
     const r = runChain.resolveStepSelection({ steps: sources, from: 'massing' });
-    expect(r.selected).toHaveLength(14);
+    expect(r.selected).toHaveLength(15); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
     expect(r.skipped).toHaveLength(14);
     expect(r.selected[r.selected.length - 1]).toBe('assert_engine_health');
     expect(r.skipped, 'a tail run does NOT reap stranded rows — reconcile is Step 0 and is not selected').toContain('reconcile');

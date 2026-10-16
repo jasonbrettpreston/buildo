@@ -204,7 +204,7 @@ describe('chain-spec Step Breakdown tables — membership + position vs manifest
       checked += live.length;
       problems.push(...membershipProblems(chain, specFile, live, parseStepBreakdown(specFile)));
     }
-    expect(checked).toBe(88); // 32+16+28+7+2+1+1+1 (bylaw_maps, Spec 58 §11.3, H6 2026-10-16; coa_notices, Spec 129, 2026-10-07) — MEASURED 2026-09-15 as 87, 86 after FLEET-2 2.1 (link_massing out of permits). Kept EXACT on purpose: deriving it from the manifest would let a chain lose steps quietly, the one thing this pin guards.
+    expect(checked).toBe(89); // 32+16+29+7+2+1+1+1 (link_parcel_abutments into sources, Spec 130, H6 A2 2026-10-16; bylaw_maps, Spec 58 §11.3, H6 2026-10-16; coa_notices, Spec 129, 2026-10-07) — MEASURED 2026-09-15 as 87, 86 after FLEET-2 2.1 (link_massing out of permits). Kept EXACT on purpose: deriving it from the manifest would let a chain lose steps quietly, the one thing this pin guards.
     expect(problems).toEqual([]);
   });
 

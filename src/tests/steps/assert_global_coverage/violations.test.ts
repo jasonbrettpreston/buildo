@@ -196,7 +196,7 @@ describe('assert_global_coverage — measured facts, true today (plain it)', () 
     expect(coa.length).toBe(16);
     // FLEET-2 2026-10-05 (MQ-C8 a2 + MQ-A8 (a), operator-accepted, compliance-vetted): classify_lifecycle_phase and its gate assert_lifecycle_phase_distribution (kept ADJACENT, 03fcb569) run before assert_data_bounds / assert_engine_health; refresh_snapshot runs after the marketplace tail (permits), after the gate (coa), and before assert_global_coverage (sources). Closes derived chain-order rows 21–24 + the MQ-A8 row. Relative order, never slot numbers.
     expect(sources.indexOf('assert_global_coverage'), 'sources chain position').toBe(sources.indexOf('refresh_snapshot') + 1); // MQ-A8: right after refresh_snapshot
-    expect(sources.length).toBe(28);
+    expect(sources.length).toBe(29); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
   });
 
   it('the 6 pre-existing verdict-affecting logic variables are registered with their measured defaults (report §1.3)', () => {

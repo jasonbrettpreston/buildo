@@ -109,8 +109,8 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(permits).not.toContain('link_massing'); // FLEET-2 2.1: permits length is the manifest's own; the membership fence replaces the hand count
     expect(coa.indexOf('assert_engine_health'), 'coa chain position').toBe(coa.indexOf('assert_data_bounds') + 1); // the quality block
     expect(coa.length).toBe(16);
-    expect(sources.indexOf('assert_engine_health'), 'sources chain position — last step').toBe(27); // 28 of 28
-    expect(sources.length).toBe(28);
+    expect(sources.indexOf('assert_engine_health'), 'sources chain position — last step').toBe(28); // 29 of 29 (H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates)
+    expect(sources.length).toBe(29);
     expect(deepScrapes.indexOf('assert_engine_health'), 'deep_scrapes chain position').toBe(5); // 6 of 7
     expect(deepScrapes.length).toBe(7);
   });

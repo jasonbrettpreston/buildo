@@ -665,7 +665,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=22 |
-| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=a341880 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
 | G3 | 2 | 2 | table rows=15 vocab-hit rows=15 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
@@ -715,7 +715,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 | 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
 | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 487 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 150 terminal(s) unwitnessed (no capture) |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 151 terminal(s) unwitnessed (no capture) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -724,39 +724,22 @@ The harness uses a fake pool, so the run wrote nothing to any database.
 - compare ran: true · diffs found: 201 · unexplained: 0
 
 ### Test suite (item iii)
-- 2333/2361 passed (suite success=false)
-- harvested: 77 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
+- 2356/2367 passed (suite success=false)
+- harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (28):
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the compute corpus is not empty (a vacuous loop proves nothing)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the driver REPORTS the compute corpus under --json (report shape only — gating is proven above)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-wsib.js (slug "link_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcel-addresses.js (slug "link_parcel_addresses") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-centroids.js (slug "compute_centroids") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-parcels.js (slug "link_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (11):
+  - src/tests/step-conformance.infra.test.ts > prove-red — the shape rule fires on the unconverted corpus > every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json, minus declared pending)
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-global-coverage.js (slug "assert_global_coverage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-data-bounds.js (slug "assert_data_bounds") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-engine-health.js (slug "assert_engine_health") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-neighbourhoods.js (slug "link_neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/quality/assert-parcel-sanity.js (slug "assert_parcel_sanity") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-ravines.js (slug "enrich_ravines") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-heritage.js (slug "enrich_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-address-points.js (slug "address_points") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-parcels.js (slug "parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-massing.js (slug "massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-neighbourhoods.js (slug "neighbourhoods") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-wsib.js (slug "load_wsib") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-heritage.js (slug "load_heritage") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-centreline.js (slug "enrich_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-zoning.js (slug "load_zoning") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/enrich_parcels/sixplex.logic.test.ts > enrich_parcels — sixplex pass (600.60 membership) > ESX-3 invalidators: each column invalidated by full_rescan in both producer and reader descriptors
+  - src/tests/steps/assert_data_bounds/violations.test.ts > assert_data_bounds — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1/§1.0 claim 4)
+  - src/tests/steps/assert_engine_health/violations.test.ts > assert_engine_health — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1 claim 3)
+  - src/tests/steps/assert_global_coverage/violations.test.ts > assert_global_coverage — measured facts, true today (plain it) > manifest.json declares the 3 chains at the measured positions (report §1.1 claim 3)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > 6. chain wiring (fact, unchanged by this conversion) > chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 28 (FLEET-2 manifest variant c2)
+  - src/tests/steps/compute_parcel_cost_estimates/violations.test.ts > compute_parcel_cost_estimates — test 13: chain wiring > sources chain has 28 steps; compute_parcel_cost_estimates sits at index 22 (0-based), immediately after enrich_parcels
+  - src/tests/steps/enrich_heritage/violations.test.ts > enrich_heritage — G-shape (true from commit 1: legacy source text) > chain wiring — sources chain has 28 steps and enrich_heritage sits immediately after enrich_ravines
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

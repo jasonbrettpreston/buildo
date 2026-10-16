@@ -191,14 +191,15 @@ describe('compute_parcel_cost_estimates — test 11: CPCE-D3 CLOSED — the coun
 });
 
 describe('compute_parcel_cost_estimates — test 13: chain wiring', () => {
-  it('sources chain has 28 steps; compute_parcel_cost_estimates sits at index 22 (0-based), immediately after enrich_parcels', () => {
+  it('sources chain has 29 steps; compute_parcel_cost_estimates sits at index 22 (0-based), immediately after enrich_parcels', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const manifest: any = require(path.join(REPO_ROOT, 'scripts/manifest.json'));
     const slugs: string[] = manifest.chains.sources;
-    expect(slugs).toHaveLength(28);
+    expect(slugs).toHaveLength(29); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
     expect(slugs.indexOf('compute_parcel_cost_estimates')).toBe(22);
     expect(slugs[21]).toBe('enrich_parcels');
-    expect(slugs[23]).toBe('refresh_snapshot'); // FLEET-2 manifest variant c2 moved refresh_snapshot ahead of the asserts
+    expect(slugs[23]).toBe('link_parcel_abutments'); // H6 A2 2026-10-16 (Spec 130 chain position)
+    expect(slugs[24]).toBe('refresh_snapshot'); // FLEET-2 manifest variant c2 moved refresh_snapshot ahead of the asserts
   });
 });
 

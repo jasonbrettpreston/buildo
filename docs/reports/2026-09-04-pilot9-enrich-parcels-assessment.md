@@ -986,7 +986,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=31 |
-| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=a341880 |
+| G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
 | G3 | 1 | 2 | table rows=10 vocab-hit rows=9 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
@@ -1036,7 +1036,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 | 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
 | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 487 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 150 terminal(s) unwitnessed (no capture) |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 151 terminal(s) unwitnessed (no capture) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
@@ -1045,14 +1045,22 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 - compare ran: true · diffs found: 681 · unexplained: 0
 
 ### Test suite (item iii)
-- 2362/2365 passed (suite success=false)
+- 2356/2367 passed (suite success=false)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (3):
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the compute corpus is not empty (a vacuous loop proves nothing)
-  - src/tests/step-conformance.infra.test.ts > §5.5 compute shape — dispatch table ≡ declared checks > the driver REPORTS the compute corpus under --json (report shape only — gating is proven above)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (11):
+  - src/tests/step-conformance.infra.test.ts > prove-red — the shape rule fires on the unconverted corpus > every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json, minus declared pending)
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+  - src/tests/steps/assert_data_bounds/violations.test.ts > assert_data_bounds — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1/§1.0 claim 4)
+  - src/tests/steps/assert_engine_health/violations.test.ts > assert_engine_health — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1 claim 3)
+  - src/tests/steps/assert_global_coverage/violations.test.ts > assert_global_coverage — measured facts, true today (plain it) > manifest.json declares the 3 chains at the measured positions (report §1.1 claim 3)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+  - src/tests/steps/assert_parcel_sanity/violations.test.ts > 6. chain wiring (fact, unchanged by this conversion) > chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 28 (FLEET-2 manifest variant c2)
+  - src/tests/steps/compute_parcel_cost_estimates/violations.test.ts > compute_parcel_cost_estimates — test 13: chain wiring > sources chain has 28 steps; compute_parcel_cost_estimates sits at index 22 (0-based), immediately after enrich_parcels
+  - src/tests/steps/enrich_heritage/violations.test.ts > enrich_heritage — G-shape (true from commit 1: legacy source text) > chain wiring — sources chain has 28 steps and enrich_heritage sits immediately after enrich_ravines
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

@@ -86,11 +86,11 @@ describe('enrich_heritage — G-shape (true from commit 1: legacy source text)',
     expect(src).toMatch(/ADVISORY_LOCK_ID\s*=\s*62/);
   });
 
-  it('chain wiring — sources chain has 28 steps and enrich_heritage sits immediately after enrich_ravines', () => {
+  it('chain wiring — sources chain has 29 steps and enrich_heritage sits immediately after enrich_ravines', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
     const manifest: any = require(path.join(REPO_ROOT, 'scripts/manifest.json'));
     const slugs: string[] = manifest.chains.sources;
-    expect(slugs).toHaveLength(28);
+    expect(slugs).toHaveLength(29); // H6 A2 2026-10-16: +link_parcel_abutments after compute_parcel_cost_estimates
     expect(slugs.indexOf('enrich_heritage')).toBe(slugs.indexOf('enrich_ravines') + 1);
   });
 });

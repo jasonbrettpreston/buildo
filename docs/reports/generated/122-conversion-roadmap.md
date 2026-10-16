@@ -12,7 +12,7 @@ Remaining files: **36** (+ **3** pending) · remaining slugs: **38** (+ **3** pe
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 3 | 2 |
+| C5 | 3 | 3 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -31,7 +31,7 @@ Remaining files: **36** (+ **3** pending) · remaining slugs: **38** (+ **3** pe
 |---|---|---|---|---|---|---|
 | INGESTOR | `scripts/load-bylaw-map-areas.js` | load_bylaw_map_areas [pending: shape_clean_pending_recapture] | bylaw_maps (1) | — | — | — |
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
-| LINK | `scripts/link-parcel-abutments.js` | link_parcel_abutments [pending: shape_clean_pending_recapture] |  (0) | — | — | — |
+| LINK | `scripts/link-parcel-abutments.js` | link_parcel_abutments [pending: shape_clean_pending_recapture] | sources (1) | top-left | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 

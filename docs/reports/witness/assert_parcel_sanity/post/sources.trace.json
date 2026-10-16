@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-parcel-sanity.js",
   "chain": "sources",
-  "source_fingerprint": "9e17337d584a41cdacebda1cda26ad77110754476e642db4e41f2dd1117f052f",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "58a5995188eda9edcb7ae645bcd3fe89d0a2f4c39e8e9d01fa556bec33c03c5d",
+  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
   "header": {
     "processes": 1,
     "calls": 26,
     "distinct": 18,
     "utility": 12,
-    "tracer_self_ms": 4.83,
-    "wall_ms": 47139
+    "tracer_self_ms": 0.927,
+    "wall_ms": 7247
   },
   "statements": [
     {
@@ -98,7 +98,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 734,
       "reads": {},
       "writes": {},
       "excluded": [

@@ -4,9 +4,9 @@
 <!-- Regenerate: npm run churn-complexity -- --refresh -->
 
 > SPEC LINK: `docs/specs/01-pipeline/123_step_opt_assessment_validation.md` §2, §6 (G2)
-> window_end: `a3418800f56d09ddd8003fe3e8ba8e94efe0b945` (must be an ancestor of HEAD — `--check` enforces this and recomputes every column at this SHA, never HEAD)
+> window_end: `b87f62db541859a360f255c7eaa00f609eda4759` (must be an ancestor of HEAD — `--check` enforces this and recomputes every column at this SHA, never HEAD)
 > Population: 27 domain steps (`manifest.chains.sources` minus `reconcile`, chain-head infrastructure per Spec 122 §7.4 A3 — excluded from the population and the median split; still listed below for coverage).
-> Median split (ties → high side, `>=` on both axes): median churn (commits) = 24 · median complexity (branches) = 0
+> Median split (ties → high side, `>=` on both axes): median churn (commits) = 22 · median complexity (branches) = 0
 
 ## Top-right quadrant (named) — 14
 
@@ -39,12 +39,12 @@
 | load_centreline | `scripts/load-centreline.js` | 6 | 1617 | 9 | 0 | top-left |
 | link_parcel_addresses | `scripts/link-parcel-addresses.js` | 9 | 959 | 9 | 0 | top-left |
 | compute_centroids | `scripts/compute-centroids.js` | 17 | 736 | 9 | 0 | top-left |
-| link_parcels | `scripts/link-parcels.js` | 33 | 2060 | 9 | 0 | top-right |
+| link_parcels | `scripts/link-parcels.js` | 34 | 2066 | 9 | 0 | top-right |
 | enrich_ravines | `scripts/enrich-ravines.js` | 3 | 762 | 9 | 0 | top-left |
 | enrich_heritage | `scripts/enrich-heritage.js` | 8 | 1316 | 9 | 0 | top-left |
 | enrich_centreline | `scripts/enrich-centreline.js` | 6 | 1297 | 9 | 0 | top-left |
 | massing | `scripts/load-massing.js` | 27 | 1272 | 9 | 0 | top-right |
-| link_massing | `scripts/link-massing.js` | 44 | 2302 | 9 | 0 | top-right |
+| link_massing | `scripts/link-massing.js` | 45 | 2308 | 9 | 0 | top-right |
 | neighbourhoods | `scripts/load-neighbourhoods.js` | 25 | 1855 | 9 | 0 | top-right |
 | link_neighbourhoods | `scripts/link-neighbourhoods.js` | 26 | 1125 | 9 | 0 | top-right |
 | load_wsib | `scripts/load-wsib.js` | 24 | 1429 | 9 | 0 | top-right |
@@ -52,6 +52,7 @@
 | load_zoning | `scripts/load-zoning.js` | 4 | 810 | 9 | 0 | top-left |
 | enrich_parcels | `scripts/enrich-parcels.js` | 38 | 5932 | 9 | 0 | top-right |
 | compute_parcel_cost_estimates | `scripts/compute-parcel-cost-estimates.js` | 12 | 1903 | 9 | 0 | top-left |
+| link_parcel_abutments | `scripts/link-parcel-abutments.js` | 1 | 36 | 9 | 0 | top-left |
 | refresh_snapshot | `scripts/refresh-snapshot.js` | 36 | 3195 | 9 | 0 | top-right |
 | assert_global_coverage | `scripts/quality/assert-global-coverage.js` | 54 | 3934 | 9 | 0 | top-right |
 | assert_parcel_sanity | `scripts/quality/assert-parcel-sanity.js` | 3 | 213 | 9 | 0 | top-left |

@@ -350,7 +350,7 @@
     "slug_forms": "derived",
     "varies_by_chain": {
       "checks": "per_chain",
-      "phase": { "permits": 23, "coa": 14, "sources": 28, "deep_scrapes": 6 },
+      "phase": { "permits": 23, "coa": 14, "sources": 29, "deep_scrapes": 6 },
       "audit_table": "per_chain",
       "scope": "none"
     },

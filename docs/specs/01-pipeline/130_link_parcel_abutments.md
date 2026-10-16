@@ -106,10 +106,17 @@ This step stores observations. The front-yard-averaging question — which neigh
 ## 6. Operating Boundaries
 
 ### Target Files
-- `scripts/link-parcel-abutments.js`
-- `scripts/link-parcel-abutments.descriptor.json`
-- `scripts/lib/compute/link-parcel-abutments.js`
-- `scripts/link-parcel-abutments.notes.json`
+<!-- generated:target-files -->
+<!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
+- `link_parcel_abutments` — LINK · pending · owner specs: 130
+  - `scripts/link-parcel-abutments.js`
+  - `scripts/link-parcel-abutments.descriptor.json`
+  - `scripts/link-parcel-abutments.notes.json`
+  - `scripts/lib/compute/link-parcel-abutments.js`
+  - `src/tests/steps/link_parcel_abutments/violations.test.ts`
+  - `src/tests/steps/link_parcel_abutments/witness-adoption.logic.test.ts`
+  - edges: not in the cross-step ledger snapshot (declared files only)
+<!-- /generated:target-files -->
 - `migrations/255_parcel_abutments.sql`
 
 ### Out-of-Scope Files

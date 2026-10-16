@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "a0adfdf6b3fbb114aa4acff968f5eddf45e6caa6bc90fbb25aa356914d9ad416",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "7c6541de1c647d302683cb0fec85c35c77d0616dc6c72060e96b81253a45b926",
+  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
   "header": {
     "processes": 1,
     "calls": 23,
     "distinct": 22,
     "utility": 5,
-    "tracer_self_ms": 5.178,
-    "wall_ms": 1240
+    "tracer_self_ms": 0.778,
+    "wall_ms": 231
   },
   "statements": [
     {
@@ -44,7 +44,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 734,
       "reads": {},
       "writes": {},
       "excluded": [

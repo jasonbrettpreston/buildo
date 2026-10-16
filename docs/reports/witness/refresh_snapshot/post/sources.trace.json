@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/refresh-snapshot.js",
   "chain": "sources",
-  "source_fingerprint": "981e2945314ed37b681b85748923cf9a14c7ed7f3443ce7ae4bb095d534dd1e0",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "d5206f22c7da221cf2c3dc7abd157c68ffeea9dd90c2fb583470ff221b8a6041",
+  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
   "header": {
     "processes": 1,
     "calls": 53,
     "distinct": 45,
     "utility": 15,
-    "tracer_self_ms": 10.344,
-    "wall_ms": 25334
+    "tracer_self_ms": 1.714,
+    "wall_ms": 3382
   },
   "statements": [
     {
@@ -174,7 +174,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 734,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -775,7 +775,7 @@
   ],
   "transactions": [
     {
-      "client": "18012:2",
+      "client": "89980:2",
       "write_fingerprints": [
         "73f5d76ba8569f71"
       ]

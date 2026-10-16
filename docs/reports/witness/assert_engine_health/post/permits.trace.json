@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "permits",
-  "source_fingerprint": "a9a333a3e62466d422054b54254ce54aa6b81c1a8907ac8b5acfe2fd0131b524",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "b8aa4907261cfaf40b43fc0671edb048c8ec9eb27a9b8a8ff7d35434c3ced4aa",
+  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
   "header": {
     "processes": 1,
-    "calls": 137,
+    "calls": 146,
     "distinct": 20,
     "utility": 5,
-    "tracer_self_ms": 19.754,
-    "wall_ms": 1484
+    "tracer_self_ms": 4.907,
+    "wall_ms": 334
   },
   "statements": [
     {
       "fingerprint": "018abfe6b1e0291a",
       "kind": "read",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 29,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -53,7 +53,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 114,
+      "rowCount": 123,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -65,7 +65,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 107,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -89,7 +89,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 734,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -144,7 +144,7 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 117,
+      "count": 126,
       "rowCount": 10,
       "reads": {
         "engine_health_snapshots": [
@@ -176,7 +176,7 @@
       "fingerprint": "a37b37a75a1fd130",
       "kind": "read",
       "count": 1,
-      "rowCount": 2,
+      "rowCount": 40,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -210,7 +210,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 114,
+      "rowCount": 123,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -257,7 +257,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 117,
+      "rowCount": 126,
       "reads": {},
       "writes": {},
       "excluded": [

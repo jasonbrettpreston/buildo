@@ -53,6 +53,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   link_parcel_addresses: { name: 'Link Parcel Addresses', group: 'link' },
   link_neighbourhoods:{ name: 'Link Neighbourhoods',   group: 'link' },
   link_massing:       { name: 'Link Massing',          group: 'link' },
+  link_parcel_abutments: { name: 'Link Parcel Abutments', group: 'link' },
   link_coa:           { name: 'Link CoA',              group: 'link' },
   link_coa_to_parcels:{ name: 'Link CoA to Parcels',   group: 'link' },
   classify_coa_scope: { name: 'Classify CoA Scope',    group: 'classify' },
@@ -143,7 +144,7 @@ if (!_manifestParsed.success) {
 // indent 0. Verified consistent per-slug across chains (WF2 2026-06-11).
 const STEP_INDENT: Record<string, number> = {
   classify_scope: 1, builders: 1, link_wsib: 1, geocode_permits: 1, link_parcels: 1,
-  enrich_permits: 1, link_neighbourhoods: 1, link_massing: 1, link_similar: 1,
+  enrich_permits: 1, link_neighbourhoods: 1, link_massing: 1, link_parcel_abutments: 1, link_similar: 1,
   classify_permits: 1, compute_storey_norms: 1, compute_build_norms: 1, backfill_realtor_permit_trades: 1, compute_cost_estimates: 1, compute_parcel_cost_estimates: 1,
   compute_timing_calibration_v2: 1, link_coa: 1, refresh_snapshot: 1,
   compute_trade_forecasts: 1, compute_opportunity_scores: 1, update_tracked_projects: 1, dispatch_notifications: 1,
