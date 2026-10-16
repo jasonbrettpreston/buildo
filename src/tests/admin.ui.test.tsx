@@ -1692,9 +1692,9 @@ describe('NON_TOGGLEABLE_SLUGS filtering', () => {
   });
 
   it('every ingestion chain has at least one non-toggleable step', () => {
-    // Entities, wsib, deep_scrapes and coa_notices (Spec 129: one operator-triggered step, no
+    // Entities, wsib, deep_scrapes, coa_notices (Spec 129) and bylaw_maps (Spec 58 §11.3) — each one operator-triggered step, no
     // infrastructure step of its own) have no infrastructure steps — skip them
-    const ingestionChains = PIPELINE_CHAINS.filter((c) => !['entities', 'wsib', 'deep_scrapes', 'coa_notices'].includes(c.id));
+    const ingestionChains = PIPELINE_CHAINS.filter((c) => !['entities', 'wsib', 'deep_scrapes', 'coa_notices', 'bylaw_maps'].includes(c.id));
     for (const chain of ingestionChains) {
       const hasInfra = chain.steps.some((s) => NON_TOGGLEABLE_SLUGS.has(s.slug));
       expect(hasInfra).toBe(true);
@@ -2631,11 +2631,13 @@ describe('Funnel panel components extracted to separate file', () => {
     // audit_table render path for assert-global-coverage (two render sites).
     // WF3 capture-ledger gap 2026-10-06: bumped from 1500 to 1510 for the `captured`
     // run-status branch in getStatusDot (Spec 120 §3.2b; locked by FreshnessTimeline.ui.test.tsx).
+    // H6 2026-10-16: bumped from 1510 to 1520 for the `bylaw_maps` chain registration (one STEP_NAMES
+    // entry + one CHAIN_META row, the coa_notices precedent; Spec 58 §11.3) and the A2 abutments entry.
     const source = fs.readFileSync(
       path.join(__dirname, '../components/FreshnessTimeline.tsx'), 'utf-8'
     );
     const lineCount = source.split('\n').length;
-    expect(lineCount).toBeLessThan(1510);
+    expect(lineCount).toBeLessThan(1520);
   });
 
   it('FunnelPanels.tsx exports CircularBadge and DataFlowTile', () => {

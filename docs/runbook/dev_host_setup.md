@@ -93,6 +93,19 @@ PGOPTIONS="-c maintenance_work_mem=512MB -c synchronous_commit=off" \
   pg_restore --no-owner -L fk.lst -d <db> <dump>
   ```
 - The `cron` schema is not restored unless the dev cron jobs are wanted (`-n cron`).
+- **Shared memory (once per fresh container):** a new Supabase container runs
+  `dynamic_shared_memory_type = posix` on a 64 MB `/dev/shm`, so the capture harness and run-chain
+  refuse it (`sys_dsm_capacity`, Spec 30 §4.1a). Run the fix that `scripts/lib/preflight-dsm.js`
+  names, then check that `SHOW dynamic_shared_memory_type` reads `mmap`:
+  ```
+  docker exec supabase_db_Buildo psql -U supabase_admin -d postgres -c "ALTER SYSTEM SET dynamic_shared_memory_type = 'mmap'" && docker restart supabase_db_Buildo
+  ```
+  Measured 2026-10-16: the Mac restore missed this step, and the first H6 capture refused until it ran.
+- **Worktrees have no `.env`** (never copy it). A DB command in a worktree loads the main tree's file
+  for that one process only: `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r dotenv/config <script>`.
+- **`db:generate` on the restored DB:** drizzle introspect reorders every table, drops the
+  `usersInAuth` MANUAL PATCH and picks up stray `*_bak_*` / `_backup_*` tables. Splice only the
+  migration's new definitions into `src/lib/db/generated/{schema,relations}.ts` (measured H6, 2026-10-16).
 
 ## 5. Machine-move checklist — everything git does NOT carry
 

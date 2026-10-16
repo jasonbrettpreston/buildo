@@ -1,0 +1,507 @@
+{
+  "identity": {
+    "name": "load_bylaw_map_areas",
+    "display_name": "By-law Map Areas (600.60 Sixplex Overlay)",
+    "owner": "data",
+    "description": "Loads the pinned 600.60 Sixplex Overlay map seed (by-law 654-2025 Diagrams 1/2: the City GIS layer-80 areas with their holes, plus the CKAN TEY wards and ward 23) from scripts/seeds/bylaw/maps/600_60.geojson into bylaw_map_areas: guarded upsert on area_key plus a scoped departure delete, in one transaction. The seed is never fetched live; its md5/sha256 are pinned in the seed manifest.",
+    "lock": 127,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of bylaw_map_areas (Spec 47 §A.5 next-free id 127; 58 is load_zoning). The shell keeps `const ADVISORY_LOCK_ID = 127;` as a §5.4 source-text constant, asserted equal by the pipeline advisory-lock suite.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "58",
+    "spec_version": "2.3",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [],
+      "externals": [
+        {
+          "id": "seed:bylaw-maps-600_60",
+          "kind": "filesystem",
+          "path": "scripts/seeds/bylaw/maps/600_60.geojson",
+          "format": "geojson",
+          "key_property": "area_key"
+        }
+      ]
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+
+  "outputs": {
+    "writes": [
+      {
+        "table": "bylaw_map_areas",
+        "key": "area_key",
+        "key_sql_type": "TEXT",
+        "geometry_kind": "polygon",
+        "columns": [
+          { "name": "area_key", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "map_code", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "source", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "source_feature_id", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "area_type", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "area_name", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "seed_sha256", "vocabulary": "none", "written": "step", "bind": "value" },
+          { "name": "geom", "vocabulary": "none", "written": "step", "bind": "wkb_geometry" }
+        ],
+        "write_discipline": {
+          "class": "upsert_scoped_departure_delete",
+          "guard": "is_distinct_from",
+          "guard_columns": ["map_code", "source", "source_feature_id", "area_type", "area_name", "seed_sha256", "geom"],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The upsert and the scoped departure DELETE commit together: a committed upsert with a rolled-back delete would leave a map area the adopted seed no longer carries, and enrich_parcels decides 600.60 membership from every row of this table. A new seed rewrites every row once (seed_sha256 changes), so the change ratio is unbounded on that run and zero on a re-run.",
+            "liveness": { "kind": "table", "ref": "bylaw_map_areas" }
+          }
+        },
+        "retract": "departed"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 2,
+      "why": {
+        "text": "Exactly two write statements reach bylaw_map_areas: the guarded upsert and the scoped departure DELETE. The geometry validation is a read-only PostGIS SELECT.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "content_hash",
+        "position": "post_acquisition",
+        "external": "seed:bylaw-maps-600_60"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/compute/load-bylaw-map-areas.js", "scripts/seeds/bylaw/maps/manifest.json"],
+    "logic_version": "none",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "on_prior_run_error_why": {
+      "text": "The prior completed run's content hash is the only gate this step has (a filesystem external has no HEAD validators). A failed read must not degrade to first-run and rewrite the table silently; refusing is the visible posture.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/staleness.js" }
+    }
+  },
+
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "bylaw_map_areas",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 254 enables RLS on bylaw_map_areas with ZERO policies (Spec 114 Class B). Under a non-bypass role the load writes 0 rows with NO error and the verdict reads PASS. The bypass is the precondition, checked before the first read (load_coa_notices precedent).",
+          "liveness": {
+            "kind": "table",
+            "ref": "bylaw_map_areas"
+          }
+        }
+      },
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "geom is GEOMETRY(MultiPolygon,4326) and the write validates it with ST_MakeValid; without PostGIS the step cannot store a map area at all.",
+          "liveness": { "kind": "external", "ref": "postgis" }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_bylaw_map_areas_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The GiST index the enrich_parcels sixplex pass filters candidate areas through; without it the consumer degrades to a sequential scan per parcel.",
+          "liveness": { "kind": "file", "ref": "migrations/254_bylaw_map_areas_sixplex.sql" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "bylaw_map_areas",
+    "schema_drift": "pause"
+  },
+
+  "execution": {
+    "shape": "ingest",
+    "txn_scope": "step",
+    "statement_timeout": "none",
+    "step_timeout": "5m",
+    "batch": 8191,
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A seed feature that fails shapeRecord (key/source mismatch, an area type or map code the manifest does not carry) is counted by reason and skipped, and the pre_write FAIL check source_counts_match_manifest then refuses the whole write: no map area is ever silently missing.",
+      "liveness": { "kind": "check", "ref": "source_counts_match_manifest" }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured or the pinned manifest, so a check that throws is a defect, not an upstream condition: it must redden the run.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/load-bylaw-map-areas.js" }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "bylaw_maps": { "argv": [], "env": { "PIPELINE_CHAIN": "bylaw_maps" } }
+    },
+    "maintenance": "none"
+  },
+
+  "checks": [
+    {
+      "id": "dataset_source_license",
+      "kind": "invariant",
+      "expect": { "licence_ruling_recorded": true },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Operator ruling 2026-10-08 (Q-A1): the City GIS layer states no licence; it is used LOCALLY and recorded as 'not stated — City of Toronto GIS, unverified', and a cloud/prod publish waits until it is confirmed. This row carries the recorded ruling on every run so the provenance is read from the audit table, never assumed.",
+        "liveness": { "kind": "file", "ref": "scripts/seeds/bylaw/maps/manifest.json" }
+      }
+    },
+    {
+      "id": "seed_hash_matches_manifest",
+      "kind": "invariant",
+      "expect": { "acquired_content_hash_equals": "manifest.seed_md5" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The seed is pinned (Spec 68 §9 G-PROV): the bytes the library hashed while copying the file must be the bytes map-seed.mjs --adopt recorded. A hand-edited or half-adopted seed (crash between the two renames) is refused before any write. The library's content hash is md5, so the manifest records seed_md5 beside seed_sha256. The manifest itself is committed data required at load: a missing manifest, or one whose seed_sha256 / seed_md5 / map_code / sources / area_types is malformed, fails the step at load (BMA_E_MANIFEST), so no run is ever scored against an unpinned seed.",
+        "liveness": { "kind": "file", "ref": "scripts/analysis/bylaw/map-seed.mjs" }
+      },
+      "order_guarantee": { "guarantee": "The acquired content hash is compared with the manifest seed_md5 before the write is prepared, so a seed whose bytes differ from the pin is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "source_counts_match_manifest",
+      "kind": "invariant",
+      "expect": { "per_source_features_equal": "manifest.sources[].feature_count, else manifest.sources[].ward_codes.length" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Measured 2026-10-08: layer 80 holds 18 features (returnCountOnly) and the ward union is the 8 TEY wards + ward 23; both pins are the manifest's. A shaped count per source that differs from the manifest means a feature was skipped by shapeRecord or the seed is wrong; either way 600.60 membership would be computed against a partial map, so the write is refused.",
+        "liveness": { "kind": "external", "ref": "https://gis.toronto.ca/arcgis/rest/services/cot_geospatial11/FeatureServer/80" }
+      },
+      "order_guarantee": { "guarantee": "Each source's shaped feature count is scored against the manifest (18 GIS, 9 wards) before the write is prepared, so a source with a wrong count is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "bad_key_count",
+      "kind": "invariant",
+      "expect": { "reports": "seed features whose area_key is not <source>:<positive integer>" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A feature with a malformed area_key is dropped by the parse; a dropped map area is land whose 600.60 status silently changes, so any bad key refuses the write.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "order_guarantee": { "guarantee": "The count of seed features whose area_key is not <source>:<positive integer> is scored before the write is prepared, so any malformed key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "duplicate_key_count",
+      "kind": "invariant",
+      "expect": { "unique_source_key": true },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "ON CONFLICT cannot affect a row twice; dedupeBySourceId keeps the first and this count is the only evidence two different polygons shared a key. map-seed.mjs checkSeed already refuses duplicates, so a non-zero here is a seed that bypassed the adopt door.",
+        "liveness": { "kind": "file", "ref": "scripts/analysis/bylaw/map-seed.mjs" }
+      },
+      "order_guarantee": { "guarantee": "The count of seed features sharing an area_key is scored before the write is prepared, so any duplicate key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "null_geometry_count",
+      "kind": "invariant",
+      "expect": { "reports": "seed features carrying no geometry" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "A null geometry is dropped at parse, before validation; for a 27-feature legal map that is a missing area, so it refuses the write.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "order_guarantee": { "guarantee": "The count of seed features carrying no geometry is scored before the write is prepared, so any null geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "geometry_skipped_count",
+      "kind": "invariant",
+      "expect": { "reports": "features the geometry validation could not make valid" },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Unlike a 854-polygon ravine layer there is no tolerable loss rate for a by-law map: one unrepairable area changes the overlay. Zero, scored before the write.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      },
+      "order_guarantee": { "guarantee": "The count of features the geometry validation could not make valid is scored before the write is prepared, so any unrepairable geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.", "spec_ref": "docs/specs/01-pipeline/58_source_zoning_bylaw.md", "anchor": "the map is refused before any write" }
+    },
+    {
+      "id": "delete_skipped_empty_guard",
+      "kind": "invariant",
+      "expect": { "guard_fired": false },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "F-C1: `key <> ALL('{}')` is true for every row, so an empty parse would retract the whole table; the library suppresses that DELETE and this row makes the suppression visible.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  ],
+
+  "invariants": "none",
+  "plausibility": "none",
+
+  "override": {
+    "force_full": "none",
+    "force_run": "BYLAW_MAP_FORCE_RELOAD",
+    "dry_run": "none"
+  },
+
+  "emits": [
+    {
+      "key": "bylaw_map_load",
+      "type": "object",
+      "consumers": [],
+      "skeleton": {
+        "map_code": "600.60",
+        "seed_sha256": null,
+        "content_hash": null,
+        "feature_count": 0,
+        "areas_inserted": 0,
+        "areas_updated": 0,
+        "areas_deleted": 0,
+        "delete_skipped_empty_guard": false,
+        "skipped_reason": null
+      }
+    }
+  ],
+
+  "deviations": [
+    {
+      "from": "the plan's 'seed missing -> fail_error' posture",
+      "why": {
+        "text": "A kind:\"filesystem\" external that resolves to no file is the library's declared tier-1 skip no_source_file (acquire.js 0fs), landing a COMPLETED skipped_no_source_file row, not a failure. The seed is committed in the repository, so a missing file is a repo defect caught first by src/tests/steps/load_bylaw_map_areas/bylaw-maps.infra.test.ts; the step does not add a second, bespoke posture.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      },
+      "adjudicated_by": "Spec 124 Rule 1 (one home: the library's filesystem posture); WF1 phase2-inputs A3",
+      "date": "2026-10-08"
+    },
+    {
+      "from": "the plan's two seed files and composite key (source, source_feature_id)",
+      "why": {
+        "text": "ONE seed file carries both sources (one pin, one staleness stamp) and the INGESTOR key is the text area_key = source:source_feature_id, which the migration's CHECK ties to the pair it replaces (UNIQUE (source, source_feature_id) is kept). Accepted by the operator 2026-10-08.",
+        "liveness": { "kind": "file", "ref": "migrations/254_bylaw_map_areas_sixplex.sql" }
+      },
+      "adjudicated_by": "operator 2026-10-08 (deviations accepted)",
+      "date": "2026-10-08"
+    }
+  ],
+
+  "limitations": [
+    {
+      "what": "Geometry is validated for type and validity and the seed is checked against a Toronto lon/lat box at adopt time, but nothing here compares the City GIS layer with the by-law's Diagram 1 image: the 881 holes (R-10b) are loaded as published and their meaning is ruled downstream (Q-A2).",
+      "measured": "research note phase2-inputs-research.md (A): 937 residential lots in 881 holes; 245 edge lots",
+      "check_id": "none"
+    },
+    {
+      "what": "The licence of the City GIS layer is not stated; the step runs locally only, in its own operator-triggered chain (bylaw_maps, the coa_notices posture), never in a scheduled chain. Nothing in the step itself blocks a cloud run — the publish hold is an operator rule recorded by dataset_source_license and the manifest publish_scope.",
+      "measured": "layer 80 copyrightText empty (2026-10-07); operator ruling 2026-10-08",
+      "check_id": "dataset_source_license"
+    },
+    {
+      "what": "The content-hash gate compares the seed bytes only: a change to this step's compute or migration with an unchanged seed lands skipped_content_hash and does not reload (no code_version trigger — the INGESTOR fleet posture; only load_coa_notices, whose parser output is versioned, carries one). A deliberate reload after such a change is BYLAW_MAP_FORCE_RELOAD=1 (recovery.force).",
+      "measured": "declared: staleness.trigger = content_hash only; 27 rows, the seed changes about yearly",
+      "check_id": "none"
+    }
+  ],
+
+  "interpretation": { "file": "load-bylaw-map-areas.notes.json" },
+
+  "recovery": {
+    "reset": "TRUNCATE is never correct here: re-adopt the seed (map-seed.mjs --refresh then --adopt) and re-run; the guarded upsert plus departure delete converges the table. BYLAW_MAP_FORCE_RELOAD=1 bypasses the content-hash gate for a deliberate reload.",
+    "resume": "none",
+    "force": "BYLAW_MAP_FORCE_RELOAD",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "The only write target declares retract \"departed\" (a scoped departure DELETE keyed by this run's own keys, inside the step transaction), not a mode-gated full retraction, so a kill leaves either nothing or the committed load.",
+      "liveness": "none"
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "The generic before-image mirrors a retraction scope predicate; this target's departure DELETE is keyed by an id array with write_discipline.scope none, so there is nothing to mirror (the load_ravines R-M / LG-17 posture).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+    }
+  },
+
+  "database": {
+    "class": "primary",
+    "min_migration": 254,
+    "assert_current_database": "postgres"
+  },
+
+  "counters": {
+    "records_total": { "source": "acquired.feature_count" },
+    "records_new": { "source": "written.inserted" },
+    "records_updated": { "source": "written.updated" }
+  },
+
+  "config": "none",
+
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": { "bylaw_maps": 1 },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+
+  "terminals": [
+    {
+      "id": "skipped_no_source_file",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "bylaw_map_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The seed file is absent (library tier-1 skip no_source_file). Completed, so the consumer's completed-row read keeps the prior block; the repo-level infra test is what reddens a missing committed seed.",
+        "liveness": { "kind": "file", "ref": "src/tests/steps/load_bylaw_map_areas/bylaw-maps.infra.test.ts" }
+      }
+    },
+    {
+      "id": "skipped_content_hash",
+      "kind": "skip_gated",
+      "status": "completed",
+      "records_meta": { "bylaw_map_load": "object", "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The seed bytes are identical to the prior completed run's: the normal outcome between adoptions. The prior block is re-emitted so enrich_parcels' pin still reads a completed row.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "bylaw_map_load": "object", "audit_table": "object", "terminal": "string" }
+    },
+    {
+      "id": "failed_seed_hash_matches_manifest",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The seed bytes do not match the manifest pin: refused before any write.", "liveness": { "kind": "check", "ref": "seed_hash_matches_manifest" } }
+    },
+    {
+      "id": "failed_source_counts_match_manifest",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A source's shaped feature count differs from the manifest: refused before any write.", "liveness": { "kind": "check", "ref": "source_counts_match_manifest" } }
+    },
+    {
+      "id": "failed_bad_key_count",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A seed feature carried a malformed area_key: refused before any write.", "liveness": { "kind": "check", "ref": "bad_key_count" } }
+    },
+    {
+      "id": "failed_duplicate_key_count",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "Two seed features shared an area_key: refused before any write.", "liveness": { "kind": "check", "ref": "duplicate_key_count" } }
+    },
+    {
+      "id": "failed_null_geometry_count",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A seed feature carried no geometry: refused before any write.", "liveness": { "kind": "check", "ref": "null_geometry_count" } }
+    },
+    {
+      "id": "failed_geometry_skipped_count",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A map area could not be made valid: refused before any write.", "liveness": { "kind": "check", "ref": "geometry_skipped_count" } }
+    },
+    {
+      "id": "failed_empty_source",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "guards.empty_source: the acquired seed has 0 rows to write; the write is refused and bylaw_map_areas is untouched.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": {
+        "text": "The local copy or the GeoJSON parse threw; nothing was written.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/acquire.js" }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": {
+        "text": "Advisory lock 127 is held by another process; the library emits a row-derived SKIP summary.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  ]
+}

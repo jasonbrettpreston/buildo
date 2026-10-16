@@ -290,6 +290,18 @@ The `max_build_stories` "derived" path was `round(bylaw_max_height_m / storey_he
 ---
 
 <testing>
+## 9. Sixplex overlay pass — 600.60 membership (PROPOSED 2026-10-08; McBylaw Phase 2 inputs A4)
+
+One more overlay pass beside the §2 membership flags: `parcels.in_sixplex_area`, `sixplex_area_type`, `sixplex_membership_basis` (migration 254), from `bylaw_map_areas` (Spec 58 §11.3, `load_bylaw_map_areas`).
+
+- **Phase:** `sixplex`, order 5, shared transaction, scope **full** (every parcel every run, behind an `IS DISTINCT FROM` guard; a re-run writes 0). `optimal_config` moves to order 6.
+- **Method:** the map is split with `ST_Subdivide(geom, enrich_parcels_sixplex_subdivide_max_vertices)` (logic variable, default 256) into an indexed `ON COMMIT DROP` temp table; each parcel's `ST_PointOnSurface` is tested against the City GIS areas (holes kept), the CKAN ward union, and the GIS hull (holes filled).
+- **Basis (closed):** `gis_in` (TRUE, area type 4 TEY / 3 Scarborough North) · `gis_out_ward_out` (FALSE) · `gis_hole_ward_in`, `gis_edge_ward_in` (NULL — R-10b / Q-A2: measured first, then ruled) · `straddle` (reserved, Q-A3, never emitted) · `no_geom` (NULL). The migration-254 consistency CHECK enforces the value/basis pairing.
+- **Map missing:** when `bylaw_map_areas` holds no 600.60 rows from both sources the pass is skipped, the columns keep their prior values (NULL before the first map; stale after a map is removed — the WARN is the only signal), and `sixplex_map_missing` WARNs.
+- **Input guard split (operator 2026-10-16, H6 QA panel N5):** the map is the one declared read that may be empty (it is local-only while the layer licence is open, Spec 58 §11.3), so an empty map must not halt the step. `inputs.on_missing` is `run` (an empty read table is an INFO `inputs_nonempty` row) and the halt moves to `guards.empty_source`, which lists every other read table (`parcels`, the zoning tables, `parcel_buildings`, `building_footprints`, the neighbourhood tables, `permits`, `coa_applications`; the enrich_heritage array form, 122a). A new read table joins that list unless a spec defines its empty behaviour.
+- **Checks:** `sixplex_map_missing` (WARN), `sixplex_basis_counts` (INFO, the per-basis census), `sixplex_enriched_count` (INFO).
+- **Reality bounds (plan, RC seat at capture):** TRUE share of R-category lots in [0.30, 0.40] (measured 34.5 %); R-zone TRUE share ≥ 0.85; disputed ≤ 1,200 (measured 1,122); `gis_in` R-category count = 151,881 ± re-run drift (a mismatch is a finding).
+
 ## 5. Testing Mandate
 - **Logic** (`src/tests/zoning-parcels.logic.test.ts`): `zoning-precedence.js` attr→rule map completeness (every parcel column has a rule); every base parameter renders the dominant form, overlays MIN, memberships bool_or; an anti-reintroduction lock forbids MIN/MAX over the 9 base parameters (E1); deterministic ORDER BY present; jsonb shape builder.
 - **Infra** (`src/tests/parcels-zoning-columns.regression.test.ts`): migration 165 applied — all ~36 columns + exact types + CHECK-free nullability; assert **no** new index on `parcels` from the migration; `zoning_overlays` is JSONB.
@@ -315,9 +327,10 @@ Every test file carries the `SPEC LINK` header.
   - `scripts/enrich-parcels.notes.json`
   - `scripts/lib/compute/enrich-parcels.js`
   - `src/tests/steps/enrich_parcels/pending-scope-when.logic.test.ts`
+  - `src/tests/steps/enrich_parcels/sixplex.logic.test.ts`
   - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`
   - `src/tests/steps/enrich_parcels/violations.test.ts`
-  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `enrich_parcels_pass3_scope` writes (migrations/240_phase_b_massing_watermark_and_pass3_scope.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `bylaw_map_areas` reads (migrations/254_bylaw_map_areas_sixplex.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `enrich_parcels_pass3_scope` writes (migrations/240_phase_b_massing_watermark_and_pass3_scope.sql); `neighbourhood_build_norms` reads (migrations/199_neighbourhood_build_norms.sql); `neighbourhood_storey_norms` reads (migrations/195_neighbourhood_storey_norms.sql); `neighbourhoods` reads (migrations/013_neighbourhoods.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql); `permits` reads (migrations/001_permits.sql); `zoning_bylaw_areas` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` reads (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` reads (migrations/164_zoning_bylaw_tables.sql)
   - upstream: enrich_centreline · enrich_heritage · enrich_ravines · link_massing · massing · neighbourhoods · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity · compute_parcel_cost_estimates · link_massing
   - consumers: scripts/run-chain.js (records_meta deferred)

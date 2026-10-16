@@ -1,0 +1,62 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/link-parcel-abutments.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "This file carries 5 prose entries (well under the cap). The junction is DERIVED, not imported:",
+    "the interesting prose is what the pair set and the setback estimate MEAN, not how a source drifts."
+  ],
+  "expected_shape": [
+    {
+      "what": "A healthy run writes about 1.0 M ORDERED pair rows — roughly 2.3 abutments per lot, so about 496 K parcels × 2.3 × 2 orientations. Every value column is derived, `linked_at` is the run clock, and an unchanged re-run writes ZERO rows (the IS DISTINCT FROM guard over all seven value columns). The numbers below are INFERRED from the 496 K-parcel corpus and must be REPLACED by the measurement at the first capture — this entry is the shape to compare that capture against, not a pin.",
+      "measured": {
+        "value": { "ordered_pairs": 1000000, "pairs_per_lot": 2.3, "source": "inferred, not measured" },
+        "date": "2026-10-08",
+        "query": "n/a — round(2.3 × count(parcels with geom)) at the first capture"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "There is ONE row per ORDERED pair — (A,B) and (B,A) are both present — and every attribute on a row describes the NEIGHBOUR as seen FROM THE SUBJECT: `neighbour_residential` is the neighbour's zone family, `same_frontage_street` is subject-street = neighbour-street (NULL for either side having no frontage street), `neighbour_building_id` is the neighbour's PRIMARY building and `bldg_to_subject_m` is that building to the SUBJECT's geometry. Front-yard-averaging applicability is NOT stored: McBylaw derives none/one/two/ambiguous on read from these pairs, with fya_neighbour_max_dist_m 15.0 (10.5.40.70(1)). A reader who treats a row as an unordered adjacency, or reads `bldg_to_subject_m` as a neighbour-local distance, halves or mirrors the answer.",
+      "measured": {
+        "value": { "row_grain": "ordered pair", "fya_neighbour_max_dist_m": 15.0, "derived_by": "McBylaw" },
+        "date": "2026-10-08",
+        "query": "research note phase2-inputs-research.md (B)"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "`asymmetric_pairs` > 0. Adjacency is symmetric and every batch emits both orientations, so an (A,B) without its (B,A) is a partial write OR — the common case — a pair whose other orientation was deleted outside the step (the migration-255 trigger deletes both orientations, so a one-sided delete is a manual edit). Every run re-derives every pair (full_rescan), so a re-run re-creates the missing orientation; a persisting count after a re-run is a defect in the pair query.",
+      "check": "asymmetric_pairs",
+      "measured": {
+        "value": { "expected_asymmetric_pairs": 0, "repair": "re-run (full_rescan)" },
+        "date": "2026-10-08",
+        "query": "SELECT count(*) FROM parcel_abutments a WHERE NOT EXISTS (SELECT 1 FROM parcel_abutments b WHERE b.parcel_id = a.neighbour_id AND b.neighbour_id = a.parcel_id)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Two frozen vocabularies live in the compute, not in logic_variables (H6 conformance 2026-10-16, Spec 124 Rule 3). RES_ZONES = R, RD, RS, RT, RM is By-law 569-2013's residential zone-family set; neighbour_residential is true exactly when the neighbour's zoning_class is one of them. STATUSES is the closed est_status set, declared as the column's vocabulary (on_unknown fail) and mirrored by migration 255's CHECK. Neither is a tunable: an operator-editable copy could only disagree with the by-law or with Postgres."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "`front_setback_est_m` is the difference between the neighbour's primary building's distance-to-its-own-frontage-street and its lot-to-street distance — measured to the building OUTLINE (the massing roof outline, eaves and porches included), not the main wall (800.50). The fidelity is therefore `differs` (Spec 69 M-26), and the estimate is ADVISORY ONLY until an estimator passes the CoA-notice oracle (Q-B1, method v2 within 0.5 m on only 2 of 9 oracle parcels). Nothing in this step detects that a massing outline with a deep porch has moved the estimate inward; an `est_status` of `estimated` says the arithmetic was in bounds, NOT that the number is the by-law's setback.",
+      "detected_by": "none",
+      "measured": {
+        "value": { "oracle_parcels_within_0_5m": "2 of 9", "check_id": "est_status_counts" },
+        "date": "2026-10-07",
+        "query": "research note phase2-inputs-research.md (Q-B1)"
+      }
+    }
+  ]
+}

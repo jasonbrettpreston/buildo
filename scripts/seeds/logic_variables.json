@@ -4867,6 +4867,72 @@
       "group": "Source Ingestion"
     }
   },
+  "abut_touch_tolerance_m": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0,
+    "max": 5,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: two lots abut when their boundaries lie within this distance (metres) — the research sample used ST_DWithin 0.5 m (phase2-inputs-research.md (B)). CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "abut_min_shared_len_m": {
+    "default": 1.0,
+    "type": "number",
+    "min": 0.1,
+    "max": 50,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: minimum shared boundary length (metres, EPSG 2952) for a pair to be stored; excludes point-touch corner contacts (the ambiguous >= 3 abutter cases in the research sample). CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "abut_bbox_pad_deg": {
+    "default": 0.00002,
+    "type": "number",
+    "min": 0.000001,
+    "max": 0.001,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: GiST bbox pre-filter pad in degrees (about 2 m at Toronto), a superset of abut_touch_tolerance_m; the exact cut is the geography ST_DWithin that follows. CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "abut_street_search_deg": {
+    "default": 0.0008,
+    "type": "number",
+    "min": 0.0001,
+    "max": 0.01,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: bbox (degrees, about 80 m) around the neighbour lot within which centreline segments named as its primary frontage street are unioned for the front-setback estimate (research method v2). CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "fya_est_min_m": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 5,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: an estimated neighbour front setback below this (metres) is est_status estimate_negative, never stored as a value (research: 4 of 378 negative). Bounds 0..5 (H6 QA ruling 2026-10-16, CA N3): never below 0, so a negative setback is never stamped estimated, and never above fya_est_max_m's floor of 5, so min <= max holds without a cross-check. CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "fya_est_max_m": {
+    "default": 30,
+    "type": "number",
+    "min": 5,
+    "max": 200,
+    "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: an estimated neighbour front setback above this (metres) is est_status estimate_out_of_bounds (research p99 17.41 m). CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "abut_parcels_with_abutments_warn_pct": {
+    "default": 50,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "H6 QA ruling 2026-10-16 item 2. link_parcel_abutments: minimum CUMULATIVE share (%) of parcels with geometry that have at least one abutment row; below it the parcels_with_abutments_pct check WARNs (pct >= form, the link_neighbourhoods_link_rate_warn_pct convention: the value is the floor itself, not a complement). PROVISIONAL 50: re-set from the first capture (H6 runbook step 5) to just under the measured share. CONSUMED by link_parcel_abutments via checks[].limit_from_config.",
+    "admin": { "group": "Source Ingestion" }
+  },
+  "enrich_parcels_sixplex_subdivide_max_vertices": {
+    "default": 256,
+    "type": "number",
+    "min": 8,
+    "max": 4096,
+    "description": "McBylaw Phase 2 inputs A4 (2026-10-08). The enrich_parcels sixplex pass splits each 600.60 map area (bylaw_map_areas; the main City GIS polygon has ~31K vertices and 813 holes) with ST_Subdivide(geom, this) into an indexed ON COMMIT DROP temp table before the point-on-surface membership test. Smaller = more, cheaper parts. The research join against the unsubdivided polygon was cancelled at 15 minutes. CONSUMED by scripts/lib/compute/enrich-parcels.js (buildSixplexSql $1).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "enrich_parcels_bbox_degree_divisor": {
     "default": 78000,
     "type": "number",

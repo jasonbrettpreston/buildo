@@ -795,7 +795,7 @@ become a 7-line file plus a 606-line island one directory over. §5.5 closes tha
 entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixture:
 `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`.
 
-**Conversion checklist line — McDonald's Airtight V3 (2026-10-11, Spec 124 R-BZ/R-CA):** every conversion from now on, and every step not yet converted, passes Airtight V3: compute purity codes G0–G13 (122a §A26) with ZERO findings and no ledger allowance. `step-validate` prints `standard: V2|V3`; a step entering `converted[]` or `pending[]` with a purity finding is RED.
+**Conversion checklist line — McDonald's Airtight V3 (2026-10-11, Spec 124 R-BZ/R-CA):** every conversion from now on, and every step not yet converted, passes Airtight V3: compute purity codes G0–G13 (122a §A26) with ZERO findings and no ledger allowance. `step-validate` prints `standard: V2|V3`; a step entering `converted[]` or `pending[]` with a purity finding is RED. Before the first capture, walk the trap list in 122a §A27.
 
 **Enforced (2026-09-26, Spec 124 §5 R-BA gate E):** the shape rule bans the commonest hiding places
 (console, bare fetch, wall clock, `process.env`, forbidden `require`s) but says nothing about a bare

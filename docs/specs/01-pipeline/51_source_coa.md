@@ -30,6 +30,7 @@ As a lead generator, I need Committee of Adjustment variance hearing records ing
 | `street_num` | TEXT | `STREET_NUM` | |
 | `street_name` | TEXT | `STREET_NAME` | |
 | `decision_date` | DATE | `DECISION_DATE` | |
+| `zoning_designation` | TEXT | `ZONING_DESIGNATION` (both resources) | Raw zone string as filed, trimmed, else NULL (mig 253). As at the hearing date. Parsed only by `scripts/lib/coa-zoning-designation.js` (closed status `full_569 · class_only · former_bylaw · long_name · unparsed · null`). Hashed into `data_hash`: adding it re-upserts every row once on the first `--full` (status ledger +0: it emits on status change only). |
 | `linked_permit_num` | TEXT | — | Populated by `link_coa` step |
 | `linked_confidence` | NUMERIC | — | 0.30–0.95 |
 
@@ -91,6 +92,7 @@ The CoA stream parallels the permits stream — neither is a foreign key of the 
 - `C_OF_A_DESCISION` typo in CKAN → mapped as-is to `decision` column
 - Empty records on incremental → `process.exit(0)` after logging "no new records"
 - CKAN SQL endpoint returns 500 → treated as error, chain halts
+- `ZONING_DESIGNATION` absent or blank → `zoning_designation` NULL, counted in the `zoning_designation_null` audit row; never a skip (not in CRITICAL_FIELDS).
 
 ### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 3 — shipped 2026-05-22)
 
@@ -139,6 +141,8 @@ Tracked in `docs/reports/review_followups.md` row 160 as candidate for future "e
 <!-- TEST_INJECT_START -->
 - **Logic:** `coa.logic.test.ts` (field mapping, address composition, ward normalization)
 - **Logic:** `pipeline-sdk.logic.test.ts` (load-coa uses Pipeline SDK)
+- **Logic:** `load-coa.logic.test.ts` (zoning_designation mapping, hash input, wiring)
+- **Logic:** `coa-zoning-designation.logic.test.ts` (parser on 48 real CKAN strings, closed status set, CoA->parcel zone-class check)
 <!-- TEST_INJECT_END -->
 </testing>
 
@@ -149,6 +153,7 @@ Tracked in `docs/reports/review_followups.md` row 160 as candidate for future "e
 
 ### Target Files
 - `scripts/load-coa.js`
+- `scripts/lib/coa-zoning-designation.js`
 
 ### Out-of-Scope Files
 - `scripts/link-coa.js` — governed by step spec

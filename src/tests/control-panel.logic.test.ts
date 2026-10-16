@@ -144,6 +144,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_optcfg_batch_size',
   'enrich_parcels_pass5_stream_batch_size',
   'enrich_parcels_bbox_degree_divisor',
+  'enrich_parcels_sixplex_subdivide_max_vertices', // Spec 65 §P2A A4 (2026-10-08) — ST_Subdivide vertex cap for the sixplex map-area point-on-surface test
   // Pilot 9 commit 7b (Spec 65 §3a DEC-4) — the zoning_class-coverage PASS/WARN floors (95/90).
   'enrich_parcels_zone_class_pct_pass_floor',
   'enrich_parcels_zone_class_pct_warn_floor',
@@ -155,6 +156,15 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // seam (ctx.clock.asOfDate(), no bare now()::date literal) is unaffected; only the OPTIONAL
   // operator-override capability was dropped. See docs/reports/review_followups.md (MED).
   'enrich_parcels_pass5_timeout_minutes',
+  // Spec 130 link_parcel_abutments (McBylaw Phase 2 inputs B, 2026-10-08) — admin group "Source Ingestion";
+  // the 6 tunables read by scripts/lib/compute/link-parcel-abutments.js (Rule 3: nothing hidden).
+  'abut_touch_tolerance_m',
+  'abut_min_shared_len_m',
+  'abut_bbox_pad_deg',
+  'abut_street_search_deg',
+  'fya_est_min_m',
+  'fya_est_max_m',
+  'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
   'reno_coa_uplift_pct', // Spec 65 §6 SC-3 — new-build CoA uplift over max-build GFA

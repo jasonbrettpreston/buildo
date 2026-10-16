@@ -63,6 +63,7 @@ export const PIPELINE_REGISTRY: Record<string, PipelineEntry> = {
   enrich_wsib_registry: { name: 'Enrich WSIB Registry',  group: 'link' },
   load_wsib:          { name: 'Load WSIB Registry',    group: 'ingest' },
   load_coa_notices:   { name: 'Load CoA Decision Notices', group: 'ingest' },
+  load_bylaw_map_areas: { name: 'Load By-law Map Areas', group: 'ingest' },
   link_wsib:          { name: 'Link WSIB',             group: 'link' },
   link_similar:       { name: 'Link Similar Permits',  group: 'link' },
   create_pre_permits: { name: 'Create Pre-Permits',    group: 'link' },
@@ -181,6 +182,8 @@ const CHAIN_META: ReadonlyArray<{ id: string; label: string; description: string
   { id: 'deep_scrapes', label: 'Deep Scrapes',                description: 'Weekdays ×3/day — AIC portal inspection scraping' },
   // Spec 129 — local-only and operator-triggered: deliberately NOT in DISPATCHABLE_CHAINS (no cloud dispatch).
   { id: 'coa_notices',  label: 'CoA Decision Notices',        description: 'Operator-triggered, local only — pinned decision-notice PDFs → coa_notice_variances' },
+  // Spec 58 §11.3 — local-only and operator-triggered (600.60 layer licence open, LBMA-D5): deliberately NOT in DISPATCHABLE_CHAINS.
+  { id: 'bylaw_maps',   label: 'By-law Map Areas',            description: 'Operator-triggered, local only — pinned 600.60 Sixplex Overlay seed → bylaw_map_areas' },
 ];
 
 export const PIPELINE_CHAINS: PipelineChain[] = CHAIN_META.map((meta) => ({

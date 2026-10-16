@@ -794,3 +794,18 @@ The caller (`step-validate`) builds `runnerFingerprints` from the derived runner
 ### Proof of no runtime change
 
 The landing changes gates, ledger rows and specs only — no runtime code. `git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty; `computeLibFingerprint()` is equal before and after; `step-validate --all --fast` differs only in the #32 lines (any `## Validation scorecard (generated)` block that moves is regenerated in the same commit).
+
+## Appendix §A27 — Conversion traps checklist (H6 + cross-step audit, 2026-10-16)
+
+Every new step and every conversion walks this list before its first capture. Each line names the rule that governs it and what enforces it. "Live only" means only a real run against the dev DB catches it, so run the step once before capturing.
+
+1. **Net-new steps stay `pending`** (Spec 124 R-CS). `cutover.mjs` also needs a pretty-printed census row and a `registers_at` naming commit ③ or ⑨ (`convertedAtFor`).
+2. **RLS:** every write target on an RLS-enabled table declares `rls_bypass_or_policy`, and a new table's migration enables RLS (Spec 124 R-CT; Spec 114 §2).
+3. **Bind limit:** rows × bound columns per upsert ≤ 65,535 (Spec 124 R-CU). Live only for fan-out targets.
+4. **Invalidators:** an `outputs.invalidates` row is declared by the column's WRITER (#44 arm). `by:"trigger"` means a trigger that NULLs the column, checked in the live function body (MQ-D3, live only); a trigger that deletes rows is a presence-only `guards.requires` (Spec 124 R-CR).
+5. **Emits:** every key the compute emits is a declared `emits[]` entry (gate C, measured at capture).
+6. **`explained-diffs.json`** exists; `{"contract_version":1,"diffs":[]}` for a net-new step (#40; load_coa_notices precedent).
+7. **Finish the descriptor, notes and compute before capturing.** Any edit stales `source_fingerprint` (#44 STALE, G8) and forces a recapture. A recapture over a loaded target needs the step's own reset or force path to produce a nonzero capture (#38; coa `.forced.json`; LBMA-D7: a content-hash skip does not see an empty target).
+8. **The harness overwrites only tracked goldens:** stage the previous capture by path before `--overwrite`.
+9. **Runbook stop bounds quote the governing spec's population** (Spec 65:302 bounds residential lots, not all parcels).
+10. **Host:** local Supabase DSM `mmap`; worktree DB env via `DOTENV_CONFIG_PATH` for one process; `db:generate` on a restored DB is spliced, not taken whole (`docs/runbook/dev_host_setup.md` §4).

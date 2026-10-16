@@ -49,11 +49,15 @@ describe('manifest-utils — STEP_TELEMETRY_TABLES allow-list', () => {
   // before any new table becomes admin-browsable (the compensating control for the denylist).
   it('exposes EXACTLY the reviewed set of inspectable tables', () => {
     const FROZEN_INSPECTABLE_TABLES = [
-      'address_points', 'building_footprints', 'coa_applications',
+      'address_points', 'building_footprints',
+      'bylaw_map_areas', // reviewed 2026-10-16: public City GIS / CKAN ward polygons + area names, no personal data (Spec 58 §11.3)
+      'coa_applications',
       'coa_notice_variances', // reviewed 2026-10-10: values only, no text/personal data (Spec 129 §3.2/§3.4)
       'cost_estimates',
       'data_quality_snapshots', 'engine_health_snapshots', 'entities', 'heritage_properties',
-      'lead_parcels', 'lead_trades', 'neighbourhood_build_norms', 'neighbourhood_storey_norms', 'neighbourhoods', 'parcel_address_points',
+      'lead_parcels', 'lead_trades', 'neighbourhood_build_norms', 'neighbourhood_storey_norms', 'neighbourhoods',
+      'parcel_abutments', // reviewed 2026-10-16: parcel-id pairs, distances, flags only, no personal data (Spec 130)
+      'parcel_address_points',
       'parcel_buildings', 'parcels', 'permit_inspections', 'permit_parcels', 'permit_trades',
       'permits', 'phase_calibration', 'phase_stay_calibration', 'pipeline_runs', 'ravines',
       'toronto_centreline', 'trade_forecasts', 'wsib_registry', 'zoning_bylaw_areas',

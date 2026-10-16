@@ -193,6 +193,10 @@
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
+    "scripts/lib/compute/link-parcel-abutments.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-16 (H6, Spec 130; registry-truth ruling 1 / fold 8 item 1): a real import of link_parcel_abutments (scripts/link-parcel-abutments.js:32 requires it). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. A semantic change is signalled by the hand-bumped staleness.logic_version (v1-centreline-differencing) behind the step's code_version trigger, so the row stays descriptive."
+    },
     "scripts/lib/compute/link-parcel-addresses.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
@@ -204,6 +208,10 @@
     "scripts/lib/compute/link-wsib.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
+    },
+    "scripts/lib/compute/load-bylaw-map-areas.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-16 (H6 conformance; registry-truth ruling 1 / fold 8 item 1): a real import of load_bylaw_map_areas (scripts/load-bylaw-map-areas.js requires it). 0 runtime readers: no file under scripts/lib reads staleness.fingerprint_inputs, so nothing hashes it. The step has no code_version trigger (the INGESTOR fleet posture; declared limitation, reload = BYLAW_MAP_FORCE_RELOAD), so the row stays descriptive."
     },
     "scripts/lib/compute/refresh-snapshot.js": {
       "disposition": "descriptive",
@@ -252,6 +260,10 @@
     "scripts/lib/zoning-precedence.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
+    },
+    "scripts/seeds/bylaw/maps/manifest.json": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-16 (H6 conformance; the load_coa_notices vocab.json / target-map.json row posture): committed data the load_bylaw_map_areas compute requires statically (map code, sources, area types, the seed_sha256 / seed_md5 pins). 0 runtime readers hash it; a new seed moves the seed bytes, which the content_hash trigger compares, so the row stays descriptive."
     },
     "wsib_registry:count": {
       "disposition": "descriptive",

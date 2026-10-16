@@ -1,0 +1,804 @@
+{
+  "identity": {
+    "name": "link_parcel_abutments",
+    "display_name": "Parcel Abutments (front-yard averaging input)",
+    "owner": "data",
+    "description": "Links every parcel to the parcels that abut it (shared boundary >= abut_min_shared_len_m) into parcel_abutments, one row per ordered pair, with the neighbour's residential flag, same-frontage-street flag, primary building, building-to-subject distance and an advisory estimated front setback. Observations only: front-yard-averaging applicability (10.5.40.70(1)) is derived on read by McBylaw.",
+    "lock": 130,
+    "why_lock": {
+      "text": "Mutual exclusion with every other writer of parcel_abutments (Spec 47 §A.5: the spec number 130 is globally unique). The shell keeps `const ADVISORY_LOCK_ID = 130;` as a §5.4 source-text constant, asserted equal by the pipeline advisory-lock suite.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "130",
+    "spec_version": "1.0",
+    "archetype": "LINK",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "parcels"
+        },
+        {
+          "step": "massing"
+        },
+        {
+          "step": "load_centreline"
+        },
+        {
+          "step": "link_massing"
+        },
+        {
+          "step": "enrich_centreline"
+        },
+        {
+          "step": "enrich_parcels"
+        }
+      ],
+      "tables": [
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "geom",
+            "zoning_class",
+            "primary_frontage_street_name"
+          ]
+        },
+        {
+          "table": "parcel_buildings",
+          "columns": [
+            "parcel_id",
+            "building_id",
+            "is_primary"
+          ]
+        },
+        {
+          "table": "building_footprints",
+          "columns": [
+            "id",
+            "geom"
+          ]
+        },
+        {
+          "table": "toronto_centreline",
+          "columns": [
+            "geom",
+            "linear_name_full"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "parcel_abutments",
+        "key": [
+          "parcel_id",
+          "neighbour_id"
+        ],
+        "columns": [
+          {
+            "name": "parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "neighbour_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "shared_len_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "same_frontage_street",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "neighbour_residential",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "neighbour_building_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "bldg_to_subject_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "front_setback_est_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "est_status",
+            "vocabulary": {
+              "values": [
+                "estimated",
+                "no_building",
+                "no_frontage_street",
+                "street_not_found",
+                "estimate_negative",
+                "estimate_out_of_bounds"
+              ],
+              "on_unknown": "fail",
+              "source": "scripts/lib/compute/link-parcel-abutments.js classifyMatches"
+            },
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "linked_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "shared_len_m",
+            "same_frontage_street",
+            "neighbour_residential",
+            "neighbour_building_id",
+            "bldg_to_subject_m",
+            "front_setback_est_m",
+            "est_status"
+          ],
+          "scope": "parcel_id IN (SELECT id FROM parcels WHERE geom IS NOT NULL)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "The junction is re-derived, not reloaded: every run (staleness.mode_select none, full_rescan — Q-B3 full rescan, adjudicated 2026-10-14) walks every parcel with geometry and upserts both orientations of every derived pair behind an IS DISTINCT FROM guard over every value column (linked_at is the run clock and is never a guard term, LG-9), so an unchanged re-run writes zero rows and a relinked building or renamed frontage street is picked up by the next run. Pair EXISTENCE depends only on the two geometries: a material geometry change deletes the parcel's pairs in both orientations (migration 255 trigger) and a parcel delete cascades (FK). Distances are rounded to the NUMERIC(10,2) column scale so the guard is stable.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/link-parcel-abutments.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "parcel_abutments",
+        "column": "linked_at",
+        "when": "a parcel's geometry, a neighbour's primary building (link_massing) or a parcel's frontage street (enrich_centreline) changes. O4 rows 5/7 precedent (link_massing, link_parcels): link_parcel_abutments re-derives every pair of every parcel with geometry on every run (staleness.mode_select \"none\"), so resolveLinkGate always resolves mode full and the next run picks the change up; linked_at moves only on rows whose values moved (IS DISTINCT FROM guard).",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "shared_len_m",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "same_frontage_street",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "neighbour_residential",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "neighbour_building_id",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "bldg_to_subject_m",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "front_setback_est_m",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcel_abutments",
+        "column": "est_status",
+        "when": "re-derived on every run (staleness.mode_select none, full_rescan) behind the IS DISTINCT FROM guard. Pair existence is not an invalidator row: a material parcels.geom change deletes the parcel's pairs in both orientations through the migration-255 trigger, a guards.requires presence precondition (R-CR), and the next run re-creates the pairs that still abut.",
+        "by": "full_rescan"
+      }
+    ],
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "One write statement reaches parcel_abutments: the per-batch guarded upsert. There is no retraction (retract none under full_rescan, O4 row 5): pairs that stop abutting are removed by the migration-255 trigger or the parcels FK cascade.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "code_version",
+        "position": "pre_compute",
+        "emit_key": "code_version"
+      },
+      {
+        "signal": "upstream_ledger",
+        "position": "pre_compute",
+        "table": "parcels",
+        "emit_key": "parcels_count"
+      },
+      {
+        "signal": "upstream_ledger",
+        "position": "pre_compute",
+        "table": "building_footprints",
+        "emit_key": "building_footprints_count"
+      },
+      {
+        "signal": "upstream_ledger",
+        "position": "pre_compute",
+        "table": "toronto_centreline",
+        "emit_key": "centreline_count"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/compute/link-parcel-abutments.js"
+    ],
+    "logic_version": "v1-centreline-differencing",
+    "on_fingerprint_change": "run",
+    "on_prior_run_error": "fail_step",
+    "pins": [
+      {
+        "step": "link_massing",
+        "stamp": "parcel_buildings.linked_at",
+        "why": {
+          "text": "LDG-10 / S1-P producer edge (watermark, not evaluated): the neighbour's primary building comes from parcel_buildings; under full_rescan every run re-reads it, so no incremental scope keys on this stamp.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/link-parcel-abutments.js"
+          }
+        }
+      },
+      {
+        "step": "enrich_centreline",
+        "stamp": "parcels.centreline_dataset_version_when_enriched",
+        "why": {
+          "text": "LDG-10 / S1-P producer edge (watermark, not evaluated): primary_frontage_street_name is enrich_centreline's output; re-read every run under full_rescan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/link-parcel-abutments.js"
+          }
+        }
+      },
+      {
+        "step": "enrich_parcels",
+        "stamp": "parcels.zoning_enriched_at",
+        "why": {
+          "text": "LDG-10 / S1-P producer edge (watermark, not evaluated): neighbour_residential reads parcels.zoning_class, enrich_parcels' pass-1 output; re-read every run under full_rescan.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/link-parcel-abutments.js"
+          }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "Every pair is found and measured with PostGIS (ST_DWithin, ST_Intersection, ST_Distance in EPSG 2952); there is no second code path.",
+          "liveness": {
+            "kind": "external",
+            "ref": "postgis"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_parcels_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The self-join finds neighbours through the parcels GiST index; without it the set-based join degrades to a nested scan over 496K parcels (the per-lot form measured 50 ms/lot, about 6 h, is refused).",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/011_parcels.sql"
+          }
+        }
+      },
+      {
+        "kind": "index",
+        "name": "idx_toronto_centreline_geom_gist",
+        "on_missing": "fail",
+        "why": {
+          "text": "The neighbour frontage-street geometry is gathered through the centreline GiST index.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/173_create_toronto_centreline.sql"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "parcel_abutments",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 255 enables RLS on parcel_abutments with ZERO policies (Spec 114 Class B). Under a non-bypass role the guarded upsert affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (load_coa_notices precedent).",
+          "liveness": {
+            "kind": "table",
+            "ref": "parcel_abutments"
+          }
+        }
+      },
+      {
+        "kind": "trigger",
+        "name": "parcels.trg_parcels_abutments_invalidation",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 255, a presence precondition, not an invalidator row (R-CR; checked presence-only, the link_massing trg_parcels_geom_invalidation form): a material parcels.geom change deletes the parcel's pairs in both orientations, so a pair that stops abutting through a geometry edit is removed (there is no retraction under full_rescan); without the trigger an edited lot would keep its stale pairs.",
+          "liveness": {
+            "kind": "file",
+            "ref": "migrations/255_parcel_abutments.sql"
+          }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": "parcels",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "link",
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "45m",
+    "batch": 250,
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the library already measured (the join counters, the write counters, the post-write table query), so a check that throws is a defect: it must redden the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/link-parcel-abutments.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "sources": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "sources"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "full_mode_gate",
+      "kind": "freshness",
+      "expect": {
+        "reports": "the mode decision and its reason (full / full_rescan on every run)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "pre",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Records the runner's gate (resolveLinkGate: full / full_rescan under mode_select none) so the audit table says how every run was scoped; it RECORDS, it never decides (Rule 10). INFO under the Rule 10 exception for a purely descriptive row: violations is always 0 and the gate decision is in detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "parcels_processed",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "subject parcels walked this run"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The denominator of this run: every parcel with geometry (full_rescan, every run). INFO under the Rule 10 exception for a purely descriptive counter that no threshold can bound: violations is always 0 and the count lives in detail.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
+    },
+    {
+      "id": "abutment_rows_written",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rows inserted and updated by the guarded upsert"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Zero on an unchanged re-run is the idempotency evidence (full_rescan behind the IS DISTINCT FROM guard). INFO under the Rule 10 exception for a purely descriptive counter that no threshold can bound: violations is always 0 and the count lives in detail.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcel_abutments"
+        }
+      }
+    },
+    {
+      "id": "asymmetric_pairs",
+      "kind": "invariant",
+      "expect": {
+        "symmetric": "(a,b) present iff (b,a) present"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Adjacency is symmetric and every batch emits both orientations; an asymmetric pair means a partial write (a geometry edit deletes both orientations through the migration-255 trigger, so it never leaves one side), measured over the whole table after every run.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcel_abutments"
+        }
+      }
+    },
+    {
+      "id": "est_status_counts",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "rows per est_status over the whole table"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The closed est_status census the Reality-Check bounds read (research: 4 of 378 estimates negative; p50 6.73 m on RD). INFO under the Rule 10 exception for a purely descriptive counter that no threshold can bound: violations is always 0 and the count lives in detail.",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcel_abutments.est_status"
+        }
+      }
+    },
+    {
+      "id": "parcels_with_abutments_pct",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "CUMULATIVE percentage of parcels with geometry that have at least one abutment row"
+      },
+      "limit": "pct >= 50",
+      "limit_from_config": "abut_parcels_with_abutments_warn_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "retighten_when": "the first capture (H6 runbook step 5) measures the share: abut_parcels_with_abutments_warn_pct is then re-set from 50 (a loose provisional floor) to just under the measured value, so a join, tolerance or pad regression that collapses the share WARNs.",
+      "why": {
+        "text": "Most urban lots have neighbours; a collapse of this share is a join, tolerance or search-pad regression (limitations[2]). A threshold exists, so it is not a purely descriptive counter (R-H, Spec 124 §5 Rule 10): WARN on a config floor, the fleet LINK form of link_neighbourhoods link_rate (field_coverage, pct >=, limit_from_config). QA ruling 2026-10-16 item 2 (.cursor/h6-qa-ruling-2026-10-16.md). The floor is provisional until the first capture measures the share.",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcel_abutments"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "duration_ms",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "code_version",
+      "type": "string",
+      "consumers": [
+        "link_parcel_abutments"
+      ]
+    },
+    {
+      "key": "parcels_count",
+      "type": "string",
+      "consumers": [
+        "link_parcel_abutments"
+      ]
+    },
+    {
+      "key": "building_footprints_count",
+      "type": "string",
+      "consumers": [
+        "link_parcel_abutments"
+      ]
+    },
+    {
+      "key": "centreline_count",
+      "type": "string",
+      "consumers": [
+        "link_parcel_abutments"
+      ]
+    },
+    {
+      "key": "full_mode",
+      "type": "bool",
+      "consumers": []
+    },
+    {
+      "key": "parcels_processed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "abutment_rows",
+      "type": "int",
+      "consumers": []
+    }
+  ],
+  "deviations": "none",
+  "limitations": [
+    {
+      "what": "A pair that stops qualifying without a MATERIAL geometry change is not deleted by a re-run (there is no retraction under full_rescan); its values are frozen at the last run that derived it. Every cause: (1) a tunable change — abut_touch_tolerance_m, abut_min_shared_len_m or abut_bbox_pad_deg (the pad narrows the search, limitations[2]); (2) a method change (staleness.logic_version); (3) a geometry edit below the trigger's material-change tolerance (migration 255 trg_parcels_abutments_invalidation fires only when public.parcels_geom_materially_changed, tolerance parcels_geom_change_tolerance_deg), which can still drop shared_len_m below the minimum. After (1) or (2) the operator resets the junction (recovery.reset). Precedent for a declared, check-less staleness class: enrich-heritage.descriptor.json FOLD-I5 limitation. QA ruling 2026-10-16 item 3 (keep the limitation; no partial check).",
+      "measured": "declared: pair existence = f(geom, abut_touch_tolerance_m, abut_min_shared_len_m, abut_bbox_pad_deg); material geom changes are trigger-invalidated, sub-tolerance geom edits and tunable or method changes are not. No check observes such a pair: it stays symmetric, so asymmetric_pairs cannot see it.",
+      "check_id": "none"
+    },
+    {
+      "what": "front_setback_est_m is measured to the building OUTLINE (massing roof outline incl. eaves/porches), not the main wall (800.50): fidelity `differs` (Spec 69 M-26). It is advisory only until an estimator passes the CoA-notice oracle (Q-B1).",
+      "measured": "research 2026-10-07: method v2 within 0.5 m on 2 of 9 CoA-notice oracle parcels",
+      "check_id": "est_status_counts"
+    },
+    {
+      "what": "The neighbour search is a degree bbox pad (abut_bbox_pad_deg) before a geography ST_DWithin in metres (abut_touch_tolerance_m); each is bounded on its own, so an operator who raises the tolerance above the pad's ground distance (about 1.6 m E-W at the default) silently narrows the search to the pad.",
+      "measured": "defaults 0.00002 deg (about 1.6-2.2 m) vs 0.5 m",
+      "check_id": "parcels_with_abutments_pct"
+    }
+  ],
+  "interpretation": {
+    "file": "link-parcel-abutments.notes.json"
+  },
+  "recovery": {
+    "reset": "After a tunable or logic_version change that can drop pairs: DELETE FROM parcel_abutments (an operator action, H-lane) then re-run — every run re-derives every pair, so the re-run IS the rebuild. Otherwise a plain re-run is the repair: values that moved are rewritten through the guarded upsert.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "full_rescan (mode_select none): there is no incremental mode for a crash to be followed by and nothing to force; no write target is a destructive retraction (retract none), so a run killed mid-loop leaves earlier batches committed and the next run's full re-derive repairs the rest.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "No write target retracts (retract none); the only deletes are the migration-255 trigger's and the FK cascade's, both outside the step. The junction is fully derivable from parcels, parcel_buildings, building_footprints and toronto_centreline.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/link-parcel-abutments.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 255,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.e1.scanned"
+    },
+    "records_new": {
+      "source": "written.e1.inserted"
+    },
+    "records_updated": {
+      "source": "written.e1.updated"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "abut_touch_tolerance_m",
+        "min": 0,
+        "max": 5,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "abut_min_shared_len_m",
+        "min": 0.1,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "abut_bbox_pad_deg",
+        "min": 0.000001,
+        "max": 0.001,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "abut_street_search_deg",
+        "min": 0.0001,
+        "max": 0.01,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "fya_est_min_m",
+        "min": 0,
+        "max": 5,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "fya_est_max_m",
+        "min": 5,
+        "max": 200,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "abut_parcels_with_abutments_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "sources": 24
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "linked",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      }
+    },
+    {
+      "id": "linked_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "asymmetric_pairs WARNed: the run completed and the stale pairs are named in the audit row.",
+        "liveness": {
+          "kind": "check",
+          "ref": "asymmetric_pairs"
+        }
+      }
+    },
+    {
+      "id": "no_eligible_parcels",
+      "kind": "no_op",
+      "status": "completed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "No parcel has geometry: nothing to derive (the empty_source guard on parcels normally halts first).",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcel_abutments"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A guards.requires precondition (PostGIS, a GiST index) is missing; nothing is written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 130 is held by another process; the library emits a row-derived SKIP summary.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}

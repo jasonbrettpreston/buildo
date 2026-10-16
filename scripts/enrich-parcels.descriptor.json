@@ -38,6 +38,9 @@
         },
         {
           "step": "load_zoning"
+        },
+        {
+          "step": "load_bylaw_map_areas"
         }
       ],
       "tables": [
@@ -165,12 +168,21 @@
             "hearing_date",
             "parcel_linked_at"
           ]
+        },
+        {
+          "table": "bylaw_map_areas",
+          "columns": [
+            "map_code",
+            "source",
+            "area_type",
+            "geom"
+          ]
         }
       ],
       "externals": []
     },
     "expect_nonempty": true,
-    "on_missing": "halt"
+    "on_missing": "run"
   },
   "outputs": {
     "writes": [
@@ -1149,6 +1161,64 @@
           }
         },
         "retract": "none"
+      },
+      {
+        "table": "parcels",
+        "key": "id",
+        "columns": [
+          {
+            "name": "in_sixplex_area",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "sixplex_area_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "sixplex_membership_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_why": {
+            "text": "The sixplex pass (Spec 65 PROPOSED, McBylaw Phase 2 inputs A4) is a full rescan every run, so the IS DISTINCT FROM guard over the three membership columns is what makes a re-run write zero rows.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/enrich-parcels.js"
+            }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "All three declared columns are guarded; none is a run-clock column.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/enrich-parcels.js"
+            }
+          },
+          "scope": "every parcel on every run (execution.phases sixplex scope full): ST_PointOnSurface(parcels.geom) tested against an indexed ON COMMIT DROP temp table of ST_Subdivide parts of bylaw_map_areas (600.60), joined back by parcels.id; parcels with NULL geom get basis no_geom",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "600.60 membership (by-law 654-2025 Diagrams 1/2) as one overlay pass beside the Spec 65 membership flags. Values follow the migration-254 consistency CHECK: TRUE only for gis_in, FALSE only for gis_out_ward_out, NULL for the disputed bases (holes and edge, Q-A2 open) and no_geom. straddle is reserved (Q-A3) and never emitted.",
+            "liveness": {
+              "kind": "file",
+              "ref": "migrations/254_bylaw_map_areas_sixplex.sql"
+            }
+          }
+        },
+        "retract": "none"
       }
     ],
     "invalidates": [
@@ -1171,12 +1241,30 @@
         "when": "trg_parcels_geom_invalidation (migrations 242/251) nulls massing_enriched_at when parcels.geom MATERIALLY changes (public.parcels_geom_materially_changed, migration 251 — a tolerance predicate) — the same trigger, the re-eligibility signal for pass 2's own incremental scope predicate (parcel_buildings.linked_at > parcels.massing_enriched_at).",
         "by": "trigger",
         "trigger": "parcels.trg_parcels_geom_invalidation"
+      },
+      {
+        "table": "parcels",
+        "column": "in_sixplex_area",
+        "when": "a new map seed (load_bylaw_map_areas) or a parcel geometry change: the sixplex pass re-derives every parcel on every run behind its IS DISTINCT FROM guard (execution.phases sixplex scope full); migration 254's trg_parcels_invalidate_on_geom_change also NULLs the column on a material geom change.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcels",
+        "column": "sixplex_area_type",
+        "when": "a new map seed (load_bylaw_map_areas) or a parcel geometry change: the sixplex pass re-derives every parcel on every run behind its IS DISTINCT FROM guard (execution.phases sixplex scope full); migration 254's trg_parcels_invalidate_on_geom_change also NULLs the column on a material geom change.",
+        "by": "full_rescan"
+      },
+      {
+        "table": "parcels",
+        "column": "sixplex_membership_basis",
+        "when": "a new map seed (load_bylaw_map_areas) or a parcel geometry change: the sixplex pass re-derives every parcel on every run behind its IS DISTINCT FROM guard (execution.phases sixplex scope full); migration 254's trg_parcels_invalidate_on_geom_change also NULLs the column on a material geom change.",
+        "by": "full_rescan"
       }
     ],
     "write_inventory": {
-      "statements": 15,
+      "statements": 16,
       "why": {
-        "text": "The 27-statement DML/DDL enumeration (commit 1) minus temp-table CREATE/DROP/INDEX/ANALYZE (statements 1-8, 27) and the two SET LOCAL statement/lock timeout statements (18-19, txn config, not writes): pass1 UPDATE (9), pass1 zoning stamp (buildZoningStampSql, stamp heal 2026-10-06), pass2 UPDATE (10), massing stamp (11), existing UPDATE (12), scenario UPDATE (13), comps ineligibility reset (14), --full-only comp blanket reset (15), pass4 comps UPDATE (16), comp_count zero-fill (17), pass3_scope INSERT (20), pass5 ineligibility reset (21), pass5 batched UPDATE (22), pass3_scope consumed_at flips (23/24 counted once — same statement shape, bulk + per-parcel). The two optional pipeline_runs heartbeat/stall-diagnostic UPDATEs (25/26) are EXCLUDED from this count (EP-D5 — undeclared in emitMeta's own writes map today; not this write_inventory's own target table, cascades territory) — see limitations[].",
+        "text": "The 27-statement DML/DDL enumeration (commit 1) minus temp-table CREATE/DROP/INDEX/ANALYZE (statements 1-8, 27) and the two SET LOCAL statement/lock timeout statements (18-19, txn config, not writes): pass1 UPDATE (9), pass1 zoning stamp (buildZoningStampSql, stamp heal 2026-10-06), pass2 UPDATE (10), massing stamp (11), existing UPDATE (12), scenario UPDATE (13), comps ineligibility reset (14), --full-only comp blanket reset (15), pass4 comps UPDATE (16), comp_count zero-fill (17), pass3_scope INSERT (20), pass5 ineligibility reset (21), pass5 batched UPDATE (22), pass3_scope consumed_at flips (23/24 counted once — same statement shape, bulk + per-parcel) + the sixplex UPDATE (one statement through ctx.exec; the no_geom rows ride the same temp table). The two optional pipeline_runs heartbeat/stall-diagnostic UPDATEs (25/26) are EXCLUDED from this count (EP-D5 — undeclared in emitMeta's own writes map today; not this write_inventory's own target table, cascades territory) — see limitations[].",
         "liveness": {
           "kind": "file",
           "ref": ".cursor/pilot9_enrich_parcels_active_task.md"
@@ -1270,6 +1358,17 @@
             "ref": "scripts/lib/compute/enrich-parcels.js"
           }
         }
+      },
+      {
+        "step": "load_bylaw_map_areas",
+        "stamp": "bylaw_map_areas.seed_sha256",
+        "why": {
+          "text": "LDG-10 / S1-P producer edge (watermark, not evaluated — H6 port 2026-10-14): the sixplex pass reads bylaw_map_areas, whose rows carry the adopted seed's sha256. The pass is a full rescan every run (execution.phases sixplex scope full), so a new seed is picked up by the next run without a scope decision; a missing or partial map is a WARN row (sixplex_map_missing), never a halt, because the seed is local_only until the licence ruling (Q-A1) and a halting pin would fail enrich_parcels wherever load_bylaw_map_areas does not run.",
+          "liveness": {
+            "kind": "check",
+            "ref": "sixplex_map_missing"
+          }
+        }
       }
     ]
   },
@@ -1318,7 +1417,19 @@
       }
     ],
     "srid": 4326,
-    "empty_source": "parcels",
+    "empty_source": [
+      "parcels",
+      "zoning_bylaw_areas",
+      "zoning_height_overlay",
+      "zoning_lot_coverage_overlay",
+      "parcel_buildings",
+      "building_footprints",
+      "neighbourhood_build_norms",
+      "neighbourhood_storey_norms",
+      "neighbourhoods",
+      "permits",
+      "coa_applications"
+    ],
     "schema_drift": "none"
   },
   "execution": {
@@ -1369,8 +1480,16 @@
         "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes"
       },
       {
-        "name": "optimal_config",
+        "name": "sixplex",
         "order": 5,
+        "txn": "shared",
+        "writes_ref": 7,
+        "scope": "full",
+        "timeout_minutes_from_config": "enrich_parcels_pass_statement_timeout_minutes"
+      },
+      {
+        "name": "optimal_config",
+        "order": 6,
         "txn": "post_commit",
         "writes_ref": 4,
         "scope": "deferred",
@@ -1829,6 +1948,66 @@
         "liveness": {
           "kind": "column",
           "ref": "parcels.comp_count"
+        }
+      }
+    },
+    {
+      "id": "sixplex_map_missing",
+      "kind": "invariant",
+      "expect": {
+        "map_areas_loaded": true
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The sixplex pass skips when bylaw_map_areas holds no 600.60 rows from both sources — e.g. a database where load_bylaw_map_areas has not run (cloud, until the licence is confirmed). The columns keep their prior values: NULL before any map (basis NULL), STALE after a map is removed, and nothing on the row says so. WARN on every such run so the gap is visible; the empty map never halts the step (inputs.on_missing run; the other read tables halt through guards.empty_source, Spec 65 sixplex guard split).",
+        "liveness": {
+          "kind": "table",
+          "ref": "bylaw_map_areas"
+        }
+      }
+    },
+    {
+      "id": "sixplex_basis_counts",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "parcels per sixplex_membership_basis this run"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "The per-basis census the Reality-Check bounds read (research 2026-10-07: 151,881 gis_in R-category lots; ~1,122 disputed).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.sixplex_membership_basis"
+        }
+      }
+    },
+    {
+      "id": "sixplex_enriched_count",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "parcels whose sixplex columns changed this run"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Zero on a re-run is the idempotency evidence.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/enrich-parcels.js"
         }
       }
     },
@@ -2493,7 +2672,7 @@
   },
   "database": {
     "class": "primary",
-    "min_migration": 237,
+    "min_migration": 254,
     "assert_current_database": "postgres"
   },
   "counters": {
@@ -2736,6 +2915,12 @@
         "name": "enrich_parcels_bbox_degree_divisor",
         "min": 1000,
         "max": 1000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_parcels_sixplex_subdivide_max_vertices",
+        "min": 8,
+        "max": 4096,
         "on_invalid": "fail"
       },
       {

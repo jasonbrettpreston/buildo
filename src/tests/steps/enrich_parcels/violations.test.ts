@@ -2541,6 +2541,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     const res = await ep.computePostPhase(pool, { passRaw });
 
     // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped — plus the three keys the stamp-heal and zoning-change-scope WF3s added (2026-10-06).
+    // + 5 sixplex_* keys (McBylaw Phase 2 inputs A4) — a declared addition.
     expect(Object.keys(res.matched).sort()).toEqual([
       'comp_candidate_pool', 'comp_zero_comps_count', 'comparable_builds_enriched_count',
       'existing_mislinked_footprint_count', 'existing_structure_enriched_count',
@@ -2551,6 +2552,8 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       'parcels_ambiguous_zone_count', 'parcels_enriched_count', 'pending_scope_parcels',
       'ravine_constrained_count', 'scenario_enriched_count',
       'scope_recovery_batches', 'scope_recovery_recovered_count', 'scope_stamped_without_recompute_count',
+      'sixplex_basis_counts', 'sixplex_enriched_count', 'sixplex_map_missing', 'sixplex_ran',
+      'sixplex_skip_detail',
       'zone_class_pct', 'zoning_change', 'zoning_fsi_source_nulled_count',
       'zoning_stamp_null_count', 'zoning_stamp_only_count',
     ].sort());
@@ -2585,6 +2588,11 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       zoning_stamp_null_count: 71, // the first count's stamp_null column
       zoning_stamp_only_count: 73,
       zoning_change: null, // passRaw.zoning.zoningChange absent (--full)
+      sixplex_ran: false,
+      sixplex_map_missing: false,
+      sixplex_skip_detail: { skipped: null, mapCounts: null },
+      sixplex_basis_counts: { all: {}, residential: {} },
+      sixplex_enriched_count: 0,
     });
 
     // (3) The aggregate block keeps `enrich_parcels`' OWN key names (the runner never

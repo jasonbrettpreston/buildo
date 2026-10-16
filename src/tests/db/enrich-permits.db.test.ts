@@ -64,7 +64,7 @@ describe.skipIf(!dbAvailable())('Spec 66 enrich-permits — live DB (migration 1
        GROUP BY table_name ORDER BY table_name`);
     const m = Object.fromEntries(rows.map((r) => [r.table_name, r.n]));
     expect(m.permits).toBe(11);
-    expect(m.coa_applications).toBe(10);
+    expect(m.coa_applications).toBe(11); // + zoning_designation (migration 253, H6 2026-10-16)
   });
 
   it('assertWf2Ran throws when no parcel is enriched, passes once one is', async () => {

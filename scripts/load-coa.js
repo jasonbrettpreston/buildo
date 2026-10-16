@@ -163,6 +163,7 @@ async function fetchAllRecords(resourceId, resourceName, tel) {
  *   FINALDATE           → decision_date (for closed); for active, use APPEAL_EXPIRY_DATE
  *   DESCRIPTION         → description
  *   CONTACT_NAME        → applicant (closest available field)
+ *   ZONING_DESIGNATION  → zoning_designation (raw, trimmed; both resources; parsed only by scripts/lib/coa-zoning-designation.js)
  */
 function mapRecord(raw, schemaDrift) {
   // Schema drift detection: check critical fields exist in the CKAN payload
@@ -217,6 +218,9 @@ function mapRecord(raw, schemaDrift) {
   const applicant = trimToNull(raw.CONTACT_NAME);
   const subType = trimToNull(raw.SUB_TYPE);
 
+  // Zone as filed (as at the hearing). Raw: never parsed here. Optional: a missing key is null, not schema drift.
+  const zoningDesignation = trimToNull(raw.ZONING_DESIGNATION);
+
   // Build record first, then hash its own mapped fields — NOT the raw CKAN object.
   // Raw CKAN records include _id, _full_text, rank which change between fetches
   // and cause phantom updates even when the actual data is identical.
@@ -234,6 +238,7 @@ function mapRecord(raw, schemaDrift) {
     description,
     applicant,
     sub_type: subType,
+    zoning_designation: zoningDesignation,
   };
   record.data_hash = computeHash(record);
 
@@ -259,12 +264,12 @@ async function upsertBatch(client, batch, RUN_AT) {
   }
 
   // Collect arrays for UNNEST batch insert (O(1) round-trips instead of O(batch.length)).
-  // 14 column arrays + scalar RUN_AT = 15 params; 500 rows × 14 cols = 7,000 params
+  // 15 column arrays + scalar RUN_AT = 16 params; 500 rows × 15 cols = 7,500 params
   // per batch — well under PostgreSQL's 65,535 limit.
   const applicationNumbers = [], addresses = [], streetNums = [], streetNames = [],
     streetNamesNormalized = [], wards = [], statuses = [], decisions = [],
     decisionDates = [], hearingDates = [], descriptions = [], applicants = [],
-    subTypes = [], dataHashes = [];
+    subTypes = [], zoningDesignations = [], dataHashes = [];
 
   for (const rec of batch) {
     applicationNumbers.push(rec.application_number);
@@ -280,6 +285,7 @@ async function upsertBatch(client, batch, RUN_AT) {
     descriptions.push(rec.description ?? null);
     applicants.push(rec.applicant ?? null);
     subTypes.push(rec.sub_type ?? null);
+    zoningDesignations.push(rec.zoning_designation ?? null);
     dataHashes.push(rec.data_hash);
   }
 
@@ -287,7 +293,7 @@ async function upsertBatch(client, batch, RUN_AT) {
     `INSERT INTO coa_applications (
        application_number, address, street_num, street_name, street_name_normalized, ward,
        status, decision, decision_date, hearing_date, description,
-       applicant, sub_type, data_hash, first_seen_at, last_seen_at
+       applicant, sub_type, zoning_designation, data_hash, first_seen_at, last_seen_at
      )
      SELECT
        unnest($1::text[]),
@@ -304,8 +310,9 @@ async function upsertBatch(client, batch, RUN_AT) {
        unnest($12::text[]),
        unnest($13::text[]),
        unnest($14::text[]),
-       $15::timestamptz,
-       $15::timestamptz
+       unnest($15::text[]),
+       $16::timestamptz,
+       $16::timestamptz
      ON CONFLICT (application_number) DO UPDATE SET
        address = EXCLUDED.address,
        street_num = EXCLUDED.street_num,
@@ -319,14 +326,15 @@ async function upsertBatch(client, batch, RUN_AT) {
        description = EXCLUDED.description,
        applicant = EXCLUDED.applicant,
        sub_type = EXCLUDED.sub_type,
+       zoning_designation = EXCLUDED.zoning_designation,
        data_hash = EXCLUDED.data_hash,
-       last_seen_at = $15::timestamptz
+       last_seen_at = $16::timestamptz
      WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash
      RETURNING (xmax = 0) AS is_insert`,
     [
       applicationNumbers, addresses, streetNums, streetNames, streetNamesNormalized,
       wards, statuses, decisions, decisionDates, hearingDates, descriptions,
-      applicants, subTypes, dataHashes, RUN_AT,
+      applicants, subTypes, zoningDesignations, dataHashes, RUN_AT,
     ]
   );
 
@@ -471,8 +479,8 @@ pipeline.run('load-coa', async (pool) => {
       },
     });
     pipeline.emitMeta(
-      { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"] },
-      { "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"] }
+      { "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE", "ZONING_DESIGNATION"] },
+      { "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "zoning_designation", "data_hash", "first_seen_at", "last_seen_at"] }
     );
     return;
   }
@@ -625,6 +633,8 @@ pipeline.run('load-coa', async (pool) => {
     // step, and capture timing matters because the upsert overwrites
     // `applicant` on any data_hash change (a later blanking would lose them).
     { metric: 'applicant_names_present', value: mapped.filter((m) => m.applicant !== null).length, threshold: 'signal: > 0 → build Spec 37 CoA entity extraction (deferred 2026-07-29)', status: mapped.some((m) => m.applicant !== null) ? 'WARN' : 'PASS' },
+    // Spec 51 zoning_designation (McBylaw P2 inputs C3): rows written with no designation (key absent or blank). ~10% null is the measured baseline (2026-10-07); ALL null is the signature of a CKAN rename (the hash change would re-upsert every row to NULL), so it WARNs.
+    { metric: 'zoning_designation_null', value: deduplicated.filter((m) => m.zoning_designation === null).length, threshold: 'WARN when every row is null (CKAN key vanished or renamed)', status: deduplicated.length > 0 && deduplicated.every((m) => m.zoning_designation === null) ? 'WARN' : 'PASS' },
     // Phase I.1: lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule).
     // Unconditional emission of both rows. WARN-grade error gate (NOT FAIL) preserves
     // primary upsert verdict on ledger failures per Tier 3 SAVEPOINT pattern.
@@ -671,14 +681,14 @@ pipeline.run('load-coa', async (pool) => {
   });
   pipeline.emitMeta(
     {
-      "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE"],
+      "CKAN API": ["REFERENCE_FILE#", "STREET_NUM", "STREET_NAME", "WARD", "C_OF_A_DESCISION", "STATUSDESC", "HEARING_DATE", "DESCRIPTION", "CONTACT_NAME", "SUB_TYPE", "ZONING_DESIGNATION"],
       // Phase I.1: pre-UPSERT capture of coa_applications.status for ledger from_status
       // detection. coa_type_class is NOT listed here — Phase I.1 v2.3 DeepSeek MED 1
       // fold: decision/decision_date are batch-sourced from CKAN payload, not DB SELECT.
       "coa_applications": ["application_number", "status"],
     },
     {
-      "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "data_hash", "first_seen_at", "last_seen_at"],
+      "coa_applications": ["application_number", "address", "street_num", "street_name", "street_name_normalized", "ward", "status", "decision", "decision_date", "hearing_date", "description", "applicant", "sub_type", "zoning_designation", "data_hash", "first_seen_at", "last_seen_at"],
       // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
       "lifecycle_status_history": ["lead_id", "from_status", "to_status", "decision", "decision_date", "transitioned_at", "detected_by", "event_date"],
     }

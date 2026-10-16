@@ -143,11 +143,13 @@ describe.skipIf(!dbAvailable())('migration 249 — geometry change invalidates t
       expect(row.centroid_lng).toBeNull();
     });
 
-    it('parcels still has exactly one enabled trigger, BEFORE UPDATE OF geom, geometry, bound to the function', async () => {
+    // Migration 255 adds a separate AFTER UPDATE OF geom trigger (trg_parcels_abutments_invalidation, Spec 124 R-CR);
+    // the invariant here is that the BEFORE invalidation trigger is still exactly one (tgtype bit 2 = BEFORE).
+    it('parcels still has exactly one enabled BEFORE trigger, BEFORE UPDATE OF geom, geometry, bound to the function', async () => {
       const { rows } = await pool!.query(
         `SELECT t.tgname, t.tgenabled, p.proname, pg_get_triggerdef(t.oid) AS def
            FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid
-          WHERE t.tgrelid = 'parcels'::regclass AND NOT t.tgisinternal`,
+          WHERE t.tgrelid = 'parcels'::regclass AND NOT t.tgisinternal AND (t.tgtype & 2) = 2`,
       );
       expect(rows).toHaveLength(1);
       expect(rows[0].tgname).toBe('trg_parcels_geom_invalidation');

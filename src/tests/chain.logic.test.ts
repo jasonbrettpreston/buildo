@@ -10,9 +10,10 @@ import {
 import manifest from '../../scripts/manifest.json';
 
 describe('Pipeline Chain Definitions', () => {
-  it('defines exactly 7 chains', () => {
+  it('defines exactly 8 chains', () => {
     // 7th: coa_notices (Spec 129, 2026-10-07) — standalone, operator-triggered, local-only.
-    expect(PIPELINE_CHAINS).toHaveLength(7);
+    // 8th: bylaw_maps (Spec 58 §11.3, H6 2026-10-16) — standalone, operator-triggered, local-only.
+    expect(PIPELINE_CHAINS).toHaveLength(8);
   });
 
   it('defines permits chain with 29 steps (Phase G removed create_pre_permits)', () => {
@@ -326,7 +327,7 @@ describe('UI Chain Ordering (Dependency Hierarchy)', () => {
     const ids = PIPELINE_CHAINS.map((c) => c.id);
     // WF2 combined chain (2026-07-25): CoA runs first, then Permits (chain-coa-permits.yml),
     // so the UI now orders coa before permits.
-    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes', 'coa_notices']);
+    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes', 'coa_notices', 'bylaw_maps']);
   });
 });
 

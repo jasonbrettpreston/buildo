@@ -805,7 +805,7 @@ export function checkCutoverPrereqs(convertedSlugs, items, descriptorsBySlug = {
  * DECLARED prefix for that slug (operator-approved 2026-09-29);
  * `checkDefectPrefixCollisions` (fast invariant #42) fails any new collision.
  */
-export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS' });
+export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS', link_parcel_abutments: 'LAB' });
 
 /** The estate's initials convention (AS/LR/LM/LW/LPA) — one letter per underscore-separated word, uppercased. */
 export function defectPrefixFor(slug, overrides = DEFECT_PREFIX_OVERRIDES) {

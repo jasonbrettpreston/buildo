@@ -519,10 +519,11 @@ describe('Pipeline Registry', () => {
     // +1 reconcile (Spec 122 §7.4 / A3, S3 2026-08-24) — the Step-0 reaper at the
     // head of chain_sources; the only writer of pipeline_runs.status = 'crashed'.
     // +1 load_coa_notices (Spec 129 §12, commit B)
-    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(69);
+    // +1 load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
+    expect(Object.keys(PIPELINE_REGISTRY)).toHaveLength(70);
   });
 
-  it('groups are correct: 15 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
+  it('groups are correct: 16 ingest, 22 link, 17 classify, 2 snapshot, 10 quality', () => {
     // -1 classify: v1 compute_timing_calibration removed (2026-04-21)
     // +1 snapshot: backup_db added (WF3 2026-04-25)
     // +1 classify: compute_phase_calibration added (WF1 #B 2026-05-09)
@@ -544,7 +545,8 @@ describe('Pipeline Registry', () => {
     // +1 classify: compute_build_norms (Spec 78 P1 2026-06-26)
     // +1 classify: compute_parcel_cost_estimates (Spec 88 P1 2026-06-30)
     // +1 ingest: load_coa_notices (Spec 129 §12, commit B)
-    expect(groups.filter((g) => g === 'ingest')).toHaveLength(15);
+    // +1 ingest: load_bylaw_map_areas (Spec 58 §11.3, H6 2026-10-16)
+    expect(groups.filter((g) => g === 'ingest')).toHaveLength(16);
     expect(groups.filter((g) => g === 'link')).toHaveLength(22);
     expect(groups.filter((g) => g === 'classify')).toHaveLength(18); // +dispatch_notifications (P25 25A, group 'classify')
     expect(groups.filter((g) => g === 'snapshot')).toHaveLength(2);
@@ -569,11 +571,12 @@ describe('Pipeline Chains', () => {
     PIPELINE_REGISTRY = mod.PIPELINE_REGISTRY;
   });
 
-  it('has exactly 7 chains: coa, permits, entities, wsib, sources, deep_scrapes, coa_notices', () => {
+  it('has exactly 8 chains: coa, permits, entities, wsib, sources, deep_scrapes, coa_notices, bylaw_maps', () => {
+    // Spec 58 §11.3 (H6): standalone chain bylaw_maps = [load_bylaw_map_areas], last.
     // WF2 2026-07-25: CoA ordered before Permits (coa→permits combined chain).
     // Spec 129 §12 (commit B): standalone chain coa_notices = [load_coa_notices], last.
     const ids = PIPELINE_CHAINS.map((c) => c.id);
-    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes', 'coa_notices']);
+    expect(ids).toEqual(['coa', 'permits', 'entities', 'wsib', 'sources', 'deep_scrapes', 'coa_notices', 'bylaw_maps']);
   });
 
   it('permits chain has 29 steps ending with backup_db (Phase G removed create_pre_permits)', () => {

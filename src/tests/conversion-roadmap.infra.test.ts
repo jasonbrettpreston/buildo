@@ -197,8 +197,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     // exemption change is still the one thing that trips this.
     const doneFiles = Object.keys(fileToSlugs).filter((f) => convertedSet.has(f) || pendingSet.has(f));
     // 63 -> 64 / 65 -> 66 at WF1 load_coa_notices commit B (2026-10-07): a NET-NEW pending step (Spec 129).
-    expect(remaining.length + doneFiles.length).toBe(64);
-    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(66);
+    // 64 -> 66 / 66 -> 68 at H6 (2026-10-16): two NET-NEW pending steps (load_bylaw_map_areas, link_parcel_abutments; R-CS).
+    expect(remaining.length + doneFiles.length).toBe(66);
+    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(68);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -308,7 +309,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 1 -> 0 at the row 3.3 ③ (load_zoning, 2026-10-05): the row is RETAINED with `status: "converted"` (R-AO), batch "pending" kept verbatim.
     // 0 -> 1 at WF1 load_coa_notices commit B (2026-10-07): the net-new step's census row is batch "pending"
     // from day one (no C-batch to flip from). Returns to 0 at its cutover (R-AO retention).
-    expect(pendingBatch.size).toBe(1);
+    // 1 -> 3 at H6 (2026-10-16): load_bylaw_map_areas + link_parcel_abutments, net-new, batch "pending" (R-CS).
+    expect(pendingBatch.size).toBe(3);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
@@ -506,7 +508,7 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     // Spec 124 R-AN (2026-09-15): the converted count is DERIVED from
     // converted.json, never retyped per cutover.
     const convertedSlugCount = CONVERTED.length;
-    expect(totalSlugs).toBe(69); // 68 -> 69: load_coa_notices (Spec 129, 2026-10-07)
+    expect(totalSlugs).toBe(71); // 68 -> 69: load_coa_notices (Spec 129, 2026-10-07); 69 -> 71: load_bylaw_map_areas + link_parcel_abutments (H6, 2026-10-16)
     expect(convertedSlugCount + pendingSlugs + args.exemptions.length + remainingSlugs).toBe(totalSlugs);
     // batch2 P1.1 cutover (2026-09-18): CONVERTED grew 14->15 (assert_parcel_sanity);
     // batch-2 row 2.1 cutover (2026-09-18): CONVERTED grew 15->16 (enrich_ravines),

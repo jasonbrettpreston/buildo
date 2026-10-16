@@ -1,0 +1,224 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-bylaw-map-areas.js",
+  "chain": "bylaw_maps",
+  "source_fingerprint": "2b3eb7b47dc32ba8077876f85c71a2fbf4818eb1c2f07f7601801719a1735eb9",
+  "git_head": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+  "header": {
+    "processes": 1,
+    "calls": 16,
+    "distinct": 12,
+    "utility": 7,
+    "tracer_self_ms": 1.948,
+    "wall_ms": 1221
+  },
+  "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "bylaw_maps:load_bylaw_map_areas",
+            "load_bylaw_map_areas",
+            "load-bylaw-map-areas"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "36792c4b7d22fd4c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 27,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "a8a5f1c4b30fd405",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "bylaw_map_areas": [
+          "area_key"
+        ]
+      },
+      "writes": {
+        "bylaw_map_areas": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "bf75ce78566ca96d",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 27,
+      "reads": {
+        "bylaw_map_areas": [
+          "area_name",
+          "area_type",
+          "geom",
+          "map_code",
+          "seed_sha256",
+          "source",
+          "source_feature_id"
+        ]
+      },
+      "writes": {
+        "bylaw_map_areas": [
+          "area_key",
+          "area_name",
+          "area_type",
+          "geom",
+          "map_code",
+          "seed_sha256",
+          "source",
+          "source_feature_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "98957:2",
+      "write_fingerprints": [
+        "a8a5f1c4b30fd405",
+        "bf75ce78566ca96d"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "bylaw_map_areas": [
+        "area_key",
+        "area_name",
+        "area_type",
+        "geom",
+        "map_code",
+        "seed_sha256",
+        "source",
+        "source_feature_id"
+      ]
+    },
+    "writes": {
+      "bylaw_map_areas": [
+        "area_key",
+        "area_name",
+        "area_type",
+        "geom",
+        "map_code",
+        "seed_sha256",
+        "source",
+        "source_feature_id"
+      ]
+    }
+  },
+  "errors": []
+}

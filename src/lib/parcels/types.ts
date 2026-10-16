@@ -48,6 +48,9 @@ export interface Parcel {
   in_rooming_house_overlay: boolean | null;
   in_parking_zone_overlay: boolean | null;
   in_building_setback_overlay: boolean | null;
+  in_sixplex_area: boolean | null;
+  sixplex_area_type: number | null;
+  sixplex_membership_basis: 'gis_in' | 'gis_out_ward_out' | 'gis_hole_ward_in' | 'gis_edge_ward_in' | 'straddle' | 'no_geom' | null;
   on_priority_retail: boolean | null;
   in_queenstw_eat_overlay: boolean | null;
   zoning_overlays: Record<string, unknown> | null;

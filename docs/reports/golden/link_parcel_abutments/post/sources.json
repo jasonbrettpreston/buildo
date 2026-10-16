@@ -1,0 +1,515 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/link-parcel-abutments.js",
+  "chain": "sources",
+  "git_head": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 2996888,
+    "records_new": 1674348,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 379605,
+      "code_version": "v1-centreline-differencing",
+      "parcels_count": "496536",
+      "building_footprints_count": "427077",
+      "centreline_count": "47330",
+      "full_mode": true,
+      "parcels_processed": 496535,
+      "abutment_rows": 1674348,
+      "config": {
+        "abut_touch_tolerance_m": 0.5,
+        "abut_min_shared_len_m": 1,
+        "abut_bbox_pad_deg": 0.00002,
+        "abut_street_search_deg": 0.0008,
+        "fya_est_min_m": 0,
+        "fya_est_max_m": 30,
+        "abut_parcels_with_abutments_warn_pct": 50
+      },
+      "terminal": "linked",
+      "ledger_row": "chain_owned",
+      "chain_run_id": null,
+      "code_sha": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "pool_errors": 0,
+      "checks_passed": "all",
+      "checks_failed": 0,
+      "checks_warned": 0,
+      "errors": [],
+      "warnings": [],
+      "audit_table": {
+        "phase": 24,
+        "name": "Parcel Abutments (front-yard averaging input)",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "full_mode_gate",
+            "value": {
+              "mode": "full",
+              "reason": "full_rescan",
+              "explicit_full": false
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "parcels_processed",
+            "value": {
+              "parcels_processed": 496535
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "abutment_rows_written",
+            "value": {
+              "inserted": 1674348,
+              "updated": 0
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "asymmetric_pairs",
+            "value": {
+              "asymmetric_pairs": 0
+            },
+            "threshold": "viol == 0",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "est_status_counts",
+            "value": {
+              "estimated": 1510411,
+              "no_building": 4638,
+              "estimate_negative": 47716,
+              "no_frontage_street": 60954,
+              "estimate_out_of_bounds": 50629
+            },
+            "threshold": "viol == 0",
+            "status": "INFO",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "parcels_with_abutments_pct",
+            "value": {
+              "linked": 495920,
+              "total": 496535
+            },
+            "threshold": "pct >= 50",
+            "status": "PASS",
+            "source": "check",
+            "observed": "after_write"
+          },
+          {
+            "metric": "inputs_nonempty",
+            "value": {
+              "parcels": 496536,
+              "parcel_buildings": 535039,
+              "building_footprints": 427077,
+              "toronto_centreline": 47330
+            },
+            "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+            "status": "INFO"
+          },
+          {
+            "metric": "empty_source_guard",
+            "value": {
+              "parcels": 496536
+            },
+            "threshold": "guards.empty_source table(s) non-empty",
+            "status": "INFO"
+          },
+          {
+            "metric": "vocabulary:parcel_abutments.est_status",
+            "value": "within declared values (5 distinct)",
+            "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 7893.63,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 379659,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "parcels": [
+          "id",
+          "geom",
+          "zoning_class",
+          "primary_frontage_street_name"
+        ],
+        "parcel_buildings": [
+          "parcel_id",
+          "building_id",
+          "is_primary"
+        ],
+        "building_footprints": [
+          "id",
+          "geom"
+        ],
+        "toronto_centreline": [
+          "geom",
+          "linear_name_full"
+        ]
+      },
+      "writes": {
+        "parcel_abutments": [
+          "parcel_id",
+          "neighbour_id",
+          "shared_len_m",
+          "same_frontage_street",
+          "neighbour_residential",
+          "neighbour_building_id",
+          "bldg_to_subject_m",
+          "front_setback_est_m",
+          "est_status",
+          "linked_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=258 (floor 255)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_parcel_abutments]\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":2996888,\"records_new\":1674348,\"records_updated\":0,\"records_meta\":{\"duration_ms\":379605,\"code_version\":\"v1-centreline-differencing\",\"parcels_count\":\"496536\",\"building_footprints_count\":\"427077\",\"centreline_count\":\"47330\",\"full_mode\":true,\"parcels_processed\":496535,\"abutment_rows\":1674348,\"config\":{\"abut_touch_tolerance_m\":0.5,\"abut_min_shared_len_m\":1,\"abut_bbox_pad_deg\":0.00002,\"abut_street_search_deg\":0.0008,\"fya_est_min_m\":0,\"fya_est_max_m\":30,\"abut_parcels_with_abutments_warn_pct\":50},\"terminal\":\"linked\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"51bad98974e5eb1c4418d6b596acb44b0b467942\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":24,\"name\":\"Parcel Abutments (front-yard averaging input)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"full_mode_gate\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"explicit_full\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":{\"parcels_processed\":496535},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"abutment_rows_written\",\"value\":{\"inserted\":1674348,\"updated\":0},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"asymmetric_pairs\",\"value\":{\"asymmetric_pairs\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"est_status_counts\",\"value\":{\"estimated\":1510411,\"no_building\":4638,\"estimate_negative\":47716,\"no_frontage_street\":60954,\"estimate_out_of_bounds\":50629},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_with_abutments_pct\",\"value\":{\"linked\":495920,\"total\":496535},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"parcel_buildings\":535039,\"building_footprints\":427077,\"toronto_centreline\":47330},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"parcels\":496536},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:parcel_abutments.est_status\",\"value\":\"within declared values (5 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":7893.63,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":379659,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"parcels\":[\"id\",\"geom\",\"zoning_class\",\"primary_frontage_street_name\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"geom\"],\"toronto_centreline\":[\"geom\",\"linear_name_full\"]},\"writes\":{\"parcel_abutments\":[\"parcel_id\",\"neighbour_id\",\"shared_len_m\",\"same_frontage_street\",\"neighbour_residential\",\"neighbour_building_id\",\"bldg_to_subject_m\",\"front_setback_est_m\",\"est_status\",\"linked_at\"]}}\n\n[link_parcel_abutments] completed in 379.7s\n",
+  "stderr": "",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 2755,
+  "table_state": [
+    {
+      "table": "parcel_abutments",
+      "row_count": 1674348,
+      "ceiling_bypassed": "projected",
+      "content_hash": "3b25a39ee1fd7046e7c929120a012ebb",
+      "order_by": "explicit",
+      "order_columns": [
+        "parcel_id",
+        "neighbour_id"
+      ],
+      "columns": [
+        "parcel_id",
+        "neighbour_id",
+        "shared_len_m",
+        "same_frontage_street",
+        "neighbour_residential",
+        "neighbour_building_id",
+        "bldg_to_subject_m",
+        "front_setback_est_m",
+        "est_status",
+        "linked_at"
+      ],
+      "hash_method": "row_hash_then_concat"
+    }
+  ],
+  "tables_source": "descriptor",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "parcel_abutments": 1366
+  },
+  "table_specs": {
+    "parcel_abutments": {
+      "columns": [
+        "parcel_id",
+        "neighbour_id",
+        "shared_len_m",
+        "same_frontage_street",
+        "neighbour_residential",
+        "neighbour_building_id",
+        "bldg_to_subject_m",
+        "front_setback_est_m",
+        "est_status",
+        "linked_at"
+      ],
+      "columns_source": "descriptor",
+      "order": [
+        "parcel_id",
+        "neighbour_id"
+      ],
+      "order_source": "descriptor"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.chain_run_id",
+    "key:summary.records_meta.code_sha",
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/link-parcel-abutments.js",
+    "chain": "sources",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "abutment_rows": 1674348,
+        "audit_table": {
+          "name": "Parcel Abutments (front-yard averaging input)",
+          "phase": 24,
+          "rows": [
+            {
+              "metric": "full_mode_gate",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "explicit_full": false,
+                "mode": "full",
+                "reason": "full_rescan"
+              }
+            },
+            {
+              "metric": "parcels_processed",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "parcels_processed": 496535
+              }
+            },
+            {
+              "metric": "abutment_rows_written",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "inserted": 1674348,
+                "updated": 0
+              }
+            },
+            {
+              "metric": "asymmetric_pairs",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "viol == 0",
+              "value": {
+                "asymmetric_pairs": 0
+              }
+            },
+            {
+              "metric": "est_status_counts",
+              "observed": "after_write",
+              "source": "check",
+              "status": "INFO",
+              "threshold": "viol == 0",
+              "value": {
+                "estimate_negative": 47716,
+                "estimate_out_of_bounds": 50629,
+                "estimated": 1510411,
+                "no_building": 4638,
+                "no_frontage_street": 60954
+              }
+            },
+            {
+              "metric": "parcels_with_abutments_pct",
+              "observed": "after_write",
+              "source": "check",
+              "status": "PASS",
+              "threshold": "pct >= 50",
+              "value": {
+                "linked": 495920,
+                "total": 496535
+              }
+            },
+            {
+              "metric": "inputs_nonempty",
+              "status": "INFO",
+              "threshold": "every declared read table non-empty (inputs.expect_nonempty)",
+              "value": {
+                "building_footprints": 427077,
+                "parcel_buildings": 535039,
+                "parcels": 496536,
+                "toronto_centreline": 47330
+              }
+            },
+            {
+              "metric": "empty_source_guard",
+              "status": "INFO",
+              "threshold": "guards.empty_source table(s) non-empty",
+              "value": {
+                "parcels": 496536
+              }
+            },
+            {
+              "metric": "vocabulary:parcel_abutments.est_status",
+              "status": "INFO",
+              "threshold": "every stored value is a declared vocabulary value (on_unknown: fail)",
+              "value": "within declared values (5 distinct)"
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "building_footprints_count": "427077",
+        "centreline_count": "47330",
+        "checks_failed": 0,
+        "checks_passed": "all",
+        "checks_warned": 0,
+        "code_version": "v1-centreline-differencing",
+        "config": {
+          "abut_bbox_pad_deg": 0.00002,
+          "abut_min_shared_len_m": 1,
+          "abut_parcels_with_abutments_warn_pct": 50,
+          "abut_street_search_deg": 0.0008,
+          "abut_touch_tolerance_m": 0.5,
+          "fya_est_max_m": 30,
+          "fya_est_min_m": 0
+        },
+        "errors": [],
+        "full_mode": true,
+        "ledger_row": "chain_owned",
+        "parcels_count": "496536",
+        "parcels_processed": 496535,
+        "pool_errors": 0,
+        "terminal": "linked",
+        "warnings": []
+      },
+      "records_new": 1674348,
+      "records_total": 2996888,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "building_footprints": [
+            "id",
+            "geom"
+          ],
+          "parcel_buildings": [
+            "parcel_id",
+            "building_id",
+            "is_primary"
+          ],
+          "parcels": [
+            "id",
+            "geom",
+            "zoning_class",
+            "primary_frontage_street_name"
+          ],
+          "toronto_centreline": [
+            "geom",
+            "linear_name_full"
+          ]
+        },
+        "writes": {
+          "parcel_abutments": [
+            "parcel_id",
+            "neighbour_id",
+            "shared_len_m",
+            "same_frontage_street",
+            "neighbour_residential",
+            "neighbour_building_id",
+            "bldg_to_subject_m",
+            "front_setback_est_m",
+            "est_status",
+            "linked_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"[link_parcel_abutments] target: link_parcel_abutments (descriptor.database) → database=postgres user=postgres migrations=258 (floor 255)\",\"tag\":\"[link_parcel_abutments]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"mode gate: explicit_full=false forced=false changed=false → FULL (full_rescan)\",\"tag\":\"[link_parcel_abutments]\"}",
+      "[link_parcel_abutments] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "parcel_id",
+          "neighbour_id",
+          "shared_len_m",
+          "same_frontage_street",
+          "neighbour_residential",
+          "neighbour_building_id",
+          "bldg_to_subject_m",
+          "front_setback_est_m",
+          "est_status",
+          "linked_at"
+        ],
+        "content_hash": "3b25a39ee1fd7046e7c929120a012ebb",
+        "hash_method": "row_hash_then_concat",
+        "order_by": "explicit",
+        "order_columns": [
+          "parcel_id",
+          "neighbour_id"
+        ],
+        "row_count": 1674348,
+        "table": "parcel_abutments"
+      }
+    ],
+    "invariants": []
+  },
+  "rerun_proof": {
+    "answer": "PASS",
+    "rows": [
+      {
+        "table": "parcel_abutments",
+        "mode": "strict",
+        "answer": "zero",
+        "rewritten": 0,
+        "row_delta": 0
+      }
+    ],
+    "reason": "zero writes on 1 table(s) [parcel_abutments]",
+    "txid_before_run2": 61087,
+    "run2": {
+      "exit_code": 0,
+      "skipped": false,
+      "terminal": "linked"
+    }
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 2756,
+      "recorded_by": "harness"
+    },
+    {
+      "id": 2757,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": "7743412f347046a773cbbbc89cc67252c33f854679d0831f8852a3e27a5f59ef",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-parcel-abutments.js",
+    "scripts/link-parcel-abutments.descriptor.json",
+    "scripts/link-parcel-abutments.js",
+    "scripts/link-parcel-abutments.notes.json"
+  ],
+  "lib_fingerprint": "24df6f49515fef1898f60cf596b3ae3185325e8694a045db16fa73e32cc363e2"
+}

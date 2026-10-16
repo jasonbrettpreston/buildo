@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { usersInAuth, profiles, permits, costEstimates, entities, entityContacts, entityProjects, productGroups, leadProducts, trades, leadTrades, neighbourhoods, neighbourhoodBuildNorms, neighbourhoodStoreyNorms, buildingFootprints, parcelBuildings, parcels, permitHistory, syncRuns, permitParcels, permitPhaseTransitions, permitTrades, tradeMappingRules, wsibRegistry, userProfiles, leadViews, subscribeNonces, deviceTokens, trackedProjects, notifications, notificationDispatches, adminWatchlist, adminAuditLog, adminBackupCodes, addressPoints, parcelAddressPoints, supplierProducts, suppliers, supplierTrades, tradeProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements } from "./schema";
+import { usersInAuth, profiles, permits, costEstimates, entities, entityContacts, entityProjects, productGroups, leadProducts, trades, leadTrades, neighbourhoods, neighbourhoodBuildNorms, neighbourhoodStoreyNorms, buildingFootprints, parcelBuildings, parcels, permitHistory, syncRuns, permitParcels, permitPhaseTransitions, permitTrades, tradeMappingRules, wsibRegistry, userProfiles, leadViews, subscribeNonces, deviceTokens, trackedProjects, notifications, notificationDispatches, adminWatchlist, adminAuditLog, adminBackupCodes, addressPoints, parcelAddressPoints, supplierProducts, suppliers, supplierTrades, tradeProducts, universalStreamCatalog, universalStreamTradeSignals, leadViewEvents, leadParcels, permitProducts, entitlements, parcelAbutments } from "./schema";
 
 export const profilesRelations = relations(profiles, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
@@ -141,6 +141,12 @@ export const parcelsRelations = relations(parcels, ({many}) => ({
 	permitParcels: many(permitParcels),
 	parcelAddressPoints: many(parcelAddressPoints),
 	leadParcels: many(leadParcels),
+	parcelAbutments_neighbourId: many(parcelAbutments, {
+		relationName: "parcelAbutments_neighbourId_parcels_id"
+	}),
+	parcelAbutments_parcelId: many(parcelAbutments, {
+		relationName: "parcelAbutments_parcelId_parcels_id"
+	}),
 }));
 
 export const permitHistoryRelations = relations(permitHistory, ({one}) => ({
@@ -386,5 +392,18 @@ export const entitlementsRelations = relations(entitlements, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
 		fields: [entitlements.userId],
 		references: [usersInAuth.id]
+	}),
+}));
+
+export const parcelAbutmentsRelations = relations(parcelAbutments, ({one}) => ({
+	parcel_neighbourId: one(parcels, {
+		fields: [parcelAbutments.neighbourId],
+		references: [parcels.id],
+		relationName: "parcelAbutments_neighbourId_parcels_id"
+	}),
+	parcel_parcelId: one(parcels, {
+		fields: [parcelAbutments.parcelId],
+		references: [parcels.id],
+		relationName: "parcelAbutments_parcelId_parcels_id"
 	}),
 }));

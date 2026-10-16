@@ -385,6 +385,16 @@ Rules 2 and 3 differ: 600.60.40(1)(A) displaces base Ch.10 unit-count rows (rule
 
 **Vectors** (`scripts/seeds/bylaw/eval-vectors.json`): the six Spec 67 worked examples — 41 Derwyn Rd, 64 Eastbourne Cres, 96 Futura Dr, 68 Cordella Ave, parcel 5071306 (RT row), 7 Bijou Walk — and V1–V25. None of the six examples carries an exception. Inputs are extracted from the examples' recorded query results. Each vector has a closed `vector_status`: `by_law_expected` (expected value with its Spec 67 anchor **and** the by-law clause it reads, checked against the page text, not Spec 67 prose), `no_expected:<reason>` (V16 has none; V12's NULL is a fallback policy, mapped to `not_evaluated`), or `model_composite` (V25's footprint is a model `LEAST(…)`; excluded from value checks). A transcribed value is an `eval_vector` adjudication. G-EVAL applicability comes from the row's generated chapter zone, not the keyed `application`, so a mis-scoped draft cannot hide from a vector. The S0.5 spike drafts the vectors in its own directory; S6b promotes them. **V1–V4 and V25's side setback are wrong as Spec 67 states them** (KFM-4): they key 10.20.40.70(3) on measured frontage, but the clause keys on the *required* minimum lot frontage, i.e. label `f` (default 12.0 m, 10.20.30.20(1)(B)). S6b corrects them from the spike evaluator — with no `f` the by-law value is 1.2 m; with `f` = the stated frontage it is 0.6 / 0.9 / 1.8 / 3.0 / 1.8 m — and records each as an `eval_vector` adjudication; Spec 67 itself is regenerated at S13 (Spec 69 M-51).
 
+#### D7 inputs (PROPOSED 2026-10-08)
+
+Lot-vector producers beyond the parcel's label and metrics. Absent, disputed or untrusted → `not_evaluated` with the reason, never a default.
+
+| Input | Producer | `input_fidelity` |
+|---|---|---|
+| `sixplex` | `parcels.in_sixplex_area` + basis (Spec 65, mig 254) | `matches` iff basis `gis_in`, else `not_evaluated:map_area_disputed` (Q-A2) |
+| `abutment` | `parcel_abutments` (Spec 130; applicability derived on read, Spec 130 §4) | value `differs` (M-26); averaging `not_evaluated:front_averaging_unavailable` until Q-B1 |
+| `coa_zoning_designation` | `coa_applications.zoning_designation` (Spec 51, mig 253) | `matches` |
+
 ## 8. Anti-spaghetti rules
 
 1. **No per-row code.** No regulation id or exception number appears as an executable literal in `scripts/` or `src/` (G-EXC-LIT, Phase 2); no branch on a regulation id.

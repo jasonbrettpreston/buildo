@@ -36,6 +36,8 @@
     "enrich_wsib_builders": { "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_WSIB_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "enrich_named_builders":{ "file": "scripts/enrich-web-search.js",     "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_UNMATCHED_ONLY": "1" }, "telemetry_tables": ["entities"], "telemetry_null_cols": { "entities": ["phone", "email", "website"] } },
     "load_coa_notices":     { "file": "scripts/load-coa-notices.js",      "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["coa_notice_variances"] },
+    "load_bylaw_map_areas": { "file": "scripts/load-bylaw-map-areas.js",  "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["bylaw_map_areas"] },
+    "link_parcel_abutments": { "file": "scripts/link-parcel-abutments.js", "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["parcel_abutments"] },
     "load_wsib":            { "file": "scripts/load-wsib.js",             "supports_full": false, "supports_dry_run": false, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["trade_name", "mailing_address"] } },
     "link_wsib":            { "file": "scripts/link-wsib.js",             "supports_full": false, "supports_dry_run": true, "chain_args": { "sources": ["--full"] }, "telemetry_tables": ["entities", "wsib_registry"] },
     "enrich_wsib_registry": { "file": "scripts/enrich-wsib.js",          "supports_full": false, "supports_dry_run": false, "env": { "ENRICH_LIMIT": "6000" }, "telemetry_tables": ["wsib_registry"], "telemetry_null_cols": { "wsib_registry": ["primary_phone", "primary_email", "website"] } },
@@ -117,6 +119,9 @@
     ],
     "coa_notices": [
       "load_coa_notices"
+    ],
+    "bylaw_maps": [
+      "load_bylaw_map_areas"
     ],
     "deep_scrapes": [
       "inspections", "classify_inspection_status", "assert_network_health",

@@ -453,6 +453,19 @@
       "content_sha256": "d1f968ae87748c4137cee4659e54f6ce6868179bb0484bdf1e40c089c761381b",
       "moved_at": "2026-10-13",
       "commit": "63f7635e"
+    },
+    {
+      "id": "M21",
+      "from_spec": "124",
+      "anchor": "| R-AQ | **A batch's cloud acceptance is a PARTIAL chain run over that batch's converted slugs; the FULL chain is proven ONCE at end of conversion; and where the standing instance cannot complete a proof inside its ceilings, the sanctioned remedy is a TEMPORARY COMPUTE RESIZE, never a raised ceiling.** `run-chain.js --only`/`--from` + the `chain-sources.yml` inputs, pinned per R-AL. Per-slug rows from one `chain_run_id` per acceptance run stay mandatory (R-AB's ACC-1 arm unchanged); what is retired is R-AB's implicit whole-chain scope. **Measured cause (2026-09-18):** Supabase Small (2 GB RAM, 512 MB `shared_buffers`, 22 MB/s baseline) reads ~4.7 MB/s sequential against a 4.4 GB `parcels` heap; `enrich_parcels` exceeds its 180-min step ceiling and full chains exceed the 300-min job cap. **A ceiling measures the STEP; an instance measures the HARDWARE — raising the former to absorb the latter destroys the only signal that says the step regressed.** So `enrich_parcels_pass5_timeout_minutes` and `manifest…step_timeout_minutes` stay UNCHANGED. **The resize is an OPERATOR ACTION the orchestrator REQUESTS via a hard-stop prompt, never performs** — dispatch waits for the operator's live-resize confirmation, and the downgrade waits for a second operator confirmation once the proof and its per-slug batch are adjudicated. Procedure: `docs/runbook/README.md` §3c. | Amends: R-AB (scope), R-AL (pinning unchanged) | `scripts/run-chain.js`; `.github/workflows/chain-sources.yml`; `docs/runbook/README.md` §3c; `.cursor/batch2_c5_active_task.md` §2.2a/§5 |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B9 — Register rows R-AQ…R-AW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-16",
+      "line_count": 10,
+      "classification": "REGISTER",
+      "evidence": "H6 conformance (QUEUE 2026-10-16): Spec 124 had ~100 B of arm (iv) headroom and owes R-CT/R-CU (conversion traps). Rows R-AQ…R-AW (the next contiguous block after M20) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.",
+      "content_sha256": "e011659c76fa67f1c777dd77f752b977caab7a29ccc677b307057c7df0935f98",
+      "moved_at": "2026-10-16",
+      "commit": "51bad989"
     }
   ]
 }

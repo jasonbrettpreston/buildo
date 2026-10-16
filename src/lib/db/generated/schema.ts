@@ -199,6 +199,7 @@ export const coaApplications = pgTable("coa_applications", {
 	maxBuildFsi: numeric("max_build_fsi", { precision: 6, scale:  3 }),
 	coaFsi: numeric("coa_fsi", { precision: 6, scale:  3 }),
 	realizedFsiP90: numeric("realized_fsi_p90", { precision: 6, scale:  3 }),
+	zoningDesignation: text("zoning_designation"),
 }, (table) => [
 	index("idx_coa_applications_address").using("btree", table.address.asc().nullsLast().op("text_ops")),
 	index("idx_coa_applications_address_trgm").using("gin", table.address.asc().nullsLast().op("gin_trgm_ops")),
@@ -889,6 +890,9 @@ export const parcels = pgTable("parcels", {
 	coaFsi: numeric("coa_fsi", { precision: 6, scale:  3 }),
 	realizedFsiP90: numeric("realized_fsi_p90", { precision: 6, scale:  3 }),
 	lotSizeSource: text("lot_size_source"),
+	inSixplexArea: boolean("in_sixplex_area"),
+	sixplexAreaType: smallint("sixplex_area_type"),
+	sixplexMembershipBasis: text("sixplex_membership_basis"),
 }, (table) => [
 	index("idx_parcels_address").using("btree", table.addrNumNormalized.asc().nullsLast().op("text_ops"), table.streetNameNormalized.asc().nullsLast().op("text_ops")),
 	index("idx_parcels_centroid").using("btree", table.centroidLat.asc().nullsLast().op("numeric_ops"), table.centroidLng.asc().nullsLast().op("numeric_ops")).where(sql`(centroid_lat IS NOT NULL)`),
@@ -2381,4 +2385,55 @@ export const coaNoticeVariances = pgTable("coa_notice_variances", {
 	check("chk_cnv_target_sentinel", sql`(target_status = 'mapped'::text) OR (target = target_status)`),
 	check("chk_cnv_target_status", sql`target_status = ANY (ARRAY['mapped'::text, 'ambiguous'::text, 'unmapped'::text])`),
 	check("chk_cnv_variance_key", sql`variance_key = ((((source_family || '|'::text) || (application_number)::text) || '|'::text) || (item_ordinal)::text)`),
+]);
+
+export const bylawMapAreas = pgTable("bylaw_map_areas", {
+	areaKey: text("area_key").primaryKey().notNull(),
+	mapCode: text("map_code").notNull(),
+	source: text().notNull(),
+	sourceFeatureId: integer("source_feature_id").notNull(),
+	areaType: smallint("area_type").notNull(),
+	areaName: text("area_name").notNull(),
+	seedSha256: char("seed_sha256", { length: 64 }).notNull(),
+	geom: geometry({ type: "multipolygon", srid: 4326 }).notNull(),
+}, (table) => [
+	index("idx_bylaw_map_areas_geom_gist").using("gist", table.geom.asc().nullsLast().op("gist_geometry_ops_2d")),
+	unique("bylaw_map_areas_source_feature_uniq").on(table.source, table.sourceFeatureId),
+	check("bylaw_map_areas_area_type_check", sql`area_type = ANY (ARRAY[3, 4])`),
+	check("bylaw_map_areas_key_shape", sql`area_key = ((source || ':'::text) || (source_feature_id)::text)`),
+	check("bylaw_map_areas_map_code_check", sql`map_code = '600.60'::text`),
+	check("bylaw_map_areas_seed_sha256_check", sql`seed_sha256 ~ '^[0-9a-f]{64}$'::text`),
+	check("bylaw_map_areas_source_check", sql`source = ANY (ARRAY['city_gis_layer80'::text, 'ckan_wards_2018'::text])`),
+]);
+
+export const parcelAbutments = pgTable("parcel_abutments", {
+	parcelId: integer("parcel_id").notNull(),
+	neighbourId: integer("neighbour_id").notNull(),
+	sharedLenM: numeric("shared_len_m", { precision: 10, scale:  2 }).notNull(),
+	sameFrontageStreet: boolean("same_frontage_street"),
+	neighbourResidential: boolean("neighbour_residential").notNull(),
+	neighbourBuildingId: integer("neighbour_building_id"),
+	bldgToSubjectM: numeric("bldg_to_subject_m", { precision: 10, scale:  2 }),
+	frontSetbackEstM: numeric("front_setback_est_m", { precision: 10, scale:  2 }),
+	estStatus: text("est_status").notNull(),
+	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).notNull(),
+}, (table) => [
+	index("idx_parcel_abutments_neighbour").using("btree", table.neighbourId.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.neighbourId],
+			foreignColumns: [parcels.id],
+			name: "parcel_abutments_neighbour_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.parcelId],
+			foreignColumns: [parcels.id],
+			name: "parcel_abutments_parcel_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.parcelId, table.neighbourId], name: "parcel_abutments_pkey"}),
+	check("parcel_abutments_bldg_to_subject_m_check", sql`(bldg_to_subject_m IS NULL) OR (bldg_to_subject_m >= (0)::numeric)`),
+	check("parcel_abutments_building_status", sql`(est_status = 'no_building'::text) OR (neighbour_building_id IS NOT NULL)`),
+	check("parcel_abutments_est_status_check", sql`est_status = ANY (ARRAY['estimated'::text, 'no_building'::text, 'no_frontage_street'::text, 'street_not_found'::text, 'estimate_negative'::text, 'estimate_out_of_bounds'::text])`),
+	check("parcel_abutments_estimate_iff_estimated", sql`(est_status = 'estimated'::text) = (front_setback_est_m IS NOT NULL)`),
+	check("parcel_abutments_no_self", sql`parcel_id <> neighbour_id`),
+	check("parcel_abutments_shared_len_m_check", sql`shared_len_m >= (0)::numeric`),
 ]);

@@ -1,0 +1,64 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-bylaw-map-areas.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries across expected_shape · read_this_way · suspicious_if ·",
+    "blind_spots · decisions · review_notes · expected · known_normal · known_bad ·",
+    "do_not_reflag · how_to_investigate · limitations.",
+    "The cap is checked over this file by step-validate fast invariant #45 (NOTES-CAP). When a 13th wants in",
+    "there are exactly two legal resolutions: PROMOTE it to a check, or DELETE it.",
+    "There is no overflow file and no overflow block.",
+    "",
+    "This file carries 5 prose entries (well under the cap). The by-law map is a 27-row,",
+    "adopt-once-a-year table: the interesting prose is what the numbers MEAN, not how they drift."
+  ],
+  "expected_shape": [
+    {
+      "what": "A healthy run SKIPS on `skipped_content_hash` between seed adoptions: the seed is a committed 27-feature file, so the library's post-acquisition content-hash gate eats the run and re-emits the prior block — the normal outcome. A load happens ONCE PER ADOPTION and rewrites all 27 rows (seed_sha256 changes, so the guard fires on every row). `node scripts/analysis/bylaw/map-seed.mjs --refresh` then `--adopt` is the only thing that moves the hash.",
+      "measured": {
+        "value": { "features": 27, "gis": 18, "wards": 9 },
+        "date": "2026-10-08",
+        "query": "layer 80 returnCountOnly = 18; ward subset 04,09,10,11,12,13,14,19,23"
+      }
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "The two area types are the by-law's TWO diagrams, not a hierarchy: `area_type` 4 = Toronto and East York Community Council Area (Diagram 1), `area_type` 3 = Scarborough North / Ward 23 (Diagram 2). The 881 holes the City publishes sit in 3 of the 18 GIS rows and are kept as published (R-10b — loaded as published, ruled downstream); the ward rows (the 8 TEY wards + ward 23) are the by-law text's boundary. `enrich_parcels`' sixplex pass reads BOTH, and 600.60 membership is the union.",
+      "measured": {
+        "value": { "area_type_4": 24, "area_type_3": 3, "gis_rows_with_holes": 3, "interior_rings": 881 },
+        "date": "2026-10-16",
+        "query": "the adopted seed scripts/seeds/bylaw/maps/600_60.geojson (sha256 b24cfb16…): features grouped by area_type (GIS 16 + wards 8 = 24 type 4; GIS 2 + ward 23 = 3 type 3), interior rings counted per GIS feature. Re-measured against bylaw_map_areas at the first capture (H6 runbook step 3)."
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "The GIS shaped count is not 18 while the run is otherwise healthy — the City has republished layer 80 and the seed is now a snapshot of a layer that no longer exists. Refresh and re-adopt the seed (`map-seed.mjs --refresh` then `--adopt`), then re-measure Q-A2 (the holes), because the hole count is the number the by-law's Diagram 1 must still agree with.",
+      "check": "source_counts_match_manifest",
+      "measured": {
+        "value": { "expected_gis_features": 18, "expected_wards": 9 },
+        "date": "2026-10-08",
+        "query": "layer 80 returnCountOnly = 18"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "Nothing in this step compares the City GIS layer-80 areas with the by-law's Diagram 1 image (R-10b / Q-A2). The 881 holes are loaded exactly as the City publishes them and their MEANING — whether a lot fully inside a hole is in or out of the overlay — is a ruling this step cannot make. A republished layer whose polygons moved by a metre would pass every check here: the count is unchanged, the geometry validates, nothing departs.",
+      "detected_by": "none",
+      "measured": {
+        "value": { "holes": 881, "residential_lots_in_holes": 937, "edge_lots": 245 },
+        "date": "2026-10-08",
+        "query": "research note phase2-inputs-research.md (A)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "Licence: the City of Toronto GIS layer states NO licence (copyrightText empty, measured 2026-10-07). Operator ruling 2026-10-08 (Q-A1): the seed is used LOCALLY ONLY and the ruling is recorded as 'not stated — City of Toronto GIS, unverified'; a cloud/prod publish waits until the licence is confirmed. The `dataset_source_license` row re-records it on every run, so the provenance is read from the audit table and never assumed.",
+      "why": "The GIS layer is the only source of Diagrams 1/2 and there is no substitute; the alternative was not loading the overlay at all. Local-only keeps the unverified-licence claim out of any published artifact while the operator pursues confirmation.",
+      "adjudicated": "operator, 2026-10-08 (Q-A1)"
+    }
+  ]
+}

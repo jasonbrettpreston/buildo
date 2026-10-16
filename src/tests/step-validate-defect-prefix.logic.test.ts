@@ -72,7 +72,10 @@ describe('step-validate.mjs — defect-prefix overrides + collision check (G6, S
     expect(defectPrefixFor('link_wsib')).toBe('LW');
     // the bare initials convention (no overrides) collapses both to LW — the defect
     expect(defectPrefixFor('load_wsib', {})).toBe('LW');
-    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS' });
+    // link_parcel_abutments -> LAB (H6, 2026-10-16): its initials LPA collide with link_parcel_addresses (#42).
+    expect(defectPrefixFor('link_parcel_abutments')).toBe('LAB');
+    expect(defectPrefixFor('link_parcel_addresses')).toBe('LPA');
+    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB' });
   });
 
   it('RED direction — the live overrides were removed: load_wsib/link_wsib collide on LW, blocked, naming both slugs and the override fix', async () => {

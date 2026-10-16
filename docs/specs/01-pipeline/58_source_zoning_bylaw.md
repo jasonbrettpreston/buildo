@@ -412,6 +412,14 @@ Every test file MUST include the SPEC LINK header.
   - downstream: none
   - consumers: enrich_parcels (records_meta base_layer_committed_after_overlays_failed) · enrich_parcels (records_meta zoning_layers_loaded) · enrich_parcels (records_meta zoning_partial_load) · enrich_parcels (records_meta zoning_rows_changed) · load_zoning (records_meta zoning_layer_versions)
 <!-- /generated:target-files -->
+- `load_bylaw_map_areas` — INGESTOR · pending (net-new, Spec 124 R-CS; the generated block lists converted steps only) · owner specs: 58 (§11.3)
+  - `scripts/load-bylaw-map-areas.js`
+  - `scripts/load-bylaw-map-areas.descriptor.json`
+  - `scripts/load-bylaw-map-areas.notes.json`
+  - `scripts/lib/compute/load-bylaw-map-areas.js`
+  - `scripts/analysis/bylaw/map-seed.mjs`, `scripts/seeds/bylaw/maps/`
+  - `migrations/254_bylaw_map_areas_sixplex.sql`
+  - `src/tests/steps/load_bylaw_map_areas/`
 - `scripts/lib/zoning-attr-drift.js`
 - `scripts/lib/geometry-validator.js`
 - `migrations/NNN_zoning_bylaw_tables.sql` (10 tables + GIST + CHECK + non-spatial indexes — NO `zoning_exceptions` per D6)
@@ -670,6 +678,27 @@ empty) and the census row is RETAINED with `status: converted`, `converted_at: c
 - **Class lock (pct checks report a value).** `src/tests/steps/pct-checks-evaluate.logic.test.ts` resolves this step's
   observer-TABLE dispatch (`observerFor` → `named(id, fn)`); every pct observer reports `value` (or the INERT constant), never a
   `violations` flag.
+
+### 11.3 `load_bylaw_map_areas` — second INGESTOR (built 2026-10-08, McBylaw Phase 2 inputs A3; conformed 2026-10-16, H6; registers at cutover)
+
+**Chain:** `bylaw_maps` (standalone, operator-triggered, local-only — the `coa_notices` / Spec 129 form).
+
+**Steps:** 1 (`load_bylaw_map_areas`)
+
+### Step Breakdown
+
+| # | Slug | Script | Purpose | Writes |
+|---|------|--------|---------|--------|
+| 1 | `load_bylaw_map_areas` | `load-bylaw-map-areas.js` | Pinned 600.60 Sixplex Overlay map seed (City GIS layer 80 + CKAN TEY wards) → map areas | `bylaw_map_areas` |
+
+Loads the pinned 600.60 Sixplex Overlay map seed (by-law 654-2025 Diagrams 1/2) into `bylaw_map_areas` (migration 254): the City GIS layer `cot_geospatial11/FeatureServer/80` (18 features, holes kept) and the CKAN `city-wards` TEY wards {04, 09, 10, 11, 12, 13, 14, 19} plus ward 23, in ONE seed file `scripts/seeds/bylaw/maps/600_60.geojson` pinned by `scripts/seeds/bylaw/maps/manifest.json` (sha256 + md5, url, fetched_at). The pipeline never fetches the layer live: the seed is refreshed only through `node scripts/analysis/bylaw/map-seed.mjs --refresh` then `--adopt` (G-PROV).
+
+- **Files (Spec 122 §4.1):** `scripts/load-bylaw-map-areas.js` (frozen shell, lock 127) · `.descriptor.json` · `.notes.json` · `scripts/lib/compute/load-bylaw-map-areas.js`. Its own operator-triggered chain `bylaw_maps` (the `coa_notices` posture: local only while the licence is unconfirmed, run on each seed adoption), never a scheduled chain; `enrich_parcels` reads the table on its next run. The map code, sources and area types are the manifest's data, required statically by the compute (the `load_coa_notices` vocab posture); a missing or malformed manifest fails the step at load.
+- **Write:** class B `upsert_scoped_departure_delete` keyed by `area_key` (`source:source_feature_id`), `retract: "departed"`, empty-source refusal and the F-C1 delete guard.
+- **Pre-write refusals:** the map is refused before any write — no transaction is opened and `bylaw_map_areas` is untouched — when the seed bytes differ from the manifest pin, when a source's feature count differs from the manifest (18 GIS, 9 wards), or on any bad key, duplicate key, null geometry or unrepairable geometry.
+- **Licence (operator ruling 2026-10-08, Q-A1):** the City GIS layer states none; it is used locally and recorded as "not stated — City of Toronto GIS, unverified". A cloud/prod publish waits until it is confirmed.
+- **Consumer:** `enrich_parcels` (Spec 65) reads the `bylaw_map_areas` TABLE; its producer edge is a watermark pin on `bylaw_map_areas.seed_sha256` (not evaluated). No step reads the `records_meta.bylaw_map_load` block, so `emits[].consumers` is empty (R-BF: declared = observed).
+- **Reload on a code change:** the gate is the seed's content hash only (`records_meta.bylaw_map_load.content_hash`, the load_ravines / load_coa_notices key); a code change with an unchanged seed does not reload. `BYLAW_MAP_FORCE_RELOAD=1` is the deliberate reload (a declared limitation, the INGESTOR fleet posture).
 
 ## 12. Known Failure Modes
 

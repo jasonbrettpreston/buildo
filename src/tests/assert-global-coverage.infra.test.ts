@@ -446,6 +446,7 @@ describe('chain specs — step counts DERIVED from manifest.chains, never retype
     ['entities', '45_chain_entities.md'],
     ['wsib', '46_wsib_enrichment.md'],
     ['coa_notices', '129_source_coa_notices.md'],
+    ['bylaw_maps', '58_source_zoning_bylaw.md'],
   ];
   const specText = (f: string) => fs.readFileSync(path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', f), 'utf8');
 

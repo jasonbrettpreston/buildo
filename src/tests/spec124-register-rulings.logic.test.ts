@@ -218,7 +218,10 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
   describe('R-AZ — a per-invocation row cap is NOT an override; retired by standard (2026-09-23)', () => {
     const SPEC_124 = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '124_step_standard_policy.md');
     const PROGRAMME_ITEMS = path.join(REPO_ROOT, 'scripts', 'steps', '_schema', 'programme-items.json');
-    const spec = fs.readFileSync(SPEC_124, 'utf8');
+    // M21 (H6, 2026-10-16) moved R-AQ…R-AW (R-AV included) to a 124a LIVE REGISTER section (§B9),
+    // so the register is read from both, as the M20 precedent does (spec-split.infra.test.ts).
+    const SPEC_124A = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '124a_step_standard_policy_appendix.md');
+    const spec = `${fs.readFileSync(SPEC_124, 'utf8')}\n${fs.readFileSync(SPEC_124A, 'utf8')}`;
 
     const registerRow = (text: string, id: string): string | null => {
       const m = text.match(new RegExp(`^\\| ${id.replace('-', '\\-')} \\|[^\\n]*$`, 'm'));

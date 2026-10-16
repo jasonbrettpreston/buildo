@@ -1,6 +1,7 @@
 /**
  * SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §1.10 (ENRICHER), §5.5 (seams)
  * SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md §2/§3/§4/§5/§6/§7 (governing behaviour, passes 1-3)
+ * SPEC LINK: docs/specs/01-pipeline/65_enrich_parcels.md (sixplex overlay pass — PROPOSED, McBylaw Phase 2 inputs A4)
  * SPEC LINK: docs/specs/01-pipeline/78_optimal_lot_configuration.md §P2/§P3A.1/§P3C.1/§P3C.2 (passes 4-5)
  * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 2 compute is JUST compute, Rule 3 P4
  *   externalization, §5.5 seam list)
@@ -1839,16 +1840,26 @@ async function computeDeferScope(ctx, threshold) {
 }
 
 // ===========================================================================
-// D#5 — the honest aggregate records_updated. Pure JS, verbatim from :1834-1842.
+// D#5 — the honest aggregate records_updated. Pure JS, verbatim from :1834-1842,
+// extended with `sixplexIds` (the sixplex pass's own updated-id set) so the aggregate
+// counts EVERY row any pass touched.
 // ===========================================================================
 
-function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds }) {
+/**
+ * @param {{zoningIds?: Iterable<number>, maxBuildIds?: Iterable<number>,
+ *   existingIds?: Iterable<number>, scenarioIds?: Iterable<number>,
+ *   optConfigGenuineIds?: Iterable<number>, sixplexIds?: Iterable<number>}} sets
+ *   the per-pass updated-id sets; every one is optional and defaults to empty.
+ * @returns {number} the size of their DISTINCT-id union.
+ */
+function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, scenarioIds, optConfigGenuineIds, sixplexIds }) {
   const touched = new Set();
   for (const id of zoningIds || []) touched.add(id);
   for (const id of maxBuildIds || []) touched.add(id);
   for (const id of existingIds || []) touched.add(id);
   for (const id of scenarioIds || []) touched.add(id);
   for (const id of optConfigGenuineIds || []) touched.add(id);
+  for (const id of sixplexIds || []) touched.add(id);
   return touched.size;
 }
 
@@ -1896,6 +1907,7 @@ async function computePostPhase(pool, { passRaw }) {
   const maxBuild = passRaw.max_build || {};
   const existing = passRaw.existing_structure || {};
   const comps = passRaw.comparable_builds || {};
+  const sixplex = passRaw.sixplex || {};
   const optCfg = passRaw.optimal_config || {};
   const genuineIds = optCfg.genuineIds ? [...optCfg.genuineIds] : [];
 
@@ -1919,6 +1931,11 @@ async function computePostPhase(pool, { passRaw }) {
       comp_candidate_pool: comps.candidates || 0,
       comparable_builds_enriched_count: comps.updated || 0,
       comp_zero_comps_count: comps.zero_comps || 0,
+      sixplex_ran: sixplex.ran === true,
+      sixplex_map_missing: sixplex.skipped === 'no_map_areas' || sixplex.skipped === 'partial_map_areas',
+      sixplex_skip_detail: { skipped: sixplex.skipped || null, mapCounts: sixplex.mapCounts || null },
+      sixplex_basis_counts: { all: sixplex.basisCounts || {}, residential: sixplex.basisCountsResidential || {} },
+      sixplex_enriched_count: sixplex.updated || 0,
       optimal_config_enriched_count: optCfg.updated || 0,
       opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
       opt_config_citywide_fallback_count: optCfg.citywide || 0,
@@ -1955,8 +1972,166 @@ async function computePostPhase(pool, { passRaw }) {
         existingIds: existing.updatedIds,
         scenarioIds: existing.scenarioUpdatedIds,
         optConfigGenuineIds: genuineIds,
+        sixplexIds: sixplex.updatedIds,
       }),
     },
+  };
+}
+
+// ===========================================================================
+// SIXPLEX PASS — 600.60 map membership (Spec 65 PROPOSED; McBylaw Phase 2 inputs A4; migration 254).
+// Full rescan every run behind an IS DISTINCT FROM guard. The map (bylaw_map_areas, from the pinned
+// seed via load_bylaw_map_areas) is split by ST_Subdivide into an indexed ON COMMIT DROP temp table
+// (the research join against the unsubdivided 31K-vertex polygon was cancelled at 15 min), then each
+// parcel's ST_PointOnSurface is tested against the City GIS areas (holes kept), the CKAN ward union and
+// the GIS hull (holes filled). straddle is reserved (Q-A3) and never emitted.
+// ===========================================================================
+
+/**
+ * Pure JS mirror of the sixplex SQL CASE (ESX-6 pins BOTH this and the SQL). The migration-254
+ * consistency rule: `gis_in` -> in_sixplex_area true with the area type carried through; the ward-only
+ * boundaries are HONEST NULLs (in_sixplex_area null, never a guessed true/false); `gis_out_ward_out`
+ * is the only `false`. `straddle` is reserved (Q-A3) and never produced here.
+ *
+ * ESX-F3 — `hasGeom` means the parcel's geometry is non-NULL AND non-empty
+ * (`p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom)`), exactly the predicate the statement-6 `pt` CTE
+ * applies. An empty geometry cannot yield a ST_PointOnSurface anchor, so it must fall to `no_geom`
+ * (NULLs, never a guessed `gis_out_ward_out` false), not be silently treated as testable.
+ */
+function classifySixplexBasis({ hasGeom, gisAreaType, wardIn, hullIn }) {
+  if (!hasGeom) return { basis: 'no_geom', in_sixplex_area: null, sixplex_area_type: null };
+  if (gisAreaType != null) return { basis: 'gis_in', in_sixplex_area: true, sixplex_area_type: gisAreaType };
+  if (wardIn && hullIn) return { basis: 'gis_hole_ward_in', in_sixplex_area: null, sixplex_area_type: null };
+  if (wardIn) return { basis: 'gis_edge_ward_in', in_sixplex_area: null, sixplex_area_type: null };
+  return { basis: 'gis_out_ward_out', in_sixplex_area: false, sixplex_area_type: null };
+}
+
+/**
+ * The sixplex temp-table SELECTs, in build order (H6 port onto the S2 seam, Spec 124 R-BZ G4/G5):
+ * compute owns ONLY the SELECT text; `ctx.tempTable` owns the DROP / CREATE TEMP ... ON COMMIT DROP /
+ * CREATE INDEX / ANALYZE wrapper. Exactly ONE SELECT carries a bound parameter — the subdivide size,
+ * `$1::int`, sourced from `config.enrich_parcels_sixplex_subdivide_max_vertices` (Rule 3: no literal
+ * tunable in the SQL).
+ */
+function buildSixplexPartsSql() {
+  return `SELECT a.source, a.area_type, 'area'::text AS part, ST_Subdivide(a.geom, $1::int) AS geom
+  FROM bylaw_map_areas a
+ WHERE a.map_code = '600.60'
+UNION ALL
+SELECT a.source, a.area_type, 'hull'::text AS part, ST_Subdivide(ST_MakePolygon(ST_ExteriorRing(d.geom)), $1::int) AS geom
+  FROM bylaw_map_areas a CROSS JOIN LATERAL ST_Dump(a.geom) d
+ WHERE a.map_code = '600.60' AND a.source = 'city_gis_layer80'`;
+}
+
+/** The per-parcel membership census over the indexed `sixplex_parts` (no params). */
+function buildSixplexEnrichSql() {
+  return `WITH pt AS (
+  SELECT p.id, ST_PointOnSurface(p.geom) AS g FROM parcels p
+   WHERE p.geom IS NOT NULL AND NOT ST_IsEmpty(p.geom)
+),
+m AS (
+  SELECT pt.id,
+    (SELECT min(s.area_type) FROM sixplex_parts s
+      WHERE s.part = 'area' AND s.source = 'city_gis_layer80' AND s.geom && pt.g AND ST_Intersects(s.geom, pt.g)) AS gis_area_type,
+    EXISTS (SELECT 1 FROM sixplex_parts s
+      WHERE s.part = 'area' AND s.source = 'ckan_wards_2018' AND s.geom && pt.g AND ST_Intersects(s.geom, pt.g)) AS ward_in,
+    EXISTS (SELECT 1 FROM sixplex_parts s
+      WHERE s.part = 'hull' AND s.geom && pt.g AND ST_Intersects(s.geom, pt.g)) AS hull_in
+  FROM pt
+)
+SELECT id,
+  CASE WHEN gis_area_type IS NOT NULL THEN 'gis_in'
+       WHEN ward_in AND hull_in THEN 'gis_hole_ward_in'
+       WHEN ward_in THEN 'gis_edge_ward_in'
+       ELSE 'gis_out_ward_out' END AS sixplex_membership_basis,
+  CASE WHEN gis_area_type IS NOT NULL THEN true WHEN ward_in THEN NULL ELSE false END AS in_sixplex_area,
+  gis_area_type::smallint AS sixplex_area_type
+FROM m
+UNION ALL
+SELECT p.id, 'no_geom', NULL::boolean, NULL::smallint FROM parcels p
+ WHERE p.geom IS NULL OR ST_IsEmpty(p.geom)`;
+}
+
+/** The two SELECTs joined, for locks/review only (never executed as one string). */
+function buildSixplexSql() {
+  return [buildSixplexPartsSql(), buildSixplexEnrichSql()].join(';\n');
+}
+
+/** The guarded set-based UPDATE: only rows whose triple actually changed are touched. */
+function buildSixplexUpdateSql() {
+  return `UPDATE parcels p SET
+    in_sixplex_area = e.in_sixplex_area,
+    sixplex_area_type = e.sixplex_area_type,
+    sixplex_membership_basis = e.sixplex_membership_basis
+FROM sixplex_enrich e
+WHERE p.id = e.id
+  AND (p.in_sixplex_area IS DISTINCT FROM e.in_sixplex_area
+    OR p.sixplex_area_type IS DISTINCT FROM e.sixplex_area_type
+    OR p.sixplex_membership_basis IS DISTINCT FROM e.sixplex_membership_basis)
+RETURNING p.id`;
+}
+
+/**
+ * Run the sixplex pass inside the shared transaction. When bylaw_map_areas holds no 600.60 rows from
+ * BOTH sources the pass is SKIPPED and every column is left untouched — the WARN check
+ * `sixplex_map_missing` reports it. No verdict is derived here (Rule 10).
+ *
+ * `ran` is true on EVERY path including the skips (ESX-F1). `skipped` is null when the pass ran,
+ * `'no_map_areas'` when both sources hold zero rows and `'partial_map_areas'` when exactly one does;
+ * `mapCounts` carries the raw `{ gis, wards }` either way so the check detail can name the shortfall
+ * (ESX-F2).
+ *
+ * H6 port: the temp tables go through `ctx.tempTable` (S2) and the UPDATE through `ctx.exec` (S3,
+ * counter-neutral — `updated` below stays the pass's own count). The reads (`client.query` SELECTs over
+ * declared relations) are unchanged.
+ */
+async function runSixplexPass(client, ctx, config) {
+  const maxVertices = Number(config.enrich_parcels_sixplex_subdivide_max_vertices);
+
+  const have = await client.query(
+    "SELECT count(*) FILTER (WHERE source = 'city_gis_layer80')::int AS gis, count(*) FILTER (WHERE source = 'ckan_wards_2018')::int AS wards FROM bylaw_map_areas WHERE map_code = '600.60'",
+  );
+  const gis = have.rows[0].gis;
+  const wards = have.rows[0].wards;
+  const mapCounts = { gis, wards };
+  if (!(gis > 0 && wards > 0)) {
+    const skipped = gis === 0 && wards === 0 ? 'no_map_areas' : 'partial_map_areas';
+    return { ran: true, skipped, mapCounts, updated: 0, updatedIds: [], basisCounts: {}, basisCountsResidential: {} };
+  }
+
+  await ctx.tempTable({
+    name: 'sixplex_parts',
+    selectSql: buildSixplexPartsSql(),
+    params: [maxVertices],
+    index: { name: 'sixplex_parts_geom_gist', using: 'gist', column: 'geom' },
+    analyze: true,
+  });
+  await ctx.tempTable({ name: 'sixplex_enrich', selectSql: buildSixplexEnrichSql() });
+
+  const counts = await client.query(
+    'SELECT sixplex_membership_basis AS basis, count(*)::int AS n FROM sixplex_enrich GROUP BY basis ORDER BY basis',
+  );
+  const basisCounts = {};
+  for (const row of counts.rows) basisCounts[row.basis] = row.n;
+
+  // ESX-F5 — the R-category slice of the same census, so the Reality-Check bounds can be read off the
+  // pass's OWN numbers instead of re-derived by the runner.
+  const res = await client.query(
+    "SELECT e.sixplex_membership_basis AS basis, count(*)::int AS n FROM sixplex_enrich e JOIN parcels p ON p.id = e.id WHERE p.zoning_class IN ('R', 'RD', 'RS', 'RT', 'RM') GROUP BY 1 ORDER BY 1",
+  );
+  const basisCountsResidential = {};
+  for (const row of res.rows) basisCountsResidential[row.basis] = row.n;
+
+  // ctx.exec(7): outputs.writes[7], the declared sixplex set_based_join_update (execution.phases sixplex writes_ref 7).
+  const upd = await ctx.exec(7, buildSixplexUpdateSql());
+  return {
+    ran: true,
+    skipped: null,
+    mapCounts,
+    updated: upd.rowCount,
+    updatedIds: upd.rows.map((r) => r.id),
+    basisCounts,
+    basisCountsResidential,
   };
 }
 
@@ -2193,6 +2368,32 @@ function comp_zero_comps_count(ctx) {
   ctx.report('comp_zero_comps_count', { violations: 0, detail: n });
 }
 
+function sixplex_map_missing(ctx) {
+  // ESX-F1 — "the pass never ran" is a violation in its own right: a passRaw carrying no sixplex
+  // stats at all (or a `ran` that is not `true`) used to read as "ran clean" because
+  // `sixplex_map_missing` was only ever set from `skipped`.
+  const didNotRun = ctx.matched.sixplex_ran !== true;
+  const missing = ctx.matched.sixplex_map_missing === true;
+  let detail = null;
+  if (didNotRun) {
+    detail = 'sixplex pass did not run';
+  } else if (missing) {
+    // ESX-F2 — name the shortfall (which source, how many rows) rather than a fixed "both sources".
+    const d = ctx.matched.sixplex_skip_detail || {};
+    const counts = d.mapCounts || {};
+    detail = `${d.skipped || 'no_map_areas'}: gis=${counts.gis ?? 0} wards=${counts.wards ?? 0} — sixplex pass skipped, columns untouched`;
+  }
+  ctx.report('sixplex_map_missing', { violations: didNotRun || missing ? 1 : 0, detail });
+}
+
+function sixplex_basis_counts(ctx) {
+  ctx.report('sixplex_basis_counts', { violations: 0, detail: ctx.matched.sixplex_basis_counts || {} });
+}
+
+function sixplex_enriched_count(ctx) {
+  ctx.report('sixplex_enriched_count', { violations: 0, detail: ctx.matched.sixplex_enriched_count || 0 });
+}
+
 function optimal_config_enriched_count(ctx) {
   const n = ctx.matched.optimal_config_enriched_count || 0;
   ctx.report('optimal_config_enriched_count', { violations: 0, detail: n });
@@ -2235,6 +2436,9 @@ const CHECKS = {
   comp_candidate_pool,
   comparable_builds_enriched_count,
   comp_zero_comps_count,
+  sixplex_map_missing,
+  sixplex_basis_counts,
+  sixplex_enriched_count,
   optimal_config_enriched_count,
   opt_aor_envelope_capped_count,
   opt_config_citywide_fallback_count,
@@ -2261,6 +2465,7 @@ const passes = [
   { name: 'max_build', txn: 'shared', run: runPass2 },
   { name: 'existing_structure', txn: 'shared', run: runPass3 },
   { name: 'comparable_builds', txn: 'shared', run: runPass4 },
+  { name: 'sixplex', txn: 'shared', run: runSixplexPass },
   { name: 'optimal_config', txn: 'post_commit', run: runPass5 },
 ];
 
@@ -2366,6 +2571,13 @@ Object.assign(module.exports, {
   buildCompCandidatesSql,
   buildComparableBuildsUpdateSql,
   runPass4,
+  // sixplex pass
+  classifySixplexBasis,
+  buildSixplexPartsSql,
+  buildSixplexEnrichSql,
+  buildSixplexSql,
+  buildSixplexUpdateSql,
+  runSixplexPass,
   // pass 5
   OPTCFG_WRITE_COLS,
   OPTCFG_GENUINE_COLS,

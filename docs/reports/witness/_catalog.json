@@ -154,6 +154,16 @@
       "min_height_m",
       "source_id"
     ],
+    "bylaw_map_areas": [
+      "area_key",
+      "area_name",
+      "area_type",
+      "geom",
+      "map_code",
+      "seed_sha256",
+      "source",
+      "source_feature_id"
+    ],
     "coa_applications": [
       "abuts_laneway",
       "address",
@@ -297,6 +307,7 @@
       "variance_context",
       "ward",
       "zoning_class",
+      "zoning_designation",
       "zoning_dominant_parcel_id",
       "zoning_dominant_parcel_method",
       "zoning_enriched_at",
@@ -754,6 +765,18 @@
       "type",
       "user_id"
     ],
+    "parcel_abutments": [
+      "bldg_to_subject_m",
+      "est_status",
+      "front_setback_est_m",
+      "linked_at",
+      "neighbour_building_id",
+      "neighbour_id",
+      "neighbour_residential",
+      "parcel_id",
+      "same_frontage_street",
+      "shared_len_m"
+    ],
     "parcel_address_points": [
       "address_point_id",
       "computed_at",
@@ -873,6 +896,7 @@
       "in_policy_area",
       "in_queenstw_eat_overlay",
       "in_rooming_house_overlay",
+      "in_sixplex_area",
       "is_corner_lot",
       "is_heritage_designated",
       "is_in_ravine_protection_area",
@@ -927,6 +951,8 @@
       "realized_fsi_p90",
       "rear_suite_permission",
       "rear_suite_type",
+      "sixplex_area_type",
+      "sixplex_membership_basis",
       "stated_area_raw",
       "street_name_normalized",
       "street_type_normalized",
