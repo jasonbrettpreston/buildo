@@ -75,7 +75,9 @@ describe('step-validate.mjs — defect-prefix overrides + collision check (G6, S
     // link_parcel_abutments -> LAB (H6, 2026-10-16): its initials LPA collide with link_parcel_addresses (#42).
     expect(defectPrefixFor('link_parcel_abutments')).toBe('LAB');
     expect(defectPrefixFor('link_parcel_addresses')).toBe('LPA');
-    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB' });
+    // enrich_ravines -> RV (V3 B1, 2026-10-16): its defect ledger ids are RV-D*, not the ER initials.
+    expect(defectPrefixFor('enrich_ravines')).toBe('RV');
+    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV' });
   });
 
   it('RED direction — the live overrides were removed: load_wsib/link_wsib collide on LW, blocked, naming both slugs and the override fix', async () => {

@@ -180,15 +180,11 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
 - compare ran: false · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
-- 2375/2379 passed (suite success=false)
+- 2379/2379 passed (suite success=true)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (4):
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
+- failing: none
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

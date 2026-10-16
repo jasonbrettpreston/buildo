@@ -267,10 +267,11 @@ describe('gate I — registry coverage (#33-#36)', () => {
       expect(rows.map((r) => r.id)).toEqual(['AS-D1b', 'ADB-D7']);
     });
 
-    it('T6e: LIVE — the real tree reports a measured definition count (currently 57 disagreements)', () => {
+    // 57 → 30 (2026-10-16, V3 B1): the RV prefix override and RV-D2/RV-D4 dispositions removed 27 disagreements; T6f keeps the ledger exact.
+    it('T6e: LIVE — the real tree reports a measured definition count (currently 30 disagreements)', () => {
       const out = reg.checkDefectIdUniqueness(REPO_ROOT);
       expect(out.definitions).toBeGreaterThan(50);
-      expect(out.violations.length).toBe(57);
+      expect(out.violations.length).toBe(30);
     });
 
     it('T6f: LIVE — every #36 defect-id disagreement has a gate-I ledger row, and there are zero orphans', () => {

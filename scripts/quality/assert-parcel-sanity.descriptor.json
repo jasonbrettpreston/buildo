@@ -1356,10 +1356,10 @@
       "retighten_when": "zero rows — closes when slice 1's on-lot apportionment (enrich_parcels cur_floor_gfa_sqm = ST_Intersection area, not the whole polygon) makes on-lot share genuinely 1.0 for every non-shared structure; RD/attached remain two different legitimate floors even after slice 1 (attached party-wall sharing is real, not a defect).",
       "last_measured": {
         "value": 61571,
-        "at": "2026-10-16T19:30:55.309Z",
-        "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-        "cost_ms": 2153,
-        "sample_n": 18,
+        "at": "2026-10-16T19:41:34.349Z",
+        "commit": "3a155a519b29fbd10dfc0f775f1254a61a7b5d41",
+        "cost_ms": 2842,
+        "sample_n": 19,
         "source_run": {
           "run_id": null,
           "chain": null,

@@ -87,6 +87,10 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261016t1938z": [
+      "address_point_id",
+      "latitude"
+    ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
       "address_class_desc",

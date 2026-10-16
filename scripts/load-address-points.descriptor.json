@@ -269,7 +269,7 @@
     "txn_scope": "step",
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": 3855,
+    "batch": 3640,
     "on_row_error": "skip",
     "on_row_error_why": {
       "text": "A row with no usable coordinate source (neither a parseable `geometry` GeoJSON Point/MultiPoint NOR numeric LATITUDE/LONGITUDE) is counted in `skipped` and the load continues — the loader's own isNaN(lat)||isNaN(lng) guard [READ load-address-points.js:317-322]. The tolerance is bounded by the declared skip_rate_pct check below; no bare percentage literal survives here (Rule 3).",

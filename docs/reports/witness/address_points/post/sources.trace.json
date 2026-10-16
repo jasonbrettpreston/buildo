@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-address-points.js",
   "chain": "sources",
-  "source_fingerprint": "f07d55795c14545111eab6e4c33d4b8a54579aa1f7dfdec8a09c8f0469259ecc",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "af08738bfeceda9faa19a3f4aa94e77aaaed38dec6bdb53f39a03d902b315f38",
+  "git_head": "3a155a519b29fbd10dfc0f775f1254a61a7b5d41",
   "header": {
     "processes": 1,
     "calls": 166,
     "distinct": 17,
     "utility": 8,
-    "tracer_self_ms": 1256.257,
-    "wall_ms": 35985
+    "tracer_self_ms": 1101.246,
+    "wall_ms": 36332
   },
   "statements": [
     {
@@ -278,7 +278,7 @@
   ],
   "transactions": [
     {
-      "client": "85980:3",
+      "client": "16779:3",
       "write_fingerprints": [
         "8b9dda5a2430e883",
         "9f8e7239f14db5a0",

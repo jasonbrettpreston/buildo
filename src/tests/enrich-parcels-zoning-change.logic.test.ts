@@ -211,8 +211,11 @@ describe('zoningRunWrote — the #12b predicate, pure (data in, decision out)', 
 
 describe('source locks — the compute file no longer carries the reads it delegated', () => {
   // (h) the whole point of 8b: the SQL and the DB clock are GONE from the reader.
-  it('(h1) enrich-parcels.js contains no `pipeline_runs` text at all', () => {
-    expect(/pipeline_runs/.test(SRC)).toBe(false);
+  // Comments are excluded: CP-S1 (Spec 124 R-CW, 2026-10-16) documents in a comment that the
+  // descriptor's op:"not_failed" pin on pipeline_runs.status replaced the #12c throw.
+  it('(h1) enrich-parcels.js code contains no `pipeline_runs` text at all', () => {
+    const code = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(/pipeline_runs/.test(code)).toBe(false);
   });
 
   it('(h2) no `now()` inside the readZoningChange region (the retired DB clock)', () => {

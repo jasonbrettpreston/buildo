@@ -345,7 +345,8 @@ describe('WF3 sql-witness set-operation fences (GREEN before and after)', () => 
 
     const r = R.resolveStatement(sql, catalog);
     expect(r.error).toBeNull();
-    expect(r.fingerprint).toBe('c10cd7338ceb2234');
+    // c10cd7338ceb2234 → c71d62254f932144 (2026-10-16): H4-G's COALESCE(ap/p street_type) split; the recaptured trace carries it.
+    expect(r.fingerprint).toBe('c71d62254f932144');
 
     const trace = JSON.parse(
       fs.readFileSync(

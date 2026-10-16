@@ -249,7 +249,8 @@ describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
 
   it('V5: standardFor speaks V2 for a frozen module, V3 for a clean one', () => {
     const rows = loadRows();
-    expect(gateE.standardFor('enrich-parcels', rows)).toBe('V2');
+    // enrich-parcels left the frozen set when CP-S1 closed its purity rows (2026-10-16); load-zoning is still frozen.
+    expect(gateE.standardFor('load-zoning', rows)).toBe('V2');
     expect(gateE.standardFor('load-wsib', rows)).toBe('V3');
   });
 
