@@ -2082,7 +2082,7 @@ none
 - `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
 - `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
-- `scripts/seeds/bylaw/vocab.json` sha256 `def634b213fdcaa7`
+- `scripts/seeds/bylaw/vocab.json` sha256 `c76b9f8ef4768b1a`
 - `scripts/seeds/lineage-meta-snapshot.json` sha256 `de2d2052aa3e611d`
 - `scripts/seeds/logic_variables.json` sha256 `507eb6e90932249b`
 - `scripts/surfaces/_schema/report-fields.decl.json` sha256 `bf41c6f0c132a19e`
