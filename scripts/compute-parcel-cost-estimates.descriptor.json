@@ -160,6 +160,15 @@
           "text": "Migration 205 — one of the 3 FSI scalars.",
           "liveness": { "kind": "column", "ref": "parcels.max_build_fsi" }
         }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "parcels",
+        "on_missing": "fail",
+        "why": {
+          "text": "parcels has RLS enabled with ZERO policies (Spec 114 Class B). Under a non-bypass role this step's write affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (Spec 124 R-CT; load_coa_notices precedent).",
+          "liveness": { "kind": "table", "ref": "parcels" }
+        }
       }
     ],
     "srid": "none",
@@ -335,7 +344,7 @@
   "limitations": [
     {
       "what": "CPCE-A1's cloud no-op cost is UNMEASURED. Locally a full stream is 70–95s against a mostly-unchanged table (measured 2026-07); a cold/full rewrite of 437K wide rows with a JSONB column, and the Supabase-Small cloud cost of running this on every scheduled invocation, is not measured anywhere and is carried as a declared risk resolved at the end-of-batch cloud proof.",
-      "measured": "docs/reports/2026-09-__-batch2-p2-4-compute-parcel-cost-estimates-assessment.md §0.4",
+      "measured": "docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md §0.4",
       "check_id": "none"
     },
     {

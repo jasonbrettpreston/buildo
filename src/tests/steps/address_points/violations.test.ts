@@ -47,13 +47,15 @@ const CSV_DRIFT_REL = `${STEP_DIR_REL}/fixtures/address-points-drift-header-only
 
 /** Spec 47 §A.5 lock registry row 96 [READ load-address-points.js:80]. */
 const LOCK_ID = 96;
-/** The written table and its 16 columns (§1.2 of the assessment report, from the INSERT :184-196). */
+/** The written table and its 17 columns (§1.2 of the assessment report, from the INSERT :184-196). */
 const WRITE_TABLE = 'address_points';
 const WRITE_COLUMNS = [
   'address_point_id', 'latitude', 'longitude',
   'address_number', 'linear_name_full', 'address_full', 'lo_num', 'hi_num',
   'maint_stage', 'address_status', 'address_class_desc', 'class_family_desc', 'place_name',
-  'addr_num_normalized', 'linear_name_normalized', 'geom',
+  'addr_num_normalized', 'linear_name_normalized',
+  'street_type_normalized', // mig 257 (Spec 54 §3 level 0): parsed street type, derived
+  'geom',
   'retired_at', // fold 10 soft-retire (AP-D9): written insert_only, seeded NULL, only MARK/UNMARK change it
 ];
 const WRITE_CLASS = 'guarded_upsert';
@@ -61,7 +63,8 @@ const WRITE_CLASS = 'guarded_upsert';
 const GUARD_COLUMNS = [
   'latitude', 'longitude', 'address_number', 'linear_name_full', 'address_full',
   'lo_num', 'hi_num', 'maint_stage', 'address_status', 'address_class_desc',
-  'class_family_desc', 'place_name', 'addr_num_normalized', 'linear_name_normalized', 'geom',
+  'class_family_desc', 'place_name', 'addr_num_normalized', 'linear_name_normalized',
+  'street_type_normalized', 'geom',
 ];
 /** The CSV_URL literal (:37-38) — inputs.reads.externals[0].url. */
 const CSV_URL_HOST = 'ckan0.cf.opendata.inter.prod-toronto.ca';
@@ -81,6 +84,7 @@ const CONFIG_VARS: Record<string, number> = {
   address_points_null_address_number_max_pct: 0.1,
   address_points_download_timeout_ms: 60000,
   address_points_mass_retire_max_pct: 0.02, // fold 10 soft-retire mass guard (fold 15 default)
+  address_points_null_street_type_max_pct: 0.06, // Spec 54 §3 level 0 (mig 257): null_street_type_pct's ceiling (gate A answer 1)
 };
 /** The config variables that are REAL seeded variables minted by this step (sources_address_points_floor pre-exists). */
 const NEW_CONFIG_VARS = [
@@ -93,6 +97,7 @@ const SHARED_FLOOR_VAR = 'sources_address_points_floor';
 /** The declared check ids (Rule 5). */
 const CHECK_IDS = [
   'csv_header_drift',
+  'null_street_type_pct',
   'null_address_number_pct',
   'skip_rate_pct',
   'rows_read_floor',
@@ -323,6 +328,15 @@ describe('row 3.1 — compute.shapeRecord maps a CSV record to the 16 bound colu
     expect(r.address_number).toBe('100');
     expect(r.addr_num_normalized, 'normalizeAddressNumber("100")').toBe('100');
     expect(r.linear_name_normalized, 'parseLinearName("Davenport Rd").street_name').toBe('DAVENPORT');
+    expect(r.street_type_normalized, 'parseLinearName("Davenport Rd").street_type (mig 257)').toBe('RD');
+  });
+
+  it('a row whose LINEAR_NAME_FULL carries no recognised type stores street_type_normalized null (never \'\')', () => {
+    const rows = parseCsvFixture(CSV_6ROWS_REL);
+    const record = { ...(rows[0] as Record<string, string>), LINEAR_NAME_FULL: 'The Kingsway' };
+    const r = shapeRecord()(record) as Shape;
+    expect(r, 'the row must shape').not.toBeNull();
+    expect(r.street_type_normalized, 'no recognised type ⇒ null, never the empty string').toBeNull();
   });
 
   it('a MultiPoint-geometry row is unwrapped the same way ([[lng,lat]] → lng/lat)', () => {
@@ -468,6 +482,43 @@ describe('row 3.1 — the checks fire on their fixtures (Spec 124 Rule 3/5/10)',
     expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG_PCT_RATIO).status, '0.01 <= 0.10 default ⇒ PASS').toBe('PASS');
   });
 
+  it('null_street_type_pct WARNs above the config bound and PASSes under it (Spec 54 §3 level 0)', () => {
+    // Spec 54 §3 level 0 / mig 257: the share of shaped rows whose parsed street type
+    // is empty. Same denominator (rows_shaped) and same raw-fraction scale as the
+    // sibling; bound externalized (Rule 3) to address_points_null_street_type_max_pct
+    // (default 0.06). A rise means parseLinearName stopped recognising types and every
+    // linker silently falls back to the frozen parcel type.
+    const check = checkById(loadDescriptor(), 'null_street_type_pct');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const over = driveCheck('null_street_type_pct', { acquired: { rows_shaped: 100, column_nulls: { street_type_normalized: 10 } }, config: CFG_PCT_RATIO });
+    expect(over[0]![1].value, '0.10 ⇒ the measured fraction').toBe(0.1);
+    expect(over[0]![1].violations, 'WF3: no 0/1 flag').toBeUndefined();
+    expect(verdict.checkRow(check, over[0]![1], 'fail_step', CFG_PCT_RATIO).status, '0.10 > 0.06 default ⇒ WARN').toBe('WARN');
+    const under = driveCheck('null_street_type_pct', { acquired: { rows_shaped: 100, column_nulls: { street_type_normalized: 4 } }, config: CFG_PCT_RATIO });
+    expect(under[0]![1].value, '0.04 ⇒ the measured fraction').toBe(0.04);
+    expect(under[0]![1].violations, 'WF3: no 0/1 flag').toBeUndefined();
+    expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG_PCT_RATIO).status, '0.04 <= 0.06 default ⇒ PASS').toBe('PASS');
+  });
+
+  it('null_street_type_pct reports value null / detail.reason no_input when the denominator is missing or zero', () => {
+    // Regression Guardian 2026-10-12: with no `column_nulls` / `rows_shaped` (or an
+    // attempted count of 0) the check must NOT fabricate a 0.00 fraction — a silent
+    // 0% would read as a PASS and hide a pipeline that shaped nothing. It reports a
+    // null value with the 'no_input' reason instead (scripts/lib/compute/load-address-points.js).
+    const noCounters = driveCheck('null_street_type_pct', { acquired: {}, config: CFG_PCT_RATIO });
+    expect(noCounters).toHaveLength(1);
+    expect(noCounters[0]![1].value, 'no counters ⇒ no measurable fraction').toBeNull();
+    expect(noCounters[0]![1].detail, 'the absence is named, not silent').toEqual({ reason: 'no_input' });
+
+    const zeroDenominator = driveCheck('null_street_type_pct', { acquired: { rows_shaped: 0, column_nulls: { street_type_normalized: 0 } }, config: CFG_PCT_RATIO });
+    expect(zeroDenominator).toHaveLength(1);
+    expect(zeroDenominator[0]![1].value, 'zero shaped rows ⇒ no measurable fraction').toBeNull();
+    expect(zeroDenominator[0]![1].detail, 'the absence is named, not silent').toEqual({ reason: 'no_input' });
+  });
+
   it('skip_rate_pct FAILs at/above the config bound (5%)', () => {
     // WF3 2026-09-28: re-pointed from the 0/1 flag to value + the verdict row (verdict.js compares a pct bound to `violations` first, so the flag, not the ratio, was compared).
     const check = checkById(loadDescriptor(), 'skip_rate_pct');
@@ -522,10 +573,17 @@ describe('row 3.1 — the descriptor declares class-A guarded_upsert (Spec 122 �
     expect(w[0]!.write_discipline.txn_scope, 'the runner wraps ALL batches in ONE transaction (Fold B3)').toBe('step');
   });
 
-  it('the 17 write columns are declared (3 base + 10 source + 2 normalized + geom + retired_at)', () => {
+  it('the 18 write columns are declared (3 base + 10 source + 3 normalized + geom + retired_at)', () => {
     const d = loadDescriptor();
     const cols = writes(d)[0]!.columns.map((c) => c.name).sort();
     expect(cols).toEqual([...WRITE_COLUMNS].sort());
+  });
+
+  it('street_type_normalized is declared bare (no on_empty), derived', () => {
+    const d = loadDescriptor();
+    const col = writes(d)[0]!.columns.find((c) => c.name === 'street_type_normalized');
+    expect(col, 'the descriptor must declare street_type_normalized (mig 257)').toBeDefined();
+    expect((col as { on_empty?: string }).on_empty).toBeUndefined();
   });
 
   it('guard_columns carry the WHERE-clause set (the 12 NULLIF/bare + geom)', () => {
@@ -578,6 +636,8 @@ describe('row 3.1 — checks[] wiring (Rule 5) and config.logic_variables (Rule 
     expect(checkById(d, 'csv_header_drift').severity).toBe('WARN');
     expect(checkById(d, 'null_address_number_pct').severity).toBe('WARN');
     expect(checkById(d, 'null_address_number_pct').limit_from_config).toBe('address_points_null_address_number_max_pct');
+    expect(checkById(d, 'null_street_type_pct').severity).toBe('WARN');
+    expect(checkById(d, 'null_street_type_pct').limit_from_config).toBe('address_points_null_street_type_max_pct');
     // CORRECTED at commit 9 (ROW-ERROR-GATE fast invariant #27 caught this): the legacy
     // auditRows entry reads `status: skipRate >= 5 ? 'FAIL' : 'PASS'` (git show
     // 120b2b99:scripts/load-address-points.js:418) — FAIL-severity, not WARN.

@@ -624,6 +624,24 @@ describe('row 3.6 — checks: skip_rate_pct / features_read_floor / batch_error_
     expect(pass[0]![1]!.violations).toBe(0);
   });
 
+  it.each<[string, Record<string, unknown>]>([
+    ['{}', {}],
+    ['rows_read 0', { rows_read: 0, bad_key_count: 0, null_geometry_count: 0, shaped_skipped: 0 }],
+  ])('skip_rate_pct on %s reports value null / detail.reason no_input and FAILs, never PASS', (_l, acquired) => {
+    // WF3 2026-10-14 (the null_address_number_pct precedent): nothing read ⇒ no skip rate. RED
+    // before the fix: `{violations:0, detail:null}` ⇒ `viol == 0` PASS ("green because it never
+    // looked", Spec 124 §7 LM-D14). Now no count ⇒ `unevaluable` at the declared severity (FAIL).
+    const calls = driveCheck('skip_rate_pct', { acquired, config: CFG });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![1]).toEqual({ value: null, detail: { reason: 'no_input' } });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const c = checkById(loadDescriptor(), 'skip_rate_pct');
+    expect(verdict.checkRow(c, calls[0]![1], 'fail_step', CFG).status, 'unmeasured ⇒ FAIL, never PASS').toBe('FAIL');
+  });
+
   it('skip_rate_pct is declared: no limit_from_config, severity FAIL, and the compute reads the config bound', () => {
     const c = checkById(loadDescriptor(), 'skip_rate_pct');
     // corrected at ②: the legacy boundary is STRICT (`skipRate >= 5 ? 'FAIL'`), which `pct <=`

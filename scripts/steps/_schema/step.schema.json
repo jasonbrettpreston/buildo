@@ -2865,9 +2865,10 @@
                 "enum": [
                   "equals",
                   "nonzero",
-                  "true"
+                  "true",
+                  "not_failed"
                 ],
-                "description": "S1-P (Spec 124 Rule 10): the closed predicate the runner evaluates before any phase/compute (scripts/lib/step/index.js measureProducerPins). Default equals when `equals` is present; nonzero = a non-zero number or non-empty string; true = the literal boolean true."
+                "description": "S1-P (Spec 124 Rule 10): the closed predicate the runner evaluates before any phase/compute (scripts/lib/step/index.js measureProducerPins). Default equals when `equals` is present; nonzero = a non-zero number or non-empty string; true = the literal boolean true; not_failed (CP-S1 #12c, 2026-10-14) = the declared producer run's status is not `failed` — stamp `pipeline_runs.status` only, `statuses` required."
               },
               "statuses": {
                 "type": "array",
@@ -2946,6 +2947,34 @@
                   "properties": {
                     "stamp": {
                       "pattern": "^records_meta\\."
+                    }
+                  }
+                }
+              },
+              {
+                "x-rule": "CP-S1 #12c (2026-10-14): op not_failed reads the producer run status — stamp pipeline_runs.status only, a declared terminal set (S1-P verdict read), no equals literal",
+                "if": {
+                  "required": [
+                    "op"
+                  ],
+                  "properties": {
+                    "op": {
+                      "const": "not_failed"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "statuses"
+                  ],
+                  "not": {
+                    "required": [
+                      "equals"
+                    ]
+                  },
+                  "properties": {
+                    "stamp": {
+                      "const": "pipeline_runs.status"
                     }
                   }
                 }

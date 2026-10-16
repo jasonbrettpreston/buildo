@@ -1,16 +1,16 @@
 {
   "trace_version": 1,
-  "step": "scripts\\load-massing.js",
+  "step": "scripts/load-massing.js",
   "chain": "sources",
-  "source_fingerprint": "07af923006804f9430591a078c6454ae06e5800b996e8557af156dbb0bd79b08",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "d1329ee7be82e72ee13128701b58e6448f3dd32aa2b9685c75dd44709fb83164",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 98,
-    "distinct": 19,
-    "utility": 12,
-    "tracer_self_ms": 7602.146,
-    "wall_ms": 319579
+    "calls": 96,
+    "distinct": 18,
+    "utility": 10,
+    "tracer_self_ms": 809.402,
+    "wall_ms": 44954
   },
   "statements": [
     {
@@ -102,7 +102,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -241,7 +241,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 6,
+      "count": 5,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -257,21 +257,11 @@
       "writes": {},
       "excluded": [],
       "error": null
-    },
-    {
-      "fingerprint": "ef589a4a639a791a",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
     }
   ],
   "transactions": [
     {
-      "client": "3176:3",
+      "client": "15559:3",
       "write_fingerprints": [
         "26ccff78d2c8f90e"
       ]

@@ -11,7 +11,8 @@
           "address_status",
           "linear_name_normalized",
           "maint_stage",
-          "retired_at"
+          "retired_at",
+          "street_type_normalized"
         ],
         "parcel_address_points": [
           "address_point_id",

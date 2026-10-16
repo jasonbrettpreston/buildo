@@ -29,11 +29,11 @@
 // a pin may carry a `bound` over TWO producer stamps instead of an `op`/`equals`
 // predicate — `bound: "pct <= N"` plus `of: records_meta.<denominator>` — with the
 // limit optionally taken from a declared logic variable (`limit_from_config`). The
-// `op` set stays CLOSED (`equals|nonzero|true`, unchanged): the pin evaluator
+// `op` set stays CLOSED (`bound` adds no op): the pin evaluator
 // DERIVES the ratio `100 * <stamp> / <of>` and hands it to the EXISTING
 // `verdict.js` `resolveLimit` + `evaluateLimit` — the one pct grammar estate-wide,
 // never a second one. The ravines `MAX_INVALID_GEOM_RATIO = 0.05` function-scope
-// literal is the founding case.
+// literal is the founding case. (`not_failed`, CP-S1 #12c 2026-10-14, is the one later op.)
 
 // A cycle-safe require: `verdict.js` requires NOTHING, so this cannot re-open the
 // `ledger.js` <-> `step/index.js` load cycle the lazy-require note above documents.
@@ -43,9 +43,12 @@ const { resolveLimit, evaluateLimit } = require('./verdict');
  * The CLOSED op set (Fold 1 item 3). An `op` outside this set is an ERROR row,
  * never a silent fall-through — an unpinned predicate would be an undeclared
  * check, exactly what R-BZ G1/G12 forbid.
+ * `not_failed` (CP-S1 #12c, operator 2026-10-14; RE-FREEZE) is the one op that reads the producer
+ * RUN's status instead of a records_meta stamp: valid only on stamp `pipeline_runs.status` (schema),
+ * FAIL when the pin's declared run has status `failed`.
  * @type {readonly string[]}
  */
-const PIN_OPS = Object.freeze(['equals', 'nonzero', 'true']);
+const PIN_OPS = Object.freeze(['equals', 'nonzero', 'true', 'not_failed']);
 
 /**
  * The CLOSED read kinds (Fold 1 item 1). Only `baseline` takes
@@ -314,6 +317,10 @@ function evaluatePins(pins, resultsBySlug, config) {
       }
     } else if (PIN_OPS.includes(op) === false) {
       result = 'ERROR';
+    } else if (op === 'not_failed') {
+      // The run's own status (the producer result's `status`), never a records_meta path.
+      observed = producerStatus;
+      result = producerStatus === 'failed' ? 'FAIL' : 'PASS';
     } else {
       const { present, value } = readPath(res.records_meta, pin.stamp);
       if (!present) {
@@ -344,7 +351,9 @@ function evaluatePins(pins, resultsBySlug, config) {
             ? `expected ${JSON.stringify(pin.equals)}`
             : op === 'nonzero'
               ? 'expected non-empty'
-              : 'expected true';
+              : op === 'not_failed'
+                ? 'expected not failed'
+                : 'expected true';
           note = `${who}: ${pin.stamp} = ${shown} — ${expect} — ${result}`;
         }
       }

@@ -67,6 +67,7 @@
             "address_point_id",
             "addr_num_normalized",
             "linear_name_normalized",
+            "street_type_normalized",
             "address_class_desc",
             "maint_stage",
             "address_status",
@@ -379,6 +380,18 @@
             "ref": "permit_parcels"
           }
         }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "permits",
+        "on_missing": "fail",
+        "why": {
+          "text": "permits has RLS enabled with ZERO policies (Spec 114 Class B). Under a non-bypass role this step's write affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (Spec 124 R-CT; load_coa_notices precedent).",
+          "liveness": {
+            "kind": "table",
+            "ref": "permits"
+          }
+        }
       }
     ],
     "srid": 4326,
@@ -476,6 +489,46 @@
       "accept_until": "none",
       "why": {
         "text": "F17's informational sibling counter, ported by name.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
+    },
+    {
+      "id": "matches_tier_1_ap_type",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "the address_points_exact matches whose street type was decided by the ADDRESS POINT's own street_type_normalized"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "H4-G (observability seat, 2026-10-10) — an always-INFO count making Strategy 1a's COALESCE(ap.street_type_normalized, p.street_type_normalized) decision visible: this side counts the matches the address point's own type carried. Paired with matches_tier_1_parcel_type_fallback; the two sum to tier_1_via_bridge.",
+        "liveness": {
+          "kind": "column",
+          "ref": "permit_parcels.match_type"
+        }
+      }
+    },
+    {
+      "id": "matches_tier_1_parcel_type_fallback",
+      "kind": "field_coverage",
+      "expect": {
+        "reports": "the address_points_exact matches whose street type fell through to the PARCEL's street_type_normalized (corner-lot rule, Spec 54 level 0)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "H4-G (observability seat, 2026-10-10) — the fallback half of Strategy 1a's COALESCE split, mirroring matches_tier_1_ap_type's shape exactly: the parcel column decided the street type because the address point carried none.",
         "liveness": {
           "kind": "column",
           "ref": "permit_parcels.match_type"
@@ -668,7 +721,7 @@
       "id": "street_type_conflict",
       "kind": "field_coverage",
       "expect": {
-        "reports": "written address_points_exact links whose permit street_type conflicts with the linked parcel's street_type_normalized"
+        "reports": "written address_points_exact links whose permit street_type conflicts with the linked parcel's street_type_normalized (since 2026-10-10: COALESCE(address point type, parcel type), Spec 54 §3 level 0)"
       },
       "limit": "viol == 0",
       "severity": "WARN",
@@ -678,7 +731,7 @@
       "accept_until": "none",
       "retighten_when": "zero rows",
       "why": {
-        "text": "LP-D9 (commit 8a, 2026-08-30). address_points_exact's JOIN originally matched on house-number + street-name ONLY (address_points carries no street-type column of its own) — a same-name-different-type collision (measured live: 26 MEADOWVALE RD vs DR, ~31.6km apart) could resolve to whichever candidate won the class/area/id-ASC tiebreak, regardless of the permit's own declared type. Measured system-wide before the fix: 7,062/215,552 (3.3%) currently-linked address_points_exact rows conflicted. THE FIX adds p.street_type_normalized to the JOIN, mirroring Strategy 1b's own empty-type predicate shape exactly. Post-fix a NEW mismatch is structurally impossible; this check is a standing whole-table audit (not merely run-scoped) so a pre-fix residual row an incremental run never revisits, or a future regression of the predicate, is never invisible again. WARN + retighten_when (Spec 48 §4.9), mirroring spatial_null_coordinate_permits' own convention.",
+        "text": "LP-D9 (commit 8a, 2026-08-30). address_points_exact's JOIN originally matched on house-number + street-name ONLY (address_points carries no street-type column of its own) — a same-name-different-type collision (measured live: 26 MEADOWVALE RD vs DR, ~31.6km apart) could resolve to whichever candidate won the class/area/id-ASC tiebreak, regardless of the permit's own declared type. Measured system-wide before the fix: 7,062/215,552 (3.3%) currently-linked address_points_exact rows conflicted. THE FIX adds p.street_type_normalized to the JOIN, mirroring Strategy 1b's own empty-type predicate shape exactly. Spec 54 level 0 (2026-10-10): the conflict predicate now judges on COALESCE(address point street_type_normalized, parcel street_type_normalized) — the address point's own type first, the parcel's as fallback. A parcel with ANY active (non-retired) address point whose type matches the permit's is therefore NOT a conflict, even when the parcel's own street_type_normalized differs: the corner-lot rule, which without the COALESCE would have read ~4.7K legitimate corner pairs as false conflicts. Post-fix a NEW mismatch is structurally impossible; this check is a standing whole-table audit (not merely run-scoped) so a pre-fix residual row an incremental run never revisits, or a future regression of the predicate, is never invisible again. WARN + retighten_when (Spec 48 §4.9), mirroring spatial_null_coordinate_permits' own convention.",
         "liveness": {
           "kind": "column",
           "ref": "permits.street_type"
@@ -878,6 +931,16 @@
     },
     {
       "key": "matches_tier_1_via_bridge",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_1_ap_type",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "matches_tier_1_parcel_type_fallback",
       "type": "int",
       "consumers": []
     },
@@ -1139,6 +1202,8 @@
         "permits_processed": "int",
         "matches_tier_1_exact": "int",
         "matches_tier_1_via_bridge": "int",
+        "matches_tier_1_ap_type": "int",
+        "matches_tier_1_parcel_type_fallback": "int",
         "matches_tier_2_name": "int",
         "matches_tier_3_spatial": "int",
         "matches_tier_3_polygon": "int",
@@ -1185,6 +1250,8 @@
         "permits_processed": "int",
         "matches_tier_1_exact": "int",
         "matches_tier_1_via_bridge": "int",
+        "matches_tier_1_ap_type": "int",
+        "matches_tier_1_parcel_type_fallback": "int",
         "matches_tier_2_name": "int",
         "matches_tier_3_spatial": "int",
         "matches_tier_3_polygon": "int",
@@ -1235,6 +1302,54 @@
         "liveness": {
           "kind": "check",
           "ref": "parcel_retraction_ratio"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A guards.requires precondition with on_missing: \"fail\" is absent — e.g. the PostGIS extension the spatial cascade (tiers 3 and 4) needs, or a supporting index. The step refuses before reading anything.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared logic variable resolved outside its bounds under on_invalid: \"fail\", or names no registry at all. hoisted_above_gate: true puts this refusal ABOVE the advisory lock — validation runs before the lock is taken, so an invalid threshold cannot hide behind a green SKIPPED summary on a contended run.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 90 is held by another process, so this run does not proceed. The library emits a row-derived SKIP summary so contention reads as a declared terminal rather than an unlogged early return.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
         }
       }
     }

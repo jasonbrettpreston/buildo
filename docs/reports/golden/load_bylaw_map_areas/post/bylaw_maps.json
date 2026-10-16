@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-bylaw-map-areas.js",
   "chain": "bylaw_maps",
-  "git_head": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -42,7 +42,7 @@
       "terminal": "skipped_content_hash",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "code_sha": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -81,7 +81,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 31,
+            "value": 27,
             "threshold": null,
             "status": "INFO"
           }
@@ -113,15 +113,15 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=258 (floor 254)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"post-acquisition gate: skip (unchanged_content_hash) — bytes identical, nothing parsed\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":0,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":\"unchanged_content_hash\",\"spec_version\":\"2.3\"},\"gate\":{\"reason\":\"unchanged_content_hash\",\"gated_skip\":true},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"skipped_content_hash\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"51bad98974e5eb1c4418d6b596acb44b0b467942\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":31,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"bylaw_map_areas\":[\"area_key\",\"map_code\",\"source\",\"source_feature_id\",\"area_type\",\"area_name\",\"seed_sha256\",\"geom\"]},\"external\":[\"seed:bylaw-maps-600_60\"]}\n\n[load_bylaw_map_areas] completed in 0.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=259 (floor 254)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"post-acquisition gate: skip (unchanged_content_hash) — bytes identical, nothing parsed\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":0,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":\"unchanged_content_hash\",\"spec_version\":\"2.3\"},\"gate\":{\"reason\":\"unchanged_content_hash\",\"gated_skip\":true},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"skipped_content_hash\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":27,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"bylaw_map_areas\":[\"area_key\",\"map_code\",\"source\",\"source_feature_id\",\"area_type\",\"area_name\",\"seed_sha256\",\"geom\"]},\"external\":[\"seed:bylaw-maps-600_60\"]}\n\n[load_bylaw_map_areas] completed in 0.0s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2767,
+  "pipeline_runs_max_id_before": 2948,
   "table_state": [
     {
       "table": "bylaw_map_areas",
-      "row_count": 0,
-      "content_hash": null,
+      "row_count": 27,
+      "content_hash": "8319126c77779be8b76aa45b03decf72",
       "order_by": "explicit",
       "order_columns": [
         "area_key"
@@ -141,7 +141,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "bylaw_map_areas": 1
+    "bylaw_map_areas": 12
   },
   "table_specs": {
     "bylaw_map_areas": {
@@ -271,7 +271,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=258 (floor 254)\",\"tag\":\"[load_bylaw_map_areas]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=259 (floor 254)\",\"tag\":\"[load_bylaw_map_areas]\"}",
       "{\"level\":\"INFO\",\"msg\":\"post-acquisition gate: skip (unchanged_content_hash) — bytes identical, nothing parsed\",\"tag\":\"[load_bylaw_map_areas]\"}",
       "[load_bylaw_map_areas] completed in <DUR>"
     ],
@@ -287,12 +287,12 @@
           "seed_sha256",
           "geom"
         ],
-        "content_hash": null,
+        "content_hash": "8319126c77779be8b76aa45b03decf72",
         "order_by": "explicit",
         "order_columns": [
           "area_key"
         ],
-        "row_count": 0,
+        "row_count": 27,
         "table": "bylaw_map_areas"
       }
     ],
@@ -310,7 +310,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [bylaw_map_areas]",
-    "txid_before_run2": 70692,
+    "txid_before_run2": 86002,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -319,11 +319,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 2768,
+      "id": 2949,
       "recorded_by": "harness"
     },
     {
-      "id": 2769,
+      "id": 2950,
       "recorded_by": "harness"
     }
   ],
@@ -334,5 +334,5 @@
     "scripts/load-bylaw-map-areas.js",
     "scripts/load-bylaw-map-areas.notes.json"
   ],
-  "lib_fingerprint": "24df6f49515fef1898f60cf596b3ae3185325e8694a045db16fa73e32cc363e2"
+  "lib_fingerprint": "eb842b8b180740e8350d048666aad135cd525b5961b6c9fa48b5619c4ff800ac"
 }

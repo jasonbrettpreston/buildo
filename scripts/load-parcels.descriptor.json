@@ -740,6 +740,24 @@
         "min": 1e-8,
         "max": 5e-7,
         "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_metres_per_degree_lat",
+        "min": 110574,
+        "max": 111694,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_sqm_to_sqft",
+        "min": 10.7639,
+        "max": 10.7639,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "parcels_m_to_ft",
+        "min": 3.28084,
+        "max": 3.28084,
+        "on_invalid": "fail"
       }
     ],
     "validation": "strict",

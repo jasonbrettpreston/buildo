@@ -2,11 +2,11 @@
   "$comment": [
     "Spec 124 §5 R-BA — one closed allowlist for every closed-response gate. Orchestrator-edited only (registry_reserved).",
     "Gate A rows below (2026-09-26, HEAD c5ec4d91) are the 13 closed-bound violations measured on the 20 already-converted steps under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope ruling (§3 DEFERRED): dated, closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ full-chain acceptance) — not per-step remediation commits, which are out of scope until the sources chain completes. The concurrently-landing L1 quick fix (programme branch) registers 8 of these 13 bounds as logic variables; when it rebases in, those 8 rows become orphans and MUST be deleted in that same commit (R-X closing-row posture) — the remaining 5 (compute_parcel_cost_estimates) stay open.",
-    "Gate E rows (2026-09-26) — 31 hard-coded compute literals (12 module-level numeric consts [rule renamed 2026-09-26 from compute-no-upper-numeric-const to compute-no-module-numeric-const, WF3 fix-gate-e-any-case-const: a camelCase rename used to bypass the old case-only match; enrich-ravines MAX_INVALID_GEOM_RATIO's row was DELETED as an orphan in that same fix — the constant is function-local, out of the corrected rule's module-level scope, never a bypass], 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation.",
-    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). FIXER-pass note (same day): commit 7d807c0b's gate-K checks (G7 scoreG7 tightening) knocked link_massing from 14/17 to 10/17 same-day, briefly requiring a 4th score row here (`scripts/analysis/gates/score-floor.mjs --list` reproduced it) — but the SAME FIXER commit also closed link_massing's genuine G8 unexplained-diffs finding (a DB-restore `row_count` shift, §7c of its assessment report), which alone raised the score to 16/17 — at/above the floor again. That 4th row was therefore added AND immediately deleted (R-X: never leave an orphan) in the same commit; only the original 3 rows below remain.",
+    "Gate E rows (2026-09-26) — 31 hard-coded compute literals (12 module-level numeric consts [rule renamed 2026-09-26 from compute-no-upper-numeric-const to compute-no-module-numeric-const, WF3 fix-gate-e-any-case-const: a camelCase rename used to bypass the old case-only match; enrich-ravines MAX_INVALID_GEOM_RATIO's row was DELETED as an orphan in that same fix — the constant is function-local, out of the corrected rule's module-level scope, never a bypass], 14 SQL INTERVAL, 2 SQL date, 2 SQL numeric bound, 1 violations-compare) measured across 9 compute modules by fast invariant #32; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 (not CRITICAL/HIGH) — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). SOURCE_CRS/DEGREES_PER_METRE_DIVISOR/MS_PER_DAY/DAYS_PER_JULIAN_YEAR/SQM_TO_SQFT/M_TO_FT are plausible physical_constant/unit_conversion/coordinate_reference candidates but ship as pending_remediation — a permanent disposition needs a spec_ref+anchor citation the orchestrator has not yet authored; converting them is a followup, not an invented citation. 2026-10-14 (operator H-Q1, Spec 124 R-BC(b) strict zero + R-AW): load-parcels SQM_TO_SQFT / M_TO_FT and both mPerDegLat rows are DELETED — the values are registered logic variables (parcels_sqm_to_sqft / parcels_m_to_ft pinned min = max; parcels_metres_per_degree_lat WGS84-bounded, migration 262); SOURCE_CRS had no reader and was deleted (srid lives in the descriptor).",
+    "Gate F rows (2026-09-26) — 3 scorecard-floor steps below 14/17 (enrich_ravines 12, enrich_heritage 10, compute_parcel_cost_estimates 10) and 5 LF-only violations (geocode_permits descriptor+notes+violations.test.ts, link_massing descriptor, link_neighbourhoods violations.test.ts — the last is Fold GC-7's i/-text NUL fixture) measured by fast invariant #37 + the computeScorecard hard-stop; deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). FIXER-pass note (same day): commit 7d807c0b's gate-K checks (G7 scoreG7 tightening) knocked link_massing from 14/17 to 10/17 same-day, briefly requiring a 4th score row here (`scripts/analysis/gates/score-floor.mjs --list` reproduced it) — but the SAME FIXER commit also closed link_massing's genuine G8 unexplained-diffs finding (a DB-restore `row_count` shift, §7c of its assessment report), which alone raised the score to 16/17 — at/above the floor again. That 4th row was therefore added AND immediately deleted (R-X: never leave an orphan) in the same commit; only the original 3 rows below remain. 2026-10-14 (operator \"proceed\", lane H Q2): the 2 test-file LF rows (geocode_permits + link_neighbourhoods violations.test.ts) are DELETED — the files were renormalised (CRLF -> LF; the NUL literal became its \\u0000 escape, same runtime value) and #37 re-measured i/lf on both.",
     "Gate G rows part 1 (2026-09-26) — 20 'explained:report-citation' transition rows, one per converted step: none has authored explained-diffs.json yet, so checkCaptures() falls back to the legacy report-substring citation for every step (gate G3, fast invariant #40). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a step's row becomes an ORPHAN the moment its explained-diffs.json lands and must be deleted in that commit (R-X). NOTE (FIXER pass, same day): `link_massing` genuinely needed only ONE new diff explained (a fresh G8 `table_state[].row_count` finding, DB-restore centroid regain) while its OTHER 469 diffs still rely on THIS blanket row's report-substring fallback — authoring `explained-diffs.json` with only that one key and deleting this row (as fast invariant #40 demands the moment the file exists at all) would have broken those 469 unrelated, already-explained diffs. Measured live: it did (469 unexplained after the row was removed). Fixed via the legacy report-citation channel instead (the assessment report now names `row_count` with the measured why) — this row stays until a FULL `explained-diffs.json` covering every one of link_massing's diff keys lands, which is its own, larger remediation commit, not this one.",
     "Gate G rows part 2 (2026-09-26) — 16 'nonzero:<table>' rows (fast invariant #38, the N2 zero-write class) + 20 'lib_fingerprint' rows, one per converted step (fast invariant #39 — every golden POST capture predates lib_fingerprint stamping, Fold GC-4's \"missing\" legacy-allowable state). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ); a lib_fingerprint row closes on that step's own remediation recapture.",
-    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment) — DELETED 2026-09-29 by operator ruling R4: those 8 slugs now carry census rows authored blind from the legacy script at its pre-cutover SHA (legacy_citation, locked by src/tests/census-legacy-citation.infra.test.ts), so the rows would be #35 orphans. Remaining: 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them.",
+    "Gate I rows (2026-09-26) — 8 'census:<slug>' rows (fast invariant #35, the 8 slugs converted before the 2026-09-15 R-AO retention amendment) — DELETED 2026-09-29 by operator ruling R4: those 8 slugs now carry census rows authored blind from the legacy script at its pre-cutover SHA (legacy_citation, locked by src/tests/census-legacy-citation.infra.test.ts), so the rows would be #35 orphans. Remaining: 57 'defect:<id>' rows (fast invariant #36, disagreeing multi-table/multi-file defect-id status cells across the pilot-era assessment reports). Deferred under the 2026-09-26 OPERATOR DIRECTION \"McDonald's Airtight\" scope item 3 — closing trigger \"chain_sources conversion complete\" (Spec 124 R-AQ). Gate I #33 (banned-value coverage) and #34 (staleness disposition) are fully closed live (validate.js GRANDFATHERED_VALUE_PATHS extended to all 4 x-banned-for-new.values keys; staleness-disposition.json authored for all 29 declared fingerprint_inputs) — no ledger rows needed for them. 2026-10-14 (operator \"proceed\", lane H Q2, burn-down Q10 a): the 27 LR/LM/AP rows are DELETED — each report table now carries the defect-ledger.md status verbatim in column 5, and #36 re-measured 0 disagreements for those prefixes (57 -> 30 violations). AS/AGC/ADB/AEH (30) remain.",
     "Gate K rows (2026-09-26, FIXER pass) — commit 7d807c0b's own gate-K rows covered only 18 of the 20 converted steps; `link_massing` and `link_neighbourhoods` were left unledgered, which is a SLUG-SCOPE mistake, not a sanctioned exemption: they are PREVIOUSLY CONVERTED steps (both in converted.json), never the genuinely in-development INGESTOR slugs `load_centreline`/`massing`/`neighbourhoods` (not yet converted, never appear in this ledger or in a live `--all` run) that the 2026-09-26 OPERATOR DIRECTION forward-hard-enforces with NO ledger rows permitted (§1). The 2 rows below close that gap under scope item 3 (deferred, dated, MED/LOW — same disposition as every other gate-K row), and `src/tests/gate-score-floor.infra.test.ts`'s own `RBA_NO_LEDGER_EXEMPT` test-level bypass (which had hard-coded these SAME two slugs as an unsanctioned exception, conflating them with the in-development ingestor names) is removed in the same commit — Spec 124 §5 R-BA: ledger rows are the ONLY sanctioned exception."
   ],
   "contract_version": 1,
@@ -444,39 +444,6 @@
     },
     {
       "gate": "E",
-      "step": "load-parcels",
-      "file": "scripts/lib/compute/load-parcels.js",
-      "item": "compute-no-module-numeric-const@const SOURCE_CRS = 4326;",
-      "disposition": "pending_remediation",
-      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "load-parcels",
-      "file": "scripts/lib/compute/load-parcels.js",
-      "item": "compute-no-module-numeric-const@const SQM_TO_SQFT = 10.7639;",
-      "disposition": "pending_remediation",
-      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "load-parcels",
-      "file": "scripts/lib/compute/load-parcels.js",
-      "item": "compute-no-module-numeric-const@const M_TO_FT = 3.28084;",
-      "disposition": "pending_remediation",
-      "why": "compute-no-module-numeric-const — measured 2026-09-26 (WF2 gate E, fast invariant #32)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
       "step": "refresh-snapshot",
       "file": "scripts/lib/compute/refresh-snapshot.js",
       "item": "compute-no-sql-interval-literal@sql: `SELECT",
@@ -542,26 +509,6 @@
       "gate": "F",
       "step": "(registry)",
       "item": "eol:scripts/geocode-permits.notes.json",
-      "disposition": "pending_remediation",
-      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "F",
-      "step": "(registry)",
-      "item": "eol:src/tests/steps/geocode_permits/violations.test.ts",
-      "disposition": "pending_remediation",
-      "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "F",
-      "step": "(registry)",
-      "item": "eol:src/tests/steps/link_neighbourhoods/violations.test.ts",
       "disposition": "pending_remediation",
       "why": "committed with CRLF/mixed line endings or as a binary (-text) blob — measured 2026-09-26 (WF2 gate F, fast invariant #37); Fold GC-7 (i/-text on link_neighbourhoods/violations.test.ts, a literal NUL at line 695)",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
@@ -991,246 +938,6 @@
     {
       "gate": "I",
       "step": "(registry)",
-      "item": "defect:LR-D1",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D2",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D3",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D4",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D5",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D6",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D7",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D8",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LR-D9",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D1",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D2",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D3",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D4",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D5",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D6",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D7",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D8",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D9",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D10",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D11",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D12",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D13",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D14",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:LM-D15",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
       "item": "defect:AGC-D1",
       "disposition": "pending_remediation",
       "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
@@ -1412,36 +1119,6 @@
       "gate": "I",
       "step": "(registry)",
       "item": "defect:AEH-D6",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:AP-D1",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:AP-D2",
-      "disposition": "pending_remediation",
-      "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
-      "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
-      "filed": "2026-09-26",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "I",
-      "step": "(registry)",
-      "item": "defect:AP-D3",
       "disposition": "pending_remediation",
       "why": "measured 2026-09-26 (WF2 gate I, fast invariant #36) — this defect id is defined by >1 table row with disagreeing status cells: the pilot-era assessment report's terse \"known defects\" index table (no/empty status cell) alongside its detailed findings table (a real status), plus a defect-ledger.md mirror. A legal mirror requires an IDENTICAL status cell across all rows, which none of the 57 measured ids carry.",
       "closing_brief": "chain_sources conversion complete (Spec 124 R-AQ full-chain acceptance; OPERATOR DIRECTION 2026-09-26 \"McDonald's Airtight\" scope item 3 — deferred, dated)",
@@ -1669,28 +1346,6 @@
       "disposition": "pending_remediation",
       "why": "G8 compute-halts at scripts/lib/compute/enrich-heritage.js:92 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
       "closing_brief": "CP-S5",
-      "filed": "2026-10-11",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "enrich-parcels",
-      "file": "scripts/lib/compute/enrich-parcels.js",
-      "item": "compute-halt@js:throw new Error(`${TAG} latest ${PRODUCER_NAME} run FAILED — halting (will not enrich against stale zoning)`);#1",
-      "disposition": "pending_remediation",
-      "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:233 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
-      "closing_brief": "CP-S1",
-      "filed": "2026-10-11",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "enrich-parcels",
-      "file": "scripts/lib/compute/enrich-parcels.js",
-      "item": "compute-halt@js:throw new Error(`${TAG} buildPass1ScopeWhere: zoningChanged must be a boolean on a non-full run (got ${JSON.stringify(zoningChanged)})`);#1",
-      "disposition": "pending_remediation",
-      "why": "G8 compute-halts at scripts/lib/compute/enrich-parcels.js:276 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
-      "closing_brief": "CP-S1",
       "filed": "2026-10-11",
       "adjudicated_by": "operator"
     },
@@ -2208,30 +1863,6 @@
       "disposition": "pending_remediation",
       "why": "G13 compute-no-swallow at scripts/lib/compute/load-parcels.js:299 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
       "closing_brief": "CP-PLANA",
-      "filed": "2026-10-11",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "load-parcels",
-      "file": "scripts/lib/compute/load-parcels.js",
-      "item": "compute-no-local-numeric-const@const mPerDegLat = 111320;",
-      "disposition": "physical_constant",
-      "why": "G9 compute-no-local-numeric-const at scripts/lib/compute/load-parcels.js:140 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
-      "spec_ref": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "anchor": "mPerDegLat = 111320",
-      "filed": "2026-10-11",
-      "adjudicated_by": "operator"
-    },
-    {
-      "gate": "E",
-      "step": "load-parcels",
-      "file": "scripts/lib/compute/load-parcels.js",
-      "item": "compute-no-local-numeric-const@const mPerDegLat = 111320;#2",
-      "disposition": "physical_constant",
-      "why": "G9 compute-no-local-numeric-const at scripts/lib/compute/load-parcels.js:175 — measured 2026-10-11 (R-BZ compute purity, Airtight V3)",
-      "spec_ref": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "anchor": "mPerDegLat = 111320",
       "filed": "2026-10-11",
       "adjudicated_by": "operator"
     },

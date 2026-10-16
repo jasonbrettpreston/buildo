@@ -134,6 +134,14 @@ const CONFIG_VARS: Record<string, number> = {
   parcels_null_address_pct_max: 0.1,
   // geom-drift WF3 Commit 2: the tolerance the materiality predicate (migration 251) reads; minted by Commit 1's migration + seed, so NOT in NEW_CONFIG_VARS.
   parcels_geom_change_tolerance_deg: 1e-7,
+  // Operator 2026-10-14 (Q1): the metres-per-degree-latitude projection factor the MBR/shoelace
+  // helpers use, formerly the `const mPerDegLat = 111320` literal at two sites (2 physical_constant
+  // ledger rows). NOT in NEW_CONFIG_VARS: it reaches the helpers through shapeRecord's seam.config.
+  parcels_metres_per_degree_lat: 111320,
+  // Operator 2026-10-14 (H-Q1 follow-up): the two unit definitions, formerly the SQM_TO_SQFT /
+  // M_TO_FT module consts (gate-E ledger rows). Bounds pinned min = max = the definition.
+  parcels_sqm_to_sqft: 10.7639,
+  parcels_m_to_ft: 3.28084,
 };
 /** New variables this step mints (sources_parcels_floor is SHARED, pre-existing). */
 const NEW_CONFIG_VARS = [
@@ -758,7 +766,8 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     // still dropped bare numbers.
     const mod = loadComputeModule();
     expect(typeof mod.parseStatedArea, 'the compute must export parseStatedArea so the acceptance rules are unit-drivable').toBe('function');
-    const parse = mod.parseStatedArea as (raw: unknown) => number | null;
+    const parseRaw = mod.parseStatedArea as (raw: unknown, sqmToSqft: number) => number | null;
+    const parse = (raw: unknown) => parseRaw(raw, CONFIG_VARS.parcels_sqm_to_sqft as number);
     const table: Array<[string, number | null]> = [
       ['300.00 sq.m', 300],
       ['500.00sq.m', 500],
@@ -971,10 +980,14 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
     expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG).status, '0.01 <= 0.1 ⇒ PASS').toBe('PASS');
   });
 
-  it('null_address_pct is silent (value 0, detail null, no violations key, no throw) when the runner counters are absent — the pre-0o short-circuit stays a safe no-op, never a crash', () => {
+  it('null_address_pct names the absence (value null, detail.reason no_input, no violations key, no throw) when the runner counters are absent — never a crash, never a silent 0', () => {
+    // WF3 2026-10-14: the pre-0o short-circuit reported `value 0, detail null`, which the
+    // `pct <=` arm PASSed ("green because it never looked", Spec 124 §7 LM-D14). The
+    // no-throw half of this lock is kept; the silent-0 half is knowingly retired.
     const empty = driveCheck('null_address_pct', { acquired: {}, config: CFG });
-    expect(empty[0]![1].value).toBe(0);
-    expect(empty[0]![1].detail).toBeNull();
+    expect(empty).toHaveLength(1);
+    expect(empty[0]![1].value).toBeNull();
+    expect(empty[0]![1].detail).toEqual({ reason: 'no_input' });
     expect(empty[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
   });
 
@@ -1071,16 +1084,50 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
     expect(/0\.95/.test(src.replace(/ctx\.config\.parcels_irregularity_threshold/g, '')), 'no bare 0.95 literal survives outside the config read').toBe(false);
   });
 
-  it('notes.json declares SQM_TO_SQFT/M_TO_FT as unit constants, NOT logic_variables (plan D3 — no config.constants schema field, corrected in this review pass)', () => {
-    const notes = JSON.parse(readText(NOTES_REL)) as Record<string, unknown>;
-    const blob = JSON.stringify(notes);
-    expect(/SQM_TO_SQFT|10\.7639/.test(blob), 'the sq.m -> sq.ft unit constant is declared').toBe(true);
-    expect(/M_TO_FT|3\.28084/.test(blob), 'the metre -> foot unit constant is declared').toBe(true);
-    expect(/unit.constant|physics/i.test(blob), 'the reasoning (no admin knob for physics) is stated').toBe(true);
+  it('Q1 (operator 2026-10-14) — no 111320 literal in the compute; the projection factor is parcels_metres_per_degree_lat, read once from config', () => {
+    const src = readText(COMPUTE_REL);
+    expect(/111320|111_320/.test(src), 'no bare metres-per-degree literal survives in the compute').toBe(false);
+    expect(/\bmPerDegLat\s*=\s*\d/.test(src), 'no local numeric mPerDegLat const').toBe(false);
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code.match(/config\.parcels_metres_per_degree_lat/g)?.length, 'read once (code, not comments), in shapeRecord, from the resolved config').toBe(1);
     const d = loadDescriptor();
-    const cfg = (d.config as { logic_variables: Array<{ name: string }> }).logic_variables.map((v) => v.name);
-    expect(cfg).not.toContain('SQM_TO_SQFT');
-    expect(cfg).not.toContain('M_TO_FT');
+    const decl = (d.config as { logic_variables: Array<{ name: string; min: number; max: number; on_invalid: string }> })
+      .logic_variables.find((v) => v.name === 'parcels_metres_per_degree_lat');
+    expect(decl, 'the descriptor declares parcels_metres_per_degree_lat').toBeDefined();
+    expect(decl!.min).toBeGreaterThanOrEqual(110000);
+    expect(decl!.max).toBeLessThanOrEqual(112000);
+    // The value drives the math: a different factor changes depth (the latitude axis), so the
+    // helpers really read the injected value rather than a hidden copy.
+    const mod = loadComputeModule();
+    const est = mod.estimateLotDimensions as (g: unknown, a: number | null, t: number, m: number) => { depth_m: number } | null;
+    const ring = [[-79.4, 43.7], [-79.3999, 43.7], [-79.3999, 43.7002], [-79.4, 43.7002], [-79.4, 43.7]];
+    const geom = { type: 'Polygon', coordinates: [ring] };
+    const a = est(geom, null, 0.95, 111320);
+    const b = est(geom, null, 0.95, 111000);
+    expect(a, 'dims computed with the injected factor').not.toBeNull();
+    expect(a!.depth_m).not.toBe(b!.depth_m);
+  });
+
+  it('H-Q1 (operator 2026-10-14) — unit definitions are logic variables pinned min = max = the definition; no unit literal or SOURCE_CRS in compute', () => {
+    const src = readText(COMPUTE_REL);
+    expect(/10\.7639|3\.28084/.test(src), 'no bare unit-conversion literal survives in the compute').toBe(false);
+    expect(/SOURCE_CRS/.test(src), 'the dead SOURCE_CRS const is deleted (srid lives in the descriptor)').toBe(false);
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    for (const v of ['parcels_sqm_to_sqft', 'parcels_m_to_ft']) {
+      expect(code.includes(`config.${v}`), `the compute reads ${v} from the resolved config`).toBe(true);
+    }
+    const d = loadDescriptor();
+    const decls = (d.config as { logic_variables: Array<{ name: string; min: number; max: number }> }).logic_variables;
+    const S = seedDefaults() as Record<string, { default: number; min?: number; max?: number; description?: string }>;
+    for (const [name, def] of [['parcels_sqm_to_sqft', 10.7639], ['parcels_m_to_ft', 3.28084]] as const) {
+      const decl = decls.find((v) => v.name === name);
+      expect(decl, `descriptor declares ${name}`).toBeDefined();
+      expect([decl!.min, decl!.max], `${name} descriptor bounds pinned to the definition`).toEqual([def, def]);
+      expect([S[name]!.default, S[name]!.min, S[name]!.max], `${name} seed default/bounds pinned`).toEqual([def, def, def]);
+      expect(S[name]!.description ?? '', 'described as a unit definition').toMatch(/unit definition, not a tunable/);
+    }
+    const notes = JSON.stringify(JSON.parse(readText(NOTES_REL)));
+    expect(/parcels_sqm_to_sqft/.test(notes) && /parcels_m_to_ft/.test(notes), 'notes.json names the variables').toBe(true);
   });
 
   it('notes.json is a real notes file (≤12 entries) with fences[] an explicit array', () => {

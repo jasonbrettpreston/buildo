@@ -67,6 +67,7 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
       'place_name',
       'addr_num_normalized',
       'linear_name_normalized',
+      'street_type_normalized',
       'geom',
       'retired_at',
     ]) {
@@ -74,7 +75,8 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     }
     // 16 → 17 at FLEET-2 fold 10 (soft-retire): `retired_at` (written "insert_only", the departed_mark rule's required
     // column; seeded NULL on INSERT, changed only by MARK/UNMARK).
-    expect(write.columns).toHaveLength(17);
+    // 17 → 18 (mig 257, 2026-10-10): street_type_normalized, the parsed type (Spec 54 §3 level 0).
+    expect(write.columns).toHaveLength(18);
   });
 
   it('computes geom from the coordinate OR-contract (geometry GeoJSON, else lat/lng)', () => {
@@ -245,10 +247,11 @@ describe('scripts/load-address-points.js — WF1 Phase 2b extension', () => {
     expect(compute.coerceKey('')).toBeNull();
   });
 
-  it('outputs declare all 16 persisted columns (incl. geom + 2 normalized)', () => {
+  it('outputs declare all 17 persisted columns (incl. geom + 3 normalized)', () => {
     const cols = descriptor.outputs.writes[0].columns.map((c: { name: string }) => c.name);
     expect(cols).toContain('addr_num_normalized');
     expect(cols).toContain('linear_name_normalized');
+    expect(cols).toContain('street_type_normalized');
     expect(cols).toContain('geom');
   });
 });

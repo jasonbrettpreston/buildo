@@ -103,6 +103,9 @@ PGOPTIONS="-c maintenance_work_mem=512MB -c synchronous_commit=off" \
   Measured 2026-10-16: the Mac restore missed this step, and the first H6 capture refused until it ran.
 - **Worktrees have no `.env`** (never copy it). A DB command in a worktree loads the main tree's file
   for that one process only: `DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r dotenv/config <script>`.
+- **Worktrees have no `data/`** (it is gitignored). A filesystem-source step (load_wsib) skips with
+  `no_source_file`, and a `--source-csv` bracket refuses. Clone the files from the main tree with
+  `cp -c ~/Buildo/data/<file> <worktree>/data/` (APFS, no extra space). Measured on the V3 fleet night, 2026-10-16.
 - **`db:generate` on the restored DB:** drizzle introspect reorders every table, drops the
   `usersInAuth` MANUAL PATCH and picks up stray `*_bak_*` / `_backup_*` tables. Splice only the
   migration's new definitions into `src/lib/db/generated/{schema,relations}.ts` (measured H6, 2026-10-16).

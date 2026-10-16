@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "sources",
-  "source_fingerprint": "b8aa4907261cfaf40b43fc0671edb048c8ec9eb27a9b8a8ff7d35434c3ced4aa",
-  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
+  "source_fingerprint": "98f15150fe92b076b0962ca5d81b2d6c3253323a3a47f08f3d33ef5f8167336b",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
     "calls": 146,
     "distinct": 20,
     "utility": 5,
-    "tracer_self_ms": 2.473,
-    "wall_ms": 339
+    "tracer_self_ms": 3.185,
+    "wall_ms": 346
   },
   "statements": [
     {
@@ -89,7 +89,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 734,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [

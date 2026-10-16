@@ -535,15 +535,19 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // so it never reached this list.
   'address_points_skip_rate_max_pct', 'address_points_null_address_number_max_pct', 'address_points_download_timeout_ms',
   'address_points_mass_retire_max_pct', // registry-truth fold 10 soft-retire mass guard (FLEET-2, default 0.02)
+  'address_points_null_street_type_max_pct', // Spec 54 §3 level 0 (mig 257) — null_street_type_pct's ceiling (default 0.06)
   // batch-2 row 3.7 (2026-09-24) — parcels' own three (the shared
   // sources_parcels_floor is already listed above, under the "Sources
-  // Catastrophic-Load Floors" group). SQM_TO_SQFT/M_TO_FT are unit-conversion
-  // physical constants, declared in notes.json, deliberately NOT logic
-  // variables (no admin knob for physics) — never reach this list.
+  // Catastrophic-Load Floors" group). The unit conversions are listed below
+  // (operator 2026-10-14), pinned min = max so they are visible, not tunable.
   'parcels_irregularity_threshold', 'parcels_skip_rate_max_pct', 'parcels_download_timeout_ms',
   // WF3 parcels geom drift (migration 251, 2026-10-06) — the geometry material-change tolerance,
   // read by public.parcels_geom_materially_changed() (trigger now; load_parcels upsert in Commit 2).
   'parcels_geom_change_tolerance_deg',
+  // Q1 (operator 2026-10-14) — the ring-projection factor, formerly the R-BZ physical_constant mPerDegLat literal.
+  'parcels_metres_per_degree_lat',
+  // H-Q1 (operator 2026-10-14) — unit definitions (were SQM_TO_SQFT / M_TO_FT consts), bounds pinned to the definition.
+  'parcels_sqm_to_sqft', 'parcels_m_to_ft',
   // WF2 L1 (McDonald's Airtight, 2026-09-26) — Spec 124 Rule 3 externalizes parcels' own
   // null-address WARN (enrich_parcels' ambiguous-zone WARN deferred pending a heavy DB run).
   'parcels_null_address_pct_max',

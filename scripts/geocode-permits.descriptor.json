@@ -223,7 +223,20 @@
     "on_fingerprint_change": "none"
   },
   "guards": {
-    "requires": [],
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "permits",
+        "on_missing": "fail",
+        "why": {
+          "text": "permits has RLS enabled with ZERO policies (Spec 114 Class B). Under a non-bypass role this step's write affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (Spec 124 R-CT; load_coa_notices precedent).",
+          "liveness": {
+            "kind": "table",
+            "ref": "permits"
+          }
+        }
+      }
+    ],
     "srid": "none",
     "empty_source": "none",
     "schema_drift": "none"

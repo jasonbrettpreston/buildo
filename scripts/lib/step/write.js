@@ -1769,11 +1769,24 @@ async function executeSetBasedClear(client, plan, scopeParams) {
  */
 async function executeUpsertBatch(client, plan, rows) {
   if (rows.length === 0) return { inserted: 0, updated: 0 };
-  const values = [];
-  for (const row of rows) values.push(...plan.bindRow(row));
-  const result = await client.query(plan.upsertSqlFor(rows.length), values);
-  const inserted = result.rows.filter((r) => r.is_insert).length;
-  return { inserted, updated: result.rows.length - inserted };
+  // R-CU (spec 124 §5): ONE statement binds at most 65,535 parameters — PostgreSQL's
+  // protocol limit. Stride the caller's rows exactly as `executeWrite` does, so a LINK
+  // whose rows fan out per key (link_parcel_abutments at 1,000 parcels → 67,400 params)
+  // cannot overflow a single statement. The caller still owns the transaction; this
+  // function opens none.
+  let inserted = 0;
+  let updated = 0;
+  const batchSize = pipeline.maxRowsPerInsert(plan.columnsPerRow);
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const slice = rows.slice(i, i + batchSize);
+    const values = [];
+    for (const row of slice) values.push(...plan.bindRow(row));
+    const result = await client.query(plan.upsertSqlFor(slice.length), values);
+    const ins = result.rows.filter((r) => r.is_insert).length;
+    inserted += ins;
+    updated += result.rows.length - ins;
+  }
+  return { inserted, updated };
 }
 
 /** `retract: "all"` — the scoped mass retraction, fired only when `retract_when` allows it. */

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/geocode-permits.js",
   "chain": "none",
-  "source_fingerprint": "bb6e93b1db19513bc9ef871df84493c3a5f44259308b40e019cf269dbe2995b3",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "b1331207116d40f88025502c3b8852638ff1ccfde7d0557fa272add2e4048d6c",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 36,
-    "distinct": 27,
+    "calls": 37,
+    "distinct": 28,
     "utility": 11,
-    "tracer_self_ms": 12.078,
-    "wall_ms": 11810
+    "tracer_self_ms": 1.393,
+    "wall_ms": 640
   },
   "statements": [
     {
@@ -76,7 +76,7 @@
             "geocode_permits",
             "geocode-permits"
           ],
-          2609
+          3001
         ]
       ]
     },
@@ -142,13 +142,13 @@
       "params": [
         [
           "completed_with_warnings",
-          9097,
+          439,
           null,
-          2609,
+          3001,
           0,
           0,
           0,
-          "{\"duration_ms\":8453,\"code_version\":\"none\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525364,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":0,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"address_points\":525691},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":206,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":425,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":175,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":9097,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":388,\"code_version\":\"none\",\"permits_total\":254082,\"total_geocoded\":231930,\"has_geo_id_no_match\":14492,\"no_geo_id\":7660,\"zombies_cleaned\":0,\"address_points_loaded\":525372,\"config\":{\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_heartbeat_minutes\":5,\"geocode_permits_lock_timeout_ms\":1800000},\"terminal\":\"geocoded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"geocode_coverage: 91.28155477365574\"],\"audit_table\":{\"phase\":0,\"name\":\"Permit Geocoding\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"total_permits\",\"value\":254082,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"already_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"newly_geocoded\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"total_geocoded\",\"value\":231930,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geocode_coverage\",\"value\":91.28155477365574,\"threshold\":\"pct >= 95\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_geo_id\",\"value\":7660,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"zombies_cleaned\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"backlog_remaining\",\"value\":14492,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"lat_xor_lng_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"coords_outside_toronto_bbox_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"address_points\":525699},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_lat_xor_lng_null_count_duration_ms\",\"value\":23,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geocoded_at_set_but_no_geo_id_count_duration_ms\",\"value\":23,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coords_outside_toronto_bbox_count_duration_ms\",\"value\":22,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":439,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -156,7 +156,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -174,6 +174,20 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
       "error": null
     },
     {
@@ -337,12 +351,12 @@
         [
           "geocode",
           0,
-          2609
+          3001
         ],
         [
           "zombie_cleanup",
           0,
-          2609
+          3001
         ]
       ]
     },
@@ -437,7 +451,7 @@
   ],
   "transactions": [
     {
-      "client": "5340:3",
+      "client": "37961:3",
       "write_fingerprints": [
         "760860da79f13d44",
         "ed126eabe5106b3c"

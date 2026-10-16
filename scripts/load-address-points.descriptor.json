@@ -3,7 +3,7 @@
     "name": "address_points",
     "display_name": "Toronto Address Points",
     "owner": "data",
-    "description": "Loads Toronto's Address Points CSV (~525K rows, ~183 MB) from the CKAN Open Data portal into the address_points lookup table: a class-A guarded upsert (INSERT ... ON CONFLICT (address_point_id) DO UPDATE ... WHERE <15 cols> IS DISTINCT FROM, NO retraction anywhere) over 16 columns, in one step-scoped transaction. The first write-class-A (guarded_upsert) INGESTOR in the fleet — load_ravines (the only other INGESTOR) is class B upsert_scoped_departure_delete.",
+    "description": "Loads Toronto's Address Points CSV (~525K rows, ~183 MB) from the CKAN Open Data portal into the address_points lookup table: a class-A guarded upsert (INSERT ... ON CONFLICT (address_point_id) DO UPDATE ... WHERE <16 cols> IS DISTINCT FROM, NO retraction anywhere) over 17 columns, in one step-scoped transaction. The first write-class-A (guarded_upsert) INGESTOR in the fleet — load_ravines (the only other INGESTOR) is class B upsert_scoped_departure_delete.",
     "lock": 96,
     "why_lock": {
       "text": "Mutual exclusion with every other writer of address_points across the fleet (Spec 47 §A.5 lock registry row 96) [READ docs/specs/01-pipeline/47:1941]. The lock is declared here and acquired by the library from descriptor.identity.lock; scripts/load-address-points.js keeps `ADVISORY_LOCK_ID = 96` as a §5.4 source-text constant, and the two are asserted equal by src/tests/steps/address_points/violations.test.ts. The lock holds across the whole step — acquisition, parse, the write and the score — because the 525K-row load must not interleave with a second writer.",
@@ -159,6 +159,12 @@
             "on_empty": "preserve"
           },
           {
+            "name": "street_type_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
             "name": "geom",
             "vocabulary": "none",
             "written": "step",
@@ -188,6 +194,7 @@
             "place_name",
             "addr_num_normalized",
             "linear_name_normalized",
+            "street_type_normalized",
             "geom"
           ],
           "scope": "none",
@@ -314,6 +321,28 @@
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/address-points-csv-drift.js"
+        }
+      }
+    },
+    {
+      "id": "null_street_type_pct",
+      "kind": "bound",
+      "expect": {
+        "of": "rows whose parsed street_type_normalized is empty over rows attempted",
+        "direction": "max"
+      },
+      "limit": "pct <= 0.06",
+      "limit_from_config": "address_points_null_street_type_max_pct",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 54 §3 level 0 (mig 257, operator Option A 2026-10-10): every linker falls back to the frozen parcel type when the address point's type is NULL, so a parser that stops recognising types would silently revert the fix. Measured 0.044 (23,010 of 525,343 live points, real parser, 2026-10-10); ceiling 0.06 (Rule 3, externalized). The first load after mig 257 updates ~502K rows (NULL → filled); this check attributes it.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/address-normalizers.js"
         }
       }
     },
@@ -640,6 +669,12 @@
         "name": "address_points_null_address_number_max_pct",
         "min": 0,
         "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "address_points_null_street_type_max_pct",
+        "min": 0,
+        "max": 1,
         "on_invalid": "fail"
       },
       {

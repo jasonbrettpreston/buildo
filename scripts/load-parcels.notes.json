@@ -25,13 +25,13 @@
   ],
   "constants": [
     {
-      "what": "SQM_TO_SQFT = 10.7639 (1 square metre in square feet) and M_TO_FT = 3.28084 (1 metre in feet) are UNIT CONSTANTS, NOT logic_variables. They are the definitions of the units the source publishes in and the column names promise, not a policy knob: an operator who 'tuned' M_TO_FT to 3.0 would not change a threshold, they would make frontage_ft and depth_ft WRONG by ~9% while every count in the audit table still reads healthy. Plan D3 states this explicitly and the schema has no config.constants field (corrected in the review pass that produced the violations suite), so the reasoning lives here. `0.95` (parcels_irregularity_threshold), the rows-read floor, the skip-rate bound and the download timeout are the real tunables and ARE declared in descriptor.config.logic_variables[].",
+      "what": "The unit definitions are registered logic variables PINNED to their definition (operator 2026-10-14; Spec 124 R-AW form + R-BC(b) strict zero — a ledger row is not allowed): parcels_sqm_to_sqft = 10.7639 (1 square metre in square feet) and parcels_m_to_ft = 3.28084 (1 metre in feet), each declared with min = max = the definition and on_invalid fail. They are VISIBLE (nothing hidden) but NOT TUNABLE: an operator who set parcels_m_to_ft to 3.0 would make frontage_ft and depth_ft WRONG by ~9% while every audit count read healthy, so any value other than the definition refuses the step before compute. parcels_metres_per_degree_lat (111320, the ring projection factor) is the physical constant beside them, bounded to the WGS84 equator..pole range. The former SOURCE_CRS = 4326 const had no reader and was deleted — the srid is declared once in the descriptor. `0.95` (parcels_irregularity_threshold), the rows-read floor, the skip-rate bound and the download timeout are the real tunables.",
       "measured": {
-        "value": { "sqm_to_sqft": 10.7639, "m_to_ft": 3.28084, "unit_constants": 2, "tunable_literals": 4 },
-        "date": "2026-09-24",
-        "query": "grep -n \"SQM_TO_SQFT\\|M_TO_FT\\|IRREGULARITY_THRESHOLD\" scripts/load-parcels.js"
+        "value": { "parcels_sqm_to_sqft": 10.7639, "parcels_m_to_ft": 3.28084, "parcels_metres_per_degree_lat": 111320, "compute_constant_literals": 0 },
+        "date": "2026-10-14",
+        "query": "grep -cE \"10\\.7639|3\\.28084|111320|SOURCE_CRS\" scripts/lib/compute/load-parcels.js"
       },
-      "why": "There is no admin knob for physics. A unit conversion is a fact, not a preference; a config row invites a change that silently invalidates the derived column rather than any bound."
+      "why": "There is still no admin knob for physics: the pinned bounds make a unit conversion a visible fact the step refuses to run without, never a preference. A hidden compute const was the alternative, and Spec 124 R-BC(b) admits no ledger row for it."
     }
   ],
   "read_this_way": [

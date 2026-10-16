@@ -227,7 +227,9 @@ const LIVE_CODE_VERSION = 'v2-building-centroid-in-parcel';
 // (post/sources-full, post/sources-full-forced-1, post/standalone) all measured 84357131…; the peel-8b-era value was 329bbcb6ccd5c32d8b8e9ffca77ff255.
 // re-pinned 2026-10-10 fleet-night-3 recapture: all three independent POSTs hash 94fecf0c… after the
 // parcel_buildings drift (534,989 → 535,039), so the twice-run determinism claim still holds.
-const LM_D13_FIXED_HASH = '94fecf0cf135181ace95663befffe338';
+// re-pinned 2026-10-16 V3 fleet night: all three independent POSTs (sources-full, sources-full-forced-1,
+// standalone) hash be97a014… at the same 535,039 rows (link_massing code unchanged; scripts/lib/step changed).
+const LM_D13_FIXED_HASH = 'be97a0147a20e3c641341a0d93cf27d5';
 
 // ONE compiler, the same one pipeline.step() validates with.
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library

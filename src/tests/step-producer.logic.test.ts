@@ -163,7 +163,7 @@ class FakePool {
 
 describe('producer library — frozen vocabularies', () => {
   it('exposes the CLOSED op set and read kinds', () => {
-    expect(PIN_OPS).toEqual(['equals', 'nonzero', 'true']);
+    expect(PIN_OPS).toEqual(['equals', 'nonzero', 'true', 'not_failed']);
     expect(PRODUCER_READS).toEqual(['baseline', 'activity', 'verdict']);
     expect(Object.isFrozen(PIN_OPS)).toBe(true);
     expect(Object.isFrozen(PRODUCER_READS)).toBe(true);
@@ -591,5 +591,53 @@ describe("makeProducer — onError: 'throw' (a fail-closed HOOK read; the rethro
     await expect(producer('load_zoning', { onError: 'throw' })).rejects.toThrow('boom');
     const res = await producer('load_zoning');
     expect(res.reason).toBe('ERROR');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// j. not_failed — the run-status op (CP-S1 #12c, operator 2026-10-14; proposed row amends R-CB)
+// ---------------------------------------------------------------------------
+
+describe('evaluatePins — j. not_failed (the producer run status, never a records_meta stamp)', () => {
+  const TERMINAL = ['completed', 'completed_with_warnings', 'completed_with_errors', 'failed', 'crashed', 'cancelled'];
+  const PIN: Pin = { step: 'load_zoning', stamp: 'pipeline_runs.status', op: 'not_failed', statuses: TERMINAL };
+  const res = (status: string | null, reason: 'FOUND' | 'MISSING' | 'ERROR' = 'FOUND'): ProducerResult => ({
+    slug: 'load_zoning',
+    forms: [],
+    reason,
+    sid: reason === 'FOUND' ? 2637 : null,
+    status,
+    started_at: null,
+    completed_at: reason === 'FOUND' ? '2026-10-14T00:00:00Z' : null,
+    // a run status is NOT in records_meta: an empty meta must not make the pin MISSING
+    records_meta: reason === 'FOUND' ? {} : null,
+    rows: [],
+  });
+  const row = (r: ProducerResult) => evaluatePins([PIN], { load_zoning: r })[0]!;
+
+  it('failed → FAIL (status FAIL, observed "failed", producer fields set)', () => {
+    const r = row(res('failed'));
+    expect(r.result).toBe('FAIL');
+    expect(r.status).toBe('FAIL');
+    expect(r.observed).toBe('failed');
+    expect(r.producer_run_id).toBe(2637);
+    expect(r.metric).toBe('producer_pin_load_zoning_pipeline_runs_status_not_failed');
+  });
+
+  it.each(['completed', 'completed_with_warnings', 'completed_with_errors', 'crashed', 'cancelled'])('%s → PASS', (s) => {
+    const r = row(res(s));
+    expect(r.result).toBe('PASS');
+    expect(r.status).toBe('INFO');
+    expect(r.observed).toBe(s);
+  });
+
+  it('no run → MISSING; reader error → ERROR (both FAIL rows, as every pin)', () => {
+    expect(row(res(null, 'MISSING')).result).toBe('MISSING');
+    expect(row(res(null, 'ERROR')).result).toBe('ERROR');
+    expect(row(res(null, 'ERROR')).status).toBe('FAIL');
+  });
+
+  it('reads through the EXISTING pin read identity: the declared statuses, no new read option', () => {
+    expect(producerOptsForPin(PIN)).toEqual({ statuses: TERMINAL });
   });
 });

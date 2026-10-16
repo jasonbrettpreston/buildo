@@ -55,12 +55,6 @@ const {
 } = require('../parcels-csv-drift');
 
 /**
- * The published source geometry type contract (Spec 55 §2's "WKT" wording is doc-rot —
- * the live CKAN resource ships a GeoJSON `geometry` column; row 3.7 ① reconciliation).
- */
-const SOURCE_CRS = 4326;
-
-/**
  * The two rows-with-a-null-address readers. The `parcels_null_address_pct` audit row is
  * built by the shared drift lib, never forked here — only its ROW TEXT comes from that
  * library; the 0.1 WARN boundary itself now reads `parcels_null_address_pct_max` through
@@ -100,18 +94,21 @@ function field(record, name) {
  * `parseStatedArea`: `STATEDAREA` is the SOURCE-stated lot area (Spec 55:56). Accepted
  * shapes: `<n> sq.m` → n; a bare number `<n>` → n m² (WF3 lot-size 2026-10-01: 10,121
  * bare values agree with ST_Area within 5% for 98.5%, 0% as sq.ft); `<n> sq.ft` →
- * n / SQM_TO_SQFT. Anything else, zero or negative is NULL — never a fallback to the
+ * n / sqmToSqft. Anything else, zero or negative is NULL — never a fallback to the
  * polygon area. shapeRecord's lot_size_sqm is exclusively this function's output; the
  * STORED column may hold a preserved geom_backfill value (on_empty:preserve_null),
  * discriminated by lot_size_source.
+ *
+ * @param {string|null|undefined} raw the STATEDAREA cell
+ * @param {number} sqmToSqft `config.parcels_sqm_to_sqft` (the unit definition, pinned)
  */
-function parseStatedArea(raw) {
+function parseStatedArea(raw, sqmToSqft) {
   if (!raw || !raw.trim()) return null;
   const match = raw.trim().match(/^(\d+(?:\.\d+)?|\.\d+)\s*(sq\.m|sq\.ft)?$/i);
   if (!match) return null;
   const value = parseFloat(match[1]);
   if (Number.isNaN(value) || value <= 0) return null;
-  return match[2] && match[2].toLowerCase() === 'sq.ft' ? value / SQM_TO_SQFT : value;
+  return match[2] && match[2].toLowerCase() === 'sq.ft' ? value / sqmToSqft : value;
 }
 
 /** `extractRing` (loader :58-63, verbatim): Polygon → its first ring; MultiPolygon → its first part's first ring. */
@@ -125,24 +122,41 @@ function extractRing(geometry) {
 }
 
 /**
- * `minimumBoundingRect` (loader :65-96, verbatim): the ring is projected to metres at
- * its centroid latitude, then rotated through every edge to find the least-area
- * enclosing rectangle. Returns `{ width, height }` (width = the SHORTER side), or null
- * when the ring cannot form a rectangle.
+ * `projectRing`: the ring's first `n` vertices projected to local metres about their
+ * centroid (equirectangular, at the centroid latitude). The ONE home of the projection
+ * both `minimumBoundingRect` and `shoelaceArea` used to inline (loader :65-119); the
+ * metres-per-degree factor is `parcels_metres_per_degree_lat` (operator 2026-10-14 —
+ * formerly a numeric literal at both sites), injected, never a literal here.
+ *
+ * @param {Array<[number, number]>} ring closed ring, [lng, lat] vertices
+ * @param {number} n vertex count excluding the closing vertex
+ * @param {number} mPerDegLat `config.parcels_metres_per_degree_lat`
+ * @returns {Array<[number, number]>}
  */
-function minimumBoundingRect(ring) {
-  if (!ring || ring.length < 4) return null;
-  const n = ring.length - 1;
+function projectRing(ring, n, mPerDegLat) {
   let cLat = 0, cLng = 0;
   for (let i = 0; i < n; i++) { cLng += ring[i][0]; cLat += ring[i][1]; }
   cLat /= n; cLng /= n;
-  const cosLat = Math.cos((cLat * Math.PI) / 180);
-  const mPerDegLat = 111320;
-  const mPerDegLng = 111320 * cosLat;
+  const mPerDegLng = mPerDegLat * Math.cos((cLat * Math.PI) / 180);
   const points = [];
   for (let i = 0; i < n; i++) {
     points.push([(ring[i][0] - cLng) * mPerDegLng, (ring[i][1] - cLat) * mPerDegLat]);
   }
+  return points;
+}
+
+/**
+ * `minimumBoundingRect` (loader :65-96, verbatim): the ring is projected to metres at
+ * its centroid latitude, then rotated through every edge to find the least-area
+ * enclosing rectangle. Returns `{ width, height }` (width = the SHORTER side), or null
+ * when the ring cannot form a rectangle.
+ *
+ * @param {number} mPerDegLat `config.parcels_metres_per_degree_lat`
+ */
+function minimumBoundingRect(ring, mPerDegLat) {
+  if (!ring || ring.length < 4) return null;
+  const n = ring.length - 1;
+  const points = projectRing(ring, n, mPerDegLat);
   let minArea = Infinity, bestW = 0, bestH = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
@@ -163,21 +177,15 @@ function minimumBoundingRect(ring) {
   return { width: bestW, height: bestH };
 }
 
-/** `shoelaceArea` (loader :100-119, verbatim): the ring's true area in square metres. */
-function shoelaceArea(ring) {
+/**
+ * `shoelaceArea` (loader :100-119, verbatim): the ring's true area in square metres.
+ * @param {number} mPerDegLat `config.parcels_metres_per_degree_lat`
+ */
+function shoelaceArea(ring, mPerDegLat) {
   if (!ring || ring.length < 4) return null;
   const n = ring.length - 1;
   if (n < 3) return null;
-  let cLat = 0, cLng = 0;
-  for (let i = 0; i < n; i++) { cLng += ring[i][0]; cLat += ring[i][1]; }
-  cLat /= n; cLng /= n;
-  const cosLat = Math.cos((cLat * Math.PI) / 180);
-  const mPerDegLat = 111320;
-  const mPerDegLng = 111320 * cosLat;
-  const points = [];
-  for (let i = 0; i < n; i++) {
-    points.push([(ring[i][0] - cLng) * mPerDegLng, (ring[i][1] - cLat) * mPerDegLat]);
-  }
+  const points = projectRing(ring, n, mPerDegLat);
   let sum = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
@@ -191,10 +199,10 @@ function shoelaceArea(ring) {
  * 1.0. Used only by the checker's own test to understand `is_irregular`; it takes no
  * part in the write path (the loader's inline ratio at :146 IS the write path).
  */
-function rectangularityRatio(ring) {
-  const polyArea = shoelaceArea(ring);
+function rectangularityRatio(ring, mPerDegLat) {
+  const polyArea = shoelaceArea(ring, mPerDegLat);
   if (polyArea == null || polyArea <= 0) return null;
-  const mbr = minimumBoundingRect(ring);
+  const mbr = minimumBoundingRect(ring, mPerDegLat);
   if (!mbr) return null;
   const mbrArea = mbr.width * mbr.height;
   if (mbrArea <= 0) return null;
@@ -216,18 +224,19 @@ function rectangularityRatio(ring) {
  * @param {object|null} geometry the parsed GeoJSON, or null for an unparsable/absent cell
  * @param {number|null} statedAreaSqm `parseStatedArea`'s output (null when absent)
  * @param {number} irregularityThreshold `ctx.config.parcels_irregularity_threshold`
+ * @param {number} mPerDegLat `config.parcels_metres_per_degree_lat` (the ring projection factor)
  * @returns {{frontage_m: number, depth_m: number, is_irregular: boolean}|null}
  */
-function estimateLotDimensions(geometry, statedAreaSqm, irregularityThreshold) {
+function estimateLotDimensions(geometry, statedAreaSqm, irregularityThreshold, mPerDegLat) {
   if (!geometry) return null;
   const ring = extractRing(geometry);
   if (!ring) return null;
-  const mbr = minimumBoundingRect(ring);
+  const mbr = minimumBoundingRect(ring, mPerDegLat);
   if (!mbr) return null;
   if (mbr.width < 1 || mbr.height < 1) return null;
 
   const mbrArea = mbr.width * mbr.height;
-  const polygonArea = shoelaceArea(ring);
+  const polygonArea = shoelaceArea(ring, mPerDegLat);
 
   const trueArea = (statedAreaSqm && statedAreaSqm > 0) ? statedAreaSqm : polygonArea;
   const scale = (trueArea && trueArea > 0 && mbrArea > 0)
@@ -320,16 +329,6 @@ function isoDateFromRunAt(runAt) {
 }
 
 /**
- * The unit constants declared in scripts/load-parcels.notes.json's `constants` block
- * (plan D3): SQM_TO_SQFT and M_TO_FT are DEFINITIONS of the units the source publishes
- * in, not tunables — an operator who "tuned" M_TO_FT to 3.0 would not move a threshold,
- * they would make frontage_ft wrong by ~9% under a healthy audit table. They are module
- * constants on purpose, and they are NOT declared in config.logic_variables[].
- */
-const SQM_TO_SQFT = 10.7639;
-const M_TO_FT = 3.28084;
-
-/**
  * `shapeRecord(record, seam)` → the column values `outputs.writes[0]` binds, or `null`
  * for a row the step REFUSES to carry (loader :467-545). Spec 122 §5.1's CSV arm: the
  * second argument `{ geojson }` is handed in so a shapefile's pre-stringified geometry
@@ -358,7 +357,7 @@ const M_TO_FT = 3.28084;
  * same declared way `ctx.config.parcels_irregularity_threshold` would from a check.
  *
  * @param {Record<string, string>} record one parsed CSV row (publisher's verbatim shape)
- * @param {{ geojson?: string, config?: { parcels_irregularity_threshold?: number }, run_at?: Date }} seam
+ * @param {{ geojson?: string, config?: { parcels_irregularity_threshold?: number, parcels_metres_per_degree_lat?: number, parcels_sqm_to_sqft?: number, parcels_m_to_ft?: number }, run_at?: Date }} seam
  *   the injected facts: a pre-stringified geometry, the resolved config, the run's clock
  * @returns {Record<string, unknown>|null}
  */
@@ -378,10 +377,14 @@ function shapeRecord(record, seam) {
   if (!parcelId) return null;
 
   const statedAreaRaw = field(src, 'STATEDAREA');
-  const lotSizeSqm = parseStatedArea(statedAreaRaw);
+  // The unit definitions (operator 2026-10-14): registered logic variables whose bounds are
+  // pinned min = max = the definition — visible, never tunable (notes.json `constants`).
+  const sqmToSqft = config.parcels_sqm_to_sqft;
+  const mToFt = config.parcels_m_to_ft;
+  const lotSizeSqm = parseStatedArea(statedAreaRaw, sqmToSqft);
   // WF3 lot-size: a non-empty STATEDAREA the parser refuses is COUNTED, never silent.
   if (statedAreaRaw && lotSizeSqm == null && typeof facts.tag === 'function') facts.tag('stated_area_unparsed');
-  const lotSizeSqft = lotSizeSqm ? Math.round(lotSizeSqm * SQM_TO_SQFT * 100) / 100 : null;
+  const lotSizeSqft = lotSizeSqm ? Math.round(lotSizeSqm * sqmToSqft * 100) / 100 : null;
 
   const addressNumber = field(src, 'ADDRESS_NUMBER');
   const linearNameFull = field(src, 'LINEAR_NAME_FULL');
@@ -397,7 +400,9 @@ function shapeRecord(record, seam) {
   // Falling back to `geomRaw` here would feed garbage text into ST_GeomFromWKB's validation
   // phase instead of the documented null-carries-through swallow (report row 6 / AP-D2 parity).
   const geomParseFailed = parsedGeom.parsed === true;
-  const dims = estimateLotDimensions(geometry, lotSizeSqm, config.parcels_irregularity_threshold);
+  const dims = estimateLotDimensions(
+    geometry, lotSizeSqm, config.parcels_irregularity_threshold, config.parcels_metres_per_degree_lat,
+  );
   const frontageM = dims ? dims.frontage_m : null;
   const depthM = dims ? dims.depth_m : null;
 
@@ -414,9 +419,9 @@ function shapeRecord(record, seam) {
     lot_size_sqft: lotSizeSqft,
     lot_size_source: lotSizeSqm != null ? 'stated' : null,
     frontage_m: frontageM,
-    frontage_ft: frontageM ? Math.round(frontageM * M_TO_FT * 100) / 100 : null,
+    frontage_ft: frontageM ? Math.round(frontageM * mToFt * 100) / 100 : null,
     depth_m: depthM,
-    depth_ft: depthM ? Math.round(depthM * M_TO_FT * 100) / 100 : null,
+    depth_ft: depthM ? Math.round(depthM * mToFt * 100) / 100 : null,
     // The parsed GeoJSON travels as the `geojson` field the write plan's geometry
     // binding reads; a shapefile's already-stringified geometry passes through as-is.
     geojson: facts.geojson !== undefined ? facts.geojson : (geomParseFailed ? null : (geomRaw || null)),
@@ -507,7 +512,10 @@ function null_address_pct(ctx) {
   const attempted = numberOrNull(a.rows_shaped);
   const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
-    return ctx.report('null_address_pct', { value: 0, detail: null });
+    // WF3 2026-10-14: nothing examined ⇒ no fraction. A fabricated 0 PASSed the `pct <=` arm
+    // ("green because it never looked", Spec 124 §7 LM-D14; measured: run 1984); null renders
+    // `unevaluable` at the declared severity (WARN). Mirrors null_address_number_pct.
+    return ctx.report('null_address_pct', { value: null, detail: { reason: 'no_input' } });
   }
   ctx.report('null_address_pct', {
     detail: buildNullAddressAuditRow(nullRows, attempted).value,
@@ -531,7 +539,10 @@ function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
   const rowsRead = numberOrNull(a.rows_read) != null ? numberOrNull(a.rows_read) : numberOrNull(a.feature_count);
   if (rowsRead == null || rowsRead <= 0) {
-    return ctx.report('skip_rate_pct', { value: 0, detail: null });
+    // WF3 2026-10-14: nothing read ⇒ no skip rate. A fabricated 0 PASSed the `pct <=` arm
+    // ("green because it never looked", Spec 124 §7 LM-D14); null renders `unevaluable` at
+    // the declared severity. Mirrors address_points' skip_rate_pct.
+    return ctx.report('skip_rate_pct', { value: null, detail: { reason: 'no_input' } });
   }
   const skipped = numberOrNull(a.records_skipped) != null
     ? numberOrNull(a.records_skipped)
@@ -737,4 +748,3 @@ module.exports.rectangularityRatio = rectangularityRatio;
 module.exports.extractRing = extractRing;
 module.exports.minimumBoundingRect = minimumBoundingRect;
 module.exports.shoelaceArea = shoelaceArea;
-module.exports.SOURCE_CRS = SOURCE_CRS;

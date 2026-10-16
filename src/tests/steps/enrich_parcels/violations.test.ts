@@ -2984,6 +2984,21 @@ describe('zoning-change scope (2026-10-06 MED) — L-logic locks', () => {
     expect(() => m.buildPass1ScopeWhere({ full: false })).toThrow();
   });
 
+  // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md R-BZ G8 (no throw reachable from a defer_scope hook), Rule 10
+  it('pass1IncrementalWhere — the defer_scope predicate: narrows ONLY on an explicit false, never throws (F-10 + R-BZ G8)', () => {
+    const m = raw();
+    expect(m.pass1IncrementalWhere(true)).toBe('TRUE');
+    expect(m.pass1IncrementalWhere(false)).toBe('(p.zoning_enriched_at IS NULL)');
+    for (const odd of [undefined, null, 0, 'false']) expect(m.pass1IncrementalWhere(odd)).toBe('TRUE');
+    // the pass path and the defer path render the SAME predicate for every boolean answer
+    for (const zc of [true, false]) expect(m.buildPass1ScopeWhere({ full: false, zoningChanged: zc })).toBe(m.pass1IncrementalWhere(zc));
+    // the defer_scope hook calls the total helper, never the throwing one
+    const src = fs.readFileSync(abs(COMPUTE_REL), 'utf8');
+    const deferBody = src.slice(src.indexOf('async function computeDeferScope('), src.indexOf('\n}\n', src.indexOf('async function computeDeferScope(')));
+    expect(deferBody).toContain('pass1IncrementalWhere(zoningChange.changed)');
+    expect(deferBody).not.toContain('buildPass1ScopeWhere(');
+  });
+
   it('anti-reintroduction — the rendered pass-1 SQL never compares a publisher version (no `source_dataset_version >`)', () => {
     const m = raw();
     for (const zoningChanged of [true, false]) {

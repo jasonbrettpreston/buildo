@@ -258,11 +258,13 @@ consumer.
 
 ### 5.1 Defect ledger (PIN in wrong form — never fix inside the conversion, Spec 123 §3.1)
 
-| ID | Defect | PIN (wrong form carried) | Post-cutover fix |
-|---|---|---|---|
-| **AP-D1** | **Spec/code divergence.** Spec 54 narrates a `maint_stage = REGULAR` filter (`54:35` "Filter to REGULAR") and `address_status ∈ {NULL,CURRENT,NONE}` acceptance (`54:36`, `:80`); the loader has **NO** filter on either — every row inserts [READ `load-address-points.js` §C — grep `maint_stage`/`address_status` finds inserts only]. **BOTH readings recorded:** (a) the spec is aspirational and the code is right (unfiltered is the canonical load); (b) the spec is right and the loader over-inserts `RESERVED` (~1.5%, 7.7K rows) and non-accepted statuses. | Carry the CODE unfiltered (zero-diff). PIN as KNOWN-DEFECT in its wrong form. | A separate post-cutover commit with its own RED lock, **ONCE PH-0 rules which side is right**. **RULING OWED: operator/orchestrator** — not decided here. |
-| **AP-D2** | Silent `JSON.parse` swallow: `try{…}catch{ /* fall through */ }` refuses to surface an unparseable geometry [READ `:293-305`]. | Carry the swallow verbatim (NO behaviour change); at the peel add a **counted, declared `geom_parse_failures`** audit row. Name the rule in that check's `why`. | not a fix — the declaration is the close |
-| **AP-D3** | Batch drop: a failed batch is logged, `errors++`, rows DROPPED for the run [READ `:372-378`]. | Carry as-is; declare `execution.on_batch_error:"drop_batch"` at the peel (the schema's own description already cites `load-address-points.js:374-378`). | not a fix — the declaration is the close |
+> Status mirrors `docs/reports/defect-ledger.md` (the register) verbatim — gate I #36 (Q10 a, 2026-10-14); the historical closing detail stays in the last column.
+
+| ID | Defect | PIN (wrong form carried) | Post-cutover fix | Status |
+|---|---|---|---|---|
+| **AP-D1** | **Spec/code divergence.** Spec 54 narrates a `maint_stage = REGULAR` filter (`54:35` "Filter to REGULAR") and `address_status ∈ {NULL,CURRENT,NONE}` acceptance (`54:36`, `:80`); the loader has **NO** filter on either — every row inserts [READ `load-address-points.js` §C — grep `maint_stage`/`address_status` finds inserts only]. **BOTH readings recorded:** (a) the spec is aspirational and the code is right (unfiltered is the canonical load); (b) the spec is right and the loader over-inserts `RESERVED` (~1.5%, 7.7K rows) and non-accepted statuses. | Carry the CODE unfiltered (zero-diff). PIN as KNOWN-DEFECT in its wrong form. | A separate post-cutover commit with its own RED lock, **ONCE PH-0 rules which side is right**. **RULING OWED: operator/orchestrator** — not decided here. | **CLOSED** · spec corrected 2026-09-24 (operator ruling: the loader's unfiltered ingest is the intended behaviour; Spec 54 rewritten) |
+| **AP-D2** | Silent `JSON.parse` swallow: `try{…}catch{ /* fall through */ }` refuses to surface an unparseable geometry [READ `:293-305`]. | Carry the swallow verbatim (NO behaviour change); at the peel add a **counted, declared `geom_parse_failures`** audit row. Name the rule in that check's `why`. | not a fix — the declaration is the close | **CLOSED** · this conversion (declared, counted) |
+| **AP-D3** | Batch drop: a failed batch is logged, `errors++`, rows DROPPED for the run [READ `:372-378`]. | Carry as-is; declare `execution.on_batch_error:"drop_batch"` at the peel (the schema's own description already cites `load-address-points.js:374-378`). | not a fix — the declaration is the close | **CLOSED · FIXED-BY-RUNNER** (MQ-B5 (a), 2026-10-05) — since the conversion `a8c1a42f` the write runs through `write.js executeWrite` (one transaction, no catch), so a failed batch fails the step and nothing is dropped; the `drop_batch` declaration is retired to `fail_step` with a deviations[] row |
 
 **Note (Spec 54 wrong-form, zero-diff):** AP-D1 is a PINNED divergence — the conversion does NOT filter, so the golden
 proves zero-diff against the live table. Marked **"RULING OWED: operator/orchestrator"**.
@@ -693,21 +695,21 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 3 | 3 | file=true fences=3 it-count=52 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
+| G7 | 3 | 3 | file=true fences=3 it-count=57 red-evidence-claims=0 red-evidence-pass=true ledger-deferred=true |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=52 |
+| G4d (fence<=lock) | PASS | — | fences=3 lock-it-count=57 |
 | G-shape | PASS | — | file-clean=true compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | address_points | PASS | min_migration=18 <= migrations count=257 |
-| 2 | address_points | PASS | 5 declared, missing from seeds: none |
+| 1 | address_points | PASS | min_migration=18 <= migrations count=259 |
+| 2 | address_points | PASS | 6 declared, missing from seeds: none |
 | 3 | address_points | PASS | retired=0 overlap-with-declared=none |
 | 7 | address_points | PASS | SPEC LINK header present=true |
-| 8 | address_points | PASS | G-4: 5 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | address_points | PASS | G-4: 6 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 20 | address_points | PASS | HB-1: execution.shape="ingest" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 21 | address_points | PASS | CEIL-1: execution.shape="ingest" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
@@ -723,46 +725,39 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | 29 | (registry) | PASS | ON-INVALID-CLOSED (gate B): 12 on_invalid(s) checked, all closed (12 ledger-allowed, 0 from fail/named-deviation) |
 | 30 | (registry) | PASS | EMITS-EQUIV (gate C): 0 emits drift(s) checked, all closed (0 ledger-allowed, 0 from declared==emitted) |
 | 31 | (registry) | PASS | CONSUMER-REGISTRY (gate D): 0 contract(s) checked, all closed (0 ledger-allowed, 0 present+typed/excluded); 41 unproduced src read(s) (hard until the FLEET-2 landing commit (.cursor/wf2_registry_truth_active_task.md, Fold 14 P1-C6)) [unproduced:src/app/api/admin/builders/route.ts:entities.google_place_id; unproduced:src/app/api/admin/stats/route.ts:notifications.is_sent; unproduced:src/app/api/admin/stats/route.ts:permits.first_seen_at; unproduced:src/app/api/leads/flight-board/detail/[id]/route.ts:permits.updated_at; unproduced:src/app/api/leads/flight-board/route.ts:permits.updated_at; unproduced:src/app/api/notifications/route.ts:notifications.id; unproduced:src/app/api/notifications/route.ts:notifications.is_read; unproduced:src/features/leads/lib/get-lead-feed.ts:entities.id; unproduced:src/features/leads/lib/get-lead-feed.ts:entities.photo_url; unproduced:src/features/leads/lib/get-lead-feed.ts:permits.location; unproduced:src/lib/admin/supplier-leads.ts:trade_forecasts.target_window; unproduced:src/lib/analytics/queries.ts:entities.id; unproduced:src/lib/builders/enrichment.ts:entities.first_seen_at; unproduced:src/lib/builders/enrichment.ts:entities.google_place_id; unproduced:src/lib/builders/enrichment.ts:entities.google_rating; unproduced:src/lib/builders/enrichment.ts:entities.google_review_count; unproduced:src/lib/builders/enrichment.ts:entities.id; unproduced:src/lib/builders/enrichment.ts:entities.linkedin_url; unproduced:src/lib/builders/enrichment.ts:entities.photo_url; unproduced:src/lib/builders/enrichment.ts:entities.photo_validated_at; unproduced:src/lib/builders/enrichment.ts:entities.trade_name; unproduced:src/lib/leads/lead-detail-query.ts:permits.updated_at; unproduced:src/lib/leads/lead-detail-query.ts:trade_forecasts.target_window; unproduced:src/lib/leads/lead-inspect-query.ts:coa_applications.lead_id; unproduced:src/lib/leads/lead-inspect-query.ts:lifecycle_status_history.id; unproduced:src/lib/leads/lead-inspect-query.ts:permits.first_seen_at; unproduced:src/lib/leads/lead-inspect-query.ts:permits.updated_at; unproduced:src/lib/leads/lead-inspect-query.ts:trade_forecasts.target_window; unproduced:src/lib/quality/metrics.ts:entities.google_place_id; unproduced:src/lib/quality/metrics.ts:permits.first_seen_at; unproduced:src/lib/sync/process.ts:permits.bid_value; unproduced:src/lib/sync/process.ts:permits.first_seen_at; unproduced:src/lib/sync/process.ts:permits.lead_id; unproduced:src/lib/sync/process.ts:permits.lifecycle_block; unproduced:src/lib/sync/process.ts:permits.lifecycle_group; unproduced:src/lib/sync/process.ts:permits.lifecycle_seq; unproduced:src/lib/sync/process.ts:permits.lifecycle_stage; unproduced:src/lib/sync/process.ts:permits.location; unproduced:src/lib/sync/process.ts:permits.photo_url; unproduced:src/lib/sync/process.ts:permits.trade_classified_at; unproduced:src/lib/sync/process.ts:permits.updated_at]; UNPRODUCED-UNWITNESSED: 41 (report-only until the table's inserter converts) [UNPRODUCED-UNWITNESSED:src/app/api/admin/builders/route.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/app/api/admin/stats/route.ts:notifications.is_sent; UNPRODUCED-UNWITNESSED:src/app/api/admin/stats/route.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/app/api/leads/flight-board/detail/[id]/route.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/app/api/leads/flight-board/route.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/app/api/notifications/route.ts:notifications.id; UNPRODUCED-UNWITNESSED:src/app/api/notifications/route.ts:notifications.is_read; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:entities.id; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:entities.photo_url; UNPRODUCED-UNWITNESSED:src/features/leads/lib/get-lead-feed.ts:permits.location; UNPRODUCED-UNWITNESSED:src/lib/admin/supplier-leads.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/analytics/queries.ts:entities.id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_rating; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.google_review_count; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.id; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.linkedin_url; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.photo_url; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.photo_validated_at; UNPRODUCED-UNWITNESSED:src/lib/builders/enrichment.ts:entities.trade_name; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-detail-query.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-detail-query.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:coa_applications.lead_id; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:lifecycle_status_history.id; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:permits.updated_at; UNPRODUCED-UNWITNESSED:src/lib/leads/lead-inspect-query.ts:trade_forecasts.target_window; UNPRODUCED-UNWITNESSED:src/lib/quality/metrics.ts:entities.google_place_id; UNPRODUCED-UNWITNESSED:src/lib/quality/metrics.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.bid_value; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.first_seen_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lead_id; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_block; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_group; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_seq; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.lifecycle_stage; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.location; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.photo_url; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.trade_classified_at; UNPRODUCED-UNWITNESSED:src/lib/sync/process.ts:permits.updated_at]; 4 unconverted-producer read(s) listed (O3, red once the producer converts) [unconverted_producer:scripts/classify-lifecycle-phase.js:permit_classifier_extended; unconverted_producer:scripts/quality/assert-lifecycle-phase-distribution.js:seq_violations; unconverted_producer:scripts/quality/assert-lifecycle-phase-distribution.js:seq_violations_truncated_count; unconverted_producer:scripts/quality/assert-network-health.js:scraper_telemetry] |
-| 37 | (registry) | PASS | LF-ONLY (gate F): 3 path(s) checked, all LF (3 ledger-allowed) |
+| 37 | (registry) | PASS | LF-ONLY (gate F): 1 path(s) checked, all LF (1 ledger-allowed) |
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 383 definition row(s) checked, 44 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 383 definition row(s) checked, 71 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (11 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
-| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 84 finding(s), all ledger-allowed (84) |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 77 finding(s), all ledger-allowed (77) |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 18 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 30 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 20 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by 2/27 step(s); write_inventory.by_mode declared by 0/27 |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 487 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 27 step(s) mode_select per archetype; 501 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 27 step(s) logic_version <=> code_version trigger; 32 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 311 declared-key check(s), 0 violations; 151 terminal(s) unwitnessed (no capture) |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 27 step(s); 318 declared-key check(s), 0 violations; 154 terminal(s) unwitnessed (no capture) |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 189 · unexplained: 0
+- compare ran: true · diffs found: 202 · unexplained: 0
 
 ### Test suite (item iii)
-- 2356/2367 passed (suite success=false)
+- 2375/2379 passed (suite success=false)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 5 — src/tests/steps/link_massing/metamorphic.test.ts, src/tests/steps/link_massing/nearest-determinism.test.ts, src/tests/steps/link_massing/rung1-inline-wkt.test.ts, src/tests/steps/link_parcel_addresses/metamorphic.test.ts, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts
 - skipped (declared but not run): 0
-- failing (11):
-  - src/tests/step-conformance.infra.test.ts > prove-red — the shape rule fires on the unconverted corpus > every UNCONVERTED sources-chain step file is among them, and every one still calls pipeline.run() (27 minus converted.json, minus declared pending)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_data_bounds/violations.test.ts > assert_data_bounds — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1/§1.0 claim 4)
-  - src/tests/steps/assert_engine_health/violations.test.ts > assert_engine_health — measured facts, true today (plain it) > manifest.json declares the 4 chains at the measured positions (report §1.1 claim 3)
-  - src/tests/steps/assert_global_coverage/violations.test.ts > assert_global_coverage — measured facts, true today (plain it) > manifest.json declares the 3 chains at the measured positions (report §1.1 claim 3)
+- failing (4):
+  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/link-massing.js (slug "link_massing") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
   - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
   - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
   - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > 6. chain wiring (fact, unchanged by this conversion) > chain.logic ordering + length: compute_parcel_cost_estimates < refresh_snapshot < assert_global_coverage < assert_parcel_sanity, length 28 (FLEET-2 manifest variant c2)
-  - src/tests/steps/compute_parcel_cost_estimates/violations.test.ts > compute_parcel_cost_estimates — test 13: chain wiring > sources chain has 28 steps; compute_parcel_cost_estimates sits at index 22 (0-based), immediately after enrich_parcels
-  - src/tests/steps/enrich_heritage/violations.test.ts > enrich_heritage — G-shape (true from commit 1: legacy source text) > chain wiring — sources chain has 28 steps and enrich_heritage sits immediately after enrich_ravines
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -770,7 +765,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
-| 3 | Tunables externalized | enforced-green | G-4: 5 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 3 | Tunables externalized | enforced-green | G-4: 6 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -781,7 +776,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=39840B notes=8765B checks=6 rows records_meta=2842B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=41201B notes=8765B checks=7 rows records_meta=3062B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

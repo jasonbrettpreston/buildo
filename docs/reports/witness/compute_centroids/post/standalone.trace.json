@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/compute-centroids.js",
   "chain": "none",
-  "source_fingerprint": "35bdeff1bebbeaa1989ad3c63c30d7f78b2a4aa75e683a51790607fc5feb9b25",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "9a0a3f8a31217f26213164a521959d45a1bd2e5822e64f9f6f02263cacd9e49b",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 30,
-    "distinct": 26,
+    "calls": 31,
+    "distinct": 27,
     "utility": 8,
-    "tracer_self_ms": 8.021,
-    "wall_ms": 24554
+    "tracer_self_ms": 1.157,
+    "wall_ms": 1795
   },
   "statements": [
     {
@@ -84,13 +84,13 @@
       "params": [
         [
           "completed_with_warnings",
-          23343,
+          1551,
           null,
-          2669,
+          2842,
           1,
           0,
           0,
-          "{\"duration_ms\":17717,\"parcels_processed\":1,\"centroids_computed\":0,\"failed_geometries\":1,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"backfilled_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":6,\"errors\":[],\"warnings\":[\"failed_geometries: 1\",\"compute_rate: 0%\",\"geom_not_null_geometry_null_count: 1\",\"outside_polygon_count: 1716\",\"pointonsurface_gt_1m_count: 139280\",\"centroid_in_neighbour_parcel_count: 1528\"],\"audit_table\":{\"phase\":10,\"name\":\"Centroid Computation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroids_computed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"failed_geometries\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_rate\",\"value\":\"0%\",\"threshold\":\"pct >= 98\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_rows_changed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_max_shift_m\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_total\",\"value\":496536,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geom_not_null_geometry_null_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"outside_polygon_count\",\"value\":1716,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pointonsurface_gt_1m_count\",\"value\":139280,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_in_neighbour_parcel_count\",\"value\":1528,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_algorithm_drift_gt_1m_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"sys_parcels_total_duration_ms\",\"value\":958,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_null_count_duration_ms\",\"value\":1306,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_not_null_geometry_null_count_duration_ms\",\"value\":89,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_outside_polygon_count_duration_ms\",\"value\":967,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pointonsurface_gt_1m_count_duration_ms\",\"value\":1449,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_in_neighbour_parcel_count_duration_ms\",\"value\":981,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_algorithm_drift_gt_1m_count_duration_ms\",\"value\":2833,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.04,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":23342,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":605,\"parcels_processed\":1,\"centroids_computed\":0,\"failed_geometries\":1,\"recompute_rows_changed\":0,\"recompute_max_shift_m\":null,\"config\":{\"compute_centroids_failed_geometries_warn\":0,\"compute_centroids_compute_rate_warn_pct\":98,\"compute_centroids_full_recompute_batch_size\":10000},\"terminal\":\"backfilled_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":6,\"errors\":[],\"warnings\":[\"failed_geometries: 1\",\"compute_rate: 0%\",\"geom_not_null_geometry_null_count: 1\",\"outside_polygon_count: 1716\",\"pointonsurface_gt_1m_count: 139280\",\"centroid_in_neighbour_parcel_count: 1528\"],\"audit_table\":{\"phase\":10,\"name\":\"Centroid Computation\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"backlog_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_processed\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"centroids_computed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"failed_geometries\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"compute_rate\",\"value\":\"0%\",\"threshold\":\"pct >= 98\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_rows_changed\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"recompute_max_shift_m\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_total\",\"value\":496536,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"geom_not_null_geometry_null_count\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"outside_polygon_count\",\"value\":1716,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"pointonsurface_gt_1m_count\",\"value\":139280,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_in_neighbour_parcel_count\",\"value\":1528,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"centroid_algorithm_drift_gt_1m_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"sys_parcels_total_duration_ms\",\"value\":26,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_null_count_duration_ms\",\"value\":331,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_geom_not_null_geometry_null_count_duration_ms\",\"value\":54,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_outside_polygon_count_duration_ms\",\"value\":213,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_pointonsurface_gt_1m_count_duration_ms\",\"value\":312,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_in_neighbour_parcel_count_duration_ms\",\"value\":215,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_centroid_algorithm_drift_gt_1m_count_duration_ms\",\"value\":295,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.64,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1551,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -98,7 +98,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -128,6 +128,20 @@
       "excluded": [
         "pg_class",
         "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
       ],
       "error": null
     },

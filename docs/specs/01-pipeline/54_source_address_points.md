@@ -39,6 +39,7 @@ As the **canonical** source of street-level addresses for permit + CoA matching,
 | `place_name` | TEXT | NEW — POI name when present. |
 | `addr_num_normalized` | TEXT | DERIVED — leading-zero-stripped uppercase `address_number`. Cross-table JOIN key. |
 | `linear_name_normalized` | TEXT | DERIVED — uppercase street-name component of `linear_name_full` (street_type stripped). Cross-table JOIN key. |
+| `street_type_normalized` | TEXT | DERIVED (mig 257, 2026-10-10) — canonical short street type (AVE, CRES, ST, …) of `linear_name_full` via the shared `parseLinearName`; NULL when no recognised type. A guard column, so a reload fills it. Disambiguation level 0 (§3). |
 | `geom` | GEOMETRY(Point, 4326) | NEW — `ST_SetSRID(ST_MakePoint(lng, lat), 4326)` where `(lng, lat)` come from the CSV **`geometry`** GeoJSON column (loader primary, `load-address-points.js:285-301`), or `LATITUDE`/`LONGITUDE` columns as fallback (`:304`). **The CSV's coordinate source is `geometry`, NOT lat/lng columns** — assert-schema + the loader drift check require `geometry` OR (`LATITUDE` AND `LONGITUDE`) per the coordinate-source contract (WF3 2026-05-30). Used by the `parcel_address_points` bridge (mig 162). |
 
 **PK:** `(address_point_id)`
@@ -70,6 +71,7 @@ As the **canonical** source of street-level addresses for permit + CoA matching,
 5. COALESCE-preserve all 10 source + 2 normalized columns against future CKAN strip events
 
 ### Disambiguation hierarchy (consumed by Strategy 1a / Tier 1a — WF1 plan v4 fold H5)
+0. **Street type (operator ruling 2026-10-10, Option A):** a candidate is judged by `COALESCE(address_points.street_type_normalized, parcels.street_type_normalized)`. The address point's own type comes first (the address of record since the 2026-05-20 strip); the frozen parcel column is only the fallback. Permits (Strategy 1a, LP-D9): a typed permit matches only that type. CoA (Tier 1a): tolerant when either side is unknown, and a type match outranks an untyped candidate. Measured before the change: 37 CoA links sat on an address point of another type (4 on a NULL-type parcel the parcel-only check could not see).
 1. `address_class_desc`: Structure (1) > Structure Entrance (2) > Land (3) > other (4)
 2. `ST_Area(p.geom::geography) ASC` — narrower parcel wins cross-parcel ties (fold C2: `::geography` cast yields square meters; raw `ST_Area` on `GEOMETRY(*, 4326)` returns square *degrees*)
 3. `address_point_id ASC` — stable deterministic final tiebreaker

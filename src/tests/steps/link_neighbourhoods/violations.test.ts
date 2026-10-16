@@ -699,6 +699,6 @@ describe('RED (commit ③) — cutover and the spec diff', () => {
     const og = d.checks.find((c) => c.order_guarantee)?.order_guarantee;
     expect(og, 'no check declares an order_guarantee').toBeTruthy();
     const spec = readText(og?.spec_ref ?? SPEC60_REL);
-    expect(spec.includes(og?.anchor ?? ' '), `order_guarantee.anchor does not resolve in ${og?.spec_ref}`).toBe(true);
+    expect(spec.includes(og?.anchor ?? '\u0000'), `order_guarantee.anchor does not resolve in ${og?.spec_ref}`).toBe(true);
   });
 });

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "source_fingerprint": "76419f85da6a5cb49c21a04ba95042812ebecaa1fe5467ddb008f79686d7aab4",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "8d73217e20cc244f03458364783e719cf52e2cc3c819f69c0eebd164fa0b5f2b",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 43,
-    "distinct": 31,
+    "calls": 44,
+    "distinct": 32,
     "utility": 13,
-    "tracer_self_ms": 8.258,
-    "wall_ms": 18935
+    "tracer_self_ms": 1.521,
+    "wall_ms": 1974
   },
   "statements": [
     {
@@ -135,7 +135,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -181,6 +181,20 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
       "error": null
     },
     {
@@ -446,7 +460,7 @@
   ],
   "transactions": [
     {
-      "client": "22456:3",
+      "client": "80714:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

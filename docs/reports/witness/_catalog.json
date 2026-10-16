@@ -83,6 +83,10 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261016t1912z": [
+      "address_point_id",
+      "latitude"
+    ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
       "address_class_desc",
@@ -1016,6 +1020,10 @@
       "id",
       "lot_size_sqm"
     ],
+    "parcels_cohort_bak_20261016t1813z": [
+      "id",
+      "lot_size_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1646,6 +1654,26 @@
       "is_gta"
     ],
     "wsib_registry_cohort_bak_20261014t1546z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261016t1816z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261016t1817z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261016t1818z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261016t1905z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261016t1906z": [
       "id",
       "is_gta"
     ],

@@ -2,57 +2,57 @@
   "entries": {
     "opt_aor_gfa_gt_max_buildable_gfa_count": {
       "value": 0,
-      "cost_ms": 487,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "cost_ms": 940,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     },
     "zoning_dominant_area_share_out_of_range_count": {
       "value": 0,
-      "cost_ms": 439,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "cost_ms": 941,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     },
     "comp_fsi_p50_small_n_sample_count": {
       "value": 3758,
-      "cost_ms": 457,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "cost_ms": 572,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     },
     "heritage_basis_coverage_distribution": {
       "value": 1770,
-      "cost_ms": 424,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "cost_ms": 528,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     },
     "existing_mislink_footprint_ratio_out_of_bound_count": {
       "value": 0,
-      "cost_ms": 480,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "cost_ms": 577,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     },
     "parcels_dead_tuple_ratio": {
-      "value": 0.7859,
-      "cost_ms": 18,
-      "at": "2026-10-16T14:36:08.791Z",
-      "commit": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "value": 0.7869,
+      "cost_ms": 16,
+      "at": "2026-10-16T17:00:12.221Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "run_id": null,
       "chain": "sources",
-      "sample_n": 6
+      "sample_n": 7
     }
   }
 }

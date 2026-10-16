@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-address-points.js",
   "chain": "sources",
-  "source_fingerprint": "c4e3dd51837c4fc9ae1689677bd5b14ad837a2abe3f9512e4ddf64c7ec0333bc",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "f07d55795c14545111eab6e4c33d4b8a54579aa1f7dfdec8a09c8f0469259ecc",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 158,
+    "calls": 166,
     "distinct": 17,
     "utility": 8,
-    "tracer_self_ms": 4995.653,
-    "wall_ms": 128434
+    "tracer_self_ms": 1256.257,
+    "wall_ms": 35985
   },
   "statements": [
     {
@@ -44,7 +44,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -76,54 +76,6 @@
       "excluded": [
         "schema_migrations"
       ],
-      "error": null
-    },
-    {
-      "fingerprint": "68563e108d423a94",
-      "kind": "write",
-      "count": 137,
-      "rowCount": 274,
-      "reads": {
-        "address_points": [
-          "addr_num_normalized",
-          "address_class_desc",
-          "address_full",
-          "address_number",
-          "address_status",
-          "class_family_desc",
-          "geom",
-          "hi_num",
-          "latitude",
-          "linear_name_full",
-          "linear_name_normalized",
-          "lo_num",
-          "longitude",
-          "maint_stage",
-          "place_name"
-        ]
-      },
-      "writes": {
-        "address_points": [
-          "addr_num_normalized",
-          "address_class_desc",
-          "address_full",
-          "address_number",
-          "address_point_id",
-          "address_status",
-          "class_family_desc",
-          "geom",
-          "hi_num",
-          "latitude",
-          "linear_name_full",
-          "linear_name_normalized",
-          "lo_num",
-          "longitude",
-          "maint_stage",
-          "place_name",
-          "retired_at"
-        ]
-      },
-      "excluded": [],
       "error": null
     },
     {
@@ -175,7 +127,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 5,
+      "rowCount": 6,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -206,9 +158,59 @@
       "fingerprint": "9184be8b14cc7f3c",
       "kind": "read",
       "count": 1,
-      "rowCount": 525369,
+      "rowCount": 525372,
       "reads": {},
       "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9f8e7239f14db5a0",
+      "kind": "write",
+      "count": 145,
+      "rowCount": 200,
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_full",
+          "address_number",
+          "address_point_id",
+          "address_status",
+          "class_family_desc",
+          "geom",
+          "hi_num",
+          "latitude",
+          "linear_name_full",
+          "linear_name_normalized",
+          "lo_num",
+          "longitude",
+          "maint_stage",
+          "place_name",
+          "retired_at",
+          "street_type_normalized"
+        ]
+      },
       "excluded": [],
       "error": null
     },
@@ -276,10 +278,10 @@
   ],
   "transactions": [
     {
-      "client": "10468:3",
+      "client": "85980:3",
       "write_fingerprints": [
-        "68563e108d423a94",
         "8b9dda5a2430e883",
+        "9f8e7239f14db5a0",
         "e91c517f196ee56c"
       ]
     }
@@ -304,7 +306,8 @@
         "longitude",
         "maint_stage",
         "place_name",
-        "retired_at"
+        "retired_at",
+        "street_type_normalized"
       ]
     },
     "writes": {
@@ -325,7 +328,8 @@
         "longitude",
         "maint_stage",
         "place_name",
-        "retired_at"
+        "retired_at",
+        "street_type_normalized"
       ]
     }
   },

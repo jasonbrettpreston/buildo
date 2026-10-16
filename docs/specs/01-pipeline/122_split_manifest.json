@@ -466,6 +466,19 @@
       "content_sha256": "e011659c76fa67f1c777dd77f752b977caab7a29ccc677b307057c7df0935f98",
       "moved_at": "2026-10-16",
       "commit": "51bad989"
+    },
+    {
+      "id": "M22",
+      "from_spec": "122",
+      "anchor": "**RE-FREEZE #32 — `inputs.reads.externals[].format` \"pdf_document_set\" + `externals[].manifest` + `externals[].pdf` (2026-10-07, WF1 load_coa_notices, Spec 129 §11):** a pinned, sha256-verified PDF document SET read in memory; one additive arm in `acquire.js` (`acquirePdfDocumentSet`) and one dispatch branch in `runIngestPhase` (compute seams `shapeDocument` / `reconcileDocuments`); every other format byte-identical. Detail 122a §A24; register row R-BY.",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A28 — RE-FREEZE #32–#33 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16",
+      "line_count": 4,
+      "classification": "REGISTER",
+      "evidence": "V3 fleet night (QUEUE 2026-10-16): Spec 122 had ~80 B of arm (iv) headroom and owes the RE-FREEZE #35 entry (CP-S1 `not_failed` pin op). The #32 and #33 entries stay in force; #32 detail is §A24, #33 detail §A25. New RE-FREEZE entries are still added to Spec 122 §8.",
+      "content_sha256": "b1ac3782e94dc487c556ffb2da634a5c729bf8c2cb89ce0c39d01027f55a78bd",
+      "moved_at": "2026-10-16",
+      "commit": "31ab81f8"
     }
   ]
 }

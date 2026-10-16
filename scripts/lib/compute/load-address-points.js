@@ -98,6 +98,7 @@ function resolveCoordinates(record) {
  * row the step refuses to load (no coordinate source at all). Byte-identical to the
  * loader's `:283-345` mapping: trims, `safeParseIntOrNull` for lo/hi, the shared
  * `normalizeAddressNumber`/`parseLinearName` JOIN keys, `''→null` for the text columns.
+ * shapeRecord returns 17 column values.
  *
  * `geojson` is the geometry field name the write plan's geometry column and
  * `validateGeometries` read (SPEC LINK 122 §5.1 RE-FREEZE #13) — it carries the raw
@@ -112,7 +113,7 @@ function shapeRecord(record) {
   if (coords == null) return null;
   const addressNumber = field(record, 'ADDRESS_NUMBER');
   const linearNameFull = field(record, 'LINEAR_NAME_FULL');
-  const { street_name: streetNameOnly } = parseLinearName(linearNameFull);
+  const { street_name: streetNameOnly, street_type: streetType } = parseLinearName(linearNameFull);
   const geomRaw = field(record, 'geometry');
   const geojson = geomRaw || JSON.stringify({
     type: 'Point',
@@ -134,6 +135,7 @@ function shapeRecord(record) {
     place_name: field(record, 'PLACE_NAME') || null,
     addr_num_normalized: normalizeAddressNumber(addressNumber) || null,
     linear_name_normalized: streetNameOnly || null,
+    street_type_normalized: streetType || null, // mig 257 (Spec 54 §3 level 0): the parsed type, derived; '' → null
     geojson,
   };
 }
@@ -218,11 +220,38 @@ function null_address_number_pct(ctx) {
   const attempted = numberOrNull(a.rows_shaped);
   const nullRows = numberOrNull(a.column_nulls && a.column_nulls.address_number);
   if (attempted == null || nullRows == null || attempted <= 0) {
-    return ctx.report('null_address_number_pct', { value: 0, detail: null });
+    // WF3 2026-10-14: nothing examined ⇒ no fraction. A fabricated 0 PASSed the `pct <=` arm
+    // ("green because it never looked", Spec 124 §7 LM-D14); null renders `unevaluable` at
+    // the declared severity. Mirrors null_street_type_pct.
+    return ctx.report('null_address_number_pct', { value: null, detail: { reason: 'no_input' } });
   }
   ctx.report('null_address_number_pct', {
     detail: buildNullAddressNumberAuditRow(nullRows, attempted).value,
     value: nullRows / attempted,
+  });
+}
+
+/**
+ * Spec 54 §3 level 0 (mig 257): the share of shaped rows whose parsed street type is
+ * empty. Measured 0.044 with the real parser (23,010 / 525,343, 2026-10-10). A rise
+ * means parseLinearName stopped recognising types and the linkers silently fall back
+ * to the frozen parcel type.
+ *
+ * A sibling of `null_address_number_pct` (same denominator `rows_shaped`, same
+ * zero-guard, same raw-fraction scale) — but with NO audit-row helper: it reads the
+ * library's own `column_nulls.street_type_normalized` count and reports it, never
+ * fabricating a row the library did not produce.
+ */
+function null_street_type_pct(ctx) {
+  const a = ctx.acquired || {};
+  const attempted = numberOrNull(a.rows_shaped);
+  const nullRows = numberOrNull(a.column_nulls && a.column_nulls.street_type_normalized);
+  if (attempted == null || nullRows == null || attempted <= 0) {
+    return ctx.report('null_street_type_pct', { value: null, detail: { reason: 'no_input' } });
+  }
+  ctx.report('null_street_type_pct', {
+    value: nullRows / attempted,
+    detail: { null_rows: nullRows, attempted },
   });
 }
 
@@ -241,7 +270,10 @@ function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
   const rowsRead = numberOrNull(a.rows_read) != null ? numberOrNull(a.rows_read) : numberOrNull(a.feature_count);
   if (rowsRead == null || rowsRead <= 0) {
-    return ctx.report('skip_rate_pct', { value: 0, detail: null });
+    // WF3 2026-10-14: nothing read ⇒ no skip rate. A fabricated 0 PASSed the `pct <=` arm
+    // ("green because it never looked", Spec 124 §7 LM-D14); null renders `unevaluable` at
+    // the declared severity. Mirrors null_address_number_pct.
+    return ctx.report('skip_rate_pct', { value: null, detail: { reason: 'no_input' } });
   }
   const skipped = numberOrNull(a.records_skipped) != null
     ? numberOrNull(a.records_skipped)
@@ -346,6 +378,7 @@ function buildLoadMeta(ctx) {
 /** §5.5 (1) — the dispatch table. Keys are exactly the descriptor's check ids, in order. */
 const CHECKS = {
   csv_header_drift,
+  null_street_type_pct,
   null_address_number_pct,
   skip_rate_pct,
   rows_read_floor,

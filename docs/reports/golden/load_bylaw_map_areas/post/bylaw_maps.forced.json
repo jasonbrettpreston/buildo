@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-bylaw-map-areas.js",
   "chain": "bylaw_maps",
-  "git_head": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -41,7 +41,7 @@
       "terminal": "loaded",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "51bad98974e5eb1c4418d6b596acb44b0b467942",
+      "code_sha": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -194,13 +194,13 @@
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 26.73,
+            "value": 27.72,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 1010,
+            "value": 974,
             "threshold": null,
             "status": "INFO"
           }
@@ -232,10 +232,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=258 (floor 254)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"acquired 27 feature(s) (1848357 bytes, md5 e28c4d8a…)\"}\nPIPELINE_SUMMARY:{\"records_total\":27,\"records_new\":27,\"records_updated\":0,\"records_meta\":{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":27,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"51bad98974e5eb1c4418d6b596acb44b0b467942\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"seed_hash_matches_manifest\",\"value\":{\"acquired\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"pinned\":\"e28c4d8acb8e858d28a9ff1ba6409700\"},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The acquired content hash is compared with the manifest seed_md5 before the write is prepared, so a seed whose bytes differ from the pin is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"source_counts_match_manifest\",\"value\":{\"counts\":{\"city_gis_layer80\":{\"got\":18,\"want\":18},\"ckan_wards_2018\":{\"got\":9,\"want\":9}},\"shaped_skipped_by_reason\":{}},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"Each source's shaped feature count is scored against the manifest (18 GIS, 9 wards) before the write is prepared, so a source with a wrong count is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"bad_key_count\",\"value\":{\"bad_key_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features whose area_key is not <source>:<positive integer> is scored before the write is prepared, so any malformed key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"duplicate_key_count\",\"value\":{\"duplicate_key_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features sharing an area_key is scored before the write is prepared, so any duplicate key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"null_geometry_count\",\"value\":{\"null_geometry_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features carrying no geometry is scored before the write is prepared, so any null geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"geometry_skipped_count\",\"value\":{\"invalid_geometry_skipped\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of features the geometry validation could not make valid is scored before the write is prepared, so any unrepairable geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"delete_skipped_empty_guard\",\"value\":{\"delete_skipped_empty_guard\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"bylaw_map_areas\",\"rows_acquired\":27},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:seed:bylaw-maps-600_60\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":26.73,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1010,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"bylaw_map_areas\":[\"area_key\",\"map_code\",\"source\",\"source_feature_id\",\"area_type\",\"area_name\",\"seed_sha256\",\"geom\"]},\"external\":[\"seed:bylaw-maps-600_60\"]}\n\n[load_bylaw_map_areas] completed in 1.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=259 (floor 254)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_bylaw_map_areas]\",\"msg\":\"acquired 27 feature(s) (1848357 bytes, md5 e28c4d8a…)\"}\nPIPELINE_SUMMARY:{\"records_total\":27,\"records_new\":27,\"records_updated\":0,\"records_meta\":{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":27,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":null},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"seed_hash_matches_manifest\",\"value\":{\"acquired\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"pinned\":\"e28c4d8acb8e858d28a9ff1ba6409700\"},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The acquired content hash is compared with the manifest seed_md5 before the write is prepared, so a seed whose bytes differ from the pin is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"source_counts_match_manifest\",\"value\":{\"counts\":{\"city_gis_layer80\":{\"got\":18,\"want\":18},\"ckan_wards_2018\":{\"got\":9,\"want\":9}},\"shaped_skipped_by_reason\":{}},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"Each source's shaped feature count is scored against the manifest (18 GIS, 9 wards) before the write is prepared, so a source with a wrong count is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"bad_key_count\",\"value\":{\"bad_key_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features whose area_key is not <source>:<positive integer> is scored before the write is prepared, so any malformed key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"duplicate_key_count\",\"value\":{\"duplicate_key_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features sharing an area_key is scored before the write is prepared, so any duplicate key is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"null_geometry_count\",\"value\":{\"null_geometry_count\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of seed features carrying no geometry is scored before the write is prepared, so any null geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"geometry_skipped_count\",\"value\":{\"invalid_geometry_skipped\":0},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"the map is refused before any write\",\"guarantee\":\"The count of features the geometry validation could not make valid is scored before the write is prepared, so any unrepairable geometry is refused before any write — no transaction is opened and bylaw_map_areas is untouched.\"},\"observed\":\"before_write\"},{\"metric\":\"delete_skipped_empty_guard\",\"value\":{\"delete_skipped_empty_guard\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"bylaw_map_areas\",\"rows_acquired\":27},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:seed:bylaw-maps-600_60\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":27.72,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":974,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"bylaw_map_areas\":[\"area_key\",\"map_code\",\"source\",\"source_feature_id\",\"area_type\",\"area_name\",\"seed_sha256\",\"geom\"]},\"external\":[\"seed:bylaw-maps-600_60\"]}\n\n[load_bylaw_map_areas] completed in 1.0s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 2771,
+  "pipeline_runs_max_id_before": 2946,
   "table_state": [
     {
       "table": "bylaw_map_areas",
@@ -260,7 +260,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "bylaw_map_areas": 17
+    "bylaw_map_areas": 14
   },
   "table_specs": {
     "bylaw_map_areas": {
@@ -509,7 +509,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=258 (floor 254)\",\"tag\":\"[load_bylaw_map_areas]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_bylaw_map_areas] target: load_bylaw_map_areas (descriptor.database) → database=postgres user=postgres migrations=259 (floor 254)\",\"tag\":\"[load_bylaw_map_areas]\"}",
       "{\"level\":\"INFO\",\"msg\":\"acquired 27 feature(s) (1848357 bytes, md5 e28c4d8a…)\",\"tag\":\"[load_bylaw_map_areas]\"}",
       "[load_bylaw_map_areas] completed in <DUR>"
     ],
@@ -548,7 +548,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [bylaw_map_areas]",
-    "txid_before_run2": 70706,
+    "txid_before_run2": 85996,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -557,11 +557,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 2772,
+      "id": 2947,
       "recorded_by": "harness"
     },
     {
-      "id": 2773,
+      "id": 2948,
       "recorded_by": "harness"
     }
   ],
@@ -572,5 +572,5 @@
     "scripts/load-bylaw-map-areas.js",
     "scripts/load-bylaw-map-areas.notes.json"
   ],
-  "lib_fingerprint": "24df6f49515fef1898f60cf596b3ae3185325e8694a045db16fa73e32cc363e2"
+  "lib_fingerprint": "eb842b8b180740e8350d048666aad135cd525b5961b6c9fa48b5619c4ff800ac"
 }

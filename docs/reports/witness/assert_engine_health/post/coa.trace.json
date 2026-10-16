@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "coa",
-  "source_fingerprint": "b8aa4907261cfaf40b43fc0671edb048c8ec9eb27a9b8a8ff7d35434c3ced4aa",
-  "git_head": "b87f62db541859a360f255c7eaa00f609eda4759",
+  "source_fingerprint": "98f15150fe92b076b0962ca5d81b2d6c3253323a3a47f08f3d33ef5f8167336b",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 147,
-    "distinct": 21,
-    "utility": 5,
-    "tracer_self_ms": 2.735,
-    "wall_ms": 319
+    "calls": 149,
+    "distinct": 22,
+    "utility": 7,
+    "tracer_self_ms": 4.435,
+    "wall_ms": 640
   },
   "statements": [
     {
@@ -101,7 +101,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 734,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -157,7 +157,7 @@
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
       "count": 126,
-      "rowCount": 126,
+      "rowCount": 57,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -248,7 +248,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 2,
+      "count": 3,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -275,6 +275,16 @@
       "excluded": [
         "pg_stat_user_tables"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "fa138b34753c9e4f",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
       "error": null
     }
   ],

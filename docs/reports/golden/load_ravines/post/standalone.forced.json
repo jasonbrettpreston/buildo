@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-ravines.js",
   "chain": "none",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -54,7 +54,7 @@
       "terminal": "loaded",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+      "code_sha": "31ab81f87495ceb22cbe64c3408eab29488879dd",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 1,
@@ -283,49 +283,49 @@
           },
           {
             "metric": "sys_ravines_distinct_source_dataset_version_duration_ms",
-            "value": 11,
+            "value": 2,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_ravines_area_km2_duration_ms",
-            "value": 546,
+            "value": 130,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_parcels_sign_law_violations_duration_ms",
-            "value": 13676,
+            "value": 362,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_permits_sign_law_violations_duration_ms",
-            "value": 2957,
+            "value": 38,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_coa_sign_law_violations_duration_ms",
-            "value": 486,
+            "value": 21,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_parcels_lineage_mismatch_duration_ms",
-            "value": 13678,
+            "value": 366,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 31.61,
+            "value": 206.58,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 27019,
+            "value": 4134,
             "threshold": null,
             "status": "INFO"
           }
@@ -356,16 +356,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=255 (floor 167)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"acquired 854 feature(s) (4490391 bytes, md5 97b4ac7f…)\"}\nPIPELINE_SUMMARY:{\"records_total\":854,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"ravine_load\":{\"spec_version\":\"1.2\",\"source_dataset_version\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"last_modified\":\"Mon, 14 Mar 2022 15:25:09 GMT\",\"etag\":\"\\\"1647271509.0-4490391-1365250661\\\"\",\"content_hash\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"feature_count\":854,\"polygons_inserted\":0,\"polygons_updated\":0,\"polygons_deleted\":0,\"delete_skipped_empty_guard\":false,\"mass_delete_pct\":0,\"invalid_geometry_repaired\":65,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0,\"skipped_reason\":null},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_ravines_dataset_age_warn_years\":20,\"load_ravines_count_drift_fail_pct\":0.5,\"load_ravines_geometry_update_warn_pct\":0.5,\"load_ravines_invalid_geometry_fail_pct\":0.05,\"load_ravines_mass_delete_fail_pct\":0.5,\"load_ravines_rows_changed_ratio_warn_pct\":0.5,\"load_ravines_download_timeout_ms\":60000},\"acquired\":{\"record_fields\":{\"ckan:ravine-natural-feature-protection-area-wgs84\":[\"OBJECTID\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"parcels_lineage_mismatch: 1\"],\"audit_table\":{\"phase\":6,\"name\":\"Ravine + Natural Feature Protection\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_age_years\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_bad_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_duplicate_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_feature_count\",\"value\":854,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"RAVINE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"A source that suddenly carries half as many polygons is a publisher error, not a legal boundary change — the run must FAIL before any write, and an operator override (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1) enables execution but never suppresses the FAIL verdict.\"},\"observed\":\"before_write\"},{\"metric\":\"ravine_geometry_repaired_pct\",\"value\":0.076,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"before any DB writes\",\"guarantee\":\"More than 5% of features failing geometry validation means the run must abort before any DB write — do not enter pipeline.withTransaction; no transaction state can dangle.\"},\"observed\":\"before_write\"},{\"metric\":\"ravine_write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_rows_changed_ratio\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_update_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_mass_delete_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravines_distinct_source_dataset_version\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravines_area_km2\",\"value\":110.995,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"parcels_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"permits_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"coa_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"parcels_lineage_mismatch\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:ckan:ravine-natural-feature-protection-area-wgs84\",\"value\":\"header unchanged (1 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_ravines_distinct_source_dataset_version_duration_ms\",\"value\":11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravines_area_km2_duration_ms\",\"value\":546,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_sign_law_violations_duration_ms\",\"value\":13676,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_permits_sign_law_violations_duration_ms\",\"value\":2957,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coa_sign_law_violations_duration_ms\",\"value\":486,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_lineage_mismatch_duration_ms\",\"value\":13678,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":31.61,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":27019,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"ravines\":[\"source_id\",\"geom\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"ckan:ravine-natural-feature-protection-area-wgs84\"]}\n\n[load_ravines] completed in 27.0s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=259 (floor 167)\"}\n{\"level\":\"INFO\",\"tag\":\"[load_ravines]\",\"msg\":\"acquired 854 feature(s) (4490391 bytes, md5 97b4ac7f…)\"}\nPIPELINE_SUMMARY:{\"records_total\":854,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"ravine_load\":{\"spec_version\":\"1.2\",\"source_dataset_version\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"last_modified\":\"Mon, 14 Mar 2022 15:25:09 GMT\",\"etag\":\"\\\"1647271509.0-4490391-1365250661\\\"\",\"content_hash\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"feature_count\":854,\"polygons_inserted\":0,\"polygons_updated\":0,\"polygons_deleted\":0,\"delete_skipped_empty_guard\":false,\"mass_delete_pct\":0,\"invalid_geometry_repaired\":65,\"invalid_geometry_skipped\":0,\"geometry_collection_extracted\":0,\"drift_check_passed\":true,\"mass_delete_check_passed\":true,\"geometry_update_pct\":0,\"skipped_reason\":null},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_ravines_dataset_age_warn_years\":20,\"load_ravines_count_drift_fail_pct\":0.5,\"load_ravines_geometry_update_warn_pct\":0.5,\"load_ravines_invalid_geometry_fail_pct\":0.05,\"load_ravines_mass_delete_fail_pct\":0.5,\"load_ravines_rows_changed_ratio_warn_pct\":0.5,\"load_ravines_download_timeout_ms\":60000},\"acquired\":{\"record_fields\":{\"ckan:ravine-natural-feature-protection-area-wgs84\":[\"OBJECTID\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"parcels_lineage_mismatch: 1\"],\"audit_table\":{\"phase\":6,\"name\":\"Ravine + Natural Feature Protection\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":\"https://open.toronto.ca/open-data-license/\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_no_cache_validators\",\"value\":\"last-modified+etag\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_age_years\",\"value\":4,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_override_feature_count_drift_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_override_mass_delete_present\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_bad_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_null_geometry_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_duplicate_objectid_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_feature_count\",\"value\":854,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_count_drift_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"RAVINE_ACCEPT_FEATURE_COUNT_DRIFT\",\"guarantee\":\"A source that suddenly carries half as many polygons is a publisher error, not a legal boundary change — the run must FAIL before any write, and an operator override (RAVINE_ACCEPT_FEATURE_COUNT_DRIFT=1) enables execution but never suppresses the FAIL verdict.\"},\"observed\":\"before_write\"},{\"metric\":\"ravine_geometry_repaired_pct\",\"value\":0.076,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_collection_extracted\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_skipped_pct\",\"value\":0,\"threshold\":\"pct <= 0.05\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"before any DB writes\",\"guarantee\":\"More than 5% of features failing geometry validation means the run must abort before any DB write — do not enter pipeline.withTransaction; no transaction state can dangle.\"},\"observed\":\"before_write\"},{\"metric\":\"ravine_write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_rows_changed_ratio\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_geometry_update_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_mass_delete_pct\",\"value\":0,\"threshold\":\"pct <= 0.5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_delete_skipped_empty_guard\",\"value\":false,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravines_distinct_source_dataset_version\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravines_area_km2\",\"value\":110.995,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"parcels_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"permits_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"coa_sign_law_violations\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"parcels_lineage_mismatch\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"WARN\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:ckan:ravine-natural-feature-protection-area-wgs84\",\"value\":\"header unchanged (1 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_ravines_distinct_source_dataset_version_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravines_area_km2_duration_ms\",\"value\":130,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_sign_law_violations_duration_ms\",\"value\":362,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_permits_sign_law_violations_duration_ms\",\"value\":38,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_coa_sign_law_violations_duration_ms\",\"value\":21,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_parcels_lineage_mismatch_duration_ms\",\"value\":366,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":206.58,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":4134,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"ravines\":[\"source_id\",\"geom\",\"source_dataset_version\",\"created_at\",\"updated_at\"]},\"external\":[\"ckan:ravine-natural-feature-protection-area-wgs84\"]}\n\n[load_ravines] completed in 4.1s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 2619,
+      "id": 2812,
       "pipeline": "load_ravines",
       "status": "completed_with_warnings",
-      "started_at": "2026-10-13T22:34:43.444Z",
-      "completed_at": "2026-10-13T22:35:10.438Z",
-      "duration_ms": 27022,
+      "started_at": "2026-10-16T15:54:43.722Z",
+      "completed_at": "2026-10-16T15:54:47.848Z",
+      "duration_ms": 4135,
       "records_total": 854,
       "records_new": 0,
       "records_updated": 0,
@@ -391,7 +391,7 @@
             ]
           }
         },
-        "code_sha": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+        "code_sha": "31ab81f87495ceb22cbe64c3408eab29488879dd",
         "terminal": "loaded",
         "warnings": [
           "parcels_lineage_mismatch: 1"
@@ -615,49 +615,49 @@
               "threshold": "guards.schema_drift: the acquired header equals the prior completed run's recorded header"
             },
             {
-              "value": 11,
+              "value": 2,
               "metric": "sys_ravines_distinct_source_dataset_version_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 546,
+              "value": 130,
               "metric": "sys_ravines_area_km2_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 13676,
+              "value": 362,
               "metric": "sys_parcels_sign_law_violations_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 2957,
+              "value": 38,
               "metric": "sys_permits_sign_law_violations_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 486,
+              "value": 21,
               "metric": "sys_coa_sign_law_violations_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 13678,
+              "value": 366,
               "metric": "sys_parcels_lineage_mismatch_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 31.61,
+              "value": 206.58,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 27019,
+              "value": 4134,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -694,7 +694,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 2618,
+  "pipeline_runs_max_id_before": 2811,
   "table_state": [
     {
       "table": "ravines",
@@ -715,7 +715,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "ravines": 258
+    "ravines": 50
   },
   "table_specs": {
     "ravines": {
@@ -759,7 +759,7 @@
     }
   ],
   "invariants_file": null,
-  "db_target": "127.0.0.1:54322/postgres",
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
   "runtime": "node",
   "args": [],
   "nondeterminism": [
@@ -1364,7 +1364,7 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=255 (floor 167)\",\"tag\":\"[load_ravines]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[load_ravines] target: load_ravines (descriptor.database) → database=postgres user=postgres migrations=259 (floor 167)\",\"tag\":\"[load_ravines]\"}",
       "{\"level\":\"INFO\",\"msg\":\"acquired 854 feature(s) (4490391 bytes, md5 97b4ac7f…)\",\"tag\":\"[load_ravines]\"}",
       "[load_ravines] completed in <DUR>"
     ],
@@ -1424,7 +1424,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [ravines]",
-    "txid_before_run2": 3577577,
+    "txid_before_run2": 74204,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -1433,11 +1433,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 2619,
+      "id": 2812,
       "recorded_by": "step"
     },
     {
-      "id": 2620,
+      "id": 2813,
       "recorded_by": "step"
     }
   ],
@@ -1448,5 +1448,5 @@
     "scripts/load-ravines.js",
     "scripts/load-ravines.notes.json"
   ],
-  "lib_fingerprint": "24df6f49515fef1898f60cf596b3ae3185325e8694a045db16fa73e32cc363e2"
+  "lib_fingerprint": "eb842b8b180740e8350d048666aad135cd525b5961b6c9fa48b5619c4ff800ac"
 }

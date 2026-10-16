@@ -1521,7 +1521,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 709 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 713 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -2455,8 +2455,8 @@
       "spec": "124 R-BZ",
       "title": "Compute-purity seam S1: one producer / run-history reader",
       "promised": "One readRunHistory in step/ledger.js replaces every compute-authored pipeline_runs read; ctx.producer + staleness.pins[] predicates; pin rows report the derived verdict and are never read to halt.",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G1 8, G8 23, G6 1, G9 1, G12 3); standard-gates-ledger.json rows with closing_brief \"CP-S1\"",
+      "status": "BUILT",
+      "evidence": "2d7b0d84 (H5: readRunHistory scripts/lib/step/ledger.js; ctx.producer scripts/lib/step/producer.js; staleness.pins[] op/bound/statuses evaluated by measureProducerPins, R-CB) + wf2/purity-closeout (2026-10-14): the defer_scope hook calls the total pass1IncrementalWhere; the #12c 'latest load_zoning run FAILED' compute throw is the enrich-parcels op:\"not_failed\" pin on pipeline_runs.status (producer.js PIN_OPS; operator 2026-10-14). Gate E measured 2026-10-14: 0 standard-gates-ledger.json rows with closing_brief \"CP-S1\", 0 unallowed, 0 orphans.",
       "owner": {
         "kind": "wf",
         "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S1)"
@@ -2465,15 +2465,15 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-14"
     },
     {
       "id": "CP-S2",
       "spec": "124 R-BZ",
       "title": "Compute-purity seam S2: temp tables, maintenance, transactions",
       "promised": "ctx.tempTable scoped to the txn; execution.maintenance dead-tuple selection arm writing selection-evidence rows; RECORDER upsert via flushBatch; vocab-coverage timeout from config.",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G4 19, G5 1, G6 1, G7 4, G13 1); standard-gates-ledger.json rows with closing_brief \"CP-S2\"",
+      "status": "BUILT",
+      "evidence": "2d7b0d84 (H5 S2): ctx.tempTable (scripts/lib/step/temp-table.js); execution.maintenance dead_tuple_ratio arm (R-CG); write_plan (R-CD); read_gucs (R-CF); ctx.readSnapshot with statement_timeout_minutes_from_config (R-CH). Gate E measured 2026-10-14: 0 standard-gates-ledger.json rows with closing_brief \"CP-S2\", 0 unallowed, 0 orphans.",
       "owner": {
         "kind": "wf",
         "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S2)"
@@ -2482,15 +2482,15 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-14"
     },
     {
       "id": "CP-S3",
       "spec": "124 R-BZ",
       "title": "Compute-purity seam S3: ENRICHER write seam",
       "promised": "enrich_parcels passes[] hand statements to the closed seam set; the pass3 queue and the lock DELETE go through the library (ctx.lock.held + a lock-held row).",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G5 17, G1 1); standard-gates-ledger.json rows with closing_brief \"CP-S3\"",
+      "status": "BUILT",
+      "evidence": "2d7b0d84 (H5 S3): ctx.exec seam (R-CK; enrich-parcels.js passes write through ctx.exec); scope-ledger hygiene in scripts/lib/step/scope-retire.js (R-CI); scope_retire_lock_held WARN row (R-CJ, scripts/lib/step/index.js). Gate E measured 2026-10-14: 0 standard-gates-ledger.json rows with closing_brief \"CP-S3\", 0 unallowed, 0 orphans.",
       "owner": {
         "kind": "wf",
         "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S3)"
@@ -2499,15 +2499,15 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-14"
     },
     {
       "id": "CP-S4",
       "spec": "124 R-BZ",
       "title": "Compute-purity seam S4: ctx to contract_read / defer_scope hooks",
       "promised": "contract_read/defer_scope hooks take (ctx) not (pool); ctx.config.$meta replaces the logic_variables read; duplicate guards.empty_source HALTs deleted.",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G8 6, G1 2); standard-gates-ledger.json rows with closing_brief \"CP-S4\"",
+      "status": "BUILT",
+      "evidence": "2d7b0d84 (H5 S4): contract_read/defer_scope hooks receive {pool, config, producer} (scripts/lib/step/index.js resolveHook(...)(hookCtx)); ctx.config.$meta (R-CM); uniqueness invariants as checks[] (R-CL). Gate E measured 2026-10-14: 0 standard-gates-ledger.json rows with closing_brief \"CP-S4\", 0 unallowed, 0 orphans.",
       "owner": {
         "kind": "wf",
         "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S4)"
@@ -2516,7 +2516,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-14"
     },
     {
       "id": "CP-S5",

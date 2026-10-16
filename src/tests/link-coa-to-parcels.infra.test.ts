@@ -162,34 +162,41 @@ describe('link-coa-to-parcels.js — WF1 #parcel-address-bridge Phase 2e bridge 
     path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
     'utf-8',
   );
+  // WF2 brief L extracted the tier-1a bridge SQL into scripts/lib/coa-link-sql.js
+  // (`tier1aBridgeSql`); the bridge SQL-string locks read that module's source.
+  const bridgeSrc = fs.readFileSync(
+    path.resolve(__dirname, '../../scripts/lib/coa-link-sql.js'),
+    'utf-8',
+  );
 
   it('checks address_points → parcel_address_points BEFORE the legacy parcels-table Tier 1a query', () => {
-    const bridgeIdx = src.indexOf('FROM address_points ap');
-    // Legacy block is marked by the section comment "Tier 1a (legacy)".
-    const legacyIdx = src.indexOf('Tier 1a (legacy)');
+    // The bridge is now an extracted module call; assert the script invokes
+    // `tier1aBridgeSql(` before the legacy parcels-table tier-1a query.
+    const bridgeIdx = src.indexOf('tier1aBridgeSql(');
+    const legacyIdx = src.indexOf("matchTier = 'tier_1a_exact'");
     expect(bridgeIdx).toBeGreaterThan(-1);
     expect(legacyIdx).toBeGreaterThan(-1);
     expect(bridgeIdx).toBeLessThan(legacyIdx);
   });
 
   it('bridge query JOINs through parcel_address_points to resolve parcel_id', () => {
-    expect(src).toMatch(/JOIN\s+parcel_address_points\s+pap\s+ON\s+pap\.address_point_id\s*=\s*ap\.address_point_id/);
-    expect(src).toMatch(/JOIN\s+parcels\s+p\s+ON\s+p\.id\s*=\s*pap\.parcel_id/);
+    expect(bridgeSrc).toMatch(/JOIN\s+parcel_address_points\s+pap\s+ON\s+pap\.address_point_id\s*=\s*ap\.address_point_id/);
+    expect(bridgeSrc).toMatch(/JOIN\s+parcels\s+p\s+ON\s+p\.id\s*=\s*pap\.parcel_id/);
   });
 
   it('bridge query filters to MAINT_STAGE=REGULAR + ADDRESS_STATUS in (CURRENT, NONE) with NULL fallback', () => {
     // WF3 hotfix #2 (2026-05-23) — see link-parcels equivalent.
-    expect(src).toMatch(/ap\.maint_stage\s+IS\s+NULL\s+OR\s+UPPER\(ap\.maint_stage\)\s*=\s*'REGULAR'/);
-    expect(src).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s+IN\s*\(\s*'CURRENT'\s*,\s*'NONE'\s*\)/);
+    expect(bridgeSrc).toMatch(/ap\.maint_stage\s+IS\s+NULL\s+OR\s+UPPER\(ap\.maint_stage\)\s*=\s*'REGULAR'/);
+    expect(bridgeSrc).toMatch(/ap\.address_status\s+IS\s+NULL\s+OR\s+UPPER\(ap\.address_status\)\s+IN\s*\(\s*'CURRENT'\s*,\s*'NONE'\s*\)/);
   });
 
   it('bridge query uses ST_Area(p.geom::geography) ASC + ap.address_point_id ASC tiebreakers (plan v4 H5/C2/F19)', () => {
-    expect(src).toMatch(/CASE\s+UPPER\(COALESCE\(ap\.address_class_desc/);
-    expect(src).toMatch(/WHEN\s+'STRUCTURE'\s+THEN\s+1/);
-    expect(src).toMatch(/WHEN\s+'STRUCTURE ENTRANCE'\s+THEN\s+2/);
-    expect(src).toMatch(/WHEN\s+'LAND'\s+THEN\s+3/);
-    expect(src).toMatch(/ST_Area\s*\(\s*p\.geom\s*::\s*geography\s*\)\s+ASC/i);
-    expect(src).toMatch(/ap\.address_point_id\s+ASC/);
+    expect(bridgeSrc).toMatch(/CASE\s+UPPER\(COALESCE\(ap\.address_class_desc/);
+    expect(bridgeSrc).toMatch(/WHEN\s+'STRUCTURE'\s+THEN\s+1/);
+    expect(bridgeSrc).toMatch(/WHEN\s+'STRUCTURE ENTRANCE'\s+THEN\s+2/);
+    expect(bridgeSrc).toMatch(/WHEN\s+'LAND'\s+THEN\s+3/);
+    expect(bridgeSrc).toMatch(/ST_Area\s*\(\s*p\.geom\s*::\s*geography\s*\)\s+ASC/i);
+    expect(bridgeSrc).toMatch(/ap\.address_point_id\s+ASC/);
   });
 
   it('bridge match increments BOTH tier1aExact (legacy rollup) AND tier1aViaBridge (sibling) per F17', () => {

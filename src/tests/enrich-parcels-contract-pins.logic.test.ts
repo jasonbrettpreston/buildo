@@ -131,6 +131,22 @@ describe('enrich-parcels descriptor pin — the former readZoningContract HALTs 
   it('(b) the pin reads the run through producerOptsForPin → { metaObject }', () => {
     expect(producerOptsForPin(BASE_PIN)).toEqual({ metaObject: 'zoning_layers_loaded' });
   });
+
+  // CP-S1 #12c (operator 2026-10-14; proposed row amends R-CB): the former "latest load_zoning run
+  // FAILED" compute throw is the declared op:"not_failed" pin. Chesterton's fence kept: it reads the
+  // WIDER closed terminal set (a failed run must be SEEN), never the layers read's baseline set.
+  it('(b2) declares the latest-run probe as ONE load_zoning op:"not_failed" pin over the full terminal set', () => {
+    const STATUS_PIN = CONTRACT_PINS.find((p) => p.op === 'not_failed');
+    expect(STATUS_PIN, 'the pipeline_runs.status not_failed pin must exist').toBeDefined();
+    expect(STATUS_PIN).toMatchObject({ step: 'load_zoning', stamp: 'pipeline_runs.status', op: 'not_failed' });
+    expect(STATUS_PIN?.why?.liveness?.ref).toBe('scripts/lib/compute/enrich-parcels.js');
+    const TERMINAL = ['completed', 'completed_with_warnings', 'completed_with_errors', 'failed', 'crashed', 'cancelled'];
+    expect(producerOptsForPin(STATUS_PIN)).toEqual({ statuses: TERMINAL });
+    const rowOf = (status: string) => evaluatePins([STATUS_PIN], { load_zoning: found({}, { status }) })[0];
+    expect(rowOf('failed').result).toBe('FAIL');
+    expect(rowOf('failed').status).toBe('FAIL');
+    expect(rowOf('completed_with_errors').result).toBe('PASS');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -177,14 +193,14 @@ describe('readZoningContract — reads via ctx.producer (no ledger SQL of its ow
     // The two contract reads come FIRST, in this order, with these identities (Chesterton's fence:
     // the #12c probe's terminal set is NOT the layers read's baseline set); s1p-8b's readZoningChange
     // adds two more producer reads after them (own baseline, zoning window).
-    expect(producer).toHaveBeenCalledTimes(4);
-    expect(producer.mock.calls[0]).toEqual([
-      'load_zoning',
-      { statuses: 'terminal', orderBy: 'started_at', excludeWarnSkip: false, onError: 'throw' },
-    ]);
-    expect(producer.mock.calls[1]?.[1]).toEqual({ metaObject: 'zoning_layers_loaded' });
+    // CP-S1 #12c: the latest-run probe is the declared not_failed pin now, so the hook makes 3 reads:
+    // the layers read, then readZoningChange's two (own baseline, zoning window).
+    expect(producer).toHaveBeenCalledTimes(3);
+    expect(producer.mock.calls[0]?.[1]).toEqual({ metaObject: 'zoning_layers_loaded' });
     // the layers read's identity IS the declared pin's identity (same run the runner evaluated).
-    expect(producerOptsForPin(BASE_PIN)).toEqual(producer.mock.calls[1]?.[1]);
+    expect(producerOptsForPin(BASE_PIN)).toEqual(producer.mock.calls[0]?.[1]);
+    // no started_at-ordered terminal probe remains in the hook
+    expect(producer.mock.calls.some((c) => (c[1] as Record<string, unknown> | undefined)?.orderBy === 'started_at')).toBe(false);
   });
 
   it('(c2) no defaults: a zoning_layers_loaded-less read surfaces `undefined` loudly (never {} silently)', async () => {
@@ -199,9 +215,10 @@ describe('readZoningContract — reads via ctx.producer (no ledger SQL of its ow
     await expect(readZoningContract(nullMeta.ctx)).rejects.toThrow(TypeError);
   });
 
-  it('(d) latest failed → the named residual HALT; ERROR → fail closed; MISSING → proceeds', async () => {
+  it('(d) the hook throws no "latest run FAILED" halt (the not_failed pin owns it); ERROR → fail closed; MISSING → proceeds', async () => {
+    expect(SRC).not.toMatch(/run FAILED — halting/);
     const failed = stubCtx({ probe: found({}, { status: 'failed' }) });
-    await expect(readZoningContract(failed.ctx)).rejects.toThrow(/latest sources:load_zoning run FAILED/);
+    await expect(readZoningContract(failed.ctx)).resolves.toMatchObject({ layers: { base: true, a: 1 } });
 
     const errored = stubCtx({ probe: { reason: 'ERROR', error: 'boom' } });
     await expect(readZoningContract(errored.ctx)).rejects.toThrow(/boom/);

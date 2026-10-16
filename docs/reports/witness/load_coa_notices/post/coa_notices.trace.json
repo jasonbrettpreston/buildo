@@ -3,14 +3,14 @@
   "step": "scripts/load-coa-notices.js",
   "chain": "coa_notices",
   "source_fingerprint": "c550b313c460a328f62be96137746eb29c2b2a420e4a63fdfc147531d9e1c375",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
     "calls": 15,
     "distinct": 13,
     "utility": 5,
-    "tracer_self_ms": 4.275,
-    "wall_ms": 1394
+    "tracer_self_ms": 0.791,
+    "wall_ms": 220
   },
   "statements": [
     {
@@ -56,7 +56,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [

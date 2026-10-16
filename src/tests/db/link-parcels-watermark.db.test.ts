@@ -135,8 +135,8 @@ describe.skipIf(!dbAvailable())('O4 row 7 — parcel_linked_at is stamped only w
   async function seedMatchablePermit(parcelId: number) {
     await pool.query(
       `INSERT INTO address_points (address_point_id, latitude, longitude, geom,
-         addr_num_normalized, linear_name_normalized, maint_stage, address_status, address_class_desc)
-       VALUES ($1, 43.75, -79.2, ST_SetSRID(ST_MakePoint(-79.2,43.75),4326), '77','LPR7MATCHST','REGULAR','CURRENT','STRUCTURE')`,
+         addr_num_normalized, linear_name_normalized, street_type_normalized, maint_stage, address_status, address_class_desc)
+       VALUES ($1, 43.75, -79.2, ST_SetSRID(ST_MakePoint(-79.2,43.75),4326), '77','LPR7MATCHST','RD','REGULAR','CURRENT','STRUCTURE')`,
       [AP_MATCH],
     );
     await pool.query(

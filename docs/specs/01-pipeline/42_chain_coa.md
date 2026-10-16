@@ -98,6 +98,7 @@ with new CoA linkage are reclassified on the next daily permits chain run (≤24
 4. **Address linking** — uses pre-computed `street_name_normalized` columns (populated at ingestion by `scripts/lib/address.js`). Ward is a confidence **booster**, not a gatekeeper (80% of permits lack ward data):
    - Pre-pass: unlinks cross-ward mismatches from prior runs
    - Tier 1a: `street_num + street_name_normalized` + ward match → 0.95
+   - Since 2026-10-10 the Tier 1a bridge also applies Spec 54 §3 level 0 (street type, address point first): a same-number, same-name street of another type never wins the tiebreak.
    - Tier 1b: `street_num + street_name_normalized` + permit ward NULL → 0.85
    - Tier 1c: `street_num + street_name_normalized` + ward conflict → 0.10 (flagged)
    - Tier 2a: `street_name_normalized` only + ward match → 0.60

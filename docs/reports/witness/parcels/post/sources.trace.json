@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-parcels.js",
   "chain": "sources",
-  "source_fingerprint": "9798faeacafc8e16eae3650b06a84b512fcf0a31b2ee27f68f4709e047db41be",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "102fda127ae38b86d16442a054fe88caee8fe86241d6b7206d90a544fc10c0b9",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
     "calls": 162,
     "distinct": 14,
     "utility": 8,
-    "tracer_self_ms": 8244.077,
-    "wall_ms": 271953
+    "tracer_self_ms": 1317.877,
+    "wall_ms": 64579
   },
   "statements": [
     {
@@ -53,7 +53,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -174,7 +174,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 6,
+      "rowCount": 9,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -227,7 +227,7 @@
   ],
   "transactions": [
     {
-      "client": "1888:3",
+      "client": "12459:3",
       "write_fingerprints": [
         "74861d67d045ac4d"
       ]

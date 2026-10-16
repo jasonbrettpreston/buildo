@@ -22,7 +22,8 @@
           "longitude",
           "maint_stage",
           "place_name",
-          "retired_at"
+          "retired_at",
+          "street_type_normalized"
         ]
       },
       "writes": {
@@ -43,7 +44,8 @@
           "longitude",
           "maint_stage",
           "place_name",
-          "retired_at"
+          "retired_at",
+          "street_type_normalized"
         ]
       },
       "violations": [],

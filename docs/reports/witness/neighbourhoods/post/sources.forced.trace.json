@@ -1,16 +1,16 @@
 {
   "trace_version": 1,
-  "step": "scripts\\load-neighbourhoods.js",
+  "step": "scripts/load-neighbourhoods.js",
   "chain": "sources",
   "source_fingerprint": "069505a60c5847f2e1215af0ee0eb66638bb65eb26941969af651c16d2964610",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 21,
-    "distinct": 16,
-    "utility": 9,
-    "tracer_self_ms": 15.986,
-    "wall_ms": 5317
+    "calls": 19,
+    "distinct": 15,
+    "utility": 7,
+    "tracer_self_ms": 2.786,
+    "wall_ms": 2226
   },
   "statements": [
     {
@@ -40,16 +40,6 @@
       ]
     },
     {
-      "fingerprint": "1b0f8cbcf8a51ea6",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "295268ea529014a0",
       "kind": "read",
       "count": 1,
@@ -65,7 +55,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -217,7 +207,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 3,
+      "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -247,7 +237,7 @@
   ],
   "transactions": [
     {
-      "client": "18756:2",
+      "client": "16298:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]

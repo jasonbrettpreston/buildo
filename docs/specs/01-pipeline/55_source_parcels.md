@@ -50,7 +50,7 @@ The Toronto Open Data Property Boundaries CSV historically published 7 columns. 
 | `linear_name_full` | TEXT | **LEGACY** — same as above | |
 | `addr_num_normalized` | TEXT | **LEGACY** — same as above; cross-table JOIN key with Spec 54 `address_points.addr_num_normalized` | Shared normalizer in `scripts/lib/address-normalizers.js` |
 | `street_name_normalized` | TEXT | **LEGACY** — same as above; JOIN key with `address_points.linear_name_normalized` | |
-| `street_type_normalized` | TEXT | **LEGACY** — same as above | |
+| `street_type_normalized` | TEXT | **LEGACY** — same as above; since 2026-10-10 only the FALLBACK for street-type disambiguation (Spec 54 §3 level 0 reads the address point's own type first) | |
 | `date_effective` | DATE | **LEGACY** — same as above | |
 | `stated_area_raw` | TEXT | CSV `STATEDAREA` | |
 | `lot_size_sqm` / `lot_size_sqft` | NUMERIC | **CSV `STATEDAREA`** via `parseStatedArea` (`scripts/lib/compute/load-parcels.js`) — the SOURCE-stated lot area, **not** derived from geometry. Accepted shapes: `<n> sq.m`; a bare number `<n>` = m² (WF3 lot-size 2026-10-01: 98.5% of 10,121 bare values agree with `ST_Area(geom::geography)` within 5%, 0% if read as sq.ft); `<n> sq.ft` ÷ 10.7639. Zero, negative, `unknown`/`None` and any other shape → no stated value (counted by the loader's `stated_area_unparsed` INFO row). **Durability:** both columns declare `on_empty:"preserve_null"` — a run with no stated value never erases a stored lot (stated or `geom_backfill`); a stated value always supersedes. NULL = no lot from any source. | |

@@ -3,14 +3,14 @@
   "step": "scripts/load-ravines.js",
   "chain": "sources",
   "source_fingerprint": "bff0862c5455a9e72e3db28ae1a2ee2083eada64ed069b19bc1dfc896e0d5df0",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
     "calls": 28,
     "distinct": 21,
     "utility": 10,
-    "tracer_self_ms": 59.601,
-    "wall_ms": 29115
+    "tracer_self_ms": 7.626,
+    "wall_ms": 15612
   },
   "statements": [
     {
@@ -84,7 +84,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -303,7 +303,7 @@
   ],
   "transactions": [
     {
-      "client": "11452:2",
+      "client": "70856:2",
       "write_fingerprints": [
         "90c7ddf48a145ae1",
         "f50d1a3052763050"

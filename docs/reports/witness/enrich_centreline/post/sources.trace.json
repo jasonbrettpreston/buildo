@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "4e974638db6dd24ea84a6215687851547016d40e82e1f8b061a73e0e985312f2",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "7714eef4b15de8ae5b97bc5c15eccbb3b7631d07543c5ebf9ad0c70bd53e3944",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 51,
-    "distinct": 33,
+    "calls": 52,
+    "distinct": 34,
     "utility": 14,
-    "tracer_self_ms": 10.382,
-    "wall_ms": 577814
+    "tracer_self_ms": 1.675,
+    "wall_ms": 90826
   },
   "statements": [
     {
@@ -161,7 +161,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 480480,
+      "rowCount": 0,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -188,7 +188,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -218,6 +218,20 @@
       "excluded": [
         "pg_class",
         "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
       ],
       "error": null
     },
@@ -498,7 +512,7 @@
   ],
   "transactions": [
     {
-      "client": "22544:3",
+      "client": "76821:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

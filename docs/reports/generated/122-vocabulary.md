@@ -310,7 +310,7 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `pins[].why.liveness` | `none` \| object {kind, ref} | † |
 | `pins[].why.liveness.kind` | `check` · `file` · `table` · `column` · `external` · `spec` | † ! |
 | `pins[].why.liveness.ref` | string | † |
-| `pins[].op` | `equals` · `nonzero` · `true` | — |
+| `pins[].op` | `equals` · `nonzero` · `true` · `not_failed` | — |
 | `pins[].statuses` | list (min 1) of `completed` · `completed_with_warnings` · `completed_with_errors` · `failed` · `crashed` · `cancelled` | — |
 | `pins[].meta_object` | string `^[a-z][a-z0-9_]*$` | — |
 | `pins[].bound` | string `^pct (<=|>=) [0-9]*\.?[0-9]+$` | — |

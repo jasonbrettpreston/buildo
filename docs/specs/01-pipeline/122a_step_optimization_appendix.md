@@ -810,3 +810,15 @@ Every new step and every conversion walks this list before its first capture. Ea
 9. **Runbook stop bounds quote the governing spec's population** (Spec 65:302 bounds residential lots, not all parcels).
 10. **Host:** local Supabase DSM `mmap`; worktree DB env via `DOTENV_CONFIG_PATH` for one process; `db:generate` on a restored DB is spliced, not taken whole (`docs/runbook/dev_host_setup.md` §4).
 11. **A recapture repeats the original capture's flags.** A capture records its own `invariants_file`; retaking it without `--invariants=<that file>` falls back to the descriptor's invariants and drops the rest, which G8 reads as unexplained diffs (refresh_snapshot, H6 A2, 2026-10-16). Read `invariants_file`, `chain` and `args` from the previous capture first.
+12. **A recapture also replays what the capture does not store in `args`** (V3 fleet night, 2026-10-16). (a) Harness projections: a `table_specs[].columns_source`/`order_source` of `"arg"` means the original passed `--table-columns`/`--table-order`; rebuild them from the previous capture, or the descriptor default re-hashes clock columns (`updated_at`, `last_seen_at`, `linked_at`) and G8 fails (`capture-step-golden.js:487-498`). (b) Brackets: a nonzero capture taken inside a perturbation bracket (`ingestor-forced-cohort.js`, the `*-cohort-differential.js` scripts, `link-massing-healing-cohort.js`) is replayed through that bracket with its committed cohort, never as a plain run (#38). (c) Inputs: a filesystem-source step needs its file in this worktree's `data/` (gitignored; clone it in with `cp -c`), or it skips with `no_source_file`.
+
+
+---
+
+## Appendix §A28 — RE-FREEZE #32–#33 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16
+
+Moved from Spec 122 — V3 fleet night (QUEUE 2026-10-16): Spec 122 had ~80 B of arm (iv) headroom and owes the RE-FREEZE #35 entry (CP-S1 `not_failed` pin op). The #32 and #33 entries stay in force; #32 detail is §A24, #33 detail §A25. New RE-FREEZE entries are still added to Spec 122 §8.
+
+**RE-FREEZE #32 — `inputs.reads.externals[].format` "pdf_document_set" + `externals[].manifest` + `externals[].pdf` (2026-10-07, WF1 load_coa_notices, Spec 129 §11):** a pinned, sha256-verified PDF document SET read in memory; one additive arm in `acquire.js` (`acquirePdfDocumentSet`) and one dispatch branch in `runIngestPhase` (compute seams `shapeDocument` / `reconcileDocuments`); every other format byte-identical. Detail 122a §A24; register row R-BY.
+
+**RE-FREEZE #33 — `outputs.writes[].columns[].materiality` (2026-10-08, WF3 parcels geom drift Commit 2, Spec 55):** an opt-in per-column change predicate `{sql_function, tolerance_from_config, carries}`. The codegen renders `M = public.<fn>(<table>.<col>, EXCLUDED.<col>)` as the column's own SET, the carried columns' SETs, every `set_null_on_change_of` arm watching it, and its WHERE term. `validate.js` adds 7 refusals. Every axis-free target renders byte-identical (the 0t/0u ravines/address_points pins and step-library T5/T7 are unchanged). Adopted by parcels only (`geom`, carrying `geometry`). Detail 122a §A25; register row R-BX.

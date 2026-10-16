@@ -105,6 +105,7 @@ function buildMatchSql(descriptor, config, mode) {
       WITH input_permits (permit_num, revision_num, addr_num, street_name, street_type) AS (
         SELECT unnest($1::text[]), unnest($2::text[]), unnest($3::text[]), unnest($4::text[]), unnest($5::text[])
       ),
+      -- Spec 54 §3 level 0 (WF2 2026-10-10, mig 257): the address point's own parsed type first; the frozen parcel column (pre-2026-05-20 strip) only as fallback. LP-D9's strictness is unchanged.
       -- LP-D9 (commit 8a, 2026-08-30): address_points carries NO street-type column of
       -- its own (linear_name_normalized is type-less), so this CTE originally matched on
       -- house-number + street-name ONLY -- a same-name-different-type collision (e.g. "26
@@ -121,6 +122,10 @@ function buildMatchSql(descriptor, config, mode) {
       address_points_exact AS (
         SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
           ip.permit_num, ip.revision_num, pap.parcel_id,
+          -- H4-G (observability seat): make the COALESCE decision visible. TRUE means the
+          -- permit's type was satisfied by the ADDRESS POINT's own street_type_normalized;
+          -- FALSE means it fell through to the parcel column (the corner-lot fallback).
+          (ap.street_type_normalized IS NOT NULL) AS via_ap_type,
           'address_points_exact' AS match_type, ${addressPointsExactConfidence}::numeric AS confidence
         FROM input_permits ip
         JOIN address_points ap
@@ -132,8 +137,8 @@ function buildMatchSql(descriptor, config, mode) {
          AND ap.retired_at IS NULL
         JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
         JOIN parcels p ON p.id = pap.parcel_id
-         AND p.street_type_normalized = ip.street_type
-        WHERE (ip.street_type = '' OR p.street_type_normalized = ip.street_type)
+         AND COALESCE(ap.street_type_normalized, p.street_type_normalized) = ip.street_type
+        WHERE (ip.street_type = '' OR COALESCE(ap.street_type_normalized, p.street_type_normalized) = ip.street_type)
         ORDER BY ip.permit_num, ip.revision_num,
           CASE UPPER(COALESCE(ap.address_class_desc, ''))
             WHEN 'STRUCTURE'           THEN 1
@@ -147,6 +152,7 @@ function buildMatchSql(descriptor, config, mode) {
       exact AS (
         SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
           ip.permit_num, ip.revision_num, pa.id AS parcel_id,
+          NULL::boolean AS via_ap_type,
           'exact_address' AS match_type, ${exactAddressConfidence}::numeric AS confidence
         FROM input_permits ip
         JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
@@ -162,6 +168,7 @@ function buildMatchSql(descriptor, config, mode) {
       name_only AS (
         SELECT DISTINCT ON (ip.permit_num, ip.revision_num)
           ip.permit_num, ip.revision_num, pa.id AS parcel_id,
+          NULL::boolean AS via_ap_type,
           'name_only' AS match_type, ${nameOnlyConfidence}::numeric AS confidence
         FROM input_permits ip
         JOIN parcels pa ON pa.addr_num_normalized = ip.addr_num
@@ -281,6 +288,7 @@ function buildMatchSql(descriptor, config, mode) {
     // again — "this class must never be invisible again." Empty-type-tolerant rows
     // (permit street_type '' or NULL) are correctly excluded: they were never claimed to
     // satisfy this invariant, mirroring Strategy 1b's own empty-type disposition.
+    // Spec 54 level 0 (2026-10-10): judged on the address point's type, parcel as fallback (else ~4.7K corner pairs read as false conflicts).
     street_type_mismatch_sql:
       `SELECT COUNT(*) AS n
          FROM permit_parcels pp
@@ -288,7 +296,7 @@ function buildMatchSql(descriptor, config, mode) {
          JOIN parcels pa ON pa.id = pp.parcel_id
         WHERE pp.match_type = 'address_points_exact'
           AND p.street_type IS NOT NULL AND TRIM(p.street_type) != ''
-          AND UPPER(TRIM(p.street_type)) != pa.street_type_normalized;`,
+          AND NOT EXISTS (SELECT 1 FROM parcel_address_points pap JOIN address_points ap ON ap.address_point_id = pap.address_point_id WHERE pap.parcel_id = pp.parcel_id AND ap.retired_at IS NULL AND COALESCE(ap.street_type_normalized, pa.street_type_normalized) = UPPER(TRIM(p.street_type)));`,
   };
 }
 
@@ -297,12 +305,21 @@ function classifyPrimary(rows) {
   let addressPointsExact = 0;
   let exactLegacy = 0;
   let nameOnly = 0;
+  // H4-G (observability seat): split Strategy 1a's matches by which side of the
+  // COALESCE decided the street type. via_ap_type TRUE ⇒ the address point's own
+  // street_type_normalized carried it; FALSE ⇒ the parcel-column fallback did.
+  let matchesTier1ApType = 0;
+  let matchesTier1ParcelTypeFallback = 0;
   for (const r of rows) {
-    if (r.match_type === 'address_points_exact') addressPointsExact++;
+    if (r.match_type === 'address_points_exact') {
+      addressPointsExact++;
+      if (r.via_ap_type === true) matchesTier1ApType++;
+      else matchesTier1ParcelTypeFallback++;
+    }
     else if (r.match_type === 'exact_address') exactLegacy++;
     else if (r.match_type === 'name_only') nameOnly++;
   }
-  return { rows, addressPointsExact, exactLegacy, nameOnly };
+  return { rows, addressPointsExact, exactLegacy, nameOnly, matchesTier1ApType, matchesTier1ParcelTypeFallback };
 }
 
 /** Strategy 3 Step 1 (containment) rows — already typed by the SQL. */
@@ -332,6 +349,22 @@ function tier_1_exact_address(ctx) {
 
 function tier_1_via_bridge(ctx) {
   ctx.report('tier_1_via_bridge', { violations: 0, detail: ctx.matched.address_points_exact });
+}
+
+/** H4-G (observability seat) — the always-INFO audit row for Strategy 1a's COALESCE, mirroring
+ * permits_watermarked's shape exactly: counts the address_points_exact matches whose street type
+ * was decided by the ADDRESS POINT's own street_type_normalized. Paired with
+ * matches_tier_1_parcel_type_fallback below; the two sum to tier_1_via_bridge. */
+function matches_tier_1_ap_type(ctx) {
+  ctx.report('matches_tier_1_ap_type', { violations: 0, detail: ctx.matched.matchesTier1ApType || 0 });
+}
+
+/** H4-G (observability seat) — the always-INFO audit row for Strategy 1a's COALESCE fallback
+ * branch, mirroring permits_watermarked's shape exactly: counts the address_points_exact matches
+ * whose street type was decided by the PARCEL's street_type_normalized (the corner-lot rule,
+ * Spec 54 level 0). Sources ctx.matched.matchesTier1ParcelTypeFallback. */
+function matches_tier_1_parcel_type_fallback(ctx) {
+  ctx.report('matches_tier_1_parcel_type_fallback', { violations: 0, detail: ctx.matched.matchesTier1ParcelTypeFallback || 0 });
 }
 
 function tier_2_name_only(ctx) {
@@ -429,6 +462,8 @@ const CHECKS = {
   permits_processed,
   tier_1_exact_address,
   tier_1_via_bridge,
+  matches_tier_1_ap_type,
+  matches_tier_1_parcel_type_fallback,
   tier_2_name_only,
   tier_3_spatial,
   tier_3_polygon,
@@ -457,6 +492,11 @@ function buildLinkMeta(ctx) {
     permits_processed: m.permits_processed,
     matches_tier_1_exact: m.address_points_exact + m.exact_legacy,
     matches_tier_1_via_bridge: m.address_points_exact,
+    // H4-G (observability seat): Strategy 1a matches on COALESCE(ap.street_type_normalized,
+    // p.street_type_normalized) — these two split that match count by WHICH side decided,
+    // so the run record says so rather than leaving the 1a predicate opaque.
+    matches_tier_1_ap_type: m.matchesTier1ApType || 0,
+    matches_tier_1_parcel_type_fallback: m.matchesTier1ParcelTypeFallback || 0,
     matches_tier_2_name: m.name_only,
     matches_tier_3_spatial: m.spatial_polygon + m.spatial,
     matches_tier_3_polygon: m.spatial_polygon,

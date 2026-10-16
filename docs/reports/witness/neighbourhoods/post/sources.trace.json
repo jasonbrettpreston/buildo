@@ -3,14 +3,14 @@
   "step": "scripts/load-neighbourhoods.js",
   "chain": "sources",
   "source_fingerprint": "069505a60c5847f2e1215af0ee0eb66638bb65eb26941969af651c16d2964610",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
     "calls": 19,
     "distinct": 15,
     "utility": 7,
-    "tracer_self_ms": 15.986,
-    "wall_ms": 7236
+    "tracer_self_ms": 2.852,
+    "wall_ms": 2087
   },
   "statements": [
     {
@@ -55,7 +55,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -237,7 +237,7 @@
   ],
   "transactions": [
     {
-      "client": "6048:2",
+      "client": "34296:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]

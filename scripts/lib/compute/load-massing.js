@@ -198,7 +198,10 @@ function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
   const rr = rowsRead(a);
   if (rr == null || rr <= 0) {
-    return ctx.report('skip_rate_pct', { violations: 0, detail: null });
+    // WF3 2026-10-14: nothing read ⇒ no skip rate. A fabricated `violations: 0` PASSed the
+    // `viol == 0` limit ("green because it never looked", Spec 124 §7 LM-D14); no count
+    // renders `unevaluable` at the declared severity. Mirrors null_address_number_pct.
+    return ctx.report('skip_rate_pct', { value: null, detail: { reason: 'no_input' } });
   }
   const pct = (skippedCount(a) / rr) * 100;
   ctx.report('skip_rate_pct', {

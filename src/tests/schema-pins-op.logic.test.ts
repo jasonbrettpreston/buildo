@@ -201,6 +201,32 @@ describe('staleness.pins[] — the S1-P `op` / `statuses` / `meta_object` keys (
     pin(validateItem.errors, '', 'anyOf');
   });
 
+  // CP-S1 #12c (operator 2026-10-14; proposed row amends R-CB): the run-status op.
+  const TERMINAL = ['completed', 'completed_with_warnings', 'completed_with_errors', 'failed', 'crashed', 'cancelled'];
+  const notFailed = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    step: 'load_zoning', stamp: 'pipeline_runs.status', op: 'not_failed', statuses: TERMINAL, ...overrides,
+  });
+
+  it('op:"not_failed" on pipeline_runs.status with a declared terminal set is VALID', () => {
+    expect(validateItem(notFailed()), `errors=${JSON.stringify(validateItem.errors, null, 1)}`).toBe(true);
+  });
+
+  it('op:"not_failed" on any other stamp is INVALID (it reads the run status only)', () => {
+    expect(validateItem(notFailed({ stamp: 'records_meta.x' })), 'not_failed over a records_meta stamp must be refused').toBe(false);
+    pin(validateItem.errors, '/stamp', 'const');
+  });
+
+  it('op:"not_failed" WITHOUT statuses is INVALID (a verdict read declares its terminal set, R-CB S1-P)', () => {
+    const item = notFailed();
+    delete item.statuses;
+    expect(validateItem(item), 'not_failed with no statuses must be refused').toBe(false);
+    pin(validateItem.errors, '', 'required', ['missingProperty', 'statuses']);
+  });
+
+  it('op:"not_failed" WITH an equals literal is INVALID', () => {
+    expect(validateItem(notFailed({ equals: 'failed' })), 'not_failed + equals must be refused').toBe(false);
+  });
+
   it('x-trust-op names the real executor, and the sibling x-trust names the pin evaluator', () => {
     // The annotation is a claim about WHERE the op is executed; a drifted path is a lie with
     // a citation, so it is pinned to the actual module#function.

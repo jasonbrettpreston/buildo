@@ -5373,6 +5373,16 @@
       "group": "Source Ingestion"
     }
   },
+  "address_points_null_street_type_max_pct": {
+    "default": 0.06,
+    "type": "number",
+    "description": "Spec 124 Rule 3 — WARN ceiling on the FRACTION (0–1) of shaped address points with no parsed street type (Spec 54 §3 level 0, mig 257). Measured 0.044 on 2026-10-10. CONSUMED by load_address_points (null_street_type_pct, via checks[].limit_from_config).",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
   "parcels_download_timeout_ms": {
     "default": 60000,
     "type": "number",
@@ -5679,6 +5689,36 @@
     "min": 1e-8,
     "max": 5e-7,
     "description": "WF3 parcels geom drift (Spec 55 Known Failure Modes; Spec 124 Rule 3) — degrees. A parcel shape change is MATERIAL only when some vertex moves farther than this from the other shape (discrete Hausdorff), or its structure, vertex count or validity changes; sub-tolerance publisher jitter and ring rotation are not. 1e-7 ≈ 1.1 cm lat / 0.8 cm lon (the centroid numeric(10,7) quantum, 10x the largest measured CKAN jitter). Bounds [1e-8, 5e-7] are enforced in the SQL function too: 0 would recreate the 2026-09-24 citywide invalidation. Fail-closed: a missing or out-of-bounds row RAISEs on the first inexact geometry write. CONSUMED by public.parcels_geom_materially_changed() (migration 251) — read by the trg_parcels_geom_invalidation trigger function and (after Commit 2) the load_parcels upsert. Operator-tunable.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "parcels_metres_per_degree_lat": {
+    "default": 111320,
+    "type": "number",
+    "min": 110574,
+    "max": 111694,
+    "description": "Operator 2026-10-14 (Spec 124 Rule 3; was the R-BZ physical_constant mPerDegLat) — metres per degree of latitude, the equirectangular projection factor load_parcels uses to turn a parcel ring's lng/lat into local metres (longitude scales by cos(centroid latitude)) before the minimum-bounding-rectangle frontage/depth and the shoelace polygon area behind is_irregular. A PHYSICAL CONSTANT, not a policy knob: 111320 is the legacy value carried VERBATIM (zero-diff). Bounds are deliberately tight — [110574, 111694] is the WGS84 meridian degree length from the equator to the pole, so any value outside it is physically impossible. Editing it rescales frontage_m/depth_m on the next load. CONSUMED by scripts/lib/compute/load-parcels.js shapeRecord via the resolved config.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "parcels_sqm_to_sqft": {
+    "default": 10.7639,
+    "type": "number",
+    "min": 10.7639,
+    "max": 10.7639,
+    "description": "Square feet per square metre — a unit definition, not a tunable (operator 2026-10-14; Spec 124 R-AW form, R-BC(b) strict zero: was the SQM_TO_SQFT compute const). Bounds are pinned min = max = 10.7639 so the value is visible in admin but any other value refuses the step (on_invalid fail). Converts lot_size_sqm to lot_size_sqft and a '<n> sq.ft' STATEDAREA to m². CONSUMED by scripts/lib/compute/load-parcels.js shapeRecord via the resolved config.",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "parcels_m_to_ft": {
+    "default": 3.28084,
+    "type": "number",
+    "min": 3.28084,
+    "max": 3.28084,
+    "description": "Feet per metre — a unit definition, not a tunable (operator 2026-10-14; Spec 124 R-AW form, R-BC(b) strict zero: was the M_TO_FT compute const). Bounds are pinned min = max = 3.28084 so the value is visible in admin but any other value refuses the step (on_invalid fail). Converts frontage_m/depth_m to frontage_ft/depth_ft. CONSUMED by scripts/lib/compute/load-parcels.js shapeRecord via the resolved config.",
     "admin": {
       "group": "Source Ingestion"
     }

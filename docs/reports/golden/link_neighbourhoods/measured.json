@@ -2,48 +2,48 @@
   "entries": {
     "neighbourhood_id_orphans": {
       "value": 0,
-      "cost_ms": 157,
-      "at": "2026-10-13T22:22:11.215Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2596",
+      "cost_ms": 35,
+      "at": "2026-10-16T17:02:31.861Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "2879",
       "chain": null,
-      "sample_n": 15
+      "sample_n": 18
     },
     "negative_neighbourhood_ids": {
       "value": 0,
-      "cost_ms": 34,
-      "at": "2026-10-13T22:22:11.215Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2596",
+      "cost_ms": 7,
+      "at": "2026-10-16T17:02:31.861Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "2879",
       "chain": null,
-      "sample_n": 15
+      "sample_n": 18
     },
     "linked_permit_outside_its_own_neighbourhood": {
       "value": 0,
-      "cost_ms": 810,
-      "at": "2026-10-13T22:22:11.215Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2596",
+      "cost_ms": 156,
+      "at": "2026-10-16T17:02:31.861Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "2879",
       "chain": null,
-      "sample_n": 15
+      "sample_n": 18
     },
     "stamped_permits_with_null_coordinates": {
       "value": 0,
-      "cost_ms": 557,
-      "at": "2026-10-13T22:22:11.215Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2596",
+      "cost_ms": 75,
+      "at": "2026-10-16T17:02:31.861Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "2879",
       "chain": null,
-      "sample_n": 15
+      "sample_n": 18
     },
     "neighbourhood_id_unreachable_no_coords": {
-      "value": 10486,
-      "cost_ms": 648,
-      "at": "2026-10-13T22:22:11.215Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2596",
+      "value": 13499,
+      "cost_ms": 68,
+      "at": "2026-10-16T17:02:31.861Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "2879",
       "chain": null,
-      "sample_n": 15
+      "sample_n": 18
     }
   }
 }

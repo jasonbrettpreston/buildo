@@ -2,30 +2,30 @@
   "entries": {
     "lat_xor_lng_null_count": {
       "value": 0,
-      "cost_ms": 206,
-      "at": "2026-10-13T22:27:20.331Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2609",
+      "cost_ms": 23,
+      "at": "2026-10-16T18:45:20.421Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "3001",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 18
     },
     "geocoded_at_set_but_no_geo_id_count": {
       "value": 0,
-      "cost_ms": 425,
-      "at": "2026-10-13T22:27:20.331Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2609",
+      "cost_ms": 23,
+      "at": "2026-10-16T18:45:20.421Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "3001",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 18
     },
     "coords_outside_toronto_bbox_count": {
       "value": 0,
-      "cost_ms": 175,
-      "at": "2026-10-13T22:27:20.331Z",
-      "commit": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
-      "run_id": "2609",
+      "cost_ms": 22,
+      "at": "2026-10-16T18:45:20.421Z",
+      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+      "run_id": "3001",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 18
     }
   }
 }

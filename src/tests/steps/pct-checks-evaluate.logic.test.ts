@@ -252,16 +252,52 @@ describe('WF3 pct checks — the reported ratio, not a flag (Spec 122 §5.5, 124
     });
   });
 
-  describe('empty acquired is PASS-SAFE (value 0, detail null)', () => {
-    it.each<[StepName, string]>([
-      ['address_points', 'skip_rate_pct'],
-      ['address_points', 'null_address_number_pct'],
-      ['parcels', 'skip_rate_pct'],
-      ['parcels', 'null_address_pct'],
-    ])('%s: %s on {} reports {value:0, detail:null} and PASSes', (step, checkId) => {
-      const { obs, row: r } = row(step, checkId, {});
-      expect(obs).toEqual({ value: 0, detail: null });
-      expect(r.status).toBe('PASS');
+  describe('empty acquired is never PASS (value null, detail.reason no_input)', () => {
+    // WF3s 2026-10-14: this block pinned all four pct checks PASS-SAFE (`{value:0, detail:null}`
+    // ⇒ PASS on an empty `acquired`). Each left it in its own WF3 (the null_street_type_pct
+    // precedent): nothing examined ⇒ value null / no_input ⇒ `unevaluable` at the declared
+    // severity (Spec 124 §7 LM-D14, Rule 10).
+    it('address_points: null_address_number_pct on {} reports {value:null, detail:{reason:no_input}} and WARNs, never PASS', () => {
+      const { obs, row: r } = row('address_points', 'null_address_number_pct', {});
+      expect(obs).toEqual({ value: null, detail: { reason: 'no_input' } });
+      expect(r.status).toBe('WARN');
+    });
+
+    // WF3 2026-10-14 (skip_rate_pct, address_points): nothing read ⇒ no skip rate. RED before
+    // the fix: `{value:0, detail:null}` ⇒ PASS ("green because it never looked", Spec 124 §7
+    // LM-D14). Now null / no_input ⇒ `unevaluable` at the declared severity (FAIL), never PASS.
+    it.each<[string, Record<string, unknown>]>([
+      ['{}', {}],
+      ['rows_read 0', { rows_read: 0, records_skipped: 0 }],
+    ])('address_points: skip_rate_pct on %s reports {value:null, detail:{reason:no_input}} and FAILs, never PASS', (_l, acquired) => {
+      const { obs, row: r } = row('address_points', 'skip_rate_pct', acquired);
+      expect(obs).toEqual({ value: null, detail: { reason: 'no_input' } });
+      expect(r.status).toBe(findCheck('address_points', 'skip_rate_pct').severity);
+      expect(r.status).toBe('FAIL');
+    });
+
+    // WF3 2026-10-14 (skip_rate_pct, parcels): same defect, same fix as address_points above.
+    it.each<[string, Record<string, unknown>]>([
+      ['{}', {}],
+      ['rows_read 0', { rows_read: 0, records_skipped: 0 }],
+    ])('parcels: skip_rate_pct on %s reports {value:null, detail:{reason:no_input}} and FAILs, never PASS', (_l, acquired) => {
+      const { obs, row: r } = row('parcels', 'skip_rate_pct', acquired);
+      expect(obs).toEqual({ value: null, detail: { reason: 'no_input' } });
+      expect(r.status).toBe(findCheck('parcels', 'skip_rate_pct').severity);
+      expect(r.status).toBe('FAIL');
+    });
+
+    // WF3 2026-10-14 (null_address_pct, parcels): RED before the fix: `{value:0, detail:null}` ⇒
+    // PASS. Measured instance: pipeline_runs 1984 (495,495 rows read) rendered this row
+    // `value: null, status: PASS`.
+    it.each<[string, Record<string, unknown>]>([
+      ['{}', {}],
+      ['rows_shaped 0', { rows_shaped: 0, column_nulls: { address_number: 0 } }],
+    ])('parcels: null_address_pct on %s reports {value:null, detail:{reason:no_input}} and WARNs, never PASS', (_l, acquired) => {
+      const { obs, row: r } = row('parcels', 'null_address_pct', acquired);
+      expect(obs).toEqual({ value: null, detail: { reason: 'no_input' } });
+      expect(r.status).toBe(findCheck('parcels', 'null_address_pct').severity);
+      expect(r.status).toBe('WARN');
     });
   });
 });

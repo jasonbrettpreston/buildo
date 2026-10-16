@@ -41,6 +41,8 @@ const pipeline = require('./lib/pipeline');
 const { z } = require('zod');
 const { loadMarketplaceConfigs, validateLogicVars } = require('./lib/config-loader');
 const { safeParsePositiveInt, safeParseFloat } = require('./lib/safe-math');
+const { parseLinearName } = require('./lib/address-normalizers'); // Spec 54 §3 level 0: the parser that produced both address_points.street_type_normalized and parcels.street_type_normalized.
+const { tier1aBridgeSql } = require('./lib/coa-link-sql'); // Spec 54 §3 level 0 / Spec 42 tier 1a: the bridge SQL text (WF2 brief L).
 
 // §R2 — advisory lock 4201 (Spec 42 §6.8 Phase D allocation)
 const ADVISORY_LOCK_ID = 4201;
@@ -280,9 +282,9 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
         },
       });
       pipeline.emitMeta(
-        { coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
-          parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
-          address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
+        { coa_applications: ['id', 'lead_id', 'street_num', 'street_name', 'street_name_normalized', 'parcel_linked_at'],
+          parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'street_type_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
+          address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'street_type_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
           parcel_address_points: ['parcel_id', 'address_point_id'],
           neighbourhoods: ['id', 'geom'] },
         { lead_parcels: ['lead_id', 'parcel_id', 'match_type', 'confidence', 'matched_at'],
@@ -300,6 +302,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     // The legacy `tier_1a_exact` audit row still totals BOTH bridge +
     // legacy parcels-table hits (preserves 7-day observe-chain baseline).
     let tier1aViaBridge = 0;
+    let tier1aTypeConfirmed = 0; // Spec 54 level 0: bridge matches whose candidate's type equals the application's
+    let tier1aTypeTolerant = 0;  // bridge matches accepted with the type unknown on either side (tolerant, not confirmed)
     let tier1bNameOnly = 0;
     let noAddressData = 0;     // CoA has no street_name_normalized (handled in pre-pass below)
     let noParcelMatch = 0;     // address present but no parcel found
@@ -339,6 +343,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
                 ca.lead_id,
                 ca.street_num,
                 ca.street_name_normalized,
+                ca.street_name, -- LP-D9 port: the raw name carries the street TYPE (street_name_normalized strips it)
                 ca.latitude,
                 ca.longitude,
                 ca.neighbourhood_id
@@ -378,57 +383,20 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
             //   - tier_1a_exact / tier_1b_name_only: matched
             //   - no_parcel_match: had address but no parcel found
 
+            // LP-D9 port (WF3 2026-10-10): the CoA row's own declared street type,
+            // parsed once per row with the SAME parser that produced
+            // parcels.street_type_normalized. '' when unknown → no type constraint.
+            // Declared here (enclosing scope) because the legacy tier-1a block below
+            // is a sibling `if` and must see the same value.
+            const coaStreetType = hasStreetNum && hasStreetName ? parseLinearName(coa.street_name || '').street_type : '';
+
             if (hasStreetNum && hasStreetName) {
               // ─── Tier 1a (bridge path) — preferred resolution via address_points
-              //
-              // Toronto stripped ADDRESS_NUMBER, LINEAR_NAME_FULL,
-              // DATE_EFFECTIVE from the Property Boundaries CSV on
-              // 2026-05-20. address_points is now the canonical address
-              // source; parcel_address_points (mig 162 + Phase 2c) guarantees
-              // the AP geom is inside the parcel polygon. Try this FIRST;
-              // fall through to the legacy parcels-table query on miss.
-              //
-              // Plan v4 fold F17: this match increments BOTH tier1aExact
-              // (legacy counter preserved) AND tier1aViaBridge (new INFO
-              // sibling). match_type='address_points_exact' is the new value
-              // surfacing the bridge-path provenance at the row level
-              // (consistent with Phase 2d link-parcels Strategy 1a).
-              //
-              // Disambiguation (plan v4 H5/C2/F19 uniform 3-level rule):
-              //   1. ADDRESS_CLASS_DESC priority (Structure > Structure Entrance > Land)
-              //   2. ST_Area(p.geom::geography) ASC — narrower parcel wins;
-              //      ::geography cast yields square meters (raw on GEOMETRY
-              //      (*, 4326) would return square degrees — fold C2).
-              //   3. ap.address_point_id ASC — stable deterministic final tie.
-              //
-              // MAINT_STAGE=REGULAR + ADDRESS_STATUS=CURRENT filters retired
-              // records with NULL fallback for pre-Phase-2b imports.
+              // SQL text + rationale now live in scripts/lib/coa-link-sql.js
+              // (tier1aBridgeSql; SPEC LINK Spec 54 §3 level 0 / Spec 42 tier 1a).
               const apBridge = await client.query(
-                `SELECT p.id, p.centroid_lat, p.centroid_lng${hasPostGIS ? ', p.geom' : ', p.geometry'}
-                   FROM address_points ap
-                   JOIN parcel_address_points pap ON pap.address_point_id = ap.address_point_id
-                   JOIN parcels p ON p.id = pap.parcel_id
-                  WHERE ap.addr_num_normalized = $1
-                    AND ap.linear_name_normalized = $2
-                    AND (ap.maint_stage IS NULL OR UPPER(ap.maint_stage) = 'REGULAR')
-                    -- WF3 hotfix #2 (2026-05-23): see link-parcels.js
-                    -- equivalent block. Toronto's actual ADDRESS_STATUS
-                    -- column contains 'None' for 100% of rows; accept
-                    -- 'NONE' alongside 'CURRENT' as the in-use state.
-                    AND (ap.address_status IS NULL OR UPPER(ap.address_status) IN ('CURRENT', 'NONE'))
-                    -- fold 10 item 4 (registry-truth, 2026-10-03): a soft-retired address point never matches.
-                    AND ap.retired_at IS NULL
-                  ORDER BY
-                    CASE UPPER(COALESCE(ap.address_class_desc, ''))
-                      WHEN 'STRUCTURE'           THEN 1
-                      WHEN 'STRUCTURE ENTRANCE'  THEN 2
-                      WHEN 'LAND'                THEN 3
-                      ELSE 4
-                    END,
-                    ST_Area(p.geom::geography) ASC,
-                    ap.address_point_id ASC
-                  LIMIT 1`,
-                [coa.street_num.trim(), coa.street_name_normalized.trim()]
+                tier1aBridgeSql(hasPostGIS),
+                [coa.street_num.trim(), coa.street_name_normalized.trim(), coaStreetType]
               );
               if (apBridge.rows.length > 0) {
                 parcelMatch = apBridge.rows[0];
@@ -436,6 +404,7 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
                 confidence = tier1aConfidence;
                 tier1aExact++;
                 tier1aViaBridge++;
+                if (apBridge.rows[0].type_confirmed === true) tier1aTypeConfirmed++; else tier1aTypeTolerant++;
               }
             }
 
@@ -446,9 +415,10 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
                    FROM parcels
                   WHERE addr_num_normalized = $1
                     AND street_name_normalized = $2
+                    AND ($3 = '' OR street_type_normalized IS NULL OR street_type_normalized = $3)
                   ORDER BY id DESC
                   LIMIT 1`,
-                [coa.street_num.trim(), coa.street_name_normalized.trim()]
+                [coa.street_num.trim(), coa.street_name_normalized.trim(), coaStreetType]
               );
               if (t1a.rows.length > 0) {
                 parcelMatch = t1a.rows[0];
@@ -657,6 +627,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       // sibling — delta over time shows migration progress.
       { metric: 'tier_1a_exact',                  value: tier1aExact,                                            threshold: null,                                          status: 'INFO' },
       { metric: 'tier_1a_via_bridge',             value: tier1aViaBridge,                                        threshold: null,                                          status: 'INFO' },
+      { metric: 'tier_1a_type_confirmed',        value: tier1aTypeConfirmed,                                    threshold: null,                                          status: 'INFO' },
+      { metric: 'tier_1a_type_tolerant',         value: tier1aTypeTolerant,                                     threshold: null,                                          status: 'INFO' },
       { metric: 'tier_1b_name_only',              value: tier1bNameOnly,                                         threshold: null,                                          status: 'INFO' },
       { metric: 'no_address_data',                value: noAddressData,                                          threshold: null,                                          status: 'INFO' },
       { metric: 'no_parcel_match',                value: noParcelMatch,                                          threshold: null,                                          status: 'INFO' },
@@ -688,6 +660,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
         tier_1a_exact: tier1aExact,
         // Plan v4 fold F17: bridge-path subset key for migration tracking.
         tier_1a_via_bridge: tier1aViaBridge,
+        tier_1a_type_confirmed: tier1aTypeConfirmed,
+        tier_1a_type_tolerant: tier1aTypeTolerant,
         tier_1b_name_only: tier1bNameOnly,
         no_address_data: noAddressData,
         no_parcel_match: noParcelMatch,
@@ -713,9 +687,9 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
     // table; Phase 2e only consumes it).
     pipeline.emitMeta(
       {
-        coa_applications: ['id', 'lead_id', 'street_num', 'street_name_normalized', 'parcel_linked_at'],
-        parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
-        address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
+        coa_applications: ['id', 'lead_id', 'street_num', 'street_name', 'street_name_normalized', 'parcel_linked_at'],
+        parcels: ['id', 'addr_num_normalized', 'street_name_normalized', 'street_type_normalized', 'centroid_lat', 'centroid_lng', 'geom'],
+        address_points: ['address_point_id', 'addr_num_normalized', 'linear_name_normalized', 'street_type_normalized', 'address_class_desc', 'maint_stage', 'address_status', 'retired_at'],
         parcel_address_points: ['parcel_id', 'address_point_id'],
         neighbourhoods: ['id', 'geom'],
       },
@@ -729,6 +703,8 @@ pipeline.run('link-coa-to-parcels', async (pool) => {
       processed,
       tier_1a_exact: tier1aExact,
       tier_1a_via_bridge: tier1aViaBridge,
+      tier_1a_type_confirmed: tier1aTypeConfirmed,
+      tier_1a_type_tolerant: tier1aTypeTolerant,
       tier_1b_name_only: tier1bNameOnly,
       no_address_data: noAddressData,
       no_parcel_match: noParcelMatch,

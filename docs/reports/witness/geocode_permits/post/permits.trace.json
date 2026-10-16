@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/geocode-permits.js",
   "chain": "permits",
-  "source_fingerprint": "bb6e93b1db19513bc9ef871df84493c3a5f44259308b40e019cf269dbe2995b3",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "b1331207116d40f88025502c3b8852638ff1ccfde7d0557fa272add2e4048d6c",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 30,
-    "distinct": 24,
+    "calls": 31,
+    "distinct": 25,
     "utility": 11,
-    "tracer_self_ms": 6.786,
-    "wall_ms": 8366
+    "tracer_self_ms": 1.306,
+    "wall_ms": 1296
   },
   "statements": [
     {
@@ -131,7 +131,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -152,6 +152,20 @@
       "error": null
     },
     {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
       "fingerprint": "6652815a6eb5fa63",
       "kind": "read",
       "count": 1,
@@ -167,7 +181,7 @@
       "fingerprint": "760860da79f13d44",
       "kind": "write",
       "count": 1,
-      "rowCount": 6,
+      "rowCount": 4,
       "reads": {
         "address_points": [
           "address_point_id",
@@ -368,7 +382,7 @@
   ],
   "transactions": [
     {
-      "client": "20712:3",
+      "client": "36494:3",
       "write_fingerprints": [
         "760860da79f13d44",
         "ed126eabe5106b3c"

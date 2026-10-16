@@ -171,11 +171,34 @@ describe('address_points AP-D8 — null_address_number_pct reads the 0o counters
     expect(verdict.checkRow(check, calls[0]![1], 'fail_step', CFG).status, '0.01 <= 0.10 ⇒ PASS').toBe('PASS');
   });
 
-  it('L5c — an unmeasured run reports value 0 and detail null, and never throws', () => {
+  it('L5c — an unmeasured run reports value null / detail.reason no_input, and never throws', () => {
+    // WF3 2026-10-14 (mirrors the null_street_type_pct precedent): with no `rows_shaped` /
+    // `column_nulls` the check must NOT fabricate a 0.00 fraction — a silent 0 PASSes the
+    // `pct <=` arm and hides a run that measured nothing (Spec 124 §7, LM-D14 "green because
+    // it never looked"). RED value before the fix: `{ value: 0, detail: null }` ⇒ PASS.
+    // Measured instance: pipeline_runs 1978/1979/1980/1992 read ~525K rows each yet rendered
+    // this row `value: null, status: PASS`.
     const calls = driveCheck('null_address_number_pct', { acquired: {}, config: CFG });
-    expect(calls[0]![1].value).toBe(0);
-    expect(calls[0]![1].detail).toBeNull();
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![1].value, 'no counters ⇒ no measurable fraction').toBeNull();
+    expect(calls[0]![1].detail, 'the absence is named, not silent').toEqual({ reason: 'no_input' });
     expect(calls[0]![1].violations, 'WF3: the flag is gone').toBeUndefined();
+    // The verdict renders it `unevaluable` at the declared severity (WARN), never PASS.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const check = (loadDescriptor().checks as Array<{ id: string }>).find((c) => c.id === 'null_address_number_pct');
+    expect(verdict.checkRow(check, calls[0]![1], 'fail_step', CFG).status, 'unmeasured ⇒ WARN, never PASS').toBe('WARN');
+  });
+
+  it('L5e — zero shaped rows reports value null / detail.reason no_input (RED: value 0 ⇒ PASS)', () => {
+    const calls = driveCheck('null_address_number_pct', {
+      acquired: { rows_shaped: 0, column_nulls: { address_number: 0 } }, config: CFG,
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![1].value, 'zero shaped rows ⇒ no measurable fraction').toBeNull();
+    expect(calls[0]![1].detail, 'the absence is named, not silent').toEqual({ reason: 'no_input' });
   });
 
   it('L5d (source lock) — the compute no longer names the dead `attempted_address_number_rows` field', () => {

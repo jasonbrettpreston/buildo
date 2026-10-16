@@ -1328,6 +1328,26 @@
       },
       {
         "step": "load_zoning",
+        "stamp": "pipeline_runs.status",
+        "op": "not_failed",
+        "statuses": [
+          "completed",
+          "completed_with_warnings",
+          "completed_with_errors",
+          "failed",
+          "crashed",
+          "cancelled"
+        ],
+        "why": {
+          "text": "#12c (formerly the readZoningContract throw 'latest sources:load_zoning run FAILED — halting', CP-S1, 2026-10-14): load_zoning writes one txn per target, so a failed run may have committed partial zoning; the newest finished load_zoning run must not be failed, or the runner halts before any phase. A verdict read: the full terminal set, so a failed run is SEEN and never hidden behind an older green one (R-CB S1-P).",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
+      {
+        "step": "load_zoning",
         "stamp": "pipeline_runs.completed_at",
         "why": {
           "text": "zoning-change scope (Spec 65 §2 step 6, 2026-10-06): readZoningChange compares a load_zoning run's completed_at (DB clock) with the started_at of this step's last completed run — our clock against our clock, never the publisher's source_dataset_version.",
@@ -1414,6 +1434,18 @@
         "kind": "trigger",
         "name": "parcels.trg_parcels_geom_invalidation",
         "on_missing": "fail"
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "parcels",
+        "on_missing": "fail",
+        "why": {
+          "text": "parcels has RLS enabled with ZERO policies (Spec 114 Class B). Under a non-bypass role this step's write affects 0 rows with NO error, so the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (Spec 124 R-CT; load_coa_notices precedent).",
+          "liveness": {
+            "kind": "table",
+            "ref": "parcels"
+          }
+        }
       }
     ],
     "srid": 4326,

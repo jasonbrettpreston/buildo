@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-heritage.js",
   "chain": "sources",
-  "source_fingerprint": "e5abd2534a5ffab02d8c0422e49c467b39e0dc9868368b324ee4aae9387f42e9",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "source_fingerprint": "52a6c17b4074c632a41be7b79e219685e477f86cae2511397bf2ec75b7a81cbb",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "header": {
     "processes": 1,
-    "calls": 53,
-    "distinct": 37,
+    "calls": 54,
+    "distinct": 38,
     "utility": 13,
-    "tracer_self_ms": 9.412,
-    "wall_ms": 21855
+    "tracer_self_ms": 1.541,
+    "wall_ms": 2370
   },
   "statements": [
     {
@@ -186,7 +186,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 726,
+      "rowCount": 738,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -216,6 +216,20 @@
       "excluded": [
         "pg_class",
         "pg_trigger"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
       ],
       "error": null
     },
@@ -551,7 +565,7 @@
   ],
   "transactions": [
     {
-      "client": "10892:3",
+      "client": "82387:3",
       "write_fingerprints": [
         "98df2d71dc306fc7"
       ]

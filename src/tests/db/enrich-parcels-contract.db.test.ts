@@ -18,9 +18,9 @@
 //   (3) R-BG (iv) / R-CB: the read's status set is the library BASELINE set, so a
 //       `completed_with_warnings` run carrying the key IS admissible (the deleted bare
 //       `status = 'completed'` probe was NOT — it silently skipped a warn-completed load).
-//   (4) the #12c probe still HALTS on a `failed` run (the named residual throw: a pin reads
-//       `records_meta` stamps only, so "the newest run, whatever its status, failed" is not a pin);
-//       a failed run OLDER than a completed one does not halt.
+//   (4) the #12c probe is the declared op:"not_failed" pin on `pipeline_runs.status` (CP-S1,
+//       operator 2026-10-14): a newest `failed` run is a FAIL row and `measureProducerPins` halts
+//       before any phase; a failed run OLDER than a completed one PASSes. The hook no longer throws.
 //
 // FIXTURE DISCIPLINE: the pipeline slug is the REAL `sources:load_zoning` the production SQL matches,
 // and the fixtures land inside a dedicated PoolClient under BEGIN/ROLLBACK — nothing outside the
@@ -247,8 +247,10 @@ describe.skipIf(!dbAvailable())('enrich_parcels readZoningContract — S1-P-8a l
   });
 
   // ── 4 ────────────────────────────────────────────────────────────────────────────────────────
-  it('4 — the #12c probe HALTS on a newest failed run; a FAILED run older than a completed one does not', async () => {
-    // (a) FAILED is the newest terminal run → the named residual HALT.
+  it('4 — the #12c not_failed pin HALTS on a newest failed run; a FAILED run older than a completed one does not', async () => {
+    const statusRow = (rows: Array<{ pin_id?: string; result?: string }>) =>
+      rows.find((r) => r.pin_id === 'load_zoning.pipeline_runs.status');
+    // (a) FAILED is the newest terminal run → a FAIL row and the runner's pre-phase halt.
     await inRolledBackTxn(pool, async (client) => {
       await insertRun(client, {
         status: 'completed',
@@ -263,7 +265,9 @@ describe.skipIf(!dbAvailable())('enrich_parcels readZoningContract — S1-P-8a l
         recordsMeta: { zoning_layers_loaded: { base: true, v: 'failed' } },
       });
 
-      await expect(compute.readZoningContract(ctxFor(client))).rejects.toThrow(/latest .* FAILED/);
+      const measured = await measureProducerPins(client, DESCRIPTOR);
+      expect(statusRow(measured.rows)?.result).toBe('FAIL');
+      expect(measured.halt).toBe(true);
     });
 
     // (b) the failed run is OLDER than a completed one → the hook RESOLVES.
@@ -281,6 +285,7 @@ describe.skipIf(!dbAvailable())('enrich_parcels readZoningContract — S1-P-8a l
         recordsMeta: { zoning_layers_loaded: { base: true, v: 'old' } },
       });
 
+      expect(statusRow((await measureProducerPins(client, DESCRIPTOR)).rows)?.result).toBe('PASS');
       const contract = await compute.readZoningContract({ ...ctxFor(client), pool: { query: async () => ({ rows: [changeAt(W4.probeAt)] }) } });
       expect(contract.layers.v).toBe('old');
       expect(contract.baseCommittedAfterOverlayFailed).toBe(false);

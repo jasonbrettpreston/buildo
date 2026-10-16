@@ -166,7 +166,6 @@ for (const c of Object.keys(BASE_SRC)) {
 // retirement: the SAME two checks, enforced generically by the runner from `guards.requires` instead of
 // a bespoke query embedded in domain logic.
 // ---------------------------------------------------------------------------
-const PRODUCER_NAME = 'sources:load_zoning'; // Spec 58 producer enrich_parcels consumes (§9)
 const ZONING_PRODUCER_STEP = 'load_zoning'; // = staleness.pins[].step for the zoning contract pin (locked by enrich-parcels-contract-pins.logic.test.ts)
 
 const ENRICH_SELF_STEP = 'enrich_parcels'; // = this step's own slug for the #12a baseline read
@@ -218,12 +217,8 @@ async function readZoningChange(ctx) {
  * @param {{pool: import('pg').Pool, config: object, producer: Function}} ctx
  */
 async function readZoningContract(ctx) {
-  // #12c — the "latest producer run FAILED" probe. NOT a baseline read (R-CB): the baseline set would never see a failed run and would silently fall back to an older green one,
-  // so the wider closed terminal set is explicit. Ordered by started_at (the current key), id DESC added by the reader. warn-skip rows are NOT excluded (the old probe had no such filter).
-  const latest = await ctx.producer(ZONING_PRODUCER_STEP, { statuses: 'terminal', orderBy: 'started_at', excludeWarnSkip: false, onError: 'throw' }); // fail closed, as the old pool.query rejection did
-  if (latest.status === 'failed') {
-    throw new Error(`${TAG} latest ${PRODUCER_NAME} run FAILED — halting (will not enrich against stale zoning)`);
-  }
+  // #12c — "the latest load_zoning run FAILED" is the descriptor's op:"not_failed" pin on pipeline_runs.status (CP-S1, 2026-10-14):
+  // the runner evaluates it before any phase over the full terminal set and halts on a FAIL row (Rule 10), so this hook never sees it.
   // #12d — the newest baseline run that CARRIES zoning_layers_loaded as an object. SAME read identity as the descriptor pin (statuses default, meta_object) so the pin the runner already evaluated and this read see the same run.
   const withMeta = await ctx.producer(ZONING_PRODUCER_STEP, { metaObject: 'zoning_layers_loaded' });
   const meta = withMeta.records_meta;
@@ -256,7 +251,19 @@ function buildPass1ScopeWhere({ full = false, zoningChanged } = {}) {
   if (typeof zoningChanged !== 'boolean') {
     throw new Error(`${TAG} buildPass1ScopeWhere: zoningChanged must be a boolean on a non-full run (got ${JSON.stringify(zoningChanged)})`);
   }
-  return zoningChanged ? 'TRUE' : '(p.zoning_enriched_at IS NULL)';
+  return pass1IncrementalWhere(zoningChanged);
+}
+
+/**
+ * Pass 1's incremental (non-full) predicate for a zoning-change answer. Total, never throws: it narrows
+ * ONLY on an explicit `false`; anything else scopes every parcel (F-10: never silently narrow). The
+ * defer_scope hook calls this directly with readZoningChange's always-boolean answer, so no throw is
+ * reachable from the hook (Spec 124 R-BZ G8, Rule 10); the pass path keeps buildPass1ScopeWhere's F-10 throw.
+ * @param {boolean} zoningChanged
+ * @returns {string}
+ */
+function pass1IncrementalWhere(zoningChanged) {
+  return zoningChanged === false ? '(p.zoning_enriched_at IS NULL)' : 'TRUE';
 }
 
 /**
@@ -1821,7 +1828,7 @@ async function countUnconsumedBacklog(client) {
 async function computeDeferScope(ctx, threshold) {
   const client = ctx.pool;
   const zoningChange = await readZoningChange(ctx);
-  const pass1Where = buildPass1ScopeWhere({ full: false, zoningChanged: zoningChange.changed });
+  const pass1Where = pass1IncrementalWhere(zoningChange.changed);
   const massingWhere = buildMassingScopeWhere({ full: false });
   const decisionWhere = buildDecisionScopeWhere({ full: false });
   const [pass1, massing, decision, combined, backlog] = await Promise.all([
@@ -2550,6 +2557,7 @@ Object.assign(module.exports, {
   checks: CHECKS,
   // pass 1
   buildPass1ScopeWhere,
+  pass1IncrementalWhere,
   buildEnrichmentSql,
   buildUpdateSql,
   buildZoningStampSql,

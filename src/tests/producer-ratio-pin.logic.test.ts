@@ -9,8 +9,9 @@
 // scripts/lib/ravines/enrich-ravines.js, unreadable from any descriptor and
 // therefore untunable (Fold 1 item 2 of the S1-P producer design).
 //
-// THE OP SET STAYS CLOSED. `scripts/lib/step/producer.js#PIN_OPS` is still
-// `['equals','nonzero','true']`; the `max_ratio` op is NOT added. A pin that
+// THE OP SET STAYS CLOSED. `scripts/lib/step/producer.js#PIN_OPS` is
+// `['equals','nonzero','true','not_failed']` (`not_failed`: CP-S1 #12c, 2026-10-14);
+// the `max_ratio` op is NOT added. A pin that
 // carries `bound` instead of `op`/`equals` makes `evaluatePins` DERIVE the ratio
 // `100 * <stamp> / <of>` and hand it to the EXISTING `verdict.js`
 // `resolveLimit` + `evaluateLimit` — the one pct grammar estate-wide
@@ -117,8 +118,8 @@ function run(meta: Record<string, unknown>, config?: Record<string, number>): Re
 }
 
 describe('S1-P-6a — a `bound` pin derives 100 * stamp / of and cannot fail to be measured', () => {
-  it('the closed op set is UNCHANGED — `max_ratio` was dropped, not added', () => {
-    expect([...PIN_OPS]).toEqual(['equals', 'nonzero', 'true']);
+  it('the closed op set — `max_ratio` was dropped, not added (`not_failed` is the CP-S1 #12c run-status op)', () => {
+    expect([...PIN_OPS]).toEqual(['equals', 'nonzero', 'true', 'not_failed']);
   });
 
   it('5 of 100 against the declared 5% is a PASS reporting the measured ratio as its value', () => {

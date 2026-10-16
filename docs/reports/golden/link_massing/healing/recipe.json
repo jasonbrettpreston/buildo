@@ -2,8 +2,8 @@
   "contract_version": 1,
   "step": "link_massing",
   "plan": ".cursor/wf2_link_massing_nonzero_close_active_task.md D3",
-  "derived_at": "2026-10-14T13:19:18.544Z",
-  "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+  "derived_at": "2026-10-16T18:23:27.185Z",
+  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
   "config": {
     "link_massing_centroid_confidence": 0.95
   },
@@ -432,37 +432,37 @@
     "x_pairs_stored": 0
   },
   "backup": {
-    "base": "link_massing_cohort_bak_20261014t1319z",
-    "pb": "link_massing_cohort_bak_20261014t1319z_pb",
-    "pm": "link_massing_cohort_bak_20261014t1319z_pm",
-    "created_at": "2026-10-14T13:21:17.246Z",
+    "base": "link_massing_cohort_bak_20261016t1823z",
+    "pb": "link_massing_cohort_bak_20261016t1823z_pb",
+    "pm": "link_massing_cohort_bak_20261016t1823z_pm",
+    "created_at": "2026-10-16T18:23:52.918Z",
     "database": "postgres",
-    "system_identifier": "7663896436381360167",
+    "system_identifier": "7696970913848156196",
     "baseline": {
       "parcel_buildings": {
         "rows": 535039,
-        "hash": "d258959efaa63991eb6923079dafec33",
+        "hash": "0a4ecb48ce3b792a9e41eea69be2b896",
         "columns": "all"
       },
       "parcels": {
         "rows": 496536,
-        "hash": "49a2b702cad853d0f53edcb9e03e5fae",
+        "hash": "049dd2955a753e3f84f52b9362b158db",
         "columns": "all"
       },
       "parcels_pm": {
         "rows": 496536,
-        "hash": "94b4d4e6b5dc7f23e30db894282c23e9",
+        "hash": "308ab895d20514c557e3b5753087a1fd",
         "columns": [
           "id",
           "massing_enriched_at"
         ]
       }
     },
-    "dropped_at": "2026-10-14T13:49:41.183Z"
+    "dropped_at": "2026-10-16T18:31:17.173Z"
   },
   "last_run": {
-    "started_at": "2026-10-14T13:21:20.516Z",
-    "git_head": "32abbc71ba4c5047b7195a40c9a831d8d9c5a6e0",
+    "started_at": "2026-10-16T18:23:53.080Z",
+    "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
     "capture": "docs/reports/golden/link_massing/post/cohort-heal.json",
     "chain": "sources",
     "harness_exit": {
@@ -529,17 +529,17 @@
     "post_restore": {
       "parcel_buildings": {
         "rows": 535039,
-        "hash": "d258959efaa63991eb6923079dafec33",
-        "ms": 1357
+        "hash": "0a4ecb48ce3b792a9e41eea69be2b896",
+        "ms": 418
       },
       "parcels": {
         "rows": 496536,
-        "hash": "49a2b702cad853d0f53edcb9e03e5fae",
-        "ms": 69976
+        "hash": "049dd2955a753e3f84f52b9362b158db",
+        "ms": 17256
       }
     },
     "asserted": true,
     "restored": true,
-    "finished_at": "2026-10-14T13:49:41.183Z"
+    "finished_at": "2026-10-16T18:31:17.173Z"
   }
 }
