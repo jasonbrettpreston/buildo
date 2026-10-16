@@ -1,0 +1,706 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p13",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(730)#(730)[SSP](A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 730"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "1615", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[SSP](A)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "named_lots_only",
+      "disclosure": "Site specific provision permitting office and retail store on the lands municipally known as 1615 Dufferin St. in 1992 (TO: 438-86; 12 (1) 295). Not modelled: the permitted uses (office, retail store) are not vocabulary uses tokens and the permission attaches to named addresses only."
+    },
+    {
+      "unit_id": "900.2.10(730)#(730)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "285-75",
+        "citation": "former City of Toronto by-law 285-75"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 730"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(730)#(730)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "340-79",
+        "citation": "former City of Toronto by-law 340-79"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 730"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "1-65", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[PBS](B)"},
+        {"literal": "30-74", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[PBS](B)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(730)#(730)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "222-79",
+        "citation": "former City of Toronto by-law 222-79"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 730"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "14-120", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[PBS](C)"},
+        {"literal": "15-107", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[PBS](C)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(730)#(730)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "446-78",
+        "citation": "former City of Toronto by-law 446-78"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 730"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "200-202", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(730)[PBS](D)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "procedural_not_numeric",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "66-04",
+        "citation": "City of Toronto by-law 66-04"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "871-05",
+        "citation": "City of Toronto by-law 871-05"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "97-0247",
+        "citation": "former City of Toronto by-law 97-0247"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "1-19", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "2-20", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "252", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "272", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "274-276", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "17", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"},
+        {"literal": "22R", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(296)[PBS](C)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "72-04",
+        "citation": "City of Toronto by-law 72-04"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "65-04",
+        "citation": "City of Toronto by-law 65-04"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "519-03",
+        "citation": "City of Toronto by-law 519-03"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](G)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "265-06",
+        "citation": "City of Toronto by-law 265-06"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](H)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "62-04",
+        "citation": "City of Toronto by-law 62-04"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(296)#(296)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "179-71",
+        "citation": "City of Toronto by-law 179-71"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 296"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "procedural_not_numeric",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "920-2006",
+        "citation": "City of Toronto by-law 920-2006"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "354-86",
+        "citation": "former City of Toronto by-law 354-86"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "1011", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](B)"},
+        {"literal": "730", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](B)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "450-76",
+        "citation": "former City of Toronto by-law 450-76"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "376", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](C)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "202-81",
+        "citation": "former City of Toronto by-law 202-81"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "39", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](D)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "417-77",
+        "citation": "former City of Toronto by-law 417-77"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "100", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](E)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(740)#(740)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "number": "554-2014",
+        "citation": "City of Toronto by-law 554-2014"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "named_addresses"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 740"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "1183", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(740)[PBS](F)"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "prevailing_alternate_path",
+      "disclosure": "none"
+    }
+  ]
+}

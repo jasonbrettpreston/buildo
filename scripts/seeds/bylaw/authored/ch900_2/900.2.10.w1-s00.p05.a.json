@@ -1,0 +1,372 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p05",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 2.5 m @(736)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["the odd numbered addresses of 91-209 Parkmount Road", "160 Mountjoy Avenue"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"R": "Exception R 736", "garden_suite": "containing a garden suite"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type", "has_garden_suite"],
+        "description": "Minimum rear yard setback of 2.5 m for an ancillary building containing a garden suite, replacing 150.7.60.20(3)(B), on the named Parkmount Road / Mountjoy Avenue addresses only.",
+        "gaps": "Applies only to named addresses; no lot list is held to match them."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "named_addresses", "refs": ["the odd numbered addresses of 91-209 Parkmount Road", "160 Mountjoy Avenue"]},
+      "literals_not_expressed": [
+        {"literal": "1.5 metres", "clause": "(736)[SSP](A)(ii)", "reason": "limit_not_modelled"},
+        {"literal": "75 percent", "clause": "(736)[SSP](A)(ii)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"R": "Exception R 736", "garden_suite": "containing a garden suite", "abuts_named_street": "lot line abutting Craven Road"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type", "has_garden_suite"],
+        "description": "The area between the garden suite building and the Craven Road lot line must be landscaping (except a driveway and a walkway up to 1.5 m wide), at least 75% of it soft landscaping.",
+        "gaps": "No DSL target for landscaping of the area between a suite and a named street lot line; named addresses only."
+      },
+      "disclosure": "On these named lots the area between a garden suite and the Craven Road lot line must be landscaped (a walkway may be up to 1.5 m wide) and at least 75% of that landscaping must be soft landscaping; this is not checked by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "named_addresses", "refs": ["the odd numbered addresses of 91-209 Parkmount Road", "160 Mountjoy Avenue"]},
+      "literals_not_expressed": [
+        {"literal": "10 percent", "clause": "(736)[SSP](A)(iii)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"R": "Exception R 736", "garden_suite": "containing a garden suite", "abuts_named_street": "facing Craven Road"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type", "has_garden_suite", "suite_wall_openings"],
+        "description": "At least 10% of the rear main wall of the garden suite building facing Craven Road must be openings (doors or windows).",
+        "gaps": "No DSL target for wall-opening share; named addresses only."
+      },
+      "disclosure": "On these named lots at least 10% of the garden suite's rear main wall facing Craven Road must be doors or windows; this is not checked by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(iv)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "numeric_expression": ["separation_m = 6.0 m @(736)[SSP](A)(iv)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["building_height_band"], "if": "proposed_height_m > 4.0 m"},
+      "applies_to": {"part": "named_addresses", "refs": ["the odd numbered addresses of 91-209 Parkmount Road", "160 Mountjoy Avenue"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["garden_suite"],
+        "lot_conditions": ["building_height_band"],
+        "uses": [],
+        "evidence": {"R": "Exception R 736", "garden_suite": "containing a garden suite", "building_height_band": "height greater than 4.0 metres"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type", "has_garden_suite"],
+        "description": "Where the garden suite building is taller than 4.0 m, its main wall must be at least 6.0 m from the main wall of the residential building on the lot, replacing 150.7.60.30(1)(B).",
+        "gaps": "Applies only to named addresses; needs the proposed suite height."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](A)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "372-78", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["50 Bain Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 372-78 prevails on 50 Bain Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 50 Bain Ave. former City of Toronto by-law 372-78 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](B)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "136-78", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["On or between the odd numbered addresses of 71-117 Blake St."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "City of Toronto by-law 136-78 prevails on the odd numbered addresses 71-117 Blake St.", "gaps": "Prevailing by-law not evaluated."},
+      "disclosure": "On the odd numbered addresses 71-117 Blake St. City of Toronto by-law 136-78 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](C)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "22936", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["10 Boultbee Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 22936 prevails on 10 Boultbee Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 10 Boultbee Ave. former City of Toronto by-law 22936 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](D)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "370-77, 458-83 and 742-83", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["66 Boultbee Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-laws 370-77, 458-83 and 742-83 prevail on 66 Boultbee Ave.", "gaps": "Former by-laws not evaluated."},
+      "disclosure": "On 66 Boultbee Ave. former City of Toronto by-laws 370-77, 458-83 and 742-83 prevail; they are not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](E)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "54-67", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["655 Broadview Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 54-67 prevails on 655 Broadview Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 655 Broadview Ave. former City of Toronto by-law 54-67 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](F)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "299-75", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["60 Cavell Ave.", "97 Cavell Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 299-75 prevails on 60 and 97 Cavell Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 60 and 97 Cavell Ave. former City of Toronto by-law 299-75 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](G)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "356-75", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["39 Harcourt Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 356-75 prevails on 39 Harcourt Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 39 Harcourt Ave. former City of Toronto by-law 356-75 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](H)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "94-0737", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["148 Hazelwood Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 94-0737 prevails on 148 Hazelwood Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 148 Hazelwood Ave. former City of Toronto by-law 94-0737 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](I)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "54-67", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["10 Hogarth Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 54-67 prevails on 10 Hogarth Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 10 Hogarth Ave. former City of Toronto by-law 54-67 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](J)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "686-01", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["885 Logan Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "City of Toronto by-law 686-01 prevails on 885 Logan Ave.", "gaps": "Prevailing by-law not evaluated."},
+      "disclosure": "On 885 Logan Ave. City of Toronto by-law 686-01 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](K)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "226-69", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["24 Mountjoy Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 226-69 prevails on 24 Mountjoy Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 24 Mountjoy Ave. former City of Toronto by-law 226-69 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](L)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "414-78; 555-78", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["369 Pape Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-laws 414-78 and 555-78 prevail on 369 Pape Ave.", "gaps": "Former by-laws not evaluated."},
+      "disclosure": "On 369 Pape Ave. former City of Toronto by-laws 414-78 and 555-78 prevail; they are not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](M)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "356-75", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["660 Pape Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 356-75 prevails on 660 Pape Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 660 Pape Ave. former City of Toronto by-law 356-75 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](N)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "533-01", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["662 Pape Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "City of Toronto by-law 533-01 prevails on 662 Pape Ave.", "gaps": "Prevailing by-law not evaluated."},
+      "disclosure": "On 662 Pape Ave. City of Toronto by-law 533-01 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](O)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "22876", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["720 Rhodes Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 22876 prevails on 720 Rhodes Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 720 Rhodes Ave. former City of Toronto by-law 22876 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](P)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "154-80", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["355 Riverdale Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 154-80 prevails on 355 Riverdale Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On 355 Riverdale Ave. former City of Toronto by-law 154-80 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](Q)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "118-82; 474-82, 595-82, 80-84 and 229-84", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["On or between the even numbered addresses of 100-110 Unity Rd."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-laws 118-82, 474-82, 595-82, 80-84 and 229-84 prevail on the even numbered addresses 100-110 Unity Rd.", "gaps": "Former by-laws not evaluated."},
+      "disclosure": "On the even numbered addresses 100-110 Unity Rd. former City of Toronto by-laws 118-82, 474-82, 595-82, 80-84 and 229-84 prevail; they are not evaluated by the tool.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](R)",
+      "archetype": "PREVAILING", "target": "none", "bound": "none", "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "273-93", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no", "ranks_layers": "none", "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["On or between the odd numbered addresses of 887-903 Woodbine Ave."]},
+      "literals_not_expressed": [],
+      "application": {"zones": ["R"], "building_types": ["any"], "lot_conditions": [], "uses": [], "evidence": {"R": "Exception R 736"}},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "description": "Former City of Toronto by-law 273-93 prevails on the odd numbered addresses 887-903 Woodbine Ave.", "gaps": "Former by-law not evaluated."},
+      "disclosure": "On the odd numbered addresses 887-903 Woodbine Ave. former City of Toronto by-law 273-93 prevails; it is not evaluated by the tool.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(736)": {
+      "explanation": "Exception R 736 sets extra garden suite rules for the odd numbered addresses 91-209 Parkmount Road and 160 Mountjoy Avenue (a 2.5 m minimum rear yard setback, landscaping and wall-opening rules toward Craven Road, and a 6.0 m separation from the house when the suite is taller than 4.0 m), and lists named properties where older City of Toronto by-laws prevail. These apply only to the named addresses.",
+      "code_refs": "none"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "a_seal": {
+    "seal_id": 392,
+    "sha256": "23dcdd9330a741d59dce61f8d078bdac2443af58738343db5e1e32c7d4031905"
+  },
+  "b_run": {
+    "ledger_sha256": "49a255ee7f82b6b975f31fbf72f90a3c70195bb5d880d59babc16e9fc251b982",
+    "read_paths": [],
+    "run_id": "20261014T232015Z-97bb7698",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W1",
+  "briefs": {
+    "a": "6c377a6357eeb25651a6ffb54a2cd49967d5657a6d82cfd53fcca842963df512",
+    "b": "4a0340b39119799db19aaa2261a7d837a8e68bf3ffa74f9cdf39e2a9c18aba00"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s13",
+  "unit_shas": {
+    "900.2.10(729)#(729)[PBS](A)": "a536689ca5b5f7b6cdcdb52aa7058a5898bc22d3fe321595cd90521689b1386a",
+    "900.2.10(729)#(729)[PBS](B)": "8e0ce8a2a63a6913d0581b8bf0f13ae13fc18de741d5ce85eba768bb79220be6",
+    "900.2.10(729)#(729)[PBS](C)": "caae9524bf2a2dd21619b61719bc23d9d00606136e9a002990b64f820ea87f1d",
+    "900.2.10(729)#(729)[PBS](D)": "e21e26bbb4e534697e38b25b6545ffc493884278d574cd0aa43a7957284e1e7d",
+    "900.2.10(729)#(729)[PBS](E)": "2dddc40e75d0463e82d969a689ce6e3e9877fbefd9304006398731a55fa8e496",
+    "900.2.10(729)#(729)[PBS](F)": "e259aca655aaa11f7783062f1ab6ea94a9fbb56043b321d9d70d1a536164ed73",
+    "900.2.10(729)#(729)[SSP]": "6a41f7be4179ea09b8a05635ddb192535f2d078091d3f2136783b704ddd6a608",
+    "900.2.10(771)#(771)[PBS](A)": "8d5e5ad4f9302ce56747929fd7c60bffde3af3996697ac687424a4b0d720015f",
+    "900.2.10(771)#(771)[PBS](B)": "a19dadff000a345f411ab727821eda3dd459a6cf61c841bc5b35d872a5fd7578",
+    "900.2.10(771)#(771)[SSP]": "1e5c5696de4373d3962b9e8d2876845be18e6bc248d053382437477c37f3c29b",
+    "900.2.10(848)#(848)[PBS](A)": "c7bdab5d3fbc651a1a4671a104c79c8c3501cd94853fb8df54c53b30881e76fa",
+    "900.2.10(848)#(848)[PBS](B)": "21a9403374411a3da223c11e41be69180189986c3dfa0f355d43edec39687e7d",
+    "900.2.10(848)#(848)[PBS](C)": "b1c37887a147cd6882c567865db6b9a98795fb96620a036d08a3c79ff939f0d4",
+    "900.2.10(848)#(848)[SSP](A)": "da9a2a6234a4a74cbb5bcc508b54a6aeaa424ff64a31185f5019a621e0554a1d"
+  }
+}

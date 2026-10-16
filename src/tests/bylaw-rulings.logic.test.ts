@@ -280,6 +280,119 @@ describe('Spec 69a M-87..M-92 — R5 rulings (vocab members, rate_base, ref_targ
     expect([green.violations, green.counts.refs_target_absent]).toEqual([[], 1]);
     expect(checkXref({ ...f.input, adjudications: [{ ...adj[0], citation: 'other' }] }).violations.map((x: Json) => x.code)).toEqual(['ref_unresolved']); // pinned to the exact unit + citation
   });
+  it('M-132: the R-3 phrasing-variant licence patterns are on their own targets (M-87 style)', () => {
+    const T = PVOCAB.dsl_target;
+    expect(T.side_setback_m.patterns).toContain('from a side lot line');
+    expect(T.height_m.patterns).toContain('maximum building height');
+    expect(T.encroachment_m.patterns).toContain('permitted to project');
+    expect(T.separation_m.patterns).toContain('from the main wall of the residential building');
+    expect(T.ancillary_floor_area_m2.patterns).toContain('area of the ancillary');
+    expect(T.parking_space_width_m.patterns).toContain('metres wide');
+    expect(T.parking_space_length_m.patterns).toContain('metres long');
+    expect(T.vertical_clearance_m.patterns).toContain('vertical dimension');
+  });
+  it('M-134: the round-2 licence patterns are on their own targets, and "for a side lot line" is licensed nowhere (option (b))', () => {
+    const T = PVOCAB.dsl_target;
+    expect(T.required_lot_frontage_m.patterns).toContain('minimum required lot frontage');
+    expect(T.front_setback_m.patterns).toEqual(expect.arrayContaining(['from a front lot line', 'for a front lot line']));
+    expect(T.lot_line_setback_m.patterns).toContain('rear yard lot line');
+    expect(T.dwelling_units_max.patterns).toContain('dwelling unit per lot');
+    for (const t of Object.values<Json>(T)) expect(t.patterns ?? []).not.toContain('for a side lot line');
+  });
+  it('M-142: storey_count_band / platform_height_band are threshold tokens reading existing dsl targets', () => {
+    expect(PVOCAB.lot_condition.storey_count_band).toEqual({ threshold: true, reads: ['height_storeys'] });
+    expect(PVOCAB.lot_condition.platform_height_band).toEqual({ threshold: true, reads: ['platform_height_m'] });
+    for (const t of ['height_storeys', 'platform_height_m']) expect(Object.keys(PVOCAB.dsl_target)).toContain(t);
+  });
+  it('M-157: building_type detached_house is licensed by the former-by-law wording "detached dwelling" (M-132 style)', () => {
+    expect(PVOCAB.building_type.detached_house.patterns).toEqual(expect.arrayContaining(['detached house', 'detached dwelling']));
+  });
+  it('M-158: lawfully_existing joins its declared user input; the caveat phrase map is closed and every entry is a dsl_target with a template direction', () => {
+    expect(PVOCAB.lot_condition.lawfully_existing).toEqual({ user_input: 'lawfully_existing_status' });
+    expect(PVOCAB.user_input).toEqual(expect.arrayContaining(['lawfully_existing_status', 'existing_footprint_sqm', 'current_stories']));
+    const c = PVOCAB.lawfully_existing_caveat;
+    expect(Object.keys(c.template).sort()).toEqual(['max', 'max_lot', 'min', 'min_building']);
+    expect([c.token, c.default, c.inputs, c.m39_date]).toEqual(['lawfully_existing', false, { footprint: 'existing_footprint_sqm', storeys: 'current_stories' }, '2025-06-26']);
+    expect(c.cutoff).toEqual({ default: '9 May 2013 (or a building permit issued before then)', m39: '26 June 2025' });
+    expect(Object.keys(c.phrases).sort()).toEqual(['bicycle_parking_spaces', 'building_depth_m', 'building_length_m', 'building_width_m', 'driveway_width_m', 'entrance_height_m', 'front_landscaping_pct', 'front_setback_m', 'front_soft_landscaping_pct', 'fsi', 'gfa_m2', 'height_m', 'height_storeys', 'loading_spaces', 'lot_coverage_pct', 'main_wall_height_m', 'parking_rate', 'parking_spaces', 'rear_setback_m', 'required_lot_area_m2', 'required_lot_frontage_m', 'separation_m', 'side_setback_m']);
+    for (const [t, dirs] of Object.entries<Json>(c.phrases)) {
+      expect(Object.keys(PVOCAB.dsl_target)).toContain(t);
+      for (const [dir, p] of Object.entries<Json>(dirs)) {
+        expect(['max', 'min']).toContain(dir);
+        expect(Object.keys(c.template)).toContain(p.template ?? dir);
+        if (p.template) expect(p.template.startsWith(dir)).toBe(true);
+        expect(p.phrase).toContain('{v}');
+        expect(typeof p.measure).toBe('string');
+      }
+    }
+  });
+  it('M-159: the use sets are a partition of vocab.uses; each accessory / specific use carries its closed disclosure; zone_category_chapter maps chapters to vocab zones', () => {
+    const keys = (o: Json) => Object.keys(o).filter((k) => k !== '$comment');
+    const acc = keys(PVOCAB.accessory_structure_use); const spec = keys(PVOCAB.specific_use); const non = PVOCAB.non_accessory_use as string[];
+    expect([...acc, ...spec, ...non].sort()).toEqual([...PVOCAB.uses].sort());
+    expect(new Set([...acc, ...spec, ...non]).size).toBe(PVOCAB.uses.length);
+    for (const k of acc) expect(PVOCAB.accessory_structure_use[k].disclosure).toMatch(/^rules for an? .+ on this lot are not part of this answer$/);
+    for (const k of spec) expect(PVOCAB.specific_use[k].disclosure).toMatch(/^rules for an? .+ on this lot are not part of this answer$/);
+    expect(PVOCAB.specific_use.school.section).toBe('150.48');
+    for (const ch of keys(PVOCAB.zone_category_chapter)) for (const z of PVOCAB.zone_category_chapter[ch].zones) expect(PVOCAB.zone).toContain(z);
+    expect(PVOCAB.zone_category_chapter['10'].zones).toEqual(PVOCAB.zone);
+  });
+  it('M-169: every non-threshold lot_condition token and every user_input is disclosed, data-filled, scenario-filled or M-158-specialised (closed, total)', () => {
+    const b = PVOCAB.undetermined_condition_disclosure;
+    const lc = Object.entries<Json>(PVOCAB.lot_condition).filter(([, x]) => !x.threshold && !x.generated).map(([k]) => k);
+    const dc = PVOCAB.design_choice_disclosure;
+    const cov = new Set([...Object.keys(b.lot_condition), ...b.data_filled, ...Object.keys(b.specialised), ...Object.keys(dc.lot_condition)]);
+    expect(lc.filter((k) => !cov.has(k))).toEqual([]);
+    const ucov = new Set([...Object.keys(b.user_input), ...b.scenario_filled, ...Object.keys(b.specialised), ...Object.keys(dc.user_input)]);
+    expect((PVOCAB.user_input as string[]).filter((k) => !ucov.has(k))).toEqual([]);
+    for (const k of [...Object.keys(b.lot_condition), ...b.data_filled]) expect(Object.keys(PVOCAB.lot_condition)).toContain(k);
+    expect(b.template).toBe('If {condition}: {effect}.');
+  });
+  it('M-170: no_rear_lot_line is a lot_condition token with a disclosure phrase; DEFINE effects and condition overrides are closed per-unit sentences', () => {
+    const b = PVOCAB.undetermined_condition_disclosure;
+    expect(PVOCAB.lot_condition.no_rear_lot_line).toEqual({ patterns: ['has no rear lot line'] });
+    expect(b.lot_condition.no_rear_lot_line).toBe('the lot has no rear lot line (a triangular lot)');
+    expect(Object.keys(b.define_effect).filter((k) => k !== '$comment').sort()).toEqual(['5.10.40.40(1)#whole', '5.10.40.70(5)#whole']);
+    expect(Object.keys(b.condition_override).filter((k) => k !== '$comment')).toEqual(['5.10.40.40(1)#whole']);
+    expect(Object.keys(b.data_derivable_followup).sort()).toEqual(['no_rear_lot_line', 'shoreline_or_top_of_bank']);
+  });
+  it('M-171: GFA deductions that need building facts carry closed disclosure sentences (970.10.15.10(1) family)', () => {
+    const b = PVOCAB.measure_deduction_disclosure;
+    expect(b.measure).toBe('gfa_m2');
+    const ids = Object.keys(b.sentences);
+    expect(ids).toHaveLength(11);
+    for (const id of ['970.10.15.10(1)#(1)(A)', '970.10.15.10(1)#(1)(B)', '970.10.15.10(1)#(1)(C)', '970.10.15.10(1)#(1)(D)']) expect(ids).toContain(id);
+    for (const v of Object.values<string>(b.sentences)) expect(v).toMatch(/counted floor area may exclude .+.$/);
+  });
+  it('M-172: every undetermined token / input is in exactly one class (site fact or design choice); design choices carry achieved / restrictive templates', () => {
+    const b = PVOCAB.undetermined_condition_disclosure; const dc = PVOCAB.design_choice_disclosure;
+    const lc = Object.entries<Json>(PVOCAB.lot_condition).filter(([, x]) => !x.threshold && !x.generated).map(([k]) => k);
+    for (const k of lc) {
+      const n = [b.data_filled.includes(k), k in b.specialised, k in b.lot_condition, k in dc.lot_condition].filter(Boolean).length;
+      expect([k, n]).toEqual([k, 1]);
+    }
+    for (const k of PVOCAB.user_input as string[]) {
+      const n = [b.scenario_filled.includes(k), k in b.specialised, k in b.user_input, k in dc.user_input].filter(Boolean).length;
+      expect([k, n]).toEqual([k, 1]);
+    }
+    expect(dc.achieved_template).toBe('{measure} {value} is achieved if: {conditions}.');
+    expect(Object.keys(dc.lot_condition)).toEqual(expect.arrayContaining(['lowest_level_joists_1_0_to_1_5_m_for_80_pct', 'lowest_level_ceiling_2_4_m_for_80_pct', 'lowest_level_contains_dwelling_unit']));
+  });
+  it('M-173: houseplex 5–6 class gated on 600.60; driveway default override; main-wall-pair units disclosed; heritage / lane are data-filled', () => {
+    const sc = PVOCAB.scenario_class_units.detached_houseplex_5_6;
+    expect([sc.house_units, sc.ancillary_units, sc.outside_or_unheld]).toEqual([{ min: 5, max: 6, evaluated_at: 6 }, 0, 'not_evaluated:map_area_not_held']);
+    const dc = PVOCAB.design_choice_disclosure;
+    expect(dc.default_overrides.individual_private_driveway.taken_as).toBe(true);
+    expect(dc.default_overrides.no_individual_private_driveway.disclosure).toBe('If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m.');
+    for (const rr of ['10.10.40.10(2)', '10.20.40.10(2)', '10.40.40.10(2)', '10.80.40.10(2)']) for (const c of ['(A)', '(B)']) expect(Object.keys(dc.unit_sentences)).toContain(`${rr}#(2)${c}`);
+    // M-174: entrance height (4) + dormers (8) + 10.80.30.10(1)(B) (1)
+    expect(Object.keys(dc.unit_sentences).filter((k) => k !== '$comment')).toHaveLength(21);
+    expect(dc.unit_sentences['10.80.40.10(4)#whole']).toBe('The main pedestrian entrance may be no more than 1.2 m above established grade.');
+    const b = PVOCAB.undetermined_condition_disclosure;
+    expect(b.data_filled).toEqual(expect.arrayContaining(['heritage_property', 'abuts_lane']));
+    expect(b.data_sources.heritage_property).toContain('parcels.is_heritage_designated');
+    expect(b.data_sources.abuts_lane).toContain('parcels.abuts_laneway');
+  });
   it('M-125: coa_mismatch is a vocab adjudication kind', () => {
     expect(PVOCAB.adjudication_kind).toContain('coa_mismatch');
   });

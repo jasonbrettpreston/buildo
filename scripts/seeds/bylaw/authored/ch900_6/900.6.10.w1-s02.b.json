@@ -1,0 +1,144 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w1-s02",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = by_type(detached_house: 230 m2; semi_detached_house: 460 m2; duplex: 555 m2; triplex: 610 m2) @(23)[SSP](A)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_house: 7.5 m; semi_detached_house: 15.0 m; duplex: 15.0 m; triplex: 16.5 m) @(23)[SSP](B)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 9.5 m @(23)[SSP](C)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.6 m @(23)[SSP](D)(i)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(23)[SSP](D)(ii)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 1.5 m @(23)[SSP](D)(iii)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = by_type(detached_house: 230 m2; semi_detached_house: 465 m2; duplex: 555 m2) @(263)[SSP](A)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = by_type(detached_house: 7.5 m; semi_detached_house: 15.0 m; duplex: 18.0 m) @(263)[SSP](B)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = by_type(detached_house: 35 pct; semi_detached_house: 35 pct; duplex: 30 pct) @(263)[SSP](C)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 8.5 m @(263)[SSP](D)",
+        "height_storeys = 2 storeys @(263)[SSP](D)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = by_type(detached_house: 0.9 m; semi_detached_house: 1.2 m; duplex: 2.4 m) @(263)[SSP](E)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](F)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.6.10(383)#(383)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": [
+        "lot_coverage_pct = 40 pct @(383)[SSP](A)"
+      ]
+    },
+    {
+      "unit_id": "900.6.10(383)#(383)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

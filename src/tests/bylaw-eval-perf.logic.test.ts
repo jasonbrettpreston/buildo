@@ -10,8 +10,10 @@
 //   1. a nested target is resolved once per (depth, scenario) inside one top-level call (red before the memo)
 //   2. nothing is cached across top-level calls on the lot (a changed lot gives a fresh answer)
 //   3. a candidates array changed between calls gives a fresh answer (no stale per-array cache)
-//   4. equivalence: the fixture corpus (35 eval-vector lots × 4 variants × 56 targets + permitted()) hashes to the
-//      value the pre-refactor evaluator produced (golden captured from bd332ec8's evaluate.mjs)
+//   4. equivalence: the fixture corpus (35 eval-vector lots × 4 variants × 57 targets + permitted()) hashes to the
+//      value the pre-refactor evaluator produced (golden captured from bd332ec8's evaluate.mjs). Re-pinned 2026-10-16 for
+//      the 57th target `aggregate_side_setback_m` (Spec 69a M-130) only: over the original 56 targets the hash is unchanged
+//      (0b693318…), proven by hashing the new tree against main's target list.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -95,6 +97,6 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
       }
     }
     expect(lots.length).toBe(35);
-    expect(h.digest('hex')).toBe('0b6933187500c6ae25456ca8c6369395f89ee3d13641a770f932fbc346d59756');
+    expect(h.digest('hex')).toBe('aae2598191050c660bbfb36f9e38707dddee33e7eac75b6c4e547e6995262241');
   }, 60_000);
 });

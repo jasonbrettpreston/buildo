@@ -1,0 +1,189 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p07",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](A)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "one",
+          "reason": "count_or_ordinal_not_a_limit",
+          "clause_path": "(5)[SSP](A)(i)"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Exception R 5"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "duplex",
+            "evidence": "a duplex may be attached"
+          }
+        ],
+        "lot_conditions": [
+          {
+            "token": "adjacent lot fronts the flanking street",
+            "evidence": "on an adjacent lot in the same zone"
+          }
+        ],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 3.0 m @(5)[SSP](A)(ii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Exception R 5"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "duplex",
+            "evidence": "minimum side yard setback for a duplex"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "10.5.40.60(1)",
+          "reason": "cross_reference_value",
+          "clause_path": "(5)[SSP](B)"
+        }
+      ],
+      "application": {
+        "zones": [
+          {
+            "token": "R",
+            "evidence": "Exception R 5"
+          }
+        ],
+        "building_types": [
+          {
+            "token": "any",
+            "evidence": "platform with a floor higher"
+          }
+        ],
+        "lot_conditions": [],
+        "uses": [
+          {
+            "token": "deck_or_platform",
+            "evidence": "a platform with a floor"
+          }
+        ]
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      }
+    }
+  ]
+}

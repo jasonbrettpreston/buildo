@@ -77,14 +77,14 @@
       "unit": "m",
       "aspect": "lot",
       "concept": "required minimum lot frontage (label f, or the zone's stated value); also read by band conditions",
-      "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least"]
+      "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
-    "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area"] },
+    "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
     "interior_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum (or minimum) interior floor area of the building, suite or room the unit applies to", "patterns": ["interior floor area"] },
-    "height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of the building the unit applies to, from established grade", "patterns": ["maximum height", "height of", "in height"] },
+    "height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of the building the unit applies to, from established grade", "patterns": ["maximum height", "height of", "in height", "maximum building height"] },
     "height_projection_m": { "unit": "m", "aspect": "envelope", "concept": "a structure may exceed the permitted maximum height by (Spec 69a M-81 R5)", "patterns": ["may exceed the permitted maximum height", "above the permitted maximum height"] },
     "height_storeys": { "unit": "storeys", "aspect": "envelope", "concept": "maximum number of storeys", "patterns": ["storeys", "storey"] },
     "main_wall_height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of the exterior portion of main walls", "patterns": ["main walls", "main wall height"] },
@@ -98,14 +98,15 @@
     "building_depth_m": { "unit": "m", "aspect": "envelope", "concept": "maximum building depth", "patterns": ["building depth"] },
     "building_width_m": { "unit": "m", "aspect": "envelope", "concept": "maximum (or minimum) width of the building the unit applies to", "patterns": ["building width", "width of the building"] },
     "dwelling_unit_width_m": { "unit": "m", "aspect": "envelope", "concept": "minimum width of a dwelling unit (e.g. a townhouse dwelling unit) (Spec 69 M-76 B8)", "patterns": ["width of a dwelling unit", "width of each dwelling unit"] },
-    "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or"] },
-    "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard"] },
-    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line"] },
+    "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or", "from a front lot line", "for a front lot line"] },
+    "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard", "from a rear lot line"] },
+    "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line"] },
+    "aggregate_side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum aggregate of the side yard setbacks of both side yards (Spec 69a M-130)", "patterns": ["aggregate side yard"] },
     "side_setback_street_m": {
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum setback from a side lot line abutting a street (flankage)",
-      "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line"]
+      "patterns": ["side yard abutting a street", "side lot line that abuts a street", "side lot line abutting a street", "street abutting the side lot line", "street that abuts the side lot line", "lot that flanks on a street", "if the lot line abuts a street"]
     },
     "street_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from any lot line abutting a street", "patterns": ["lot line abutting a street", "lot line that abuts a street"] },
     "lane_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum building setback from a lot line abutting a lane", "patterns": ["abutting a lane", "abuts a lane"] },
@@ -114,15 +115,15 @@
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum building setback from a lot line where the clause does not name a yard (ancillary buildings, suites, pools)",
-      "patterns": ["from a lot line", "building setback", "from all lot lines"]
+      "patterns": ["from a lot line", "building setback", "from all lot lines", "rear yard lot line"]
     },
     "separation_m": {
       "unit": "m",
       "aspect": "envelope",
       "concept": "minimum separation distance between buildings (or main walls) on the same lot",
-      "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building"]
+      "patterns": ["separation distance", "from the residential building", "separation", "closer to a residential building", "from the main wall of the residential building"]
     },
-    "encroachment_m": { "unit": "m", "aspect": "envelope", "concept": "maximum distance a building element may encroach into a required setback", "patterns": ["may encroach"] },
+    "encroachment_m": { "unit": "m", "aspect": "envelope", "concept": "maximum distance a building element may encroach into a required setback", "patterns": ["may encroach", "permitted to project"] },
     "encroachment_clearance_m": { "unit": "m", "aspect": "envelope", "concept": "minimum distance an encroaching element must keep from a lot line", "patterns": ["no closer than", "from the lot line", "no closer to a lot line than", "no closer to a side lot line than", "no closer to the side lot line than"] },
     "platform_common_wall_distance_m": { "unit": "m", "aspect": "envelope", "concept": "minimum distance of a platform from the common wall dividing dwelling units (Spec 69 M-76 B8)", "patterns": ["from the common wall"] },
     "platform_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum area of a deck, balcony or platform", "patterns": ["platform", "balcony"] },
@@ -136,7 +137,7 @@
     "rear_soft_landscaping_pct": { "unit": "pct", "aspect": "landscaping", "concept": "minimum share of the rear yard that is soft landscaping", "patterns": ["rear yard for soft landscaping", "rear yard soft landscaping", "for soft landscaping"] },
     "side_street_landscaping_pct": { "unit": "pct", "aspect": "landscaping", "concept": "minimum share of a side yard abutting a street that is landscaping", "patterns": ["side yard abutting a street for landscaping"] },
     "landscaping_strip_width_m": { "unit": "m", "aspect": "landscaping", "concept": "minimum width of a landscaping or soft-landscaping strip", "patterns": ["strip of", "wide strip"] },
-    "dwelling_units_max": { "unit": "units", "aspect": "use_permission", "concept": "maximum number of dwelling units in the building or on the lot", "patterns": ["number of dwelling units", "dwelling units"] },
+    "dwelling_units_max": { "unit": "units", "aspect": "use_permission", "concept": "maximum number of dwelling units in the building or on the lot", "patterns": ["number of dwelling units", "dwelling units", "dwelling unit per lot"] },
     "bedrooms": { "unit": "units", "aspect": "use_permission", "concept": "maximum (or minimum) number of bedrooms", "patterns": ["bedrooms"] },
     "buildings_on_lot": { "unit": "units", "aspect": "use_permission", "concept": "maximum number of buildings of a stated type on a lot", "patterns": ["residential building on a lot", "maximum of one"] },
     "driveway_width_m": { "unit": "m", "aspect": "parking_access", "concept": "maximum (or minimum) driveway width", "patterns": ["driveway width", "width of a driveway", "minimum width along its entire length", "two-way driveway", "one-way driveway", "the driveway is no more than"] },
@@ -153,9 +154,9 @@
       "patterns": ["parking spaces", "parking space"]
     },
     "parking_rate": { "unit": "ratio", "aspect": "parking_access", "concept": "minimum or maximum parking spaces per dwelling unit (or per stated base)", "patterns": ["per dwelling unit", "for each dwelling unit", "per lawfully existing dwelling unit", "for each 100 square metres", "per 100 square metres", "for each bed-sitting room or dwelling unit", "for each 10 bed-sitting rooms or dwelling units", "for each secondary suite", "for each guest room", "per building", "for a dwelling unit", "or dwelling unit", "parking rate", "rate for calculating effective parking spaces"] },
-    "parking_space_length_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum length of a parking space", "patterns": ["minimum length", "length of", "length"] },
-    "parking_space_width_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum width of a parking space or drive aisle", "patterns": ["minimum width", "width of"] },
-    "vertical_clearance_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum vertical clearance of a parking, loading or bicycle space", "patterns": ["vertical clearance"] },
+    "parking_space_length_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum length of a parking space", "patterns": ["minimum length", "length of", "length", "metres long"] },
+    "parking_space_width_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum width of a parking space or drive aisle", "patterns": ["minimum width", "width of", "metres wide"] },
+    "vertical_clearance_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum vertical clearance of a parking, loading or bicycle space", "patterns": ["vertical clearance", "vertical dimension"] },
     "bicycle_parking_spaces": { "unit": "units", "aspect": "parking_access", "concept": "minimum number of bicycle parking spaces", "patterns": ["bicycle parking spaces"] },
     "bicycle_space_wall_clearance_m": { "unit": "m", "aspect": "parking_access", "concept": "minimum horizontal clearance of a bicycle parking space from the wall it is placed against", "patterns": ["horizontal clearance from the wall"] },
     "bicycle_parking_rate": {
@@ -177,7 +178,7 @@
   "dsl_input": {
     "lot_frontage_m": { "unit": "m", "definition": "800.50(445)", "licensed_by": ["lot frontage"], "note": "MEASURED lot frontage (not the label f requirement, which is the target required_lot_frontage_m)" },
     "lot_depth_m": { "unit": "m", "definition": "800.50(440)", "licensed_by": ["lot depth"] },
-    "lot_area_m2": { "unit": "m2", "definition": "800.50(425)", "licensed_by": ["lot area", "area of the lot"] },
+    "lot_area_m2": { "unit": "m2", "definition": "800.50(425)", "licensed_by": ["lot area", "area of the lot", "floor space index"] },
     "platform_floor_height_m": { "unit": "m", "null_reason": "no_ch800_definition", "licensed_by": ["vertical distance between"], "note": "vertical distance between a platform floor and the ground (a scenario value; Spec 69a M-82 V5d). Ch.800 defines no platform/deck floor height (nearest: 800.50(240) established grade, (255) first floor) and borrowing one is barred (M-82 P4), so null_reason no_ch800_definition (P1-Q9, 2026-10-13)" },
     "proposed_height_m": {
       "unit": "m",
@@ -220,7 +221,7 @@
     "LC": { "unit": "pct", "meaning": "Lot Coverage Overlay Map value (995.30)", "held": true }
   },
   "building_type": {
-    "detached_house": { "structure": "principal", "residential": true, "patterns": ["detached house"] },
+    "detached_house": { "structure": "principal", "residential": true, "patterns": ["detached house", "detached dwelling"] },
     "semi_detached_house": { "structure": "principal", "residential": true, "patterns": ["semi-detached house"] },
     "townhouse": { "structure": "principal", "residential": true, "patterns": ["townhouse"] },
     "duplex": { "structure": "principal", "parent": "detached_houseplex", "patterns": ["duplex"] },
@@ -247,9 +248,11 @@
   },
   "lot_condition": {
     "corner_lot": { "patterns": ["corner lot"] },
-    "through_lot": { "patterns": ["through lot"] },
+    "through_lot": { "patterns": ["through lot", "rear lot line also abuts a street"] },
     "flanking_lot": { "patterns": ["flanking"] },
     "side_yard_abuts_street": { "patterns": ["side yard abuts a street"] },
+    "no_rear_lot_line": { "patterns": ["has no rear lot line"] },
+    "no_individual_private_driveway": { "patterns": ["does not have an individual private driveway"] },
     "frontage_band": { "threshold": true, "reads": ["lot_frontage_m", "townhouse_unit_width_m"] },
     "required_frontage_band": { "threshold": true, "reads": ["required_lot_frontage_m"] },
     "depth_band": { "threshold": true, "reads": ["lot_depth_m"] },
@@ -258,13 +261,15 @@
     "building_height_band": { "threshold": true, "reads": ["proposed_height_m", "height_m"] },
     "separation_band": { "threshold": true, "reads": ["distance_to_residential_m", "separation_m"] },
     "building_length_band": { "threshold": true, "reads": ["building_length_m"] },
+    "storey_count_band": { "threshold": true, "reads": ["height_storeys"] },
+    "platform_height_band": { "threshold": true, "reads": ["platform_height_m"] },
     "label_value": { "threshold": true, "reads": ["label"] },
     "overlay_mapped": { "threshold": true, "reads": ["overlay"] },
     "abuts_lane": { "patterns": ["lane"] },
     "abuts_named_street": {},
     "major_street": { "patterns": ["major street"] },
     "shoreline_or_top_of_bank": {},
-    "lawfully_existing": {},
+    "lawfully_existing": { "user_input": "lawfully_existing_status" },
     "heritage_property": { "patterns": ["heritage"] },
     "exception_area": { "generated": true },
     "adjacent_lot_fronts_flanking_street": {},
@@ -308,11 +313,11 @@
     "ancillary_units": "ancillary_units"
   },
   "instrument_kind": ["former_bylaw", "former_section", "schedule_map"],
-  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device"],
+  "uses": ["dwelling_unit", "secondary_suite_use", "parking_space", "private_garage", "swimming_pool", "deck_or_platform", "energy_device", "school", "portable_classroom"],
   "requirement": ["parking_in_building", "comply_or_minor_variance", "units_within_existing_building", "landscaping_type", "access_from_lane", "located_within_building", "principal_residence_occupation", "occupy_entire_building", "regulated_or_supervised", "waste_storage_in_building", "same_lot_as_use", "parking_in_rear_yard", "parking_in_side_yard", "parking_within_table_range", "identified_and_marked", "bicycle_access_unobstructed", "accessible_parking_location", "ev_charging_outlet", "parking_space_available_for_required_use", "vehicle_entrance_above_driveway_centreline", "access_from_street", "payment_in_lieu", "agreement_with_city", "municipal_services_operational", "retain_lawfully_existing", "fenced", "comply_with_bylaw"],
   "calculation_handling_status": ["modelled", "partially_modelled", "not_modelled", "informational"],
   "not_modelled_reason": ["needs_user_input", "needs_data_we_lack", "existing_building_facts", "deferred_phase2", "ch900_backlog", "outside_maxbld_building_types", "procedural_not_numeric", "map_area_not_held", "named_lots_only", "prevailing_alternate_path"],
-  "literal_not_expressed_reason": ["threshold_used_in_application", "cross_reference_value", "count_or_ordinal_not_a_limit", "illustrative_or_historic", "map_label_value", "limit_not_modelled", "rate_base", "lot_condition_arm_not_modelled"],
+  "literal_not_expressed_reason": ["threshold_used_in_application", "cross_reference_value", "count_or_ordinal_not_a_limit", "illustrative_or_historic", "map_label_value", "limit_not_modelled", "rate_base", "lot_condition_arm_not_modelled", "limit_arm_not_modelled"],
   "field_failure_reason": ["verbatim_changed", "consolidation_mismatch", "eval_conflict"],
   "disclosure_reason": { "source_defect": ["garbled_character", "lead_in_without_items", "division_repeat", "marker_typo", "numbering_repeat", "heading_not_in_toc", "group_heading_in_cell", "source_repeat_letter", "ref_missing_space", "ref_target_absent", "instrument_not_published_online"] },
   "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "label_letter_unknown", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
@@ -334,7 +339,7 @@
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
   "heuristic_reason": ["modelling_assumption", "data_cleaning_bound", "tolerance", "statistical_default", "proxy_for_unmodelled_rule"],
   "adjudication_kind": ["disagreement", "consolidation_mismatch", "eval_mismatch", "eval_vector", "source_repeat_letter", "correction", "ref_target_absent", "instrument_not_published_online", "coa_mismatch"],
-  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units"],
+  "user_input": ["building_type", "current_stories", "existing_driveway_type", "existing_driveway_width_m", "existing_front_parking_pad", "has_secondary_suite", "has_garden_suite", "has_laneway_suite", "roof_type", "suite_wall_openings", "lawfully_existing_status", "pool", "unit_count", "bedroom_count", "house_units", "ancillary_units", "existing_footprint_sqm"],
   "code_roots": ["scripts/lib/build-norms.js", "scripts/lib/compute/enrich-parcels.js", "scripts/lib/max-build.js", "scripts/lib/optimal-config.js", "scripts/lib/parcel-cost.js", "scripts/lib/zoning-precedence.js"],
   "banned_code_refs": [
     {
@@ -403,5 +408,257 @@
       { "kind": "bylaw_number", "pattern": "\\bby-laws\\s+\\d{3,5}(?:\\s*,\\s*(?:and\\s+)?\\d{3,5})+", "flags": "gi" }
     ]
   },
-  "value_keyword": ["none", "unlimited", "unregulated"]
+  "value_keyword": ["none", "unlimited", "unregulated"],
+  "lawfully_existing_caveat": {
+    "$comment": "Spec 69a M-158 (operator Q-E, 2026-10-15): the rule's constants and the generated caveat on a target where a lawfully_existing unit is set aside (default false). Wording = template (phrase.template, else template[bound]) filled from phrases[target][bound]; never free text. A target|bound with a set-aside unit and no phrase fails validation (caveat_unmapped).",
+    "token": "lawfully_existing",
+    "default": false,
+    "inputs": { "footprint": "existing_footprint_sqm", "storeys": "current_stories" },
+    "m39_date": "2025-06-26",
+    "cutoff": { "default": "9 May 2013 (or a building permit issued before then)", "m39": "26 June 2025" },
+    "template": {
+      "max": "If a building on this lot lawfully existed on {cutoff} and it {phrase}, that {measure} is the limit instead.",
+      "max_lot": "If this lot lawfully existed on {cutoff} with {phrase}, that {measure} is the limit instead.",
+      "min": "If this lot lawfully existed on {cutoff} with {phrase}, that {measure} is the minimum instead.",
+      "min_building": "If a building on this lot lawfully existed on {cutoff} and it {phrase}, that {measure} is the minimum instead."
+    },
+    "phrases": {
+      "height_m": { "max": { "phrase": "is taller than {v} m", "measure": "height" } },
+      "main_wall_height_m": { "max": { "phrase": "has main walls taller than {v} m", "measure": "main wall height" } },
+      "building_depth_m": { "max": { "phrase": "is deeper than {v} m", "measure": "depth" } },
+      "building_length_m": { "max": { "phrase": "is longer than {v} m", "measure": "length" } },
+      "building_width_m": { "max": { "phrase": "is wider than {v} m", "measure": "width" } },
+      "entrance_height_m": { "max": { "phrase": "has its main entrance more than {v} m above established grade", "measure": "entrance height" } },
+      "lot_coverage_pct": { "max": { "phrase": "covers more than {v}% of the lot", "measure": "coverage" } },
+      "height_storeys": { "max": { "phrase": "has more than {v} storeys", "measure": "number of storeys" } },
+      "gfa_m2": { "max": { "phrase": "has more than {v} m² of floor area", "measure": "floor area" } },
+      "fsi": {
+        "max": { "phrase": "has more floor area than FSI {v}", "measure": "floor area" },
+        "min": { "phrase": "less floor area than FSI {v}", "measure": "floor area" }
+      },
+      "front_setback_m": { "min": { "phrase": "is closer than {v} m to the front lot line", "measure": "front yard setback", "template": "min_building" } },
+      "side_setback_m": { "min": { "phrase": "is closer than {v} m to a side lot line", "measure": "side yard setback", "template": "min_building" } },
+      "rear_setback_m": { "min": { "phrase": "is closer than {v} m to the rear lot line", "measure": "rear yard setback", "template": "min_building" } },
+      "separation_m": { "min": { "phrase": "is closer than {v} m to another building on the lot", "measure": "separation distance", "template": "min_building" } },
+      "driveway_width_m": { "max": { "phrase": "a driveway wider than {v} m", "measure": "driveway width", "template": "max_lot" } },
+      "parking_spaces": {
+        "max": { "phrase": "more than {v} parking spaces", "measure": "number of parking spaces", "template": "max_lot" },
+        "min": { "phrase": "fewer than {v} parking spaces", "measure": "number of parking spaces" }
+      },
+      "loading_spaces": { "min": { "phrase": "fewer than {v} loading spaces", "measure": "number of loading spaces" } },
+      "bicycle_parking_spaces": { "min": { "phrase": "fewer than {v} bicycle parking spaces", "measure": "number of bicycle parking spaces" } },
+      "parking_rate": { "min": { "phrase": "fewer than {v} parking spaces per dwelling unit (or per the stated base)", "measure": "parking rate" } },
+      "front_landscaping_pct": { "min": { "phrase": "less than {v}% of the front yard as landscaping", "measure": "landscaping" } },
+      "front_soft_landscaping_pct": { "min": { "phrase": "less than {v}% of the front yard as soft landscaping", "measure": "soft landscaping" } },
+      "required_lot_frontage_m": { "min": { "phrase": "less than {v} m of frontage", "measure": "frontage" } },
+      "required_lot_area_m2": { "min": { "phrase": "less than {v} m² of lot area", "measure": "lot area" } }
+    }
+  },
+  "zone_category_chapter": {
+    "$comment": "Spec 69a M-159 (1): a base unit from one of these chapters whose application.zones is empty loads only on a lot whose zone is in its category's zones. A chapter not listed keeps today's behaviour. Titles are the City's chapter names (569-2013 table of contents, pinned pages). zones lists the vocab.zone members of the category; [] = no MaxBLD residential zone.",
+    "10": { "category": "Residential", "zones": ["R", "RD", "RS", "RT", "RM"] },
+    "15": { "category": "Residential Apartment", "zones": [] },
+    "30": { "category": "Commercial", "zones": [] },
+    "40": { "category": "Commercial Residential", "zones": [] },
+    "50": { "category": "Commercial Residential Employment", "zones": [] },
+    "60": { "category": "Employment Industrial", "zones": [] },
+    "80": { "category": "Institutional", "zones": [] },
+    "90": { "category": "Open Space", "zones": [] },
+    "100": { "category": "Utility and Transportation", "zones": [] }
+  },
+  "accessory_structure_use": {
+    "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
+    "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
+    "deck_or_platform": { "disclosure": "rules for a deck or platform on this lot are not part of this answer" },
+    "private_garage": { "disclosure": "rules for a private garage on this lot are not part of this answer" },
+    "energy_device": { "disclosure": "rules for an energy device (solar or heating, ventilation and air conditioning equipment) on this lot are not part of this answer" },
+    "portable_classroom": { "disclosure": "rules for a portable classroom building on this lot are not part of this answer" }
+  },
+  "specific_use": {
+    "$comment": "Spec 69a M-159 (3): a unit whose application.uses names one of these applies only on a lot that has that use; on a lot without it the unit does not apply, with this closed disclosure.",
+    "school": { "section": "150.48", "disclosure": "rules for a school on this lot are not part of this answer" }
+  },
+  "non_accessory_use": ["dwelling_unit", "secondary_suite_use", "parking_space"],
+  "scenario_class_units": {
+    "$comment": "Spec 69a M-160 (operator Q-D, 2026-10-15): dwelling-unit counts of the Layer 2 v1 P classes (scenario-classes.json, M-63 dated note 2026-10-14: P axis only, A = K = none). house_units = units in the principal building on the lot; ancillary_units = units in ancillary buildings (0 while A = none). A range is the ratified M-63 range; evaluated_at is the single value Layer 2 passes (C1 collapse: houseplex 2 = 3 = 4 when A = none).",
+    "detached_house": {
+      "house_units": 1,
+      "ancillary_units": 0
+    },
+    "detached_houseplex": {
+      "house_units": {
+        "min": 2,
+        "max": 4,
+        "evaluated_at": 4
+      },
+      "ancillary_units": 0
+    },
+    "semi_detached_house": {
+      "house_units": 1,
+      "ancillary_units": 0
+    },
+    "semi_detached_houseplex": {
+      "house_units": {
+        "min": 2,
+        "max": 4,
+        "evaluated_at": 4
+      },
+      "ancillary_units": 0
+    },
+    "townhouse": {
+      "house_units": 1,
+      "ancillary_units": 0
+    },
+    "detached_houseplex_5_6": {
+      "house_units": {
+        "min": 5,
+        "max": 6,
+        "evaluated_at": 6
+      },
+      "ancillary_units": 0,
+      "applies_within": "600.60 overlay map area (By-law 654-2025)",
+      "outside_or_unheld": "not_evaluated:map_area_not_held",
+      "basis": "M-63 P value 'houseplex 5–6 (inside 600.60 only)'; Spec 78 §6.2 C2: houseplex 5 = 6 (600.60 only), so 6 stands for the range"
+    }
+  },
+  "undetermined_condition_disclosure": {
+    "$comment": "Spec 69a M-169 (operator 2026-10-15, envelope review): a condition no data source fills is taken as NOT holding (the permitted new build is answered); each unit set aside this way attaches 'If {condition}: {effect}.' with {condition} from this map and {effect} generated from the unit (its target measure, bound and value). Closed set: an uncovered undetermined token or input fails validation. lawfully_existing / existing_footprint_sqm use the specialised M-158 caveat. Data-filled (NOT covered): corner_lot, through_lot, major_street (parcels), threshold tokens (their if reads data, scenario or resolved inputs), exception_area (generated); scenario-filled: building_type, house_units, ancillary_units, unit_count, has_garden_suite, has_laneway_suite (M-160). M-172 (2026-10-15): this map holds SITE FACTS only (the builder cannot choose them); DESIGN CHOICES are in design_choice_disclosure.",
+    "template": "If {condition}: {effect}.",
+    "specialised": {
+      "lawfully_existing": "M-158",
+      "lawfully_existing_status": "M-158",
+      "existing_footprint_sqm": "M-158"
+    },
+    "lot_condition": {
+      "flanking_lot": "the lot flanks a street",
+      "side_yard_abuts_street": "a side yard of the lot abuts a street",
+      "abuts_named_street": "the lot abuts the street the rule names",
+      "shoreline_or_top_of_bank": "the lot is on a shoreline or top of bank",
+      "adjacent_lot_fronts_flanking_street": "the adjacent lot fronts on the flanking street",
+      "front_averaging_not_applicable": "front yard averaging does not apply to the lot",
+      "one_abutting_building_within_15_m": "one building on an abutting lot is within 15 m",
+      "two_abutting_buildings_within_15_m": "buildings on both abutting lots are within 15 m",
+      "parcel_of_urban_residential_land": "the lot is a parcel of urban residential land (O. Reg. 299/19)",
+      "no_rear_lot_line": "the lot has no rear lot line (a triangular lot)"
+    },
+    "define_effect": {
+      "$comment": "Spec 69a M-170: the {effect} of a DEFINE unit (no value to generate from), one closed sentence per unit.",
+      "5.10.40.70(5)#whole": "the rear yard setback is measured as a radius from the point where the side lot lines meet",
+      "5.10.40.40(1)#whole": "the part of the lot below that line is not counted in the floor space index, so the permitted floor area is lower"
+    },
+    "condition_override": {
+      "$comment": "Spec 69a M-170: a unit whose {condition} needs the clause's own wording instead of the token phrase.",
+      "5.10.40.40(1)#whole": "TRCA has determined a shoreline hazard limit or stable top-of-bank crosses the lot"
+    },
+    "data_derivable_followup": {
+      "no_rear_lot_line": "parcel geometry (a lot whose boundary has a front lot line and no rear lot line); not held today (Spec 65 lot inputs are rectangle approximations, Spec 68 §13 limitation 8)",
+      "shoreline_or_top_of_bank": "a TRCA hazard / top-of-bank layer is not held; Spec 59 ravine data (Chapter 658 protection areas) is only a may-apply proxy"
+    },
+    "user_input": {
+      "current_stories": "the existing building's number of storeys is the one the rule names",
+      "existing_driveway_type": "the lot has an existing driveway of the type the rule names",
+      "existing_driveway_width_m": "the existing driveway's width meets the rule's test",
+      "existing_front_parking_pad": "the lot has an existing front yard parking pad",
+      "pool": "the lot has a swimming pool"
+    },
+    "data_filled": [
+      "corner_lot",
+      "through_lot",
+      "major_street",
+      "exception_area",
+      "heritage_property",
+      "abuts_lane"
+    ],
+    "scenario_filled": [
+      "building_type",
+      "house_units",
+      "ancillary_units",
+      "unit_count",
+      "has_garden_suite",
+      "has_laneway_suite"
+    ],
+    "data_sources": {
+      "corner_lot": "parcels.is_corner_lot (Spec 62)",
+      "through_lot": "parcels.is_through_lot (Spec 62)",
+      "major_street": "parcels.on_policy_road (trial proxy, P2-0 p2-measure)",
+      "exception_area": "generated (loader)",
+      "heritage_property": "parcels.is_heritage_designated (Spec 61 L5 / L12; geometry-derived, authoritative)",
+      "abuts_lane": "parcels.abuts_laneway (Spec 62 as-built, migration 191; Spec 65 AF-1)"
+    }
+  },
+  "design_choice_disclosure": {
+    "$comment": "Spec 69a M-172 (operator 2026-10-15, review of 600.60.40(2)(A)): a condition the builder controls. For the theoretical max build, a PERMISSIVE unit (raises a max / lowers a min) is taken as met and the answer carries achieved_template; a RESTRICTIVE unit is not applied to the answer and is shown only as restrictive_template (the trade-off). Every non-threshold, non-generated lot_condition token and every user_input is in exactly one of: data_filled / scenario_filled / specialised (M-158) / undetermined_condition_disclosure (site facts) / design_choice_disclosure (test-locked).",
+    "achieved_template": "{measure} {value} is achieved if: {conditions}.",
+    "restrictive_template": "If the design {conditions}: {effect}.",
+    "conditions_join": "; and ",
+    "lot_condition": {
+      "lowest_level_joists_1_0_to_1_5_m_for_80_pct": "the lowest level's ceiling joists are 1.0–1.5 m above grade for 80% of its area",
+      "lowest_level_ceiling_2_4_m_for_80_pct": "it has at least 2.4 m floor-to-ceiling height for 80% of its area",
+      "lowest_level_contains_dwelling_unit": "it contains a dwelling unit",
+      "has_secondary_suite": "the house has a secondary suite",
+      "individual_private_driveway": "each dwelling unit has an individual private driveway",
+      "garage_entrance_faces_street": "the garage's vehicle entrance faces a street",
+      "all_units_front_street": "every dwelling unit fronts directly on a street",
+      "unit_not_fronting_street": "a townhouse dwelling unit does not front on a street",
+      "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front"
+    },
+    "user_input": {
+      "has_secondary_suite": "the house has a secondary suite",
+      "roof_type": "the roof is of the type the rule names",
+      "suite_wall_openings": "the suite's walls have the openings the rule names",
+      "bedroom_count": "the dwelling units have the bedroom counts the rule names"
+    },
+    "default_overrides": {
+      "$comment": "Spec 69a M-173: operator choices that override the M-172 'permissive taken as met' default for a design-choice token.",
+      "individual_private_driveway": {
+        "taken_as": true,
+        "why": "operator 2026-10-15: assume an individual private driveway (the larger 6.0 m townhouse unit width is answered)"
+      },
+      "no_individual_private_driveway": {
+        "taken_as": false,
+        "disclosure": "If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m."
+      }
+    },
+    "unit_sentences": {
+      "$comment": "Spec 69a M-173 / M-174: restrictive design-choice units disclosed by one closed sentence (never applied to the answer); {value} = the unit's resolved value.",
+      "10.10.40.10(2)#(2)(A)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.10.40.10(2)#(2)(B)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.20.40.10(2)#(2)(A)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.20.40.10(2)#(2)(B)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.40.40.10(2)#(2)(A)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.40.40.10(2)#(2)(B)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.80.40.10(2)#(2)(A)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.80.40.10(2)#(2)(B)": "Main walls may be no higher than the higher of 7.0 m or 2.5 m less than the permitted maximum height, on either all side main walls (for at least 70% of each side main wall's width) or all front and rear main walls (for at least the share of their total width the clause sets by lot frontage); the design chooses which pair.",
+      "10.80.30.10(1)#(1)(B)": "If the semi-detached house is divided onto two lots: each lot's minimum lot area is 50% of the 'a' value ({value} m²).",
+      "10.10.40.10(6)#whole": "The main pedestrian entrance may be no more than 1.2 m above established grade.",
+      "10.20.40.10(6)#whole": "The main pedestrian entrance may be no more than 1.2 m above established grade.",
+      "10.40.40.10(4)#whole": "The main pedestrian entrance may be no more than 1.2 m above established grade.",
+      "10.80.40.10(4)#whole": "The main pedestrian entrance may be no more than 1.2 m above established grade.",
+      "10.10.40.10(5)#(5)(A)": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers.",
+      "10.10.40.10(5)#(5)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers.",
+      "10.20.40.10(7)#(7)(A)": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers.",
+      "10.20.40.10(7)#(7)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers.",
+      "10.40.40.10(5)#(5)(A)": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers.",
+      "10.40.40.10(5)#(5)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers.",
+      "10.80.40.10(5)#(5)(A)": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers.",
+      "10.80.40.10(5)#(5)(B)": "Dormer walls do not count as main walls if the dormer faces total no more than 40% of the width of the main walls below them that are within the main wall height limit; the design chooses the dormers."
+    }
+  },
+  "measure_deduction_disclosure": {
+    "$comment": "Spec 69a M-171 (operator 2026-10-15 review of 970.10.15.10(1)): a deduction from a measure that needs building facts is disclosed, never evaluated. The permitted maximum is answered unchanged; each listed DEFINE unit that applies to the lot (its own condition decided as usual, e.g. (D) needs a detached house and frontage > 12.0 m) attaches its closed sentence. Closed set: a DEFINE gfa_m2 deduction unit with no sentence fails validation.",
+    "measure": "gfa_m2",
+    "sentences": {
+      "970.10.15.10(1)#(1)(A)": "Your counted floor area may exclude the basement floor area.",
+      "970.10.15.10(1)#(1)(B)": "Your counted floor area may exclude the area of a floor void with more than 4.5 m of clearance, up to 10% of the permitted maximum floor area.",
+      "970.10.15.10(1)#(1)(C)": "Your counted floor area may exclude the area of required parking spaces inside the building.",
+      "970.10.15.10(1)#(1)(D)": "Your counted floor area may exclude one more parking space, for a detached house on a lot with more than 12.0 m of frontage.",
+      "10.5.40.40(3)#(3)(A)": "Your counted floor area may exclude the basement floor area.",
+      "10.5.40.40(3)#(3)(B)": "Your counted floor area may exclude the area of a floor void with more than 4.5 m of clearance, up to 10% of the permitted maximum floor area.",
+      "10.5.40.40(3)#(3)(C)": "Your counted floor area may exclude the area of up to one parking space per dwelling unit inside the building.",
+      "10.5.40.40(3)#(3)(D)": "Your counted floor area may exclude one more parking space, for a detached house on a lot with more than 12.0 m of frontage.",
+      "10.5.40.40(3)(E)@1075-2026#(3)(E)": "Your counted floor area may exclude cladding added to the original exterior surface of a main wall or of an addition, including the vents, pipes or utility equipment beneath it.",
+      "150.7.60.50(5)#whole": "The garden suite building's counted floor area may exclude the areas listed in 10.5.40.40(1), (2) and (3)(A) and (B).",
+      "150.8.60.50(4)#whole": "The laneway suite building's counted floor area may exclude the areas listed in 10.5.40.40(1), (2) and (3)(A) and (B)."
+    }
+  }
 }

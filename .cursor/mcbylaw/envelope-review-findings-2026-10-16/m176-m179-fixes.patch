@@ -1,0 +1,308 @@
+diff --git a/scripts/seeds/bylaw/adjudications.json b/scripts/seeds/bylaw/adjudications.json
+index ea8b3b4..bf81b25 100644
+--- a/scripts/seeds/bylaw/adjudications.json
++++ b/scripts/seeds/bylaw/adjudications.json
+@@ -70054,6 +70054,173 @@
+           "building_type"
+         ]
+       }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "calculation_handling",
++      "id": "COR-10.80.40.1(3)#(3)(A)/calculation_handling~s1",
++      "kind": "correction",
++      "reason": "operator ruling 2026-10-15 (M-176(1)): \"as per townhouse unit width we just assume no driveway\"; the 5.0 m arm is answered and the 6.0 m arm is the disclosed trade-off",
++      "rule": "Spec 69a M-176(1) (supersedes the M-173(2) default), M-75",
++      "supersedes": "COR-10.80.40.1(3)#(3)(A)/calculation_handling",
++      "unit": "10.80.40.1(3)#(3)(A)",
++      "value": {
++        "description": "Each townhouse dwelling unit must be at least 5.0 m wide where it has no individual private driveway leading directly to its front.",
++        "gaps": "Applies only under no_individual_private_driveway (design choice). By M-176(1) (build more) no individual private driveway is assumed, so this 5.0 m is answered; (B) 6.0 m is the disclosed trade-off (vocab design_choice_disclosure.default_overrides).",
++        "not_modelled_reason": "needs_user_input",
++        "status": "partially_modelled",
++        "user_inputs": [
++          "building_type"
++        ]
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "target",
++      "id": "COR-150.8.60.70(1)#(1)(B)/target",
++      "kind": "correction",
++      "reason": "operator y 2026-10-16 (envelope review; M-179(1)): \"all ancillary buildings combined … 30 percent\" bounds the ancillary buildings together, never the lot overall coverage",
++      "rule": "Spec 69a M-179(1), M-151, M-75",
++      "unit": "150.8.60.70(1)#(1)(B)",
++      "value": "ancillary_coverage_pct"
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "numeric_expression",
++      "id": "COR-150.8.60.70(1)#(1)(B)/numeric_expression",
++      "kind": "correction",
++      "reason": "follows the target correction (M-179(1))",
++      "rule": "Spec 69a M-179(1), M-151, M-75",
++      "unit": "150.8.60.70(1)#(1)(B)",
++      "value": [
++        "ancillary_coverage_pct = 30 pct @(1)(B)"
++      ]
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "condition",
++      "id": "COR-150.7.60.20(6)#(6)(B)/condition",
++      "kind": "correction",
++      "reason": "envelope review 2026-10-16 finding 7: the arm applies on a corner lot only where the suite has a parking space with vehicle access from the flanking street; the token is already in application.lot_conditions",
++      "rule": "Spec 69a M-172(3), M-75; Spec 68 §6 condition",
++      "unit": "150.7.60.20(6)#(6)(B)",
++      "value": {
++        "tokens": [
++          "corner_lot",
++          "garage_entrance_faces_street"
++        ]
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "condition",
++      "id": "COR-150.7.60.20(6)#(6)(C)/condition~s1",
++      "kind": "correction",
++      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
++      "rule": "Spec 69a M-179(2), M-75",
++      "supersedes": "COR-150.7.60.20(6)#(6)(C)/condition",
++      "unit": "150.7.60.20(6)#(6)(C)",
++      "value": {
++        "tokens": [
++          "corner_lot"
++        ]
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "application.lot_conditions",
++      "id": "COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1",
++      "kind": "correction",
++      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
++      "rule": "Spec 69a M-179(2), M-75",
++      "supersedes": "COR-150.7.60.20(6)#(6)(C)/application.lot_conditions",
++      "unit": "150.7.60.20(6)#(6)(C)",
++      "value": [
++        "corner_lot"
++      ]
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "application.evidence",
++      "id": "COR-150.7.60.20(6)#(6)(C)/application.evidence~s1",
++      "kind": "correction",
++      "reason": "operator y 2026-10-16 (envelope review; M-179(2)): 150.7.60.20(6)(C) is the corner-lot arm outside (A)/(B) (heading \"Garden Suite on Corner Lot\"; lead-in \"must comply with regulation 150.7.60.20(5), except\"); interior lots take 150.7.60.20(5). Reverses the 2026-10-09 P10 correction.",
++      "rule": "Spec 69a M-179(2), M-75; Spec 68 §6.4 rule 7",
++      "supersedes": "COR-150.7.60.20(6)#(6)(C)/application.evidence",
++      "unit": "150.7.60.20(6)#(6)(C)",
++      "value": {
++        "corner_lot": "Corner Lot",
++        "garden_suite": "containing a garden suite"
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "calculation_handling",
++      "id": "COR-150.7.60.20(2)#(2)(C)/calculation_handling",
++      "kind": "correction",
++      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
++      "rule": "Spec 69a M-149, M-172(3), M-75",
++      "unit": "150.7.60.20(2)#(2)(C)",
++      "value": {
++        "description": "If the rear lot line abuts a lot in the Residential Zone category and the garden suite building has openings such as windows in its rear main wall above 4.0 m above average grade, the (B) rear yard setback of 1.5 m is increased by 1.5 m.",
++        "gaps": "Scope not tested (M-149): the rear lot line abutting a Residential-zone lot, and rear-wall openings above 4.0 m (a design choice, suite_wall_openings). Restrictive (raises the (B) 1.5 m by 1.5 m), so it is disclosed, never applied to the maximum (M-172(3), M-177(3)). The first 1.5 m is the (B) value being increased.",
++        "not_modelled_reason": "needs_user_input",
++        "status": "not_modelled",
++        "user_inputs": [
++          "has_garden_suite",
++          "suite_wall_openings"
++        ]
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "disclosure",
++      "id": "COR-150.7.60.20(2)#(2)(C)/disclosure",
++      "kind": "correction",
++      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
++      "rule": "Spec 69a M-149, M-172(3), M-75",
++      "unit": "150.7.60.20(2)#(2)(C)",
++      "value": "If the garden suite has openings such as windows in its rear main wall more than 4.0 m above average grade and the rear lot line abuts a residential lot: the minimum rear yard setback is 3.0 m."
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "calculation_handling",
++      "id": "COR-150.7.60.20(5)#(5)(A)/calculation_handling",
++      "kind": "correction",
++      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
++      "rule": "Spec 69a M-149, M-172(3), M-75",
++      "unit": "150.7.60.20(5)#(5)(A)",
++      "value": {
++        "description": "Despite 10.5.60.20(3) and (6) and 10.10.60.20(1), where the side lot line does not abut a street and the side main wall has openings such as doors or windows, the garden suite's minimum side yard setback is the greater of 1.5 m or 10 percent of the lot frontage, to a maximum of 3.0 m.",
++        "gaps": "Scope not tested (M-149): a side lot line not abutting a street, and openings in the side main wall (a design choice, suite_wall_openings). Restrictive (a 1.5 m floor instead of (B)'s 0.6 m), so it is disclosed, never applied to the maximum (M-172(3), M-177(3)); (B) answers. 'To a maximum of 3.0 metres' read as capping the 10 percent amount.",
++        "not_modelled_reason": "needs_user_input",
++        "status": "not_modelled",
++        "user_inputs": [
++          "has_garden_suite",
++          "suite_wall_openings"
++        ]
++      }
++    },
++    {
++      "adjudicated_on": "2026-10-16",
++      "adjudicator": "operator",
++      "field": "disclosure",
++      "id": "COR-150.7.60.20(5)#(5)(A)/disclosure",
++      "kind": "correction",
++      "reason": "envelope review 2026-10-16 finding 7: the scope turns on wall openings the design chooses (no token tests it) and the arm raises the minimum; M-172(3) restrictive design choice, disclosed and never bound",
++      "rule": "Spec 69a M-149, M-172(3), M-75",
++      "unit": "150.7.60.20(5)#(5)(A)",
++      "value": "If the garden suite has doors or windows in a side main wall facing a side lot line that does not abut a street: that side yard setback is at least the greater of 1.5 m or 10% of the lot frontage, to a maximum of 3.0 m."
+     }
+   ]
+ }
+diff --git a/scripts/seeds/bylaw/vocab.json b/scripts/seeds/bylaw/vocab.json
+index c1c46eb..8b7973b 100644
+--- a/scripts/seeds/bylaw/vocab.json
++++ b/scripts/seeds/bylaw/vocab.json
+@@ -80,6 +80,7 @@
+       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage"]
+     },
+     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
++    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined"] },
+     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
+     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
+     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
+@@ -609,14 +610,14 @@
+       "bedroom_count": "the dwelling units have the bedroom counts the rule names"
+     },
+     "default_overrides": {
+-      "$comment": "Spec 69a M-173: operator choices that override the M-172 'permissive taken as met' default for a design-choice token.",
++      "$comment": "Spec 69a M-173 / M-176(1): operator choices that fix the direction of a design-choice token pair. M-176(1) (2026-10-15, build more) supersedes M-173(2): no individual private driveway is assumed, so the 5.0 m townhouse unit width is answered and the 6.0 m arm is the disclosed trade-off.",
+       "individual_private_driveway": {
+-        "taken_as": true,
+-        "why": "operator 2026-10-15: assume an individual private driveway (the larger 6.0 m townhouse unit width is answered)"
++        "taken_as": false,
++        "disclosure": "If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m."
+       },
+       "no_individual_private_driveway": {
+-        "taken_as": false,
+-        "disclosure": "If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m."
++        "taken_as": true,
++        "why": "operator 2026-10-15 (M-176(1)): assume no individual private driveway (the smaller 5.0 m townhouse unit width is answered; the maximum build)"
+       }
+     },
+     "unit_sentences": {
+diff --git a/src/tests/bylaw-rulings.logic.test.ts b/src/tests/bylaw-rulings.logic.test.ts
+index b5dc131..60524f4 100644
+--- a/src/tests/bylaw-rulings.logic.test.ts
++++ b/src/tests/bylaw-rulings.logic.test.ts
+@@ -382,8 +382,10 @@ describe('Spec 69a M-87..M-92 — R5 rulings (vocab members, rate_base, ref_targ
+     const sc = PVOCAB.scenario_class_units.detached_houseplex_5_6;
+     expect([sc.house_units, sc.ancillary_units, sc.outside_or_unheld]).toEqual([{ min: 5, max: 6, evaluated_at: 6 }, 0, 'not_evaluated:map_area_not_held']);
+     const dc = PVOCAB.design_choice_disclosure;
+-    expect(dc.default_overrides.individual_private_driveway.taken_as).toBe(true);
+-    expect(dc.default_overrides.no_individual_private_driveway.disclosure).toBe('If the dwelling unit has no individual private driveway leading to its front: the minimum unit width is 5.0 m.');
++    // M-176(1) supersedes the M-173(2) driveway default: no driveway is assumed (5.0 m answered), 6.0 m is disclosed
++    expect(dc.default_overrides.individual_private_driveway.taken_as).toBe(false);
++    expect(dc.default_overrides.no_individual_private_driveway.taken_as).toBe(true);
++    expect(dc.default_overrides.individual_private_driveway.disclosure).toBe('If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m.');
+     for (const rr of ['10.10.40.10(2)', '10.20.40.10(2)', '10.40.40.10(2)', '10.80.40.10(2)']) for (const c of ['(A)', '(B)']) expect(Object.keys(dc.unit_sentences)).toContain(`${rr}#(2)${c}`);
+     // M-174: entrance height (4) + dormers (8) + 10.80.30.10(1)(B) (1)
+     expect(Object.keys(dc.unit_sentences).filter((k) => k !== '$comment')).toHaveLength(21);
+diff --git a/src/tests/bylaw-suite-keying-m176-m179.logic.test.ts b/src/tests/bylaw-suite-keying-m176-m179.logic.test.ts
+new file mode 100644
+index 0000000..97d6e64
+--- /dev/null
++++ b/src/tests/bylaw-suite-keying-m176-m179.logic.test.ts
+@@ -0,0 +1,75 @@
++// SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §6, §7.4, §7.5 (conditions, alternatives, applicability);
++//            docs/specs/01-pipeline/69a_mcbylaw_register.md M-75 (corrections), M-149, M-172(3), M-176(1), M-179
++//
++// Operator envelope review 2026-10-16 (findings 2, 7): fixes the existing rulings already decide, applied as M-75
++// corrections to the agreed units and as vocab data. Each assertion reads the production path (validate.mjs inputs →
++// agree.mjs resolved units; evaluate.mjs applies() over evaluatorVocab()).
++import { describe, expect, it } from 'vitest';
++import path from 'node:path';
++import { pathToFileURL } from 'node:url';
++
++type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- untyped .mjs module surface
++const mod = async (rel: string): Promise<Json> => import(pathToFileURL(path.join(process.cwd(), rel)).href);
++const V = await mod('scripts/analysis/bylaw/validate.mjs');
++const AU = await mod('scripts/analysis/bylaw/authored.mjs');
++const AG = await mod('scripts/analysis/bylaw/agree.mjs');
++const E = await mod('scripts/analysis/bylaw/evaluate.mjs');
++const VO = await mod('scripts/analysis/bylaw/vocab.mjs');
++const I = V.loadInputs({ root: process.cwd() });
++const ag = AG.checkAgree({ shards: AU.loadAuthored(process.cwd()), adjudications: I.adjudications, vocab: I.vocab });
++const unitOf = (id: string): Json => {
++  const r = ag.units.get(id);
++  if (!r) throw new Error(`no unit ${id}`);
++  return r.unit;
++};
++const tokens = (c: unknown): string[] => (c && typeof c === 'object' ? ((c as Json).tokens ?? []) : []);
++const C = E.makeContext(VO.evaluatorVocab(I.vocab));
++
++describe('M-176(1) — townhouse unit width answers 5.0 m (no individual private driveway)', () => {
++  it('the design-choice default takes "no driveway" as met and discloses the 6.0 m arm', () => {
++    const o = I.vocab.design_choice_disclosure.default_overrides;
++    expect(o.no_individual_private_driveway.taken_as).toBe(true);
++    expect(o.individual_private_driveway.taken_as).toBe(false);
++    expect(o.individual_private_driveway.disclosure).toBe('If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m.');
++  });
++  it('10.80.40.1(3)(A) gaps cite M-176(1), not the superseded M-173 default', () => {
++    const g = unitOf('10.80.40.1(3)#(3)(A)').calculation_handling.gaps;
++    expect(g).toMatch(/M-176\(1\)/);
++    expect(g).not.toMatch(/driveway is assumed present/);
++  });
++});
++
++describe('M-179(1) — all-ancillary coverage is its own target', () => {
++  it('vocab declares ancillary_coverage_pct (pct, envelope) and the vocab stays valid', () => {
++    expect(I.vocab.dsl_target.ancillary_coverage_pct).toMatchObject({ unit: 'pct', aspect: 'envelope' });
++    expect(VO.checkVocab(I.vocab).violations).toEqual([]);
++  });
++  it('150.8.60.70(1)(B) (30 % of all ancillary buildings) is keyed on ancillary_coverage_pct', () => {
++    const u = unitOf('150.8.60.70(1)#(1)(B)');
++    expect(u.target).toBe('ancillary_coverage_pct');
++    expect(u.numeric_expression).toEqual(['ancillary_coverage_pct = 30 pct @(1)(B)']);
++  });
++});
++
++describe('M-172(3) / M-75 — garden-suite side-yard arms carry their tested conditions', () => {
++  const lot = (corner: boolean, garage: boolean): Json => ({ zone: 'R', label: {}, overlays: {}, vars: { lot_frontage_m: 12, lot_depth_m: 36 }, flags: { corner_lot: corner, garage_entrance_faces_street: garage }, building_type: 'garden_suite' });
++  it('150.7.60.20(6)(B) tests corner_lot and garage_entrance_faces_street', () => {
++    expect(tokens(unitOf('150.7.60.20(6)#(6)(B)').condition)).toEqual(['corner_lot', 'garage_entrance_faces_street']);
++  });
++  it('150.7.60.20(6)(C) is the corner-lot arm (M-179(2)): an interior lot takes 150.7.60.20(5)', () => {
++    const u = unitOf('150.7.60.20(6)#(6)(C)');
++    expect(tokens(u.condition)).toEqual(['corner_lot']);
++    expect(E.applies(lot(false, false), u, C).ok).toBe(false);
++  });
++});
++
++describe('M-149 / M-172(3) — untestable restrictive suite scopes are not modelled and disclosed', () => {
++  for (const id of ['150.7.60.20(2)#(2)(C)', '150.7.60.20(5)#(5)(A)']) {
++    it(`${id} is not_modelled with a disclosure`, () => {
++      const u = unitOf(id);
++      expect(u.calculation_handling.status).toBe('not_modelled');
++      expect(u.calculation_handling.gaps).toMatch(/M-149/);
++      expect(typeof u.disclosure === 'string' && u.disclosure !== 'none' && u.disclosure.startsWith('If ')).toBe(true);
++    });
++  }
++});

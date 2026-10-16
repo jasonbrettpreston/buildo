@@ -1,0 +1,401 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s67",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 330 m2 @(2)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(2)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": [], "gaps": ["the frontage of the lot that legally existed on the day of the enactment of this By-law needs as-built input"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](C)(i)(a)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 6.0 m @(2)[SSP](C)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "lot_list"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "named_lots_only", "user_inputs": [], "gaps": ["applies only to registered plan 8673 Block E, Lots 68, 69,79,98,99,106,107"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](C)(i)(b)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 6.0 m @(2)[SSP](C)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "lot_list"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "named_lots_only", "user_inputs": [], "gaps": ["applies only to registered plan 8673 Block J, Lots 44, 47,49,59,85"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](C)(i)(c)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 6.0 m @(2)[SSP](C)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "lot_list"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "named_lots_only", "user_inputs": [], "gaps": ["applies only to registered plan 8673 Block F, Lot 22"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](C)(ii)(a)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 3.0 m @(2)[SSP](C)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "lot_list"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "named_lots_only", "user_inputs": [], "gaps": ["applies only to registered plan 8673 Block E, Lot 81"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](C)(ii)(b)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 3.0 m @(2)[SSP](C)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "lot_list"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "named_lots_only", "user_inputs": [], "gaps": ["applies only to registered plan 8673 Block J, Lots 7, 22"]}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](D)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": [{"token": "parking_space", "evidence": "Front yard parking is permitted"}]
+      },
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.45 m @(2)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [{"literal": "0.3 m", "reason": "limit_arm_not_modelled"}],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 2"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 2"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "Attached garages may be erected"}]
+      },
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(2)#(2)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "detached_house", "evidence": "lawfully existing detached house"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "lawfully existing detached house"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type", "lawfully_existing_status"], "gaps": ["an addition or extension above the first storey of a lawfully existing detached house must meet the base by-law minimum building setbacks"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 1351"}],
+        "lot_conditions": [],
+        "uses": [{"token": "deck_or_platform", "evidence": "a platform with a floor higher"}]
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": [], "gaps": ["the platform floor is compared with the first floor of the building, an as-built fact"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](C)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 1351"}],
+        "lot_conditions": [],
+        "uses": [{"token": "parking_space", "evidence": "Required parking spaces for a dwelling unit"}]
+      },
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1351)[SSP](D)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "literals_not_expressed": [{"literal": "0.6 ratio", "reason": "threshold_used_in_application"}],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house, erected"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "erected before October 15, 1953"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["the addition limit applies only to a detached house existing as of the stated date"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](D)(ii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "literals_not_expressed": [{"literal": "0.6 ratio", "reason": "cross_reference_value"}],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house, erected"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "erected before October 15, 1953"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["finished floor levels of the addition compared with the existing building"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](D)(iii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "literals_not_expressed": [{"literal": "0.6 ratio", "reason": "cross_reference_value"}],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house, erected"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "erected before October 15, 1953"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["the addition must be no closer to the nearest side lot line than the existing side wall"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](D)(iv)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "literals_not_expressed": [{"literal": "0.6 ratio", "reason": "cross_reference_value"}, {"literal": "5 years", "reason": "threshold_used_in_application"}],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house, erected"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "erected before October 15, 1953"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"], "gaps": ["the age of any prior addition is not derivable from lot data"]}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[SSP](E)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": ["frontage_band", "if lot_frontage_m <= 7.6 m"],
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 1351"}],
+        "lot_conditions": [{"token": "frontage_band", "evidence": "lot frontage of 7.6 metres"}],
+        "uses": [{"token": "private_garage", "evidence": "vehicle entrance through the front wall"}]
+      },
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": [], "gaps": []}
+    },
+    {
+      "unit_id": "900.3.10(1351)#(1351)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(2) 319 of former City of Toronto By-law 438-86"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "literals_not_expressed": [],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 1351"}],
+        "building_types": [{"token": "any", "evidence": "Exception RD 1351"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": [], "gaps": []}
+    }
+  ]
+}

@@ -92,6 +92,8 @@ export function makeContext(vocab, extra = {}) {
     typeParent: vocab.building_type_parent || {},
     userInputs: new Set(vocab.user_input || []),
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
+    // M-175: uses that name an accessory structure (pool, garage, deck, …); a unit scoped to one limits that structure.
+    accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
     enactments: extra.enactments || {},
     absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
     // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
@@ -396,6 +398,11 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     if (!bt) unknown = 'needs_user_input:building_type';
     else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
   }
+  // M-175 (operator envelope review 2026-10-15): a unit scoped to an accessory-structure use (vocab
+  // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
+  // this check the 10.5.60.20(8)(A) swimming-pool rear setback (25.0 m) decided houses' rear setbacks.
+  const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
+  if (accUse) { reads.add('uses'); return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` }; }
   const part = (u.applies_to && u.applies_to.part) || 'whole';
   const refs = (u.applies_to && u.applies_to.refs) || [];
   if (part === 'map_area') {

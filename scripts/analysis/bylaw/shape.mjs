@@ -31,7 +31,7 @@
 //   field_missing              an agreed unit / its row omits an authored field ("none" is written, never omitted)
 //   vocab_value_unknown        an authored value outside its vocab.json list
 //   shape_required_missing     a §7.3 required field of the unit's archetype is "none" / empty
-//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit; M-107: `lot_condition_arm_not_modelled` on a non-LIMIT unit)
+//   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit; M-107 / M-130: `lot_condition_arm_not_modelled` / `limit_arm_not_modelled` on a non-LIMIT unit)
 //   value_form_not_allowed     the generated value_form is outside the archetype's allowed forms (§7.3)
 //   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10)
 //   modelled_without_inputs    calculation_handling `modelled` with an overlay / existing(…) we do not hold, or
@@ -257,6 +257,8 @@ function shapeProblems(u, index, vocab, external) {
   for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'limit_not_modelled' && a !== 'UNUSUAL') p.push(['shape_must_be_none', `literals_not_expressed reason limit_not_modelled on ${a} (only UNUSUAL may use it — Spec 69a M-82)`]);
   // Spec 69a M-107: `lot_condition_arm_not_modelled` discloses the inexpressible lot-condition arm of a partly modelled LIMIT — only a LIMIT may say so
   for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'lot_condition_arm_not_modelled' && a !== 'LIMIT') p.push(['shape_must_be_none', `literals_not_expressed reason lot_condition_arm_not_modelled on ${a} (only LIMIT may use it — Spec 69a M-107)`]);
+  // Spec 69a M-130: `limit_arm_not_modelled` discloses an additive inexpressible arm of a partly modelled LIMIT — only a LIMIT may say so
+  for (const e of Array.isArray(u.literals_not_expressed) ? u.literals_not_expressed : []) if (e && e.reason === 'limit_arm_not_modelled' && a !== 'LIMIT') p.push(['shape_must_be_none', `literals_not_expressed reason limit_arm_not_modelled on ${a} (only LIMIT may use it — Spec 69a M-130)`]);
   return p;
 }
 

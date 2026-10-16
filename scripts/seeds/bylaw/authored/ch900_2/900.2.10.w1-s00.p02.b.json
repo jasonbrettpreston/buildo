@@ -1,0 +1,316 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p02",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [{"token": "any", "evidence": "The following uses are permitted"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "permitted uses nursing home, retirement home and religious residence have no vocab.uses token; never borrow another target (Spec 69 P4)"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](B)(i)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "located_within_building",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [
+          {"token": "detached_house", "evidence": "originally constructed and used as a detached house"},
+          {"token": "semi_detached_house", "evidence": "a detached house, a semi-detached house"},
+          {"token": "townhouse", "evidence": "a semi-detached house, or a townhouse"}
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](B)(ii)(a)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [{"token": "major_street", "evidence": "a major street on the Policy Areas Overlay Map"}],
+      "requirement": "comply_with_bylaw",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [{"token": "any", "evidence": "be on a lot that has a front lot line"}],
+        "lot_conditions": [{"token": "major_street", "evidence": "a major street on the Policy Areas Overlay Map"}],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](B)(ii)(b)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [{"token": "major_street", "evidence": "a street that intersects a major street"}],
+      "requirement": "comply_with_bylaw",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [{"token": "any", "evidence": "be on a lot that has a front lot line"}],
+        "lot_conditions": [{"token": "major_street", "evidence": "a street that intersects a major street"}],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "80 metres", "clause_path": "(7)[SSP](B)(ii)(b)", "reason": "threshold_used_in_application"}
+      ],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](C)(i)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "located_within_building",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [
+          {"token": "detached_house", "evidence": "originally constructed and used as a detached house"},
+          {"token": "semi_detached_house", "evidence": "a detached house, a semi-detached house"},
+          {"token": "townhouse", "evidence": "a semi-detached house, or a townhouse"}
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"]
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](C)(ii)(a)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [{"token": "major_street", "evidence": "a major street on the Policy Areas Overlay Map"}],
+      "requirement": "comply_with_bylaw",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 7"}],
+        "building_types": [{"token": "any", "evidence": "be on a lot that has a front lot line"}],
+        "lot_conditions": [{"token": "major_street", "evidence": "a major street on the Policy Areas Overlay Map"}],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[SSP](D)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "displaces regulation 10.10.20.100(3) for a community centre or library here; displaces[] is generator-computed"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 468-2004"},
+      "evaluated_by_us": "no",
+      "applies_to": {"part": "named_addresses"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(7)#(7)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 1027-2012"},
+      "evaluated_by_us": "no",
+      "applies_to": {"part": "named_addresses"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(4)#(4)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "R", "evidence": "Exception R 4"}],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "incorporates exception 900.2.10(7); include_ref is generator-computed"
+    },
+    {
+      "unit_id": "900.2.10(4)#(4)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(1) 232 of former City of Toronto By-law 438-86"},
+      "evaluated_by_us": "no",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    },
+    {
+      "unit_id": "900.2.10(4)#(4)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "former City of Toronto By-law 664-1991"},
+      "evaluated_by_us": "no",
+      "applies_to": {"part": "named_addresses"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none"
+    }
+  ]
+}

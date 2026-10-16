@@ -1,0 +1,54 @@
+{
+  "a_seal": {
+    "seal_id": 428,
+    "sha256": "562abc65772c78ecaaa78405f82a161fccd2d66c10b4a79eb7e143992bc3ade8"
+  },
+  "b_run": {
+    "ledger_sha256": "70263d296196883b117eb500376103bbb3e79394af871050f5ed9bdbde7a648b",
+    "read_paths": [],
+    "run_id": "20261015T005008Z-7455792f",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W1",
+  "briefs": {
+    "a": "f6fe3c863c346bba801e4a9066b6b2d981f5e513113b0edc2674e519821a797a",
+    "b": "934bb4d8101503125c6dfbf96f65df45cc897f2e87ea7fe474ecfd84b3b8dadc"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s49",
+  "unit_shas": {
+    "900.3.10(123)#(123)[PBS]": "fdfb0abb559893f5a9353c3954983f760d7561ac4f77072c957c5d46fffaa453",
+    "900.3.10(123)#(123)[SSP](A)": "8163f3d1130af28a738ccf3f061e5b425c2deba72497f0c2538cf0409f3ef594",
+    "900.3.10(123)#(123)[SSP](B)": "c58d5adb008702874df1f59995eaf8ec8694884497547a81795aafdb58432891",
+    "900.3.10(123)#(123)[SSP](C)": "f4ceb6c9bca915d3df2de1d84185e2b84f5ae1533efc089e14146defa60201b1",
+    "900.3.10(123)#(123)[SSP](D)": "fa2b7808c788e6477bb3686e0b4d50dba6f27f06a81d090c494466f677e280f9",
+    "900.3.10(123)#(123)[SSP](E)": "4da8ccb7461c9c6135e78c48169f054a23ed52ae93b7878f608666df27621b23",
+    "900.3.10(123)#(123)[SSP](F)": "085914172545c426f8653391d4409ba55c30ee4bffde4d5f90212055d80178bd",
+    "900.3.10(123)#(123)[SSP](G)": "bf0d3860fd0e8c8419500cd60d3f923c9ad57aa1f05d1183670b82ff32714183",
+    "900.3.10(1410)#(1410)[PBS](A)": "c48ce55c4e423ef310ddb143619cb0768c829620d18c7903acc9db42a3b0c821",
+    "900.3.10(1410)#(1410)[PBS](B)": "a214b747b98d0fb6d5784e866dc4b065c34699f43be05b709b9e41ce9874bb70",
+    "900.3.10(1410)#(1410)[SSP](A)(i)": "0c8f5cf93ae29849d2a9d77aaee808807b5373a85ab661aef74e90fd2ce020f0",
+    "900.3.10(1410)#(1410)[SSP](A)(ii)": "c8a8d6f5e35293deae2a9ac44bf7b2f314d6f83c32224867cdaa95cd141a00a6",
+    "900.3.10(1410)#(1410)[SSP](A)(iii)": "33aa77fb0c5fa497b96cd80e7221fac0c8c72c3d3617cfe63009e42336f9ce7e",
+    "900.3.10(1410)#(1410)[SSP](A)(iv)": "7e88929ac6b04cdd5f13bd48e2fd0d1cd6db6084ffae69ac281fde3f31057b61",
+    "900.3.10(1410)#(1410)[SSP](B)": "7adaf321bc44b74d069af3ab075fe3b3ccc5d71669cab5f1e3a2522a383be42e",
+    "900.3.10(1410)#(1410)[SSP](C)": "b890dd114ac500299e8dad4fd32dda50c899cf3977a9b299233089281421dca0",
+    "900.3.10(701)#(701)[PBS]": "77154439241aafae69eedb6597ed2ba4c59a67053c3e3038cb781b363fd1bb80",
+    "900.3.10(701)#(701)[SSP](A)(i)": "492e74cd5c1391969b22aacbc50316e3740cc8486d4946cd19cd45aff1335ce2",
+    "900.3.10(701)#(701)[SSP](A)(ii)": "2a29cfc5b37e329389395b2124f446f1843c83136b909f2d626cfd174b27c0ce",
+    "900.3.10(701)#(701)[SSP](A)(iii)": "2a9f1e9d543971198a32577087de1261ba45233776c2985452a2069799ab41df",
+    "900.3.10(701)#(701)[SSP](B)": "dac376cd8aa98b744a32c2e5828d1f85f7b0ab5dc7e6193be29682cd7f806984",
+    "900.3.10(701)#(701)[SSP](C)": "2f4a8bc7268b0552ecf36083ef546554e34d2a6257f69478fca84bec3438f861",
+    "900.3.10(701)#(701)[SSP](D)": "c8740f6297e0aca779eef729b4e0c6fb872c7b94191ed9458b0429690f6bfa04"
+  }
+}

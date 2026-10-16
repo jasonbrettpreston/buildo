@@ -1,0 +1,573 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_4/900.4.10.w1-s60",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](A)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {"literal": "22.0 m", "reason": "limit_not_modelled", "clause_path": "(48)[SSP](A)(i)"}
+      ],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "any", "evidence": "minimum building setback from a front lot line"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "ch900_backlog",
+      "disclosure": "Setback is stated as 22.0 metres from the centreline on the original road allowance of St. Clair Ave.; a setback measured from a road centreline has no dsl_target (rule 23), so the limit is not modelled.",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.45 m @(48)[SSP](A)(ii)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "any", "evidence": "minimum side yard setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(48)[SSP](A)(iii)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "any", "evidence": "building setback from a side lot line"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](A)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {"literal": "22.0 m", "reason": "limit_not_modelled", "clause_path": "(48)[SSP](A)(iv)"}
+      ],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "any", "evidence": "minimum building setback from a front lot line"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "ch900_backlog",
+      "disclosure": "Setback is stated as 22.0 metres from the centreline on the original road allowance of Birchmount Rd.; a setback measured from a road centreline has no dsl_target (rule 23), so the limit is not modelled.",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](A)(v)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(48)[SSP](A)(v)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "any", "evidence": "an attached or detached garage"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "attached or detached garage"}]
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](B)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 15.0 m @(48)[SSP](B)(i)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "a lot has a semi-detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](B)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 510 m2 @(48)[SSP](B)(ii)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "a lot has a semi-detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 7.5 m @(48)[SSP](C)(i)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "a lot has a semi-detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 255 m2 @(48)[SSP](C)(ii)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "a lot has a semi-detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 7.5 m @(48)[SSP](D)(i)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "detached_house", "evidence": "A lot with a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 255 m2 @(48)[SSP](D)(ii)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 48"}],
+        "building_types": [{"token": "detached_house", "evidence": "A lot with a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(48)#(48)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [
+          {"token": "semi_detached_house", "evidence": "only permitted building type is semi-detached houses"},
+          {"token": "ancillary_building", "evidence": "and ancillary structures"}
+        ],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": ["front_setback_m", "rear_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = 6.0 m @(14)[SSP](B)",
+        "rear_setback_m = 6.0 m @(14)[SSP](B)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [{"token": "any", "evidence": "The minimum building setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(14)[SSP](C)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [{"token": "any", "evidence": "The minimum building setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 9.1 m @(14)[SSP](D)",
+        "height_storeys = 3 storeys @(14)[SSP](D)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [{"token": "any", "evidence": "maximum height of all buildings"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](E)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {"literal": "60 pct", "reason": "limit_not_modelled", "clause_path": "(14)[SSP](E)"}
+      ],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "for each semi-detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "ch900_backlog",
+      "disclosure": "A maximum share of the front yard given to hard surfacing has no dsl_target (no hard-surfacing target exists, and a landscaping target may not be borrowed, rule 14), so the 60% limit is not modelled.",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 51 pct @(14)[SSP](F)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exception RS 14"}],
+        "building_types": [{"token": "any", "evidence": "lot coverage for all buildings"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    },
+    {
+      "unit_id": "900.4.10(14)#(14)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "gaps": []
+      },
+      "not_modelled_reason": "none",
+      "disclosure": "none",
+      "input_fidelity": "none"
+    }
+  ]
+}

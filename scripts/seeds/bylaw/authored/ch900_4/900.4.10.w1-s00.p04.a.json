@@ -1,0 +1,251 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_4/900.4.10.w1-s00.p04",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.4.10(336)#(336)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = min(0.6 ratio × lot_area_m2; 204 m2) @(336)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 < 408 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "a permitted building type",
+          "lot_area_band": "if the lot area is less than 408 square metres"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The exception states the maximum floor space index as an area: the lesser of 0.6 times the lot area or 204 square metres, for a lot with an area under 408 square metres. Keyed as a gross floor area cap computed from the lot area.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(336)#(336)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = min(0.5 ratio × lot_area_m2; 279 m2) @(336)[SSP](A)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 ≥ 408 m2 and lot_area_m2 ≤ 697 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "a permitted building type",
+          "lot_area_band": "if the lot area is 408 square metres to 697 square metres"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "For a lot with an area from 408 to 697 square metres, the maximum floor space index is the lesser of 0.5 times the lot area or 279 square metres. Keyed as a gross floor area cap computed from the lot area.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(336)#(336)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 0.4 ratio × lot_area_m2 @(336)[SSP](A)(iii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 > 697 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "a permitted building type",
+          "lot_area_band": "if the lot area is more than 697 square metres"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "For a lot with an area over 697 square metres, the maximum floor space index is 0.4 times the lot area. Keyed as a gross floor area cap computed from the lot area.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(336)#(336)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 336",
+          "any": "Prevailing By-laws and Prevailing Sections:(None Apply)"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No prevailing by-laws or prevailing sections apply to Exception RS 336; the clause has no effect on what can be built.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(312)#(312)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 185 m2 @(312)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 312",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The minimum lot area for a detached house is 185 square metres.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(312)#(312)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 6.0 m @(312)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 312",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The minimum lot frontage for a detached house is 6.0 metres.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.4.10(312)#(312)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 944-2015", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["120 Donlands Avenue"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RS"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RS": "Exception RS 312",
+          "any": "On 120 Donlands Avenue"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On 120 Donlands Avenue, City of Toronto by-law 944-2015 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The provisions of by-law 944-2015 are not keyed.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On 120 Donlands Avenue, City of Toronto by-law 944-2015 prevails; MaxBLD does not evaluate it, so results for that address may differ from what the prevailing by-law allows.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.4.10(336)": {
+      "explanation": "Exception RS 336 caps the floor area of a home on a sliding scale by lot size: on lots under 408 square metres, the lesser of 0.6 times the lot area or 204 square metres; on lots of 408 to 697 square metres, the lesser of 0.5 times the lot area or 279 square metres; on lots over 697 square metres, 0.4 times the lot area. No prevailing by-laws apply.",
+      "code_refs": "none"
+    },
+    "900.4.10(312)": {
+      "explanation": "Exception RS 312 lets a detached house sit on a smaller lot than the RS zone normally requires: a minimum lot area of 185 square metres and a minimum lot frontage of 6.0 metres. At 120 Donlands Avenue, City of Toronto by-law 944-2015 prevails and is not evaluated by MaxBLD.",
+      "code_refs": "none"
+    }
+  }
+}

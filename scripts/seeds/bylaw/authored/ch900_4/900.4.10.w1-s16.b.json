@@ -1,0 +1,373 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_4/900.4.10.w1-s16",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.4.10(61)#(61)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.45 m @(61)[SSP](A)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.4.10(61)#(61)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(61)[SSP](B)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.4.10(61)#(61)[SSP](C)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": {
+        "if": "required_lot_frontage_m >= 6.0 m",
+        "lot_conditions": ["required_frontage_band"]
+      },
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house is permitted"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(61)#(61)[SSP](D)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.4.10(61)#(61)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](B)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = max(15.0 m; 7.5 m × dwelling_units) @(25)[SSP](B)(i)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "A semi-detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](B)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = max(510 m2; 255 m2 × dwelling_units) @(25)[SSP](B)(ii)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "A semi-detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type", "unit_count"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](B)(iii)",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "numeric_expression": ["lot_line_setback_m = 22.0 m @(25)[SSP](B)(iii)"],
+      "condition": {
+        "if": "abuts_named_street",
+        "lot_conditions": ["abuts_named_street"]
+      },
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "A semi-detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](B)(iv)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(25)[SSP](B)(iv)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "A semi-detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](B)(v)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 2.4 m @(25)[SSP](B)(v)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "semi_detached_house", "evidence": "A semi-detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 15.0 m @(25)[SSP](C)(i)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = 510 m2 @(25)[SSP](C)(ii)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](C)(iii)",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "numeric_expression": ["lot_line_setback_m = 22.0 m @(25)[SSP](C)(iii)"],
+      "condition": {
+        "if": "abuts_named_street",
+        "lot_conditions": ["abuts_named_street"]
+      },
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](C)(iv)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.45 m @(25)[SSP](C)(iv)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[SSP](C)(v)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 2.4 m @(25)[SSP](C)(v)"],
+      "condition": "none",
+      "application": {
+        "zones": [{"token": "RS", "evidence": "Exceptions for RS Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house must comply"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.4.10(25)#(25)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    }
+  ]
+}

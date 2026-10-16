@@ -1,0 +1,328 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s23",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1406)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "has a detached house erected before October 15, 1953"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(ii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "floor levels within the addition"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(iii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "existing side main wall of the building"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "not_modelled_reason": "needs_data_we_lack",
+      "disclosure": "Requires the completion date of any prior addition; an age requirement (at least 5 years old) has no expressible DSL target and no vocabulary unit for time.",
+      "literals_not_expressed": [
+        {"literal": "5 years", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "any prior addition"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "first floor of the building"}],
+        "lot_conditions": [],
+        "uses": [{"token": "deck_or_platform", "evidence": "a platform with a floor higher than"}]
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": ["frontage_band", "if lot_frontage_m <= 7.6 m"],
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "front wall of a residential building"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "Section 12(2) 119 of former City of Toronto By-law 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[SSP](A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": ["lawfully_existing"],
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "lawfully existing detached house"}],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "lawfully existing detached house"}],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "first floor of the building"}],
+        "lot_conditions": [],
+        "uses": [{"token": "deck_or_platform", "evidence": "a platform with a floor higher than"}]
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "Section 12(2) 119 of former City of Toronto By-law 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "former City of Toronto by-law 585-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "former City of Toronto by-law 533-80",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "former City of Toronto by-law 563-80",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses"},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "Prevailing By-laws and Prevailing Sections"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "calculation_handling": {"status": "not_modelled", "user_inputs": []}
+    }
+  ]
+}

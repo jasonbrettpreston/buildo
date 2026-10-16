@@ -1,0 +1,161 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p05",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 2.5 m @(736)[SSP](A)(i)"]
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": ["front_soft_landscaping_pct", "element_width_m"],
+      "bound": "min",
+      "numeric_expression": ["front_soft_landscaping_pct = 75 pct @(736)[SSP](A)(ii)", "element_width_m = 1.5 m @(736)[SSP](A)(ii)"]
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "element_width_pct",
+      "bound": "min",
+      "numeric_expression": ["element_width_pct = 10 pct @(736)[SSP](A)(iii)"]
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[SSP](A)(iv)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "numeric_expression": ["separation_m = 6.0 m @(736)[SSP](A)(iv)"]
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](G)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](H)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](J)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](K)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](L)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](M)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](N)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](O)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](P)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](Q)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(736)#(736)[PBS](R)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

@@ -1,0 +1,958 @@
+{
+ "schema": "bylaw-authored-v1",
+ "shard": "ch900_2/900.2.10.w1-s00.p10",
+ "keyer": "A",
+ "units": [
+  {
+   "unit_id": "900.2.10(604)#(604)[SSP](A)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "apartment_building"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 604",
+     "apartment_building": "An apartment building"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "An apartment building is not a permitted building type on these lands.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(604)#(604)[PBS]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "No prevailing by-laws or sections apply to exception R 604.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](A)",
+   "archetype": "REQUIRE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "comply_with_bylaw",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": {
+    "tokens": [
+     "lawfully_existing"
+    ]
+   },
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [
+     "lawfully_existing"
+    ],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930",
+     "detached_house": "existing detached house",
+     "lawfully_existing": "lawfully existing detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "existing_building_facts",
+    "user_inputs": [
+     "building_type",
+     "lawfully_existing_status"
+    ],
+    "description": "An addition above the first storey of a lawfully existing detached house must meet the minimum building setbacks of the by-law.",
+    "gaps": "Needs the lawfully existing status and the as-built house."
+   },
+   "disclosure": "Additions above the first storey of a lawfully existing detached house must meet the standard minimum setbacks; this depends on the existing building and is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](B)",
+   "archetype": "LIMIT",
+   "target": "required_lot_frontage_m",
+   "bound": "min",
+   "numeric_expression": [
+    "required_lot_frontage_m = 7.5 m @(930)[SSP](B)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "detached_house"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930",
+     "detached_house": "with a detached house"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [
+     "building_type"
+    ],
+    "description": "Minimum lot frontage of 7.5 m for a lot with a detached house.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "needs_data_we_lack",
+    "user_inputs": [],
+    "description": "A vehicle entrance through the front main wall of a residential building (other than an ancillary building) is not permitted.",
+    "gaps": "The location of a vehicle entrance is a design fact not held."
+   },
+   "disclosure": "On these lands a garage entering through the front wall of the house is not permitted; this is not evaluated.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](D)(i)",
+   "archetype": "LIMIT",
+   "target": "platform_area_m2",
+   "bound": "max",
+   "numeric_expression": [
+    "platform_area_m2 = 4.0 m2 @(930)[SSP](D)(i)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.2 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Exception R 930",
+     "deck_or_platform": "such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "A raised rear deck or balcony is limited to 4.0 m2.",
+    "gaps": "Applies only to a platform attached to or within 0.3 m of the rear main wall and more than 1.2 m above established grade; the platform design is a scenario fact."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](D)(ii)",
+   "archetype": "LIMIT",
+   "target": "side_setback_m",
+   "bound": "min",
+   "numeric_expression": [
+    "side_setback_m = 1.8 m @(930)[SSP](D)(ii)"
+   ],
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.2 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Exception R 930",
+     "deck_or_platform": "such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "A raised rear deck or balcony must be at least 1.8 m from the side lot lines.",
+    "gaps": "Applies only to a platform attached to or within 0.3 m of the rear main wall and more than 1.2 m above established grade; the platform design is a scenario fact."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[SSP](D)(iii)",
+   "archetype": "PROHIBIT",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [
+    {
+     "literal": "0.3 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    },
+    {
+     "literal": "1.2 metres",
+     "clause": "(930)[SSP](D)",
+     "reason": "threshold_used_in_application"
+    }
+   ],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [
+     "deck_or_platform"
+    ],
+    "evidence": {
+     "R": "Exception R 930",
+     "deck_or_platform": "such as a deck or balcony"
+    }
+   },
+   "calculation_handling": {
+    "status": "partially_modelled",
+    "not_modelled_reason": "needs_user_input",
+    "user_inputs": [],
+    "description": "A raised rear deck or balcony may not encroach into the required rear yard setback.",
+    "gaps": "Applies only to a platform attached to or within 0.3 m of the rear main wall and more than 1.2 m above established grade; the platform design is a scenario fact."
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 63 of former City of Toronto By-law 438-86",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Section 12(2) 63 of former By-law 438-86 prevails.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Section 12(2) 118 of former By-law 438-86 prevails.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_section",
+    "citation": "Section 12(2) 119 of former City of Toronto By-law 438-86",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Section 12(2) 119 of former By-law 438-86 prevails.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[PBS](D)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 354-73",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the odd numbered addresses of 61-65 Petman Ave."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 354-73 prevails on 61-65 Petman Ave. (odd).",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(930)#(930)[PBS](E)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "City of Toronto by-laws 545-2004 and 134-2005",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "36 Whitewood Rd."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 930"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "By-laws 545-2004 and 134-2005 prevail on 36 Whitewood Rd.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(322)#(322)[SSP]",
+   "archetype": "PROCEDURAL",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [],
+    "building_types": [],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {}
+   },
+   "calculation_handling": {
+    "status": "informational",
+    "not_modelled_reason": "procedural_not_numeric",
+    "user_inputs": [],
+    "description": "No site specific provisions apply to exception R 322.",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(322)#(322)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 145-72",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the even numbered addresses of 700-706 Coxwell Ave.",
+     "the odd numbered addresses of 701-719 Coxwell Ave."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 322"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 145-72 prevails on 700-706 (even) and 701-719 (odd) Coxwell Ave.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(322)#(322)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 678-84",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the odd numbered addresses of 49-51 Donlands Ave."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 322"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 678-84 prevails on 49-51 Donlands Ave. (odd).",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(322)#(322)[PBS](C)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 198-77",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "27 Eaton Ave."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 322"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 198-77 prevails on 27 Eaton Ave.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(322)#(322)[PBS](D)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 187-71",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "the odd numbered addresses of 137-145 Strathmore Blvd."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 322"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 187-71 prevails on 137-145 Strathmore Blvd. (odd).",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(804)#(804)[SSP](A)",
+   "archetype": "INCLUDE",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": "none",
+   "evaluated_by_us": "none",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "whole",
+    "refs": []
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 804"
+    }
+   },
+   "calculation_handling": {
+    "status": "modelled",
+    "not_modelled_reason": "none",
+    "user_inputs": [],
+    "description": "The lands must also comply with exception 900.2.10(7).",
+    "gaps": "none"
+   },
+   "disclosure": "none",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(804)#(804)[PBS](A)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "former City of Toronto by-law 437-75",
+    "municipality": "former City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "142 Argyle St."
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 804"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "Former by-law 437-75 prevails on 142 Argyle St.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  },
+  {
+   "unit_id": "900.2.10(804)#(804)[PBS](B)",
+   "archetype": "PREVAILING",
+   "target": "none",
+   "bound": "none",
+   "numeric_expression": "none",
+   "requirement": "none",
+   "instrument": {
+    "kind": "former_bylaw",
+    "citation": "City of Toronto by-law 498-2011",
+    "municipality": "City of Toronto"
+   },
+   "evaluated_by_us": "no",
+   "ranks_layers": "none",
+   "condition": "none",
+   "applies_to": {
+    "part": "named_addresses",
+    "refs": [
+     "259, 259A, 259B, 259C, and 259D Dovercourt Road"
+    ]
+   },
+   "literals_not_expressed": [],
+   "application": {
+    "zones": [
+     "R"
+    ],
+    "building_types": [
+     "any"
+    ],
+    "lot_conditions": [],
+    "uses": [],
+    "evidence": {
+     "R": "Exception R 804"
+    }
+   },
+   "calculation_handling": {
+    "status": "not_modelled",
+    "not_modelled_reason": "prevailing_alternate_path",
+    "user_inputs": [],
+    "description": "By-law 498-2011 prevails on 259-259D Dovercourt Road.",
+    "gaps": "The prevailing instrument is an alternate compliance path that is not evaluated."
+   },
+   "disclosure": "A former by-law or section prevails as an alternate compliance path on these lands; it is not evaluated here.",
+   "not_an_override": []
+  }
+ ],
+ "rows": {
+  "900.2.10(604)": {
+   "explanation": "On lands in exception R 604, an apartment building is not allowed. No older by-laws prevail.",
+   "code_refs": "none"
+  },
+  "900.2.10(930)": {
+   "explanation": "On lands in exception R 930: a detached-house lot needs at least 7.5 m of frontage; additions above the first storey of an existing detached house must meet the standard setbacks; a garage door through the front wall of the house is not allowed; and a rear deck or balcony more than 1.2 m above grade is capped at 4.0 m2, must stay 1.8 m from the side lot lines and may not extend into the required rear yard. Several sections of former By-law 438-86, and site by-laws for named addresses on Petman Ave. and Whitewood Rd., also prevail.",
+   "code_refs": "none"
+  },
+  "900.2.10(322)": {
+   "explanation": "Exception R 322 adds no site specific rules; older site by-laws prevail on named addresses on Coxwell Ave., Donlands Ave., Eaton Ave. and Strathmore Blvd.",
+   "code_refs": "none"
+  },
+  "900.2.10(804)": {
+   "explanation": "Lands in exception R 804 must also comply with exception R 7; older site by-laws prevail at 142 Argyle St. and 259-259D Dovercourt Road.",
+   "code_refs": "none"
+  }
+ }
+}

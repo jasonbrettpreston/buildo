@@ -1,0 +1,728 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s27",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](A)(i)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "22.0 metres", "clause": "(1142)[SSP](A)(i)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "abuts_named_street": "lot line abuts Lawson Rd."}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A front setback of 22.0 m measured from the original centreline of Lawson Rd., Colonel Danforth Trail, Meadowvale Rd., Centennial Rd. or Pickering Town Line; no target measures a setback from a street centreline and no front-yard target is licensed by the text.",
+        "gaps": "Original street centrelines are not held; the front lot line wording does not license front_setback_m."
+      },
+      "disclosure": "On lots whose front lot line abuts Lawson Rd., Colonel Danforth Trail, Meadowvale Rd., Centennial Rd. or Pickering Town Line, buildings must be set back at least 22.0 m from the original centreline of that street. We do not evaluate this; check it with the City.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "6.0 metres", "clause": "(1142)[SSP](A)(ii)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": [],
+        "description": "A 6.0 m minimum building setback from the front lot line where the lot does not abut a named street; the text says 'building setback from a front lot line', which no front-yard target pattern licenses, and the 'all other cases' arm is the negation of the named-street condition.",
+        "gaps": "No licensed target for a building setback from a front lot line; the 'all other cases' condition is not expressible as a token."
+      },
+      "disclosure": "Where the front lot line does not abut one of the named streets, buildings must be set back at least 6.0 m from the front lot line. We do not evaluate this yet.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(1142)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum side yard setback of 0.9 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": ["street_setback_m = 4.5 m @(1142)[SSP](C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum building setback of 4.5 m from any lot line that abuts a street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](D)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Incorporates exception 900.3.10(1462); its provisions are evaluated through that exception.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[SSP](E)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["townhouse", "apartment_building"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {
+          "RD": "Exception RD",
+          "townhouse": "a townhouse",
+          "apartment_building": "apartment building is not",
+          "abuts_named_street": "abutting Meadowvale Road"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"],
+        "description": "Townhouses and apartment buildings are not permitted on a lot abutting Meadowvale Road, despite By-law 1062-2025(OLT).",
+        "gaps": "Whether a lot abuts Meadowvale Road is not a held lot attribute."
+      },
+      "disclosure": "On lots abutting Meadowvale Road, a townhouse or apartment building is not permitted. We may not detect which lots abut Meadowvale Road.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1142)#(1142)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or sections apply.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(88)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "detached_house": "a detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"],
+        "description": "For a lot with a detached house, the minimum lot frontage is the frontage the lot had on the day By-law 569-2013 was enacted.",
+        "gaps": "The lot frontage as of the enactment date (2013-05-09) is not held."
+      },
+      "disclosure": "For a detached house, the minimum lot frontage is whatever the lot's frontage was when By-law 569-2013 was enacted. We cannot confirm historic frontage.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(88)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "detached_house": "a detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": ["building_type"],
+        "description": "With a detached house, the minimum lot area is the area the lot had on the day By-law 569-2013 was enacted.",
+        "gaps": "The lot area as of the enactment date (2013-05-09) is not held."
+      },
+      "disclosure": "For a detached house, the minimum lot area is whatever the lot's area was when By-law 569-2013 was enacted. We cannot confirm historic lot area.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "22.0 metres", "clause": "(88)[SSP](C)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "abuts_named_street": "abut Bellamy Rd."}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A 22.0 m minimum building setback from a lot line abutting Bellamy Rd., measured from the original centreline of Bellamy Rd.; no target measures a setback from a street centreline.",
+        "gaps": "The original centreline of Bellamy Rd. is not held."
+      },
+      "disclosure": "On lots abutting Bellamy Rd., buildings must be at least 22.0 m from the original centreline of Bellamy Rd. We do not evaluate this; check it with the City.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(88)[SSP](D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum side yard setback of 1.2 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 5.7 m @(88)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum setback of 5.7 m from a side lot line that abuts a street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.3 m @(88)[SSP](F)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["private_garage"],
+        "evidence": {"RD": "Exception RD", "private_garage": "attached or detached garage"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "An attached or detached garage must be at least 0.3 m from a side lot line.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](G)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = 18.0 m @(88)[SSP](G)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["108, 110, 142, 144, 146 and 148 Pandora Circle", "95 and 97 Sedgmount Dr."]},
+      "literals_not_expressed": [
+        {"literal": "9.0 metres", "clause": "(88)[SSP](G)(i)", "reason": "limit_arm_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "semi_detached_house": "a semi-detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type"],
+        "description": "On the named Pandora Circle and Sedgmount Dr. lands, a semi-detached house is permitted where the lot frontage is at least 18.0 m, with 9.0 m for each dwelling unit.",
+        "gaps": "Applies only to named addresses (no held address list); the 9.0 m per-dwelling-unit sub-allocation is not modelled."
+      },
+      "disclosure": "On 108, 110, 142, 144, 146 and 148 Pandora Circle and 95 and 97 Sedgmount Dr., a semi-detached house is permitted if the lot frontage is at least 18.0 m (9.0 m per dwelling unit). We do not evaluate this address-specific rule.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[SSP](G)(ii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["108, 110, 142, 144, 146 and 148 Pandora Circle", "95 and 97 Sedgmount Dr."]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "the RD zone", "semi_detached_house": "a semi-detached house"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": ["building_type"],
+        "description": "The semi-detached house permitted on the named lands must comply with all requirements of the RD zone.",
+        "gaps": "Applies only to named addresses (no held address list)."
+      },
+      "disclosure": "On the named Pandora Circle and Sedgmount Dr. lands, a semi-detached house must also meet all RD zone requirements. We do not evaluate this address-specific rule.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(88)#(88)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or sections apply.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(142)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "The minimum lot frontage is the frontage the lot had on the day By-law 569-2013 was enacted.",
+        "gaps": "The lot frontage as of the enactment date (2013-05-09) is not held."
+      },
+      "disclosure": "The minimum lot frontage is whatever the lot's frontage was when By-law 569-2013 was enacted. We cannot confirm historic frontage.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(142)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "The minimum lot area is the area the lot had on the day By-law 569-2013 was enacted.",
+        "gaps": "The lot area as of the enactment date (2013-05-09) is not held."
+      },
+      "disclosure": "The minimum lot area is whatever the lot's area was when By-law 569-2013 was enacted. We cannot confirm historic lot area.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](C)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "22.0 metres", "clause": "(142)[SSP](C)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "abuts_named_street": "abut Birchmount Rd."}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A 22.0 m minimum building setback from a lot line abutting Birchmount Rd., measured from the original centreline of Birchmount Rd.; no target measures a setback from a street centreline.",
+        "gaps": "The original centreline of Birchmount Rd. is not held."
+      },
+      "disclosure": "On lots abutting Birchmount Rd., buildings must be at least 22.0 m from the original centreline of Birchmount Rd. We do not evaluate this; check it with the City.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](D)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["abuts_named_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "24.0 metres", "clause": "(142)[SSP](D)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["abuts_named_street"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD", "abuts_named_street": "abut Kennedy Rd."}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A 24.0 m minimum building setback from a lot line abutting Kennedy Rd., measured from the original centreline of Kennedy Rd.; no target measures a setback from a street centreline.",
+        "gaps": "The original centreline of Kennedy Rd. is not held."
+      },
+      "disclosure": "On lots abutting Kennedy Rd., buildings must be at least 24.0 m from the original centreline of Kennedy Rd. We do not evaluate this; check it with the City.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(142)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum side yard setback of 0.9 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(142)[SSP](F)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum setback of 3.6 m from a side lot line that abuts a street.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(142)#(142)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or sections apply.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1142)": {
+      "explanation": "Site-specific RD exception 1142: buildings are set back 22.0 m from the original centreline of Lawson Rd., Colonel Danforth Trail, Meadowvale Rd., Centennial Rd. or Pickering Town Line where the front lot line abuts one of them, and 6.0 m from the front lot line otherwise; at least 0.9 m from a side lot line and 4.5 m from any lot line abutting a street. The lands must also comply with exception 900.3.10(1462), and townhouses and apartment buildings are not permitted on lots abutting Meadowvale Road.",
+      "code_refs": "none"
+    },
+    "900.3.10(88)": {
+      "explanation": "Site-specific RD exception 88: for a detached house, the minimum lot frontage and lot area are whatever the lot had when By-law 569-2013 was enacted; buildings are set back 22.0 m from the original centreline of Bellamy Rd., 1.2 m from a side lot line and 5.7 m from a side lot line abutting a street; garages must be at least 0.3 m from a side lot line. On named Pandora Circle and Sedgmount Dr. lots a semi-detached house is permitted with at least 18.0 m of frontage (9.0 m per unit) if it meets all RD zone requirements.",
+      "code_refs": "none"
+    },
+    "900.3.10(142)": {
+      "explanation": "Site-specific RD exception 142: the minimum lot frontage and lot area are whatever the lot had when By-law 569-2013 was enacted; buildings are set back 22.0 m from the original centreline of Birchmount Rd. and 24.0 m from the original centreline of Kennedy Rd. on lots abutting those roads, at least 0.9 m from a side lot line, and 3.6 m from a side lot line abutting a street.",
+      "code_refs": "none"
+    }
+  }
+}

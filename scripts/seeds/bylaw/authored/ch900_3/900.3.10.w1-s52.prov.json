@@ -1,0 +1,48 @@
+{
+  "a_seal": {
+    "seal_id": 431,
+    "sha256": "eabdaf203d2172a7f316e671dd9b0c484df906e08de31657bbf8e324780bb8cd"
+  },
+  "b_run": {
+    "ledger_sha256": "39e1ef0f95da897acf7a9f7d781d98bc62dc42bb758d85f66c0f059698ad852c",
+    "read_paths": [
+      "scripts/seeds/bylaw/authored/ch900_3/900.3.10.w1-s52.b.json"
+    ],
+    "run_id": "20261015T012632Z-2087a116",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W1",
+  "briefs": {
+    "a": "6989d664e84594be6e75882c84562faff21b183daa048c3699fc2911d401636e",
+    "b": "8f3122c7994a27e1c741569f562bd771089d49c178c5ac250c966cfd5c865936"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s52",
+  "unit_shas": {
+    "900.3.10(438)#(438)[PBS]": "54c491be5f77820c5f6d56dd5dab4bb44ccd5d7cad49b6d393695d0d92654bff",
+    "900.3.10(438)#(438)[SSP](A)": "68a3033ad2d48a99cde9b4fe7bb7b7d632aa3ba2004045c74ad6981ca684044f",
+    "900.3.10(438)#(438)[SSP](B)": "52cdeb08a60ba5f971d5ed31599ccf55ecee591abc8c4705ac2d801d409c4116",
+    "900.3.10(438)#(438)[SSP](C)": "8b65ad16151280545a7e29ebbd3f33c811dc0167f81408e65a465dfc86e48ce3",
+    "900.3.10(438)#(438)[SSP](D)": "6dc5a06eb742b6a30f031e232da607246b3ed68e773281e10d8e865c8575070b",
+    "900.3.10(438)#(438)[SSP](E)": "a60e429e2eab320a3e7dc374252da9d22497be9c0f071f93ac4fa8a4e9ef5e77",
+    "900.3.10(438)#(438)[SSP](F)": "e75953dc0db443123c3ac89e9628cae3c8d83a3608ab0a46d5d42bad46812e96",
+    "900.3.10(438)#(438)[SSP](G)": "27ebca787fe90e5d64564e4b3daf481d2ef00818769090ef17181e1125bdad0b",
+    "900.3.10(526)#(526)[PBS]": "5566e50afa4d374eb035899db31cb5362b0f0427fa4fe7850129c6d0dbc89600",
+    "900.3.10(526)#(526)[SSP](A)": "3a60c6680df60266f9d7098eb971d001e05d9fe5d2fa8911fa3fab7e1107264a",
+    "900.3.10(526)#(526)[SSP](B)": "5a0cc29c1efea8a7d44d37b9fe9750f8fba9b7a3277b438eb5557cd28745f3f7",
+    "900.3.10(526)#(526)[SSP](C)": "5041b02cb451be34177720e7a9e5c3880f9290fad9716868c0897189a43605a3",
+    "900.3.10(526)#(526)[SSP](D)": "6ccf23bfb7436f087fdc46fff13bdf7f81500ed90939bd7091ec55d094ba655e",
+    "900.3.10(526)#(526)[SSP](E)": "397baad71077c0adf8b288db2f84a2116fda68a2d44204e6721c2f0ffbc785a2",
+    "900.3.10(526)#(526)[SSP](F)": "a87342d28a95d6563b6f65a61c2f5405c002d88bef81d4654b00d048b7e1b7c4"
+  }
+}

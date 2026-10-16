@@ -1,0 +1,54 @@
+{
+  "corrections": [
+    {
+      "unit": "10.5.1.10(3)#(3)(A)",
+      "field": "condition",
+      "value": {
+        "tokens": [],
+        "if": "labelled(f)"
+      },
+      "rule": "Spec 69a M-174, M-75; Spec 68 §7.4 labelled()",
+      "reason": "operator 2026-10-15 RM review of 10.80.30.20(1)(B): a zone-label letter definition binds only where the label carries that letter; with condition \"none\" it made every lot without the letter not_evaluated:label_value_absent instead of letting the no-letter rule (e.g. 12.0 m) apply"
+    },
+    {
+      "unit": "10.5.1.10(3)#(3)(B)",
+      "field": "condition",
+      "value": {
+        "tokens": [],
+        "if": "labelled(a)"
+      },
+      "rule": "Spec 69a M-174, M-75; Spec 68 §7.4 labelled()",
+      "reason": "operator 2026-10-15 RM review of 10.80.30.20(1)(B): a zone-label letter definition binds only where the label carries that letter; with condition \"none\" it made every lot without the letter not_evaluated:label_value_absent instead of letting the no-letter rule (e.g. 12.0 m) apply"
+    },
+    {
+      "unit": "10.5.1.10(3)#(3)(C)",
+      "field": "condition",
+      "value": {
+        "tokens": [],
+        "if": "labelled(au)"
+      },
+      "rule": "Spec 69a M-174, M-75; Spec 68 §7.4 labelled()",
+      "reason": "operator 2026-10-15 RM review of 10.80.30.20(1)(B): a zone-label letter definition binds only where the label carries that letter; with condition \"none\" it made every lot without the letter not_evaluated:label_value_absent instead of letting the no-letter rule (e.g. 12.0 m) apply"
+    },
+    {
+      "unit": "10.5.1.10(3)#(3)(D)",
+      "field": "condition",
+      "value": {
+        "tokens": [],
+        "if": "labelled(u)"
+      },
+      "rule": "Spec 69a M-174, M-75; Spec 68 §7.4 labelled()",
+      "reason": "operator 2026-10-15 RM review of 10.80.30.20(1)(B): a zone-label letter definition binds only where the label carries that letter; with condition \"none\" it made every lot without the letter not_evaluated:label_value_absent instead of letting the no-letter rule (e.g. 12.0 m) apply"
+    },
+    {
+      "unit": "10.5.1.10(3)#(3)(E)",
+      "field": "condition",
+      "value": {
+        "tokens": [],
+        "if": "labelled(d)"
+      },
+      "rule": "Spec 69a M-174, M-75; Spec 68 §7.4 labelled()",
+      "reason": "operator 2026-10-15 RM review of 10.80.30.20(1)(B): a zone-label letter definition binds only where the label carries that letter; with condition \"none\" it made every lot without the letter not_evaluated:label_value_absent instead of letting the no-letter rule (e.g. 12.0 m) apply"
+    }
+  ]
+}

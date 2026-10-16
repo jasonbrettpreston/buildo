@@ -1,0 +1,340 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s40",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = existing(required_lot_frontage_m; enacted(569-2013)) @(302)[SSP](A)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(required_lot_area_m2; enacted(569-2013)) @(302)[SSP](B)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = 30 m @(302)[SSP](C)"
+      ],
+      "condition": {"tokens": ["abuts_named_street"], "if": "none"},
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.9 m @(302)[SSP](D)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 3.6 m @(302)[SSP](E)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.3 m @(302)[SSP](F)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 302"}],
+        "building_types": [{"token": "ancillary_building", "evidence": "An attached or detached garage"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(302)#(302)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = existing(required_lot_frontage_m; enacted(569-2013)) @(247)[SSP](A)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_area_m2 = existing(required_lot_area_m2; enacted(569-2013)) @(247)[SSP](B)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = 22.0 m @(247)[SSP](C)"
+      ],
+      "condition": {"tokens": ["abuts_named_street"], "if": "none"},
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(247)[SSP](D)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_street_m = 5.7 m @(247)[SSP](E)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.3 m @(247)[SSP](F)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "ancillary_building", "evidence": "An attached or detached garage"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[SSP](G)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 247"}],
+        "building_types": [{"token": "any", "evidence": "The lands, or a portion thereof"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "3.6 m", "reason": "limit_not_modelled"}
+      ],
+      "not_modelled_reason": "needs_data_we_lack",
+      "disclosure": "A minimum floor elevation of 3.6 metres above the elevation of Highland Creek is a real limit, but the by-law vocabulary has no dsl_target for a floor elevation measured from a watercourse datum and the elevation of Highland Creek is not held in the lot data.",
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(247)#(247)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "Schedule \"C\" Exceptions \"D\" and \"E\", of former City of Scarborough by-law 9350."},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []}
+    }
+  ]
+}

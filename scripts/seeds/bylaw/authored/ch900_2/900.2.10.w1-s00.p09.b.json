@@ -1,0 +1,577 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p09",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 266-71"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 190-89"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 610-00"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 97-0159"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](G)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 300-80"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](H)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 1276-07"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 22461"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](J)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 152-91"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](K)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-laws 62-67 and 190-69"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](L)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 304-80"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](M)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 97-0159"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](N)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 610-00"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](O)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 298-80"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](P)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 262-00"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](Q)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-laws 419-83, 224-84, and 225-84"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](R)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 219-02"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](S)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 115-75"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](T)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto By-law 1065-2012"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](U)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "ranks_layers": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 357-2010"
+      },
+      "evaluated_by_us": "no",
+      "applies_to": {
+        "part": "named_addresses"
+      },
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      }
+    }
+  ]
+}

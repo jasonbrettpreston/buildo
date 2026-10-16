@@ -1,0 +1,46 @@
+{
+  "a_seal": {
+    "seal_id": 402,
+    "sha256": "e1389412af22ab38fda7b33b4005936824f1101083beef7db80720bc00de9434"
+  },
+  "b_run": {
+    "ledger_sha256": "37e18d98a1301fbcace883756b8c0a5cbe60c6ef76a95620c5a7447a34385f8b",
+    "read_paths": [],
+    "run_id": "20261015T001808Z-4d33c488",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W1",
+  "briefs": {
+    "a": "0d3db4e086862263821abb701bc377710d7050f526b295cf6267ee81acb89fc3",
+    "b": "d36220ed8d7717f90e1e36ac8d817f1577ebb624873f08d6f86ad53aea167a19"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s23",
+  "unit_shas": {
+    "900.3.10(1406)#(1406)[PBS](A)": "097b50830915b36b33c7c17ce00b6cbafa0907c8c54021669e1576f0c944c882",
+    "900.3.10(1406)#(1406)[PBS](B)": "63a95309cf2786850eb1b7ed2ababb247fea069cc472df28c25a1f2b883cd44c",
+    "900.3.10(1406)#(1406)[SSP](A)(i)": "caf4061afc6c559c06bbf59446ec39d3898ed32bffdaad40ee880b0ddd349cc3",
+    "900.3.10(1406)#(1406)[SSP](A)(ii)": "daab955c44723f49a11f485a402808b1e4a16008603126f3ca5612ca43ea90d7",
+    "900.3.10(1406)#(1406)[SSP](A)(iii)": "0a6c9d9f50e7334208c5135243ffcaacf6d9933db5b5519570c9c293044bb442",
+    "900.3.10(1406)#(1406)[SSP](A)(iv)": "8ab756771dee787134d284e191f4809b519776319515f7246421a2447e75ab88",
+    "900.3.10(1406)#(1406)[SSP](B)": "7accfd756fb9b7cd1332a7f2066d3bd7e2ed48b1de6bfd4f214ae0aa74121f38",
+    "900.3.10(1406)#(1406)[SSP](C)": "b7c930b7ed2ab11e6e8db94906db1f7ebdc60f30351c579a107526728ff192a1",
+    "900.3.10(1432)#(1432)[PBS](A)": "5f96003f03740caa1de7d8df97431a3d3890cfe394f4d93de8bf040ecce0e041",
+    "900.3.10(1432)#(1432)[PBS](B)": "c7d333818039b38ac20aa524af02cb0faa8e5a035b5f0fe58265d6a3681b2884",
+    "900.3.10(1432)#(1432)[PBS](C)": "fe566df49eb54a2fb56dc4b4e1cac7a5630d2d4ff7d2460312a62c2c0d0228d1",
+    "900.3.10(1432)#(1432)[PBS](D)": "50201bbfdb41e8852a73dbb4e00d6694c1c241767592f5a8bf7e1a94e6d32286",
+    "900.3.10(1432)#(1432)[PBS](E)": "fd01c8a8a0c4e0c87da91a9fcc7773ddb252d494d6237b9cf75c0aa3a0ca4ddc",
+    "900.3.10(1432)#(1432)[SSP](A)": "12b8f6a983006afec99c8dc0f0d83f530e2c1ef2f27058722986ef1743bec700",
+    "900.3.10(1432)#(1432)[SSP](B)": "58c407172f8dd3ef3db50f79663b9f6a97dc3ee61d0cfc10bb2b2d68d248a66b"
+  }
+}

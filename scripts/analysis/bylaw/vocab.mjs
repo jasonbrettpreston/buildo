@@ -201,6 +201,7 @@ export function evaluatorVocab(vocab) {
   const types = vocab.building_type || {};
   const names = Object.keys(types).sort(cmpStr);
   return {
+    accessory_structure_use: vocab.accessory_structure_use, // M-175: applies() scopes accessory-structure units out
     building_type_parent: Object.fromEntries(names.filter((n) => types[n].parent).map((n) => [n, types[n].parent])),
     building_type_residential: names.filter((n) => types[n].residential === true),
     dsl_input: vocab.dsl_input,

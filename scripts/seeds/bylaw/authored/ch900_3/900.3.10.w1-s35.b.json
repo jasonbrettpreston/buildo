@@ -1,0 +1,430 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s35",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 3.0 m @(10)[SSP](A)"],
+      "condition": ["depth_band", "if lot_depth_m < 30.0 m"],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The minimum front yard setback"}],
+        "lot_conditions": [{"token": "depth_band", "evidence": "lots with a lot depth of less than 30.0 metres"}],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 4.5 m @(10)[SSP](B)"],
+      "condition": ["depth_band", "if lot_depth_m >= 30.0 m"],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The minimum front yard setback"}],
+        "lot_conditions": [{"token": "depth_band", "evidence": "lots with a lot depth of 30.0 metres or more"}],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "rear_setback_m = 7.5 m @(10)[SSP](C)",
+        "rear_setback_m = max(7.5 m @(10)[SSP](C); 9.0 m) @(10)[SSP](C)"
+      ],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The minimum rear yard setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [
+        {"literal": "9.0", "reason": "lot_condition_arm_not_modelled", "clause_path": "(10)[SSP](C)"}
+      ],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "aggregate_side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.3 m @(10)[SSP](D)",
+        "aggregate_side_setback_m = 1.2 m @(10)[SSP](D)"
+      ],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The minimum side yard setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "separation_m",
+      "bound": "min",
+      "numeric_expression": ["separation_m = 1.2 m @(10)[SSP](E)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "distance between adjacent buildings"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.0 m @(10)[SSP](F)"],
+      "condition": ["flanking_lot"],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "a building on a lot that flanks"}],
+        "lot_conditions": [{"token": "flanking_lot", "evidence": "lot that flanks on a street"}],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "requirement": "fenced",
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "On lots with one or more side yard setbacks"}],
+        "lot_conditions": [{"token": "depth_band", "evidence": "On lots with one or more side yard setbacks"}],
+        "uses": []
+      },
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [
+        {"literal": "0.9", "reason": "threshold_used_in_application", "clause_path": "(10)[SSP](G)"},
+        {"literal": "0.9", "reason": "cross_reference_value", "clause_path": "(10)[SSP](G)"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](H)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 2.4 m @(10)[SSP](H)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "the maximum height of a fence"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [
+        {"literal": "1.2", "reason": "threshold_used_in_application", "clause_path": "(10)[SSP](H)"}
+      ],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](I)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 10.5 m @(10)[SSP](I)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The maximum building height"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](J)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 45 pct @(10)[SSP](J)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "The maximum lot coverage"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[SSP](K)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 4.5 m @(10)[SSP](K)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 10"}],
+        "building_types": [{"token": "any", "evidence": "A private garage must be set back"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "A private garage must be set back"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(10)#(10)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(236)[SSP](A)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "The minimum required lot frontage"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(236)[SSP](B)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "The minimum required lot area"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "front_setback_m",
+      "bound": "min",
+      "numeric_expression": ["front_setback_m = 22.0 m @(236)[SSP](C)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "The minimum building setback from a front lot line"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.9 m @(236)[SSP](D)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "The minimum side yard setback"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 3.6 m @(236)[SSP](E)"],
+      "condition": ["side_yard_abuts_street"],
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "The minimum building setback from a side lot line"}],
+        "lot_conditions": [{"token": "side_yard_abuts_street", "evidence": "side lot line that abuts a street"}],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](F)(i)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 6.0 m @(236)[SSP](F)(i)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "An attached or detached garage"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "An attached or detached garage"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[SSP](F)(ii)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 0.3 m @(236)[SSP](F)(ii)"],
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exception RD 236"}],
+        "building_types": [{"token": "any", "evidence": "An attached or detached garage"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "An attached or detached garage"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(236)#(236)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole"},
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": []},
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    }
+  ]
+}

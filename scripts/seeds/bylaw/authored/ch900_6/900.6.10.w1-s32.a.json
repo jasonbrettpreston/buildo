@@ -1,0 +1,649 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w1-s32",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["all_units_front_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex", "townhouse"],
+        "lot_conditions": ["all_units_front_street"],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "detached_house": "A detached house",
+          "semi_detached_house": "semi-detached house, duplex",
+          "duplex": "house, duplex, triplex",
+          "triplex": "duplex, triplex, or",
+          "townhouse": "a townhouse with every dwelling unit",
+          "all_units_front_street": "every dwelling unit fronting directly on a street"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Only detached houses, semi-detached houses, duplexes, triplexes and townhouses (with every dwelling unit fronting directly on a street) are permitted residential building types.",
+        "gaps": "Whether every townhouse dwelling unit fronts directly on a street is a design fact of the proposal.",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = by_type(detached_house: 8.0 m; semi_detached_house: 12.0 m; duplex: 12.0 m; triplex: 12.0 m; townhouse: 5.0 m) @(253)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex", "townhouse"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "house, duplex, or triplex",
+          "triplex": "duplex, or triplex",
+          "townhouse": "for a townhouse"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum lot frontage by building type: 8.0 m detached house; 12.0 m semi-detached house, duplex or triplex; 5.0 m townhouse.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 11.0 m @(253)[SSP](C)",
+        "height_storeys = 3 storeys @(253)[SSP](C)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 253"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Maximum building height 11.0 m and no more than 3 storeys; both limits apply.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 1.0 ratio @(253)[SSP](D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 253"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Maximum floor space index 1.0.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "rear_setback_m",
+      "bound": "min",
+      "numeric_expression": ["rear_setback_m = 6.0 m @(253)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 253"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum rear yard setback 6.0 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](F)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.5 m @(253)[SSP](F)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "1.2 metres", "clause": "(253)[SSP](F)(i)", "reason": "limit_arm_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "detached_house": "for a detached house",
+          "duplex": "house, duplex, or triplex",
+          "triplex": "duplex, or triplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "Minimum side yard setback for a detached house, duplex or triplex: 0.5 m on one side and 1.2 m on the other side; the 0.5 m minimum applies to each side.",
+        "gaps": "The larger 1.2 m minimum on the other side is not modelled.",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](F)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(253)[SSP](F)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "duplex": "attached duplex or triplex",
+          "triplex": "or triplex buildings"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "Minimum side yard setback 1.2 m on the exterior side of two attached duplex or triplex buildings.",
+        "gaps": "Whether the building is one of two attached duplexes or triplexes is a design fact of the proposal.",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](F)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(253)[SSP](F)(iii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "semi_detached_house": "for a semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback 1.2 m for a semi-detached house.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](F)(iv)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.5 m @(253)[SSP](F)(iv)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["townhouse"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "townhouse": "for a townhouse"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "Minimum side yard setback 0.5 m for a townhouse.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](G)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(253)[SSP](G)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "duplex": "A duplex may be attached"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "A duplex may be attached to one other duplex on an adjacent lot in the same zone.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[SSP](H)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(253)[SSP](H)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 253",
+          "triplex": "A triplex may be attached"
+        }
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "A triplex may be attached to one other triplex on an adjacent lot in the same zone.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(253)#(253)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto By-law 712-2014", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["464, 466, and 468 Winona Drive"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 253"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On 464, 466 and 468 Winona Drive, City of Toronto By-law 712-2014 prevails as an alternate compliance path.",
+        "gaps": "The prevailing by-law is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "On 464, 466 and 468 Winona Drive, City of Toronto By-law 712-2014 prevails; we do not evaluate that by-law, so a design may be permitted under it even where this exception's limits are not met.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(473)#(473)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.6 ratio @(473)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 < 408 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "204 square metres", "clause": "(473)[SSP](A)(i)", "reason": "limit_arm_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 473",
+          "lot_area_band": "the lot area is less than"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "For a lot with an area under 408 m2, maximum floor space index is the lesser of 0.6 and 204 m2 of floor area.",
+        "gaps": "The 204 m2 floor-area cap (the 'lesser of' arm) is not modelled; only the 0.6 FSI is applied.",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(473)#(473)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.5 ratio @(473)[SSP](A)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 ≥ 408 m2 and lot_area_m2 ≤ 697 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "279 square metres", "clause": "(473)[SSP](A)(ii)", "reason": "limit_arm_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 473",
+          "lot_area_band": "the lot area is 408 square metres to 697 square metres"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "For a lot with an area of 408 m2 to 697 m2, maximum floor space index is the lesser of 0.5 and 279 m2 of floor area.",
+        "gaps": "The 279 m2 floor-area cap (the 'lesser of' arm) is not modelled; only the 0.5 FSI is applied.",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(473)#(473)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.4 ratio @(473)[SSP](A)(iii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lot_area_band"], "if": "lot_area_m2 > 697 m2"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": ["lot_area_band"],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 473",
+          "lot_area_band": "the lot area is more than"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "For a lot with an area over 697 m2, maximum floor space index is 0.4.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(473)#(473)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 473"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No prevailing by-laws or prevailing sections apply.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(32)#(32)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 32"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "description": "No site specific provisions apply.",
+        "gaps": "none",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(32)#(32)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 716-2003", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 32"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "City of Toronto by-law 716-2003 prevails as an alternate compliance path.",
+        "gaps": "The prevailing by-law is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "City of Toronto by-law 716-2003 prevails on these lands; we do not evaluate that by-law, so a design may be permitted under it even where the zone limits are not met.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(32)#(32)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RM": "Exception RM 32"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625 prevails.",
+        "gaps": "The Airport Hazard Map schedule is not held or evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "Schedule 'D' (Airport Hazard Map) of former North York zoning by-law 7625 prevails on these lands and may further restrict height; we do not evaluate it.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.6.10(253)": {
+      "explanation": "Exception RM 253 limits residential buildings to detached and semi-detached houses, duplexes, triplexes and street-fronting townhouses, sets minimum lot frontages by building type (8.0 m, 12.0 m, 5.0 m), a maximum height of 11.0 m and 3 storeys, a maximum FSI of 1.0, a 6.0 m minimum rear yard and side yard minimums of 0.5 m to 1.2 m; duplexes and triplexes may attach to one neighbour of the same type. On 464, 466 and 468 Winona Drive, By-law 712-2014 prevails.",
+      "code_refs": "none"
+    },
+    "900.6.10(473)": {
+      "explanation": "Exception RM 473 caps floor space index by lot area: the lesser of 0.6 and 204 m2 under 408 m2; the lesser of 0.5 and 279 m2 from 408 m2 to 697 m2; and 0.4 above 697 m2. The floor-area caps are not yet applied.",
+      "code_refs": "none"
+    },
+    "900.6.10(32)": {
+      "explanation": "Exception RM 32 adds no site specific provisions; City of Toronto by-law 716-2003 and the former North York Airport Hazard Map (Schedule 'D', by-law 7625) prevail and are not evaluated by us.",
+      "code_refs": "none"
+    }
+  }
+}

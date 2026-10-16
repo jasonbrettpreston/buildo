@@ -1,0 +1,748 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s19",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "lot_line_setback_m = 30.0 m @(931)[SSP](A)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "84 Davisville Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": [],
+        "description": "A minimum 30.0 m building setback from the Millwood Rd. lot line, a condition of the retirement home permission at 84 Davisville Ave. only.",
+        "gaps": "Applies to one named address and to a retirement home use, which MaxBLD does not model."
+      },
+      "disclosure": "At 84 Davisville Ave. a retirement home is permitted only if the building is set back at least 30.0 m from the Millwood Rd. lot line; this site-specific condition is not evaluated.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](A)(ii)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "84 Davisville Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "named_lots_only",
+        "user_inputs": [],
+        "description": "A condition of the retirement home permission at 84 Davisville Ave.: no driveway to the lot from Millwood Rd.",
+        "gaps": "Applies to one named address only."
+      },
+      "disclosure": "At 84 Davisville Ave. the retirement home permission requires that no driveway to the lot is provided from Millwood Rd.; this site-specific condition is not evaluated.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {
+        "tokens": [
+          "lawfully_existing"
+        ]
+      },
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [
+          "lawfully_existing"
+        ],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931",
+          "detached_house": "existing detached house",
+          "lawfully_existing": "lawfully existing detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [
+          "building_type",
+          "lawfully_existing_status"
+        ],
+        "description": "An addition or extension above the first storey of a lawfully existing detached house must meet the by-law's minimum building setbacks.",
+        "gaps": "Needs the lawful status and the as-built footprint of the existing house."
+      },
+      "disclosure": "If you add above the first storey of an existing detached house, the addition must meet the by-law's minimum setbacks; we do not check this against the existing building.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 9.0 m @(931)[SSP](C)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931",
+          "detached_house": "a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ],
+        "description": "The minimum lot frontage for a lot with a detached house is 9.0 m.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "No vehicle entrance through the front main wall of a residential building (ancillary buildings excepted), despite 10.10.80.40(1).",
+        "gaps": "Depends on the design of the front wall, which is not a lot input."
+      },
+      "disclosure": "A garage or vehicle entrance through the front wall of the house is not permitted here; we do not check the design.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](E)(i)",
+      "archetype": "LIMIT",
+      "target": "platform_area_m2",
+      "bound": "max",
+      "numeric_expression": [
+        "platform_area_m2 = 4.0 m2 @(931)[SSP](E)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.2 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Exception R 931",
+          "deck_or_platform": "deck or balcony"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "A rear platform (deck or balcony) within 0.3 m of the rear main wall and more than 1.2 m above established grade is limited to 4.0 m2.",
+        "gaps": "Whether a proposed platform meets the 0.3 m / 1.2 m applicability thresholds is a design input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](E)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.8 m @(931)[SSP](E)(ii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.2 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Exception R 931",
+          "deck_or_platform": "deck or balcony"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "Such a raised rear platform must have a minimum side yard setback of 1.8 m.",
+        "gaps": "Applies only to a platform meeting the 0.3 m / 1.2 m thresholds, a design input."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[SSP](E)(iii)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "0.3 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "literal": "1.2 metres",
+          "clause": "(931)[SSP](E)",
+          "reason": "threshold_used_in_application"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [
+          "deck_or_platform"
+        ],
+        "evidence": {
+          "R": "Exception R 931",
+          "deck_or_platform": "deck or balcony"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "Such a raised rear platform may not encroach into the required rear yard setback.",
+        "gaps": "Platform design is not a lot input."
+      },
+      "disclosure": "A raised rear deck or balcony may not extend into the required rear yard; we do not check deck design.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 63 of former City of Toronto By-law 438-86",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: Section 12(2) 63 of former City of Toronto By-law 438-86.",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On these lands, Section 12(2) 63 of former City of Toronto By-law 438-86 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: Section 12(2) 118 of former City of Toronto By-law 438-86.",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On these lands, Section 12(2) 118 of former City of Toronto By-law 438-86 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_section",
+        "citation": "Section 12(2) 119 of former City of Toronto By-law 438-86",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: Section 12(2) 119 of former City of Toronto By-law 438-86.",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On these lands, Section 12(2) 119 of former City of Toronto By-law 438-86 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto By-law 809-84 and City of Toronto By-law 607-1998",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "21 Hillsdale Ave. E.",
+          "12-20 Manor Road"
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: former City of Toronto By-law 809-84 and City of Toronto By-law 607-1998 (on 21 Hillsdale Ave. E. and 12-20 Manor Road).",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On 21 Hillsdale Ave. E. and 12-20 Manor Road, former City of Toronto By-law 809-84 and City of Toronto By-law 607-1998 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 518-83",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "32 Hillsdale Ave. E."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: former City of Toronto by-law 518-83 (on 32 Hillsdale Ave. E.).",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On 32 Hillsdale Ave. E., former City of Toronto by-law 518-83 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 809-84",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "the even numbered addresses of 12-16 Manor Rd. E."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: former City of Toronto by-law 809-84 (on the even numbered addresses of 12-16 Manor Rd. E.).",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On the even numbered addresses of 12-16 Manor Rd. E., former City of Toronto by-law 809-84 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](G)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "former City of Toronto by-law 165-75",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "168 Manor Rd. E."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: former City of Toronto by-law 165-75 (on 168 Manor Rd. E.).",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On 168 Manor Rd. E., former City of Toronto by-law 165-75 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(931)#(931)[PBS](H)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "City of Toronto by-law 543-04",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "170 Manor Rd. E."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 931"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Prevailing instrument: City of Toronto by-law 543-04 (on 170 Manor Rd. E.).",
+        "gaps": "The former instrument's text is not evaluated."
+      },
+      "disclosure": "On 170 Manor Rd. E., City of Toronto by-law 543-04 also governs as an alternate compliance path; we do not evaluate it.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(931)": {
+      "explanation": "Exception R 931 (Davisville / Manor Rd. / Hillsdale Ave. area) sets a 9.0 m minimum lot frontage for detached houses, bans vehicle entrances through the front wall of a house, limits raised rear decks and balconies (4.0 m2 maximum area, 1.8 m side yard setback, no encroachment into the rear yard), requires additions above the first storey of an existing detached house to meet the setbacks, carries a retirement-home permission for 84 Davisville Ave., and keeps several former City of Toronto by-laws and sections in force, some only on named addresses.",
+      "code_refs": "none"
+    }
+  }
+}

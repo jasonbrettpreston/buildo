@@ -4250,7 +4250,7 @@
     {
       "adjudication": {
         "adjudicated_by": "operator 2026-10-08 21:25 (QR15)",
-        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false)",
+        "change": "lot.flags.lawfully_existing = false (the explicit input lawfully_existing_status: false); expected.not_evaluated needs_user_input:building_type withdrawn, 7.5 m accepted (operator 2026-10-16 ADJ-3 (a); Spec 69a M-175 (5), M-50)",
         "kind": "eval_vector",
         "reason": "The Spec 67 worked examples and V-vectors are new builds, so the lawfully-existing modifiers (10.5.40.11/21/31/71, P2) do not apply; without the explicit input their applicability is undecided and masks the by-law result as condition_unknown:lawfully_existing.",
         "ruling": "Spec 68 §7.5 (undecided applicability); Spec 69a M-82"
@@ -4261,8 +4261,7 @@
         "why": "no literal (absence or no_expected vector)"
       },
       "expected": {
-        "not_evaluated": "needs_user_input:building_type",
-        "note": "V12 NULL is a fallback policy, mapped to not_evaluated (Spec 68 §7.6, M-50)"
+        "note": "V12 NULL is a fallback policy (Spec 68 §7.6, M-50). Expectation withdrawn 2026-10-16 (operator ADJ-3 (a)): every residential building type agrees at 7.5 m (winner 10.60.40.70(3)(A)) once M-175 set aside the accessory-structure-scoped 10.5.60.20(9)(B), so M-50 answers 7.5; the Spec 67 anchor \"NOT 7.5\" targeted the retired flat constant."
       },
       "id": "V12",
       "inputs_from": "Spec 67 §6 vector row \"Inputs\" column only (no zone label letters, no overlays unless stated; height overlay 10.0 m is the §6 default \"Unless stated\" — V18-V20 state NULL)",

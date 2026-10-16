@@ -1,0 +1,497 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s09",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](A)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": ["any"],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "existing as of February 28, 1977"}],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "February 28, 1977", "reason": "illustrative_or_historic"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](B)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "first floor", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](B)(ii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "access_from_street",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": [],
+        "building_types": ["detached_house"],
+        "lot_conditions": [{"token": "abuts_named_street", "evidence": "principal entrance is from Bathurst St"}],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1335)[SSP](C)(i)"],
+      "condition": "if fsi = 0.6 ratio and lawfully_existing",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "detached house erected before October 15, 1953"}],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "0.6", "reason": "threshold_used_in_application"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](C)(ii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "detached house erected before October 15, 1953"}],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](C)(iii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "detached house erected before October 15, 1953"}],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](C)(iv)",
+      "archetype": "LIMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [{"token": "lawfully_existing", "evidence": "any prior addition is at least 5 years old"}],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "5 years", "reason": "limit_not_modelled"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](D)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "if proposed_height_m > platform_height_m",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"]
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[SSP](E)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "if lot_frontage_m ≤ 7.6 m",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [{"token": "frontage_band", "evidence": "lot frontage of 7.6 metres or less"}],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "7.6", "reason": "threshold_used_in_application"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(1335)#(1335)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "former_bylaw 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(806)[SSP](A)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(806)[SSP](B)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.0 m @(806)[SSP](C)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [
+        {"literal": "one side only", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "street_setback_m",
+      "bound": "min",
+      "numeric_expression": ["street_setback_m = 3.0 m @(806)[SSP](D)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 6.0 m @(806)[SSP](E)"],
+      "condition": "if garage_entrance_faces_street",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [{"token": "garage_entrance_faces_street", "evidence": "vehicle entrance to a garage also faces the street"}],
+        "uses": ["private_garage"]
+      },
+      "literals_not_expressed": [
+        {"literal": "6.0", "reason": "threshold_used_in_application"}
+      ],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 50 pct @(806)[SSP](F)"],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"]
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[SSP](H)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(806)#(806)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "former_bylaw 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(38)#(38)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": ["gfa_m2", "fsi"],
+      "bound": "max",
+      "numeric_expression": [
+        "gfa_m2 = 125 m2 + 0.25 ratio × lot_area_m2 @(38)[SSP](A)",
+        "fsi = 0.5 ratio @(38)[SSP](A)"
+      ],
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"]
+      },
+      "literals_not_expressed": [
+        {"literal": "0.25", "reason": "rate_base"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(38)#(38)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = max(0.6 m; abutting_front_setback_m) @(38)[SSP](B)"
+      ],
+      "condition": "if lot_frontage_m < 15.3 m and lawfully_existing and side_setback_m ≥ 0.6 m and side_setback_m sum ≥ 2.1 m",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [
+          {"token": "lawfully_existing", "evidence": "existing 1 storey detached house"},
+          {"token": "frontage_band", "evidence": "lot frontage of less than 15.3 metres"}
+        ],
+        "uses": ["dwelling_unit"]
+      },
+      "literals_not_expressed": [
+        {"literal": "15.3", "reason": "threshold_used_in_application"},
+        {"literal": "0.6", "reason": "threshold_used_in_application"},
+        {"literal": "2.1", "reason": "threshold_used_in_application"}
+      ],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(38)#(38)[PBS]",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": "none",
+      "requirement": "none",
+      "instrument": "former_bylaw 438-86",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "literals_not_expressed": [],
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "prevailing_alternate_path", "user_inputs": []}
+    }
+  ]
+}

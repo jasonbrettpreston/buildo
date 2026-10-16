@@ -411,6 +411,11 @@ export function shapeFixtures() {
     out.push({ name: 'good twin: M-107 — lot_condition_arm_not_modelled on a LIMIT', reason: null, input: { slice, shards: one(mutU('LIMIT×literal', (u) => (u.literals_not_expressed = arm))), vocab } });
     const unArm = mutU('LIMIT×literal', (u) => { u.archetype = 'UNUSUAL'; u.target = 'none'; u.bound = 'none'; u.numeric_expression = 'none'; u.literals_not_expressed = arm; u.calculation_handling.status = 'not_modelled'; u.calculation_handling.not_modelled_reason = vocab.not_modelled_reason[0]; u.disclosure = 'the clause states a limit this unit does not model'; });
     out.push({ name: 'shape_must_be_none: M-107 — lot_condition_arm_not_modelled on an UNUSUAL', reason: 'shape_must_be_none', input: { slice, shards: one(unArm), vocab } });
+    // Spec 69a M-130: limit_arm_not_modelled only on LIMIT
+    const add = [{ literal: '0.6 metres', clause: '(3)(A)', reason: 'limit_arm_not_modelled' }];
+    out.push({ name: 'good twin: M-130 — limit_arm_not_modelled on a LIMIT', reason: null, input: { slice, shards: one(mutU('LIMIT×literal', (u) => (u.literals_not_expressed = add))), vocab } });
+    const unAdd = mutU('LIMIT×literal', (u) => { u.archetype = 'UNUSUAL'; u.target = 'none'; u.bound = 'none'; u.numeric_expression = 'none'; u.literals_not_expressed = add; u.calculation_handling.status = 'not_modelled'; u.calculation_handling.not_modelled_reason = vocab.not_modelled_reason[0]; u.disclosure = 'the clause states a limit this unit does not model'; });
+    out.push({ name: 'shape_must_be_none: M-130 — limit_arm_not_modelled on an UNUSUAL', reason: 'shape_must_be_none', input: { slice, shards: one(unAdd), vocab } });
   }
   return out;
 }

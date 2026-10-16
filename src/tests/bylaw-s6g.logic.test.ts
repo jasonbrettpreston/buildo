@@ -395,6 +395,17 @@ describe('Spec 69a M-107 — lot_condition_arm_not_modelled only on LIMIT (G-SHA
   });
 });
 
+// SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-130 (operator 2026-10-14, additive inexpressible arm of a LIMIT)
+describe('Spec 69a M-130 — limit_arm_not_modelled only on LIMIT (G-SHAPE); aggregate_side_setback_m', () => {
+  const fx: Json[] = FX.shapeFixtures();
+  it('passes on LIMIT, fails on UNUSUAL', () => {
+    expect(SH.checkShape(fx.find((f) => f.name.startsWith('good twin: M-130'))!.input).violations).toEqual([]);
+    expect(codesOf(SH.checkShape(fx.find((f) => f.name.startsWith('shape_must_be_none: M-130'))!.input))).toEqual(['shape_must_be_none']);
+    expect(VOCAB.literal_not_expressed_reason).toContain('limit_arm_not_modelled');
+    expect(VOCAB.dsl_target.aggregate_side_setback_m).toMatchObject({ unit: 'm', aspect: 'envelope', patterns: ['aggregate side yard'] });
+  });
+});
+
 describe('Spec 69 M-75 correction kind — a sealed draft is corrected by a record, never edited', () => {
   const g = FX.GOOD['LIMIT×literal'];
   const correctionFor = (field: string, value: unknown, o: Json = {}) => ({ adjudications: [{ id: `COR-${g.unit_id}/${field}`, kind: 'correction', unit: g.unit_id, field, value, reason: 'the clause says so', rule: 'Spec 68 §6.4', adjudicator: 'operator', adjudicated_on: '2026-10-08', ...o }] });

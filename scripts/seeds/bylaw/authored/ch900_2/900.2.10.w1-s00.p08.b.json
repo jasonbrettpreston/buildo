@@ -1,0 +1,182 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p08",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](A)(i)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](C)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](D)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](F)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](G)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](H)(i)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 1344 m2 @(735)[SSP](H)(i)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](H)(ii)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 1480 m2 @(735)[SSP](H)(ii)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](I)",
+      "archetype": "LIMIT",
+      "target": "ancillary_floor_area_m2",
+      "bound": "max",
+      "numeric_expression": ["ancillary_floor_area_m2 = 150 m2 @(735)[SSP](I)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](J)",
+      "archetype": "LIMIT",
+      "target": "dwelling_units_max",
+      "bound": "max",
+      "numeric_expression": ["dwelling_units_max = 12 units @(735)[SSP](J)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](K)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](L)(i)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 12 units @(735)[SSP](L)(i)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](L)(ii)(a)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "max",
+      "numeric_expression": ["parking_spaces = 4 units @(735)[SSP](L)(ii)(a)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](L)(ii)(b)",
+      "archetype": "LIMIT",
+      "target": "parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["parking_spaces = 2 units @(735)[SSP](L)(ii)(b)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](M)",
+      "archetype": "LIMIT",
+      "target": ["parking_space_width_m", "parking_space_length_m"],
+      "bound": "exact",
+      "numeric_expression": ["parking_space_width_m = 2.6 m @(735)[SSP](M)", "parking_space_length_m = 5.2 m @(735)[SSP](M)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](N)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](O)(i)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_spaces = 12 units @(735)[SSP](O)(i)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](O)(ii)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_spaces = 6 units @(735)[SSP](O)(ii)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](O)(iii)",
+      "archetype": "LIMIT",
+      "target": "bicycle_parking_spaces",
+      "bound": "min",
+      "numeric_expression": ["bicycle_parking_spaces = 2 units @(735)[SSP](O)(iii)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](O)(iv)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](O)(v)",
+      "archetype": "LIMIT",
+      "target": ["parking_space_length_m", "parking_space_width_m", "vertical_clearance_m"],
+      "bound": "min",
+      "numeric_expression": ["parking_space_length_m = 0.375 m @(735)[SSP](O)(v)", "parking_space_width_m = 0.800 m @(735)[SSP](O)(v)", "vertical_clearance_m = 2.0 m @(735)[SSP](O)(v)"]
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[SSP](P)",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(735)#(735)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

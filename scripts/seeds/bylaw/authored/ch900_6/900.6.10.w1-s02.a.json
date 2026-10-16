@@ -1,0 +1,573 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_6/900.6.10.w1-s02",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = by_type(detached_house: 230 m2; semi_detached_house: 460 m2; duplex: 555 m2; triplex: 610 m2) @(23)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex",
+          "triplex": "for a triplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum lot area by building type: 230 m2 detached house, 460 m2 semi-detached house, 555 m2 duplex, 610 m2 triplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = by_type(detached_house: 7.5 m; semi_detached_house: 15.0 m; duplex: 15.0 m; triplex: 16.5 m) @(23)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "house or duplex",
+          "triplex": "for a triplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum lot frontage by building type: 7.5 m detached house, 15.0 m semi-detached house or duplex, 16.5 m triplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 9.5 m @(23)[SSP](C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum building height of 9.5 m for a detached house.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 0.6 m @(23)[SSP](D)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum side yard setback of 0.6 m for a detached house.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.2 m @(23)[SSP](D)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "house, duplex, or",
+          "triplex": "or triplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum side yard setback of 1.2 m for a semi-detached house, duplex or triplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[SSP](D)(iii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_street_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_street_m = 1.5 m @(23)[SSP](D)(iii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["corner_lot"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex", "triplex"],
+        "lot_conditions": ["corner_lot"],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "semi-detached house, duplex",
+          "duplex": "house, duplex, or",
+          "triplex": "or triplex on",
+          "corner_lot": "on a corner lot"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "On a corner lot, minimum setback of 1.5 m from a side lot line abutting a street for a detached house, semi-detached house, duplex or triplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(23)#(23)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "former City of Etobicoke by-law 1991-41", "municipality": "City of Etobicoke"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["odd numbered addresses of 1-26 Lake Shore Drive", "57-61 Lake Shore Drive"]},
+      "literals_not_expressed": [
+        {"literal": "1-26", "clause": "(23)[PBS](A)", "reason": "threshold_used_in_application"},
+        {"literal": "57-61", "clause": "(23)[PBS](A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 23"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "On or between the odd numbered addresses of 1-26 and 57-61 Lake Shore Drive, former City of Etobicoke by-law 1991-41 prevails as an alternate compliance path.",
+        "gaps": "The former Etobicoke by-law is not evaluated."
+      },
+      "disclosure": "For the odd numbered addresses 1-26 and 57-61 Lake Shore Drive, former City of Etobicoke by-law 1991-41 also applies as a prevailing by-law; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = by_type(detached_house: 230 m2; semi_detached_house: 465 m2; duplex: 555 m2) @(263)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum lot area by building type: 230 m2 detached house, 465 m2 semi-detached house, 555 m2 duplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = by_type(detached_house: 7.5 m; semi_detached_house: 15.0 m; duplex: 18.0 m) @(263)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum lot frontage by building type: 7.5 m detached house, 15.0 m semi-detached house, 18.0 m duplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = by_type(detached_house: 35 pct; semi_detached_house: 35 pct; duplex: 30 pct) @(263)[SSP](C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "or semi-detached house",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum lot coverage: 35% for a detached or semi-detached house, 30% for a duplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": ["height_m", "height_storeys"],
+      "bound": "max",
+      "numeric_expression": [
+        "height_m = 8.5 m @(263)[SSP](D)",
+        "height_storeys = 2 storeys @(263)[SSP](D)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "semi-detached house, or",
+          "duplex": "or duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Maximum height of 8.5 m and two storeys for a detached house, semi-detached house or duplex; both limits apply.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = by_type(detached_house: 0.9 m; semi_detached_house: 1.2 m; duplex: 2.4 m) @(263)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["detached_house", "semi_detached_house", "duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "detached_house": "for a detached house",
+          "semi_detached_house": "for a semi-detached house",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "Minimum side yard setback by building type: 0.9 m detached house, 1.2 m semi-detached house, 2.4 m duplex.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[SSP](F)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["triplex", "fourplex", "apartment_building"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 263",
+          "triplex": "A triplex, fourplex",
+          "fourplex": "triplex, fourplex, or",
+          "apartment_building": "or apartment building"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": ["building_type"],
+        "description": "A triplex, fourplex or apartment building is not permitted.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(263)#(263)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or prevailing sections apply to Exception RM 263.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(383)#(383)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 40 pct @(383)[SSP](A)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 383"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum lot coverage of 40%.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.6.10(383)#(383)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "schedule_map", "citation": "Schedule 'D' Airport Hazard Map from City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RM"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "RM": "Exception RM 383"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Schedule 'D' Airport Hazard Map of former City of North York zoning by-law 7625 prevails on these lands.",
+        "gaps": "The Airport Hazard Map is not held or evaluated."
+      },
+      "disclosure": "The former North York Airport Hazard Map (Schedule 'D', by-law 7625) also applies to these lands and may further restrict height; we do not evaluate it.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.6.10(23)": {
+      "explanation": "Exception RM 23 sets its own lot rules by building type: minimum lot area 230 m2 (detached), 460 m2 (semi-detached), 555 m2 (duplex), 610 m2 (triplex); minimum lot frontage 7.5 m (detached), 15.0 m (semi-detached or duplex), 16.5 m (triplex); a 9.5 m maximum height for a detached house; minimum side yard setbacks of 0.6 m (detached) and 1.2 m (semi-detached, duplex, triplex), and 1.5 m from a street side lot line on a corner lot. For some Lake Shore Drive addresses, former Etobicoke by-law 1991-41 also prevails.",
+      "code_refs": "none"
+    },
+    "900.6.10(263)": {
+      "explanation": "Exception RM 263 sets minimum lot area (230 / 465 / 555 m2) and frontage (7.5 / 15.0 / 18.0 m) for a detached house, semi-detached house and duplex, maximum lot coverage of 35% (detached, semi-detached) or 30% (duplex), a maximum height of 8.5 m and two storeys, minimum side yard setbacks of 0.9 / 1.2 / 2.4 m, and does not permit a triplex, fourplex or apartment building.",
+      "code_refs": "none"
+    },
+    "900.6.10(383)": {
+      "explanation": "Exception RM 383 permits a maximum lot coverage of 40%; the former North York Airport Hazard Map (Schedule 'D', by-law 7625) also prevails on these lands.",
+      "code_refs": "none"
+    }
+  }
+}

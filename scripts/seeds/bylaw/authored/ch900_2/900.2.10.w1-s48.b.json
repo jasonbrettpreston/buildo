@@ -1,0 +1,266 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s48",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.2.10(785)#(785)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(785)#(785)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Former City of Toronto By-law 880-79",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(785)#(785)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Former City of Toronto by-law 96-0279",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(785)#(785)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "City of Toronto by-law 805-99",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[SSP](A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "application": {
+        "zones": [],
+        "building_types": [{"token": "ancillary_building", "evidence": "an ancillary building or structure is not permitted"}],
+        "lot_conditions": [{"token": "frontage_band", "evidence": "lot frontage of less than 4.57 metres"}],
+        "uses": []
+      },
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m < 4.57 m"},
+      "literals_not_expressed": [{"value": "4.57 m", "reason": "threshold_used_in_application", "clause": "(847)[SSP](A)"}]
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[SSP](B)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "include_ref": "900.2.10(4)"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Section 12(2) 56 of former City of Toronto By-law 438-86",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Section 12(2) 240 of former City of Toronto By-law 438-86",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-law 21004",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-law 21279",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-law 20-68",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(847)#(847)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-laws 360-79 and 590-79",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(354)#(354)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.2.10(354)#(354)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "City of Toronto by-law 383-99",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[SSP](A)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "application": {
+        "zones": [],
+        "building_types": [{"token": "any", "evidence": "a day nursery, a library, a private school, a retirement home, a religious residence, an office, a nursing home, hospice care home, or a residential care home are permitted"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "condition": {"tokens": [], "if": "none"},
+      "literals_not_expressed": [{"value": "1983", "reason": "illustrative_or_historic", "clause": "(929)[SSP](A)"}, {"value": "July 11, 1983", "reason": "illustrative_or_historic", "clause": "(929)[SSP](A)(i)"}]
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[SSP](A)(ii)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "application": {
+        "zones": [],
+        "building_types": [{"token": "any", "evidence": "there is no increase in floor area of the building that existed on the lot"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "condition": {"tokens": [], "if": "none"},
+      "literals_not_expressed": [{"value": "July 11, 1983", "reason": "illustrative_or_historic", "clause": "(929)[SSP](A)(ii)"}]
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[SSP](A)(iii)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "application": {
+        "zones": [],
+        "building_types": [{"token": "any", "evidence": "all other regulations of this By-law are complied with"}],
+        "lot_conditions": [],
+        "uses": []
+      }
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[SSP](B)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "application": {
+        "zones": ["R"],
+        "building_types": [{"token": "duplex", "evidence": "a duplex may be attached to one other duplex on an adjacent lot in the same zone"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "condition": {"tokens": [], "if": "none"}
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[SSP](B)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 3.0 m @(929)[SSP](B)(ii)"],
+      "application": {
+        "zones": ["R"],
+        "building_types": [{"token": "duplex", "evidence": "the minimum side yard setback for a duplex or for the exterior of two attached duplex residential buildings is 3.0 metres"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "condition": {"tokens": [], "if": "none"}
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Section 12(2) 50 of former City of Toronto By-law 438-86",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "Section 12(2) 323 of former City of Toronto By-law 438-86",
+      "applies_to": {"part": "whole"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "City of Toronto by-law 566-00",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-laws 365-75, 416-75, and 489-75",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    },
+    {
+      "unit_id": "900.2.10(929)#(929)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "instrument": "former City of Toronto by-law 295-79",
+      "applies_to": {"part": "named_addresses"},
+      "evaluated_by_us": "no"
+    }
+  ]
+}

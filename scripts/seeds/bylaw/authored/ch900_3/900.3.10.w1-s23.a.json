@@ -1,0 +1,476 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s23",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "fsi",
+      "bound": "max",
+      "numeric_expression": ["fsi = 0.69 ratio @(1406)[SSP](A)(i)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(1406)[SSP](A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406", "detached_house": "detached house erected before"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"],
+        "description": "On a lot with a permitted maximum floor space index of 0.6, a detached house built before October 15, 1953 may be enlarged by a rear addition so long as the overall floor space index, including the addition, does not exceed 0.69.",
+        "gaps": "Applies only to a detached house erected before October 15, 1953 and only to a rear addition; the construction date of the existing house is not in our lot data."
+      },
+      "disclosure": "This lot may allow a rear addition to a pre-1953 detached house up to a total floor space index of 0.69 (instead of 0.6). We cannot confirm the house's construction date from our data, so this allowance is not applied automatically.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(ii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(1406)[SSP](A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406", "detached_house": "detached house erected before"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"],
+        "description": "A condition of the pre-1953 rear-addition allowance: every finished floor level in the addition must be no higher than the uppermost floor level of the existing building.",
+        "gaps": "Needs the floor levels of the existing building, which we do not hold."
+      },
+      "disclosure": "For the rear-addition allowance on a pre-1953 detached house, the addition's floors can be no higher than the top floor of the existing house. We cannot check this from our data.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(iii)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(1406)[SSP](A)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406", "detached_house": "detached house erected before"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"],
+        "description": "A condition of the pre-1953 rear-addition allowance: the addition may be no closer to the nearest side lot line than the existing side main wall of the building.",
+        "gaps": "Needs the as-built distance from the existing side main wall to the side lot line, which we do not hold."
+      },
+      "disclosure": "For the rear-addition allowance on a pre-1953 detached house, the addition cannot come closer to the side lot line than the existing house's side wall. We cannot measure the existing wall position from our data.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](A)(iv)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "0.6", "clause": "(1406)[SSP](A)", "reason": "threshold_used_in_application"},
+        {"literal": "5", "clause": "(1406)[SSP](A)(iv)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406", "detached_house": "detached house erected before"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type"],
+        "description": "A condition of the pre-1953 rear-addition allowance: any earlier addition to the house must be at least 5 years old.",
+        "gaps": "Needs the dates of any earlier additions, which we do not hold; an age limit has no expressible form."
+      },
+      "disclosure": "For the rear-addition allowance on a pre-1953 detached house, any earlier addition must be at least 5 years old. We cannot check addition dates from our data.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "Exception RD 1406", "deck_or_platform": "a platform with a floor higher"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "In a front or rear yard, a platform whose floor is higher than the building's first floor may not encroach into the required yard setback, despite the general platform encroachment allowance in 10.5.40.60(1).",
+        "gaps": "Depends on the proposed platform design (its floor height relative to the first floor), which is not part of the envelope calculation."
+      },
+      "disclosure": "Raised decks or platforms higher than the first floor cannot extend into the required front or rear yard here. Our envelope does not model platforms.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["frontage_band"], "if": "lot_frontage_m ≤ 7.6 m"},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": ["frontage_band"],
+        "uses": ["private_garage"],
+        "evidence": {"RD": "Exception RD 1406", "frontage_band": "lot frontage of 7.6 metres or less", "private_garage": "vehicle entrance through the front wall"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "On a lot with a frontage of 7.6 metres or less, a vehicle entrance (such as an integral garage door) through the front wall of a residential building is not permitted.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Section 12(2) 118 of former City of Toronto By-law 438-86 prevails on these lands as an alternate compliance path.",
+        "gaps": "The former by-law section is not evaluated."
+      },
+      "disclosure": "A section of the former City of Toronto By-law 438-86 (12(2) 118) also governs these lands and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1406)#(1406)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(2) 119 of former City of Toronto By-law 438-86", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1406"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Section 12(2) 119 of former City of Toronto By-law 438-86 prevails on these lands as an alternate compliance path.",
+        "gaps": "The former by-law section is not evaluated."
+      },
+      "disclosure": "A section of the former City of Toronto By-law 438-86 (12(2) 119) also governs these lands and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[SSP](A)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "comply_with_bylaw",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["lawfully_existing"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["detached_house"],
+        "lot_conditions": ["lawfully_existing"],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432", "detached_house": "existing detached house", "lawfully_existing": "lawfully existing detached house"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": ["building_type", "lawfully_existing_status"],
+        "description": "Any addition or extension above the first storey of a lawfully existing detached house must meet the minimum building setbacks of this By-law (no grandfathering of existing setbacks for upper-storey additions).",
+        "gaps": "Whether the existing house is lawfully existing is not in our lot data."
+      },
+      "disclosure": "If you add above the first storey of an existing detached house, the addition must meet today's minimum setbacks even if the existing house does not.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {"RD": "Exception RD 1432", "deck_or_platform": "a platform with a floor higher"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "In a front or rear yard, a platform whose floor is higher than the building's first floor may not encroach into the required yard setback, despite the general platform encroachment allowance in 10.5.40.60(1).",
+        "gaps": "Depends on the proposed platform design (its floor height relative to the first floor), which is not part of the envelope calculation."
+      },
+      "disclosure": "Raised decks or platforms higher than the first floor cannot extend into the required front or rear yard here. Our envelope does not model platforms.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(2) 118 of former City of Toronto By-law 438-86", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Section 12(2) 118 of former City of Toronto By-law 438-86 prevails on these lands as an alternate compliance path.",
+        "gaps": "The former by-law section is not evaluated."
+      },
+      "disclosure": "A section of the former City of Toronto By-law 438-86 (12(2) 118) also governs these lands and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 12(2) 119 of former City of Toronto By-law 438-86", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "Section 12(2) 119 of former City of Toronto By-law 438-86 prevails on these lands as an alternate compliance path.",
+        "gaps": "The former by-law section is not evaluated."
+      },
+      "disclosure": "A section of the former City of Toronto By-law 438-86 (12(2) 119) also governs these lands and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "by-law 585-86", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["93 DAWLISH AVE"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "On 93 Dawlish Ave, former City of Toronto by-law 585-86 prevails as an alternate compliance path.",
+        "gaps": "The former site-specific by-law is not evaluated."
+      },
+      "disclosure": "At 93 Dawlish Ave, former City of Toronto by-law 585-86 also applies and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "by-law 533-80", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["73 GLENGOWAN RD"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "On 73 Glengowan Rd, former City of Toronto by-law 533-80 prevails as an alternate compliance path.",
+        "gaps": "The former site-specific by-law is not evaluated."
+      },
+      "disclosure": "At 73 Glengowan Rd, former City of Toronto by-law 533-80 also applies and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.3.10(1432)#(1432)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "by-law 563-80", "municipality": "former City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["5 WEYBOURNE CRES"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RD"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RD": "Exception RD 1432"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "On 5 Weybourne Cres, former City of Toronto by-law 563-80 prevails as an alternate compliance path.",
+        "gaps": "The former site-specific by-law is not evaluated."
+      },
+      "disclosure": "At 5 Weybourne Cres, former City of Toronto by-law 563-80 also applies and may prevail; we do not evaluate it.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.3.10(1406)": {
+      "explanation": "RD exception 1406: on a lot whose permitted floor space index is 0.6, a detached house built before October 15, 1953 may get a rear addition up to a total floor space index of 0.69, if the addition's floors are no higher than the existing top floor, it comes no closer to the side lot line than the existing side wall, and any earlier addition is at least 5 years old. Raised platforms higher than the first floor may not extend into a required front or rear yard, and on lots 7.6 metres wide or narrower a vehicle entrance through the front wall is not allowed. Sections 12(2) 118 and 119 of former By-law 438-86 also apply.",
+      "code_refs": "none"
+    },
+    "900.3.10(1432)": {
+      "explanation": "RD exception 1432: any addition above the first storey of an existing detached house must meet the By-law's minimum setbacks, and raised platforms higher than the first floor may not extend into a required front or rear yard. Sections 12(2) 118 and 119 of former By-law 438-86 also apply, and former site-specific by-laws govern 93 Dawlish Ave (585-86), 73 Glengowan Rd (533-80) and 5 Weybourne Cres (563-80).",
+      "code_refs": "none"
+    }
+  }
+}

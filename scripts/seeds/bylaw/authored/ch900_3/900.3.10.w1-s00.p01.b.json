@@ -1,0 +1,115 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s00.p01",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(5)#(5)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 1.8 m @(5)[SSP](A)"]
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[SSP](B)",
+      "archetype": "DISAPPLY",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[SSP](C)(i)",
+      "archetype": "LIMIT",
+      "target": "driveway_width_m",
+      "bound": "max",
+      "numeric_expression": ["driveway_width_m = 16.6 m @(5)[SSP](C)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[SSP](C)(ii)",
+      "archetype": "LIMIT",
+      "target": ["front_landscaping_pct", "front_soft_landscaping_pct"],
+      "bound": "min",
+      "numeric_expression": [
+        "front_landscaping_pct = 33 pct @(5)[SSP](C)(ii)",
+        "front_soft_landscaping_pct = 74 pct @(5)[SSP](C)(ii)"
+      ]
+    },
+    {
+      "unit_id": "900.3.10(5)#(5)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1462)#(1462)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = min(0.6 ratio × lot_area_m2; 204 m2) @(1462)[SSP](A)(i)"]
+    },
+    {
+      "unit_id": "900.3.10(1462)#(1462)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = min(0.5 ratio × lot_area_m2; 279 m2) @(1462)[SSP](A)(ii)"]
+    },
+    {
+      "unit_id": "900.3.10(1462)#(1462)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 0.4 ratio × lot_area_m2 @(1462)[SSP](A)(iii)"]
+    },
+    {
+      "unit_id": "900.3.10(1462)#(1462)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1463)#(1463)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1463)#(1463)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(1463)#(1463)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(961)#(961)[SSP](A)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(961)#(961)[SSP](B)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    },
+    {
+      "unit_id": "900.3.10(961)#(961)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none"
+    }
+  ]
+}

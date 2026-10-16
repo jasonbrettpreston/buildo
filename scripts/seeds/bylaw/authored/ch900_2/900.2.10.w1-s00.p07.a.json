@@ -1,0 +1,144 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s00.p07",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](A)(i)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(5)[SSP](A)(i)", "reason": "count_or_ordinal_not_a_limit"}
+      ],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 5",
+          "duplex": "a duplex may be attached"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "description": "Permits a duplex to be attached to one other duplex on an adjacent lot in the same zone; evaluated as a building-type permission for a duplex.",
+        "gaps": "Whether the adjacent lot holds a duplex in the same zone is not checked from the lot data.",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "side_setback_m",
+      "bound": "min",
+      "numeric_expression": ["side_setback_m = 3.0 m @(5)[SSP](A)(ii)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["duplex"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 5",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "description": "Minimum side yard setback of 3.0 m for a duplex, or for the exterior of two attached duplexes.",
+        "gaps": "none",
+        "user_inputs": ["building_type"]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[SSP](B)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["R"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["deck_or_platform"],
+        "evidence": {
+          "R": "Exception R 5",
+          "deck_or_platform": "a platform with a floor"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "deferred_phase2",
+        "description": "In a front or rear yard, a platform whose floor is higher than the building's first floor may not encroach into the required yard setback, despite 10.5.40.60(1).",
+        "gaps": "Platform design (floor level relative to the first floor) is not modelled.",
+        "user_inputs": []
+      },
+      "disclosure": "On these lands, a deck or platform in the front or rear yard with a floor above the first floor of the house cannot extend into the required yard setback; we do not check platform designs.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(5)#(5)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "description": "No prevailing by-laws or prevailing sections apply to this exception.",
+        "gaps": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(5)": {
+      "explanation": "Exception R 5 limits dwelling units to detached houses, semi-detached houses and duplexes. A duplex may be attached to one duplex on the neighbouring lot, and a duplex (or the outside of a pair of attached duplexes) needs a side yard setback of at least 3.0 m. A raised deck or platform in the front or rear yard may not extend into the required setback. No older by-laws prevail here.",
+      "code_refs": "none"
+    }
+  }
+}

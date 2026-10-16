@@ -342,3 +342,50 @@ describe('G-CLAUSE: a Ch.900 unit need not account for its OWN exception header 
     expect(C.isOwnExceptionHeader(row('900.2.10(296)', V), { ...lit(V, '296', 6), clause_path: '(296)[SSP](A)' })).toBe(false); // not the root clause
   });
 });
+
+describe('Q-F (a): a drafted shard keeps its lead-in groups and chunking as first planned (mirrors M2); both directions', () => {
+  const FR = (n: number): [string, string][] => [
+    [`(${n})`, `(${n}) Exception RM ${n} The lands are subject to the following Site Specific Provisions:`],
+    [`(${n})[SSP]`, 'Site Specific Provisions:'],
+    [`(${n})[SSP](A)`, '(A) The minimum frontage is:'],
+    [`(${n})[SSP](A)(i)`, '(i) 12.0 metres for a detached house;'],
+    [`(${n})[SSP](A)(ii)`, '(ii) 18.0 metres for a semi-detached house;'],
+  ];
+  const sl = () => exceptionSlice({ '900.6.10(50)': FR(50), '900.6.10(60)': FR(60) });
+  const ranking = [
+    { regulation_id: '900.6.10(50)', rank: 1, closed_lots: 900, includes: [] },
+    { regulation_id: '900.6.10(60)', rank: 2, closed_lots: 800, includes: [] },
+  ];
+  // vocab v2 adds a phrasing-variant licence (M-132 / M-134 style) that makes "(A) The minimum frontage is:" a lead-in group
+  const V2 = JSON.parse(JSON.stringify(VOCAB));
+  V2.dsl_target.required_lot_frontage_m.patterns = [...V2.dsl_target.required_lot_frontage_m.patterns, 'minimum frontage'];
+  const firstPlan = () => {
+    const s = sl();
+    const groups = K.wave1Groups({ ranking, slice: s, vocab: VOCAB, priorSeed: null, hasDrafts: () => false });
+    const plan = K.planWave1({ slice: s, inScopeIds: ids(s), ranking, groups, maxUnits: 2 });
+    return K.wave1Seed({ plan, ranking, adoptionId: 'x', census: { adoption_id: 'x' }, groups });
+  };
+  it('under the first vocab neither row groups; each shard holds one row (two leaves)', () => {
+    const seed = firstPlan();
+    expect(seed.lead_in_groups).toEqual([]);
+    expect(seed.shards.map((x: Json) => [x.key, x.unit_ids.length])).toEqual([['ch900_6/900.6.10.w1-s01', 2], ['ch900_6/900.6.10.w1-s02', 2]]);
+  });
+  it('vocab grows: the DRAFTED shard (s01) keeps its first-planned units; the UNDRAFTED shard (s02) picks up the new group', () => {
+    const prior = firstPlan();
+    const s = sl();
+    const drafted = (k: string) => k === 'ch900_6/900.6.10.w1-s01';
+    const groups = K.wave1Groups({ ranking, slice: s, vocab: V2, priorSeed: prior, hasDrafts: drafted });
+    expect(groups.map((g: Json) => `${g.regulation_id}#${g.clause_path}`)).toEqual(['900.6.10(60)#(60)[SSP](A)']);
+    const plan = K.planWave1({ slice: s, inScopeIds: ids(s), ranking, groups, maxUnits: 2, drafted: prior.shards.filter((x: Json) => drafted(x.key)) });
+    expect(plan.shards.find((x: Json) => x.key.endsWith('s01')).units.map((u: Json) => u.unit_id)).toEqual(prior.shards[0].unit_ids);
+    expect(plan.shards.find((x: Json) => x.regulation_ids.includes('900.6.10(60)')).units.map((u: Json) => u.unit_id)).toEqual(['900.6.10(60)#(60)[SSP](A)']);
+    // nothing drafted → both rows group (the new vocab applies everywhere)
+    expect(K.wave1Groups({ ranking, slice: s, vocab: V2, priorSeed: prior, hasDrafts: () => false })).toHaveLength(2);
+  });
+  it('a drafted shard whose first-planned units would move is refused (w1_drafted_shard_moved), never silently re-chunked', () => {
+    const prior = firstPlan();
+    const s = sl();
+    const groups = K.wave1Groups({ ranking, slice: s, vocab: V2, priorSeed: prior, hasDrafts: () => false }); // NOT frozen
+    expect(() => K.planWave1({ slice: s, inScopeIds: ids(s), ranking, groups, maxUnits: 2, drafted: [prior.shards[0]] })).toThrow(/w1_drafted_shard_moved/);
+  });
+});

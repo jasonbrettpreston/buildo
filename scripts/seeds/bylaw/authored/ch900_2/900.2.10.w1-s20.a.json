@@ -1,0 +1,837 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_2/900.2.10.w1-s20",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.2.10(810)#(810)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The lands must comply with exception 900.2.10(7); its provisions are incorporated by reference and evaluated through that exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "327-82",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 15-25 Awde St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 327-82 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 327-82 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 15-25 Awde St., former City of Toronto by-law 327-82 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "327-82",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 1-3 Boland Lane"
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 327-82 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 327-82 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 1-3 Boland Lane, former City of Toronto by-law 327-82 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](C)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "124-73",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "1155 College St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 124-73 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 124-73 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For 1155 College St., former City of Toronto by-law 124-73 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](D)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "317-75",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 1197-1207 College St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 317-75 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 317-75 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 1197-1207 College St., former City of Toronto by-law 317-75 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](E)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "143-91",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "1236 College St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 143-91 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 143-91 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For 1236 College St., former City of Toronto by-law 143-91 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](F)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "327-82",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "648 Dufferin St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 327-82 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 327-82 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For 648 Dufferin St., former City of Toronto by-law 327-82 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](G)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "88-67 and 165-67",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 651-661 Dufferin St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 88-67 and 165-67 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 88-67 and 165-67 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 651-661 Dufferin St., former City of Toronto by-law 88-67 and 165-67 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](H)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "62-67 and 190-69",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 919-1005 Dufferin St."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 62-67 and 190-69 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 62-67 and 190-69 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 919-1005 Dufferin St., former City of Toronto by-law 62-67 and 190-69 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](I)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "124-73",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "180 Sheridan Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 124-73 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 124-73 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For 180 Sheridan Ave., former City of Toronto by-law 124-73 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(810)#(810)[PBS](J)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "495-2014(OMB)",
+        "municipality": "City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "953 Dufferin Street"
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 810"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, City of Toronto by-law 495-2014(OMB) prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 495-2014(OMB) is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For 953 Dufferin Street, City of Toronto by-law 495-2014(OMB) prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(798)#(798)[SSP](A)",
+      "archetype": "INCLUDE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 798"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The lands must comply with exception 900.2.10(5); its provisions are incorporated by reference and evaluated through that exception.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": []
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(798)#(798)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "560-90",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 93-95 Lavinia Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 798"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 560-90 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 560-90 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 93-95 Lavinia Ave., former City of Toronto by-law 560-90 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(356)#(356)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 7.5 m @(356)[SSP](A)(i)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 356",
+          "detached_house": "for a detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The minimum lot frontage for a detached house is 7.5 m.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(356)#(356)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 7.5 m × dwelling_units @(356)[SSP](A)(ii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "semi_detached_house"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 356",
+          "semi_detached_house": "in a semi-detached house"
+        }
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "description": "The minimum lot frontage for a semi-detached house is 7.5 m for each dwelling unit.",
+        "gaps": "none",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ]
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(356)#(356)[SSP](A)(iii)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 10.5 m @(356)[SSP](A)(iii)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "7.5 metres",
+          "clause": "(356)[SSP](A)(iii)",
+          "reason": "lot_condition_arm_not_modelled"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "duplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 356",
+          "duplex": "for a duplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "The minimum lot frontage for a duplex is 10.5 m; where the duplex is attached to one other duplex on an adjacent lot in the same zone, each lot needs 7.5 m.",
+        "gaps": "The attached-duplex arm (7.5 m per lot) is not modelled: whether the duplex is attached to another duplex on an adjacent lot is not a lot condition we hold, so 10.5 m is reported.",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      },
+      "disclosure": "If the duplex is attached to one other duplex on an adjacent lot in the same zone, the minimum lot frontage for each lot is 7.5 m, not the 10.5 m shown.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(356)#(356)[SSP](A)(iv)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": [
+        "required_lot_frontage_m = 10.5 m @(356)[SSP](A)(iv)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "whole",
+        "refs": []
+      },
+      "literals_not_expressed": [
+        {
+          "literal": "7.5 metres",
+          "clause": "(356)[SSP](A)(iv)",
+          "reason": "lot_condition_arm_not_modelled"
+        }
+      ],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "triplex"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 356",
+          "triplex": "for a triplex"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "description": "The minimum lot frontage for a triplex is 10.5 m; where the triplex is attached to one other triplex on an adjacent lot in the same zone, each lot needs 7.5 m.",
+        "gaps": "The attached-triplex arm (7.5 m per lot) is not modelled: whether the triplex is attached to another triplex on an adjacent lot is not a lot condition we hold, so 10.5 m is reported.",
+        "not_modelled_reason": "none",
+        "user_inputs": [
+          "building_type"
+        ]
+      },
+      "disclosure": "If the triplex is attached to one other triplex on an adjacent lot in the same zone, the minimum lot frontage for each lot is 7.5 m, not the 10.5 m shown.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.2.10(356)#(356)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {
+        "kind": "former_bylaw",
+        "citation": "423-80",
+        "municipality": "former City of Toronto"
+      },
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {
+        "part": "named_addresses",
+        "refs": [
+          "odd numbered addresses of 1-15 Balmy Ave.",
+          "20 Balmy Ave.",
+          "even numbered addresses of 6-18 Balmy Ave.",
+          "odd numbered addresses of 3-23 Glenfern Ave.",
+          "even numbered addresses of 4-30 Glenfern Ave.",
+          "even numbered addresses of 412-424 Lake Front",
+          "odd numbered addresses of 1-79 Silver Birch Ave.",
+          "even numbered addresses of 4-66 Silver Birch Ave.",
+          "odd numbered addresses of 23-71 Willow Ave.",
+          "even numbered addresses of 50-80 Willow Ave."
+        ]
+      },
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [
+          "R"
+        ],
+        "building_types": [
+          "any"
+        ],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {
+          "R": "Exception R 356"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "description": "On the named addresses, former City of Toronto by-law 423-80 prevails as an alternate compliance path; it is not evaluated.",
+        "gaps": "The text of by-law 423-80 is not held; compliance under it is not evaluated.",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": []
+      },
+      "disclosure": "For odd numbered addresses of 1-15 Balmy Ave.; 20 Balmy Ave.; even numbered addresses of 6-18 Balmy Ave.; odd numbered addresses of 3-23 Glenfern Ave.; even numbered addresses of 4-30 Glenfern Ave.; even numbered addresses of 412-424 Lake Front; odd numbered addresses of 1-79 Silver Birch Ave.; even numbered addresses of 4-66 Silver Birch Ave.; odd numbered addresses of 23-71 Willow Ave.; even numbered addresses of 50-80 Willow Ave., former City of Toronto by-law 423-80 prevails over this By-law. We do not evaluate that by-law; check it directly for these addresses.",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.2.10(810)": {
+      "explanation": "Lands in R exception 810 must also comply with exception 900.2.10(7). On several named addresses on Awde St., Boland Lane, College St., Dufferin St. and Sheridan Ave., older City of Toronto by-laws prevail instead; we do not evaluate those by-laws.",
+      "code_refs": "none"
+    },
+    "900.2.10(798)": {
+      "explanation": "Lands in R exception 798 must also comply with exception 900.2.10(5). On 93-95 Lavinia Ave., former City of Toronto by-law 560-90 prevails; we do not evaluate it.",
+      "code_refs": "none"
+    },
+    "900.2.10(356)": {
+      "explanation": "In R exception 356 the minimum lot frontage is 7.5 m for a detached house, 7.5 m per dwelling unit for a semi-detached house, and 10.5 m for a duplex or triplex (7.5 m per lot where two are attached across adjacent lots, which we do not model). On named addresses on Balmy, Glenfern, Lake Front, Silver Birch and Willow, former City of Toronto by-law 423-80 prevails; we do not evaluate it.",
+      "code_refs": "none"
+    }
+  }
+}

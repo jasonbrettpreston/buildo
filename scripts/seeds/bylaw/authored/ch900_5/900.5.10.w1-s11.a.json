@@ -1,0 +1,621 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_5/900.5.10.w1-s11",
+  "keyer": "A",
+  "units": [
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](A)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "one", "clause": "(97)[SSP](A)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["dwelling_unit"],
+        "evidence": {"RT": "Exception RT 97", "dwelling_unit": "one dwelling unit per lot"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A cap of one dwelling unit per lot as shown on the registered plan.",
+        "gaps": "No dsl_target pattern licenses a singular 'dwelling unit' count; the lots of the registered plan are not held."
+      },
+      "disclosure": "This exception allows at most one dwelling unit on each lot shown on the registered plan. We do not hold the registered-plan lots, so we have not checked this limit for this lot.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](B)",
+      "archetype": "LIMIT",
+      "target": "required_lot_frontage_m",
+      "bound": "min",
+      "numeric_expression": ["required_lot_frontage_m = existing(lot_frontage_m; enacted(569-2013)) @(97)[SSP](B)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 97"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "The minimum lot frontage is the lot frontage that existed when By-law 569-2013 was enacted.",
+        "gaps": "Lot frontage as of the enactment date is not held."
+      },
+      "disclosure": "The minimum lot frontage here is whatever the lot's frontage was when By-law 569-2013 was enacted (May 9, 2013). We do not hold historical frontage, so this is not checked.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](C)",
+      "archetype": "LIMIT",
+      "target": "required_lot_area_m2",
+      "bound": "min",
+      "numeric_expression": ["required_lot_area_m2 = existing(lot_area_m2; enacted(569-2013)) @(97)[SSP](C)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 97"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "The minimum lot area is the lot area that existed when By-law 569-2013 was enacted.",
+        "gaps": "Lot area as of the enactment date is not held."
+      },
+      "disclosure": "The minimum lot area here is whatever the lot's area was when By-law 569-2013 was enacted (May 9, 2013). We do not hold historical lot area, so this is not checked.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "numeric_expression": ["lot_line_setback_m = 3.0 m @(97)[SSP](D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 97"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum building setback of 3.0 m from the front lot line.",
+        "gaps": "The clause says 'building setback from a front lot line' (no 'front yard setback' pattern), so it is keyed to lot_line_setback_m; the front-lot-line scope is carried in the text only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](E)",
+      "archetype": "LIMIT",
+      "target": "lot_line_setback_m",
+      "bound": "min",
+      "numeric_expression": ["lot_line_setback_m = 1.0 m @(97)[SSP](E)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 97"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Minimum building setback of 1.0 m from a side lot line.",
+        "gaps": "The clause says 'building setback from a side lot line' (no 'side yard setback' pattern), so it is keyed to lot_line_setback_m; the side-lot-line scope is carried in the text only."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](F)",
+      "archetype": "LIMIT",
+      "target": "lot_coverage_pct",
+      "bound": "max",
+      "numeric_expression": ["lot_coverage_pct = 50 pct @(97)[SSP](F)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 97"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum lot coverage of 50%.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](G)",
+      "archetype": "REQUIRE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "parking_in_building",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": ["parking_space"],
+        "evidence": {"RT": "Exception RT 97", "parking_space": "required parking space"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "The required parking space must be inside a building.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[SSP](H)",
+      "archetype": "LIMIT",
+      "target": "garage_entrance_setback_m",
+      "bound": "min",
+      "numeric_expression": ["garage_entrance_setback_m = 6.0 m @(97)[SSP](H)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": {"tokens": ["garage_entrance_faces_street"]},
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": ["garage_entrance_faces_street"],
+        "uses": ["private_garage"],
+        "evidence": {
+          "RT": "Exception RT 97",
+          "garage_entrance_faces_street": "also faces the street",
+          "private_garage": "vehicle entrance to a garage"
+        }
+      },
+      "calculation_handling": {
+        "status": "partially_modelled",
+        "not_modelled_reason": "needs_user_input",
+        "user_inputs": [],
+        "description": "Where the garage's vehicle entrance faces the street, it must be at least 6.0 m from a lot line abutting a street.",
+        "gaps": "Whether a proposed garage entrance faces the street is a design choice, not lot data."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(97)#(97)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or sections apply to Exception RT 97.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(219)#(219)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No site-specific provisions apply under Exception RT 219.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(219)#(219)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 172-1998", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 219"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "City of Toronto by-law 172-1998 prevails on these lands.",
+        "gaps": "The prevailing by-law is an alternate compliance path we do not evaluate."
+      },
+      "disclosure": "City of Toronto by-law 172-1998 prevails on these lands and may permit or restrict development differently; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(166)#(166)[SSP]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No site-specific provisions apply under Exception RT 166.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(166)#(166)[PBS](A)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_bylaw", "citation": "City of Toronto by-law 1207-2009", "municipality": "City of Toronto"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 166"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "City of Toronto by-law 1207-2009 prevails on these lands.",
+        "gaps": "The prevailing by-law is an alternate compliance path we do not evaluate."
+      },
+      "disclosure": "City of Toronto by-law 1207-2009 prevails on these lands and may permit or restrict development differently; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(166)#(166)[PBS](B)",
+      "archetype": "PREVAILING",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": {"kind": "former_section", "citation": "Section 64.16(51) of the former City of North York zoning by-law 7625", "municipality": "City of North York"},
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "named_addresses", "refs": ["115 Torbarrie Rd"]},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 166"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "prevailing_alternate_path",
+        "user_inputs": [],
+        "description": "On 115 Torbarrie Rd, Section 64.16(51) of former North York zoning by-law 7625 prevails.",
+        "gaps": "The prevailing section is an alternate compliance path we do not evaluate; it applies only to the named address."
+      },
+      "disclosure": "On 115 Torbarrie Rd, Section 64.16(51) of the former City of North York zoning by-law 7625 prevails; we do not evaluate it.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": ["front_setback_m", "rear_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "front_setback_m = existing(front_setback_m; enacted(569-2013)) @(38)[SSP](A)",
+        "rear_setback_m = existing(rear_setback_m; enacted(569-2013)) @(38)[SSP](A)"
+      ],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 38"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "existing_building_facts",
+        "user_inputs": [],
+        "description": "The minimum front and rear yard setbacks are those that existed when By-law 569-2013 was enacted.",
+        "gaps": "The as-built front and rear yard setbacks at the enactment date are not held."
+      },
+      "disclosure": "The minimum front and rear yard setbacks here are whatever existed when By-law 569-2013 was enacted (May 9, 2013). We do not hold those historical setbacks, so they are not checked.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[SSP](B)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "1.2 metres", "clause": "(38)[SSP](B)", "reason": "threshold_used_in_application"},
+        {"literal": "1.2 metres", "clause": "(38)[SSP](B)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 38"}
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "needs_data_we_lack",
+        "user_inputs": [],
+        "description": "A side yard setback may be less than 1.2 m where 1.2 m wide maintenance easements exist in the abutting side yards between adjacent buildings.",
+        "gaps": "Maintenance easements are not held, so the reduced side yard setback cannot be applied."
+      },
+      "disclosure": "A side yard setback below 1.2 m is allowed here if 1.2 m wide maintenance easements exist in the abutting side yards. We do not hold easement data, so this relief is not applied.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[SSP](C)",
+      "archetype": "PROHIBIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "1.2 metres", "clause": "(38)[SSP](C)", "reason": "threshold_used_in_application"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 38"}
+      },
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No fence in a side yard narrower than 1.2 m, and no fence may obstruct a maintenance easement.",
+        "gaps": "Fences and easements are outside the building envelope model."
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[SSP](D)",
+      "archetype": "LIMIT",
+      "target": "height_storeys",
+      "bound": "max",
+      "numeric_expression": ["height_storeys = 3 storeys @(38)[SSP](D)"],
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["any"],
+        "lot_conditions": [],
+        "uses": [],
+        "evidence": {"RT": "Exception RT 38"}
+      },
+      "calculation_handling": {
+        "status": "modelled",
+        "not_modelled_reason": "none",
+        "user_inputs": [],
+        "description": "Maximum building height of 3 storeys.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[SSP](E)",
+      "archetype": "UNUSUAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [
+        {"literal": "4.5 metres", "clause": "(38)[SSP](E)", "reason": "limit_not_modelled"}
+      ],
+      "application": {
+        "zones": ["RT"],
+        "building_types": ["ancillary_building"],
+        "lot_conditions": [],
+        "uses": ["private_garage"],
+        "evidence": {
+          "RT": "Exception RT 38",
+          "ancillary_building": "other ancillary building",
+          "private_garage": "A private garage"
+        }
+      },
+      "calculation_handling": {
+        "status": "not_modelled",
+        "not_modelled_reason": "ch900_backlog",
+        "user_inputs": ["building_type"],
+        "description": "A private garage or other ancillary building must be at least 4.5 m from any side yard or rear yard lot line or a street line.",
+        "gaps": "No dsl_target pattern covers a setback 'from any side yard or rear yard lot line or a street line' for an ancillary building."
+      },
+      "disclosure": "A private garage or other ancillary building here must be set back at least 4.5 m from side and rear lot lines and street lines. We have not modelled this limit.",
+      "not_an_override": []
+    },
+    {
+      "unit_id": "900.5.10(38)#(38)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "none",
+      "ranks_layers": "none",
+      "condition": "none",
+      "applies_to": {"part": "whole", "refs": []},
+      "literals_not_expressed": [],
+      "application": {"zones": [], "building_types": [], "lot_conditions": [], "uses": [], "evidence": {}},
+      "calculation_handling": {
+        "status": "informational",
+        "not_modelled_reason": "procedural_not_numeric",
+        "user_inputs": [],
+        "description": "No prevailing by-laws or sections apply to Exception RT 38.",
+        "gaps": "none"
+      },
+      "disclosure": "none",
+      "not_an_override": []
+    }
+  ],
+  "rows": {
+    "900.5.10(97)": {
+      "explanation": "Exception RT 97 sets site-specific rules: one dwelling unit per registered-plan lot, minimum lot frontage and lot area fixed at what existed in 2013, a 3.0 m front and 1.0 m side building setback, 50% maximum lot coverage, required parking inside a building, and a 6.0 m setback for a street-facing garage entrance. No prevailing by-laws apply.",
+      "code_refs": "none"
+    },
+    "900.5.10(219)": {
+      "explanation": "Exception RT 219 has no site-specific provisions; City of Toronto by-law 172-1998 prevails on these lands and is not evaluated by us.",
+      "code_refs": "none"
+    },
+    "900.5.10(166)": {
+      "explanation": "Exception RT 166 has no site-specific provisions; City of Toronto by-law 1207-2009 prevails on these lands, and on 115 Torbarrie Rd Section 64.16(51) of former North York by-law 7625 also prevails. Neither is evaluated by us.",
+      "code_refs": "none"
+    },
+    "900.5.10(38)": {
+      "explanation": "Exception RT 38 fixes the minimum front and rear yard setbacks at what existed in 2013, allows side yards under 1.2 m where 1.2 m maintenance easements exist, bars fences in narrow side yards or over easements, caps height at 3 storeys, and requires garages and other ancillary buildings to sit at least 4.5 m from side and rear lot lines and street lines. No prevailing by-laws apply.",
+      "code_refs": "none"
+    }
+  }
+}

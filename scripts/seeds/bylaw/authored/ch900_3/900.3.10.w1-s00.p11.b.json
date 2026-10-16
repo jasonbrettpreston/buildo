@@ -1,0 +1,356 @@
+{
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s00.p11",
+  "keyer": "B",
+  "units": [
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](A)",
+      "archetype": "LIMIT",
+      "target": "height_m",
+      "bound": "max",
+      "numeric_expression": ["height_m = 6.5 m @(21)[SSP](A)"],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "maximum height of a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](B)",
+      "archetype": "DEFINE",
+      "target": "building_depth_m",
+      "bound": "none",
+      "numeric_expression": ["building_depth_m = building_depth_m @(21)[SSP](B)"],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "the maximum building depth permitted"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](C)(i)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "numeric_expression": ["gfa_m2 = gfa_m2 @(21)[SSP](C)(i)"],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "maximum gross floor area on a lot"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](C)(ii)",
+      "archetype": "DEFINE",
+      "target": "gfa_m2",
+      "bound": "none",
+      "numeric_expression": ["gfa_m2 = gfa_m2 @(21)[SSP](C)(ii)"],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "maximum gross floor area on a lot"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](C)(iii)(a)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "literals_not_expressed": [
+        {"literal": "4.6 metres", "reason": "limit_not_modelled", "clause_path": "(21)[SSP](C)(iii)(a)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "part of a building above the basement level"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](C)(iii)(b)",
+      "archetype": "DEFINE",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "floor area of a void area is doubled"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "needs_data_we_lack", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](C)(iii)(c)",
+      "archetype": "LIMIT",
+      "target": "gfa_m2",
+      "bound": "max",
+      "numeric_expression": ["gfa_m2 = 0.04 ratio × gfa_m2 @(21)[SSP](C)(iii)(c)"],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "void area of 4% of the gross floor area"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](D)(i)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 0.9 m @(21)[SSP](D)(i)",
+        "side_setback_m = 2.1 m @(21)[SSP](D)(i)"
+      ],
+      "condition": [
+        "frontage_band",
+        {"if": "lot_frontage_m < 15.3 m"}
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "side yard setback of a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](D)(ii)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = 1.2 m @(21)[SSP](D)(ii)",
+        "side_setback_m = 0.20 ratio × lot_frontage_m @(21)[SSP](D)(ii)"
+      ],
+      "condition": [
+        "frontage_band",
+        {"if": "lot_frontage_m ≥ 15.3 m and lot_frontage_m ≤ 18.0 m"}
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "side yard setback of a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](D)(iii)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = min(3.0 m; 1.2 m + 0.3 m × ((lot_frontage_m − 18.0 m) ÷ 3.0 m)) @(21)[SSP](D)(iii)",
+        "side_setback_m = 0.20 ratio × lot_frontage_m @(21)[SSP](D)(iii)"
+      ],
+      "condition": [
+        "frontage_band",
+        {"if": "lot_frontage_m > 18.0 m"}
+      ],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "side yard setback of a detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[SSP](E)",
+      "archetype": "PERMIT",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [{"if": "lot_frontage_m > 27.0 m"}],
+      "literals_not_expressed": [
+        {"literal": "3 or more vehicles", "reason": "count_or_ordinal_not_a_limit", "clause_path": "(21)[SSP](E)"},
+        {"literal": "27.0 metres", "reason": "threshold_used_in_application", "clause_path": "(21)[SSP](E)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "any", "evidence": "A garage with parking spaces"}],
+        "lot_conditions": [],
+        "uses": [{"token": "private_garage", "evidence": "A garage with parking spaces"}]
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(21)#(21)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    },
+    {
+      "unit_id": "900.3.10(42)#(42)[SSP](A)(i)",
+      "archetype": "LIMIT",
+      "target": ["gfa_m2", "fsi"],
+      "bound": "max",
+      "numeric_expression": [
+        "gfa_m2 = 118 m2 + 0.25 ratio × lot_area_m2 @(42)[SSP](A)(i)",
+        "fsi = 0.5 ratio @(42)[SSP](A)(i)"
+      ],
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "A detached house is permitted"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "modelled", "not_modelled_reason": "none", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(42)#(42)[SSP](A)(ii)",
+      "archetype": "LIMIT",
+      "target": ["side_setback_m", "side_setback_m"],
+      "bound": "min",
+      "numeric_expression": [
+        "side_setback_m = abutting_front_setback_m @(42)[SSP](A)(ii)",
+        "side_setback_m = 2.1 m @(42)[SSP](A)(ii)"
+      ],
+      "condition": [
+        "lawfully_existing",
+        {"if": "lot_frontage_m < 15.3 m"}
+      ],
+      "literals_not_expressed": [
+        {"literal": "0.6 metres", "reason": "threshold_used_in_application", "clause_path": "(42)[SSP](A)(ii)"}
+      ],
+      "application": {
+        "zones": [{"token": "RD", "evidence": "Exceptions for RD Zone"}],
+        "building_types": [{"token": "detached_house", "evidence": "above an existing 1 storey detached house"}],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "yes",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "existing_building_facts", "user_inputs": ["building_type"]}
+    },
+    {
+      "unit_id": "900.3.10(42)#(42)[PBS]",
+      "archetype": "PROCEDURAL",
+      "target": "none",
+      "bound": "none",
+      "numeric_expression": "none",
+      "condition": [],
+      "literals_not_expressed": [],
+      "application": {
+        "zones": [],
+        "building_types": [],
+        "lot_conditions": [],
+        "uses": []
+      },
+      "requirement": "none",
+      "instrument": "none",
+      "evaluated_by_us": "no",
+      "ranks_layers": "none",
+      "applies_to": {"part": "whole"},
+      "calculation_handling": {"status": "not_modelled", "not_modelled_reason": "procedural_not_numeric", "user_inputs": []}
+    }
+  ]
+}

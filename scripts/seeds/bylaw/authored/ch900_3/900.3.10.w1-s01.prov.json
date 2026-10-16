@@ -1,0 +1,45 @@
+{
+  "a_seal": {
+    "seal_id": 370,
+    "sha256": "6d3bd5208ec4029d3f0c5c6de01d2aa53d9cdea5c0edf178b0119dda210e3d1d"
+  },
+  "b_run": {
+    "ledger_sha256": "b993a176737c25e307d94ddd4e743004574a88438f126c8095a1ccefa5611f07",
+    "read_paths": [],
+    "run_id": "20261014T225003Z-2e33b83d",
+    "worktree_commit": "a5485f41c9d5737a46f5d8b4c029370d9fe657f6"
+  },
+  "batch": "W1",
+  "briefs": {
+    "a": "04d79b2b9c41b0b8bf8ad39d63bb0466b4463c2e1bac539f50556c5ed9c08909",
+    "b": "f0ec6fc1712f58c26c02fe63efd1db28e1afa96d8a39de036b943724a7c1b344"
+  },
+  "keyers": {
+    "a": {
+      "engine": "claude",
+      "id": "keyer-a:claude"
+    },
+    "b": {
+      "engine": "deepseek",
+      "id": "keyer-b:deepseek"
+    }
+  },
+  "schema": "bylaw-authored-v1",
+  "shard": "ch900_3/900.3.10.w1-s01",
+  "unit_shas": {
+    "900.3.10(252)#(252)[PBS]": "c6a78930a47fd2b3abc870e399c4b7cc786eab2d399534b36d31377c2c46c9d6",
+    "900.3.10(252)#(252)[SSP](A)": "f8ce12b56edac2c1727444cb75588c8509924e9ab971638a0f52d0dd4f57dc51",
+    "900.3.10(252)#(252)[SSP](B)": "3f54a83a0fdef076b328191b9288f476dd95170c84b6deca3110b23c2177ca86",
+    "900.3.10(252)#(252)[SSP](C)": "e97edc594110c524d22fb6e4eba8373b486c601c67afc7a6326d25e66d81b4a3",
+    "900.3.10(35)#(35)[PBS]": "6166e7147592bfa3a738242f600a16d131158cc9730b9d6bb12cc2c64b0b77b2",
+    "900.3.10(35)#(35)[SSP](A)": "6990ce7d57244609f5abd0ecd305c269accdae2520cf6b813d26be89033f2a7d",
+    "900.3.10(35)#(35)[SSP](B)": "7638c7b6e96948ac11f24be18601c99ff6e5c82983e7dde38d9ab5acd7a8710f",
+    "900.3.10(587)#(587)[PBS]": "aa16ef181f9cc701f79b3a4c819cb2d73959814e31e4fb820445a8ce85eb3959",
+    "900.3.10(587)#(587)[SSP](A)": "83dd25c925dc9b4763f37975dc6bdb424e46756c5967cd94eeddf71c2cdc543d",
+    "900.3.10(587)#(587)[SSP](B)": "2202b31ebafd1926cbd436d590c3962b7627576e3f2eb1c622cc26dc78385169",
+    "900.3.10(587)#(587)[SSP](C)": "c8707f09e649dc14da1b184bfb356195e5003c6b6407fe64e2489448b1995cc4",
+    "900.3.10(587)#(587)[SSP](D)": "1166f2451983810fc8af35b6fe2999d9cf4f0fbd039dcaa8da0a6115a4d23cc7",
+    "900.3.10(587)#(587)[SSP](E)": "59fbccad38c6e83fe96f79379d42995fdb71832d4dad0532addd1f1d6a31ef8e",
+    "900.3.10(587)#(587)[SSP](F)": "df7f45158c6fa691b81a3a5178e8d0a21fde964a88d5891386d3868aa33624cd"
+  }
+}
