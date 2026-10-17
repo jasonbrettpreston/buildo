@@ -278,6 +278,7 @@ import {
 } from './gates/registries.mjs';
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
+import { loadNetNew, headDoc, NET_NEW_TAG, selfTest as netNewSelfTest } from './gates/net-new.mjs';
 import { evaluateWitness, ownMeasurementSql, selfTest as witnessSelfTest } from './gates/witness.mjs';
 import { buildRunnerFingerprints, sqlFingerprinter } from './gates/witness-runner-set.mjs';
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
@@ -605,12 +606,28 @@ function getByPath(obj, dotPath) {
  *
  * A converted step with NO `pre/` capture at all is a violation too (the worst
  * case — a differential with no reference — is never a vacuous pass).
+ * Spec 124 R-DK (McDonald's Airtight V3): the one exception is an ACCEPTED net-new step
+ * (`netNew.get(slug).ok`, gates/net-new.mjs) — it has no legacy script to capture, and its
+ * reference is its own committed POST; a row that declares `legacy: "none"` without the
+ * evidence is a violation naming why. Any PRE file that does exist is still checked.
  */
-export function checkPreCapturesRecoverable(preStates) {
+export function checkPreCapturesRecoverable(preStates, netNew = new Map()) {
   const violations = [];
+  const netNewSlugs = [];
   for (const s of preStates) {
+    const nn = netNew.get(s.slug);
+    if (nn && !nn.ok) violations.push({ slug: s.slug, file: CENSUS_REL_FOR_NET_NEW, why: nn.why });
+    if (nn && nn.ok && s.files && s.files.length > 0) {
+      // R-CS: no PRE is ever made by copying the step's own POST — a net-new step never has one.
+      violations.push({ slug: s.slug, file: `docs/reports/golden/${s.slug}/pre/`, why: `a ${NET_NEW_TAG} step has a PRE file (R-CS forbids a PRE copied from the POST; delete it)` });
+      continue;
+    }
     if (!s.files || s.files.length === 0) {
-      violations.push({ slug: s.slug, file: `docs/reports/golden/${s.slug}/pre/`, why: 'no PRE capture on disk at all' });
+      if (nn && nn.ok) {
+        netNewSlugs.push(s.slug);
+        continue;
+      }
+      if (!nn) violations.push({ slug: s.slug, file: `docs/reports/golden/${s.slug}/pre/`, why: 'no PRE capture on disk at all' });
       continue;
     }
     for (const f of s.files) {
@@ -626,8 +643,16 @@ export function checkPreCapturesRecoverable(preStates) {
     violations,
     detail: violations.length
       ? `GOLD-PRE-FRESH: ${violations.length} unrecoverable PRE capture(s): ${violations.map((v) => `${v.file} (${v.why})`).join('; ')}`
-      : `GOLD-PRE-FRESH: ${total} PRE capture(s) across ${preStates.length} converted step(s) all tracked + clean (git can restore every reference)`,
+      : `GOLD-PRE-FRESH: ${total} PRE capture(s) across ${preStates.length - netNewSlugs.length} converted step(s) all tracked + clean (git can restore every reference)${netNewSlugs.length ? `; ${NET_NEW_TAG}: ${netNewSlugs.join(', ')}` : ''}`,
   };
+}
+const CENSUS_REL_FOR_NET_NEW = 'scripts/steps/_schema/step-archetype-census.json';
+
+let NET_NEW_MEMO = null;
+/** Spec 124 R-DK: every census row declaring legacy:"none", decided once per process. */
+function netNewMap() {
+  if (!NET_NEW_MEMO) NET_NEW_MEMO = loadNetNew(REPO_ROOT);
+  return NET_NEW_MEMO;
 }
 
 /**
@@ -1453,7 +1478,9 @@ export function retiredInputPreMatch(invocation, preDoc, postDoc, descriptor) {
   const same = preTs.every((t) => t && typeof t.content_hash === 'string' && t.content_hash.length > 0 && postByTable.get(t.table) === t.content_hash);
   return same ? { match: true, reason: 'R-BD' } : no('content_hash');
 }
-export function computePreInvocationsMissing(slug, invocations, preDocs, postDocs, descriptor) {
+export function computePreInvocationsMissing(slug, invocations, preDocs, postDocs, descriptor, netNew = new Map()) {
+  // Spec 124 R-DK: an accepted net-new step has no PRE half (its reference is its own committed POST).
+  if (netNew.get(slug) && netNew.get(slug).ok) return [];
   const keyOf = (d) => invocationKey({ chain: String(d.chain), args: d.args || [] });
   const preKeys = new Set(preDocs.filter(Boolean).map(keyOf));
   const postByKey = new Map(postDocs.filter(Boolean).map((d) => [keyOf(d), d]));
@@ -1495,7 +1522,10 @@ function checkCaptures(row, descriptorInfo, computePath) {
     presAll.map((p) => p.doc).filter(Boolean),
     posts.map((p) => p.doc).filter(Boolean),
     descriptorInfo && descriptorInfo.descriptor,
+    netNewMap(),
   );
+  const netNew = netNewMap().get(row.slug);
+  findings.netNew = Boolean(netNew && netNew.ok);
 
   let expected = null;
   if (descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath))) {
@@ -1538,6 +1568,30 @@ function checkCaptures(row, descriptorInfo, computePath) {
       const key = typeof d === 'string' ? d : d.path || JSON.stringify(d);
       findings.diffs.push({ scenario: pre.file, key });
       if (!explainedDecision(key, explainedRegistry).explained) findings.unexplainedDiffs.push({ scenario: pre.file, key });
+    }
+  }
+  // Spec 124 R-DK: a net-new step's stability half — each POST against the COMMITTED POST of the
+  // same file (two distinct observations, never a copied PRE); diffs explained only by
+  // explained-diffs.json (R-DA). A POST with no HEAD predecessor (its first commit) compares nothing.
+  if (findings.netNew) {
+    for (const post of posts) {
+      if (!post.doc) continue;
+      const rel = path.relative(REPO_ROOT, post.abs).replace(/\\/g, '/');
+      const prior = headDoc(REPO_ROOT, rel);
+      if (!prior) continue;
+      findings.compareRan = true;
+      let diffs = [];
+      try {
+        diffs = harness.diffNormalised(prior.normalised ?? prior, post.doc.normalised ?? post.doc) || [];
+      } catch (err) {
+        findings.diffError = err.message;
+        continue;
+      }
+      for (const d of diffs) {
+        const key = typeof d === 'string' ? d : d.path || JSON.stringify(d);
+        findings.diffs.push({ scenario: post.file, key });
+        if (!explainedDecision(key, explainedRegistry).explained) findings.unexplainedDiffs.push({ scenario: post.file, key });
+      }
     }
   }
   return findings;
@@ -1715,7 +1769,7 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
       const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f)) : [];
       preStates.push({ slug, files: files.map((abs) => ({ file: path.relative(REPO_ROOT, abs).replace(/\\/g, '/'), ...harness.captureGitState(abs, { cwd: REPO_ROOT }) })) });
     }
-    const fresh = checkPreCapturesRecoverable(preStates);
+    const fresh = checkPreCapturesRecoverable(preStates, netNewMap());
     results.push({
       id: 22,
       slug: '(registry)',
@@ -2845,7 +2899,7 @@ function scoreG8(captureFindings) {
   return {
     max: 3,
     score,
-    detail: `missing-invocations=${captureFindings.invocationsMissing.length} missing-pre-invocations=${(captureFindings.preInvocationsMissing ?? []).length} stale-fingerprints=${captureFindings.staleFingerprints.length} unexplained-diffs=${captureFindings.unexplainedDiffs.length}`,
+    detail: `missing-invocations=${captureFindings.invocationsMissing.length} missing-pre-invocations=${(captureFindings.preInvocationsMissing ?? []).length} stale-fingerprints=${captureFindings.staleFingerprints.length} unexplained-diffs=${captureFindings.unexplainedDiffs.length}${captureFindings.netNew ? ` ${NET_NEW_TAG}` : ''}`,
   };
 }
 function scoreG9(report) {
@@ -5193,6 +5247,7 @@ function selfTest() {
   // (its own selfTest, run here so this file's single `selfTest()` entry
   // point covers it too).
   redEvidenceSelfTest();
+  netNewSelfTest();
   // GATE V (Spec 124 §5 R-BA) — the five-word STANDARDIZED/OBSERVABLE/
   // SCALABLE/UNDERSTANDABLE/ACCURATE per-step verdict, derived only from the
   // gates above's own already-computed results (own selfTest, defined in
@@ -5232,6 +5287,15 @@ function selfTest() {
     // RED — a converted step with NO PRE capture at all is never a vacuous pass.
     const redNone = checkPreCapturesRecoverable([{ slug: 'c', files: [] }]);
     if (redNone.pass || JSON.stringify(redNone.blockedSlugs) !== '["c"]') throw new Error(`self-test FAILED: checkPreCapturesRecoverable must RED a converted step with no PRE capture on disk (${JSON.stringify(redNone)})`);
+    // Spec 124 R-DK: an ACCEPTED net-new step with no pre/ passes and is named; a refused one is RED by name.
+    const nnOk = checkPreCapturesRecoverable([{ slug: 'n', files: [] }], new Map([['n', { netNew: true, ok: true, why: NET_NEW_TAG }]]));
+    if (!nnOk.pass || !nnOk.detail.includes(NET_NEW_TAG)) throw new Error(`self-test FAILED: an accepted net-new step must pass #22 and be named (${JSON.stringify(nnOk)})`);
+    const nnRefused = checkPreCapturesRecoverable([{ slug: 'n', files: [] }], new Map([['n', { netNew: true, ok: false, why: 'legacy:"none" refused — x' }]]));
+    if (nnRefused.pass || !nnRefused.detail.includes('refused')) throw new Error(`self-test FAILED: a refused net-new row must RED #22 by name (${JSON.stringify(nnRefused)})`);
+    const nnOther = checkPreCapturesRecoverable([{ slug: 'c', files: [] }], new Map([['n', { netNew: true, ok: true, why: NET_NEW_TAG }]]));
+    if (nnOther.pass) throw new Error('self-test FAILED: the net-new branch must not exempt a different slug with no PRE');
+    const nnWithPre = checkPreCapturesRecoverable([{ slug: 'n', files: [ok('n/pre/x.json')] }], new Map([['n', { netNew: true, ok: true, why: NET_NEW_TAG }]]));
+    if (nnWithPre.pass || !nnWithPre.detail.includes('R-CS forbids')) throw new Error(`self-test FAILED: a net-new step with a PRE file must RED (${JSON.stringify(nnWithPre)})`);
   }
   // COMPRESSED-FORM-ELIGIBLE (fast invariant #23, Spec 124 R-PACE-1,
   // 2026-09-13) — checkCompressedFormEligible, proven both directions on
