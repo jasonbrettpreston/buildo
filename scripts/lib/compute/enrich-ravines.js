@@ -25,17 +25,16 @@
 // `execution.enrich_hooks.contract_read`. Called by the runner ABOVE the phase loop, before
 // any transaction opens, on the step's own pool (not a txn client).
 //
-// RV-L2 (descriptor limitations[]): guards.srid / guards.empty_source are declarative only —
-// the runner has zero consumers for either field (measured, 2026-09-18). Because the legacy
-// L14 (ravines must be non-empty) and SRID=4326 behaviours genuinely HALT rather than merely
-// report, both are folded into THIS hook — the one mechanism proven to run pre-transaction on
-// every invocation — rather than left as decorative descriptor fields with no enforcement.
+// RV-L2 (descriptor limitations[]): guards.srid / guards.empty_source were declarative only
+// (measured, 2026-09-18), so the legacy L14 and SRID=4326 HALTs were folded into THIS hook.
+// Both have since moved to the runner: L14 is the enforced guards.empty_source (S4) and the
+// SRID=4326 HALT is the guards.requires srid row (CP-S5, Spec 124 R-CX), both refused before
+// this hook runs.
 // ===========================================================================
 
 const PRODUCER_NAME = 'sources:load_ravines';
 // Must equal staleness.pins[].step in the descriptor (locked by src/tests/enrich-ravines-pins.logic.test.ts).
 const PRODUCER_STEP = 'load_ravines';
-const TAG = '[enrich_ravines]';
 
 /**
  * F1 (00902695) — the §9/L18 producer-protocol consumer. The producer-protocol HALTs are
@@ -51,13 +50,14 @@ const TAG = '[enrich_ravines]';
  * guards.empty_source (runner, before this hook; S4 — measured pre-phase for non-INGESTOR
  * steps), not folded in here.
  *
- * F3 (00902695, DEC-F §3.10) half — the SRID=4326 assertion. The three GIST-index /
- * PostGIS-extension / migration-168-column halves of F3/F4 are declared via `guards.requires`
- * instead (REQUIREMENT_PROBES has no "srid" kind, so this one clause cannot move there).
+ * F3 (00902695, DEC-F §3.10) half — the SRID=4326 assertion. Like the three GIST-index /
+ * PostGIS-extension / migration-168-column halves of F3/F4, it is declared via
+ * `guards.requires` since CP-S5 (Spec 124 R-CX): {kind:"srid", name:"parcels.geom",
+ * equals:4326}, probed by the runner (REQUIREMENT_PROBES.srid) BEFORE this hook — no catalog
+ * read and no SRID throw live here (R-BZ G3/G8).
  * @param {{pool: import('pg').Pool, config: object, producer: (slug: string, opts?: object) => Promise<object>}} ctx
  */
 async function readRavineContract(ctx) {
-  const pool = ctx.pool;
   // Producer contract (the spec-version stamp, the guard/drift flags, the invalid-geometry ratio and the
   // lineage stamp) is DECLARED in the descriptor's staleness.pins[] and evaluated by the runner
   // BEFORE this hook (Rule 10); a violated pin never reaches here. The hook only READS the
@@ -68,11 +68,7 @@ async function readRavineContract(ctx) {
 
   // L14 — ravines non-empty: enforced by the declared guards.empty_source (runner, before this hook; S4).
 
-  // §3.10 SRID guard — parcels.geom must be 4326 (no ST_Transform path in this compute).
-  const srid = await pool.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid");
-  if (Number(srid.rows[0].srid) !== 4326) {
-    throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
-  }
+  // §3.10 SRID guard — parcels.geom must be 4326: the declared guards.requires srid row (CP-S5).
 
   return { sourceDatasetVersion: rl.source_dataset_version };
 }

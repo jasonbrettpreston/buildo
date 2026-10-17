@@ -26,15 +26,12 @@
           "cur_floor_gfa_sqm",
           "lot_size_sqm",
           "max_buildable_gfa_sqm",
-          "nan",
           "parcel_cost_menu",
           "zoning_class"
         ]
       },
       "writes": {},
-      "violations": [
-        "a:parcels.nan"
-      ],
+      "violations": [],
       "errors": []
     }
   }

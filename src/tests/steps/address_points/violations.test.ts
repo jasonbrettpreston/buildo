@@ -535,17 +535,41 @@ describe('row 3.1 — the checks fire on their fixtures (Spec 124 Rule 3/5/10)',
     expect(verdict.checkRow(check, under[0]![1], 'fail_step', CFG_PCT_RATIO).status, '1 <= 5 ⇒ PASS').toBe('PASS');
   });
 
-  it('rows_read_floor reads sources_address_points_floor via ctx.config (SHARED key, Rule 3)', () => {
-    const below = driveCheck('rows_read_floor', { acquired: { rows_read: 499999 }, config: CFG });
-    expect(below[0]![1].violations, 'below the 500000 floor ⇒ violation').toBe(1);
-    const at = driveCheck('rows_read_floor', { acquired: { rows_read: 525000 }, config: CFG });
-    expect(at[0]![1].violations, 'at 525000 ⇒ clean').toBe(0);
+  it('rows_read_floor reports the raw count; the declared value_min row (sources_address_points_floor, SHARED key, Rule 3) decides', () => {
+    // CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute's parallel 0/1 flag is gone —
+    // verdict.js resolves the floor from ctx.config (limit_from_config) and decides.
+    const check = checkById(loadDescriptor(), 'rows_read_floor');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const floor = (CFG as Record<string, number>)[SHARED_FLOOR_VAR] as number;
+    const below = driveCheck('rows_read_floor', { acquired: { rows_read: floor - 1 }, config: CFG });
+    expect(below[0]![1].value, 'the raw count is the observation').toBe(floor - 1);
+    expect(below[0]![1].violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(check, below[0]![1], 'fail_step', CFG).status, 'one below the floor ⇒ FAIL').toBe('FAIL');
+    const at = driveCheck('rows_read_floor', { acquired: { rows_read: floor }, config: CFG });
+    expect(verdict.checkRow(check, at[0]![1], 'fail_step', CFG).status, 'AT the floor ⇒ PASS (value_min is inclusive)').toBe('PASS');
   });
 
-  it('geom_parse_failures is a purely descriptive counter (AP-D2 pin, INFO)', () => {
-    const calls = driveCheck('geom_parse_failures', { acquired: { geom_parse_failures: 3 }, config: CFG });
-    expect(calls[0]![1], 'an INFO counter records the count, it never gates').toMatchObject({ violations: 0 });
-    expect(String(JSON.stringify(calls[0]![1]))).toContain('3');
+  it('geom_parse_failures is a purely descriptive counter (AP-D2 pin, INFO) — read off the runner\'s shaped_tags', () => {
+    // CP-PLANA (R-BZ G13): the parse failure is counted through shapeRecord's `tag` seam
+    // (acquired.shaped_tags.geom_parse_failure); the old `acquired.geom_parse_failures` field
+    // was never populated by any runner, so the row always read 0.
+    const calls = driveCheck('geom_parse_failures', { acquired: { shaped_tags: { geom_parse_failure: 3 } }, config: CFG });
+    expect(calls[0]![1], 'an INFO counter records the count, it never gates').toMatchObject({ violations: 0, detail: 3 });
+  });
+
+  it('a malformed geometry cell is COUNTED through the seam and the row still loads (CP-PLANA, R-BZ G13)', () => {
+    const mod = loadComputeModule() as unknown as { shapeRecord: (r: Record<string, string>, seam?: unknown) => Record<string, unknown> | null };
+    const tags: Record<string, number> = {};
+    const seam = { tag: (name: string) => { tags[name] = (tags[name] || 0) + 1; } };
+    const shaped = mod.shapeRecord({ ADDRESS_POINT_ID: '1', geometry: '{not json', LATITUDE: '43.7', LONGITUDE: '-79.4' }, seam);
+    expect(shaped, 'per-record tolerance: the lat/lng fallback still loads the row').not.toBeNull();
+    expect(tags.geom_parse_failure, 'the swallow is now a reported count').toBe(1);
+    const clean = mod.shapeRecord({ ADDRESS_POINT_ID: '2', geometry: '{"type":"Point","coordinates":[-79.4,43.7]}' }, seam);
+    expect(clean).not.toBeNull();
+    expect(tags.geom_parse_failure, 'a parseable cell is not counted').toBe(1);
   });
 
   it('shaped_skipped reports rows the step refused to load (never silently dropped)', () => {
@@ -808,7 +832,9 @@ describe('row 3.1 — the standard batteries (Spec 122 §5.5, Spec 122 §5.1, th
       }
       expect(src.includes(`ctx.config.${v}`), `the compute must read ${v} via ctx.config`).toBe(true);
     }
-    expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the floor check reads the SHARED variable via ctx.config').toBe(true);
+    // CP-PLANA (R-BZ G7): the floor is read by the VERDICT (limit_from_config), never compared here.
+    expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the compute no longer compares against the shared floor').toBe(false);
+    expect(checkById(loadDescriptor(), 'rows_read_floor').limit_from_config, 'the verdict reads the SHARED floor via limit_from_config').toBe(SHARED_FLOOR_VAR);
   });
 
   it('notes.json is a real notes file (≤12 entries) with fences[] an explicit array', () => {

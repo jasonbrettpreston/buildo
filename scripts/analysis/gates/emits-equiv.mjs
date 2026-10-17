@@ -138,11 +138,49 @@ export function emitsViolations(descriptor, goldenKeys, runnerKeys = RUNNER_META
   return violations;
 }
 
+/**
+ * Spec 124 R-DE (iv) (McDonald's Airtight V3): emit keys are snake_case; an INGESTOR's run payload is ONE
+ * `<x>_load` object; no other step emits an object beyond the standard `config` / `audit_table`. Emits are
+ * consumer contracts (#31), so the existing exceptions are grandfathered by name (closed), never renamed.
+ */
+export const EMIT_SHAPE_STANDARD_OBJECTS = Object.freeze(['audit_table', 'config']);
+export const EMIT_SHAPE_GRANDFATHER = Object.freeze({
+  compute_parcel_cost_estimates: Object.freeze(['area_confidence', 'cost_by_zone', 'line_coverage']),
+  enrich_centreline: Object.freeze(['centreline_enrich']),
+  enrich_heritage: Object.freeze(['heritage_designated_by_zone']),
+  enrich_parcels: Object.freeze(['deferred']),
+  load_zoning: Object.freeze(['zoning_layer_versions', 'zoning_layers_loaded']),
+});
+const NO_LOAD_OBJECT_GRANDFATHER = Object.freeze(['load_zoning', 'neighbourhoods']);
+
+/** R-DE (iv) on ONE descriptor. PURE. */
+export function emitShapeViolations(descriptor) {
+  const step = (descriptor && descriptor.identity && descriptor.identity.name) || '(unknown-step)';
+  const archetype = descriptor && descriptor.identity && descriptor.identity.archetype;
+  const emits = descriptor && Array.isArray(descriptor.emits) ? descriptor.emits : [];
+  const out = [];
+  const push = (item, detail) => out.push({ step, item, detail: `${detail} (Spec 124 R-DE (iv))` });
+  const grand = new Set(EMIT_SHAPE_GRANDFATHER[step] || []);
+  const loads = [];
+  for (const e of emits) {
+    if (!e || typeof e.key !== 'string') continue;
+    if (!/^[a-z][a-z0-9_]*$/.test(e.key)) push(`emits.${e.key}.shape`, `emit key "${e.key}" is not snake_case`);
+    if (e.type !== 'object' || EMIT_SHAPE_STANDARD_OBJECTS.includes(e.key) || grand.has(e.key)) continue;
+    if (archetype === 'INGESTOR' && e.key.endsWith('_load')) { loads.push(e.key); continue; }
+    push(`emits.${e.key}.shape`, `"${e.key}" is an object emit; ${archetype === 'INGESTOR' ? 'an INGESTOR\'s run payload is ONE <x>_load object' : 'emits are flat outside config/audit_table'}`);
+  }
+  if (archetype === 'INGESTOR' && !NO_LOAD_OBJECT_GRANDFATHER.includes(step) && loads.length !== 1) {
+    push('emits.<x>_load.shape', `an INGESTOR declares exactly one <x>_load object emit (found ${loads.length})`);
+  }
+  return out;
+}
+
 /** Gate C over the whole converted fleet. An ORPHAN makes `pass` false (R-X). */
 export function checkEmitsEquiv(entries, ledgerRows) {
   const violations = [];
   for (const entry of Array.isArray(entries) ? entries : []) {
     violations.push(...emitsViolations(entry.descriptor, entry.goldenKeys));
+    violations.push(...emitShapeViolations(entry.descriptor));
   }
   const { unallowed, orphans, allowed } = matchLedger('C', violations, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
@@ -211,6 +249,12 @@ export function selfTest() {
   // (10) an empty/missing golden dir → RED no-golden-dir, never vacuous.
   const empty = emitsViolations(d({ emits: 'none' }), null);
   if (empty.length !== 1 || empty[0].item !== 'emits') throw new Error(`self-test FAILED (10): empty golden dir not RED (${JSON.stringify(empty)})`);
+  // (11) R-DE (iv): one <x>_load object for an INGESTOR; no new object emit elsewhere.
+  const shape = (archetype, emits) => emitShapeViolations({ identity: { name: 'fixture_step', archetype }, emits }).length;
+  if (shape('INGESTOR', [{ key: 'x_load', type: 'object' }, { key: 'audit_table', type: 'object' }]) !== 0) throw new Error('self-test FAILED (11a)');
+  if (shape('INGESTOR', [{ key: 'rows', type: 'int' }]) !== 1) throw new Error('self-test FAILED (11b): INGESTOR with no _load object');
+  if (shape('LINK', [{ key: 'match_detail', type: 'object' }]) !== 1) throw new Error('self-test FAILED (11c): LINK object emit');
+  if (shape('LINK', [{ key: 'linkRate', type: 'int' }]) !== 1) throw new Error('self-test FAILED (11d): camelCase key');
 }
 
 /** CLI — `--list` prints the orchestrator-pasteable row for every CURRENT unallowed violation. */

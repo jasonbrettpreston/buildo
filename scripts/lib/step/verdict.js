@@ -330,6 +330,30 @@ function checkRow(check, observation, onCheckError, config = null) {
   return row(observed, verdict.escalate || check.severity);
 }
 
+/**
+ * Spec 124 R-CY (McDonald's Airtight V3) — `ctx.withinLimit(checkId, value)`: the DECLARED
+ * check's own bound (`limit` / `limit_from_config`, resolved exactly as `checkRow` resolves
+ * it) applied to a value the compute measured. A §9 emit field that restates a check's
+ * outcome (`drift_check_passed`, `mass_delete_check_passed`, a per-lane copy of it) asks
+ * the runner instead of comparing `ctx.config` itself (R-BZ G7), so the emit and the audit
+ * row can never disagree about the bound. `true` only when the bound evaluates ok; an
+ * unevaluable value (NaN, no number) is `false` — the same answer `value <= bound` gave.
+ * An undeclared check id throws: the declaration is the only source of a bound.
+ *
+ * @param {object} descriptor
+ * @param {Record<string, number>|null} config - the resolved `ctx.config`
+ * @returns {(checkId: string, value: number) => boolean}
+ */
+function makeWithinLimit(descriptor, config) {
+  const byId = new Map((descriptor.checks || []).map((c) => [c.id, c]));
+  return function withinLimit(checkId, value) {
+    const check = byId.get(checkId);
+    if (!check) throw new Error(`[${descriptor.identity.name}] withinLimit: "${checkId}" is not a declared check`);
+    const verdict = evaluateLimit(resolveLimit(check, config), { value });
+    return verdict.ok === true;
+  };
+}
+
 /** LM-D16 — `errors[]`'s cap: bounded so one large `detail` cannot make the array unbounded. */
 const RENDER_VALUE_MAX_LENGTH = 300;
 
@@ -481,6 +505,7 @@ module.exports = {
   resolveWarnLimit,
   evaluateLimit,
   checkRow,
+  makeWithinLimit,
   deriveVerdict,
   buildAuditTable,
   renderValue,

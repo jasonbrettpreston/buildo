@@ -216,6 +216,7 @@ function baseArgs(over: Record<string, unknown> = {}): Record<string, unknown> {
     tier1: { skip: false, reason: 'no_pre_acquisition_trigger' },
     shapeDocument: coa.shapeDocument,
     sleep: async () => {},
+    targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
     ...over,
   };
 }

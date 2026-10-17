@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=cost_fb_total",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.cost_fb_total IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=cost_fb_total",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.cost_fb_total IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/compute-parcel-cost-estimates.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/compute_parcel_cost_estimates/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, McDonald's Airtight V3, N6 2026-10-17): parcels ids 2..254 (first 200 with cost_fb_total) get cost_fb_total +1; the step's 16-column IS DISTINCT FROM guard (scripts/lib/compute/compute-parcel-cost-estimates.js:200-203, descriptor guard_columns) recomputes and heals all 200. Replaces the data-dependent plain recipe (0 rows on 2026-10-17). Cohort key-set md5 4c5098621d; healed 200, restore 0."
+    }
+  }
+}

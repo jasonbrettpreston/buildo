@@ -87,6 +87,8 @@ function fakePool(opts: {
   priorMeta?: Record<string, unknown> | null;
   interrupted?: Record<string, unknown> | null;
   tables?: string[];
+  /** R-DD: target tables whose probe answers no rows (every other target holds rows). */
+  emptyTargets?: string[];
 } = {}) {
   const calls: Array<{ text: string; params: unknown[] | undefined }> = [];
   const tables = opts.tables ?? ['tbase', 'tov_a', 'tov_b'];
@@ -112,6 +114,9 @@ function fakePool(opts: {
       return { rows: opts.priorMeta ? [{ records_meta: opts.priorMeta }] : [] };
     }
     if (/SELECT NOW\(\) AS now/i.test(text)) return { rows: [{ now: NOW }] };
+    if (/SELECT 1 AS target_has_rows FROM/.test(text)) {
+      return { rows: (opts.emptyTargets ?? []).some((t) => text.includes(`"${t}"`)) ? [] : [{ target_has_rows: 1 }] };
+    }
     if (new RegExp(`INSERT INTO (${tablesAlt})\\b`, 'i').test(text)) return { rows: [{ is_insert: true }] };
     return { rows: [] };
   };

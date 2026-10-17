@@ -356,7 +356,15 @@ describe('WF3 sql-witness set-operation fences (GREEN before and after)', () => 
     ) as { statements: Array<{ fingerprint: string; reads: Record<string, string[]> }> };
     const pinned = trace.statements.find((s) => s.fingerprint === r.fingerprint);
     expect(pinned).toBeDefined();
-    expect(r.reads).toEqual(pinned!.reads);
+    // #44 G9 (2026-10-17): the resolver now records ORDER BY columns. The committed trace predates that,
+    // so the live resolution is the trace PLUS exactly the two ORDER-BY-only columns (both declared reads);
+    // N6 recaptures the trace and this collapses back to toEqual.
+    const g9Extra: Record<string, string[]> = { address_points: ['address_class_desc'], parcels: ['geom'] };
+    const expected: Record<string, string[]> = {};
+    for (const k of new Set([...Object.keys(pinned!.reads), ...Object.keys(g9Extra)])) {
+      expected[k] = [...new Set([...(pinned!.reads[k] ?? []), ...(g9Extra[k] ?? [])])].sort();
+    }
+    expect(r.reads).toEqual(expected);
   });
 
   it('F7 the committed link_wsib derivation SQL resolves to its committed trace entry', () => {

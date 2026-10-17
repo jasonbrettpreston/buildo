@@ -445,6 +445,62 @@ describe('LDG-10 riders — deriveMeta set_null_on_change_of writes + pins in de
   });
 });
 
+// #44 G3 (Spec 124 R-DG, extends R-BL(v) to check (e); McDonald's Airtight V3): a column the reader WRITES
+// itself derives no producer edge (link_massing NULLs parcels.massing_enriched_at, enrich_parcels also writes
+// it and runs later — the edge was a cycle). A read-only column still derives; a pin edge always joins.
+describe('#44 G3 — derivedReadsSteps skips a column the reader writes itself', () => {
+  const L = {
+    inchain: {
+      fx_reader: { chains: ['x'], reads: {}, writes: {} },
+      p: { chains: ['x'], reads: {}, writes: { t: ['k'] } },
+      later: { chains: ['x'], reads: {}, writes: { t: ['stamp'] } },
+    },
+    static: {},
+  };
+  const desc = (extra = {}) => ({
+    identity: { name: 'fx_reader' },
+    inputs: { reads: { tables: [{ table: 't', columns: ['k', 'stamp'] }], steps: [], externals: [] } },
+    outputs: { writes: [{ table: 't', key: ['id'], columns: [{ name: 'stamp' }] }] },
+    execution: { invocation: { x: {} } },
+    ...extra,
+  });
+
+  it('RED on the old derivation: a self-written column (t.stamp) no longer derives its other writer', () => {
+    expect(ledger.derivedReadsSteps('fx_reader', desc(), { ledger: L })).toEqual(['p']);
+  });
+
+  it('GREEN: a read-only column still derives, and a pin on the other writer still joins', () => {
+    const pinned = desc({ staleness: { pins: [{ step: 'later', stamp: 'records_meta.a' }] } });
+    expect(ledger.derivedReadsSteps('fx_reader', pinned, { ledger: L })).toEqual(['later', 'p']);
+  });
+
+  it('GREEN: the real link_massing descriptor no longer derives the cyclic enrich_parcels edge', () => {
+    const d = JSON.parse(readFileSync(join(__dirname, '../../scripts/link-massing.descriptor.json'), 'utf8'));
+    expect(ledger.derivedReadsSteps('link_massing', d, { ledger: ledger.effectiveLedger() })).not.toContain('enrich_parcels');
+  });
+
+  // Panel round 2 (CA m7, 2026-10-17): the exclusion may only ever drop the edge measured here. Fleet-wide,
+  // each converted step's (e) producers are compared with and without the self-written filter; a new
+  // dropped edge (a step whose only link to a producer is a column it also writes) turns this RED.
+  it('fleet: the self-written exclusion drops exactly link_massing ← enrich_parcels, nothing else', () => {
+    const eff = ledger.effectiveLedger();
+    const dropped: Record<string, string[]> = {};
+    for (const { descriptor, slug } of Object.values(seam.loadConvertedDescriptors())) {
+      const row = eff.inchain[slug];
+      if (!row || row.source !== 'descriptor') continue;
+      const kept = ledger.derivedReadsSteps(slug, descriptor, { ledger: eff });
+      const inchain = { ...eff.inchain, [slug]: { ...row, reads: deriveMeta(descriptor).reads } };
+      const raw = new Set<string>();
+      for (const chain of (row.chains as string[]) || []) {
+        for (const s of ledger.stepUpstreams(slug, { chain, ledger: { inchain } })) if (s !== slug) raw.add(s);
+      }
+      const lost = [...raw].filter((s) => !kept.includes(s)).sort();
+      if (lost.length) dropped[slug] = lost;
+    }
+    expect(dropped).toEqual({ link_massing: ['enrich_parcels'] });
+  });
+});
+
 // FLEET-2 assembly (2026-10-05): a converted step's ledger chains are its DECLARED execution.invocation
 // chains (the same declaration R-AZ generates manifest chain_args from), never a stale lineage-snapshot
 // membership. Snapshot fallback only when the descriptor declares no invocation.

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-neighbourhoods.js",
   "chain": "sources",
-  "source_fingerprint": "80a76951c2a7022ece062a67318a1ffbae13af2fd43868c5790a22d4c8d699be",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "01f053a66b9622967f2d2cb6ac780c48067485eff36867f8503ce5cf330e45b3",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 30,
     "distinct": 26,
     "utility": 7,
-    "tracer_self_ms": 1.261,
-    "wall_ms": 2487
+    "tracer_self_ms": 1.159,
+    "wall_ms": 2313
   },
   "statements": [
     {
@@ -64,7 +64,7 @@
         ]
       },
       "excluded": [],
-      "error": "FAIL:INPUT:column:longitude"
+      "error": null
     },
     {
       "fingerprint": "107ed6b6df1704a1",
@@ -112,7 +112,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -233,7 +233,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 5,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -425,7 +425,5 @@
       ]
     }
   },
-  "errors": [
-    "FAIL:INPUT:column:longitude"
-  ]
+  "errors": []
 }

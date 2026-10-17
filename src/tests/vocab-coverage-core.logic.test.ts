@@ -13,7 +13,10 @@ const { resolveAndCountTripleWithClient, quoteOrNull, typeFamily } = require('..
   resolveAndCountTripleWithClient: (
     client: { query: (text: string, params?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> },
     t: Record<string, unknown>,
-    opts?: { logWarn?: (tag: string, msg: string, ctx?: object) => void },
+    opts?: {
+      logWarn?: (tag: string, msg: string, ctx?: object) => void;
+      columnType?: (table: string, column: string) => Promise<string | null>;
+    },
   ) => Promise<{ present: number; vocab_size: number } | { unresolved: string }>;
   quoteOrNull: (name: unknown) => string | null;
   typeFamily: (dt: string) => string;
@@ -61,26 +64,44 @@ function makeFakeClient(over: { types?: Record<string, string | null>; count?: {
 }
 
 const silent = { logWarn: () => {} };
+
+/**
+ * CP-S5 (Spec 124 R-CX, amends R-CH): the core takes its column-type reader as an argument.
+ * This stand-in answers like the old schema probe (the `types` map, default character varying)
+ * WITHOUT touching the client — so the client sees only the core's own intersection count.
+ */
+function readerOf(over: { types?: Record<string, string | null> } = {}) {
+  const asked: string[] = [];
+  const columnType = async (table: string, col: string) => {
+    const key = `${table}.${col}`;
+    asked.push(key);
+    return over.types?.[key] ?? (over.types ? null : 'character varying');
+  };
+  return { asked, columnType };
+}
+const withReader = (over: { types?: Record<string, string | null> } = {}) => ({ ...silent, columnType: readerOf(over).columnType });
 const sqlOf = (seen: Array<{ text: string }>) => seen.map((s) => s.text).join('\n');
 
 describe('vocab-coverage core — compute-safe (no txn control)', () => {
   it('(a) happy path returns counts and issues NO BEGIN / SET / ROLLBACK', async () => {
     const client = makeFakeClient({ count: { present: 4, vocab_size: 7 } });
-    const out = await resolveAndCountTripleWithClient(client, TRIPLE, silent);
+    const reader = readerOf();
+    const out = await resolveAndCountTripleWithClient(client, TRIPLE, { ...silent, columnType: reader.columnType });
 
     expect(out).toEqual({ present: 4, vocab_size: 7 });
     const sql = sqlOf(client.seen);
     expect(sql).not.toMatch(/\bBEGIN\b/i);
     expect(sql).not.toMatch(/\bROLLBACK\b/i);
     expect(sql).not.toMatch(/\bSET\b/i);
-    // Two schema probes + one intersection count — nothing else.
-    expect(client.seen).toHaveLength(3);
-    expect(sql).toMatch(/information_schema\.columns/);
+    // CP-S5: the two column types come from the reader; the client runs ONE intersection count.
+    expect(reader.asked).toEqual(['source_parcels.property_type', 'vocab_property_type.value']);
+    expect(client.seen).toHaveLength(1);
+    expect(sql).not.toMatch(/information_schema/);
   });
 
   it('(b) a bad identifier returns unresolved WITHOUT touching the client', async () => {
     const client = makeFakeClient();
-    const out = await resolveAndCountTripleWithClient(client, { ...TRIPLE, dataColumn: 'bad col; DROP TABLE x' }, silent);
+    const out = await resolveAndCountTripleWithClient(client, { ...TRIPLE, dataColumn: 'bad col; DROP TABLE x' }, withReader());
 
     expect(out).toEqual({ unresolved: 'bad identifier' });
     expect(client.seen).toHaveLength(0);
@@ -89,11 +110,11 @@ describe('vocab-coverage core — compute-safe (no txn control)', () => {
   it('(c) maps query failures to markers and NEVER throws', async () => {
     const warn: Array<{ tag: string; msg: string }> = [];
     const timeoutClient = makeFakeClient({ fail: { code: '57014', message: 'canceling statement due to statement timeout' } });
-    const t = await resolveAndCountTripleWithClient(timeoutClient, TRIPLE, { logWarn: (tag, msg) => warn.push({ tag, msg }) });
+    const t = await resolveAndCountTripleWithClient(timeoutClient, TRIPLE, { logWarn: (tag, msg) => warn.push({ tag, msg }), columnType: readerOf().columnType });
     expect(t).toEqual({ unresolved: 'timeout' });
 
     const errClient = makeFakeClient({ fail: { code: '42P01', message: 'relation does not exist' } });
-    const e = await resolveAndCountTripleWithClient(errClient, TRIPLE, silent);
+    const e = await resolveAndCountTripleWithClient(errClient, TRIPLE, withReader());
     expect(e).toEqual({ unresolved: 'query error' });
 
     // The raw error message goes to logWarn only — never into the returned value.
@@ -103,17 +124,19 @@ describe('vocab-coverage core — compute-safe (no txn control)', () => {
 
     // A client that throws a non-Error still cannot escape as a rejection.
     const weird = { query: async () => { throw { code: '57014' }; } };
-    await expect(resolveAndCountTripleWithClient(weird, TRIPLE, silent)).resolves.toEqual({ unresolved: 'timeout' });
+    await expect(resolveAndCountTripleWithClient(weird, TRIPLE, withReader())).resolves.toEqual({ unresolved: 'timeout' });
   });
 
   it('reports missing columns and type mismatches without querying the data', async () => {
-    const missing = makeFakeClient({ types: {} });
-    expect(await resolveAndCountTripleWithClient(missing, TRIPLE, silent)).toEqual({ unresolved: 'missing column' });
+    const missing = makeFakeClient();
+    expect(await resolveAndCountTripleWithClient(missing, TRIPLE, withReader({ types: {} }))).toEqual({ unresolved: 'missing column' });
+    expect(missing.seen).toHaveLength(0);
 
-    const mismatch = makeFakeClient({ types: { 'source_parcels.property_type': 'integer', 'vocab_property_type.value': 'text' } });
-    expect(await resolveAndCountTripleWithClient(mismatch, TRIPLE, silent)).toEqual({ unresolved: 'type mismatch' });
-    // 2 probes only — no count query on a mismatched pair.
-    expect(mismatch.seen).toHaveLength(2);
+    const mismatch = makeFakeClient();
+    const types = { 'source_parcels.property_type': 'integer', 'vocab_property_type.value': 'text' };
+    expect(await resolveAndCountTripleWithClient(mismatch, TRIPLE, withReader({ types }))).toEqual({ unresolved: 'type mismatch' });
+    // The reader answered both types — no count query on a mismatched pair.
+    expect(mismatch.seen).toHaveLength(0);
   });
 
   it('exports the shared helpers', () => {

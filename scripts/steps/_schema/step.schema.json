@@ -1632,7 +1632,7 @@
       ],
       "properties": {
         "kind": {
-          "description": "trigger (added at LDG-10, WF1 Step 2, 2026-10-03): a named non-internal trigger, ENABLED (pg_trigger.tgenabled IN ('O','A') — origin or always; 'D' disabled and 'R' replica-only do not fire for the pipeline role), name format <table>.<trigger> (e.g. parcels.trg_parcels_geom_invalidation), probed by REQUIREMENT_PROBES.trigger (scripts/lib/step/index.js anchor probeRequirement). A declared outputs.invalidates[] by \"trigger\" invalidator is thereby a runner precondition and a cloud:pre declared_guards_present row. fk (added at the LINK pilot, 2026-08-27): a named FOREIGN KEY constraint, probed via pg_constraint contype = f. A junction table is only meaningful while BOTH sides stay referential, and a dropped FK is invisible to an index probe — a full-mode retraction would simply leave orphans for a later chain step to report. rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
+          "description": "srid (added at CP-S5, Spec 124 R-CX, 2026-10-16; RE-FREEZE #36): the SRID a spatial compute assumes, name format <table>.<column> (e.g. parcels.geom), with the required SRID in `equals`; probed by REQUIREMENT_PROBES.srid (`SELECT 1 WHERE Find_SRID('public', $1, $2) = $3`, scripts/lib/step/index.js anchor probeRequirement) before any hook, so a compute holds no Find_SRID read and no SRID throw (R-BZ G3/G8, Rule 10). trigger (added at LDG-10, WF1 Step 2, 2026-10-03): a named non-internal trigger, ENABLED (pg_trigger.tgenabled IN ('O','A') — origin or always; 'D' disabled and 'R' replica-only do not fire for the pipeline role), name format <table>.<trigger> (e.g. parcels.trg_parcels_geom_invalidation), probed by REQUIREMENT_PROBES.trigger (scripts/lib/step/index.js anchor probeRequirement). A declared outputs.invalidates[] by \"trigger\" invalidator is thereby a runner precondition and a cloud:pre declared_guards_present row. fk (added at the LINK pilot, 2026-08-27): a named FOREIGN KEY constraint, probed via pg_constraint contype = f. A junction table is only meaningful while BOTH sides stay referential, and a dropped FK is invisible to an index probe — a full-mode retraction would simply leave orphans for a later chain step to report. rls_bypass_or_policy (added at the INGESTOR pilot, 2026-08-25): the named table has RLS ENABLED, so the write path is only reachable when the pipeline role either bypasses RLS (pg_roles.rolbypassrls) or a policy grants it. Measured on `ravines`: relrowsecurity=true with ZERO policies — a non-bypass role UPSERTs and DELETEs 0 rows with NO error, so the write counters read 0 and the verdict reads PASS. That is indistinguishable from an unchanged source, which is why the precondition is checked BEFORE the write and fails loud.",
           "enum": [
             "extension",
             "index",
@@ -1640,13 +1640,18 @@
             "column",
             "fk",
             "rls_bypass_or_policy",
-            "trigger"
+            "trigger",
+            "srid"
           ],
           "x-frozen": true
         },
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "equals": {
+          "type": "integer",
+          "description": "CP-S5 (Spec 124 R-CX): the SRID a kind \"srid\" requirement demands (e.g. 4326). Required for kind srid and forbidden on every other kind."
         },
         "on_missing": {
           "description": "R6 ruling. 6 steps use a missing extension as an ALGORITHM SELECTOR, not a failure — which makes outputs.columns a fiction on the degraded branch.",
@@ -1701,6 +1706,36 @@
               "name": {
                 "pattern": "^[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
               }
+            }
+          }
+        },
+        {
+          "x-rule": "CP-S5 (Spec 124 R-CX): a kind \"srid\" requirement names <table>.<column> and carries the integer SRID in `equals` — the probe splits the name on the dot and compares Find_SRID to equals.",
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "srid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "equals"
+            ],
+            "properties": {
+              "name": {
+                "pattern": "^[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "equals"
+              ]
             }
           }
         }

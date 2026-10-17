@@ -119,7 +119,7 @@ describe('geometry-validator.classifyGeometry', () => {
 // pipeline.step() shell) to scripts/lib/compute/load-zoning.js + the descriptor checks + verdict.js.
 // ─────────────────────────────────────────────────────────────────────────
 import {
-  LAYERS,
+  layersOf,
   coerceSourceId,
   coerceColumn,
   parseHeightLabel,
@@ -142,6 +142,8 @@ const sv = require('../../scripts/lib/source-version.js') as {
 const ZD = require('../../scripts/load-zoning.descriptor.json') as {
   checks: Array<{ id: string }>;
 };
+/** Spec 124 R-CY — the compute reads the descriptor the runner hands it; the registry is derived from it. */
+const LAYERS = layersOf(ZD) as Array<{ key: string; resourceId: string; geomKind: string; cols: Array<{ src: string; col: string }> }>;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SEEDS = require('../../scripts/seeds/logic_variables.json') as Record<string, { default: unknown }>;
 
@@ -224,6 +226,7 @@ describe('load-zoning threshold cascades — the declared checks via verdict.che
     let got: Record<string, unknown> = {};
     const ctx = {
       checks: [],
+      descriptor: ZD, // Spec 124 R-CY — ctx.descriptor, never a compute-side require
       acquired: { primaries: { base: { outcome: 'loaded' } } },
       written: {
         by_target: {

@@ -41,12 +41,13 @@ describe('notes-cap — the <=12 prose cap is ONE notes-file check', () => {
   });
 
   // -------------------------------------------------------------------------
-  // T2 — countProseEntries counts ONLY the 12 prose blocks.
+  // T2 — countProseEntries counts the 12 prose blocks + constants (R-DE (vii)).
   // -------------------------------------------------------------------------
-  it('T2: counts only NOTES_PROSE_BLOCKS (fences/constants/$comment exempt)', () => {
+  // R-DE (vii) (2026-10-17): `constants` now counts toward the cap; fences/$comment stay exempt.
+  it('T2: counts NOTES_PROSE_BLOCKS + constants (fences/$comment exempt)', () => {
     const fixture = {
       expected_shape: entries(5),
-      review_notes: entries(7),
+      review_notes: entries(4),
       fences: entries(5),
       constants: entries(3),
       $comment: entries(4),

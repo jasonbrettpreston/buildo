@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-bylaw-map-areas.js",
   "chain": "bylaw_maps",
-  "source_fingerprint": "2b3eb7b47dc32ba8077876f85c71a2fbf4818eb1c2f07f7601801719a1735eb9",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "93925e9841d6516877ca5957f2a4d9bcfcd8723e1b2aa161186221152289014b",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 11,
-    "distinct": 9,
+    "calls": 12,
+    "distinct": 10,
     "utility": 5,
-    "tracer_self_ms": 0.727,
-    "wall_ms": 230
+    "tracer_self_ms": 0.71,
+    "wall_ms": 225
   },
   "statements": [
     {
@@ -107,6 +107,18 @@
       "error": null
     },
     {
+      "fingerprint": "b7221c1f818decbd",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "bylaw_map_areas": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
       "count": 2,
@@ -130,7 +142,9 @@
   "transactions": [],
   "autocommit_writes": [],
   "touched": {
-    "reads": {},
+    "reads": {
+      "bylaw_map_areas": []
+    },
     "writes": {}
   },
   "errors": []

@@ -155,7 +155,6 @@ function features_read_floor(ctx) {
   ctx.report('features_read_floor', {
     value: rr,
     detail: rr,
-    violations: rr < ctx.config.sources_building_footprints_floor ? 1 : 0,
   });
 }
 
@@ -189,10 +188,12 @@ function features_skipped(ctx) {
 }
 
 /**
- * Descriptor checks[5], FAIL — the legacy skip-rate FAIL boundary is STRICT (a rate AT
- * the ceiling fails) which `pct <=` cannot express, so the compute compares against
- * `ctx.config.massing_skip_rate_max_pct` (Rule 3) and reports violations 0/1. Denominator
- * `rows_read`; numerator the re-bucketed skip sum; the reported `detail` is UNROUNDED.
+ * Descriptor checks[5], FAIL — the raw skip rate, percent (unrounded). Denominator
+ * `rows_read`; numerator the re-bucketed skip sum. The bound is the declared
+ * `pct <= N` limit with `limit_from_config: massing_skip_rate_max_pct` (Rule 3) —
+ * verdict.js decides, never this file (CP-PLANA, R-BZ G7). The legacy boundary was
+ * STRICT (a rate AT the ceiling failed); the declared `pct <=` form is inclusive, so a
+ * rate exactly at the ceiling now passes — recorded in the descriptor's why.
  */
 function skip_rate_pct(ctx) {
   const a = ctx.acquired || {};
@@ -206,7 +207,7 @@ function skip_rate_pct(ctx) {
   const pct = (skippedCount(a) / rr) * 100;
   ctx.report('skip_rate_pct', {
     detail: pct,
-    violations: pct >= ctx.config.massing_skip_rate_max_pct ? 1 : 0,
+    value: pct,
   });
 }
 
@@ -217,13 +218,13 @@ function batch_errors(ctx) {
 }
 
 /**
- * Descriptor checks[7], FAIL — the legacy batch-error-rate FAIL boundary is STRICT (a
- * rate AT the ceiling fails), so the compute compares against
- * `ctx.config.massing_batch_error_rate_max_pct` (Rule 3) and
- * reports violations 0/1. The batch size is the DESCRIPTOR's `execution.batch` (never a
- * literal here); batches are `ceil(rows_read / batch)`, the legacy `Math.ceil(processed /
- * pipeline.BATCH_SIZE)`. Under `txn_scope:"step"` a failed batch fails the step before
- * checks run, so a completed run reads 0.
+ * Descriptor checks[7], FAIL — the raw batch-error rate, percent. The batch size is the
+ * DESCRIPTOR's `execution.batch` (never a literal here); batches are `ceil(rows_read /
+ * batch)`, the legacy `Math.ceil(processed / pipeline.BATCH_SIZE)`. The bound is the
+ * declared `pct <= N` limit with `limit_from_config: massing_batch_error_rate_max_pct`
+ * (Rule 3) — verdict.js decides, never this file (CP-PLANA, R-BZ G7). Under
+ * `txn_scope:"step"` a failed batch fails the step before checks run, so a completed
+ * run reads 0.
  */
 function batch_error_rate_pct(ctx) {
   const a = ctx.acquired || {};
@@ -234,7 +235,7 @@ function batch_error_rate_pct(ctx) {
   const rate = batches > 0 ? (errors / batches) * 100 : 0;
   ctx.report('batch_error_rate_pct', {
     detail: rate,
-    violations: rate >= ctx.config.massing_batch_error_rate_max_pct ? 1 : 0,
+    value: rate,
   });
 }
 
@@ -266,24 +267,10 @@ const CHECKS = {
   invalid_geometry_stored,
 };
 
-/**
- * ⚠️ REQUIRE-TIME INVARIANT (SPEC LINK 122 §5.5): the dispatch keys ARE the declared
- * check ids. The descriptor ships beside this file, so a mismatch is a load-order bug,
- * not a runtime condition — it must throw at require() time rather than surface as a
- * silently-unscored check on a green run.
- */
-const DECLARED_CHECKS = require('../../load-massing.descriptor.json').checks.map((c) => c.id);
-const DISPATCH_KEYS = Object.keys(CHECKS);
-if (DISPATCH_KEYS.length !== DECLARED_CHECKS.length
-    || DISPATCH_KEYS.some((id, i) => id !== DECLARED_CHECKS[i])) {
-  throw new Error('load-massing compute dispatch keys are not the descriptor\'s declared check ids: '
-    + `dispatch=[${DISPATCH_KEYS.join(', ')}] declared=[${DECLARED_CHECKS.join(', ')}]`);
-}
-for (const id of DECLARED_CHECKS) {
-  if (CHECKS[id].name !== id) {
-    throw new Error(`load-massing compute: checks.${id} is bound to a function named "${CHECKS[id].name}"`);
-  }
-}
+// The dispatch keys ARE the declared check ids, in order, each bound to a function of
+// the same name (§5.5 (1)/(4)). That invariant is enforced statically, both directions,
+// by src/tests/step-conformance.infra.test.ts ("§5.5 compute shape — dispatch table ≡
+// declared checks") — never by a require of the descriptor here (Spec 124 R-BZ G12).
 
 /**
  * The `massing_load` emit block — the keys `emits[]` declares, byte-identical to the

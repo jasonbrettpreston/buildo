@@ -1,0 +1,31 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/cohort-heal.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/link-massing-healing-cohort.js",
+          "--derive"
+        ],
+        [
+          "scripts/analysis/link-massing-healing-cohort.js",
+          "--backup",
+          "--backup-table=link_massing_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/link-massing-healing-cohort.js",
+          "--run",
+          "--backup-table=link_massing_cohort_bak_{ts}",
+          "--chain=sources",
+          "--out=docs/reports/golden/link_massing/post/cohort-heal.json"
+        ]
+      ],
+      "why": "#38 cohort evidence (both tables): the committed healing/recipe.json bracket, derive then backup then run (V3 fleet night 2026-10-16 nonzero-redo.sh)."
+    },
+    "post/sources-full-forced-1.json": {
+      "via": "plain",
+      "why": "the filename predates O4 row 5: link_massing has no force env (override none) and every run re-derives every link, so a plain run IS the forced run (night 3 precedent)."
+    }
+  }
+}

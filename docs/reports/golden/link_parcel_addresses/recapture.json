@@ -1,0 +1,16 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "plain",
+      "why": "#38 evidence: a plain sources run links the parcels new since the last run (3 rows on 2026-10-16); no bracket was ever used."
+    },
+    "post/standalone-forced.json": {
+      "via": "env",
+      "env": {
+        "LINK_PARCEL_ADDRESSES_FORCE_FULL": "1"
+      },
+      "why": "the descriptor force_full env bypasses the materialize gate (\"gate: RUN (bypassed)\" in the night-4 capture 2d7b0d84). The 2026-10-16 night retook it WITHOUT the env (gate reason upstream_activity), so the committed file is not a forced run until N6 retakes it."
+    }
+  }
+}

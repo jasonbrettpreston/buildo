@@ -170,6 +170,7 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
       keyColumn: undefined,
       coerceKey: undefined,
       forced: false,
+      targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
       preAcquisitionGate: gate,
       emitSkeleton: {},
     }) as {
@@ -247,6 +248,7 @@ describe('INGESTOR prerequisite 0w — lookup acquisition', () => {
       keyColumn: 'ravine_id',
       coerceKey: (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; },
       forced: false,
+      targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
       preAcquisitionGate: gate,
       emitSkeleton: {},
     }) as { tier1: { skip: boolean; reason: string } };

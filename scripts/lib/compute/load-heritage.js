@@ -27,15 +27,15 @@
 
 const { safeParseIntOrNull } = require('../safe-math');
 const { MS_PER_DAY, DAYS_PER_JULIAN_YEAR } = require('../units');
-// The descriptor ships beside the shell; read once at require() time (neighbourhoods precedent).
-const DESCRIPTOR = require('../../load-heritage.descriptor.json');
+// The descriptor is the runner's: every field below is read off `ctx.descriptor` inside
+// the compute call (Spec 124 R-BZ G12), never required beside the shell.
 
 /** The consumer's exact-match pin (enrich_heritage halts on anything but '1.1'). */
-const SPEC_VERSION = DESCRIPTOR.identity.spec_version;
+const specVersion = (ctx) => ctx.descriptor.identity.spec_version;
 /** The frozen §9 emit: its key and the per-dataset skeletons (the zero form, LH-D8 (b)). */
-const EMIT = DESCRIPTOR.emits[0];
+const emitOf = (ctx) => ctx.descriptor.emits[0];
 /** The declared primaries in declared order — id = the §9 sub-block name, target = its table. */
-const LANES = DESCRIPTOR.inputs.reads.externals.map((e) => ({ id: e.id, target: e.target }));
+const declaredLanes = (ctx) => ctx.descriptor.inputs.reads.externals.map((e) => ({ id: e.id, target: e.target }));
 /** ArcGIS's null-date sentinel in DESIGNATED / HCD_DESDAT (vocabulary, notes.json). */
 const ARCGIS_NULL_DATE = '1899-11-30';
 /**
@@ -234,13 +234,13 @@ const GATED = new Set(['gating', 'loaded', 'write_skipped']);
 
 function lanes(ctx) {
   if (ctx.primary) {
-    const lane = LANES.find((l) => l.id === ctx.primary) || { id: ctx.primary, target: null };
+    const lane = declaredLanes(ctx).find((l) => l.id === ctx.primary) || { id: ctx.primary, target: null };
     return [{ ...lane, outcome: 'gating', acquired: ctx.acquired || {}, prior: ctx.prior || null, written: null }];
   }
   const primaries = (ctx.acquired && ctx.acquired.primaries) || {};
   const priors = ctx.prior && typeof ctx.prior === 'object' ? ctx.prior : {};
   const byTarget = (ctx.written && ctx.written.by_target) || {};
-  return LANES.map((l) => {
+  return declaredLanes(ctx).map((l) => {
     const a = primaries[l.id] || {};
     const prior = priors[l.id] && typeof priors[l.id] === 'object' ? priors[l.id] : null;
     return { ...l, outcome: a.outcome || 'not_reached', acquired: a, prior, written: byTarget[l.target] || null };
@@ -477,12 +477,11 @@ function heritage_districts_load_failed(ctx) {
  */
 function subFor(ctx, lane) {
   const v = LANE_VOCAB[lane.id];
-  const skeleton = { ...EMIT.skeleton[lane.id] };
+  const skeleton = { ...emitOf(ctx).skeleton[lane.id] };
   const a = lane.acquired;
-  const cfg = ctx.config || {};
   if (lane.outcome === 'skipped') {
     return {
-      ...skeleton, ...(lane.prior || {}), spec_version: SPEC_VERSION,
+      ...skeleton, ...(lane.prior || {}), spec_version: specVersion(ctx),
       features_inserted: 0, features_updated: 0, features_deleted: 0,
       [v.filteredKey]: 0, [v.unknownKey]: 0, skipped_reason: a.reason || null,
     };
@@ -492,7 +491,8 @@ function subFor(ctx, lane) {
     etag: a.etag || null, content_hash: a.content_hash,
   };
   const featureCount = Number(a.feature_count) || 0;
-  const driftBreached = !(countDriftOf(lane) <= cfg.load_heritage_count_drift_fail_pct);
+  // Spec 124 R-CY (McDonald's Airtight V3) — this lane's value against the declared check's own bound, via the runner.
+  const driftBreached = !ctx.withinLimit('heritage_count_drift_pct', countDriftOf(lane));
   if (lane.outcome === 'write_skipped') {
     if (!lane.prior && featureCount === 0) return { ...skeleton, ...versions, feature_count: 0, drift_check_passed: false };
     if (driftBreached && (ctx.overrides || {}).accept_feature_count_drift !== true) {
@@ -505,7 +505,7 @@ function subFor(ctx, lane) {
   const prior = priorFeatureCount(lane);
   const massDeletePct = computeMassDeletePct(Number(w.deleted) || 0, prior);
   return {
-    spec_version: SPEC_VERSION,
+    spec_version: specVersion(ctx),
     ...versions,
     feature_count: featureCount,
     features_inserted: Number(w.inserted) || 0,
@@ -515,7 +515,7 @@ function subFor(ctx, lane) {
     invalid_geometry_skipped: a.invalid_geometry_skipped,
     geometry_collection_extracted: a.geometry_collection_extracted,
     drift_check_passed: !driftBreached,
-    mass_delete_check_passed: !(prior != null && massDeletePct > cfg.load_heritage_mass_delete_fail_pct),
+    mass_delete_check_passed: prior == null || ctx.withinLimit('heritage_mass_delete_pct', massDeletePct),
     geometry_update_pct: round3(ctx, computeGeometryUpdatePct(Number(w.updated) || 0, prior)),
     delete_skipped_empty_guard: w.delete_skipped_empty_guard === true,
     skipped_reason: null,
@@ -531,8 +531,8 @@ function buildLoadMeta(ctx) {
   const geometryUpdatePct = worst(ctx, loaded, (l) => computeGeometryUpdatePct(Number(l.written.updated) || 0, priorFeatureCount(l)));
   const massDeletePct = worst(ctx, loaded, (l) => computeMassDeletePct(Number(l.written.deleted) || 0, priorFeatureCount(l)));
   return {
-    [EMIT.key]: {
-      spec_version: SPEC_VERSION,
+    [emitOf(ctx).key]: {
+      spec_version: specVersion(ctx),
       ...Object.fromEntries(all.map((l) => [l.id, subFor(ctx, l)])),
       geometry_update_pct: round3(ctx, geometryUpdatePct),
       mass_delete_pct: round3(ctx, massDeletePct),
@@ -570,16 +570,10 @@ const CHECKS = {
   heritage_districts_load_failed,
 };
 
-/** REQUIRE-TIME INVARIANT (§5.5): the dispatch keys ARE the declared check ids, in order. */
-const DECLARED_CHECKS = DESCRIPTOR.checks.map((c) => c.id);
-const DISPATCH_KEYS = Object.keys(CHECKS);
-if (DISPATCH_KEYS.length !== DECLARED_CHECKS.length || DISPATCH_KEYS.some((id, i) => id !== DECLARED_CHECKS[i])) {
-  throw new Error('load-heritage compute dispatch keys are not the descriptor\'s declared check ids: '
-    + `dispatch=[${DISPATCH_KEYS.join(', ')}] declared=[${DECLARED_CHECKS.join(', ')}]`);
-}
-for (const id of DECLARED_CHECKS) {
-  if (CHECKS[id].name !== id) throw new Error(`load-heritage compute: checks.${id} is bound to a function named "${CHECKS[id].name}"`);
-}
+// The dispatch keys ARE the declared check ids, in order, each bound to a function of
+// the same name (§5.5 (1)/(4)). That invariant is enforced statically, both directions,
+// by src/tests/step-conformance.infra.test.ts ("§5.5 compute shape — dispatch table ≡
+// declared checks") — never by a require of the descriptor here (Spec 124 R-BZ G12).
 
 /**
  * §5.5 (2) — run the SELECTED checks, and nothing else. Called once per primary by the

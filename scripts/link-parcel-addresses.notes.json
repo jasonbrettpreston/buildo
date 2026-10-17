@@ -8,7 +8,7 @@
   "contract_version": 1,
   "read_this_way": [
     {
-      "note": "LPA-D2 (2026-08-29): the pre-conversion header claimed batch-position resume-after-Ctrl-C — FALSE. lastParcelId was a local variable, never persisted. The TRUE property: idempotent, not resumable — ON CONFLICT DO NOTHING makes a re-run safe (no duplicate writes, no corruption), but every invocation re-scans the FULL parcels population from id > -1, whether the prior run got through 1 batch or 486. A full re-scan of 486,530 parcels costs the entire ~200s every time.",
+      "what": "LPA-D2 (2026-08-29): the pre-conversion header claimed batch-position resume-after-Ctrl-C — FALSE. lastParcelId was a local variable, never persisted. The TRUE property: idempotent, not resumable — ON CONFLICT DO NOTHING makes a re-run safe (no duplicate writes, no corruption), but every invocation re-scans the FULL parcels population from id > -1, whether the prior run got through 1 batch or 486. A full re-scan of 486,530 parcels costs the entire ~200s every time.",
       "measured": {
         "value": "lastParcelId initialized to -1, local variable, never written to a table or file (:148 pre-conversion)",
         "date": "2026-08-29",
@@ -18,11 +18,11 @@
   ],
   "known_normal": [
     {
-      "note": "7 of the 8 recorded pipeline_runs show records_new: 0 (idempotent re-runs over a stable corpus). The 8th (origin, 2026-06-10) wrote all 511,224 rows — it is not a re-run.",
+      "what": "7 of the 8 recorded pipeline_runs show records_new: 0 (idempotent re-runs over a stable corpus). The 8th (origin, 2026-06-10) wrote all 511,224 rows — it is not a re-run.",
       "measured": { "value": "7/8 completed runs records_new=0; origin run records_new=511224", "date": "2026-08-29", "query": "SELECT status, started_at, (records_meta->>'records_new') FROM pipeline_runs WHERE pipeline LIKE '%link_parcel_addresses%' OR pipeline LIKE '%link-parcel-addresses%' ORDER BY started_at" }
     },
     {
-      "note": "address_class_desc carries a 4th value beyond Structure/Structure Entrance/Land: 'Land Entrance' (449 rows) — tier 4 by Spec 54 §3's own disambiguation ordering. This step writes ALL contained pairs; the disambiguation hierarchy is a CONSUMER-side rule (link-parcels.js), not performed here.",
+      "what": "address_class_desc carries a 4th value beyond Structure/Structure Entrance/Land: 'Land Entrance' (449 rows) — tier 4 by Spec 54 §3's own disambiguation ordering. This step writes ALL contained pairs; the disambiguation hierarchy is a CONSUMER-side rule (link-parcels.js), not performed here.",
       "measured": { "value": "449 rows with address_class_desc = 'Land Entrance'", "date": "2026-08-29", "query": "SELECT count(*) FROM address_points WHERE address_class_desc = 'Land Entrance'" }
     }
   ],
@@ -42,13 +42,13 @@
   ],
   "decisions": [
     {
-      "note": "A-1 RULING (Fold A, orchestrator, 2026-08-29, within the pre-authorized plan): a new runMaterializePhase (a FORK of runCascadePhase's phase-order shape, NOT an extension of runLinkPhase — runLinkPhase's SELECT-then-batched-executeUpsertBatch write path would split this step's single server-side statement, breaking G2's verbatim guarantee) + LG-18 (executeInsertSelectNoRetract, INSERT-only structurally enforced). recovery.reset ships declare-only (no new destructive rebuild mechanism this pilot)."
+      "what": "A-1 RULING (Fold A, orchestrator, 2026-08-29, within the pre-authorized plan): a new runMaterializePhase (a FORK of runCascadePhase's phase-order shape, NOT an extension of runLinkPhase — runLinkPhase's SELECT-then-batched-executeUpsertBatch write path would split this step's single server-side statement, breaking G2's verbatim guarantee) + LG-18 (executeInsertSelectNoRetract, INSERT-only structurally enforced). recovery.reset ships declare-only (no new destructive rebuild mechanism this pilot)."
     },
     {
-      "note": "R-B/R-F item 1 (2026-08-29): this pilot's write has no destructive retraction target (class D, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried forward again to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-M's before_image and recovery.interrupted both ship \"none\"+why for the same reason: there is nothing to image or to interrupt."
+      "what": "R-B/R-F item 1 (2026-08-29): this pilot's write has no destructive retraction target (class D, retract:\"none\"), so it does NOT exercise or close R-B's crashed/stuck-running reader gap — carried forward again to whichever future pilot first ships a genuine retract_when:\"full_only\" target. R-M's before_image and recovery.interrupted both ship \"none\"+why for the same reason: there is nothing to image or to interrupt."
     },
     {
-      "note": "Peel 8a (2026-08-29): R-B's carry is stated plainly as NOT EXERCISABLE HERE, not merely deferred by inconvenience — this step genuinely has no FULL mode to auto-force. runMaterializePhase (scripts/lib/step/index.js:1263-1272) returns a hardcoded mode:\"incremental\" on every RUN branch; staleness.fingerprint_inputs/mode_select:\"none\" (descriptor) means LINK_PARCEL_ADDRESSES_FORCE_FULL only bypasses staleness.ledgerGatedSkip's SKIP decision (bypassed flag, :1154) — it does not switch the batch loop onto a different code path, because the loop always re-scans the full parcels population from id > -1 regardless (LPA-D2: idempotent-not-resumable). A crashed/stuck-running auto-FULL reader has nothing to force this step INTO that a plain re-run does not already do. R-B's reader stays a genuine future obligation for a step whose FULL mode is behaviourally distinct from incremental (e.g. a retract_when:\"full_only\" target) — never satisfied by this pilot's shape.",
+      "what": "Peel 8a (2026-08-29): R-B's carry is stated plainly as NOT EXERCISABLE HERE, not merely deferred by inconvenience — this step genuinely has no FULL mode to auto-force. runMaterializePhase (scripts/lib/step/index.js:1263-1272) returns a hardcoded mode:\"incremental\" on every RUN branch; staleness.fingerprint_inputs/mode_select:\"none\" (descriptor) means LINK_PARCEL_ADDRESSES_FORCE_FULL only bypasses staleness.ledgerGatedSkip's SKIP decision (bypassed flag, :1154) — it does not switch the batch loop onto a different code path, because the loop always re-scans the full parcels population from id > -1 regardless (LPA-D2: idempotent-not-resumable). A crashed/stuck-running auto-FULL reader has nothing to force this step INTO that a plain re-run does not already do. R-B's reader stays a genuine future obligation for a step whose FULL mode is behaviourally distinct from incremental (e.g. a retract_when:\"full_only\" target) — never satisfied by this pilot's shape.",
       "measured": {
         "value": "runMaterializePhase's only `mode:` literal is \"incremental\" (2 return sites, both hardcoded); staleness.mode_select = \"none\" (descriptor)",
         "date": "2026-08-29",
@@ -82,7 +82,7 @@
   ],
   "review_notes": [
     {
-      "note": "This step writes ONE target, ONE statement per batch — read written.e1 as the whole write surface. There is no ordered multi-target sequence to reason about (unlike link_massing's E1/E2 or link_wsib's 5 targets).",
+      "what": "This step writes ONE target, ONE statement per batch — read written.e1 as the whole write surface. There is no ordered multi-target sequence to reason about (unlike link_massing's E1/E2 or link_wsib's 5 targets).",
       "measured": { "value": "1 declared write target, 1 statement per keyset batch (~487 batches at BATCH_SIZE 1000 over 486,530 parcels)", "date": "2026-08-29", "query": "node -e \"console.log(require('./scripts/link-parcel-addresses.descriptor.json').outputs.writes.length)\"" }
     }
   ]

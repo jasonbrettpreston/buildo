@@ -173,11 +173,13 @@ describe.skipIf(!dbAvailable())('assert_data_bounds — per-site halt-classifica
       `SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1::text[])`,
       [names],
     );
-    const live = new Map(rows.map((r) => [r.variable_key, parseFloat(r.variable_value)]));
+    const live = new Map(rows.map((r) => [r.variable_key, r.variable_value]));
     const config: Record<string, number> = {};
     for (const v of descriptor.config.logic_variables) {
-      const value = live.get(v.name);
-      config[v.name] = Number.isFinite(value) ? (value as number) : v.default;
+      const raw = live.get(v.name);
+      const value = raw == null ? NaN : parseFloat(raw);
+      // CP-PLANA (R-CE): pipeline_timezone is the one string-typed (enum) variable — kept verbatim.
+      config[v.name] = Number.isFinite(value) ? value : ((typeof raw === 'string' && raw.length > 0 ? raw : v.default) as unknown as number);
     }
     return config;
   }
@@ -195,6 +197,8 @@ describe.skipIf(!dbAvailable())('assert_data_bounds — per-site halt-classifica
       descriptor,
       checks: verdictLib.selectChecks(descriptor, chainId).map((c) => c.id),
       log: { info: () => {}, warn: () => {}, error: () => {} },
+      // CP-PLANA (R-BZ G6): the runner always supplies the run clock; the compute binds it.
+      clock: () => Date.now(),
       config,
       report(checkId: string, observation: unknown) {
         if (!declared.has(checkId)) {
@@ -352,7 +356,10 @@ describe.skipIf(!dbAvailable())('assert_data_bounds — per-site halt-classifica
     expect(built.warnings.some((w) => /cost_outliers/i.test(w))).toBe(false);
   }, 60_000);
 
-  it('Case C boundary — exactly 20 cost outliers: row WARN, verdict WARN, no exception', async () => {
+  // R-DC (McDonald's Airtight V3, operator y 2026-10-17): cost_outliers is the inclusive ceiling_max form of its seven
+  // siblings (viol <= cost_outlier_count_warn_max, seeded 20) — exactly 20 now PASSES and 21 is the first WARN. Both sides
+  // of the moved boundary are locked.
+  it('Case C boundary — exactly 20 cost outliers: row PASS at the inclusive ceiling, no exception', async () => {
     await pool!.query(
       `INSERT INTO permits (permit_num, revision_num, est_const_cost, status)
        SELECT $1 || g::text, '00', 2000000001, 'Under Review'
@@ -364,8 +371,26 @@ describe.skipIf(!dbAvailable())('assert_data_bounds — per-site halt-classifica
 
     const costRow = built.rows.find((x) => x.metric === 'cost_outliers');
     expect(costRow, `no cost_outliers row: ${JSON.stringify(built.rows)}`).toBeDefined();
-    expect(costRow?.status).toBe('WARN');
+    expect(costRow?.status).toBe('PASS');
     expect(costRow?.value).toBe(20);
+    expect(built.warnings.some((w) => /cost_outliers/i.test(w))).toBe(false);
+    expect(built.errors).toEqual([]);
+  }, 60_000);
+
+  it('Case C boundary + 1 — 21 cost outliers: row WARN, verdict WARN, no exception', async () => {
+    await pool!.query(
+      `INSERT INTO permits (permit_num, revision_num, est_const_cost, status)
+       SELECT $1 || g::text, '00', 2000000001, 'Under Review'
+         FROM generate_series(1, 21) g`,
+      [FX],
+    );
+
+    const built = await runChain('permits');
+
+    const costRow = built.rows.find((x) => x.metric === 'cost_outliers');
+    expect(costRow, `no cost_outliers row: ${JSON.stringify(built.rows)}`).toBeDefined();
+    expect(costRow?.status).toBe('WARN');
+    expect(costRow?.value).toBe(21);
     expect(built.audit_table.verdict).toBe('WARN');
     expect(built.warnings.some((w) => /cost_outliers/i.test(w))).toBe(true);
     expect(built.errors).toEqual([]);

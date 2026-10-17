@@ -33,10 +33,10 @@ import { unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Pool } from 'pg';
-import { dbAvailable, getTestPool } from './db/setup-testcontainer';
+import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const restoreDb = require('../../scripts/restore-db.js') as {
+const restoreDb = require('../../../scripts/restore-db.js') as {
   spawnCapture: (
     cmd: string,
     args: string[],
@@ -55,7 +55,7 @@ const restoreDb = require('../../scripts/restore-db.js') as {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const gatesLib = require('../../scripts/validation/supabase-load-gates.js') as {
+const gatesLib = require('../../../scripts/validation/supabase-load-gates.js') as {
   getAuthLinkedTables: (pool: Pool) => Promise<string[]>;
 };
 

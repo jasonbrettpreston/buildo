@@ -68,6 +68,9 @@
  *   --table-order=t:a,b[;t2:c]    ORDER BY these columns instead of the pk
  *   --invariants=<f>    JSON array of `{name, sql}` scalar queries captured after the child exits
  *   --ledger-slug=<s>   the pipeline_runs slug, when the manifest/descriptor cannot name the step
+ *   --replay=<capture>  DB-free: print the exact command(s) that retake this capture (Spec 124 R-CZ)
+ *   --replay-all        DB-free: print every capture's retake in fleet order; exit 1 if any cannot be
+ *                       replayed. [--replay-ts=yyyymmddthhmmz] pins the bracket before-image minute.
  *
  * DB target: `scripts/lib/resolve-db.js` — no silent default, host+database printed before the
  * child runs (tasks/lessons.md 2026-07-30: "print the host+database you connected to").
@@ -1091,6 +1094,249 @@ function gitHead() {
 // captureTableState failure after the spawn). Null until then: an early refusal touches no DB.
 let pendingLedgerFlush = null;
 
+// ── Replay (Spec 124 R-CZ, McDonald's Airtight V3) ────────────────────────────
+// A capture is reproducible from committed data alone. `--replay=<capture>` prints
+// the exact command(s) that retake it: the capture's own step/chain/args/
+// invariants_file/`--tables`/row ceiling and every table_specs projection whose
+// columns_source/order_source is "arg" (122a §A27 traps 11–12), plus its entry in
+// `docs/reports/golden/<slug>/recapture.json`. DB-free; nothing is re-chosen.
+//
+//   recapture.json = {contract_version: 1, captures: {"<pre|post>/<file>.json":
+//     {via: "plain"|"env"|"bracket", env?: {NAME: "1"}, steps?: [[argv]…], why}}}
+//
+// A capture with no entry replays plain. An entry is required (gate G #38) for the
+// nonzero evidence capture of every closed write table and for every capture whose
+// filename says "forced". A bracket step's argv[0] is a repo script (run as
+// `node -r dotenv/config <script>`) or one of REPLAY_TOKENS; `{ts}` inside any argv
+// element is the bracket's before-image minute (`yyyymmddthhmmz`, one per bracket).
+const RECAPTURE_REL = 'recapture.json';
+const RECAPTURE_VIAS = ['plain', 'env', 'bracket'];
+const REPLAY_TOKENS = ['{harness}', '{sql}', '{remove-capture}'];
+const RECAPTURE_MIN_WHY = 20;
+const CAPTURE_SUB_RE = /^(pre|post)\/[^/]+\.json$/;
+const GOLDEN_REL = 'docs/reports/golden';
+
+/** `docs/reports/golden/<slug>/<pre|post>/<file>.json` → {slug, sub, rel}; throws otherwise. Pure. */
+function captureRelParts(capturePath, repoRoot = REPO_ROOT) {
+  const rel = path.relative(repoRoot, path.resolve(repoRoot, String(capturePath))).split(path.sep).join('/');
+  const m = /^docs\/reports\/golden\/([^/]+)\/((?:pre|post)\/[^/]+\.json)$/.exec(rel);
+  if (!m) throw new Error(`--replay: ${capturePath} is not docs/reports/golden/<slug>/<pre|post>/<file>.json`);
+  return { slug: m[1], sub: m[2], rel };
+}
+
+/** POSIX single-quote an argv element only when it needs it. Pure. */
+function shellQuote(s) {
+  const v = String(s);
+  return /^[A-Za-z0-9_@%+=:,./-]+$/.test(v) ? v : `'${v.replace(/'/g, `'\\''`)}'`;
+}
+
+/** The env names a recipe may set: the descriptor's own `override` env values. Pure. */
+function overrideEnvNames(descriptor) {
+  const o = (descriptor && descriptor.override) || {};
+  const names = [];
+  for (const k of ['force_full', 'force_run']) {
+    if (typeof o[k] === 'string' && /^[A-Z][A-Z0-9_]*$/.test(o[k])) names.push(o[k]);
+  }
+  for (const a of Array.isArray(o.accept_anomaly) ? o.accept_anomaly : []) {
+    if (a && typeof a.env === 'string') names.push(a.env);
+  }
+  return names;
+}
+
+/**
+ * Validate one step's parsed recapture.json. Pure over its inputs: `captureExists(sub)`
+ * answers whether `golden/<slug>/<sub>` is on disk, `scriptExists(rel)` whether a repo
+ * script is. Returns `[{sub, reason}]` — empty when every entry is well-formed. An
+ * entry naming a capture that is not on disk is an ORPHAN (R-X posture).
+ */
+function validateRecapture(recapture, { descriptor = null, captureExists, scriptExists }) {
+  if (recapture === null || recapture === undefined) return [];
+  const errs = [];
+  const bad = (sub, reason) => errs.push({ sub, reason });
+  if (recapture.contract_version !== 1) bad('(file)', 'contract_version must be 1');
+  const caps = recapture.captures;
+  if (!caps || typeof caps !== 'object' || Array.isArray(caps)) {
+    bad('(file)', 'captures must be an object keyed "<pre|post>/<file>.json"');
+    return errs;
+  }
+  const envNames = overrideEnvNames(descriptor);
+  for (const [sub, e] of Object.entries(caps)) {
+    if (!CAPTURE_SUB_RE.test(sub)) { bad(sub, 'key is not "<pre|post>/<file>.json"'); continue; }
+    if (!captureExists(sub)) { bad(sub, 'orphan: names a capture that is not on disk'); continue; }
+    if (!e || typeof e !== 'object') { bad(sub, 'entry is not an object'); continue; }
+    if (!RECAPTURE_VIAS.includes(e.via)) { bad(sub, `via must be one of ${RECAPTURE_VIAS.join('|')}`); continue; }
+    if (typeof e.why !== 'string' || e.why.trim().length < RECAPTURE_MIN_WHY) bad(sub, `why must be >= ${RECAPTURE_MIN_WHY} chars`);
+    if (e.env !== undefined) {
+      if (e.via === 'plain') bad(sub, 'a plain entry sets no env');
+      else if (!e.env || typeof e.env !== 'object' || Object.keys(e.env).length === 0) bad(sub, 'env must be a non-empty object');
+      else for (const [k, v] of Object.entries(e.env)) {
+        if (!envNames.includes(k)) bad(sub, `env ${k} is not one of the descriptor's override env names [${envNames.join(', ')}]`);
+        if (typeof v !== 'string') bad(sub, `env ${k} value must be a string`);
+      }
+    } else if (e.via === 'env') bad(sub, 'via env needs env');
+    if (e.steps !== undefined && e.via !== 'bracket') bad(sub, 'only a bracket entry has steps');
+    if (e.via === 'bracket') {
+      const steps = e.steps;
+      if (!Array.isArray(steps) || steps.length === 0) { bad(sub, 'via bracket needs steps'); continue; }
+      const outFlag = `--out=${GOLDEN_REL}/`;
+      let producesCapture = false;
+      for (const argv of steps) {
+        if (!Array.isArray(argv) || argv.length === 0 || argv.some((a) => typeof a !== 'string')) { bad(sub, 'every step is a non-empty argv of strings'); continue; }
+        const head = argv[0];
+        if (REPLAY_TOKENS.includes(head)) {
+          if (head === '{harness}') producesCapture = true;
+          if (head === '{sql}' && (argv.length !== 2 || /;/.test(argv[1]))) bad(sub, '{sql} takes exactly one statement with no semicolon');
+        } else if (!/^scripts\/.+\.js$/.test(head) || !scriptExists(head)) {
+          bad(sub, `step ${JSON.stringify(head)} is neither a repo script nor one of ${REPLAY_TOKENS.join(' ')}`);
+        }
+        if (argv.some((a) => a.startsWith(outFlag) && a.endsWith(`/${sub}`))) producesCapture = true;
+      }
+      if (!producesCapture) bad(sub, 'no step produces this capture ({harness} or --out=<this capture>)');
+    }
+  }
+  return errs;
+}
+
+/** Read + parse `golden/<slug>/recapture.json`, or null when absent (a parse error throws). */
+function loadRecapture(repoRoot, slug) {
+  const abs = path.join(repoRoot, GOLDEN_REL, slug, RECAPTURE_REL);
+  if (!fs.existsSync(abs)) return null;
+  return JSON.parse(fs.readFileSync(abs, 'utf8'));
+}
+
+/**
+ * The harness argv that retakes `doc` into `rel`, from the capture's own record. Pure.
+ * Throws when the record cannot be replayed from the repo (an args element with a
+ * comma or an absolute path, an invariants file outside the repo).
+ */
+function replayHarnessArgv(doc, rel, repoRoot = REPO_ROOT) {
+  if (!doc || typeof doc.step !== 'string') throw new Error(`${rel}: capture records no step`);
+  const argv = ['scripts/analysis/capture-step-golden.js', `--step=${doc.step}`, `--chain=${doc.chain ?? 'none'}`];
+  const args = Array.isArray(doc.args) ? doc.args : [];
+  for (const a of args) {
+    if (String(a).includes(',')) throw new Error(`${rel}: args element ${JSON.stringify(a)} has a comma — --args cannot carry it`);
+    if (path.isAbsolute(String(a)) || /^[A-Za-z]:[\\/]/.test(String(a))) throw new Error(`${rel}: args element ${JSON.stringify(a)} is an absolute path — not reproducible from the repo`);
+  }
+  if (args.length > 0) argv.push(`--args=${args.join(',')}`);
+  if (doc.invariants_file) {
+    const inv = String(doc.invariants_file);
+    if (path.isAbsolute(inv) || /^[A-Za-z]:[\\/]/.test(inv) || !fs.existsSync(path.join(repoRoot, inv))) {
+      throw new Error(`${rel}: invariants_file ${JSON.stringify(inv)} is not a repo file — not reproducible`);
+    }
+    argv.push(`--invariants=${inv}`);
+  }
+  if (doc.tables_source === 'arg') {
+    const tables = [...new Set((doc.table_state || []).map((t) => t && t.table).filter(Boolean))].sort();
+    argv.push(`--tables=${tables.join(',')}`);
+  }
+  if (Number.isInteger(doc.table_row_ceiling) && doc.table_row_ceiling !== DEFAULT_TABLE_ROW_CEILING) {
+    argv.push(`--table-row-ceiling=${doc.table_row_ceiling}`);
+  }
+  const specs = doc.table_specs || {};
+  const tables = Object.keys(specs).sort();
+  const cols = tables.filter((t) => specs[t].columns_source === 'arg').map((t) => `${t}:${specs[t].columns.join(',')}`);
+  const order = tables.filter((t) => specs[t].order_source === 'arg').map((t) => `${t}:${specs[t].order.join(',')}`);
+  if (cols.length > 0) argv.push(`--table-columns=${cols.join(';')}`);
+  if (order.length > 0) argv.push(`--table-order=${order.join(';')}`);
+  argv.push(`--out=${rel}`, '--overwrite');
+  return argv;
+}
+
+/** `node -r dotenv/config <argv>` with an optional sorted `K=V` env prefix. Pure. */
+function nodeLine(argv, env) {
+  const prefix = env ? Object.keys(env).sort().map((k) => `${k}=${shellQuote(env[k])} `).join('') : '';
+  return `${prefix}node -r dotenv/config ${argv.map(shellQuote).join(' ')}`;
+}
+
+/**
+ * The shell lines that retake one capture. Pure over `doc`, `entry` and `ts`
+ * (the bracket's `{ts}` minute). `entry` null ⇒ plain.
+ */
+function replayLines(doc, rel, entry, ts, repoRoot = REPO_ROOT) {
+  const harness = replayHarnessArgv(doc, rel, repoRoot);
+  const via = entry ? entry.via : 'plain';
+  if (via === 'plain') return [nodeLine(harness, null)];
+  if (via === 'env') return [nodeLine(harness, entry.env)];
+  return entry.steps.map((step) => {
+    const argv = step.map((a) => a.split('{ts}').join(ts));
+    if (argv[0] === '{harness}') return nodeLine(harness, entry.env);
+    if (argv[0] === '{sql}') return `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -tAc ${shellQuote(argv[1])}`;
+    if (argv[0] === '{remove-capture}') return `rm -f -- ${shellQuote(rel)}`;
+    return nodeLine(argv, null);
+  });
+}
+
+/** `yyyymmddthhmmz` for a Date, plus `k` minutes. Pure. */
+function replayMinute(date, k = 0) {
+  const d = new Date(Math.floor(date.getTime() / 60000) * 60000 + k * 60000);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}t${p(d.getUTCHours())}${p(d.getUTCMinutes())}z`;
+}
+
+/** Parse `--replay-ts=yyyymmddthhmmz` into a Date (tests pin the clock). */
+function parseReplayTs(raw) {
+  const m = /^(\d{4})(\d{2})(\d{2})t(\d{2})(\d{2})z$/.exec(String(raw));
+  if (!m) throw new Error(`--replay-ts must be yyyymmddthhmmz, got ${JSON.stringify(raw)}`);
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]));
+}
+
+/**
+ * Every capture's retake, in fleet order: converted.json then pending[] (the order the
+ * fleet nights use); per step its post captures by filename, each PRE that has an entry
+ * immediately before its same-named POST (back to back, as sameSessionDecision needs).
+ * Returns {blocks: [{rel, via, lines}], errors: [{rel, reason}]}. Reads the repo only.
+ */
+function replayAll(repoRoot, base) {
+  const conv = JSON.parse(fs.readFileSync(path.join(repoRoot, 'scripts/steps/_schema/converted.json'), 'utf8'));
+  const files = [...conv.converted, ...conv.pending.map((p) => p.file)];
+  const blocks = [];
+  const errors = [];
+  let k = 0;
+  const exists = (rel) => fs.existsSync(path.join(repoRoot, rel));
+  for (const file of files) {
+    const descriptor = JSON.parse(fs.readFileSync(path.join(repoRoot, descriptorPathFor(file)), 'utf8'));
+    const slug = descriptor.identity.name;
+    const dir = path.join(repoRoot, GOLDEN_REL, slug);
+    let recapture;
+    try {
+      recapture = loadRecapture(repoRoot, slug);
+    } catch (e) {
+      errors.push({ rel: `${GOLDEN_REL}/${slug}/${RECAPTURE_REL}`, reason: e.message });
+      continue;
+    }
+    const v = validateRecapture(recapture, {
+      descriptor, captureExists: (sub) => exists(`${GOLDEN_REL}/${slug}/${sub}`), scriptExists: exists,
+    });
+    for (const e of v) errors.push({ rel: `${GOLDEN_REL}/${slug}/${e.sub}`, reason: e.reason });
+    if (v.length > 0) continue;
+    const entries = (recapture && recapture.captures) || {};
+    const posts = fs.existsSync(path.join(dir, 'post')) ? fs.readdirSync(path.join(dir, 'post')).filter((f) => f.endsWith('.json')).sort() : [];
+    for (const name of posts) {
+      for (const sub of [`pre/${name}`, `post/${name}`]) {
+        if (sub.startsWith('pre/') && !entries[sub]) continue;
+        const rel = `${GOLDEN_REL}/${slug}/${sub}`;
+        try {
+          const doc = JSON.parse(fs.readFileSync(path.join(repoRoot, rel), 'utf8'));
+          const entry = entries[sub] || null;
+          const usesTs = Boolean(entry && entry.via === 'bracket' && JSON.stringify(entry.steps).includes('{ts}'));
+          const lines = replayLines(doc, rel, entry, replayMinute(base, usesTs ? k : 0), repoRoot);
+          if (usesTs) k += 1;
+          blocks.push({ rel, via: entry ? entry.via : 'plain', lines });
+        } catch (e) {
+          errors.push({ rel, reason: e.message });
+        }
+      }
+    }
+  }
+  return { blocks, errors };
+}
+
+/** Print one block: a `#` header naming the capture and its via, then its lines. */
+function printReplayBlock(b) {
+  console.log(`# ${b.rel} (via ${b.via})`);
+  for (const l of b.lines) console.log(l);
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
@@ -1110,6 +1356,32 @@ async function main() {
     }
     console.log(`[capture-step-golden] ${diffs.length} difference(s): ${fa} vs ${fb}\n${formatDiff(diffs)}`);
     process.exitCode = 1;
+    return;
+  }
+
+  if (opts.replay || opts['replay-all']) {
+    const base = opts['replay-ts'] ? parseReplayTs(opts['replay-ts']) : new Date();
+    if (opts['replay-all']) {
+      const { blocks, errors } = replayAll(REPO_ROOT, base);
+      console.log(`# fleet recapture (Spec 124 R-CZ): ${blocks.length} capture(s); run from the repo root with DOTENV_CONFIG_PATH (and DATABASE_URL for {sql} steps) exported`);
+      for (const b of blocks) printReplayBlock(b);
+      for (const e of errors) console.log(`# UNREPLAYABLE ${e.rel}: ${e.reason}`);
+      if (errors.length > 0) process.exitCode = 1;
+      return;
+    }
+    const { slug, sub, rel } = captureRelParts(opts.replay);
+    const descriptorFile = (() => {
+      const doc = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'));
+      return { doc, descriptor: JSON.parse(fs.readFileSync(path.join(REPO_ROOT, descriptorPathFor(doc.step)), 'utf8')) };
+    })();
+    const recapture = loadRecapture(REPO_ROOT, slug);
+    const exists = (r) => fs.existsSync(path.join(REPO_ROOT, r));
+    const errs = validateRecapture(recapture, {
+      descriptor: descriptorFile.descriptor, captureExists: (s2) => exists(`${GOLDEN_REL}/${slug}/${s2}`), scriptExists: exists,
+    });
+    if (errs.length > 0) throw new Error(`${GOLDEN_REL}/${slug}/${RECAPTURE_REL}: ${errs.map((e) => `${e.sub}: ${e.reason}`).join('; ')}`);
+    const entry = (recapture && recapture.captures && recapture.captures[sub]) || null;
+    printReplayBlock({ rel, via: entry ? entry.via : 'plain', lines: replayLines(descriptorFile.doc, rel, entry, replayMinute(base), REPO_ROOT) });
     return;
   }
 
@@ -1371,4 +1643,17 @@ module.exports = {
   postCaptureGuard,
   captureGitState,
   overwriteDecision,
+  RECAPTURE_REL,
+  RECAPTURE_VIAS,
+  REPLAY_TOKENS,
+  captureRelParts,
+  shellQuote,
+  overrideEnvNames,
+  validateRecapture,
+  loadRecapture,
+  replayHarnessArgv,
+  replayLines,
+  replayMinute,
+  parseReplayTs,
+  replayAll,
 };

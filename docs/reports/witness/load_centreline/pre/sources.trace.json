@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-centreline.js",
   "chain": "sources",
-  "source_fingerprint": "3edbe516b076c85f4f1c0bdf95155cac089b2f2e7e0cc73d16a7727a5c0ea995",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "a391c6d816f13d73d7e07414aae93542471d9c0152ef9a1e5759954a36512e39",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 36,
     "distinct": 18,
     "utility": 9,
-    "tracer_self_ms": 83.985,
-    "wall_ms": 16272
+    "tracer_self_ms": 87.4,
+    "wall_ms": 16802
   },
   "statements": [
     {
@@ -79,7 +79,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -306,7 +306,7 @@
   ],
   "transactions": [
     {
-      "client": "85360:3",
+      "client": "38012:3",
       "write_fingerprints": [
         "10fad24fafb14d6d",
         "bda9b1d341d87cda",

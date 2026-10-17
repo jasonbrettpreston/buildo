@@ -3,7 +3,7 @@
 // SPEC LINK: docs/specs/01-pipeline/54_source_address_points.md §Bridge (the ST_Within containment predicate)
 //
 // RUNG 1 — INLINE WKT, and it is non-negotiable for a spatial containment step (claim #169,
-// link_massing precedent: src/tests/steps/link_massing/rung1-inline-wkt.test.ts).
+// link_massing precedent: src/tests/steps/link_massing/rung1-inline-wkt.db.test.ts).
 //
 // ⚠️ WHAT MAKES THIS RUNG 1 RATHER THAN A UNIT TEST. The geometries below are written by
 // hand and small enough to reason about on paper, the expected answer is DERIVED FROM THE

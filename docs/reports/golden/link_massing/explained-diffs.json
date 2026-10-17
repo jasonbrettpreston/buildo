@@ -1,0 +1,191 @@
+{
+  "contract_version": 1,
+  "step": "link_massing",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/link_massing/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added linked_parcel_null_centroid_count, borrowed_primary_links; dropped pb_multi_primary_parcels, link_rate_pct, confidence_values), so entries at the same index compare different invariants (sources-full-forced-1/sources-full/standalone: {\"name\":\"nearest_share_pct\",\"value\":\"19.89\"} → absent)."
+    },
+    {
+      "key": "invariants[].name",
+      "why": "the POST invariants file lists a different set of invariants (added linked_parcel_null_centroid_count, borrowed_primary_links; dropped pb_multi_primary_parcels, link_rate_pct, confidence_values), so entries at the same index compare different invariants (sources-full-forced-1/sources-full/standalone: \"pb_multi_primary_parcels\" → \"pb_rows\"; \"pb_rows\" → \"pb_distinct_parcels\"; +4 more)."
+    },
+    {
+      "key": "invariants[].value",
+      "why": "the POST invariants file lists a different set of invariants (added linked_parcel_null_centroid_count, borrowed_primary_links; dropped pb_multi_primary_parcels, link_rate_pct, confidence_values), so entries at the same index compare different invariants (sources-full-forced-1/sources-full/standalone: \"0\" → \"535039\"; \"520492\" → \"494958\"; +4 more)."
+    },
+    {
+      "key": "meta[].reads.building_footprints[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources-full-forced-1/sources-full/standalone: \"geometry\" → \"geom\"; \"footprint_area_sqm\" → \"centroid_lat\"; +2 more)."
+    },
+    {
+      "key": "meta[].reads.parcel_buildings",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources-full-forced-1/sources-full/standalone: absent → [\"parcel_id\",\"building_id\",\"is_primary\",\"structure_type\",…)."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources-full-forced-1/sources-full/standalone: \"geometry\" → \"geom\"; absent → \"lot_size_sqm\"; +1 more)."
+    },
+    {
+      "key": "meta[].writes.parcel_buildings[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources-full-forced-1/sources-full/standalone: \"parcel_id\" → \"is_primary\"; \"building_id\" → \"parcel_id\"; +1 more)."
+    },
+    {
+      "key": "meta[].writes.parcels",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources-full-forced-1/sources-full/standalone: absent → [\"massing_enriched_at\"])."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [link_massing] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources-full-forced-1 58→3 lines; sources-full 9→3 lines; standalone 9→3 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources-full-forced-1/sources-full/standalone: 8 → 16; 9 → 16)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources-full-forced-1/sources-full/standalone: absent → {\"metric\":\"link_rate\",\"observed\":\"after_write\",\"source\":\"…; absent → {\"metric\":\"multi_primary_parcels\",\"observed\":\"after_write…; +18 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources-full-forced-1.json: added building_footprints_count, full_mode_gate, structure_thresholds, multi_primary_parcels, confidence_vocabulary, nearest_footprint_gt_lot_count, shared_primary_buildings, mass_retraction_ratio, rows_changed_ratio, write_privilege, pb_unique_pairs_violations, pb_rows, pb_distinct_parcels, parcels_with_centroid, nearest_share_pct, linked_parcel_null_centroid_count, borrowed_primary_links, inputs_nonempty, empty_source_guard, vocabulary:parcel_buildings.structure_type, vocabulary:parcel_buildings.match_type, retired_var_row_present:link_massing_grid_degrees; dropped buildings_indexed, grid_cells). Measured sources-full-forced-1/sources-full/standalone: \"buildings_indexed\" → \"building_footprints_count\"; \"grid_cells\" → \"full_mode_gate\"; +5 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources-full-forced-1/sources-full/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources-full-forced-1/sources-full/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources-full-forced-1.json: added building_footprints_count, full_mode_gate, structure_thresholds, multi_primary_parcels, confidence_vocabulary, nearest_footprint_gt_lot_count, shared_primary_buildings, mass_retraction_ratio, rows_changed_ratio, write_privilege, pb_unique_pairs_violations, pb_rows, pb_distinct_parcels, parcels_with_centroid, nearest_share_pct, linked_parcel_null_centroid_count, borrowed_primary_links, inputs_nonempty, empty_source_guard, vocabulary:parcel_buildings.structure_type, vocabulary:parcel_buildings.match_type, retired_var_row_present:link_massing_grid_degrees; dropped buildings_indexed, grid_cells). Measured sources-full-forced-1/sources-full/standalone: \"PASS\" → \"INFO\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources-full-forced-1/sources-full/standalone: null → \"viol == 0\"; \">= 50%\" → \"viol == 0\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources-full-forced-1.json: added building_footprints_count, full_mode_gate, structure_thresholds, multi_primary_parcels, confidence_vocabulary, nearest_footprint_gt_lot_count, shared_primary_buildings, mass_retraction_ratio, rows_changed_ratio, write_privilege, pb_unique_pairs_violations, pb_rows, pb_distinct_parcels, parcels_with_centroid, nearest_share_pct, linked_parcel_null_centroid_count, borrowed_primary_links, inputs_nonempty, empty_source_guard, vocabulary:parcel_buildings.structure_type, vocabulary:parcel_buildings.match_type, retired_var_row_present:link_massing_grid_degrees; dropped buildings_indexed, grid_cells). Measured sources-full-forced-1/sources-full/standalone: 0 → 427077; \"N/A (PostGIS)\" → {\"explicit_full\":false,\"mode\":\"full\",\"reason\":\"full_rescan\"}; +11 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "PRE PASS → POST WARN: the POST audit table carries the declared WARN checks the legacy table never had — nearest_footprint_gt_lot_count, shared_primary_buildings, borrowed_primary_links, retired_var_row_present:link_massing_grid_degrees (all WARN in every POST, measured); data is not failing."
+    },
+    {
+      "key": "summary.records_meta.buildings_matched",
+      "why": "full-rescan counter scales with the inputs: the 2026-10-16 POST (31ab81f8) linked against 535,039 parcel_buildings / 496,536 parcels vs 520,492 / 486,530 at the PRE; LM_D13_FIXED_HASH be97a014 re-pinned with three POSTs agreeing (QUEUE 2026-10-16 V3 landing)."
+    },
+    {
+      "key": "summary.records_meta.buildings_upserted",
+      "why": "sources-full-forced-1 only: the legacy PRE forced a full rewrite (520,492 upserted); the converted upsert target is guarded is_distinct_from (descriptor outputs.writes[1]) and the converged links already hold the computed values (hash be97a014), so 0 rows change."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → 3)."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → {\"link_massing_centroid_confidence\":0.95,\"link_massing_li…)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.full_mode",
+      "why": "descriptor staleness.mode_select \"none\": the runner link gate (resolveLinkGate, scripts/lib/step/index.js:5360) runs a full rescan on every run, where the legacy PRE took its incremental gate_unchanged path on these invocations."
+    },
+    {
+      "key": "summary.records_meta.full_mode_reason",
+      "why": "descriptor staleness.mode_select \"none\": the runner link gate (resolveLinkGate, scripts/lib/step/index.js:5360) reports \"full_rescan\" on every run; the legacy PRE reported its own strings force_full_env / incremental:gate_unchanged."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.links_deleted",
+      "why": "declared LINK write counter added by the converted runner's link phase (POST 0 on every scenario: no link retracted); the legacy PRE did not report it."
+    },
+    {
+      "key": "summary.records_meta.links_inserted",
+      "why": "declared LINK write counter added by the converted runner's link phase (POST 0 on every scenario: the converged table needs no insert); the legacy PRE did not report it."
+    },
+    {
+      "key": "summary.records_meta.links_updated",
+      "why": "declared LINK write counter added by the converted runner's link phase (POST 0 on the plain scenarios); the legacy PRE did not report it. The nonzero evidence is the healing-cohort capture (golden/link_massing/healing)."
+    },
+    {
+      "key": "summary.records_meta.matches_centroid_in_parcel",
+      "why": "full-rescan match counter scales with the inputs (535,039 parcel_buildings / 496,536 parcels in the POST vs 520,492 / 486,530 at the PRE, measured table_state); the incremental PRE scenarios reported 0."
+    },
+    {
+      "key": "summary.records_meta.matches_nearest",
+      "why": "full-rescan match counter scales with the inputs (535,039 parcel_buildings / 496,536 parcels in the POST vs 520,492 / 486,530 at the PRE, measured table_state); the incremental PRE scenarios reported 0."
+    },
+    {
+      "key": "summary.records_meta.no_match_count",
+      "why": "unmatched parcels 1,395 → 1,577: the POST scans 496,536 parcels (PRE 486,530); measured table_state."
+    },
+    {
+      "key": "summary.records_meta.parcels_flagged_lost_link",
+      "why": "declared emit added by the conversion (POST 0 on every scenario: no parcel lost its link); the legacy PRE did not report it."
+    },
+    {
+      "key": "summary.records_meta.parcels_linked",
+      "why": "full-rescan counter scales with the inputs (POST 496,536 parcels scanned vs PRE 486,530, measured table_state); the incremental PRE scenarios reported 0."
+    },
+    {
+      "key": "summary.records_meta.parcels_processed",
+      "why": "full-rescan counter: POST processes every parcel (496,536 measured) where the PRE processed 486,530 (forced) or only the 1,395 unmatchable tail (incremental, report L82)."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.primary_cleared",
+      "why": "declared emit added by the conversion (POST 0 on every scenario: no primary-building flag cleared); the legacy PRE did not report it."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → \"linked_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources-full-forced-1/sources-full/standalone: absent → [\"nearest_footprint_gt_lot_count: {\\\"centroid_in_parcel\\\"…)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "report L94/LM-D1: records_total was processed parcels in the legacy (486,530 forced / 1,395 tail); the converted declared counter is the parcel_buildings row scope, 535,039 measured in the POST table_state."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources-full-forced-1: the legacy PRE counted parcelsLinked as updated (report L94); the converted counter counts written rows: 0, because the is_distinct_from-guarded upsert finds no changed link."
+    },
+    {
+      "key": "table_state[]",
+      "why": "the POST capture's table list is the descriptor's declared write tables (capture-step-golden.js table_specs), the legacy PRE captured [parcel_buildings]; POST [parcel_buildings, parcels] (sources-full-forced-1/sources-full/standalone)."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "parcel_buildings content moved with the input refresh: 520,492 rows at the PRE, 535,039 at the 2026-10-16 POST; be97a014 is LM_D13_FIXED_HASH, agreed by sources-full, forced-1 and standalone (QUEUE 2026-10-16 V3 landing, night-3 precedent)."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "parcel_buildings 520,492 → 535,039: the massing/parcels inputs were reloaded since the PRE (POST parcels 496,536 vs 486,530, measured); three POSTs agree at 535,039 (QUEUE 2026-10-16 V3 landing)."
+    }
+  ]
+}

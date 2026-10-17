@@ -53,6 +53,12 @@ function classifyArea(area, maxArea, minDepth) {
   return { violations: 0 };
 }
 
+// R-DC control: a config value alias OUTSIDE a check body classifies domain output — not judged.
+function classifyMatch(ctx, distanceM) {
+  const near = Number(ctx.config.match_near_m);
+  return distanceM <= near ? 'near' : 'far';
+}
+
 // Errors are reported through the logger seam, never swallowed raw.
 async function runPass(ctx, rows, bounds) {
   try {
@@ -71,5 +77,6 @@ module.exports = {
   readDeclaredParcels,
   joinUpdateFromSource,
   classifyArea,
+  classifyMatch,
   runPass,
 };

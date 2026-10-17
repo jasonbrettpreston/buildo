@@ -1189,6 +1189,26 @@
       "group": "Spatial & Massing"
     }
   },
+  "link_massing_bbox_degree_divisor": {
+    "default": 78000,
+    "type": "number",
+    "min": 1000,
+    "max": 1000000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E; the enrich_parcels_bbox_degree_divisor precedent) — the metres-to-degrees divisor that widens link_massing's nearest-fallback bounding-box prefilter (B-10) into degree space. A degree of longitude is ~80.5 km at Toronto's latitude, so dividing by 78000 over-covers on purpose: the exact cut is the geography ST_DWithin that follows. Changes what the cap COSTS to find, never what is accepted. 78000 = the former DEGREES_PER_METRE_DIVISOR literal. CONSUMED by link_massing (scripts/lib/compute/link-massing.js buildMatchSql, via ctx.config).",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
+  "link_massing_round_scale": {
+    "default": 10000,
+    "type": "number",
+    "min": 1,
+    "max": 1000000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E; the load_centreline_round_scale precedent) — DISPLAY precision of link_massing's audit-row ratio values (Math.round(n * scale) / scale). 10000 = the former ROUND_SCALE literal. Compared against nothing. CONSUMED by link_massing (scripts/lib/compute/link-massing.js, via ctx.config).",
+    "admin": {
+      "group": "Spatial & Massing"
+    }
+  },
   "link_massing_mass_retraction_ratio_fail_pct": {
     "default": 0.05,
     "type": "number",
@@ -5003,6 +5023,156 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "enrich_parcels_ambiguous_zone_max_pct": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "McDonald's Airtight V3 ledger A8 (operator 2026-10-17; Spec 124 R-BA gate A): the WARN bound on parcels whose dominant zoning area share is < 0.60, as a percent of scoped parcels. Formerly the hard-coded check limit \"pct <= 5\" (ported from result.ambiguous > 0.05*result.scoped). CONSUMED by enrich_parcels via checks[].limit_from_config (parcels_ambiguous_zone_count).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "refresh_snapshot_updated_24h_window_hours": {
+    "default": 24,
+    "type": "number",
+    "min": 24,
+    "max": 24,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — the window of the updated_24h metric, in hours before the run clock (formerly INTERVAL '24 hours'). Pinned min = max: the metric's name states the window, so it is visible, not tunable. Bound as a query parameter. CONSUMED by refresh_snapshot (scripts/lib/compute/refresh-snapshot.js buildPermitsScalarQuery, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "refresh_snapshot_updated_7d_window_days": {
+    "default": 7,
+    "type": "number",
+    "min": 7,
+    "max": 7,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — the window of the updated_7d metric, in days (formerly INTERVAL '7 days'). Pinned min = max to the metric's name. Bound as a query parameter. CONSUMED by refresh_snapshot (scripts/lib/compute/refresh-snapshot.js buildPermitsScalarQuery, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "refresh_snapshot_updated_30d_window_days": {
+    "default": 30,
+    "type": "number",
+    "min": 30,
+    "max": 30,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — the window of the updated_30d metric, in days (formerly INTERVAL '30 days'). Pinned min = max to the metric's name. Bound as a query parameter. CONSUMED by refresh_snapshot (scripts/lib/compute/refresh-snapshot.js buildPermitsScalarQuery, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "refresh_snapshot_cost_oor_min_cad": {
+    "default": 100,
+    "type": "number",
+    "min": 0,
+    "max": 100000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — an active permit with est_const_cost below this many dollars counts toward cost_oor (formerly the SQL literal 100). Bound as a query parameter. CONSUMED by refresh_snapshot (scripts/lib/compute/refresh-snapshot.js buildPermitsScalarQuery, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "refresh_snapshot_cost_oor_max_cad": {
+    "default": 1000000000,
+    "type": "number",
+    "min": 1000000,
+    "max": 100000000000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — an active permit with est_const_cost above this many dollars counts toward cost_oor (formerly the SQL literal 1000000000). Bound as a query parameter. CONSUMED by refresh_snapshot (scripts/lib/compute/refresh-snapshot.js buildPermitsScalarQuery, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_global_coverage_pre_permit_aged_months": {
+    "default": 18,
+    "type": "number",
+    "min": 1,
+    "max": 120,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — a PRE- permit issued more than this many months before the run clock counts as aged (formerly the SQL literal INTERVAL '18 months'). Bound as a query parameter, never interpolated. CONSUMED by assert_global_coverage (scripts/lib/compute/assert-global-coverage.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_global_coverage_engine_health_window_hours": {
+    "default": 25,
+    "type": "number",
+    "min": 1,
+    "max": 168,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — an engine_health_snapshots row captured within this many hours of the run clock counts as today's (formerly the SQL literal INTERVAL '25 hours' at both sites). Bound as a query parameter, never interpolated. CONSUMED by assert_global_coverage (scripts/lib/compute/assert-global-coverage.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_global_coverage_forecast_lookback_years": {
+    "default": 3,
+    "type": "number",
+    "min": 1,
+    "max": 20,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — a permit whose phase/issue/application date is within this many years of the run clock is forecast-eligible (formerly the SQL literal INTERVAL '3 years'). Bound as a query parameter, never interpolated. CONSUMED by assert_global_coverage (scripts/lib/compute/assert-global-coverage.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_recent_window_hours": {
+    "default": 24,
+    "type": "number",
+    "min": 1,
+    "max": 720,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — the recent-permits window (hours before the run clock) for the null-description / null-builder / null-status rates and their denominator (formerly the SQL literal INTERVAL '1 day'). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_ghost_last_seen_days": {
+    "default": 30,
+    "type": "number",
+    "min": 1,
+    "max": 3650,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — how many days before the run's calendar date a still-open permit (lifecycle_phase not P19/P20) may go unseen before it counts as a ghost record (formerly the SQL literal INTERVAL '30 days'). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_ancient_hearing_before_year": {
+    "default": 2010,
+    "type": "number",
+    "min": 1900,
+    "max": 2100,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — coa_applications.hearing_date before 1 January of this year counts as an ancient hearing (formerly the SQL date literal '2010-01-01'; its row-count ceiling is coa_ancient_hearing_count_warn_max). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_ancient_inspection_before_year": {
+    "default": 2020,
+    "type": "number",
+    "min": 1900,
+    "max": 2100,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — permit_inspections.inspection_date before 1 January of this year counts as an ancient inspection date (formerly the SQL date literal '2020-01-01'; its row-count ceiling is inspection_ancient_dates_count_warn_max). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_lot_size_max_sqm": {
+    "default": 1000000,
+    "type": "number",
+    "min": 1000,
+    "max": 100000000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — parcels.lot_size_sqm above this many square metres (or <= 0) is a lot-size outlier (formerly the SQL literal 1000000). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "assert_data_bounds_max_height_max_m": {
+    "default": 500,
+    "type": "number",
+    "min": 10,
+    "max": 2000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — building_footprints.max_height_m above this many metres (or < 0) is a height outlier (formerly the SQL literal 500). Bound as a query parameter, never interpolated. CONSUMED by assert_data_bounds (scripts/lib/compute/assert-data-bounds.js, via ctx.config).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "step_post_check_statement_timeout_minutes": {
     "default": 10,
     "type": "number",
@@ -5149,6 +5319,26 @@
     "min": 1000,
     "max": 600000,
     "description": "Spec 122 §1.2a P4 (Pilot 2, INGESTOR) — AbortController budget for BOTH CKAN calls the acquisition seam makes (the pre-acquisition HEAD and the streamed ZIP GET). 60000 = the pre-externalization literal (ravineDownloadTimeoutMs) and is ALSO the descriptor literal execution.network.timeout, which is only the fallback for an un-seeded database: execution.network.timeout_from_config names this variable and scripts/lib/step/acquire.js resolveTimeoutMs prefers the resolved value, so there is ONE source and a conformance lock asserts the two AGREE. Raise it when the CKAN edge is slow rather than letting a timeout read as an acquisition FAIL. CONSUMED by load_ravines (scripts/lib/step/acquire.js headValidators + downloadArchive, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_ravines_round_scale": {
+    "default": 1000,
+    "type": "number",
+    "min": 1,
+    "max": 100000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E, the load_centreline_round_scale precedent) — DISPLAY precision of the ratio values in load_ravines' audit rows and §9 producer block (Math.round(n * scale) / scale). 1000 = the former module-level literal ROUND_SCALE, carried byte-for-byte. Compared against nothing. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js round3, via ctx.config).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "load_ravines_max_detail_keys": {
+    "default": 50,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E, the load_centreline_max_detail_keys precedent) — LR-D1: how many dropped source ids ONE ravine_geometry_skipped_pct audit row carries in its detail. 50 = the former MAX_DETAIL_KEYS literal. A DISPLAY bound: dropped_count is always exact and dropped_ids_truncated says when the list is a prefix. CONSUMED by load_ravines (scripts/lib/compute/load-ravines.js, via ctx.config).",
     "admin": {
       "group": "Source Ingestion"
     }
@@ -5751,6 +5941,16 @@
     "max": 1000,
     "admin": {
       "group": "Sources Catastrophic-Load Floors"
+    }
+  },
+  "link_neighbourhoods_loaded_warn_min": {
+    "default": 1,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 ledger A8 (operator 2026-10-17; Spec 124 R-BA gate A): the WARN floor of link_neighbourhoods' neighbourhoods_loaded check — fewer geom-bearing polygons than sources_neighbourhoods_floor (the FAIL bound) but at least this many is WARN; below it is FAIL. Formerly the hard-coded warn_limit \"value_min 1\". CONSUMED by link_neighbourhoods via checks[].warn_limit_from_config.",
+    "admin": {
+      "group": "Neighbourhood Linking"
     }
   },
   "sources_ravines_floor": {
@@ -6679,6 +6879,26 @@
     "description": "O4 row 6 mass guard (R6 §11.4 D2(a) = registry-truth fold 16 #1 (b), operator 2026-10-03). The FAIL ceiling for link_wsib's link_wsib_mass_relink_pct check: (moves + vanishes) / wsib_registry rows linked at run start, a FRACTION (0.10 = 10%). Scored pre_write on the read-only derivation's own counts, before any write; LINK_WSIB_ACCEPT_MASS_RELINK=1 lets one run write and never suppresses the FAIL row. Steady state measured 0 moves / 0 vanishes (2026-10-03). on_invalid fail. CONSUMED by link_wsib via checks[].limit_from_config.",
     "min": 0,
     "max": 1,
+    "admin": {
+      "group": "WSIB Matching"
+    }
+  },
+  "link_wsib_exact_name_min_length": {
+    "default": 3,
+    "type": "number",
+    "min": 1,
+    "max": 50,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — S2 / LW-D6: the minimum normalized-name length the two EXACT-match tiers (trade name, legal name) accept. 3 = the former EXACT_LENGTH_FLOOR compute literal. Bound as a query parameter, never interpolated. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildDerivationSql, via ctx.config).",
+    "admin": {
+      "group": "WSIB Matching"
+    }
+  },
+  "link_wsib_fuzzy_name_min_length": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 50,
+    "description": "McDonald's Airtight V3 ledger E (operator 2026-10-17; Spec 124 R-BA gate E) — S2 / LW-D6: the minimum normalized-name length on BOTH sides of a fuzzy (trigram) match; higher than the exact floor because a fuzzy match on a short string is garbage. 5 = the former FUZZY_LENGTH_FLOOR compute literal. Bound as a query parameter. CONSUMED by link_wsib (scripts/lib/compute/link-wsib.js buildDerivationSql, via ctx.config).",
     "admin": {
       "group": "WSIB Matching"
     }

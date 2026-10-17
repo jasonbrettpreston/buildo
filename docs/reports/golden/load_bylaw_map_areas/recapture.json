@@ -1,0 +1,21 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/bylaw_maps.forced.json": {
+      "via": "bracket",
+      "env": {
+        "BYLAW_MAP_FORCE_RELOAD": "1"
+      },
+      "steps": [
+        [
+          "{sql}",
+          "DELETE FROM bylaw_map_areas"
+        ],
+        [
+          "{harness}"
+        ]
+      ],
+      "why": "run 1 of a net-new step must be nonzero (#38): the table is emptied, then a forced load (V3 fleet night 2026-10-16 run-night.sh reset). Not the descriptor recovery path (re-adopt the seed); a capture bracket only."
+    }
+  }
+}

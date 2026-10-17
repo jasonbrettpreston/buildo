@@ -55,6 +55,7 @@ const guard = witnessGuard('assert_data_bounds', __filename);
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module, same as assert-data-bounds-halt.db.test.ts
 const computeModule = require(path.join(REPO_ROOT, 'scripts/lib/compute/assert-data-bounds.js')) as {
   loadWsibBranch: (ctx: unknown) => Promise<Record<string, unknown>>;
+  loadPermitsBranch: (ctx: unknown) => Promise<Record<string, unknown>>;
   loadInspectionBranch: (ctx: unknown) => Promise<Record<string, unknown>>;
 };
 
@@ -170,6 +171,19 @@ describe('assert_data_bounds — the missing-table guard names the table it guar
 
     expect(stubs.length, 'expected all 5 WSIB queries to run on the healthy path').toBe(5);
     expect(branch).toEqual({ checked: true, wsibNoName: 3, wsibNonG: 3, wsibBadNaics: 3, wsibOrphan: 3 });
+  });
+
+  // ── ARM 4b (#44 G14, McDonald's Airtight V3): recent permits run the null-rate queries ──
+  // The dev DB has no permit seen in the last day, so no capture executes the `recentTotal > 0` branch;
+  // this arm runs it through the witness guard, so the fixture record witnesses permits.{description,
+  // builder_name, status} — the descriptor's declared reads.
+  it('loadPermitsBranch runs the three null-rate queries when recent permits exist', async () => {
+    const { pool, stubs } = makePool(relationsExist());
+    const branch = await computeModule.loadPermitsBranch({ ...ctxFor(pool), clock: () => Date.parse('2026-10-16T12:00:00Z') });
+    for (const col of ['description', 'builder_name', 'status']) {
+      expect(stubs.some((s) => new RegExp(`AND ${col} IS NULL`).test(s.sql)), `the ${col} null-rate query must run`).toBe(true);
+    }
+    expect(branch.recentTotal).toBe(3);
   });
 
   // ── ARM 5: the sibling call site is NOT the same defect shape ────────────

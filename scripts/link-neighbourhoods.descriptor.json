@@ -293,6 +293,7 @@
       "limit": "value_min 158",
       "limit_from_config": "sources_neighbourhoods_floor",
       "warn_limit": "value_min 1",
+      "warn_limit_from_config": "link_neighbourhoods_loaded_warn_min",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
@@ -818,6 +819,12 @@
         "min": 0,
         "max": 1000000,
         "on_invalid": "clamp"
+      },
+      {
+        "name": "link_neighbourhoods_loaded_warn_min",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
       }
     ],
     "validation": "strict",

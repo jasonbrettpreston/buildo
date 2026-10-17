@@ -190,6 +190,8 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS, DIST_DEFS, distMeasured, IN
           { step: 'enrich_parcels' },
           { step: 'compute_parcel_cost_estimates' },
           { step: 'parcels' },
+          // V3 #44 G2 (2026-10-17): + link_massing, the writer of parcel_buildings.match_type.
+          { step: 'link_massing' },
         ],
         tables: [
           { table: 'parcel_buildings', columns: PARCEL_BUILDINGS_COLUMNS },

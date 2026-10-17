@@ -1,0 +1,31 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/load-heritage-cohort-differential.js",
+          "--run",
+          "--side=post",
+          "--chain=sources",
+          "--out=docs/reports/golden/load_heritage/post/sources.json"
+        ]
+      ],
+      "why": "the committed load_heritage cohort differential (R-AS), HERITAGE_FORCE_RELOAD set inside the script (V3 fleet night 2026-10-16 nonzero-redo.sh). #38 cohort evidence for both tables."
+    },
+    "post/standalone.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/load-heritage-cohort-differential.js",
+          "--run",
+          "--side=post",
+          "--chain=none",
+          "--out=docs/reports/golden/load_heritage/post/standalone.json"
+        ]
+      ],
+      "why": "the committed load_heritage cohort differential (R-AS), HERITAGE_FORCE_RELOAD set inside the script (V3 fleet night 2026-10-16 nonzero-redo.sh)."
+    }
+  }
+}

@@ -49,11 +49,7 @@
           "street_type_normalized"
         ]
       },
-      "violations": [
-        "a:parcels.centreline_dataset_version_when_enriched",
-        "a:parcels.heritage_dataset_version_when_enriched",
-        "a:parcels.ravine_dataset_version_when_enriched"
-      ],
+      "violations": [],
       "errors": []
     }
   }

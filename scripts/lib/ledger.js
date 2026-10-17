@@ -297,12 +297,22 @@ function derivedReadsSteps(slug, descriptor, opts) {
   const { deriveMeta } = require('./step/index.js');
   const own = o.ledger.inchain[slug];
   const chains = invocationChains(descriptor);
+  // #44 G3 (Spec 124 R-DG, extends R-BL(v) to (e); McDonald's Airtight V3): a column the reader WRITES
+  // ITSELF is the scope of its own write, not a producer's output — it derives no producer edge here.
+  // Read-only columns are untouched, pin edges are added below regardless, and stepUpstreams itself
+  // (lineage, chain order) is unchanged: this is the #44 (e) derivation only.
+  const meta = deriveMeta(descriptor);
+  const reads = {};
+  for (const [table, cols] of Object.entries(meta.reads)) {
+    const selfWritten = new Set((meta.writes && meta.writes[table]) || []);
+    reads[table] = cols.filter((c) => !selfWritten.has(c));
+  }
   const inchain = {
     ...o.ledger.inchain,
     [slug]: {
       ...(own || {}),
       chains: (own && own.chains) || chains,
-      reads: deriveMeta(descriptor).reads,
+      reads,
     },
   };
 

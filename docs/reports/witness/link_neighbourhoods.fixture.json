@@ -31,13 +31,8 @@
           "neighbourhood_id"
         ]
       },
-      "violations": [
-        "a:parcels.*",
-        "a:permit_parcels.*"
-      ],
-      "errors": [
-        "FAIL:INPUT:column:longitude"
-      ]
+      "violations": [],
+      "errors": []
     }
   }
 }

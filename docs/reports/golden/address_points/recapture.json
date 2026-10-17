@@ -1,0 +1,42 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=address_points",
+          "--key=address_point_id",
+          "--column=latitude",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=latitude IS NOT NULL AND address_point_id <> 16487",
+          "--order=address_point_id",
+          "--backup-table=address_points_cohort_bak_{ts}",
+          "--source-csv=data/address-points-4326.csv",
+          "--source-key=ADDRESS_POINT_ID"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=address_points",
+          "--key=address_point_id",
+          "--column=latitude",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=latitude IS NOT NULL AND address_point_id <> 16487",
+          "--order=address_point_id",
+          "--backup-table=address_points_cohort_bak_{ts}",
+          "--source-csv=data/address-points-4326.csv",
+          "--source-key=ADDRESS_POINT_ID",
+          "--step=scripts/load-address-points.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/address_points/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence: a 200-row latitude cohort the step heals (V3 fleet night 2026-10-16; plan key-set md5 ddd1ca3c63 = nights 2-4 backups). op add_number:1 re-chosen 2026-10-16 (the original magnitude was never recorded); id 16487 excluded per the 2026-10-03 incident."
+    }
+  }
+}

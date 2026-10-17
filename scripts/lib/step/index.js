@@ -67,7 +67,7 @@ const pipeline = require('../pipeline');
 const { getPoolStatementTimeoutMs } = pipeline;
 const { assertDbTarget } = require('../resolve-db');
 const { validateDescriptor } = require('./validate');
-const { buildAuditTable, deriveVerdict, selectChecks, SEVERITY_RANK } = require('./verdict');
+const { buildAuditTable, deriveVerdict, selectChecks, SEVERITY_RANK, makeWithinLimit } = require('./verdict');
 const { RUN_STATUS, ownsLedgerRow, openLedgerRow, finalizeLedgerRow } = require('./ledger');
 const { resolveConfig, retiredVarRow } = require('./config');
 const staleness = require('./staleness');
@@ -92,6 +92,9 @@ const { makeTempTable } = require('./temp-table');
 // Spec 124 R-CH / R-CA(i) — the ctx.readSnapshot seam (the compute hands over a reader fn;
 // the runner owns the READ ONLY txn, its isolation and its statement bound).
 const { makeReadSnapshot } = require('./read-snapshot');
+// Spec 124 R-CX (CP-S5) — the ctx.catalog seam: column facts by NAME, runner-owned SQL, refusing an
+// undeclared table (R-BZ G3: compute holds no information_schema / pg_* text).
+const { makeCatalog, catalogDeclaredTables, runCatalogRead } = require('./catalog');
 // S1-P (Spec 124 R-BZ G1/G12, Rule 10) — producer reads + declared staleness.pins[] evaluation.
 const { makeProducer, evaluatePins, pinReadKey, producerOptsForPin } = require('./producer');
 // S3 / R-CI (2026-09-15) — the step-start scope retirement moved OUT of compute and into
@@ -155,7 +158,7 @@ function makeExecSeam({ client, seamTarget, tag }) {
 const STEP_CTX_KEYS = Object.freeze([
   'pool', 'chainId', 'runId', 'descriptor', 'checks', 'log', 'fetch', 'clock', 'config',
   'probePresence', 'acquired', 'written', 'prior', 'overrides', 'gate', 'matched',
-  'cumulative', 'elapsed_ms', 'report', 'readSnapshot', 'producer',
+  'cumulative', 'elapsed_ms', 'report', 'readSnapshot', 'producer', 'catalog', 'withinLimit',
 ]);
 
 /**
@@ -408,6 +411,29 @@ function isIngestStep(descriptor) {
  * is. `execution.shape` (C3 pre-pull) makes it a declaration, so a step that means
  * "link" cannot silently be run as something else.
  */
+/**
+ * Spec 124 R-DE (i) (McDonald's Airtight V3): a batch loop runs at its DECLARED size — `execution.batch`
+ * (an integer) or the `batch_size_from_config` variable — never a library default. A missing or
+ * non-positive size throws by name instead of silently batching at 1000 / 10000.
+ */
+function positiveBatch(descriptor, value, source) {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`[${descriptor.identity.name}] batch loop has no declared size: ${source} = ${JSON.stringify(value)} (Spec 124 R-DE (i) — declare execution.batch as the executed integer, or batch_size_from_config)`);
+  }
+  return n;
+}
+
+/** The LINK keyset loop's size: `execution.batch` as declared (`"none"` has no loop size, R-DE (i)). */
+function declaredBatchSize(descriptor) {
+  return positiveBatch(descriptor, descriptor.execution.batch, 'execution.batch');
+}
+
+/** A config-driven loop's size: the declared variable's resolved value. */
+function configBatchSize(descriptor, config, key) {
+  return positiveBatch(descriptor, config ? config[key] : undefined, `config.${key}`);
+}
+
 function isLinkStep(descriptor) {
   // LG-15 (MATCHER pilot, 2026-08-28): a LINK/MATCHER step may ALSO declare a
   // staleness-driven gated-skip path (staleness.ledgerGatedSkip, generalizing the B3
@@ -610,6 +636,14 @@ const REQUIREMENT_PROBES = {
     sql: "SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid WHERE c.relname = $1 AND t.tgname = $2 AND NOT t.tgisinternal AND t.tgenabled IN ('O','A')",
     args: (r) => r.name.split('.'),
   },
+  // CP-S5 (Spec 124 R-CX, 2026-10-16): the SRID a spatial compute assumes is a runner
+  // precondition, not a compute throw (R-BZ G3/G8, Rule 10). Name format <table>.<column>;
+  // `equals` is the required SRID. Present = Find_SRID answers exactly that value; a column
+  // PostGIS does not know makes Find_SRID raise, and that error propagates (never "present").
+  srid: {
+    sql: "SELECT 1 WHERE Find_SRID('public', $1, $2) = $3",
+    args: (r) => [...r.name.split('.'), r.equals],
+  },
 };
 
 /**
@@ -729,7 +763,9 @@ async function assertRequirements(pool, descriptor, { log, tag }) {
   for (const r of requires) {
     if (REQUIREMENT_OWNED_ELSEWHERE.has(r.kind)) continue; // rls_bypass_or_policy — measured by the write preflight; an unknown kind reaches probeRequirement and is refused
     const { present } = await probeRequirement(pool, r, descriptor);
-    measured[r.name] = present;
+    // CP-S5: a srid fact is keyed `srid:<table>.<column>` — the same name as a `column`
+    // presence fact (enrich_parcels declares column parcels.geom) must never overwrite it.
+    measured[r.kind === 'srid' ? `srid:${r.name}` : r.name] = present;
     if (present) continue;
     if (r.on_missing === 'fail') {
       throw new Error(`${tag} required ${r.kind} "${r.name}" is ABSENT from this database. `
@@ -912,9 +948,17 @@ async function ingestPrimaries(args) {
     const declared = emitsList(descriptor);
     const reemitKeys = declared.map((e) => e.key).filter((k) => k !== 'audit_table' && !RUNNER_META_KEYS.includes(k));
     const emitTypes = Object.fromEntries(declared.map((e) => [e.key, e.type]));
-    const decision = staleness.allPrimariesDecision({ primaries: pairs.map((p) => ({ id: p.external.id })),
+    let decision = staleness.allPrimariesDecision({ primaries: pairs.map((p) => ({ id: p.external.id })),
       triggerFor: (id) => { const ts = staleness.triggersAt(descriptor, 'pre_acquisition').filter((t) => t.style === 'ckan_metadata'); return ts.find((t) => t.external === id) || ts.find((t) => t.external === undefined || t.external === null); }, validatorsById, priorMeta, config: args.config,
       nowMs: args.clockNow.getTime(), forced, reemitKeys, emitTypes });
+    // R-DD (Spec 124, McDonald's Airtight V3): the all-primaries skip is honoured only when EVERY
+    // primary's target holds rows; one emptied target LOADs the step (reason target_empty).
+    decision = await staleness.skipOnlyOverRows(decision, async () => {
+      for (const { writeSpec } of pairs) {
+        if (await staleness.targetIsEmpty(pool, { outputs: { writes: [writeSpec] } })) return true;
+      }
+      return false;
+    }, tag);
     stepGate = { scope: 'all_primaries', reason: decision.reason, decisions: decision.decisions, max_age_days: decision.max_age_days, dataset_version_age_days: decision.dataset_version_age_days };
     if (decision.skip) {
       const skippedPrimaries = {};
@@ -1260,7 +1304,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // NETWORK CALL. Both parsers hand back the publisher's per-feature data verbatim —
   // `parseCsv` as the row object, `parseShapefile` (since 0f) as the DBF properties on
   // `record` — and neither can know which columns the write plan binds.
-  // `compute.shapeRecord(record, { geojson, config, run_at })` is that mapping: the
+  // `compute.shapeRecord(record, { geojson, config, run_at, descriptor })` is that mapping (R-CY: the descriptor travels IN, never required by compute): the
   // step's own pure function from ONE parsed record to the column values
   // `write.executeWrite` binds, i.e. the `{ ...columns, geojson }` shape the plan's
   // `bind` fields address — `geojson` is the GEOMETRY FIELD NAME every geometry-binding
@@ -1504,6 +1548,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       prior,
       forced,
     }),
+    // R-DD (Spec 124, McDonald's Airtight V3): a source-version skip needs a non-empty target.
+    targetEmpty: () => staleness.targetIsEmpty(pool, descriptor),
   });
 
   const gate = result.tier1.skip ? result.tier1 : result.tier2;
@@ -1598,7 +1644,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       emitSkeleton: skeleton,
       preAcquisitionGate: () => ({ skip: false, reason: 'lookup_ungated' }),
     });
-    const built = compute.buildLookup(l.id, lr.rows, { config });
+    const built = compute.buildLookup(l.id, lr.rows, { config, descriptor });
     lookupMaps[l.id] = built.map;
     // The five fields of the lookup's OWN acquisition block the step's `census_rows_matched`
     // counter and the audit table read — `rows_parsed` is the workbook's row count
@@ -1646,7 +1692,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       // rule has read since 0n/0o/0p, and is ABSENT (not `{}`) for the descriptors that
       // declare no lookup — the T-pin every converted INGESTOR still passes byte-identically.
       const record = shapeRecord(f.record, {
-        geojson: f.geojson, config, run_at: runAt, tag: tagRecord, ...(lookups.length ? { lookups: lookupMaps } : {}),
+        geojson: f.geojson, config, run_at: runAt, tag: tagRecord, descriptor, ...(lookups.length ? { lookups: lookupMaps } : {}),
       });
       if (record == null || typeof record === 'string') {
         const r = typeof record === 'string' && record ? record : 'unspecified';
@@ -2068,7 +2114,7 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   }
 
   // ── The keyset-paginated batch loop: match, classify, then writes[] IN ORDER ──
-  const batchSize = descriptor.execution.batch === 'none' ? pipeline.BATCH_SIZE : descriptor.execution.batch;
+  const batchSize = declaredBatchSize(descriptor);
   let lastId = 0;
   for (;;) {
     const batch = await pool.query(match.eligible_batch_sql, [batchSize, lastId]);
@@ -2249,7 +2295,7 @@ async function runLinkKeyedPhase({ descriptor, pool, compute, config, chainId, l
   // DELETE (delete_by_key_select_sql — same USING, same WHERE), not a superset scope (O4 row 7).
 
   // ── The composite-key keyset-paginated batch loop (LG-25) ────────────────────
-  const batchSize = descriptor.execution.batch === 'none' ? pipeline.BATCH_SIZE : descriptor.execution.batch;
+  const batchSize = declaredBatchSize(descriptor);
   let lastPermitNum = '';
   let lastRevisionNum = '';
   for (;;) {
@@ -2868,7 +2914,7 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
   const preRow = pre.rows[0] || {};
 
   // ── THE KEYSET-PAGINATED BATCH LOOP — each batch its OWN transaction ─────────
-  const batchSize = config[sql.batch_size_config_key] || 1000;
+  const batchSize = configBatchSize(descriptor, config, sql.batch_size_config_key);
   let lastId = -1;
   let batchesProcessed = 0;
   let newLinksTotal = 0;
@@ -3289,7 +3335,7 @@ async function runBackfillFullRecompute({ descriptor, pool, compute, config, log
   }
 
   const ids = drift.map((r) => r.id);
-  const batchSize = Math.max(1, Number(sql.batch_size) || 10000);
+  const batchSize = positiveBatch(descriptor, sql.batch_size, 'the compute plan\'s batch_size');
   let touched = 0;
   for (let i = 0; i < ids.length; i += batchSize) {
     const chunk = ids.slice(i, i + batchSize);
@@ -3348,7 +3394,7 @@ async function runBackfillFullRecompute({ descriptor, pool, compute, config, log
  *                          `execution.read_gucs`, never returned by compute
  *                          (R-CF)) — Rule 2: compute never touches the pool
  *                          itself, it only returns `{main: [{key, sql, params}],
- *                          optional: [{key, sql, params}]}`
+ *                          optional: [{key, sql, params} | {key, catalog: {op, tables}}]}` (CP-S5 R-CX: a catalog op runs through ctx.catalog)
  *   the MAIN reads            executed by THIS runner, sequentially, on one
  *                          pinned REPEATABLE READ READ ONLY client — mirrors
  *                          the pre-conversion WF3-F1 shape verbatim (Spec 118
@@ -3479,7 +3525,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   const { ms: phaseDeadlineMs, minutes: phaseDeadlineMinutes } = resolveRecorderBoundMinutes(descriptor, config, 'phase_deadline_minutes_from_config', tag);
 
   // ── THE READS — compute authors the SQL text, THIS RUNNER executes it ────
-  const reads = compute.buildReads(config);
+  const reads = compute.buildReads(config, clockNow);
   const results = {};
   const readTimings = [];
 
@@ -3614,11 +3660,17 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
       // `startPhaseDeadline`'s own `!timeoutMs` guard already treats as inert, so
       // "disabled stays disabled for both blocks" falls out of the same arithmetic.
       const optionalDeadline = startPhaseDeadline(optionalCancelClient, optionalPid, remainingPhaseDeadlineMs, { phase: 'optional_reads', tag, log });
+      // CP-S5 (R-CX) — an optional entry may declare a CATALOG op ({key, catalog: {op, tables}})
+      // instead of SQL text; it runs on THIS client (same statement bound, same deadline) through
+      // the runner-owned reader and lands in the same rows shape.
+      const optionalCatalog = makeCatalog({ pool: optionalClient, declaredTables: catalogDeclaredTables(descriptor), tag });
       try {
         for (const step of (reads.optional || [])) {
           const readStartMs = Date.now();
           try {
-            const r = await optionalClient.query(step.sql, step.params || []);
+            const r = step.catalog
+              ? { rows: await runCatalogRead(optionalCatalog, step.catalog, `${tag} recorder optional read "${step.key}"`) }
+              : await optionalClient.query(step.sql, step.params || []);
             results[step.key] = r.rows;
             readTimings.push({ key: step.key, elapsed_ms: Date.now() - readStartMs, row_count: r.rows.length, phase: 'optional' });
           } catch (err) {
@@ -3631,6 +3683,9 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
             // WARN check already reports this key from `results[key] === null`
             // regardless of cause, so no compute.js change is needed for the
             // audit-visible marker.
+            // CP-S5: a catalog REFUSAL (an undeclared table) is a declaration defect, not a
+            // degraded read — it never takes the carry-forward path.
+            if (err && err.catalogRefusal) throw err;
             const isBoundHit = err && (err.code === '57014' || err.code === '55P03');
             const kind = !isBoundHit ? null : (err.code === '55P03' ? 'lock_timeout' : (optionalDeadline.fired() ? 'phase_deadline' : 'statement_timeout'));
             log.warn(tag, isBoundHit
@@ -3698,7 +3753,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
 
   // ── assemble the row + author the write statement — compute, pure JS ─────
   const assembled = compute.buildRow(results, prevRowResolved, prior, config);
-  const authored = compute.buildWriteSql(assembled.row, clockNow);
+  const authored = compute.buildWriteSql(assembled.row, clockNow, config);
 
   // ── THE ONE STATEMENT ──────────────────────────────────────────────────
   let isInsert = false;
@@ -4283,7 +4338,11 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // so a hook never reads `logic_variables`. ONE frozen object, shared by the contract
   // and defer-scope hooks below, so a hook cannot rebind `pool`/`config` for its siblings.
   // S1-P: hooks read producer runs through `producer`, never `pool`.
-  const hookCtx = Object.freeze({ pool, config, producer: makeProducer({ pool, chains: staleness.declaredChains(descriptor) }) });
+  const hookCtx = Object.freeze({
+    pool, config, producer: makeProducer({ pool, chains: staleness.declaredChains(descriptor) }),
+    // CP-S5 (R-CX) — a hook reads a catalog fact through the runner-owned reader, never its own SQL.
+    catalog: makeCatalog({ pool, declaredTables: catalogDeclaredTables(descriptor), tag }),
+  });
   if (contractHook) {
     contract = await resolveHook(contractHook, 'execution.enrich_hooks.contract_read')(hookCtx);
     staleOverlays = new Set(
@@ -6402,6 +6461,12 @@ async function runWithPool(runnable, pool, ctx) {
         readSnapshot: makeReadSnapshot({ pool, descriptor, config: configValues, tag: `[${descriptor.identity.name}]` }),
         // S1-P — the ONE producer reader for compute (R-BZ G1: a compute holds no pipeline_runs SQL).
         producer: makeProducer({ pool, chains: staleness.declaredChains(descriptor) }),
+        // CP-S5 (Spec 124 R-CX) — column facts by NAME (columnCount / columnCounts / columnType):
+        // read-only, public only, refusing a table outside this step's declared read set.
+        catalog: makeCatalog({ pool, declaredTables: catalogDeclaredTables(descriptor), tag: `[${descriptor.identity.name}]` }),
+        // Spec 124 R-CY (McDonald's Airtight V3) — a §9 emit that restates a check's outcome asks
+        // the DECLARED check's bound (verdict.js makeWithinLimit), never compares ctx.config itself.
+        withinLimit: makeWithinLimit(descriptor, configValues),
         // §1.2a P4 — the ONLY way a compute reaches a tunable. Frozen, and
         // projected to the DECLARED names: `validation: "strict"` is not a checker
         // that could be skipped, it is an object that does not have the key.

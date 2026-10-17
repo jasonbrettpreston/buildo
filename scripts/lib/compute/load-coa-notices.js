@@ -539,6 +539,17 @@ function reconcileNotices(docResults, opts) {
   const docPairRates = {};
   const docItems569 = {};
   for (const [id, pd] of Object.entries(perDoc)) { docPairRates[id] = ratio(pd.pairs, pd.items); docItems569[id] = pd.items; }
+  // LCN-D5 (Spec 124 R-DC, McDonald's Airtight V3, 2026-10-17): the population the C15 floor judges is
+  // classified HERE (documents with at least coa_notices_doc_pair_rate_min_items 569 items), and the check
+  // reports only the lowest eligible rate — the declared bound (limit_from_config
+  // coa_notices_doc_pair_rate_floor) decides, never a compute comparison against ctx.config.
+  // With no eligible document the minimum is 1, the rate's upper bound (nothing can sit under the floor).
+  const docPairRateMin = { rate: 1, doc_id: null, eligible_docs: 0 };
+  for (const id of Object.keys(docPairRates).sort()) {
+    if (!(docItems569[id] >= cfg.coa_notices_doc_pair_rate_min_items)) continue;
+    docPairRateMin.eligible_docs++;
+    if (docPairRateMin.doc_id === null || docPairRates[id] < docPairRateMin.rate) { docPairRateMin.rate = docPairRates[id]; docPairRateMin.doc_id = id; }
+  }
 
   return {
     rows,
@@ -555,6 +566,7 @@ function reconcileNotices(docResults, opts) {
       pair_rate_569: ratio(pairs569, items569),
       doc_pair_rates: docPairRates,
       doc_items_569: docItems569,
+      doc_pair_rate_min_eligible: docPairRateMin,
       citation_multi: citationMulti,
       consent_items_skipped: consentSkipped,
       qualified_items: qualifiedItems,
@@ -693,14 +705,12 @@ function target_unit_mismatch_items(ctx) {
   ctx.report('target_unit_mismatch_items', { violations: s.target_unit_mismatch_items, detail: s.target_unit_mismatch_items });
 }
 
-/** C15 — documents with enough 569 items whose own pair rate is below the per-document floor. */
+/** C15 — the lowest pair rate among documents with enough 569 items; value_min <floor> decides (LCN-D5, R-DC). */
 function doc_pair_rate_floor(ctx) {
   const s = stats(ctx);
-  const floor = ctx.config ? ctx.config.coa_notices_doc_pair_rate_floor : undefined;
-  const minItems = ctx.config ? ctx.config.coa_notices_doc_pair_rate_min_items : undefined;
-  if (!s || !Number.isFinite(floor) || !Number.isFinite(minItems)) return ctx.report('doc_pair_rate_floor', { detail: null });
-  const low = Object.keys(s.doc_pair_rates).filter((id) => s.doc_items_569[id] >= minItems && s.doc_pair_rates[id] < floor).sort();
-  ctx.report('doc_pair_rate_floor', { violations: low.length, detail: low.length ? low.join(',') : 0 });
+  const m = s && s.doc_pair_rate_min_eligible;
+  if (!m) return ctx.report('doc_pair_rate_floor', { detail: null });
+  ctx.report('doc_pair_rate_floor', { value: m.rate, detail: m });
 }
 
 /** C16 — a document with no NOTICE OF DECISION block at all. */

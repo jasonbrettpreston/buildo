@@ -29,7 +29,6 @@ const PRODUCER_NAME = 'sources:load_heritage';
 // Must equal the staleness.pins[].step of this descriptor (locked by
 // src/tests/enrich-heritage-pins.logic.test.ts); the SAME read identity the runner's pins use.
 const PRODUCER_STEP = 'load_heritage';
-const TAG = '[enrich_heritage]';
 
 /**
  * §9 producer-protocol consumer — reads the already-qualified producer run; the 9 producer-contract
@@ -39,12 +38,13 @@ const TAG = '[enrich_heritage]';
  * L14 (folded in here, RV-L2 precedent) — a wiped heritage source must HALT even when matching
  * version stamps would otherwise satisfy the write's own zero-scope fast path.
  *
- * The SRID=4326 assertion (§3.10 half of F3/F4) — REQUIREMENT_PROBES has no "srid" kind, so this
- * one clause cannot move to guards.requires and is folded in here instead.
+ * The SRID=4326 assertion (§3.10 half of F3/F4) is the declared guards.requires
+ * {kind:"srid", name:"parcels.geom", equals:4326} row since CP-S5 (Spec 124 R-CX): the runner
+ * probes it (REQUIREMENT_PROBES.srid) and refuses BEFORE this hook, so no catalog read and no
+ * SRID throw live here (R-BZ G3/G8).
  * @param {{pool: import('pg').Pool, config: object, producer: (slug: string, opts?: object) => Promise<object>}} ctx
  */
 async function readHeritageContract(ctx) {
-  const pool = ctx.pool;
   // Producer contract (spec_version, counts, drift flags, lineage) is DECLARED in the descriptor's staleness.pins[] and evaluated by the runner BEFORE this
   // hook (Rule 10); a violated pin never reaches here. The hook only READS the already-qualified run — no defaults, no guard: a missing key must crash loudly, never stamp garbage.
   const run = await ctx.producer(PRODUCER_STEP);
@@ -52,11 +52,7 @@ async function readHeritageContract(ctx) {
 
   // L14 — both heritage source tables non-empty: enforced by the declared guards.empty_source (runner, before this hook; S4).
 
-  // §3.10 SRID guard — parcels.geom must be 4326 (no ST_Transform path in this compute).
-  const srid = await pool.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid");
-  if (Number(srid.rows[0].srid) !== 4326) {
-    throw new Error(`${TAG} parcels.geom SRID is ${srid.rows[0].srid}, expected 4326`);
-  }
+  // §3.10 SRID guard — parcels.geom must be 4326: the declared guards.requires srid row (CP-S5).
 
   const datasetVersion = `${hl.heritage_register.source_dataset_version}|${hl.heritage_districts.source_dataset_version}`;
   return { datasetVersion };
@@ -344,6 +340,11 @@ function enrich_heritage_duration_ms(ctx) {
   ctx.report('enrich_heritage_duration_ms', { violations: 0, detail: ctx.elapsed_ms });
 }
 
+/** INFO — the FOLD-RC1 per-zone designated share, always reported (Spec 124 R-DG: the ZONE_SQL read is this check's). */
+function heritage_designated_by_zone(ctx) {
+  ctx.report('heritage_designated_by_zone', { violations: 0, detail: ctx.matched.heritage_designated_by_zone });
+}
+
 const CHECKS = {
   parcels_heritage_designated_count,
   parcels_part_iv_count,
@@ -355,6 +356,7 @@ const CHECKS = {
   parcels_heritage_enrich_skipped,
   heritage_source_dataset_version,
   enrich_heritage_duration_ms,
+  heritage_designated_by_zone,
   // Note: the four invariants[] rows and the three plausibility[] rows (§7) are declared in the
   // descriptor's invariants[]/plausibility[] arrays, not checks[] — executed generically by
   // scripts/lib/step/plausibility.js against their own declared `sql`, never through this table.

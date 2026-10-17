@@ -87,6 +87,8 @@ function fakePool(opts: {
   /** A `running`/`crashed` row the interrupted-retraction query MAY return (subject to `$2`). */
   interrupted?: Record<string, unknown> | null;
   tables?: string[];
+  /** R-DD: target tables whose probe answers no rows (every other target holds rows). */
+  emptyTargets?: string[];
 } = {}) {
   const calls: PoolCall[] = [];
   const tables = opts.tables ?? ['tbase', 'tov_a', 'tov_b'];
@@ -117,6 +119,9 @@ function fakePool(opts: {
     }
     if (/SELECT NOW\(\) AS now/i.test(text)) return { rows: [{ now: NOW }] };
     if (/UPDATE pipeline_runs/i.test(text)) return { rows: [] };
+    if (/SELECT 1 AS target_has_rows FROM/.test(text)) {
+      return { rows: (opts.emptyTargets ?? []).some((t) => text.includes(`"${t}"`)) ? [] : [{ target_has_rows: 1 }] };
+    }
     if (new RegExp(`INSERT INTO (${tablesAlt})\\b`, 'i').test(text)) return { rows: [{ is_insert: true }] };
     return { rows: [] };
   };
@@ -645,6 +650,26 @@ describe('INGESTOR prerequisite 0y — the all-primaries full run', () => {
     //     audit table proves by carrying a row per declared pre check.
     expect(seenOverrides, 'the skip return carries `overrides`, so ctx.overrides is never undefined').toBeDefined();
     expect(seenOverrides).not.toBeNull();
+  });
+
+  // R-DD (Spec 124, McDonald's Airtight V3; LBMA-D7): the T17 run, with ONE target emptied since
+  // the prior run. Every validator is unchanged, so the gate alone would skip; the target probe
+  // turns it into a LOAD with reason target_empty, and the emptied target is written again.
+  it('R-DD — an unchanged all-primaries run over an EMPTIED target LOADs (reason target_empty)', async () => {
+    const fresh = versionDaysAgo(2);
+    const oldest = versionDaysAgo(7);
+    const preceding = priorMeta({ base: oldest, ov_a: fresh, ov_b: fresh });
+    const f = fakeFetch({ versions: { Rbase: oldest, Rov_a: fresh, Rov_b: fresh } });
+    withStubs(stubsFor(preceding));
+
+    const pool = fakePool({ priorMeta: preceding, emptyTargets: ['tov_a'] });
+    const out = await runStep(pool, f.fetchImpl);
+
+    expect(out.recordsMeta.gate.reason, 'the emptied target refuses the skip (fail-safe LOAD)').toBe('target_empty');
+    expect(out.recordsMeta.gate.gated_skip).not.toBe(true);
+    expect(pool.inserts('tov_a').length, 'the emptied target is written again').toBeGreaterThan(0);
+    const probes = pool.calls.filter((c) => /SELECT 1 AS target_has_rows FROM/.test(c.text));
+    expect(probes.length, 'the probe stops at the first empty target').toBe(2);
   });
 
   // =========================================================================

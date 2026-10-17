@@ -2,48 +2,48 @@
   "entries": {
     "neighbourhood_id_orphans": {
       "value": 0,
-      "cost_ms": 35,
-      "at": "2026-10-16T17:02:31.861Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2879",
+      "cost_ms": 32,
+      "at": "2026-10-17T19:07:13.834Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3106",
       "chain": null,
-      "sample_n": 18
+      "sample_n": 21
     },
     "negative_neighbourhood_ids": {
       "value": 0,
-      "cost_ms": 7,
-      "at": "2026-10-16T17:02:31.861Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2879",
+      "cost_ms": 6,
+      "at": "2026-10-17T19:07:13.834Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3106",
       "chain": null,
-      "sample_n": 18
+      "sample_n": 21
     },
     "linked_permit_outside_its_own_neighbourhood": {
       "value": 0,
-      "cost_ms": 156,
-      "at": "2026-10-16T17:02:31.861Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2879",
+      "cost_ms": 141,
+      "at": "2026-10-17T19:07:13.834Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3106",
       "chain": null,
-      "sample_n": 18
+      "sample_n": 21
     },
     "stamped_permits_with_null_coordinates": {
       "value": 0,
-      "cost_ms": 75,
-      "at": "2026-10-16T17:02:31.861Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2879",
+      "cost_ms": 63,
+      "at": "2026-10-17T19:07:13.834Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3106",
       "chain": null,
-      "sample_n": 18
+      "sample_n": 21
     },
     "neighbourhood_id_unreachable_no_coords": {
       "value": 13499,
-      "cost_ms": 68,
-      "at": "2026-10-16T17:02:31.861Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2879",
+      "cost_ms": 55,
+      "at": "2026-10-17T19:07:13.834Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3106",
       "chain": null,
-      "sample_n": 18
+      "sample_n": 21
     }
   }
 }

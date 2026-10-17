@@ -30,6 +30,11 @@
 //           (declared): which emit belongs to which TABLE is not machine-bound —
 //           that binding is the reviewed `cohort.json` diff.
 //         · else RED. `outputs:"none"` is VACUOUS (not listed).
+//       RECIPE (Spec 124 R-CZ, McDonald's Airtight V3): a closed table also needs
+//       its evidence capture named in `golden/<slug>/recapture.json` (the
+//       harness's `validateRecapture` shape), so a fleet night retakes it the
+//       way it was taken; a capture whose filename says "forced" needs an entry
+//       too; a malformed or orphan entry is RED (item `nonzero:recapture`).
 //
 //   (2) FRESHNESS (`fresh` | `missing` | `mismatch`). `capture-step-golden.js#computeLibFingerprint`
 //       stamps every NEW capture with a top-level `lib_fingerprint` = sha256 over
@@ -45,9 +50,10 @@
 //       `docs/reports/golden/<slug>/explained-diffs.json`
 //       (`{contract_version:1, diffs:[{key, why}]}`) has an entry whose `key`
 //       equals the diff key after every `[\d+]` is replaced by `[]`, AND whose
-//       `why.length >= 20`. The legacy assessment-report citation lives on ONLY
-//       through a per-step ledger row
-//       `{gate:'G', item:'explained:report-citation', disposition:'pending_remediation'}`.
+//       `why.length >= 20`. It is the ONLY channel (Spec 124 R-DA, McDonald's
+//       Airtight V3, 2026-10-17): the legacy assessment-report citation and its
+//       `explained:report-citation` ledger rows are deleted; a gate-G
+//       `explained:*` row left in the ledger is an orphan (`explainedChannelDecision`).
 //
 // `ledger.mjs` owns the row shape + the match (GATES includes 'G'); this file
 // owns the three answer sets, the disk loaders, and `selfTestCases()`.
@@ -60,6 +66,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { matchLedger, loadLedger, LEDGER_REL_PATH, GATES } from './ledger.mjs';
 import { loadConvertedDescriptors } from './closed-bounds.mjs';
+import { createRequire } from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -67,11 +74,14 @@ const LIB_STEP_REL = 'scripts/lib/step';
 const GOLDEN_DIR_REL = 'docs/reports/golden';
 const COHORT_REL = 'cohort.json';
 const EXPLAINED_REL = 'explained-diffs.json';
+const harness = createRequire(import.meta.url)('../capture-step-golden.js');
+export const RECAPTURE_ITEM = 'nonzero:recapture';
 
 /** Gate G's declared items — the closed set a row may name. */
 export const NONZERO_ITEM_PREFIX = 'nonzero:';
 export const LIB_FINGERPRINT_ITEM = 'lib_fingerprint';
-export const EXPLAINED_REPORT_ITEM = 'explained:report-citation';
+/** Spec 124 R-DA: no ledger row explains a G8 diff — a gate-G row with this item prefix is an orphan. */
+export const EXPLAINED_ITEM_PREFIX = 'explained:';
 
 /** Gate G's dispositions: a legacy capture and a report citation are both transitional. */
 export const GATE_G_DISPOSITIONS = ['pending_recapture', 'pending_remediation'];
@@ -176,6 +186,7 @@ export function nonzeroDecision(descriptor, posts, cohort) {
         states.push({
           table,
           decision: 'forced_nonzero',
+          evidence: nonzeroCapture.file,
           detail: `single write table "${table}: ${summaryWriteCount(nonzeroCapture.doc)} rows written in ${nonzeroCapture.file}`,
         });
       } else {
@@ -212,13 +223,13 @@ export function nonzeroDecision(descriptor, posts, cohort) {
     if (target.count_path !== undefined) {
       const c = countPathDecision(descriptor, named, target.count_path);
       states.push(c.ok
-        ? { table, decision: 'cohort_declared', detail: `cohort target "${table}" proved ${c.n} rows written in ${named.file} via count_path ${target.count_path}=${c.n}` }
+        ? { table, decision: 'cohort_declared', evidence: named.file, detail: `cohort target "${table}" proved ${c.n} rows written in ${named.file} via count_path ${target.count_path}=${c.n}` }
         : { table, decision: 'RED', detail: `cohort target "${table}" names capture "${target.capture}": ${c.reason}` });
       continue;
     }
     const n = summaryWriteCount(named.doc);
     if (n > 0) {
-      states.push({ table, decision: 'cohort_declared', detail: `cohort target "${table}" proved ${n} rows written in ${named.file} via summary counters` });
+      states.push({ table, decision: 'cohort_declared', evidence: named.file, detail: `cohort target "${table}" proved ${n} rows written in ${named.file} via summary counters` });
     } else {
       states.push({ table, decision: 'RED', detail: `cohort target "${table}" names capture "${target.capture}" whose counters are 0` });
     }
@@ -357,17 +368,41 @@ export function explainedDecision(key, explained) {
  * Gate G's explained half over a step's diff keys: `{unexplained, listed}`.
  * @param {string[]} keys G8 diff keys (the `unexplainedDiffs[].key` set)
  * @param {object|null} explained
- * @param {boolean} [reportCitationAllowed]
  */
-export function fleetExplained(keys, explained, reportCitationAllowed = false) {
+export function fleetExplained(keys, explained) {
   const unexplained = [];
   const listed = [];
   for (const key of Array.isArray(keys) ? keys : []) {
     const d = explainedDecision(key, explained);
     if (d.explained) listed.push({ key: normaliseDiffKey(key), entry: d.entry });
-    else if (!reportCitationAllowed) unexplained.push({ step: null, item: `explained:${normaliseDiffKey(key)}`, detail: d.reason });
+    else unexplained.push({ step: null, item: `explained:${normaliseDiffKey(key)}`, detail: d.reason });
   }
   return { unexplained, listed };
+}
+
+/**
+ * Fast invariant #40's answer set. PURE. Every converted slug needs a well-formed
+ * `explained-diffs.json` (`{contract_version:1, diffs:[...]}`); every gate-G
+ * `explained:*` ledger row is an ORPHAN (Spec 124 R-DA — the file is the only channel).
+ * @param {string[]} slugs converted step slugs
+ * @param {(slug: string) => object|null} loadDoc the parsed explained-diffs.json, or null
+ * @param {object[]} rows standard-gates ledger rows
+ * @returns {{violations: {step:string,item:string,detail:string}[], orphans: {step:string,item:string}[]}}
+ */
+export function explainedChannelDecision(slugs, loadDoc, rows) {
+  const violations = [];
+  for (const slug of Array.isArray(slugs) ? slugs : []) {
+    const doc = loadDoc(slug);
+    if (doc === null) {
+      violations.push({ step: slug, item: 'explained:missing', detail: `${slug} has no docs/reports/golden/${slug}/explained-diffs.json` });
+    } else if (doc.contract_version !== 1 || !Array.isArray(doc.diffs)) {
+      violations.push({ step: slug, item: 'explained:malformed', detail: `${slug}/explained-diffs.json is not {contract_version:1, diffs:[...]}` });
+    }
+  }
+  const orphans = (Array.isArray(rows) ? rows : [])
+    .filter((r) => r && r.gate === 'G' && typeof r.item === 'string' && r.item.startsWith(EXPLAINED_ITEM_PREFIX))
+    .map((r) => ({ step: r.step, item: r.item }));
+  return { violations, orphans };
 }
 
 // ---------------------------------------------------------------------------
@@ -427,8 +462,53 @@ export function loadCapturesFleet(repoRoot = REPO_ROOT) {
       slug,
       posts: loadPostCaptures(repoRoot, slug),
       cohort: loadCohort(repoRoot, slug),
+      recipe: loadRecaptureChecked(repoRoot, slug, descriptor),
     };
   });
+}
+
+/**
+ * The R-CZ recipe decision for ONE step. PURE over its inputs: `states` from
+ * nonzeroDecision, `posts` the post captures, `recapture` the parsed
+ * recapture.json (or null), `validation` the harness's validateRecapture errors.
+ * Returns RED violations `[{item, detail}]` — empty when every closed table's
+ * evidence capture and every "forced" capture has a well-formed entry.
+ */
+export function recipeDecision(states, posts, recapture, validation) {
+  const out = [];
+  for (const e of Array.isArray(validation) ? validation : []) {
+    out.push({ item: RECAPTURE_ITEM, detail: `recapture.json ${e.sub}: ${e.reason}` });
+  }
+  const entries = (recapture && recapture.captures) || {};
+  for (const s of Array.isArray(states) ? states : []) {
+    if (s.decision === 'RED' || !s.evidence) continue;
+    if (!entries[`post/${s.evidence}`]) {
+      out.push({ item: `${NONZERO_ITEM_PREFIX}${s.table}`, detail: `"${s.table}" is closed by post/${s.evidence}, which has no recapture.json entry (Spec 124 R-CZ: a fleet night cannot retake it the way it was taken)` });
+    }
+  }
+  for (const p of Array.isArray(posts) ? posts : []) {
+    if (/forced/.test(p.file) && !entries[`post/${p.file}`]) {
+      out.push({ item: RECAPTURE_ITEM, detail: `post/${p.file} is named forced but has no recapture.json entry (Spec 124 R-CZ)` });
+    }
+  }
+  return out;
+}
+
+/** Read + validate `golden/<slug>/recapture.json` from disk: `{recapture, validation}`. */
+export function loadRecaptureChecked(repoRoot, slug, descriptor) {
+  const exists = (rel) => fs.existsSync(path.join(repoRoot, rel));
+  let recapture;
+  try {
+    recapture = harness.loadRecapture(repoRoot, slug);
+  } catch (e) {
+    return { recapture: null, validation: [{ sub: '(file)', reason: `unparseable: ${e.message}` }] };
+  }
+  const validation = harness.validateRecapture(recapture, {
+    descriptor,
+    captureExists: (sub) => exists(`${GOLDEN_DIR_REL}/${slug}/${sub}`),
+    scriptExists: exists,
+  });
+  return { recapture, validation };
 }
 
 /**
@@ -445,6 +525,10 @@ export function checkNonzero(fleet, ledgerRows) {
   const vacuous = [];
   for (const entry of Array.isArray(fleet) ? fleet : []) {
     const d = nonzeroDecision(entry.descriptor, entry.posts, entry.cohort);
+    const recipe = entry.recipe
+      ? recipeDecision(d.states, entry.posts, entry.recipe.recapture, entry.recipe.validation)
+      : [];
+    for (const r of recipe) violations.push({ step: entry.slug, item: r.item, detail: r.detail });
     if (d.vacuous) {
       vacuous.push(entry.slug);
       continue;
@@ -457,11 +541,16 @@ export function checkNonzero(fleet, ledgerRows) {
   }
   const nonzeroRows = (Array.isArray(ledgerRows) ? ledgerRows : [])
     .filter((r) => r && typeof r.item === 'string' && r.item.startsWith(NONZERO_ITEM_PREFIX));
-  const { unallowed, orphans, allowed } = matchLedger('G', violations, nonzeroRows);
+  const matched = matchLedger('G', violations, nonzeroRows);
+  const { orphans, allowed } = matched;
+  // R-CZ: carry each violation's detail through, so the printed line says WHY (a missing recipe
+  // and a zero-write capture share the `nonzero:<table>` item).
+  const detailOf = new Map(violations.map((v) => [`${v.step}|${v.item}`, v.detail]));
+  const unallowed = matched.unallowed.map((v) => ({ ...v, detail: v.detail ?? detailOf.get(`${v.step}|${v.item}`) }));
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const detail = (unallowed.length || orphans.length)
-    ? `CAPTURE-NONZERO (gate G): ${unallowed.length} write target(s) with no nonzero capture`
-      + (unallowed.length ? ` [${unallowed.map((v) => `${v.step} ${v.item}`).join('; ')}]` : '')
+    ? `CAPTURE-NONZERO (gate G): ${unallowed.length} write target(s) with no nonzero capture or no recapture recipe (R-CZ)`
+      + (unallowed.length ? ` [${unallowed.map((v) => `${v.step} ${v.item}${/R-CZ/.test(v.detail || '') ? `: ${v.detail}` : ''}`).join('; ')}]` : '')
       + `; ${orphans.length} orphan ledger row(s)`
       + (orphans.length ? ` [${orphans.map((o) => `${o.step} ${o.item}`).join('; ')}]` : '')
     : `CAPTURE-NONZERO (gate G): every declared write target is closed `
@@ -557,6 +646,29 @@ export function selfTestCases() {
       run: () => nonzeroDecision({ identity: { name: 'x' }, outputs: 'none' }, [], null).vacuous,
       expect: { value: true },
     },
+    // (6b) R-CZ recipe: a closed table's evidence capture with no recapture entry -> RED; with one -> clean;
+    // a "forced" capture with no entry -> RED; a validation error (orphan) -> RED.
+    {
+      name: 'R-CZ evidence capture without entry -> RED',
+      run: () => recipeDecision(nonzeroDecision(desc(['parcels']), [cap('a.json', 5, 0)], null).states, [cap('a.json', 5, 0)], null, []).map((v) => v.item),
+      expect: { list: ['nonzero:parcels'] },
+    },
+    {
+      name: 'R-CZ evidence capture with entry -> clean',
+      run: () => recipeDecision(nonzeroDecision(desc(['parcels']), [cap('a.json', 5, 0)], null).states, [cap('a.json', 5, 0)],
+        { contract_version: 1, captures: { 'post/a.json': { via: 'plain', why: 'x'.repeat(20) } } }, []).length,
+      expect: { value: 0 },
+    },
+    {
+      name: 'R-CZ forced capture without entry -> RED',
+      run: () => recipeDecision([], [cap('s.forced.json', 0, 0)], null, []).map((v) => v.item),
+      expect: { list: ['nonzero:recapture'] },
+    },
+    {
+      name: 'R-CZ orphan entry -> RED',
+      run: () => recipeDecision([], [], null, [{ sub: 'post/gone.json', reason: 'orphan' }]).map((v) => v.item),
+      expect: { list: ['nonzero:recapture'] },
+    },
     // (7) freshness — equal -> fresh.
     { name: 'lib fp equal -> fresh', run: () => freshnessDecision({ lib_fingerprint: 'abc' }, 'abc'), expect: { state: 'fresh' } },
     // (8) freshness — absent -> missing.
@@ -580,6 +692,23 @@ export function selfTestCases() {
       name: '5-char why -> RED',
       run: () => explainedDecision('invariants[3].value', { contract_version: 1, diffs: [{ key: 'invariants[].value', why: 'short' }] }).explained,
       expect: { value: false },
+    },
+    // (12b) Spec 124 R-DA — prose citation no longer explains a key: a key with no file
+    // entry is RED whatever the report says, and a leftover report-citation row is an orphan.
+    {
+      name: 'R-DA: no file entry -> unexplained (no report channel)',
+      run: () => fleetExplained(['summary.records_meta.value'], null).unexplained.length,
+      expect: { value: 1 },
+    },
+    {
+      name: 'R-DA: an explained:report-citation row is an orphan',
+      run: () => explainedChannelDecision(['fixture_step'], () => ({ contract_version: 1, diffs: [] }), [row({ item: 'explained:report-citation' })]).orphans.length,
+      expect: { value: 1 },
+    },
+    {
+      name: 'R-DA: a converted step with no explained-diffs.json -> violation',
+      run: () => explainedChannelDecision(['fixture_step'], () => null, []).violations.length,
+      expect: { value: 1 },
     },
     // (13) a nonzero violation with its gate-G row -> allowed.
     {

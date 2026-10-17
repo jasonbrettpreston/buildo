@@ -1,0 +1,235 @@
+{
+  "contract_version": 1,
+  "step": "link_parcels",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/link_parcels/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added pp_unique_triple_violations, pp_duplicate_permit_pairs, pp_spatial_null_coordinate_count, spatial_fallback_distance_within_cap; dropped permit_parcels_total, match_type_spatial_count, duplicate_permit_pair_count, match_type_exact_address_count, match_type_address_points_exact_count, match_type_spatial_polygon_count, match_type_name_only_count, permits_total, permits_parcel_linked_at_not_null), so entries at the same index compare different invariants (permits/sources/standalone: {\"name\":\"match_type_address_points_exact_count\",\"value\":\"… → absent; {\"name\":\"match_type_spatial_polygon_count\",\"value\":\"17651\"} → absent; +3 more)."
+    },
+    {
+      "key": "invariants[].name",
+      "why": "the POST invariants file lists a different set of invariants (added pp_unique_triple_violations, pp_duplicate_permit_pairs, pp_spatial_null_coordinate_count, spatial_fallback_distance_within_cap; dropped permit_parcels_total, match_type_spatial_count, duplicate_permit_pair_count, match_type_exact_address_count, match_type_address_points_exact_count, match_type_spatial_polygon_count, match_type_name_only_count, permits_total, permits_parcel_linked_at_not_null), so entries at the same index compare different invariants (permits/sources/standalone: \"permit_parcels_total\" → \"pp_unique_triple_violations\"; \"match_type_spatial_count\" → \"pp_duplicate_permit_pairs\"; +2 more)."
+    },
+    {
+      "key": "invariants[].value",
+      "why": "the POST invariants file lists a different set of invariants (added pp_unique_triple_violations, pp_duplicate_permit_pairs, pp_spatial_null_coordinate_count, spatial_fallback_distance_within_cap; dropped permit_parcels_total, match_type_spatial_count, duplicate_permit_pair_count, match_type_exact_address_count, match_type_address_points_exact_count, match_type_spatial_polygon_count, match_type_name_only_count, permits_total, permits_parcel_linked_at_not_null), so entries at the same index compare different invariants (permits/sources/standalone: \"241172\" → \"0\"; \"17504\" → \"0\"; +2 more)."
+    },
+    {
+      "key": "meta[].reads.address_points[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (permits/sources-full/sources/standalone: \"address_class_desc\" → \"street_type_normalized\"; \"maint_stage\" → \"address_class_desc\"; +3 more)."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (permits/sources/standalone: \"centroid_lat\" → \"geom\"; \"centroid_lng\" → absent; +1 more)."
+    },
+    {
+      "key": "meta[].reads.permit_parcels",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (permits/sources-full/sources/standalone: absent → [\"permit_num\",\"revision_num\",\"parcel_id\",\"match_type\",\"co…)."
+    },
+    {
+      "key": "meta[].reads.permits[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (permits/sources-full/sources/standalone: absent → \"parcel_linked_at\"; \"geocoded_at\" → absent)."
+    },
+    {
+      "key": "meta[].writes.permits",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (permits/sources/standalone: absent → [\"parcel_linked_at\"])."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [link_parcels] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (permits 8→3 lines; sources-full 3→3 lines; sources 8→3 lines; standalone 8→3 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources-full/sources/standalone: 6 → 11; 9 → 0)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources-full/sources/standalone: absent → {\"metric\":\"tier_1_via_bridge\",\"observed\":\"after_write\",\"s…; absent → {\"metric\":\"matches_tier_1_ap_type\",\"observed\":\"after_writ…; +21 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (permits.json: added permits_processed, tier_1_exact_address, tier_1_via_bridge, matches_tier_1_ap_type, matches_tier_1_parcel_type_fallback, tier_2_name_only, tier_3_spatial, tier_3_polygon, run_matched, no_match, permit_parcels_written, permits_watermarked, parcel_retraction_ratio, spatial_null_coordinate_permits, street_type_conflict, link_rate, write_privilege, pp_unique_triple_violations, pp_duplicate_permit_pairs, pp_spatial_null_coordinate_count, spatial_fallback_distance_within_cap, inputs_nonempty, empty_source_guard, vocabulary:permit_parcels.match_type, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels; dropped status, reason). Measured permits/sources-full/sources/standalone: \"status\" → \"permits_processed\"; \"reason\" → \"tier_1_exact_address\"; +16 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources-full/sources/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources-full/sources/standalone: absent → \"check\"; \"invariant\" → \"check\"; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources-full.json: added matches_tier_1_ap_type, matches_tier_1_parcel_type_fallback, inputs_nonempty, empty_source_guard, vocabulary:permit_parcels.match_type; dropped none). Measured sources-full: \"PASS\" → \"INFO\"; \"PASS\" → \"WARN\"; +1 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources-full/sources/standalone: null → \"viol == 0\"; \"pct <= 0.05\" → \"viol == 0\"; +5 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (permits.json: added permits_processed, tier_1_exact_address, tier_1_via_bridge, matches_tier_1_ap_type, matches_tier_1_parcel_type_fallback, tier_2_name_only, tier_3_spatial, tier_3_polygon, run_matched, no_match, permit_parcels_written, permits_watermarked, parcel_retraction_ratio, spatial_null_coordinate_permits, street_type_conflict, link_rate, write_privilege, pp_unique_triple_violations, pp_duplicate_permit_pairs, pp_spatial_null_coordinate_count, spatial_fallback_distance_within_cap, inputs_nonempty, empty_source_guard, vocabulary:permit_parcels.match_type, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels, before_image_written:permit_parcels; dropped status, reason). Measured permits/sources-full/sources/standalone: \"SKIPPED\" → 254045; \"No unlinked permits — all already have parcel links\" → 224822; +14 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "PRE PASS → POST WARN: the declared WARN check spatial_null_coordinate_permits fires (8,616 permits without coordinates, measured in every POST); no other row warns."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST no longer carries it in the emitted summary; the legacy PRE emitted it (sources-full: \"all\" → absent)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner counter of WARN rows (scripts/lib/step/index.js:7084): 1 = spatial_null_coordinate_permits (8,616 measured); the legacy PRE had no such check (absent / 0)."
+    },
+    {
+      "key": "summary.records_meta.code_version",
+      "why": "declared emit (descriptor emits[] key \"code_version\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → \"v1-knn-boundary-distance\")."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → {\"link_parcels_confidence_address_points_exact\":0.97,\"lin…)."
+    },
+    {
+      "key": "summary.records_meta.db_upserted",
+      "why": "declared emit (descriptor emits[] key \"db_upserted\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → 29213; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources-full/sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_1_ap_type",
+      "why": "declared emit (descriptor emits[] key \"matches_tier_1_ap_type\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources-full/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_1_exact",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so the tier counters carry full-scope totals; the legacy incremental PRE matched 0 (absent on sources-full)."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_1_parcel_type_fallback",
+      "why": "declared emit (descriptor emits[] key \"matches_tier_1_parcel_type_fallback\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources-full/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_1_via_bridge",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so this tier counter carries the full-scope total; the legacy incremental PRE matched 0."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_2_name",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so this tier counter carries the full-scope total; the legacy incremental PRE matched 0."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_3_fallback",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so this tier counter carries the full-scope total; the legacy incremental PRE matched 0."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_3_polygon",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so this tier counter carries the full-scope total; the legacy incremental PRE matched 0."
+    },
+    {
+      "key": "summary.records_meta.matches_tier_3_spatial",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured), so this tier counter carries the full-scope total; the legacy incremental PRE matched 0."
+    },
+    {
+      "key": "summary.records_meta.no_match_count",
+      "why": "POST 8,616 unmatched = the 8,616 null-coordinate permits (null_coordinate_permits, same capture) over the full re-checked scope (descriptor recovery.reset); the PRE incremental run scanned nothing (absent / 0)."
+    },
+    {
+      "key": "summary.records_meta.null_coordinate_permits",
+      "why": "POST 8,616 permits without coordinates over the full re-checked scope (descriptor recovery.reset; also the WARN row spatial_null_coordinate_permits); the PRE incremental run scanned nothing (absent / 0)."
+    },
+    {
+      "key": "summary.records_meta.permit_parcels_deleted_count",
+      "why": "declared emit (descriptor emits[] key \"permit_parcels_deleted_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → 3672; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.permits_processed",
+      "why": "descriptor recovery.reset (O4 row 7, staleness.mode_select none): every converted run re-checks every permit (254,045 processed, permits 254,082 rows measured); the legacy incremental PRE processed 0 (absent on sources-full)."
+    },
+    {
+      "key": "summary.records_meta.permits_watermarked_count",
+      "why": "declared emit (descriptor emits[] key \"permits_watermarked_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → 29213; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.street_type_mismatch_count",
+      "why": "declared emit (descriptor emits[] key \"street_type_mismatch_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner terminal: linked_incremental_with_warnings because the WARN check spatial_null_coordinate_permits fires (8,616); the legacy PRE stamped linked_incremental (or nothing on sources-full)."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources-full/sources/standalone: absent → [\"spatial_null_coordinate_permits: 8616\"])."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "permits scenario = the first link_parcels POST of the 2026-10-16 night (recapture order): it inserted the 6,685 links that changed since the PRE (descriptor recovery.reset: writes only changed links); the later scenarios write 0."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "POST counts the permit_parcels link scope, 245,429 rows (measured table_state, same number); the PRE incremental run reported 0."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "permits scenario = the first link_parcels POST of the 2026-10-16 night (recapture order): it rewrote the 22,528 links that changed since the PRE (descriptor recovery.reset); the later scenarios write 0."
+    },
+    {
+      "key": "table_state[].ceiling",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: 100000 → absent)."
+    },
+    {
+      "key": "table_state[].ceiling_bypassed",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: absent → \"projected\")."
+    },
+    {
+      "key": "table_state[].columns",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: absent → [\"permit_num\",\"revision_num\",\"parcel_linked_at\"])."
+    },
+    {
+      "key": "table_state[].columns[]",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: absent → \"linked_at\")."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "permit_parcels content moved with the links rewritten since the PRE (6,685 inserted / 22,528 updated by the first 2026-10-16 POST; 241,172 / 239,939 → 245,429 rows measured); the later POSTs agree on one hash."
+    },
+    {
+      "key": "table_state[].order_by",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: absent → \"explicit\")."
+    },
+    {
+      "key": "table_state[].order_columns",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: absent → [\"permit_num\",\"revision_num\"])."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "permit_parcels 241,172 (sources-full PRE 239,939) → 245,429 in every POST: the first 2026-10-16 POST inserted 6,685 changed links (permits run); permits stays 254,082 rows (measured)."
+    },
+    {
+      "key": "table_state[].skipped_reason",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (permits/sources/standalone: \"over_ceiling\" → absent)."
+    },
+    {
+      "key": "reads.permits.geocoded_at",
+      "why": "#44 (g): the PRE sources-full capture read permits.geocoded_at through the incremental filter; full mode drops it (scripts/lib/compute/link-parcels.js:75 extraFilter = mode === \"full\" ? \"\" : incrementalFilter), so the current full-mode POST never reads geocoded_at."
+    }
+  ]
+}

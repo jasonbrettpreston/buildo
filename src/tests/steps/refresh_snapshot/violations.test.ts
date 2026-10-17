@@ -344,14 +344,16 @@ describe('recorder-runner conformance — LG-26/LG-27 are GENERIC library growth
 
   it('LANDED (commit 7) — the compute module\'s buildWriteSql() generates a genuine guarded_upsert at RUNTIME — INSERT + ON CONFLICT...DO UPDATE present, DELETE/TRUNCATE structurally absent. Checked by CALLING the function (buildWriteSql assembles the statement from a column-name array via string concatenation, not one static template literal a source-text regex could match)', () => {
     const mod = loadComputeModule();
-    const buildWriteSql = (mod as unknown as { buildWriteSql: (row: Record<string, unknown>, runAt?: unknown) => { sql: string; params: unknown[] } }).buildWriteSql;
+    const buildWriteSql = (mod as unknown as { buildWriteSql: (row: Record<string, unknown>, runAt?: unknown, config?: Record<string, unknown>) => { sql: string; params: unknown[] } }).buildWriteSql;
     expect(typeof buildWriteSql, 'compute.js must export buildWriteSql').toBe('function');
     const sampleRow: Record<string, unknown> = {};
-    // FLEET-2 U1: the runner passes the run clock (clockNow)
-    const { sql, params } = buildWriteSql(sampleRow, new Date('2026-10-04T00:00:00Z'));
+    // FLEET-2 U1: the runner passes the run clock (clockNow); CP-PLANA (R-CE): and the resolved config (pipeline_timezone)
+    const { sql, params } = buildWriteSql(sampleRow, new Date('2026-10-04T00:00:00Z'), { pipeline_timezone: 'UTC' });
     const findings = detectDestructiveOrWrongShapeTokens(sql);
     expect(findings, findings.join('; ')).toEqual([]);
-    expect(sql).toMatch(/CURRENT_DATE/);
+    // CP-PLANA (R-BZ G6 + R-CE): snapshot_date is the bound run clock's date in the bound zone — never CURRENT_DATE.
+    expect(sql).not.toMatch(/CURRENT_DATE/);
+    expect(sql).toMatch(/AT TIME ZONE \$\d+\)::date/);
     expect(sql).toMatch(/ON CONFLICT \(snapshot_date\)/);
     expect(Array.isArray(params)).toBe(true);
   });
@@ -428,7 +430,10 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     expect(postCounts.size).toBe(1); // one row per day: 5 invocations, same day, same count
     const postCount = [...postCounts][0]!;
     expect(postCount - preCount!).toBeGreaterThanOrEqual(0);
-    expect(postCount - preCount!).toBeLessThanOrEqual(10); // measured growth: +1, +1, then +6 at the FLEET-2 recapture (2026-10-06): 36 rows over 36 DISTINCT snapshot_date values (live SELECT), so one row per day still holds; the bound only absorbs recapture days
+    // measured growth: +1, +1, then +6 at the FLEET-2 recapture (2026-10-06): 36 rows over 36 DISTINCT snapshot_date values
+    // (live SELECT), so one row per day still holds; the bound only absorbs recapture days. 2026-10-17 (N6): 41 rows over 41
+    // DISTINCT snapshot_date values (live SELECT) — the recapture days since FLEET-2; one row per day still holds.
+    expect(postCount - preCount!).toBeLessThanOrEqual(11);
   });
 });
 

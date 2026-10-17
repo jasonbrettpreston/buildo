@@ -205,7 +205,8 @@ describe('INGESTOR prerequisite 0w — runner lookups', () => {
     const config = seedConfig();
     const compute = computeWithFns();
     restored = stubsFor();
-    const out = await runPhase(descriptorWithLookup(), compute as unknown as Record<string, unknown>, config) as {
+    const descriptor = descriptorWithLookup();
+    const out = await runPhase(descriptor, compute as unknown as Record<string, unknown>, config) as {
       acquired: { lookups: Record<string, Record<string, unknown>> };
     };
 
@@ -215,7 +216,8 @@ describe('INGESTOR prerequisite 0w — runner lookups', () => {
     expect(calls[1]![0].external.id).toBe('l');
 
     expect(compute.buildLookup).toHaveBeenCalledTimes(1);
-    expect(compute.buildLookup).toHaveBeenCalledWith('l', [{ a: 1 }], { config });
+    // Spec 124 R-CY — the seam also hands the descriptor IN (a compute never requires its own).
+    expect(compute.buildLookup).toHaveBeenCalledWith('l', [{ a: 1 }], { config, descriptor });
 
     // The lookup's MAP is the ONLY thing shapeRecord sees — `{l: {7: 'x'}}`, not the
     // whole built object, and not keyed by anything else.
@@ -251,7 +253,7 @@ describe('INGESTOR prerequisite 0w — runner lookups', () => {
   // four converted INGESTORs all declare exactly one url'd external, none with
   // a `role` — the measured precondition for the T2 refusal above.
   // -------------------------------------------------------------------------
-  it('T5 — a plain descriptor acquires once, shapeRecord ctx is the four historical keys, no acquired.lookups', async () => {
+  it('T5 — a plain descriptor acquires once, shapeRecord ctx is the four historical keys + descriptor (R-CY), no acquired.lookups', async () => {
     const compute = computeWithFns();
     restored = stubsFor();
     const out = await runPhase(clone(LOAD_RAVINES) as unknown as Record<string, unknown>, compute as unknown as Record<string, unknown>) as {
@@ -262,8 +264,9 @@ describe('INGESTOR prerequisite 0w — runner lookups', () => {
     expect(compute.buildLookup, 'buildLookup is a lookup-only seam').not.toHaveBeenCalled();
     expect(compute.shapeRecord).toHaveBeenCalledTimes(1);
     const ctx = compute.shapeRecord.mock.calls[0]![1] as Record<string, unknown>;
+    // + `descriptor` (Spec 124 R-CY): the runner hands the descriptor in, never a compute-side require.
     expect(Object.keys(ctx).sort(), 'byte-identical ctx — no `lookups` key unless one is declared')
-      .toEqual(['config', 'geojson', 'run_at', 'tag']);
+      .toEqual(['config', 'descriptor', 'geojson', 'run_at', 'tag']);
     expect(Object.prototype.hasOwnProperty.call(out.acquired, 'lookups'), 'the block is absent, not {}').toBe(false);
   });
 

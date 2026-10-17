@@ -148,9 +148,9 @@ async function readCostContract(ctx) {
 // exceeds the residual not-a-low-rise-dwelling cut (cur_floor_gfa_sqm > product_scope_max_
 // existing_gfa_sqm, exclusive — FOLD-RC2) is never priced at all — the two passes must agree on
 // "is this parcel in the model" (tasks/lessons.md:30). `maxExistingGfaSqm` is threaded from LIVE
-// config (product_scope_max_existing_gfa_sqm) by the caller; the function form (was a bare
-// template constant) is what makes this genuinely config-driven rather than a baked literal.
-function buildSourceSql(maxExistingGfaSqm) {
+// config (product_scope_max_existing_gfa_sqm) by the caller as bind parameter $1 — never interpolated
+// into the text (#44 G16, McDonald's Airtight V3: an interpolated NaN became the identifier `nan`).
+function buildSourceSql() {
   return `
     SELECT
       p.id,
@@ -177,7 +177,7 @@ function buildSourceSql(maxExistingGfaSqm) {
     WHERE p.zoning_class IS NOT NULL AND upper(p.zoning_class) LIKE 'R%'
       AND p.max_buildable_gfa_sqm IS NOT NULL
       AND p.lot_size_sqm IS NOT NULL
-      AND (p.cur_floor_gfa_sqm IS NULL OR p.cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
+      AND (p.cur_floor_gfa_sqm IS NULL OR p.cur_floor_gfa_sqm <= $1::numeric)
     ORDER BY p.id ASC`;
 }
 
@@ -279,7 +279,7 @@ async function runCostMenuPass(client, ctx) {
     if (typeof ctx.onProgress === 'function') ctx.onProgress(updated);
   }
 
-  for await (const parcel of ctx.stream(buildSourceSql(maxExistingGfaSqm), [], { batchSize: streamBatchSize })) {
+  for await (const parcel of ctx.stream(buildSourceSql(), [maxExistingGfaSqm], { batchSize: streamBatchSize })) {
     scanned++;
     // CPCE-D3 — hoisted OUTSIDE the try (parcelFamilyFromZoning never throws — it is a pure
     // string classify with an 'all' backstop, build-norms.js) so every SCANNED parcel is
@@ -389,7 +389,7 @@ async function runCostMenuPass(client, ctx) {
 // query's row counts against the stream's scanned count, and would (correctly) THROW if the
 // two populations ever disagreed — as they did the moment this bound landed and ZONE_SQL had
 // not yet been updated to match (measured live: Σ 437,279 !== scanned 410,754).
-function buildZoneSql(maxExistingGfaSqm) {
+function buildZoneSql() {
   return `
     SELECT upper(zoning_class) AS zone, COUNT(*)::int AS parcels,
            COUNT(*) FILTER (WHERE parcel_cost_menu IS NOT NULL AND parcel_cost_menu != '{"_schema_version": 1}'::jsonb)::int AS menus,
@@ -400,7 +400,7 @@ function buildZoneSql(maxExistingGfaSqm) {
      WHERE zoning_class IS NOT NULL AND upper(zoning_class) LIKE 'R%'
        AND max_buildable_gfa_sqm IS NOT NULL
        AND lot_size_sqm IS NOT NULL
-       AND (cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= ${maxExistingGfaSqm})
+       AND (cur_floor_gfa_sqm IS NULL OR cur_floor_gfa_sqm <= $1::numeric)
      GROUP BY 1
      ORDER BY 1`;
 }
@@ -497,17 +497,18 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
   const indexStaleMonths = Number(config.cost_index_stale_months);
   const ratesStale = ratesAgeMonths != null && ratesAgeMonths > ratesStaleMonths;
   const indexStale = indexAgeMonths != null && indexAgeMonths > indexStaleMonths;
-  // The `cost_rates_stale`/`cost_index_stale` CHECKS compare a numeric severity CODE (the
-  // `{warn,fail}` object-limit form, scripts/lib/step/verdict.js#evaluateLimit) — a boolean or
-  // the string 'future_dated' is not Number.isFinite and would score "unevaluable" (measured
-  // live 2026-09-21, caught by the POST golden capture). 0=fresh, 1=stale/undatable (WARN),
-  // 2=future-dated (FAIL, cost_rates_stale only — cost_index_stale never reaches this tier).
+  // McDonald's Airtight V3 ledger A8 (operator y 2026-10-17): the former 3-tier severity CODE is split
+  // into zero-tolerance checks, each reporting a 0/1 violation from THIS classification (no ctx.config
+  // comparison in a check body): cost_rates_stale = stale-or-undatable (WARN), cost_rates_stale_future_dated
+  // = future-dated (FAIL; exclusive — a future-dated table is not also counted stale), cost_index_stale =
+  // stale-or-undatable (WARN; the index clock has no future-dated arm, so it has no FAIL check).
   // CPCE-D1 CLOSED (commit 1) — the undatable arm now folds into code 1 (WARN), symmetric
   // with the index clock one line below: "I could not measure freshness" is no longer
   // conflated with "measured, and fresh" (code 0). `ratesStale` itself is untouched (it is
   // the *stale* predicate, not the *undatable* one) so the two concepts stay separable here.
-  const ratesStaleCode = ratesFuture ? 2 : (ratesAgeMonths === null || ratesStale) ? 1 : 0;
-  const indexStaleCode = indexAgeMonths === null ? 1 : indexStale ? 1 : 0;
+  const ratesStaleViol = !ratesFuture && (ratesAgeMonths === null || ratesStale) ? 1 : 0;
+  const ratesFutureViol = ratesFuture ? 1 : 0;
+  const indexStaleViol = indexAgeMonths === null || indexStale ? 1 : 0;
 
   const emptyMenuPct = scanned > 0 ? (nullGeomBasisCount / scanned) * 100 : 0;
   // §0.3/§0.6 of the conversion plan — "menu coverage" is parcel_cost_menu IS NOT NULL over the
@@ -524,7 +525,7 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
 
   // §7/A8 — the per-zone visibility block. FOLD-RC3: the Σ-identity is CODED, not merely
   // declared — a bucketing/scoping defect reddens the run rather than silently under-reporting.
-  const zoneRows = await pool.query(buildZoneSql(Number(config.product_scope_max_existing_gfa_sqm)));
+  const zoneRows = await pool.query(buildZoneSql(), [Number(config.product_scope_max_existing_gfa_sqm)]);
   const byZone = buildZoneBuckets(zoneRows.rows);
   const zoneParcelsSum = Object.values(byZone).reduce((n, z) => n + z.parcels, 0);
   if (zoneParcelsSum !== scanned) {
@@ -550,16 +551,16 @@ async function computePostPhase(pool, { passRaw, config, runAt }) {
       area_confidence_low: confidenceTotals.low,
       fit_gated_suite_count: fitGatedSuiteCount,
       fit_gated_garage_count: fitGatedGarageCount,
-      // value = the numeric severity code (the bound comparison); detail = the legacy's own
-      // human-readable false/true/'future_dated' string (rendered in the audit row instead —
-      // scripts/lib/step/verdict.js#checkRow prefers observation.detail over observation.value).
-      cost_rates_stale: ratesStaleCode,
+      // 0/1 violations per check (V3 ledger A8); detail = the legacy's own human-readable
+      // false/true/'undatable'/'future_dated' string, rendered in the audit row.
+      cost_rates_stale: ratesStaleViol,
+      cost_rates_stale_future_dated: ratesFutureViol,
       // CPCE-D1 CLOSED — 'undatable' now rides the same detail slot the index clock already
       // used; the asymmetry (undatable rates silently PASS while undatable index WARNs) is gone.
       cost_rates_stale_detail: ratesFuture ? 'future_dated' : (ratesAgeMonths === null ? 'undatable' : ratesStale),
       cost_rates_age_months: ratesAgeMonths,
       cost_index_age_months: indexAgeMonths,
-      cost_index_stale: indexStaleCode,
+      cost_index_stale: indexStaleViol,
       cost_index_stale_detail: indexAgeMonths === null ? 'undatable' : indexStale,
       cost_escalation_index: indexMissing ? null : Number(config.cost_escalation_index),
       rates_max_as_of_date: maxRateAsOf ? String(maxRateAsOf) : null,
@@ -603,19 +604,22 @@ function residential_parcels_examined(ctx) {
 // on both descriptor entries means verdict.js's checkRow forces status=INFO regardless of the
 // (always-true) value_min bound — matching the legacy's non-verdict-affecting observability.
 function fsi_implausible_count(ctx) {
-  ctx.report('fsi_implausible_count', { value: ctx.matched.fsi_implausible_count });
+  ctx.report('fsi_implausible_count', { violations: 0, detail: ctx.matched.fsi_implausible_count });
 }
 function new_build_fallback_count(ctx) {
-  ctx.report('new_build_fallback_count', { value: ctx.matched.new_build_fallback_count });
+  ctx.report('new_build_fallback_count', { violations: 0, detail: ctx.matched.new_build_fallback_count });
 }
 function engine_error_count(ctx) {
   ctx.report('engine_error_count', { value: ctx.matched.engine_error_count });
 }
 function cost_rates_stale(ctx) {
-  ctx.report('cost_rates_stale', { value: ctx.matched.cost_rates_stale, detail: ctx.matched.cost_rates_stale_detail });
+  ctx.report('cost_rates_stale', { violations: ctx.matched.cost_rates_stale, detail: ctx.matched.cost_rates_stale_detail });
+}
+function cost_rates_stale_future_dated(ctx) {
+  ctx.report('cost_rates_stale_future_dated', { violations: ctx.matched.cost_rates_stale_future_dated, detail: ctx.matched.cost_rates_stale_detail });
 }
 function cost_index_stale(ctx) {
-  ctx.report('cost_index_stale', { value: ctx.matched.cost_index_stale, detail: ctx.matched.cost_index_stale_detail });
+  ctx.report('cost_index_stale', { violations: ctx.matched.cost_index_stale, detail: ctx.matched.cost_index_stale_detail });
 }
 function compute_parcel_cost_menu_coverage_min_pct(ctx) {
   ctx.report('compute_parcel_cost_menu_coverage_min_pct', { value: ctx.matched.compute_parcel_cost_menu_coverage_min_pct });
@@ -634,10 +638,10 @@ function unmapped_residential_family_fallback_count(ctx) {
   ctx.report('unmapped_residential_family_fallback_count', { violations: ctx.matched.unmapped_residential_family_fallback_count });
 }
 // CPCE-D2 CLOSED (commit 3, 2026-09-21) — the Spec 48 §3.6 dual-pattern's INFO-counter half.
-// `value` (not `violations`) is reported: this is a purely descriptive count no threshold
-// bounds (limit "value_min 0"), not a violation count compared against a bound.
+// A purely descriptive count no threshold bounds: reported as `violations: 0` with the count in
+// `detail` under limit "viol == 0" (the enrich_heritage INFO form; V3 ledger A8, 2026-10-17).
 function stranded_cost_rows_retracted(ctx) {
-  ctx.report('stranded_cost_rows_retracted', { value: ctx.matched.stranded_cost_rows_retracted });
+  ctx.report('stranded_cost_rows_retracted', { violations: 0, detail: ctx.matched.stranded_cost_rows_retracted });
 }
 function line_coverage_max_build(ctx) {
   ctx.report('line_coverage_max_build', { violations: 0, detail: ctx.matched.line_coverage.max_build });
@@ -685,6 +689,7 @@ const CHECKS = {
   new_build_fallback_count,
   engine_error_count,
   cost_rates_stale,
+  cost_rates_stale_future_dated,
   cost_index_stale,
   compute_parcel_cost_menu_coverage_min_pct,
   compute_parcel_cost_empty_menu_max_pct,

@@ -183,7 +183,7 @@
       "kind": "invariant",
       "expect": { "license_url_present": true },
       "limit": "viol == 0",
-      "severity": "INFO",
+      "severity": "WARN",
       "blocking": false,
       "when": "pre",
       "chains": "all",

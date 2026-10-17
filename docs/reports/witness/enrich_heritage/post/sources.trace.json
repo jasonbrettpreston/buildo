@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-heritage.js",
   "chain": "sources",
-  "source_fingerprint": "52a6c17b4074c632a41be7b79e219685e477f86cae2511397bf2ec75b7a81cbb",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "832dc53a446bd70df5b578e09bbd571206e5c1deda793f60144ec834cddc3382",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 54,
     "distinct": 38,
     "utility": 13,
-    "tracer_self_ms": 1.541,
-    "wall_ms": 2370
+    "tracer_self_ms": 1.579,
+    "wall_ms": 2269
   },
   "statements": [
     {
@@ -186,7 +186,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -335,6 +335,16 @@
       "error": null
     },
     {
+      "fingerprint": "7cb354fa8e2d5aed",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 2,
@@ -392,6 +402,7 @@
           "id"
         ],
         "heritage_properties": [
+          "address_text",
           "designated_date",
           "geom",
           "id",
@@ -417,16 +428,6 @@
           "is_heritage_designated"
         ]
       },
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "9b97ae14cd1eaa94",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
       "excluded": [],
       "error": null
     },
@@ -565,7 +566,7 @@
   ],
   "transactions": [
     {
-      "client": "82387:3",
+      "client": "32695:3",
       "write_fingerprints": [
         "98df2d71dc306fc7"
       ]
@@ -580,6 +581,7 @@
         "id"
       ],
       "heritage_properties": [
+        "address_text",
         "designated_date",
         "geom",
         "id",

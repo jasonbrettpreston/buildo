@@ -224,9 +224,31 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
     // batch-2 row 3.10 ③ (enrich_centreline, 2026-10-04) — 20 -> 22 PAIRS, TWO NEW: enrich_centreline declares inputs.reads.steps [{step: 'load_centreline', version_pin: 'exact'}, {step: 'parcels', version_pin: 'gte'}] (measured, scripts/enrich-centreline.descriptor.json) and both producers are already converted, so its registration adds both edges as the DOWNSTREAM half.
     // P1-C8a (registry-truth, 2026-10-03) — 20 -> 31 PAIRS, ELEVEN NEW: the #44(e) derived producers are now declared (link_massing/enrich_ravines/enrich_heritage += parcels; enrich_parcels += parcels, massing, neighbourhoods, enrich_ravines, enrich_heritage; link_parcels += address_points, geocode_permits, parcels). All sources-chain members.
     expect(seam.deriveSeamPairs(byName)).toEqual([
+      // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 19 new.
+      { upstream: 'address_points', downstream: 'assert_data_bounds' },
+      { upstream: 'link_parcels', downstream: 'assert_data_bounds' },
+      { upstream: 'link_wsib', downstream: 'assert_data_bounds' },
+      { upstream: 'load_wsib', downstream: 'assert_data_bounds' },
+      { upstream: 'massing', downstream: 'assert_data_bounds' },
+      { upstream: 'neighbourhoods', downstream: 'assert_data_bounds' },
+      { upstream: 'parcels', downstream: 'assert_data_bounds' },
+      { upstream: 'compute_centroids', downstream: 'assert_global_coverage' },
+      { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_global_coverage' },
+      { upstream: 'enrich_parcels', downstream: 'assert_global_coverage' },
+      { upstream: 'geocode_permits', downstream: 'assert_global_coverage' },
+      { upstream: 'link_massing', downstream: 'assert_global_coverage' },
+      { upstream: 'link_neighbourhoods', downstream: 'assert_global_coverage' },
+      { upstream: 'link_parcels', downstream: 'assert_global_coverage' },
+      { upstream: 'link_wsib', downstream: 'assert_global_coverage' },
+      { upstream: 'massing', downstream: 'assert_global_coverage' },
+      { upstream: 'neighbourhoods', downstream: 'assert_global_coverage' },
+      { upstream: 'parcels', downstream: 'assert_global_coverage' },
+      { upstream: 'refresh_snapshot', downstream: 'assert_global_coverage' },
       { upstream: 'compute_parcel_cost_estimates', downstream: 'assert_parcel_sanity' },
       { upstream: 'enrich_parcels', downstream: 'assert_parcel_sanity' },
       // P1-C8a (2026-10-03) — assert_parcel_sanity declares its #44(e) producer `parcels`: 31 -> 32 PAIRS (sources chain).
+      // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+      { upstream: 'link_massing', downstream: 'assert_parcel_sanity' },
       { upstream: 'parcels', downstream: 'assert_parcel_sanity' },
       // batch-2 row 3.7 (2026-09-24) — sorts here: 'compute_centroids:parcels' falls
       // between 'assert_parcel_sanity:enrich_parcels' and
@@ -289,7 +311,11 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // batch-2 row 3.5 (2026-09-30) — sorts here: 'link_wsib:load_wsib' falls after
       // 'link_parcels:link_parcel_addresses' and before 'refresh_snapshot:link_massing'.
       { upstream: 'load_wsib', downstream: 'link_wsib' },
+      // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+      { upstream: 'geocode_permits', downstream: 'refresh_snapshot' },
       { upstream: 'link_massing', downstream: 'refresh_snapshot' },
+      // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+      { upstream: 'link_neighbourhoods', downstream: 'refresh_snapshot' },
       { upstream: 'link_parcels', downstream: 'refresh_snapshot' },
       { upstream: 'link_wsib', downstream: 'refresh_snapshot' },
     ]);
@@ -442,8 +468,30 @@ describe('runSeamChecks — one row per derived pair', () => {
   // itself, members of the 'sources' chain (Spec 43 rows 8/5/14). Live pairs/metrics 20 -> 22.
   // P1-C8a (2026-10-03): the eleven reads.steps declarations add eleven sources-chain pairs/metrics, 20 -> 31.
   const EXPECTED_SEAM_METRICS = [
+    // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 19 new.
+    'seam_address_points_before_assert_data_bounds',
+    'seam_link_parcels_before_assert_data_bounds',
+    'seam_link_wsib_before_assert_data_bounds',
+    'seam_load_wsib_before_assert_data_bounds',
+    'seam_massing_before_assert_data_bounds',
+    'seam_neighbourhoods_before_assert_data_bounds',
+    'seam_parcels_before_assert_data_bounds',
+    'seam_compute_centroids_before_assert_global_coverage',
+    'seam_compute_parcel_cost_estimates_before_assert_global_coverage',
+    'seam_enrich_parcels_before_assert_global_coverage',
+    'seam_geocode_permits_before_assert_global_coverage',
+    'seam_link_massing_before_assert_global_coverage',
+    'seam_link_neighbourhoods_before_assert_global_coverage',
+    'seam_link_parcels_before_assert_global_coverage',
+    'seam_link_wsib_before_assert_global_coverage',
+    'seam_massing_before_assert_global_coverage',
+    'seam_neighbourhoods_before_assert_global_coverage',
+    'seam_parcels_before_assert_global_coverage',
+    'seam_refresh_snapshot_before_assert_global_coverage',
     'seam_compute_parcel_cost_estimates_before_assert_parcel_sanity',
     'seam_enrich_parcels_before_assert_parcel_sanity',
+    // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+    'seam_link_massing_before_assert_parcel_sanity',
     'seam_parcels_before_assert_parcel_sanity', // P1-C8a (2026-10-03): 31 -> 32
     'seam_parcels_before_compute_centroids',
     'seam_enrich_parcels_before_compute_parcel_cost_estimates',
@@ -484,7 +532,11 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_parcels_before_link_parcels',
     // batch-2 row 3.5 cutover (2026-09-30) — load_wsib registering resolves link_wsib's declared read.
     'seam_load_wsib_before_link_wsib',
+    // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+    'seam_geocode_permits_before_refresh_snapshot',
     'seam_link_massing_before_refresh_snapshot',
+    // V3 #44 G2 (2026-10-17): the #44(e) sources-chain producers of AGC/ADB/APS/refresh_snapshot are declared — 1 new.
+    'seam_link_neighbourhoods_before_refresh_snapshot',
     'seam_link_parcels_before_refresh_snapshot',
     'seam_link_wsib_before_refresh_snapshot',
   ];

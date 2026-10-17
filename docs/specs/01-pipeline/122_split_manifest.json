@@ -479,6 +479,19 @@
       "content_sha256": "b1ac3782e94dc487c556ffb2da634a5c729bf8c2cb89ce0c39d01027f55a78bd",
       "moved_at": "2026-10-16",
       "commit": "31ab81f8"
+    },
+    {
+      "id": "M23",
+      "from_spec": "122",
+      "anchor": "**RE-FREEZE #34 — compute-purity Phase 2 seams S1–S4 + S1-P + F3-2 (2026-10-14, H5 fleet recapture night 4):**",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A29 — RE-FREEZE #34–#35 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16",
+      "line_count": 7,
+      "classification": "REGISTER",
+      "evidence": "CP-S5 (2026-10-16): Spec 122 was over its arm (iv) byte budget with the RE-FREEZE #36 entry (guards.requires kind srid). #34 and #35 stay in force. New RE-FREEZE entries are still added to Spec 122 §8.",
+      "content_sha256": "30fbd4b7aa5d4f5e9828dec589f6e7441082dd1db596a95ff300225be890f3d2",
+      "moved_at": "2026-10-16",
+      "commit": "2a96590c"
     }
   ]
 }

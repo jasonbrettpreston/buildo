@@ -25,24 +25,19 @@
 
 const { safeParsePositiveInt, safeParseIntOrNull } = require('../safe-math');
 
-// ── descriptor-derived constants (ONE home each) ───────────────────────────
-// The descriptor ships beside this file, so these are read at require() time and are
-// the SAME bytes the write plan is built from: the primary external's `key_property`,
-// the external that carries `role:"lookup"`, and `outputs.writes[0]`'s census columns
-// (those filtered `on_empty === 'preserve_null'`, in descriptor order).
-const DESCRIPTOR = require('../../load-neighbourhoods.descriptor.json');
+// ── descriptor-derived facts (ONE home each) ───────────────────────────────
+// Spec 124 R-CY (McDonald's Airtight V3) — read off the descriptor the RUNNER hands in
+// (`ctx.descriptor`, or the shapeRecord / buildLookup seam's `descriptor`), never required
+// beside the shell (R-BZ G12): the SAME bytes the write plan is built from.
 
-/** The primary external — the only url'd external WITHOUT a `role` (absent = primary, RE-FREEZE #27). */
-const PRIMARY_EXTERNAL = DESCRIPTOR.inputs.reads.externals.find((e) => !e.role && e.key_property != null);
-
-/** The key column the primary source carries the neighbourhood id on (N-D6: `AREA_SHORT_CODE` only). */
-const KEY_PROPERTY = PRIMARY_EXTERNAL.key_property;
+/** The key column the primary source carries the neighbourhood id on (N-D6: `AREA_SHORT_CODE` only) — the only url'd external WITHOUT a `role` (RE-FREEZE #27). */
+const keyPropertyOf = (d) => d.inputs.reads.externals.find((e) => !e.role && e.key_property != null).key_property;
 
 /** The census lookup external (RE-FREEZE #27): xlsx-only, never gated, absorbed here as attribute columns. */
-const LOOKUP_ID = (DESCRIPTOR.inputs.reads.externals.find((e) => e.role === 'lookup') || {}).id;
+const lookupIdOf = (d) => (d.inputs.reads.externals.find((e) => e.role === 'lookup') || {}).id;
 
 /** The 14 census columns `outputs.writes[0]` binds with `on_empty:"preserve_null"`, in descriptor order. */
-const CENSUS_COLUMNS = (DESCRIPTOR.outputs.writes[0].columns || [])
+const censusColumnsOf = (d) => (d.outputs.writes[0].columns || [])
   .filter((c) => c.on_empty === 'preserve_null')
   .map((c) => c.name);
 
@@ -122,15 +117,16 @@ function shapeRecord(record, seam) {
   const props = record || {};
   const name = props.AREA_NAME || props.AREA_LONG_CODE || '';
   if (!name) return 'missing_name';
-  const key = coerceKey(props[KEY_PROPERTY]);
-  const census = ((seam && seam.lookups) || {})[LOOKUP_ID];
+  const d = seam.descriptor;
+  const key = coerceKey(props[keyPropertyOf(d)]);
+  const census = ((seam && seam.lookups) || {})[lookupIdOf(d)];
   const row = (census && key != null && census[key]) || {};
   const shaped = {
     geojson: seam.geojson,
     name,
     geometry: seam.geojson,
   };
-  for (const col of CENSUS_COLUMNS) {
+  for (const col of censusColumnsOf(d)) {
     shaped[col] = row[col] ?? null;
   }
   return shaped;
@@ -153,9 +149,10 @@ function shapeRecord(record, seam) {
  * ABSENT — exactly the "keep the stored value" semantics `preserve_null` reproduces.
  * The bulk-5 arm assigns only non-null pcts. No logging, no pool.
  */
-function buildLookup(externalId, rows, _seam) {
-  if (externalId !== LOOKUP_ID) {
-    throw new Error(`[neighbourhoods] buildLookup was called for external "${externalId}", not the declared lookup "${LOOKUP_ID}"`);
+function buildLookup(externalId, rows, seam) {
+  const declaredLookup = lookupIdOf(seam.descriptor);
+  if (externalId !== declaredLookup) {
+    throw new Error(`[neighbourhoods] buildLookup was called for external "${externalId}", not the declared lookup "${declaredLookup}"`);
   }
 
   const map = {};
@@ -548,7 +545,6 @@ function boundaries_loaded(ctx) {
   ctx.report('boundaries_loaded', {
     value: rs,
     detail: rs,
-    violations: rs < ctx.config.sources_neighbourhoods_floor ? 1 : 0,
   });
 }
 
@@ -561,7 +557,7 @@ function boundaries_loaded(ctx) {
  */
 function census_rows_matched(ctx) {
   const a = ctx.acquired || {};
-  const lookup = (a.lookups || {})[LOOKUP_ID] || {};
+  const lookup = (a.lookups || {})[lookupIdOf(ctx.descriptor)] || {};
   const stats = lookup.stats || {};
   const n = numberOrNull(stats.matched_rows);
   ctx.report('census_rows_matched', { violations: 0, detail: n });
@@ -607,21 +603,10 @@ const CHECKS = {
   boundary_rows_inserted,
 };
 
-/**
- * ⚠️ REQUIRE-TIME INVARIANT (SPEC LINK 122 §5.5): the dispatch keys ARE the declared
- * check ids. The descriptor ships beside this file and is ALREADY required above, so this
- * reuses that binding rather than requiring the same bytes a second time; a mismatch is a
- * load-order bug, not a runtime condition — it must throw at require() time rather than
- * surface as a silently-unscored check on a green run.
- */
-const DECLARED_CHECKS = DESCRIPTOR.checks.map((c) => c.id);
-const DISPATCH_KEYS = Object.keys(CHECKS);
-if (DISPATCH_KEYS.length !== DECLARED_CHECKS.length
-    || DISPATCH_KEYS.some((id, i) => id !== DECLARED_CHECKS[i])) {
-  throw new Error('load-neighbourhoods compute dispatch keys are not the descriptor\'s declared check ids: '
-    + `dispatch=[${DISPATCH_KEYS.join(', ')}] declared=[${DECLARED_CHECKS.join(', ')}]`);
-}
-for (const id of DECLARED_CHECKS) {
+// The dispatch keys ARE the declared check ids, in order (§5.5 (1)/(4)): enforced statically,
+// both directions, by src/tests/step-conformance.infra.test.ts ("§5.5 compute shape — dispatch
+// table ≡ declared checks") — never by a require of the descriptor here (Spec 124 R-BZ G12, R-CY).
+for (const id of Object.keys(CHECKS)) {
   if (CHECKS[id].name !== id) {
     throw new Error(`load-neighbourhoods compute: checks.${id} is bound to a function named "${CHECKS[id].name}"`);
   }
@@ -636,7 +621,7 @@ for (const id of DECLARED_CHECKS) {
  */
 function buildLoadMeta(ctx) {
   const a = ctx.acquired || {};
-  const lookup = (a.lookups || {})[LOOKUP_ID] || {};
+  const lookup = (a.lookups || {})[lookupIdOf(ctx.descriptor)] || {};
   const stats = lookup.stats || {};
   return {
     boundaries_loaded: numberOrNull(a.rows_shaped) || 0,
@@ -677,6 +662,6 @@ module.exports.buildLoadMeta = buildLoadMeta;
 // The parse/compute seams, exported so a lock can drive them without a write plan.
 module.exports.parseColumnHeader = parseColumnHeader;
 module.exports.parseNumeric = parseNumeric;
-module.exports.KEY_PROPERTY = KEY_PROPERTY;
-module.exports.LOOKUP_ID = LOOKUP_ID;
-module.exports.CENSUS_COLUMNS = CENSUS_COLUMNS;
+module.exports.keyPropertyOf = keyPropertyOf;
+module.exports.lookupIdOf = lookupIdOf;
+module.exports.censusColumnsOf = censusColumnsOf;

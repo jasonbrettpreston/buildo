@@ -12,7 +12,7 @@
         "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
       }
     },
-    "spec": "55",
+    "spec": "43",
     "spec_version": "2.0",
     "archetype": "BACKFILL",
     "contract_version": 1,
@@ -224,7 +224,7 @@
     "txn_scope": "statement",
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": "none",
+    "batch": 10000,
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
     "on_check_error": "fail_step",
@@ -729,7 +729,7 @@
         "name": "compute_centroids_full_recompute_batch_size",
         "min": 100,
         "max": 50000,
-        "on_invalid": "clamp"
+        "on_invalid": "fail"
       }
     ],
     "validation": "strict",

@@ -618,6 +618,14 @@
     },
     {
       "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "classify_inspection_status",
+      "kind": "table",
+      "key": "permits.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
       "producer": "classify_lifecycle_phase",
       "kind": "table",
       "key": "coa_applications.lifecycle_phase",
@@ -634,6 +642,14 @@
     },
     {
       "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "classify_permit_phase",
+      "kind": "table",
+      "key": "permits.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
       "producer": "coa",
       "kind": "table",
       "key": "coa_applications.address",
@@ -645,6 +661,30 @@
       "producer": "coa",
       "kind": "table",
       "key": "coa_applications.application_number",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "coa",
+      "kind": "table",
+      "key": "coa_applications.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "link_coa",
+      "kind": "table",
+      "key": "coa_applications.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/admin/leads/watchlist/search/route.ts",
+      "producer": "link_coa",
+      "kind": "table",
+      "key": "permits.last_seen_at",
       "value": "any",
       "source": "src_sql"
     },
@@ -1378,6 +1418,14 @@
     },
     {
       "consumer": "src/app/api/leads/search/route.ts",
+      "producer": "classify_inspection_status",
+      "kind": "table",
+      "key": "permits.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/leads/search/route.ts",
       "producer": "classify_lifecycle_phase",
       "kind": "table",
       "key": "permits.lifecycle_phase",
@@ -1386,9 +1434,25 @@
     },
     {
       "consumer": "src/app/api/leads/search/route.ts",
+      "producer": "classify_permit_phase",
+      "kind": "table",
+      "key": "permits.last_seen_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/leads/search/route.ts",
       "producer": "close_stale_permits",
       "kind": "table",
       "key": "permits.status",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/app/api/leads/search/route.ts",
+      "producer": "link_coa",
+      "kind": "table",
+      "key": "permits.last_seen_at",
       "value": "any",
       "source": "src_sql"
     },
@@ -2335,6 +2399,14 @@
       "consumer": "src/features/leads/lib/get-lead-feed.ts",
       "producer": "load_wsib",
       "kind": "table",
+      "key": "wsib_registry.id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/features/leads/lib/get-lead-feed.ts",
+      "producer": "load_wsib",
+      "kind": "table",
       "key": "wsib_registry.is_gta",
       "value": "any",
       "source": "src_sql"
@@ -2743,6 +2815,14 @@
       "consumer": "src/lib/admin/supplier-leads.ts",
       "producer": "classify_coa_trades",
       "kind": "table",
+      "key": "lead_trades.classified_at",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/admin/supplier-leads.ts",
+      "producer": "classify_coa_trades",
+      "kind": "table",
       "key": "lead_trades.confidence",
       "value": "any",
       "source": "src_sql"
@@ -3088,6 +3168,14 @@
       "producer": "link_wsib",
       "kind": "table",
       "key": "wsib_registry.linked_entity_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/builders/enrichment.ts",
+      "producer": "load_wsib",
+      "kind": "table",
+      "key": "wsib_registry.id",
       "value": "any",
       "source": "src_sql"
     },
@@ -4311,6 +4399,22 @@
       "consumer": "src/lib/leads/lead-inspect-query.ts",
       "producer": "link_massing",
       "kind": "table",
+      "key": "parcel_buildings.confidence",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "link_massing",
+      "kind": "table",
+      "key": "parcel_buildings.is_primary",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "link_massing",
+      "kind": "table",
       "key": "parcel_buildings.parcel_id",
       "value": "any",
       "source": "src_sql"
@@ -4320,6 +4424,14 @@
       "producer": "link_neighbourhoods",
       "kind": "table",
       "key": "permits.neighbourhood_id",
+      "value": "any",
+      "source": "src_sql"
+    },
+    {
+      "consumer": "src/lib/leads/lead-inspect-query.ts",
+      "producer": "link_parcels",
+      "kind": "table",
+      "key": "permit_parcels.confidence",
       "value": "any",
       "source": "src_sql"
     },

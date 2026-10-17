@@ -12,7 +12,7 @@
   "contract_version": 1,
   "read_this_way": [
     {
-      "note": "The predicate is BUILDING-CENTROID-IN-PARCEL, and the direction is the whole point. A detached house covers roughly a third of its lot, so the LOT's centroid usually lands in the yard rather than inside the house — the pre-flip predicate (parcel centroid inside building polygon) therefore missed most single-family parcels. The building's centre of mass, by contrast, is always inside the building and almost always on the lot that owns it. Reading a low link rate on this step means the join broke, not that the city is sparsely built.",
+      "what": "The predicate is BUILDING-CENTROID-IN-PARCEL, and the direction is the whole point. A detached house covers roughly a third of its lot, so the LOT's centroid usually lands in the yard rather than inside the house — the pre-flip predicate (parcel centroid inside building polygon) therefore missed most single-family parcels. The building's centre of mass, by contrast, is always inside the building and almost always on the lot that owns it. Reading a low link rate on this step means the join broke, not that the city is sparsely built.",
       "measured": {
         "value": "parcel coverage 58% before the flip, 99.71% after",
         "date": "2026-08-27",
@@ -20,7 +20,7 @@
       }
     },
     {
-      "note": "The link rate reported in the audit table is CUMULATIVE, not run-scoped, and that is deliberate rather than lazy. In incremental mode the eligible set is exactly the parcels that have never linked — a pool that is permanently unmatchable, because they were already offered every footprint within the fallback radius and matched none — so a run-scoped rate reads 0% on a perfectly healthy run and would fire the floor every time. The row answers 'what fraction of the city is linked', which is the question a consumer actually has.",
+      "what": "The link rate reported in the audit table is CUMULATIVE, not run-scoped, and that is deliberate rather than lazy. In incremental mode the eligible set is exactly the parcels that have never linked — a pool that is permanently unmatchable, because they were already offered every footprint within the fallback radius and matched none — so a run-scoped rate reads 0% on a perfectly healthy run and would fire the floor every time. The row answers 'what fraction of the city is linked', which is the question a consumer actually has.",
       "measured": {
         "value": "run-scoped rate 0% vs cumulative 99.71% on the same run",
         "date": "2026-08-27",
@@ -28,7 +28,7 @@
       }
     },
     {
-      "note": "The nearest fallback's bbox prefilter converts metres to degrees by dividing by 78000 — metres per degree of longitude at Toronto's latitude. It OVER-covers east-west on purpose: the prefilter must be a superset of the true cut, and the exact cut is the geography ST_DWithin that follows. Changing 78000 changes what '50 metres' costs to find, never how much of it is accepted. Dropping the prefilter entirely is the failure tasks/lessons.md records: the geography distance then runs a nested loop over every footprint in the table, per batch.",
+      "what": "The nearest fallback's bbox prefilter converts metres to degrees by dividing by 78000 — metres per degree of longitude at Toronto's latitude. It OVER-covers east-west on purpose: the prefilter must be a superset of the true cut, and the exact cut is the geography ST_DWithin that follows. Changing 78000 changes what '50 metres' costs to find, never how much of it is accepted. Dropping the prefilter entirely is the failure tasks/lessons.md records: the geography distance then runs a nested loop over every footprint in the table, per batch.",
       "measured": {
         "value": "50 m -> 0.000641 degrees of prefilter span",
         "date": "2026-08-27",
@@ -38,7 +38,7 @@
   ],
   "known_normal": [
     {
-      "note": "Every incremental run processes the SAME 1,395 parcels, matches none of them, writes nothing, and reports PASS. That is the steady state, not a stall: the incremental filter selects parcels with no link at all, so it re-walks the permanently-unmatchable tail forever. The founding comment on the downstream massing_zero_link_ghost guard claims a 'measured day-one value 0' for this tail; no cloud observation supports it and both recorded cloud rows read 1395, confirmed locally here. review_followups.md files the correction; do not treat 1,395 as a regression.",
+      "what": "Every incremental run processes the SAME 1,395 parcels, matches none of them, writes nothing, and reports PASS. That is the steady state, not a stall: the incremental filter selects parcels with no link at all, so it re-walks the permanently-unmatchable tail forever. The founding comment on the downstream massing_zero_link_ghost guard claims a 'measured day-one value 0' for this tail; no cloud observation supports it and both recorded cloud rows read 1395, confirmed locally here. review_followups.md files the correction; do not treat 1,395 as a regression.",
       "measured": {
         "value": 1395,
         "date": "2026-08-27",
@@ -46,7 +46,7 @@
       }
     },
     {
-      "note": "A run that writes ZERO rows while reporting hundreds of matches is correct, not broken. The upsert is guarded on the four value columns, so re-offering an identical link is a genuine no-op — that is what makes the step re-runnable. The row to read for 'did anything change' is parcel_buildings_written; the row to read for 'did the join work' is match_centroid_in_parcel.",
+      "what": "A run that writes ZERO rows while reporting hundreds of matches is correct, not broken. The upsert is guarded on the four value columns, so re-offering an identical link is a genuine no-op — that is what makes the step re-runnable. The row to read for 'did anything change' is parcel_buildings_written; the row to read for 'did the join work' is match_centroid_in_parcel.",
       "measured": {
         "value": "records_updated 0 on every run since 2026-07-08",
         "date": "2026-08-27",
@@ -56,7 +56,7 @@
   ],
   "known_bad": [
     {
-      "note": "21.3% of linked parcels are linked ONLY by the nearest fallback at the lower confidence, and 49.06% of THOSE carry a footprint larger than their own lot — a physical impossibility that marks a mislink. The links are produced here, shipped, and NULLed one chain-step later by enrich-parcels' footprint_exceeds_lot guard. Since peel 8b the population is COUNTED at the link (`nearest_footprint_gt_lot_count`, by match_type) instead of only downstream; it is INFO and not gated, because this is a data-quality class rather than staleness — a forced full relink moves none of it, and a WARN would redden every production run for a condition the conversion did not create. ⚠️ READ THE TREND, NOT THE LEVEL: the LM-D13 tiebreak itself moved this from 48,646 to 50,790 (+2,144) because resolving a distance tie in favour of the LARGER footprint puts more primaries above their lot line. That is a declared consequence of the rule, not a regression, and it is the reason the counter exists.",
+      "what": "21.3% of linked parcels are linked ONLY by the nearest fallback at the lower confidence, and 49.06% of THOSE carry a footprint larger than their own lot — a physical impossibility that marks a mislink. The links are produced here, shipped, and NULLed one chain-step later by enrich-parcels' footprint_exceeds_lot guard. Since peel 8b the population is COUNTED at the link (`nearest_footprint_gt_lot_count`, by match_type) instead of only downstream; it is INFO and not gated, because this is a data-quality class rather than staleness — a forced full relink moves none of it, and a WARN would redden every production run for a condition the conversion did not create. ⚠️ READ THE TREND, NOT THE LEVEL: the LM-D13 tiebreak itself moved this from 48,646 to 50,790 (+2,144) because resolving a distance tie in favour of the LARGER footprint puts more primaries above their lot line. That is a declared consequence of the rule, not a regression, and it is the reason the counter exists.",
       "measured": {
         "value": "103,530 nearest-only parcels; 50,790 of them footprint > lot (48,646 before the tiebreak); 13,347 of 381,605 centroid_in_parcel primaries",
         "date": "2026-08-27",
@@ -64,7 +64,7 @@
       }
     },
     {
-      "note": "LM-D13 — the nearest fallback's SELECTION RULE, and why it is a rule rather than an accident. `DISTINCT ON (p.id)` keeps the FIRST row of the sort, so the ORDER BY *is* the answer to 'which building does this parcel get'. With distance alone an equidistant pair has no ordering between its members and the winner was whatever the plan emitted first: 18,252 of the 103,530 nearest links could flip between two otherwise identical full relinks, 17,566 of them tied at distance 0 (a footprint overlapping the lot with its centroid outside it). Since peel 8b the order is `p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC` — distance FIRST, because a tiebreak that re-ranks is not a tiebreak; then the fence-5bb31faf order, so the fallback answers the question the same way the centroid pass has always answered it: the largest footprint wins, the lowest building_id settles the rest. The area term is what makes the choice MEAN something (on a semi or a shared driveway the larger overlapping structure is the one the cost model is asking about); bf.id is the total-order backstop.",
+      "what": "LM-D13 — the nearest fallback's SELECTION RULE, and why it is a rule rather than an accident. `DISTINCT ON (p.id)` keeps the FIRST row of the sort, so the ORDER BY *is* the answer to 'which building does this parcel get'. With distance alone an equidistant pair has no ordering between its members and the winner was whatever the plan emitted first: 18,252 of the 103,530 nearest links could flip between two otherwise identical full relinks, 17,566 of them tied at distance 0 (a footprint overlapping the lot with its centroid outside it). Since peel 8b the order is `p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC` — distance FIRST, because a tiebreak that re-ranks is not a tiebreak; then the fence-5bb31faf order, so the fallback answers the question the same way the centroid pass has always answered it: the largest footprint wins, the lowest building_id settles the rest. The area term is what makes the choice MEAN something (on a semi or a shared driveway the larger overlapping structure is the one the cost model is asking about); bf.id is the total-order backstop.",
       "measured": {
         "value": "two forced FULL relinks now hash-EQUAL; before the tiebreak they read a0023203 vs 0d2ea577 with all 8 invariants identical",
         "date": "2026-08-27",
@@ -105,7 +105,7 @@
   ],
   "decisions": [
     {
-      "note": "A-8 OVERRIDE — the JS fallback path is RETIRED, not pinned. It was a complete second implementation of this step's contract (in-memory grid, haversine, Mercator auto-detect, turf point-in-polygon, batch size 500, its own confidence literals, and NO is_primary clear before the upsert) that has never executed: every recorded run reports the PostGIS branch. Retiring it removes the §1.6 silent swallow it carried — an invalid geometry in the point-in-polygon test was caught, logged and the parcel silently reclassified as no-match with no counter — and replaces the branch with a fail-loud guards.requires precondition on the extension."
+      "what": "A-8 OVERRIDE — the JS fallback path is RETIRED, not pinned. It was a complete second implementation of this step's contract (in-memory grid, haversine, Mercator auto-detect, turf point-in-polygon, batch size 500, its own confidence literals, and NO is_primary clear before the upsert) that has never executed: every recorded run reports the PostGIS branch. Retiring it removes the §1.6 silent swallow it carried — an invalid geometry in the point-in-polygon test was caught, logged and the parcel silently reclassified as no-match with no counter — and replaces the branch with a fail-loud guards.requires precondition on the extension."
     }
   ],
   "counts": {
@@ -157,7 +157,7 @@
     },
     {
       "const": "the nearest fallback resolves a distance tie by a declared rule: ORDER BY p.id, ST_Distance(...) ASC, bf.footprint_area_sqm DESC, bf.id ASC",
-      "value": "distance first (the tiebreak breaks ties, it does not re-rank), then the fence-5bb31faf order: largest footprint wins, lowest building_id settles the remainder. Locked both directions as text in the lock_test (F5: every reversion shape — a dropped term, a flipped direction, a term hoisted above the distance, no ORDER BY at all) and behaviourally in src/tests/steps/link_massing/nearest-determinism.test.ts, which runs the production statement 40 times over a randomly ordered scan of a 0-distance tie and asserts one winner with the rule and BOTH winners without it",
+      "value": "distance first (the tiebreak breaks ties, it does not re-rank), then the fence-5bb31faf order: largest footprint wins, lowest building_id settles the remainder. Locked both directions as text in the lock_test (F5: every reversion shape — a dropped term, a flipped direction, a term hoisted above the distance, no ORDER BY at all) and behaviourally in src/tests/steps/link_massing/nearest-determinism.db.test.ts, which runs the production statement 40 times over a randomly ordered scan of a 0-distance tie and asserts one winner with the rule and BOTH winners without it",
       "incident": "LM-D13, discovered by measurement rather than by a fix( commit — the Severity: footer census on this file is 0 and the construct was never wrong enough to be reported. `9ff540ec` is the commit that PINNED it verbatim and declared it (the conversion diff had to move zero rows); peel 8b is where the rule landed. Before it the ORDER BY carried distance alone, so DISTINCT ON kept whichever equidistant row the plan emitted first: 18,252 of 103,530 nearest links could flip between two identical full relinks (17,566 tied at distance 0), and two forced relinks hashed a0023203 vs 0d2ea577 with every invariant equal. Dropping either term, flipping its direction, or hoisting it above ST_Distance all reintroduce it.",
       "commit": "9ff540ec",
       "lock_test": "src/tests/steps/link_massing/violations.test.ts"
@@ -165,7 +165,7 @@
   ],
   "review_notes": [
     {
-      "note": "Read the two write targets as ONE ordered pair, never independently: the primary clear is only correct because the upsert follows it in the same transaction, and the upsert is only safe because the clear preceded it. A review that asks 'why is this UPDATE unguarded' in isolation gets the wrong answer.",
+      "what": "Read the two write targets as ONE ordered pair, never independently: the primary clear is only correct because the upsert follows it in the same transaction, and the upsert is only safe because the clear preceded it. A review that asks 'why is this UPDATE unguarded' in isolation gets the wrong answer.",
       "measured": {
         "value": "2 declared write targets, executed in declaration order",
         "date": "2026-08-27",

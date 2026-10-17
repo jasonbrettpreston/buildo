@@ -100,7 +100,9 @@ describe('load_heritage — audit rows (DEC-I: load-side only; unknown_* WARN)',
     expect(byId('heritage_zero_features_first_run')).toMatchObject({ severity: 'FAIL', when: 'pre_write' });
   });
   it('a skip re-pins spec_version after the prior spread (DEC-K / load-ravines BUG-2)', () => {
-    expect(computeSrc()).toMatch(/\.\.\.\(lane\.prior \|\| \{\}\), spec_version: SPEC_VERSION/);
+    // R-CY (iii): the descriptor travels in on ctx, so the version is read from ctx.descriptor, still re-pinned after the spread.
+    expect(computeSrc()).toMatch(/\.\.\.\(lane\.prior \|\| \{\}\), spec_version: specVersion\(ctx\)/);
+    expect(computeSrc()).toMatch(/const specVersion = \(ctx\) => ctx\.descriptor\.identity\.spec_version;/);
   });
   it('count-drift + mass-delete FAIL is threshold-derived (config-bound; the override never suppresses)', () => {
     expect(byId('heritage_count_drift_pct')).toMatchObject({ severity: 'FAIL', limit_from_config: 'load_heritage_count_drift_fail_pct' });

@@ -2,17 +2,31 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "7c6541de1c647d302683cb0fec85c35c77d0616dc6c72060e96b81253a45b926",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "f954164cd3eeea8ae57cbfb40f6ef7227de581ad78f54ef02539c5ce0dacac7d",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 23,
     "distinct": 22,
     "utility": 5,
-    "tracer_self_ms": 0.785,
-    "wall_ms": 257
+    "tracer_self_ms": 0.881,
+    "wall_ms": 239
   },
   "statements": [
+    {
+      "fingerprint": "026afe43b7535ab6",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
     {
       "fingerprint": "03ed392c5cea1168",
       "kind": "read",
@@ -20,6 +34,20 @@
       "rowCount": 1,
       "reads": {
         "permit_inspections": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4239f37acb949230",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permit_inspections": [
+          "inspection_date"
+        ]
       },
       "writes": {},
       "excluded": [],
@@ -44,7 +72,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -117,7 +145,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 26,
+      "rowCount": 33,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -148,20 +176,6 @@
       "reads": {
         "permit_inspections": [
           "status"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "99e3a163b821a7ad",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "permit_inspections": [
-          "inspection_date"
         ]
       },
       "writes": {},
@@ -230,20 +244,6 @@
         ],
         "permits": [
           "permit_num"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "b940d51ca7d64005",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "permit_inspections": [
-          "inspection_date"
         ]
       },
       "writes": {},

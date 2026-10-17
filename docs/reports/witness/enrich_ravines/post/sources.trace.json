@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
-  "source_fingerprint": "8d73217e20cc244f03458364783e719cf52e2cc3c819f69c0eebd164fa0b5f2b",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "24050666ad107e7991f9c12c3b70d3f6de939b1fce1194708dd6e16dc2745cd2",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 44,
     "distinct": 32,
     "utility": 13,
-    "tracer_self_ms": 1.521,
-    "wall_ms": 1974
+    "tracer_self_ms": 1.374,
+    "wall_ms": 1808
   },
   "statements": [
     {
@@ -135,7 +135,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -256,6 +256,16 @@
       "error": null
     },
     {
+      "fingerprint": "7cb354fa8e2d5aed",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 2,
@@ -282,16 +292,6 @@
       "kind": "utility",
       "count": 1,
       "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "9b97ae14cd1eaa94",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -460,7 +460,7 @@
   ],
   "transactions": [
     {
-      "client": "80714:3",
+      "client": "31230:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

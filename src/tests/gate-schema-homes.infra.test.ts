@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6.1 (#44 witness — registry-truth plan fold 9 C7-1 checks[] SQL reads home, C7-2 per-mode write_inventory; REPORT-ONLY until FLEET-2)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6.1 (#44 witness — registry-truth plan fold 9 C7-1 checks[] SQL reads home, C7-2 per-mode write_inventory; report-only adoption print — enforced by #44 (a)/(c), Spec 124 R-DB)
 //
 // WF2 gate — `scripts/analysis/gates/schema-homes.mjs`.
 //
@@ -10,7 +10,8 @@
 // `by_mode: { full?: {statements, why?}, incremental?: {statements, why?} }`
 // beside the mode-agnostic `statements`.
 //
-// POSTURE: REPORT-ONLY until the FLEET-2 landing commit populates the homes —
+// POSTURE (Spec 124 R-DB): a permanent REPORT-ONLY adoption print; R-BJ/R-BK are enforced by
+// #44 (a)/(c) in `witness.mjs`, not here —
 // the gate is `pass: true` BY CONSTRUCTION (T1–T6 lock that), reporting
 // adoption and naming each traced check read that sits outside
 // `inputs.reads ∪ checks[].reads` as an `R:check-reads:<slug>:<table>.<column>`
@@ -174,7 +175,7 @@ describe('schema-homes — fold 9 C7-1 checks[].reads and C7-2 write_inventory.b
     const out = schemaHomes.homesReport(descriptors);
     expect(out.reportOnly).toBe(true);
     expect(out.pass, out.detail).toBe(true);
-    expect(out.detail).toContain('REPORT-ONLY until FLEET-2');
+    expect(out.detail).toContain('report-only (adoption); enforced by #44 (a)/(c)');
   });
 
   // -------------------------------------------------------------------------

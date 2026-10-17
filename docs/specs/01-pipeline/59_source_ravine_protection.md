@@ -427,7 +427,7 @@ Write the HEAD response's `Last-Modified`, `ETag`, and the downloaded zip's cont
 
 SPEC LINK header in every test file.
 
-### 4.2 Integration tests (filesystem + Postgres fixture, per Spec 48 §3.7) — `src/tests/load-ravines.infra.test.ts`
+### 4.2 Integration tests (filesystem + Postgres fixture, per Spec 48 §3.7) — `src/tests/db/load-ravines.db.test.ts`
 
 | Test | Setup | Assertion |
 |---|---|---|
@@ -574,7 +574,7 @@ See §1. Datasources-pipeline placement (annual-cadence-or-slower; sibling to Sp
 | `scripts/quality/assert-schema.js` edit | Validate CKAN URL reachability + `OBJECTID` attribute presence |
 | `scripts/quality/assert-data-bounds.js` edit | `ravines` row count `>= 500` lower bound (catastrophic load failure detection) |
 | `scripts/manifest.json` edit | Add `source-ravines` with read_columns=[] (CKAN external), write_columns=[`ravines.*`] |
-| Tests | `src/tests/load-ravines.logic.test.ts` + `src/tests/load-ravines.infra.test.ts` + `src/tests/db/migration-N-ravines.db.test.ts` |
+| Tests | `src/tests/load-ravines.logic.test.ts` + `src/tests/db/load-ravines.db.test.ts` + `src/tests/db/migration-N-ravines.db.test.ts` |
 | Runbook | `docs/runbook/source_ravines_first_deploy_spike.md` per Spec 48 §3.7 |
 
 ### 8d — Future WF: `enrich-ravines.js` sibling script + parcels migration + chain edit

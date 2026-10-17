@@ -45,12 +45,10 @@
 
 const { safeParseIntOrNull } = require('../safe-math');
 
-/** Julian year — leap years included, which is why it is not 365. */
-const DAYS_PER_JULIAN_YEAR = 365.25;
-/** Milliseconds per day. */
-const MS_PER_DAY = 86400000;
-/** Display precision of the ratio values in the audit rows; never compared against anything. */
-const ROUND_SCALE = 1000;
+// Duration definitions come from the one shared home (gate E closed answer #3; the load_centreline
+// precedent). The display precision of ratio rows is the operator-editable load_ravines_round_scale
+// (default 1000 = 3 dp), never compared against anything (V3 ledger E, 2026-10-17).
+const { MS_PER_DAY, DAYS_PER_JULIAN_YEAR } = require('../units');
 /**
  * LR-D1 — how many dropped source ids ONE audit row carries in its detail.
  *
@@ -61,11 +59,11 @@ const ROUND_SCALE = 1000;
  * `dropped_count` is always exact, `dropped_source_ids` may be a prefix, and
  * `dropped_ids_truncated` says which. A reader is never misled about how much was lost.
  *
- * Structural, not a P4 tunable (plan S5): it is a display bound, compared against nothing.
+ * A display bound, compared against nothing: the operator-editable load_ravines_max_detail_keys
+ * (default 50, the former MAX_DETAIL_KEYS literal; V3 ledger E, 2026-10-17, load_centreline precedent).
  * The bound that decides pass/fail is `load_ravines_invalid_geometry_fail_pct`, and it is
  * computed from `dropped_count`, never from the truncated list.
  */
-const MAX_DETAIL_KEYS = 50;
 
 // ===========================================================================
 // Pure helpers — ported VERBATIM from the pre-conversion step's named exports.
@@ -236,12 +234,12 @@ function ravine_feature_count(ctx) {
  */
 function ravine_count_drift_pct(ctx) {
   const pct = computeCountDeltaPct(ctx.acquired.feature_count, priorFeatureCount(ctx));
-  ctx.report('ravine_count_drift_pct', { value: pct, detail: round3(pct) });
+  ctx.report('ravine_count_drift_pct', { value: pct, detail: round3(pct, ctx.config.load_ravines_round_scale) });
 }
 
 function ravine_geometry_repaired_pct(ctx) {
   const pct = ratioOfFeatures(ctx, ctx.acquired.invalid_geometry_repaired);
-  ctx.report('ravine_geometry_repaired_pct', { violations: 0, detail: round3(pct) });
+  ctx.report('ravine_geometry_repaired_pct', { violations: 0, detail: round3(pct, ctx.config.load_ravines_round_scale) });
 }
 
 function ravine_geometry_collection_extracted(ctx) {
@@ -264,13 +262,16 @@ function ravine_geometry_skipped_pct(ctx) {
   // beside them. Pre-conversion they were pushed as one WARN row EACH, so the audit
   // table's row count was bounded only by the feature count.
   const dropped = ctx.acquired.skipped_keys || [];
+  const scale = ctx.config.load_ravines_round_scale;
+  // R-DC: the display cap is applied by slice, and truncation is read from the slice (load_centreline form), never by comparing ctx.config.
+  const shown = dropped.slice(0, ctx.config.load_ravines_max_detail_keys);
   ctx.report('ravine_geometry_skipped_pct', {
     value: pct,
-    detail: dropped.length === 0 ? round3(pct) : {
-      pct: round3(pct),
+    detail: dropped.length === 0 ? round3(pct, scale) : {
+      pct: round3(pct, scale),
       dropped_count: dropped.length,
-      dropped_source_ids: dropped.slice(0, MAX_DETAIL_KEYS),
-      dropped_ids_truncated: dropped.length > MAX_DETAIL_KEYS,
+      dropped_source_ids: shown,
+      dropped_ids_truncated: shown.length < dropped.length,
     },
   });
 }
@@ -290,17 +291,17 @@ function ravine_write_privilege(ctx) {
 function ravine_rows_changed_ratio(ctx) {
   const w = ctx.written || {};
   const ratio = w.rows_scanned > 0 ? w.rows_changed / w.rows_scanned : 0;
-  ctx.report('ravine_rows_changed_ratio', { value: ratio, detail: round3(ratio) });
+  ctx.report('ravine_rows_changed_ratio', { value: ratio, detail: round3(ratio, ctx.config.load_ravines_round_scale) });
 }
 
 function ravine_geometry_update_pct(ctx) {
   const pct = computeGeometryUpdatePct((ctx.written || {}).updated, priorFeatureCount(ctx));
-  ctx.report('ravine_geometry_update_pct', { value: pct, detail: round3(pct) });
+  ctx.report('ravine_geometry_update_pct', { value: pct, detail: round3(pct, ctx.config.load_ravines_round_scale) });
 }
 
 function ravine_mass_delete_pct(ctx) {
   const pct = computeMassDeletePct((ctx.written || {}).deleted, priorFeatureCount(ctx));
-  ctx.report('ravine_mass_delete_pct', { value: pct, detail: round3(pct) });
+  ctx.report('ravine_mass_delete_pct', { value: pct, detail: round3(pct, ctx.config.load_ravines_round_scale) });
 }
 
 function ravine_delete_skipped_empty_guard(ctx) {
@@ -322,8 +323,9 @@ function ratioOfFeatures(ctx, count) {
   return total > 0 ? count / total : 0;
 }
 
-function round3(n) {
-  return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
+/** Display precision: round to `scale` (load_ravines_round_scale) decimals' worth of places, then back. */
+function round3(n, scale) {
+  return Math.round(n * scale) / scale;
 }
 
 /**
@@ -355,13 +357,14 @@ function buildLoadMeta(ctx) {
     polygons_updated: w.updated,
     polygons_deleted: w.deleted,
     delete_skipped_empty_guard: w.delete_skipped_empty_guard,
-    mass_delete_pct: round3(massDeletePct),
+    mass_delete_pct: round3(massDeletePct, ctx.config.load_ravines_round_scale),
     invalid_geometry_repaired: a.invalid_geometry_repaired,
     invalid_geometry_skipped: a.invalid_geometry_skipped,
     geometry_collection_extracted: a.geometry_collection_extracted,
-    drift_check_passed: countDeltaPct <= ctx.config.load_ravines_count_drift_fail_pct,
-    mass_delete_check_passed: massDeletePct <= ctx.config.load_ravines_mass_delete_fail_pct,
-    geometry_update_pct: round3(geometryUpdatePct),
+    // Spec 124 R-CY (McDonald's Airtight V3) — the declared check's own bound decides, via the runner.
+    drift_check_passed: ctx.withinLimit('ravine_count_drift_pct', countDeltaPct),
+    mass_delete_check_passed: ctx.withinLimit('ravine_mass_delete_pct', massDeletePct),
+    geometry_update_pct: round3(geometryUpdatePct, ctx.config.load_ravines_round_scale),
     skipped_reason: null,
   };
 }
@@ -440,5 +443,3 @@ module.exports.coerceSourceId = coerceSourceId;
 // The library's generic acquisition seam asks the step how to coerce ITS key.
 module.exports.coerceKey = coerceSourceId;
 module.exports.buildLoadMeta = buildLoadMeta;
-// LR-D1's display bound, exported so its lock reads the real number rather than 50.
-module.exports.MAX_DETAIL_KEYS = MAX_DETAIL_KEYS;

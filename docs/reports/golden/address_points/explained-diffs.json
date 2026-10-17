@@ -1,0 +1,151 @@
+{
+  "contract_version": 1,
+  "step": "address_points",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/address_points/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "meta[].external",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → [\"ckan:address-points-4326\"])."
+    },
+    {
+      "key": "meta[].reads.Toronto Open Data CSV",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources/standalone: [\"ADDRESS_POINT_ID\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"… → absent)."
+    },
+    {
+      "key": "meta[].reads.address_points",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → [\"address_point_id\",\"retired_at\"])."
+    },
+    {
+      "key": "meta[].writes.address_points[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources/standalone: \"geom\" → \"street_type_normalized\"; absent → \"geom\"; +1 more)."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [address_points] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources 32→3 lines; standalone 14→3 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.acquired",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDR…)."
+    },
+    {
+      "key": "summary.records_meta.address_points_load",
+      "why": "declared emit (descriptor emits[] key \"address_points_load\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → {\"errors\":0,\"records_inserted\":0,\"records_skipped\":0,\"rec…)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (sources/standalone: \"Address Points Ingestion\" → \"Toronto Address Points\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources/standalone: 2 → 3)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → {\"metric\":\"records_retired\",\"status\":\"INFO\",\"threshold\":n…; absent → {\"metric\":\"records_unretired\",\"status\":\"INFO\",\"threshold\"…)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added csv_header_drift, null_street_type_pct, null_address_number_pct, skip_rate_pct, rows_read_floor, geom_parse_failures, shaped_skipped, empty_source_guard, schema_drift:ckan:address-points-4326, records_retired, records_unretired; dropped rows_read, records_inserted, records_updated, records_unchanged, records_skipped, skip_rate, records_errors, address_points_csv_schema_drift, address_points_null_address_number_pct). Measured sources/standalone: \"rows_read\" → \"csv_header_drift\"; \"records_inserted\" → \"null_street_type_pct\"; +7 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added csv_header_drift, null_street_type_pct, null_address_number_pct, skip_rate_pct, rows_read_floor, geom_parse_failures, shaped_skipped, empty_source_guard, schema_drift:ckan:address-points-4326, records_retired, records_unretired; dropped rows_read, records_inserted, records_updated, records_unchanged, records_skipped, skip_rate, records_errors, address_points_csv_schema_drift, address_points_null_address_number_pct). Measured sources/standalone: \"INFO\" → \"PASS\"; \"PASS\" → \"INFO\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: \">= 500000\" → \"viol == 0\"; null → \"pct <= 0.06\"; +7 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added csv_header_drift, null_street_type_pct, null_address_number_pct, skip_rate_pct, rows_read_floor, geom_parse_failures, shaped_skipped, empty_source_guard, schema_drift:ckan:address-points-4326, records_retired, records_unretired; dropped rows_read, records_inserted, records_updated, records_unchanged, records_skipped, skip_rate, records_errors, address_points_csv_schema_drift, address_points_null_address_number_pct). Measured sources/standalone: 525436 → null; 321 → {\"attempted\":525372,\"null_rows\":23010}; +9 more."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"all\")."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"address_points_download_timeout_ms\":60000,\"address_poin…)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped errors is an array of FAIL-row strings (RUNNER_META_KEYS, scripts/lib/step/index.js:7088-7089), [] when none; the legacy emitted an integer error count (0)."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"gated_skip\":false,\"reason\":\"loaded\"})."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.records_inserted",
+      "why": "report L104/L119: a legacy records_meta counter (records_inserted); the converted step reports the declared counters (records_new/records_updated) instead, so the key is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.records_skipped",
+      "why": "report L107/L119: a legacy records_meta counter; the converted step reports the declared counters instead, so the key is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.records_unchanged",
+      "why": "report L106/L119: a legacy records_meta counter; the converted step reports the declared counters instead, so the key is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.records_updated",
+      "why": "report L105/L119: a legacy nested records_meta counter; the converted step reports the top-level declared counter summary.records_updated instead."
+    },
+    {
+      "key": "summary.records_meta.rows_read",
+      "why": "report L119/L134: a legacy records_meta field; the converted runner reports the acquired header under records_meta.acquired and the declared counters instead."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"loaded\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "sources: the POST is the forced-cohort bracket capture (ingestor-forced-cohort.js: 200 rows id 1..200, column perturbed then healed and restored; V3 fleet night 2026-10-16, QUEUE \"#38 recovery\"), while the legacy PRE was a full unforced load (key address_point_id, latitude add_number:1, 200 rows); no new rows are inserted in the bracket."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "sources: the POST is the forced-cohort bracket capture (ingestor-forced-cohort.js: 200 rows id 1..200, column perturbed then healed and restored; V3 fleet night 2026-10-16, QUEUE \"#38 recovery\"), while the legacy PRE was a full unforced load (key address_point_id, 200 rows), so the run writes exactly the 200 perturbed rows."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources: the POST is the forced-cohort bracket capture (ingestor-forced-cohort.js: 200 rows id 1..200, column perturbed then healed and restored; V3 fleet night 2026-10-16, QUEUE \"#38 recovery\"), while the legacy PRE was a full unforced load (key address_point_id, 200 rows), so 200 rows are updated back to source."
+    },
+    {
+      "key": "table_state[]",
+      "why": "the POST capture's table list is the descriptor's declared write tables (capture-step-golden.js table_specs), the legacy PRE captured []; POST [address_points] (sources/standalone)."
+    }
+  ]
+}

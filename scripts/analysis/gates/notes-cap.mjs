@@ -37,6 +37,14 @@ export const NOTES_PROSE_BLOCKS = Object.freeze([
 export const NOTES_CAP = 12;
 
 /**
+ * Spec 124 R-DE (vii) (McDonald's Airtight V3): the notes top level is the prose blocks plus these keys,
+ * `constants` entries count toward the cap (it is prose about values), and a block entry carries `what`
+ * (the 13-of-22 majority), never `note`.
+ */
+export const NOTES_TOP_LEVEL_EXTRA = Object.freeze(['$comment', 'contract_version', 'counts', 'fences', 'constants']);
+export const NOTES_COUNTED_EXTRA = Object.freeze(['constants']);
+
+/**
  * Prose entries in ONE parsed notes object: the sum of `.length` of each
  * `NOTES_PROSE_BLOCKS` key whose value is an array. Every other key — and a
  * non-object input — contributes 0.
@@ -46,11 +54,25 @@ export const NOTES_CAP = 12;
 export function countProseEntries(notes) {
   if (!notes || typeof notes !== 'object' || Array.isArray(notes)) return 0;
   let count = 0;
-  for (const block of NOTES_PROSE_BLOCKS) {
+  for (const block of [...NOTES_PROSE_BLOCKS, ...NOTES_COUNTED_EXTRA]) {
     const value = notes[block];
     if (Array.isArray(value)) count += value.length;
   }
   return count;
+}
+
+/** R-DE (vii) shape findings for ONE parsed notes object (PURE): unknown top-level keys, `note` entries. */
+export function notesShapeViolations(notes) {
+  if (!notes || typeof notes !== 'object' || Array.isArray(notes)) return [];
+  const allowed = new Set([...NOTES_PROSE_BLOCKS, ...NOTES_TOP_LEVEL_EXTRA]);
+  const out = [];
+  for (const key of Object.keys(notes)) if (!allowed.has(key)) out.push(`top-level key "${key}" is not a prose block or one of ${NOTES_TOP_LEVEL_EXTRA.join('/')}`);
+  for (const block of [...NOTES_PROSE_BLOCKS, ...NOTES_COUNTED_EXTRA]) {
+    const list = Array.isArray(notes[block]) ? notes[block] : [];
+    const n = list.filter((e) => e && typeof e === 'object' && Object.prototype.hasOwnProperty.call(e, 'note')).length;
+    if (n > 0) out.push(`${block} has ${n} entr${n === 1 ? 'y' : 'ies'} keyed "note" — the entry key is "what"`);
+  }
+  return out;
 }
 
 /**
@@ -73,6 +95,7 @@ export function checkNotesCap(rows) {
     if (n > NOTES_CAP) {
       red.push({ slug, notesRel, detail: `${slug}: ${notesRel} has ${n} prose entries > ${NOTES_CAP} — promote to a check or delete (no overflow file)` });
     }
+    for (const v of notesShapeViolations(row.notes)) red.push({ slug, notesRel, detail: `${slug}: ${notesRel} ${v} (Spec 124 R-DE (vii))` });
   }
   const blockedSlugs = [...new Set(red.map((r) => r.slug))].sort();
   const detail = red.length
@@ -143,9 +166,13 @@ export function selfTest() {
     throw new Error(`self-test FAILED (NOTES-CAP): a null notes row is not RED (${JSON.stringify(missing)})`);
   }
   // Non-prose keys never count: 12 prose + 5 fences → GREEN (fences are exempt).
-  const exempt = { expected_shape: arr(6), suspicious_if: arr(6), fences: arr(5), constants: arr(3), $comment: arr(4) };
+  const exempt = { expected_shape: arr(6), suspicious_if: arr(3), fences: arr(5), constants: arr(3), $comment: arr(4) };
   if (countProseEntries(exempt) !== 12) {
-    throw new Error(`self-test FAILED (NOTES-CAP): non-prose keys counted (${countProseEntries(exempt)})`);
+    throw new Error(`self-test FAILED (NOTES-CAP): fences/$comment counted or constants not counted (${countProseEntries(exempt)})`);
+  }
+  if (notesShapeViolations({ review_notes: [{ note: 'x' }] }).length !== 1 || notesShapeViolations({ extra_block: [] }).length !== 1
+    || notesShapeViolations({ review_notes: [{ what: 'x' }], constants: [] }).length !== 0) {
+    throw new Error('self-test FAILED (NOTES-CAP): R-DE (vii) shape');
   }
   if (!checkNotesCap([{ slug: 'fixture_step', notesRel: 'fixture.notes.json', notes: exempt }]).pass) {
     throw new Error('self-test FAILED (NOTES-CAP): 12 prose + 5 fences not GREEN');

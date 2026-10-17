@@ -101,9 +101,11 @@
         "coa_applications": [
           "address",
           "application_number",
+          "last_seen_at",
           "lifecycle_phase"
         ],
         "permits": [
+          "last_seen_at",
           "lifecycle_phase",
           "permit_num",
           "revision_num",
@@ -161,6 +163,7 @@
       "reads": {
         "device_tokens": [
           "push_token",
+          "updated_at",
           "user_id"
         ]
       },
@@ -777,6 +780,7 @@
           "permit_num",
           "revision_num",
           "saved",
+          "saved_at",
           "user_id"
         ],
         "permits": [
@@ -812,6 +816,7 @@
       ],
       "reads": {
         "permits": [
+          "last_seen_at",
           "lifecycle_phase",
           "permit_num",
           "revision_num",
@@ -919,6 +924,7 @@
       "reads": {
         "trade_suppliers": [
           "active",
+          "display_order",
           "name",
           "trade_slug"
         ]
@@ -973,6 +979,7 @@
           "structure_type"
         ],
         "permit_inspections": [
+          "created_at",
           "inspection_date",
           "permit_num",
           "scraped_at",
@@ -1361,6 +1368,7 @@
         ],
         "wsib_registry": [
           "business_size",
+          "id",
           "is_gta",
           "last_enriched_at",
           "linked_entity_id",
@@ -1653,6 +1661,7 @@
       "reads": {
         "lead_trades": [
           "attachment_basis",
+          "classified_at",
           "confidence",
           "is_active",
           "lead_id",
@@ -1814,6 +1823,7 @@
           "website"
         ],
         "wsib_registry": [
+          "id",
           "legal_name",
           "linked_entity_id",
           "mailing_address",
@@ -2081,6 +2091,8 @@
         ],
         "parcel_buildings": [
           "building_id",
+          "confidence",
+          "is_primary",
           "parcel_id"
         ],
         "parcels": [
@@ -2090,6 +2102,7 @@
           "lot_size_sqm"
         ],
         "permit_parcels": [
+          "confidence",
           "parcel_id",
           "permit_num",
           "revision_num"
@@ -2233,7 +2246,8 @@
           "color",
           "id",
           "name",
-          "slug"
+          "slug",
+          "sort_order"
         ]
       },
       "writes": {}

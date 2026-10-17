@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-parcel-addresses.js",
   "chain": "none",
-  "source_fingerprint": "17b9897a17e09631a0e1c43cf6543c48638eacbcbf27b739864aad570964058e",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "fd18bac2db4c575faa87c492adb3478d40f4b02056d913641a90e85e6a131566",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 18,
     "distinct": 16,
     "utility": 5,
-    "tracer_self_ms": 0.879,
-    "wall_ms": 261
+    "tracer_self_ms": 0.946,
+    "wall_ms": 270
   },
   "statements": [
     {
@@ -57,13 +57,13 @@
       "params": [
         [
           "completed",
-          52,
+          64,
           null,
-          2836,
+          3063,
           null,
           null,
           null,
-          "{\"gate\":{\"reason\":\"no_upstream_changes\",\"gated_skip\":true,\"own_slugs\":[\"sources:link_parcel_addresses\",\"link_parcel_addresses\",\"link-parcel-addresses\"],\"upstream_slugs\":[\"sources:address_points\",\"address_points\",\"address-points\",\"sources:parcels\",\"parcels\"],\"own_last_completed_at\":\"2026-10-16T16:27:39.269Z\",\"upstream_non_completed\":0,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400,\"link_parcel_addresses_structure_link_rate_warn_pct\":85,\"link_parcel_addresses_fanout_warn_rd_rs\":15},\"terminal\":\"skip_gated_no_activity\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":9,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":null,\"reason\":\"no_upstream_changes\",\"gated_skip\":true},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"address_points\":525696},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":53,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"gate\":{\"reason\":\"no_upstream_changes\",\"gated_skip\":true,\"own_slugs\":[\"sources:link_parcel_addresses\",\"link_parcel_addresses\",\"link-parcel-addresses\"],\"upstream_slugs\":[\"sources:address_points\",\"address_points\",\"address-points\",\"sources:parcels\",\"parcels\"],\"own_last_completed_at\":\"2026-10-17T18:35:28.041Z\",\"upstream_non_completed\":0,\"upstream_completed_with_changes\":0,\"upstream_stale_running\":0},\"config\":{\"link_parcel_addresses_batch_size\":1000,\"link_parcel_addresses_no_address_warn_pct\":50,\"link_parcel_addresses_no_parcel_warn_pct\":5,\"link_parcel_addresses_fanout_warn_noncondo\":20,\"link_parcel_addresses_fanout_warn_condo\":400,\"link_parcel_addresses_structure_link_rate_warn_pct\":85,\"link_parcel_addresses_fanout_warn_rd_rs\":15},\"terminal\":\"skipped_no_activity\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":9,\"name\":\"Parcel ↔ Address Points Spatial Bridge\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":null,\"reason\":\"no_upstream_changes\",\"gated_skip\":true},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"parcels\":496536,\"address_points\":525699},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":64,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -71,7 +71,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [

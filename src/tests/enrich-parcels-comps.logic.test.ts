@@ -25,13 +25,16 @@ const LEGACY_COMP = { lotTol: 0.2, knnOverfetch: 50, topN: 10, overCaptureClamp:
 const LEGACY_WINDOW_YEARS = 5;
 
 describe('comps candidate-set SQL', () => {
-  const sql = ep.buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears: LEGACY_WINDOW_YEARS });
+  const sql = ep.buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYearsParamIndex: 2 });
   it('starts from the filtered permit set (recent new_build/addition), not a parcels scan', () => {
     expect(sql).toMatch(/FROM permits pr/);
     expect(sql).toContain("project_type IN ('new_build','addition')");
     // Fold G3 seam: bound $1::date, not a bare now()::date literal — the window LENGTH (5 years)
     // is still the legacy value, now expressed as `(5 * interval '1 year')`.
-    expect(sql).toMatch(/\$1::date - \(5 \* interval '1 year'\)/);
+    // V3 ledger E + panel round 2 (2026-10-17): make_interval(years => $2::int) — the window is a bound param
+    // (never SQL text); its seeded default stays the legacy 5 years.
+    expect(sql).toMatch(/\$1::date - make_interval\(years => \$2::int\)/);
+    expect(LEGACY_WINDOW_YEARS).toBe(5);
     // principal permit per parcel via DISTINCT ON, then JOIN parcels (small-set-driven)
     expect(sql).toMatch(/DISTINCT ON \(pr\.zoning_dominant_parcel_id\)/);
     expect(sql).toMatch(/JOIN parcels pa ON pa\.id = r\.pid/);

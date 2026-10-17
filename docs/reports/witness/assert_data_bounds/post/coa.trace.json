@@ -2,17 +2,31 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "coa",
-  "source_fingerprint": "7c6541de1c647d302683cb0fec85c35c77d0616dc6c72060e96b81253a45b926",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "f954164cd3eeea8ae57cbfb40f6ef7227de581ad78f54ef02539c5ce0dacac7d",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 20,
     "distinct": 19,
     "utility": 5,
-    "tracer_self_ms": 0.988,
+    "tracer_self_ms": 0.927,
     "wall_ms": 344
   },
   "statements": [
+    {
+      "fingerprint": "0c76e5eafce8d4f1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "hearing_date"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
     {
       "fingerprint": "16829f563838219a",
       "kind": "read",
@@ -32,7 +46,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -113,20 +127,6 @@
       "error": null
     },
     {
-      "fingerprint": "6d042e3f02eecb68",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "coa_applications": [
-          "hearing_date"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "7bbcde9cfab6c79c",
       "kind": "utility",
       "count": 1,
@@ -164,7 +164,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 26,
+      "rowCount": 33,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -187,13 +187,13 @@
       "error": null
     },
     {
-      "fingerprint": "a2b680c0f1bcacc3",
+      "fingerprint": "9dfb7f2a300a74f2",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
         "coa_applications": [
-          "coa_fsi"
+          "hearing_date"
         ]
       },
       "writes": {},
@@ -201,13 +201,13 @@
       "error": null
     },
     {
-      "fingerprint": "ae6b216c68a21103",
+      "fingerprint": "a2b680c0f1bcacc3",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
         "coa_applications": [
-          "hearing_date"
+          "coa_fsi"
         ]
       },
       "writes": {},

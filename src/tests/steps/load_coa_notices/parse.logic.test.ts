@@ -181,6 +181,18 @@ describe('coa-notices document-level parse', () => {
     expect(new Set(keptRowsOf(rec).map((r) => r.variance_key)).size).toBe(3);
   });
 
+  it('T-PARSE-C15-population LCN-D5: the builder classifies the floor population; the check never compares ctx.config', () => {
+    // Spec 124 R-DC (2026-10-17): documents under coa_notices_doc_pair_rate_min_items are not eligible.
+    const doc = corpus.doc({}, corpus.NOTICE_A);
+    const res = shape(doc);
+    const few = C.reconcileNotices([{ doc, result: res }], { config: { coa_notices_doc_pair_rate_min_items: 1000 } });
+    expect(few.stats.doc_pair_rate_min_eligible).toEqual({ rate: 1, doc_id: null, eligible_docs: 0 });
+    const one = C.reconcileNotices([{ doc, result: res }], { config: { coa_notices_doc_pair_rate_min_items: 1 } });
+    const m = one.stats.doc_pair_rate_min_eligible as { rate: number; doc_id: string | null; eligible_docs: number };
+    expect(m.eligible_docs).toBe(1);
+    expect(m.rate).toBe((one.stats.doc_pair_rates as Record<string, number>)[m.doc_id as string]);
+  });
+
   it('T-PARSE-dedup-revised a revised document beats the original', () => {
     const doc1 = corpus.doc({ doc_id: 'doc-1', sha256: 'a'.repeat(64), revision: 'original' }, corpus.NOTICE_A);
     const doc2 = corpus.doc({ doc_id: 'doc-2', sha256: 'b'.repeat(64), revision: 'revised' }, noticeAWithCoverage(35));

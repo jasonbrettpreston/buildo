@@ -299,12 +299,18 @@ function parseDate(v) {
  * JSON.parse is SWALLOWED to null — the row is NOT skipped. The count of rows that took
  * this path is reported by the `geom_parse_failures` check; the function returns
  * `{ geometry, parsed }` so the caller can count without repeating the parse.
+ *
+ * @param {{ tag?: (name: string) => void }} [report] the runner's per-record report seam (shapeRecord's seam)
  */
-function parseGeoJSON(raw) {
+function parseGeoJSON(raw, report) {
   if (!raw || !raw.trim()) return { geometry: null, parsed: false };
   try {
     return { geometry: JSON.parse(raw), parsed: false };
   } catch {
+    // AP-D2 parity — the row is still carried with a null geometry, but the failure is
+    // REPORTED: counted through the runner's per-record report seam and surfaced by the
+    // declared `geom_parse_failures` check (CP-PLANA, R-BZ G13).
+    if (report && typeof report.tag === 'function') report.tag('geom_parse_failure');
     return { geometry: null, parsed: true };
   }
 }
@@ -391,7 +397,7 @@ function shapeRecord(record, seam) {
   const parsed = parseLinearName(linearNameFull);
 
   const geomRaw = field(src, 'geometry');
-  const parsedGeom = geomRaw ? parseGeoJSON(geomRaw) : { geometry: null, parsed: false };
+  const parsedGeom = geomRaw ? parseGeoJSON(geomRaw, facts) : { geometry: null, parsed: false };
   const geometry = parsedGeom.geometry;
   // `parsedGeom.parsed === true` means the parse ATTEMPT FAILED (parseGeoJSON's naming — see
   // its own doc comment): a row whose `geometry` cell would not JSON.parse must carry a null
@@ -573,7 +579,6 @@ function rows_read_floor(ctx) {
   ctx.report('rows_read_floor', {
     detail: rowsRead,
     value: rowsRead,
-    violations: rowsRead < ctx.config.sources_parcels_floor ? 1 : 0,
   });
 }
 
@@ -595,7 +600,8 @@ function records_errors(ctx) {
  * carried with a null geometry; a promoted WARN would be a behaviour change.
  */
 function geom_parse_failures(ctx) {
-  const n = numberOrNull(ctx.acquired && ctx.acquired.geom_parse_failures) || 0;
+  const tags = (ctx.acquired && ctx.acquired.shaped_tags) || {};
+  const n = numberOrNull(tags.geom_parse_failure) || 0;
   ctx.report('geom_parse_failures', { violations: 0, detail: n });
 }
 
@@ -631,24 +637,10 @@ const CHECKS = {
   stated_area_unparsed,
 };
 
-/**
- * ⚠️ REQUIRE-TIME INVARIANT (SPEC LINK 122 §5.5): the dispatch keys ARE the declared
- * check ids. The descriptor ships beside this file, so a mismatch is a load-order bug,
- * not a runtime condition — it must throw at require() time rather than surface as a
- * silently-unscored check on a green run.
- */
-const DECLARED_CHECKS = require('../../load-parcels.descriptor.json').checks.map((c) => c.id);
-const DISPATCH_KEYS = Object.keys(CHECKS);
-if (DISPATCH_KEYS.length !== DECLARED_CHECKS.length
-    || DISPATCH_KEYS.some((id, i) => id !== DECLARED_CHECKS[i])) {
-  throw new Error('load-parcels compute dispatch keys are not the descriptor\'s declared check ids: '
-    + `dispatch=[${DISPATCH_KEYS.join(', ')}] declared=[${DECLARED_CHECKS.join(', ')}]`);
-}
-for (const id of DECLARED_CHECKS) {
-  if (CHECKS[id].name !== id) {
-    throw new Error(`load-parcels compute: checks.${id} is bound to a function named "${CHECKS[id].name}"`);
-  }
-}
+// The dispatch keys ARE the declared check ids, in order, each bound to a function of
+// the same name (§5.5 (1)/(4)). That invariant is enforced statically, both directions,
+// by src/tests/step-conformance.infra.test.ts ("§5.5 compute shape — dispatch table ≡
+// declared checks") — never by a require of the descriptor here (Spec 124 R-BZ G12).
 
 /** §5.5 (2) — run the SELECTED checks, and nothing else. Errors land on their own row, never suppress siblings. */
 async function compute(ctx) {

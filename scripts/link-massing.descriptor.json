@@ -1222,18 +1222,6 @@
       "date": "2026-08-27"
     },
     {
-      "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
-      "why": {
-        "text": "SPLIT, and the split is the ruling. The three variables that decide what gets WRITTEN or what PASSES — link_massing_link_rate_fail_pct (the verdict bound) and the two written confidences — carry on_invalid \"fail\": a step must not compute a verdict, or stamp a confidence, on a value the operator did not mean, and hoisted_above_gate puts that refusal ABOVE the lock so it cannot hide behind a green SKIPPED summary. ⚠️ THE COST IS REAL AND IS STATED: these three are seeded by the mig-099 seed contract, applied at the END of npm run migrate, so a cloud database that has not re-seeded has none of them and this step REFUSES rather than running on the seed fallback. That refusal is loud, immediate and correct — but it must be sequenced with the cloud seed, not discovered by it. The three PRE-EXISTING massing_* variables keep their registered semantics (default/clamp: they shape a classification, not a verdict). Revisit at the cloud seed.",
-        "liveness": {
-          "kind": "file",
-          "ref": "scripts/seeds/logic_variables.json"
-        }
-      },
-      "adjudicated_by": "operator condition 2026-08-27 (every tunable externalized, nothing may silently fail)",
-      "date": "2026-08-27"
-    },
-    {
       "from": "the pre-conversion full-gate's four-slug prior-run read ordered by completed_at",
       "why": {
         "text": "S11, declared rather than ported. The pre-conversion gate (a step-specific scripts/lib helper, retired at FLEET-2 P2-C6) read `pipeline IN ('sources:link_massing','permits:link_massing','link_massing','link-massing') … ORDER BY completed_at DESC` — a hand-maintained slug array of which one form has ZERO rows. After conversion the gate reads the step's OWN chain-scoped history through staleness.readPriorEmit, which is source-version.js's STANDARDIZED producer self-history reader (ORDER BY started_at DESC, status IN ('completed', 'completed_with_warnings')). That is a real difference and it is declared: the baseline becomes per-chain rather than cross-chain. It is also the correct semantics — this is a producer reading itself, not a consumer asking whether some producer ran. B-6 still holds: the library opens its ledger row as `running` before the gate evaluates, so the step can never read itself.",
@@ -1344,19 +1332,19 @@
         "name": "massing_shed_threshold_sqm",
         "min": 1,
         "max": 200,
-        "on_invalid": "default"
+        "on_invalid": "fail"
       },
       {
         "name": "massing_garage_max_sqm",
         "min": 1,
         "max": 500,
-        "on_invalid": "default"
+        "on_invalid": "fail"
       },
       {
         "name": "massing_nearest_max_distance_m",
         "min": 1,
         "max": 500,
-        "on_invalid": "clamp"
+        "on_invalid": "fail"
       },
       {
         "name": "link_massing_link_rate_fail_pct",
@@ -1386,6 +1374,18 @@
         "name": "link_massing_rows_changed_ratio_warn_pct",
         "min": 0,
         "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_massing_bbox_degree_divisor",
+        "min": 1000,
+        "max": 1000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_massing_round_scale",
+        "min": 1,
+        "max": 1000000,
         "on_invalid": "fail"
       }
     ],

@@ -185,8 +185,11 @@ describe.skipIf(!dbAvailable())('refresh-snapshot.js — WF3 F1 value equivalenc
 
   it('① consolidated scalar query produces IDENTICAL values to the 10 old queries, per metric', async () => {
     const oldValues = await computeOldScalars();
-    const { sql, params } = snapshotMod.buildPermitsScalarQuery();
-    expect(params).toEqual([ACTIVE]);
+    // CP-PLANA (R-BZ G6): the run clock is BOUND ($2) — here the DB's own NOW(), so the
+    // old NOW()-relative queries and the consolidated one read the same instant.
+    const runAt = ((await pool.query('SELECT NOW() AS now')) as { rows: Array<{ now: Date }> }).rows[0]!.now;
+    const { sql, params } = snapshotMod.buildPermitsScalarQuery(runAt, { refresh_snapshot_updated_24h_window_hours: 24, refresh_snapshot_updated_7d_window_days: 7, refresh_snapshot_updated_30d_window_days: 30, refresh_snapshot_cost_oor_min_cad: 100, refresh_snapshot_cost_oor_max_cad: 1000000000 });
+    expect(params).toEqual([ACTIVE, runAt, 24, 7, 30, 100, 1000000000]); // V3 ledger E (2026-10-17)
     const { rows } = await pool.query(sql, params);
     const newValues = rows[0];
 

@@ -1993,6 +1993,7 @@ describe('override.force_run — the arm that makes a frozen source loadable (A-
       coerceKey: (raw: unknown) => Number(raw),
       forced,
       emitSkeleton: {},
+      targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
       preAcquisitionGate: (head: { lastModified: string | null; etag: string | null }) =>
         stalenessLib.preAcquisitionDecision({ descriptor: LOAD_RAVINES, validators: head, prior, forced }),
     });
@@ -3210,6 +3211,7 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
         link_wsib_tier3_confidence: 0.6, link_wsib_entity_fanin_warn: 20,
         link_wsib_mass_relink_max_pct: 0.1, link_wsib_tier3_token_overlap_fail_pct: 50,
         // O4 row 6 (fold 16 row 1): + link_wsib_mass_relink_max_pct (mass guard, default 0.10); link_wsib_tier3_full_max_iterations is retired.
+        link_wsib_exact_name_min_length: 3, link_wsib_fuzzy_name_min_length: 5, // V3 ledger E (2026-10-17): the name length floors
       };
       const pool = dryRunFakePool((text: string, values: unknown) => {
         // FLEET-2 A-1: the runner's input guards COUNT each declared table before dispatch and halt on 0 —
@@ -3345,7 +3347,8 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
     const descriptor = lpaDescriptor();
     const pool = materializePool(STUCK_ROW, true);
     const result = await stepLib.runMaterializePhase({
-      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: {}, chainId: null,
+      // R-DE (i): the materialize loop runs at its declared config size (no library 1000 default).
+      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: { stub_batch_size: 1000 }, chainId: null,
       log: NOOP_LOG, tag: '[link_parcel_addresses]', clockNow: new Date('2026-08-29T20:00:00Z'),
       ownRunId: 9003,
     });
@@ -3355,11 +3358,22 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
     expect(pool.sql.some((s: string) => s.includes('own_last') && s.includes('upstream_since')), 'bypassed:true must short-circuit BEFORE the ledger-gate query is ever issued').toBe(false);
   });
 
+  it('R-DE (i) (McDonald\'s Airtight V3): a materialize loop with no declared size THROWS by name — never the old library 1000 default', async () => {
+    const descriptor = lpaDescriptor();
+    const pool = materializePool(STUCK_ROW, true);
+    await expect(stepLib.runMaterializePhase({
+      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: {}, chainId: null,
+      log: NOOP_LOG, tag: '[link_parcel_addresses]', clockNow: new Date('2026-08-29T20:00:00Z'),
+      ownRunId: 9003,
+    })).rejects.toThrow(/config\.stub_batch_size = undefined \(Spec 124 R-DE \(i\)/);
+  });
+
   it('REVERSE (R-B/LW-D20 recurrence, MATERIALIZER) — NOT interrupted resolves `bypassed:false`, so the real ledger gate decides, and SKIPs when it genuinely would', async () => {
     const descriptor = lpaDescriptor();
     const pool = materializePool(null, true);
     const result = await stepLib.runMaterializePhase({
-      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: {}, chainId: null,
+      // R-DE (i): the materialize loop runs at its declared config size (no library 1000 default).
+      descriptor, pool, compute: materializeCompute(LPA_MATERIALIZE_SQL), config: { stub_batch_size: 1000 }, chainId: null,
       log: NOOP_LOG, tag: '[link_parcel_addresses]', clockNow: new Date('2026-08-29T20:00:00Z'),
       ownRunId: 9004,
     });
@@ -6986,7 +7000,9 @@ describe('INGESTOR prerequisite 0n — runIngestPhase passes {config, run_at} to
       expect(shapeRecordSpy).toHaveBeenCalledTimes(2);
       for (const call of shapeRecordSpy.mock.calls) {
         const ctx = call[1] as { geojson: unknown; config: unknown; run_at: unknown };
-        expect(Object.keys(ctx).sort()).toEqual(['config', 'geojson', 'run_at', 'tag']); // 0p widens ctx by tag
+        // 0p widens ctx by tag; Spec 124 R-CY by the descriptor (the compute never requires its own)
+        expect(Object.keys(ctx).sort()).toEqual(['config', 'descriptor', 'geojson', 'run_at', 'tag']);
+        expect((ctx as { descriptor?: unknown }).descriptor, 'the SAME descriptor object runIngestPhase was called with').toBe(descriptor);
         expect(ctx.config, 'config must be the SAME object, not a structurally-equal copy').toBe(resolvedConfig);
         expect(ctx.run_at).toBeInstanceOf(Date);
         expect((ctx.run_at as Date).getTime()).toBe(runAt.getTime());

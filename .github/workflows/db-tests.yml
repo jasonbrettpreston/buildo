@@ -71,7 +71,7 @@ jobs:
           done
 
       - name: Install PostgreSQL 17 client
-        # The service is Postgres 17; ubuntu's default pg_dump is older, and restore-db.infra.test.ts asserts on a
+        # The service is Postgres 17; ubuntu's default pg_dump is older, and src/tests/db/restore-db.db.test.ts asserts on a
         # real pg_dump's stderr. Same commands as chain-coa-permits.yml (F8 fold 2026-07-20).
         run: |
           sudo apt-get install -y postgresql-common

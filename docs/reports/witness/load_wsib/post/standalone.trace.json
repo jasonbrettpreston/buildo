@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-wsib.js",
   "chain": "none",
-  "source_fingerprint": "f1517695b7741dd3a14ba2a637c17dfb3ad8f76ffbb693842826b6a4825a3ef4",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "32ed2fa873fec48a8c5decaf7d88d2bb7a9af3e18b6cc88aa057849387325d1e",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 43,
     "distinct": 15,
     "utility": 7,
-    "tracer_self_ms": 116.124,
-    "wall_ms": 2970
+    "tracer_self_ms": 117.34,
+    "wall_ms": 2974
   },
   "statements": [
     {
@@ -55,13 +55,13 @@
       "params": [
         [
           "completed",
-          2757,
+          2768,
           null,
-          3011,
+          3154,
           200,
           0,
           200,
-          "{\"wsib_load\":{\"duration_ms\":2751,\"total_csv_rows\":345416,\"unique_class_g\":121116,\"records_inserted\":0,\"records_updated\":200,\"skipped_non_g\":212056,\"skipped_no_name\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_wsib_unique_class_g_warn_min\":110000,\"load_wsib_no_name_skip_warn_pct\":1},\"acquired\":{\"record_fields\":{\"local:wsib-business-classification-details\":[\"Legal name\",\"Trade name\",\"Mailing Address\",\"Predominant class\",\"NAICS code\",\"Description\",\"Class/subclass\",\"Business size\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"wsib_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_source_file\",\"value\":\"data/BusinessClassificationDetails(2025).csv\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_unique_class_g\",\"value\":121116,\"threshold\":\"value_min 110000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_no_name_skip_rate\",\"value\":\"0.0%\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_null_address_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_unchanged\",\"value\":120916,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_key_count\",\"value\":12244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:local:wsib-business-classification-details\",\"value\":\"header unchanged (8 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":72.52,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2758,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"wsib_load\":{\"duration_ms\":2763,\"total_csv_rows\":345416,\"unique_class_g\":121116,\"records_inserted\":0,\"records_updated\":200,\"skipped_non_g\":212056,\"skipped_no_name\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"load_wsib_unique_class_g_warn_min\":110000,\"load_wsib_no_name_skip_warn_pct\":1},\"acquired\":{\"record_fields\":{\"local:wsib-business-classification-details\":[\"Legal name\",\"Trade name\",\"Mailing Address\",\"Predominant class\",\"NAICS code\",\"Description\",\"Class/subclass\",\"Business size\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":19,\"name\":\"WSIB Registry Ingestion\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"wsib_load_skipped\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_source_file\",\"value\":\"data/BusinessClassificationDetails(2025).csv\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_unique_class_g\",\"value\":121116,\"threshold\":\"value_min 110000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_no_name_skip_rate\",\"value\":\"0.0%\",\"threshold\":\"pct <= 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_null_address_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_unchanged\",\"value\":120916,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_key_count\",\"value\":12244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"schema_drift:local:wsib-business-classification-details\",\"value\":\"header unchanged (8 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":72.23,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2769,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -69,7 +69,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -247,7 +247,7 @@
   ],
   "transactions": [
     {
-      "client": "41748:2",
+      "client": "45383:2",
       "write_fingerprints": [
         "8e0e557d4c86c776"
       ]

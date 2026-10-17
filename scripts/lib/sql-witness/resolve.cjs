@@ -115,12 +115,38 @@ function isRangeSubselect(node) {
 /**
  * WF3 C2c: bind a `RangeFunction` alias (`unnest(...) AS g(a, b)`) into `funcCols`
  * (alias -> Set of output column names). With no column list the single output column
- * is named by the alias (`unnest(x) h` -> h). A derived source: never a catalog read.
+ * is named by the alias (`unnest(x) h` -> h), or, for a composite-returning function, by its own output
+ * columns (COMPOSITE_FUNCTION_COLUMNS). A derived source: never a catalog read.
  */
+/** The output columns of the composite-returning set functions step SQL uses (PostGIS geometry_dump). Closed. */
+const COMPOSITE_FUNCTION_COLUMNS = Object.freeze({
+  st_dump: ['path', 'geom'],
+  st_dumppoints: ['path', 'geom'],
+  st_dumprings: ['path', 'geom'],
+});
+
+/** The lower-cased bare name of a RangeFunction's (first) function, or ''. */
+function funcNameOf(rf) {
+  const fns = rf && Array.isArray(rf.functions) ? rf.functions : [];
+  let name = '';
+  walk(fns, (n) => {
+    if (name === '' && Array.isArray(n.funcname)) {
+      const parts = n.funcname.map((f) => sval(f)).filter((x) => typeof x === 'string');
+      name = (parts[parts.length - 1] || '').toLowerCase();
+    }
+  });
+  return name;
+}
+
 function addFuncAlias(funcCols, node) {
   const a = node && node.RangeFunction ? node.RangeFunction.alias : null;
   if (!a || typeof a.aliasname !== 'string') return;
-  const cols = Array.isArray(a.colnames) ? a.colnames.map(sval).filter((x) => typeof x === 'string') : [a.aliasname];
+  const fn = funcNameOf(node.RangeFunction);
+  // #44 G11 (McDonald's Airtight V3): with no column list a composite-returning function names its own
+  // columns (`ST_Dump(a.geom) d` -> d.path, d.geom); a scalar one (`unnest(x) h`) has the alias as its one column.
+  const cols = Array.isArray(a.colnames)
+    ? a.colnames.map(sval).filter((x) => typeof x === 'string')
+    : COMPOSITE_FUNCTION_COLUMNS[fn] || [a.aliasname];
   funcCols.set(a.aliasname, new Set(cols));
 }
 
@@ -721,6 +747,23 @@ function resolveClauseColumns(scopeNode, scope, catalog, reads, writes, excluded
       });
     }
   }
+  // #44 G9 (McDonald's Airtight V3): ORDER BY / DISTINCT ON / WINDOW read columns too — a column used
+  // only there was never recorded. A bare name equal to one of this SELECT's own output names
+  // (`AS n … ORDER BY n`) is that output column, not a catalog read.
+  const outputNames = new Set(
+    (Array.isArray(scopeNode.targetList) ? scopeNode.targetList : [])
+      .map((tg) => (tg && tg.ResTarget && typeof tg.ResTarget.name === 'string' ? tg.ResTarget.name : null))
+      .filter((x) => x !== null),
+  );
+  for (const k of ['sortClause', 'distinctClause', 'windowClause']) {
+    if (scopeNode[k] === undefined) continue;
+    walkExpr(scopeNode[k], (n) => {
+      if (!isColumnRef(n)) return;
+      const names = n.fields.map((f) => sval(f));
+      if (names.length === 1 && outputNames.has(names[0])) return;
+      applyColumn(n, scope, catalog, reads, writes, excluded, false);
+    });
+  }
   // CTEs resolve as their own scope.
   if (scopeNode.withClause && Array.isArray(scopeNode.withClause.ctes)) {
     for (const cte of scopeNode.withClause.ctes) {
@@ -866,7 +909,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
         walkExpr(returning, (n) => {
           if (isColumnRef(n)) applyColumn(n, visit, catalog, reads, writes, excluded, false);
         });
-        walk(returning, (n) => {
+        walkOwnScope(returning, (n) => {
           if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, visit);
           const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
           if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, visit);
@@ -904,7 +947,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
       for (const piece of pieces) {
         if (piece === undefined) continue;
         resolveExpr(piece, scope, catalog, reads, writes, excluded, false);
-        walk(piece, (n) => {
+        walkOwnScope(piece, (n) => {
           if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
           const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
           if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
@@ -933,6 +976,9 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
     for (const rel of scope.relations) {
       if (!isDerived(scope, rel.alias || rel.rel)) recordRead(reads, excluded, rel, null);
     }
+    // #44 G10 (McDonald's Airtight V3): nested scopes are reached with walkOwnScope, never a full walk —
+    // a SubLink inside a FROM (subselect) belongs to that subselect's scope (resolveScope descends it there);
+    // a full walk re-resolved it against THIS scope, where the subselect's own aliases are not bound.
     // SET targets -> writes; SET right-hand sides -> reads.
     if (Array.isArray(inner.targetList)) {
       for (const t of inner.targetList) {
@@ -941,7 +987,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
         if (targetRel && typeof res.name === 'string') recordWrite(writes, excluded, targetRel, res.name);
         if (res.val) {
           resolveExpr(res.val, scope, catalog, reads, writes, excluded, false);
-          walk(res.val, (n) => {
+          walkOwnScope(res.val, (n) => {
             if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
             const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
             if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
@@ -955,7 +1001,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
       walkExpr(k, (n) => {
         if (isColumnRef(n)) applyColumn(n, scope, catalog, reads, writes, excluded, false);
       });
-      walk(k, (n) => {
+      walkOwnScope(k, (n) => {
         if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
         const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
         if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);
@@ -979,7 +1025,7 @@ function resolveWrite(key, inner, catalog, reads, writes, excluded, parent) {
       walkExpr(k, (n) => {
         if (isColumnRef(n)) applyColumn(n, scope, catalog, reads, writes, excluded, false);
       });
-      walk(k, (n) => {
+      walkOwnScope(k, (n) => {
         if (isRangeSubselect(n) && n.subquery) resolveScope(n.subquery, catalog, reads, writes, excluded, false, scope);
         const sub = n && !isRangeSubselect(n) ? n.SubLink : null;
         if (sub && sub.subselect) resolveScope(sub.subselect, catalog, reads, writes, excluded, false, scope);

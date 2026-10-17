@@ -373,7 +373,8 @@ describe('assert_data_bounds — measured facts, true today (plain it)', () => {
     const fields = fs.readFileSync(artifact('scripts/lib/assert-data-bounds-fields.js'), 'utf8');
     const ancientLine = fields.split(/\r?\n/).find((l) => l.includes("id: 'ancient_dates'"));
     expect(ancientLine, 'ancient_dates CHECK_DEFS entry not found').toBeDefined();
-    expect(ancientLine, 'ancient_dates must now use kind boolcfg_gt, not raw0').toMatch(/kind:\s*'boolcfg_gt'/);
+    // SUPERSEDED 2026-10-17 (Spec 124 R-DC, operator y "inclusive ceiling_max"): the declared bound decides.
+    expect(ancientLine, 'ancient_dates must now use kind ceiling_max (R-DC), not raw0 or a compute comparison').toMatch(/kind:\s*'ceiling_max'/);
     expect(ancientLine, 'ancient_dates must now bind inspection_ancient_dates_count_warn_max').toMatch(/cfgVar:\s*'inspection_ancient_dates_count_warn_max'/);
   });
 });
@@ -547,10 +548,14 @@ describe('assert_data_bounds — descriptor + compute (flipped from it.fails at 
       'coa_null_address_count_warn_max', 'coa_ancient_hearing_count_warn_max', 'coa_future_hearing_window_years',
       'coa_cost_gt_threshold_cad', 'coa_cost_gt_threshold_warn_max', 'coa_fsi_gt_threshold',
       'coa_gfa_over_lot_multiple', 'coa_gfa_over_lot_warn_max', 'inspection_ancient_dates_count_warn_max',
+      // V3 ledger E (2026-10-17): six former SQL literals
+      'assert_data_bounds_recent_window_hours', 'assert_data_bounds_ghost_last_seen_days',
+      'assert_data_bounds_ancient_hearing_before_year', 'assert_data_bounds_ancient_inspection_before_year',
+      'assert_data_bounds_lot_size_max_sqm', 'assert_data_bounds_max_height_max_m',
     ];
     for (const name of expected) expect(names.has(name), `config.logic_variables missing ${name}`).toBe(true);
     expect(names.has('calibration_freshness_warn_hours'), 'the retired dead var must be ABSENT, not carried forward (ADB-D5, §2.4)').toBe(false);
-    expect(cfg.logic_variables.length).toBe(26);
+    expect(cfg.logic_variables.length).toBe(33); // + the shared pipeline_timezone (R-CE, CP-PLANA G6) + 6 V3 ledger E variables
   });
 
   it('checks[] count is at least the row-builder census distinct-metric floor (report §2.3, 49 metrics)', () => { // flips at: commit 7
@@ -633,5 +638,74 @@ describe('assert_data_bounds — descriptor + compute (flipped from it.fails at 
   it('commit 9\'s frozen shell calls pipeline.step(...) while keeping the lock-103 constant (thin shell)', () => { // flips at: commit 7 (compute), fully true only after commit 9's cutover peel
     expect(src()).toContain('ADVISORY_LOCK_ID = 103');
     expect(src()).toMatch(/pipeline\.step\(/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CP-PLANA (Spec 124 R-BZ G13): the costest/ghost loaders no longer swallow — an errored
+// query is that check's ERRORED FAIL row (on_check_error "fail_step"), never a silent SKIP.
+// ---------------------------------------------------------------------------
+describe('assert_data_bounds — CP-PLANA G13: an errored cost_estimates / ghost query is an errored FAIL row', () => {
+  it('a throwing pool ⇒ ctx.report(id, { error }) for every costest/ghost check, and verdict.js renders FAIL with errored: true', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute + verdict library
+    const compute = require(path.join(REPO_ROOT, COMPUTE_REL)) as (ctx: unknown) => Promise<unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string; errored?: boolean };
+    };
+    const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, DESCRIPTOR_REL), 'utf8')) as {
+      execution: { on_check_error: string }; checks: Array<{ id: string }>;
+    };
+    const ids = ['ghost_permits_30d', 'cost_estimates_null_rate', 'cost_estimates_min_tiers'];
+    const reports: Record<string, Record<string, unknown>> = {};
+    const ctx = {
+      checks: ids,
+      descriptor: { identity: { name: 'assert_data_bounds' } },
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      clock: () => Date.UTC(2026, 9, 16),
+      config: { pipeline_timezone: 'UTC' },
+      pool: { query: async () => { throw new Error('relation is gone'); } },
+      report: (id: string, o: Record<string, unknown>) => { reports[id] = o; },
+    };
+    await compute(ctx);
+    for (const id of ids) {
+      expect(reports[id], `${id} must report`).toBeDefined();
+      expect(reports[id]!.error, `${id}: the error is reported, never swallowed into a SKIP`).toBeInstanceOf(Error);
+      const check = descriptor.checks.find((c) => c.id === id);
+      const row = verdict.checkRow(check, reports[id], descriptor.execution.on_check_error, ctx.config);
+      expect(row.status, `${id}: an errored query is a FAIL row`).toBe('FAIL');
+      expect(row.errored, `${id}: marked errored (never acceptance-covered)`).toBe(true);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CP-PLANA (Spec 124 R-BZ G6 + R-CE): no SQL reads the DB clock — with a fixed ctx.clock the
+// bound clock parameter IS that clock, and a calendar date binds pipeline_timezone.
+// ---------------------------------------------------------------------------
+describe('assert_data_bounds — CP-PLANA G6: the run clock is BOUND, never NOW()/CURRENT_DATE', () => {
+  it('every query the compute issues is clock-free SQL; each clock param equals the fixed ctx.clock()', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS compute
+    const compute = require(path.join(REPO_ROOT, COMPUTE_REL)) as (ctx: unknown) => Promise<unknown>;
+    const descriptor = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, DESCRIPTOR_REL), 'utf8')) as { checks: Array<{ id: string }> };
+    const CLOCK = Date.UTC(2026, 9, 16, 12);
+    const issued: Array<{ sql: string; params: unknown[] }> = [];
+    const ctx = {
+      checks: descriptor.checks.map((c) => c.id),
+      descriptor: { identity: { name: 'assert_data_bounds' } },
+      log: { info: () => {}, warn: () => {}, error: () => {} },
+      clock: () => CLOCK,
+      config: new Proxy({ pipeline_timezone: 'America/Toronto' } as Record<string, unknown>, { get: (o, k) => (k in o ? o[k as string] : 1) }),
+      pool: { query: async (sql: string, params: unknown[] = []) => { issued.push({ sql, params }); return { rows: [{ count: '1', n: 0, tiers: '1', oldest: null }] }; } },
+      report: () => {},
+    };
+    await compute(ctx);
+    const clocked = issued.filter((q) => /to_timestamp\(\$\d+::float8 \/ 1000\)/.test(q.sql));
+    expect(clocked.length, 'all 7 clock-relative reads were issued (4 permits, CoA hearing, inspection, ghost)').toBe(7);
+    for (const q of issued) expect(q.sql, 'no DB clock read').not.toMatch(/\bnow\(\)|current_date|current_timestamp/i);
+    for (const q of clocked) {
+      expect(q.params, 'the bound clock is the run clock').toContain(CLOCK);
+      if (/AT TIME ZONE/.test(q.sql)) expect(q.params, 'a calendar date binds pipeline_timezone').toContain('America/Toronto');
+    }
   });
 });

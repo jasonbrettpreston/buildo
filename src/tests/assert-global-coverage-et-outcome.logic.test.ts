@@ -68,8 +68,13 @@ function makeCtx(result: ProducerResult) {
     report,
     pool,
     producer,
+    // CP-S5 (Spec 124 R-CX) — the runner hands every ASSERT compute ctx.catalog; this harness answers a fixed count.
+    catalog: { columnCount: async () => 0, columnCounts: async () => ({}), columnType: async () => null },
     descriptor: { identity: { name: 'assert_global_coverage' } },
     log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+    // CP-PLANA (R-BZ G6 + R-CE): the loaders bind the run clock + pipeline_timezone, never NOW().
+    clock: () => Date.UTC(2026, 9, 16),
+    config: { pipeline_timezone: 'UTC' },
   };
   return { ctx, pool, report, producer };
 }

@@ -268,10 +268,11 @@ describe('gate I — registry coverage (#33-#36)', () => {
     });
 
     // 57 → 30 (2026-10-16, V3 B1): the RV prefix override and RV-D2/RV-D4 dispositions removed 27 disagreements; T6f keeps the ledger exact.
-    it('T6e: LIVE — the real tree reports a measured definition count (currently 30 disagreements)', () => {
+    // 30 → 0 (2026-10-17, ledger WP6 I30): the AS/AGC/ADB/AEH report tables mirror the register status verbatim (Q10 a precedent).
+    it('T6e: LIVE — the real tree reports a measured definition count (currently 0 disagreements)', () => {
       const out = reg.checkDefectIdUniqueness(REPO_ROOT);
       expect(out.definitions).toBeGreaterThan(50);
-      expect(out.violations.length).toBe(30);
+      expect(out.violations.length).toBe(0);
     });
 
     it('T6f: LIVE — every #36 defect-id disagreement has a gate-I ledger row, and there are zero orphans', () => {

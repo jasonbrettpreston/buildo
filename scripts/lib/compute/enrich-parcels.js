@@ -1125,10 +1125,11 @@ function buildDecisionScopeWhere({ full = false } = {}) {
 }
 
 /**
- * @param {{asOfDateParamIndex: number, windowYears: number}} clockOpts - $N placeholder index for the
- *   bound as-of date (caller supplies the value as a query param) and the (config-sourced) window length.
+ * @param {{asOfDateParamIndex: number, windowYearsParamIndex: number}} clockOpts - $N placeholder indexes for
+ *   the bound as-of date and the (config-sourced) window length; the caller supplies both as query params
+ *   (Spec 124 R-DC/G16 class: a config value is bound, never interpolated into SQL text).
  */
-function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
+function buildCompCandidatesSql({ asOfDateParamIndex, windowYearsParamIndex }) {
   return `
   WITH recent AS (
     SELECT DISTINCT ON (pr.zoning_dominant_parcel_id)
@@ -1136,7 +1137,7 @@ function buildCompCandidatesSql({ asOfDateParamIndex, windowYears }) {
       pr.project_type, pr.residential_sqm, pr.storeys, pr.structure_type
     FROM permits pr
     WHERE pr.project_type IN ('new_build','addition')
-      AND pr.issued_date >= ($${asOfDateParamIndex}::date - (${windowYears} * interval '1 year'))
+      AND pr.issued_date >= ($${asOfDateParamIndex}::date - make_interval(years => $${windowYearsParamIndex}::int))
       AND pr.zoning_dominant_parcel_id IS NOT NULL
     ORDER BY pr.zoning_dominant_parcel_id, pr.issued_date DESC, pr.residential_sqm DESC NULLS LAST
   ),
@@ -1315,7 +1316,7 @@ async function runPass4(client, ctx, config) {
   // through pg's extended protocol (a real prepared statement), which Postgres restricts to ONE
   // command — "cannot insert multiple commands into a prepared statement". The seam also issues
   // `DROP TABLE IF EXISTS comp_cand` before the CREATE (a no-op in a fresh pass transaction).
-  await ctx.tempTable({ name: 'comp_cand', selectSql: buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYears }), params: [asOfDate], index: { name: 'comp_cand_gix', using: 'gist', column: 'geom' }, analyze: true });
+  await ctx.tempTable({ name: 'comp_cand', selectSql: buildCompCandidatesSql({ asOfDateParamIndex: 1, windowYearsParamIndex: 2 }), params: [asOfDate, windowYears], index: { name: 'comp_cand_gix', using: 'gist', column: 'geom' }, analyze: true });
   const cand = (await client.query('SELECT count(*)::int AS n FROM comp_cand')).rows[0].n;
   const upd = await ctx.exec(3, buildComparableBuildsUpdateSql({ full, scopeWhere, comp }));
   // Mark eligible subjects that matched NO comps as comp_count = 0 (a clean "processed" marker; the

@@ -8,7 +8,8 @@
  *   G1  reads a raw control/ledger table through ctx.pool.query (pipeline_runs);
  *       closure modules count too — see ./helpers/purity-helper.js (sync_runs).
  *   G2  ctx.pool.query against a relation NOT in this fixture's DECLARED map.
- *   G3  information_schema introspection (column_name for 'parcels').
+ *   G3  information_schema introspection (column_name for 'parcels'), and a Find_SRID(...)
+ *       catalog call (CP-S5: the SRID is a runner guards.requires srid probe, never compute).
  *   G4  session/DML/DDL/transaction verbs run through the pool itself —
  *       BEGIN, VACUUM, pg_advisory_xact_lock, and a raw ctx.pool.connect().
  *   G5  direct DML (UPDATE) issued through ctx.pool.query instead of a seam.
@@ -45,6 +46,11 @@ async function introspectColumns(ctx) {
   return ctx.pool.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'parcels'"); // expect: G3
 }
 
+// ── G3 — a Find_SRID catalog call (CP-S5 reverse direction: the compute SRID read is gone) ─
+async function readSrid(ctx) {
+  return ctx.pool.query("SELECT Find_SRID('public', 'parcels', 'geom') AS srid"); // expect: G3
+}
+
 // ── G4 — session / DDL / transaction verbs issued through the pool ───────────────
 async function badVerbs(ctx) {
   await ctx.pool.query('BEGIN'); // expect: G4
@@ -69,6 +75,13 @@ function aliasCompare(ctx, row) {
   return { violations: 0 };
 }
 
+// R-DC: a config VALUE alias inside a check body (a function that calls ctx.report) — LCN-D5's shape.
+function valueAliasCheck(ctx, rates) {
+  const floor = ctx.config ? ctx.config.doc_rate_floor : undefined;
+  const low = rates.filter((r) => r < floor); // expect: G7
+  ctx.report('doc_rate_floor', { violations: low.length });
+}
+
 // ── G8 — a hook wired to a raw contract reader (enrich-contract bypass) ──────────
 module.exports.enrich_hooks = { contract_read: readContract };
 
@@ -78,7 +91,9 @@ module.exports.DECLARED = DECLARED;
 module.exports.readLedgerWatermark = readLedgerWatermark;
 module.exports.readUndeclared = readUndeclared;
 module.exports.introspectColumns = introspectColumns;
+module.exports.readSrid = readSrid;
 module.exports.badVerbs = badVerbs;
 module.exports.directDml = directDml;
 module.exports.aliasCompare = aliasCompare;
+module.exports.valueAliasCheck = valueAliasCheck;
 module.exports.purityHelper = purityHelper;

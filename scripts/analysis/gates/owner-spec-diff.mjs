@@ -59,6 +59,18 @@ export function ownerSpecsFor(file, censusRows) {
 }
 
 /**
+ * Spec 124 R-DE (ii) (McDonald's Airtight V3): a descriptor's `identity.spec` names one of its census owner
+ * specs — the leading spec number of an owner spec file (`"58"` ↔ `docs/specs/…/58_source_zoning_bylaw.md`).
+ * @param {unknown} spec `identity.spec`
+ * @param {string[]} ownerSpecs `ownerSpecsFor(file, censusRows)`
+ * @returns {boolean}
+ */
+export function identitySpecIsOwner(spec, ownerSpecs) {
+  if (typeof spec !== 'string' || spec === '') return false;
+  return (Array.isArray(ownerSpecs) ? ownerSpecs : []).some((s) => String(s).split('/').pop().startsWith(`${spec}_`));
+}
+
+/**
  * True iff a census entry declares `spec_diff: "N-A"` with a long-enough reason.
  * @param {{spec_diff?: unknown, spec_diff_reason?: unknown}|null|undefined} entry
  * @returns {boolean}

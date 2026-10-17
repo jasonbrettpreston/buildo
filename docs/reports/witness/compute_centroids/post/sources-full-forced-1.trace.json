@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/compute-centroids.js",
   "chain": "sources",
-  "source_fingerprint": "9a0a3f8a31217f26213164a521959d45a1bd2e5822e64f9f6f02263cacd9e49b",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "790e442c4d3c00e5b0dc33bbc7fca6dce58a4eae1a191b16b02f2df983fb0517",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 29,
     "distinct": 25,
     "utility": 8,
-    "tracer_self_ms": 1.065,
-    "wall_ms": 1868
+    "tracer_self_ms": 1.143,
+    "wall_ms": 1889
   },
   "statements": [
     {
@@ -90,7 +90,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [

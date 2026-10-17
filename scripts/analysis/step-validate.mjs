@@ -144,9 +144,8 @@
  *      multi-write step); #39 every post capture's `lib_fingerprint` (stamped
  *      by `capture-step-golden.js`) is fresh against `scripts/lib/step/**`,
  *      `missing` (legacy) ledger-allowed, `mismatch` always RED; #40 a step's
- *      G8 diff-explanation channel is `explained-diffs.json` or a dated
- *      transition ledger row — `checkCaptures(`'s own diff loop applies the
- *      per-key decision live. `scripts/analysis/gates/captures.mjs` owns all
+ *      G8 diff-explanation channel is `explained-diffs.json` only (R-DA) —
+ *      `checkCaptures(`'s own diff loop applies the per-key decision live. `scripts/analysis/gates/captures.mjs` owns all
  *      three answer sets
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
@@ -255,7 +254,7 @@ function effectiveCrossStepLedger() {
 // WF2 §5 R-BA (gate A) — the closed-bound registry + the ONE shared ledger
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
-import { checkClosedBounds, loadConvertedDescriptors, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { checkClosedBounds, loadConvertedDescriptors, loadVocabularyContext, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
 import { setAsConverted } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
@@ -268,7 +267,7 @@ import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRec
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { scanPurity } from './gates/compute-purity.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
-import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, LIB_FINGERPRINT_ITEM, EXPLAINED_REPORT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
+import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, explainedChannelDecision, LIB_FINGERPRINT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
 import {
   bannedCoverage, checkStalenessDisposition, censusParity, checkDefectIdUniqueness,
   loadConvertedSlugs as loadRegistrySlugs,
@@ -279,8 +278,8 @@ import {
 } from './gates/registries.mjs';
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
-import { evaluateWitness, selfTest as witnessSelfTest } from './gates/witness.mjs';
-import { buildRunnerFingerprints } from './gates/witness-runner-set.mjs';
+import { evaluateWitness, ownMeasurementSql, selfTest as witnessSelfTest } from './gates/witness.mjs';
+import { buildRunnerFingerprints, sqlFingerprinter } from './gates/witness-runner-set.mjs';
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -1132,7 +1131,9 @@ export function deriveVitestExclusions(testScript) {
  */
 export function vitestSpawnArgs(testScript, outFile) {
   const exclusions = deriveVitestExclusions(testScript);
-  const scoped = exclusions.filter((p) => VITEST_TARGETS.some((t) => (t.endsWith('/') ? p.startsWith(t) : p === t)));
+  // B5 (V3, McDonald's Airtight V3): the live-DB tier is ONE suffix rule, `--exclude "**/*.db.test.ts"`
+  // (122a §A27 trap 13) — a `**/` pattern reaches every target directory, so it is scoped.
+  const scoped = exclusions.filter((p) => p.startsWith('**/') || VITEST_TARGETS.some((t) => (t.endsWith('/') ? p.startsWith(t) : p === t)));
   return {
     targets: [...VITEST_TARGETS],
     exclusions,
@@ -1441,19 +1442,15 @@ export function computePreInvocationsMissing(slug, invocations, preDocs, postDoc
     .filter((key) => !isGoldPreKnownGap(slug, key));
 }
 
-function checkCaptures(row, descriptorInfo, computePath, report) {
+function checkCaptures(row, descriptorInfo, computePath) {
   const manifest = loadManifest();
   const findings = { invocationsMissing: [], preInvocationsMissing: [], staleFingerprints: [], compareRan: false, diffs: [], unexplainedDiffs: [] };
-  // Gate G3 (Spec 124 §5 R-BA gate G, Spec 123 §6 G8, WF2 "standardized gates",
-  // 2026-09-26) — the PREFERRED explanation channel is a committed
-  // `explained-diffs.json` entry (`explainedDecision(`, normalised-key match, a
-  // `why` of >= 20 chars); the legacy report-substring citation below is
-  // reachable ONLY when a `{gate:'G', item:'explained:report-citation'}` ledger
-  // row permits it for this step (transition posture — every converted step
-  // carries this row today, none has authored `explained-diffs.json` yet).
+  // Gate G3 (Spec 124 §5 R-BA gate G, Spec 123 §6 G8) — the ONLY explanation channel is a
+  // committed `explained-diffs.json` entry (`explainedDecision(`, normalised-key match, a
+  // `why` of >= 20 chars). Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): the legacy
+  // report-substring citation (a diff key's leaf name anywhere in the prose, or an
+  // "N differences" blanket) is deleted with its transition ledger rows.
   const explainedRegistry = loadExplained(REPO_ROOT, row.slug);
-  const reportCitationAllowed = loadLedger(REPO_ROOT).rows
-    .some((r) => r && r.gate === 'G' && r.step === row.slug && r.item === EXPLAINED_REPORT_ITEM);
 
   const invocations = derivedInvocations(manifest, row.slug, descriptorInfo && descriptorInfo.descriptor);
   const posts = capturesIn(row.slug, 'post');
@@ -1518,50 +1515,7 @@ function checkCaptures(row, descriptorInfo, computePath, report) {
     for (const d of diffs) {
       const key = typeof d === 'string' ? d : d.path || JSON.stringify(d);
       findings.diffs.push({ scenario: pre.file, key });
-      // A diff is EXPLAINED when its own deepest field name is cited anywhere in
-      // the assessment report — a Defect Ledger ID, a ruling id, or the literal
-      // field name discussed as a declared diff — never silently. Deliberately
-      // the DEEPEST segment only, never a generic wrapper ("records_meta",
-      // "audit_table", "rows", "summary" appear on every diff regardless of
-      // whether THIS specific field was ever discussed — matching on those would
-      // silently mark every diff "explained" and defeat the gate).
-      const GENERIC_WRAPPERS = new Set(['summary', 'records_meta', 'audit_table', 'rows', 'table_state', 'invariants', 'stdout_lines']);
-      const rawSegments = String(key).replace(/\[\d+\]/g, '').split('.').filter((s) => s && !/^\d+$/.test(s));
-      const segments = rawSegments.filter((s) => !GENERIC_WRAPPERS.has(s));
-      let cited;
-      // Gate G3 — the explained-diffs.json channel is checked FIRST; the
-      // report-substring citation below runs only when it did not explain the
-      // key AND the step's transition row permits the legacy path.
-      if (explainedDecision(key, explainedRegistry).explained) {
-        cited = true;
-      } else if (!reportCitationAllowed) {
-        cited = false;
-      } else if (segments.length > 0) {
-        // A real field name survives filtering — require it cited BY NAME.
-        const leaf = segments[segments.length - 1];
-        cited = report && report.toLowerCase().includes(leaf.toLowerCase());
-      } else {
-        // Purely structural (an array-index diff with no field name of its own,
-        // e.g. "invariants[9]" or "stdout_lines[0]") CANNOT be explained by
-        // literal-name citation — there is no name. The only honest evidence is
-        // an explicit, NARROWLY-SCOPED blanket acknowledgment: the report must
-        // mention an actual difference COUNT ("N differences") within ~400 chars
-        // of the bucket word this diff fell under. This is deliberately much
-        // narrower than "the word appears anywhere in the document" (which
-        // would silently explain everything — measured regression, reverted).
-        const bucketWord = rawSegments[rawSegments.length - 1] || String(key).replace(/\[\d+\]/g, '');
-        const countRe = /\d+\s+differences?[\s\S]{0,400}/gi;
-        cited = false;
-        if (report) {
-          for (const m of report.matchAll(countRe)) {
-            if (m[0].toLowerCase().includes(bucketWord.toLowerCase())) {
-              cited = true;
-              break;
-            }
-          }
-        }
-      }
-      if (!cited) findings.unexplainedDiffs.push({ scenario: pre.file, key });
+      if (!explainedDecision(key, explainedRegistry).explained) findings.unexplainedDiffs.push({ scenario: pre.file, key });
     }
   }
   return findings;
@@ -2009,7 +1963,8 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
   // Registry-scoped with `blockedSlugs` (the id-9/22/25/26/27 shape). The fleet is
   // DERIVED from converted.json (R-AN), never a retyped list.
   {
-    const bounds = checkClosedBounds(loadConvertedDescriptors(REPO_ROOT), loadLedger(REPO_ROOT).rows);
+    // + Spec 124 R-DE clauses (i)/(ii)/(v)/(vi) (McDonald's Airtight V3).
+    const bounds = checkClosedBounds(loadConvertedDescriptors(REPO_ROOT), loadLedger(REPO_ROOT).rows, loadVocabularyContext(REPO_ROOT));
     results.push({
       id: 28,
       slug: '(registry)',
@@ -2286,44 +2241,24 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
     });
   }
 
-  // 40. CAPTURE-EXPLAINED (Spec 124 §5 R-BA gate G, Spec 123 §6 G8, WF2
-  // "standardized gates", 2026-09-26) — a step's G8 diff-explanation channel is
-  // closed: either `docs/reports/golden/<slug>/explained-diffs.json`
-  // (`{contract_version:1, diffs:[{key,why}]}`) exists and is well-formed (the
-  // per-diff `listed`/RED decision is applied live inside `checkCaptures(`),
-  // OR — during the transition — a `{gate:'G', item:'explained:report-citation'}`
-  // ledger row permits the legacy report-substring citation `checkCaptures(`
-  // still falls back to. A step with NEITHER is RED (no diff-explanation
-  // channel at all); a step that now HAS a valid `explained-diffs.json` but
-  // still carries the transition row is an ORPHAN (R-X — delete the row once
-  // the file lands). Structural only (file-shape), not a diff re-run — the
-  // per-diff decision is `checkCaptures('s own `explainedDecision(` call, live,
-  // every run. `scripts/analysis/gates/captures.mjs` owns the answer set.
+  // 40. CAPTURE-EXPLAINED (Spec 124 §5 R-BA gate G, Spec 123 §6 G8) — a converted step's
+  // G8 diff-explanation channel is `docs/reports/golden/<slug>/explained-diffs.json`
+  // (`{contract_version:1, diffs:[{key,why}]}`), present and well-formed; the per-diff
+  // decision is `checkCaptures('s own `explainedDecision(` call, live, every run.
+  // Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): it is the ONLY channel — any gate-G
+  // `explained:*` ledger row is an ORPHAN (R-X), since no row can explain a diff any more.
+  // `scripts/analysis/gates/captures.mjs` `explainedChannelDecision` owns the answer set.
   {
-    const rowsAll40 = loadLedger(REPO_ROOT).rows;
-    const reportCitationRows = rowsAll40.filter((r) => r && r.gate === 'G' && r.item === EXPLAINED_REPORT_ITEM);
-    const violations40 = [];
-    const orphans40 = [];
     // `loadConvertedDescriptors` (identity.name), NOT `loadScoreFloorSlugs`
     // (file-basename kebab->snake) — the latter mis-derives 'load_address_points'/
     // 'load_parcels' for the two steps whose script filename differs from its
     // identity.name ('address_points'/'parcels'; measured 2026-09-26).
     const slugs40 = loadConvertedDescriptors(REPO_ROOT).map((d) => d.identity && d.identity.name).filter(Boolean);
-    for (const slug of slugs40) {
-      const explainedDoc = loadExplained(REPO_ROOT, slug);
-      const hasRow = reportCitationRows.some((r) => r.step === slug);
-      if (explainedDoc !== null) {
-        const diffsArr = Array.isArray(explainedDoc.diffs) ? explainedDoc.diffs : null;
-        if (explainedDoc.contract_version !== 1 || !diffsArr) {
-          violations40.push({ step: slug, item: 'explained:malformed', detail: `${slug}/explained-diffs.json is not {contract_version:1, diffs:[...]}` });
-        }
-        if (hasRow) orphans40.push({ step: slug, item: EXPLAINED_REPORT_ITEM });
-        continue;
-      }
-      if (!hasRow) {
-        violations40.push({ step: slug, item: EXPLAINED_REPORT_ITEM, detail: `${slug} has no explained-diffs.json and no explained:report-citation ledger row permitting the legacy citation` });
-      }
-    }
+    const { violations: violations40, orphans: orphans40 } = explainedChannelDecision(
+      slugs40,
+      (slug) => loadExplained(REPO_ROOT, slug),
+      loadLedger(REPO_ROOT).rows,
+    );
     const blockedSlugs40 = [...new Set([...violations40, ...orphans40].map((v) => v.step))];
     const pass40 = violations40.length === 0 && orphans40.length === 0;
     const detail40 = pass40
@@ -2435,8 +2370,8 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
     });
   }
 
-  // 46. SCHEMA-HOMES (registry-truth plan fold 9 C7-1/C7-2) — REPORT-ONLY until the
-  // FLEET-2 landing commit populates `checks[].reads` and `outputs.write_inventory.by_mode`.
+  // 46. SCHEMA-HOMES (registry-truth plan fold 9 C7-1/C7-2) — a permanent REPORT-ONLY adoption
+  // print (Spec 124 R-DB): R-BJ is enforced by #44 (a) and R-BK by #44 (c), never by this row.
   // Prints adoption on every run; `pass` is always true and `blockedSlugs` is empty, so
   // it can never hard-stop (no exception file — the row itself is the visible gap).
   {
@@ -5647,7 +5582,10 @@ function selfTest() {
       // Tier ownership: a file `npm run test` excludes and this validator now
       // also excludes MUST be owned by `npm run test:db`, or R-AG's two-tier
       // claim is false and the tests are simply unrun by anything.
-      if (!String(livePkg.scripts?.['test:db'] ?? '').includes(p)) {
+      // A suffix glob (`**/*.db.test.ts`, B5) is owned when test:db runs that suffix as its filter.
+      const testDb = String(livePkg.scripts?.['test:db'] ?? '');
+      const owned = p.startsWith('**/*') ? testDb.split(/\s+/).includes(p.slice('**/*'.length)) : testDb.includes(p);
+      if (!owned) {
         throw new Error(`self-test FAILED: "${p}" is excluded from \`npm run test\` but is not named by \`npm run test:db\` — excluding it here would make it unrun by EVERY tier (R-AG, Spec 124 :214)`);
       }
     }
@@ -5816,7 +5754,7 @@ function readFixtureRecords(slug) {
   }
 }
 
-function witnessFor(row, descriptorInfo, computePath, runnerFingerprints) {
+function witnessFor(row, descriptorInfo, computePath, runnerFingerprints, fingerprintSql) {
   const witnessRoot = path.join(REPO_ROOT, 'docs', 'reports', 'witness', row.slug);
   const descriptorOnDisk = descriptorInfo.ok || existsSync(path.join(REPO_ROOT, descriptorInfo.descriptorPath));
   if (!descriptorOnDisk) return null;
@@ -5840,6 +5778,11 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints) {
 
   const postTraces = readTraces('post');
   const preTraces = readTraces('pre');
+  // R-DB (Spec 124, McDonald's Airtight V3): #44 (c) counts `write_inventory.by_mode[mode]` (R-BK)
+  // for an invocation whose resolved mode is known. No capture or trace records the resolved mode
+  // yet, so none is passed: a by_mode declarer is FAIL:INPUT (mode-unresolved), never a guessed
+  // mode, until the capture records it (PIN, R-DB). Today 0 steps declare by_mode.
+  const modeByInvocation = {};
   const fixtureRecords = readFixtureRecords(row.slug);
 
   let explainedDiffs = [];
@@ -5879,8 +5822,16 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints) {
     }
   }
 
+  // R-DG (G7): the step's own plausibility[]/invariants[] SQL, fingerprinted; an unparseable entry is skipped
+  // (it is never executed as such, so no trace statement can carry its fingerprint).
+  const ownMeasurementFingerprints = new Set();
+  for (const sql of ownMeasurementSql(descriptorInfo.descriptor)) {
+    try { ownMeasurementFingerprints.add(fingerprintSql(sql)); } catch { /* not parseable SQL: nothing to match */ }
+  }
+
   return evaluateWitness({
     derivedReadsSteps,
+    ownMeasurementFingerprints,
     slug: row.slug,
     descriptor: descriptorInfo.descriptor,
     status: row.stage === 'pending' ? 'pending' : 'converted',
@@ -5890,6 +5841,7 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints) {
     explainedDiffs,
     fixtureRecords,
     runnerFingerprints,
+    modeByInvocation,
   });
 }
 
@@ -5959,6 +5911,7 @@ async function main() {
 
   // R-BZ: the RUNNER-authored statement set for #44 witness attribution (closure literals + the closed template set).
   const runnerFingerprints = await buildRunnerFingerprints({ repoRoot: REPO_ROOT });
+  const fingerprintSql = await sqlFingerprinter();
   let anyHardStop = false;
   if (ownerSpecHardStop) anyHardStop = true; // #43 is not in invariantResults — set explicitly (panel I-2)
   const summaries = [];
@@ -5971,8 +5924,8 @@ async function main() {
     if (!row.report) {
       console.error(`[step-validate] WARNING: no assessment report found for ${row.slug} — scorecard gates that read the report will read as empty/0`);
     }
-    const captureFindings = checkCaptures(row, descriptorInfo, computePath, report);
-    const witness44 = witnessFor(row, descriptorInfo, computePath, runnerFingerprints);
+    const captureFindings = checkCaptures(row, descriptorInfo, computePath);
+    const witness44 = witnessFor(row, descriptorInfo, computePath, runnerFingerprints, fingerprintSql);
     const p3 = measureP3Footprint(row, descriptorInfo);
     // matrix computed BEFORE the scorecard (Rule 13 hard-stop wiring, WF3
     // commit 4) — computeScorecard now folds an unpinned enforced-red matrix

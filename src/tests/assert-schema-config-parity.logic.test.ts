@@ -108,9 +108,12 @@ describe('assert_schema §1.2a P4 — seed default ≡ the pre-externalization l
     ).toEqual({ logic_variable: 'assert_schema_type_sample_rows' });
   });
 
-  it('the posture is the one the deviation argues for: on_invalid "default", strict, hoisted', () => {
+  it('the posture is the fleet standard: on_invalid "fail", strict, hoisted (V3 ledger B12, 2026-10-17)', () => {
     const cfg = descriptor.config as { logic_variables: ConfigVar[]; validation: string; hoisted_above_gate: boolean };
-    expect(cfg.logic_variables.map((v) => v.on_invalid)).toEqual(['default', 'default', 'default']);
+    // The "default" deviation argued from a seed fallback the config resolver no longer has: a missing
+    // logic_variables row throws whatever on_invalid says (scripts/lib/step/config.js), so on_invalid only
+    // decides an out-of-bounds operator edit, and "fail" (gate B answer 1) refuses it.
+    expect(cfg.logic_variables.map((v) => v.on_invalid)).toEqual(['fail', 'fail', 'fail']);
     expect(cfg.validation).toBe('strict');
     expect(cfg.hoisted_above_gate, 'a SKIP-eligible step must validate config ABOVE the gate').toBe(true);
   });

@@ -854,6 +854,30 @@ export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROO
   return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced, unproducedHard: split.hard, unproducedUnwitnessed: split.unwitnessed, listed };
 }
 
+/**
+ * Spec 124 R-DE (ii) (McDonald's Airtight V3): `identity.spec_version` is the producer's contract version — a
+ * pin on `records_meta.<x>.spec_version` must equal its producer's declared `identity.spec_version`, so the
+ * version is the pinned contract, never a document header that drifts from it. PURE over parsed descriptors.
+ * @returns {Array<{step:string, item:string, detail:string}>}
+ */
+export function pinSpecVersionViolations(descriptors) {
+  const list = Array.isArray(descriptors) ? descriptors : [];
+  const byName = new Map(list.filter((d) => d && d.identity).map((d) => [d.identity.name, d]));
+  const out = [];
+  for (const d of list) {
+    const step = d && d.identity && d.identity.name;
+    for (const pin of d && d.staleness && Array.isArray(d.staleness.pins) ? d.staleness.pins : []) {
+      if (!pin || typeof pin.stamp !== 'string' || !/\.spec_version$/.test(pin.stamp) || pin.equals === undefined) continue;
+      const producer = byName.get(pin.step);
+      const declared = producer && producer.identity ? producer.identity.spec_version : undefined;
+      if (declared !== pin.equals) {
+        out.push({ step, item: `staleness.pins.${pin.step}.spec_version`, detail: `${step} pins ${pin.step} ${pin.stamp} == ${JSON.stringify(pin.equals)} but ${pin.step} declares identity.spec_version ${JSON.stringify(declared)} (Spec 124 R-DE (ii))` });
+      }
+    }
+  }
+  return out;
+}
+
 /** Both halves, disk-backed — what `step-validate.mjs` calls. Also verifies the registry is fresh (`--check`). */
 export function checkConsumerRegistry(repoRoot, ledgerRows) {
   // Item 1 (gates from ①): with a pending step evaluated as-converted, the COMMITTED
@@ -873,7 +897,16 @@ export function checkConsumerRegistry(repoRoot, ledgerRows) {
       allowed: [],
     };
   }
-  return checkConsumerContracts(overlay ? buildRegistry(repoRoot) : readRegistry(repoRoot), ledgerRows, repoRoot);
+  const contracts = checkConsumerContracts(overlay ? buildRegistry(repoRoot) : readRegistry(repoRoot), ledgerRows, repoRoot);
+  const pins = pinSpecVersionViolations(loadConvertedDescriptors(repoRoot));
+  if (pins.length === 0) return contracts;
+  return {
+    ...contracts,
+    pass: false,
+    blockedSlugs: [...new Set([...(contracts.blockedSlugs || []), ...pins.map((v) => v.step)])],
+    detail: `${contracts.detail}; ${pins.length} pin spec_version mismatch(es) [${pins.map((v) => v.detail).join('; ')}]`,
+    unallowed: [...(contracts.unallowed || []), ...pins],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -968,6 +1001,12 @@ export function selfTest() {
   const { unallowed, orphans } = matchLedger('D', producerViol, [orphanRow]);
   if (unallowed.length !== 0 || orphans.length !== 1) {
     throw new Error(`self-test FAILED (12): orphan row not RED (${JSON.stringify({ unallowed, orphans })})`);
+  }
+  // (13) R-DE (ii): a spec_version pin equals its producer's identity.spec_version (stamp joined so the
+  // consumer scan never reads this fixture as a records_meta consumer).
+  const pinFleet = (equals) => [{ identity: { name: 'r' }, staleness: { pins: [{ step: 'p', stamp: ['records_meta', 'p_load', 'spec_version'].join('.'), equals }] } }, { identity: { name: 'p', spec_version: '1.2' } }];
+  if (pinSpecVersionViolations(pinFleet('1.2')).length !== 0 || pinSpecVersionViolations(pinFleet('1.1')).length !== 1) {
+    throw new Error('self-test FAILED (13): R-DE (ii) pin spec_version');
   }
 }
 

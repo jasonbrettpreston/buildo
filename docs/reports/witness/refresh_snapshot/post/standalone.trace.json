@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/refresh-snapshot.js",
   "chain": "none",
-  "source_fingerprint": "b5c09e78568a72c647fac5f4bb874cd6303dc4f1dbe5167868f2571ea80eb4f4",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "f64043f4dcf2fe3175ca1bbadc4a9c481ebd45e5cbeb790342ef8801a7c94d5f",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 56,
-    "distinct": 48,
+    "calls": 57,
+    "distinct": 49,
     "utility": 15,
-    "tracer_self_ms": 1.775,
-    "wall_ms": 3359
+    "tracer_self_ms": 1.798,
+    "wall_ms": 3368
   },
   "statements": [
     {
@@ -79,6 +79,18 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "196e0e3fd68dde0c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 5,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
       "error": null
     },
     {
@@ -159,15 +171,90 @@
       "error": null
     },
     {
-      "fingerprint": "5117505b38a46b65",
-      "kind": "read",
+      "fingerprint": "4889f94ceb7c3a50",
+      "kind": "write",
       "count": 1,
-      "rowCount": 5,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "columns"
-      ],
+      "rowCount": 1,
+      "reads": {
+        "data_quality_snapshots": [
+          "snapshot_date"
+        ]
+      },
+      "writes": {
+        "data_quality_snapshots": [
+          "active_permits",
+          "builders_enriched",
+          "builders_total",
+          "builders_with_email",
+          "builders_with_google",
+          "builders_with_phone",
+          "builders_with_website",
+          "builders_with_wsib",
+          "building_footprints_total",
+          "coa_avg_confidence",
+          "coa_high_confidence",
+          "coa_linked",
+          "coa_low_confidence",
+          "coa_total",
+          "cost_estimates_from_model",
+          "cost_estimates_from_permit",
+          "cost_estimates_null_cost",
+          "cost_estimates_total",
+          "created_at",
+          "inspections_not_passed_count",
+          "inspections_outstanding_count",
+          "inspections_passed_count",
+          "inspections_permits_scraped",
+          "inspections_total",
+          "last_sync_at",
+          "last_sync_status",
+          "null_builder_name_count",
+          "null_description_count",
+          "null_est_const_cost_count",
+          "null_geo_id_count",
+          "null_street_name_count",
+          "null_street_num_count",
+          "parcel_avg_confidence",
+          "parcel_exact_matches",
+          "parcel_name_matches",
+          "parcel_spatial_matches",
+          "parcels_with_buildings",
+          "permits_geocoded",
+          "permits_updated_24h",
+          "permits_updated_30d",
+          "permits_updated_7d",
+          "permits_with_builder",
+          "permits_with_detailed_tags",
+          "permits_with_neighbourhood",
+          "permits_with_parcel",
+          "permits_with_scope",
+          "permits_with_scope_tags",
+          "permits_with_trades",
+          "schema_column_counts",
+          "scope_project_type_breakdown",
+          "scope_tags_top",
+          "sla_permits_ingestion_hours",
+          "snapshot_date",
+          "timing_calibration_avg_sample",
+          "timing_calibration_freshness_hours",
+          "timing_calibration_total",
+          "total_permits",
+          "trade_avg_confidence",
+          "trade_commercial_classified",
+          "trade_commercial_total",
+          "trade_matches_total",
+          "trade_residential_classified",
+          "trade_residential_total",
+          "trade_tier1_count",
+          "trade_tier2_count",
+          "trade_tier3_count",
+          "violation_cost_out_of_range",
+          "violation_future_issued_date",
+          "violation_missing_status",
+          "violations_total"
+        ]
+      },
+      "excluded": [],
       "error": null
     },
     {
@@ -185,13 +272,13 @@
       "params": [
         [
           "completed",
-          3115,
+          3161,
           null,
-          2856,
+          3083,
           1,
           0,
           1,
-          "{\"duration_ms\":3109,\"neighbourhood_count\":174191,\"active_permits\":191500,\"read_timings\":[{\"key\":\"permitsScalar\",\"elapsed_ms\":213,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"trades\",\"elapsed_ms\":1932,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tradeByType\",\"elapsed_ms\":502,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"builders\",\"elapsed_ms\":1,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"parcels\",\"elapsed_ms\":223,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"coa\",\"elapsed_ms\":10,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tagBreakdown\",\"elapsed_ms\":39,\"row_count\":91,\"phase\":\"main\"},{\"key\":\"sync\",\"elapsed_ms\":0,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"massing\",\"elapsed_ms\":24,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"schemaColumnCounts\",\"elapsed_ms\":2,\"row_count\":5,\"phase\":\"optional\"},{\"key\":\"sla\",\"elapsed_ms\":21,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"inspections\",\"elapsed_ms\":0,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"costEst\",\"elapsed_ms\":11,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"coaFunnel\",\"elapsed_ms\":23,\"row_count\":1,\"phase\":\"optional\"}],\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5,\"refresh_snapshot_read_statement_timeout_minutes\":5,\"refresh_snapshot_phase_deadline_minutes\":12},\"terminal\":\"recorded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":60.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33949,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"permits\":254082,\"permit_trades\":1784196,\"entities\":3948,\"permit_parcels\":245429,\"coa_applications\":33949,\"sync_runs\":63,\"building_footprints\":427077,\"parcel_buildings\":535039,\"permit_inspections\":816,\"cost_estimates\":274398,\"lead_parcels\":274897,\"trade_forecasts\":1100888},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.32,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3115,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":3155,\"neighbourhood_count\":174191,\"active_permits\":191500,\"read_timings\":[{\"key\":\"permitsScalar\",\"elapsed_ms\":211,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"trades\",\"elapsed_ms\":1954,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tradeByType\",\"elapsed_ms\":493,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"builders\",\"elapsed_ms\":0,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"parcels\",\"elapsed_ms\":246,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"coa\",\"elapsed_ms\":10,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"tagBreakdown\",\"elapsed_ms\":37,\"row_count\":91,\"phase\":\"main\"},{\"key\":\"sync\",\"elapsed_ms\":1,\"row_count\":1,\"phase\":\"main\"},{\"key\":\"massing\",\"elapsed_ms\":25,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"schemaColumnCounts\",\"elapsed_ms\":3,\"row_count\":5,\"phase\":\"optional\"},{\"key\":\"sla\",\"elapsed_ms\":20,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"inspections\",\"elapsed_ms\":1,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"costEst\",\"elapsed_ms\":10,\"row_count\":1,\"phase\":\"optional\"},{\"key\":\"coaFunnel\",\"elapsed_ms\":24,\"row_count\":1,\"phase\":\"optional\"}],\"config\":{\"snapshot_coa_conf_high\":0.8,\"coa_match_conf_medium\":0.5,\"refresh_snapshot_read_statement_timeout_minutes\":5,\"refresh_snapshot_phase_deadline_minutes\":12,\"pipeline_timezone\":\"UTC\",\"refresh_snapshot_updated_24h_window_hours\":24,\"refresh_snapshot_updated_7d_window_days\":7,\"refresh_snapshot_updated_30d_window_days\":30,\"refresh_snapshot_cost_oor_min_cad\":100,\"refresh_snapshot_cost_oor_max_cad\":1000000000},\"terminal\":\"recorded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":0,\"name\":\"Refresh Data Quality Snapshot\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"snapshots_created\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"snapshots_updated\",\"value\":1,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"optional_query_failed\",\"value\":[],\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_pct\",\"value\":60.2,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"coa_cost_coverage_open_pct\",\"value\":50,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_total\",\"value\":33949,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_geo_open\",\"value\":3316,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_cost\",\"value\":1659,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_fresh_forecast\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"servable_coa_funnel_score\",\"value\":1558,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"duplicate_snapshot_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"permits\":254082,\"permit_trades\":1784196,\"entities\":3948,\"permit_parcels\":245429,\"coa_applications\":33949,\"sync_runs\":63,\"building_footprints\":427077,\"parcels\":496536,\"parcel_buildings\":535039,\"permit_inspections\":816,\"cost_estimates\":274398,\"lead_parcels\":274897,\"trade_forecasts\":1100888},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"sys_duplicate_snapshot_date_count_duration_ms\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0.32,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":3161,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -199,7 +286,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -388,112 +475,13 @@
       "error": null
     },
     {
-      "fingerprint": "73f5d76ba8569f71",
-      "kind": "write",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "data_quality_snapshots": [
-          "snapshot_date"
-        ]
-      },
-      "writes": {
-        "data_quality_snapshots": [
-          "active_permits",
-          "builders_enriched",
-          "builders_total",
-          "builders_with_email",
-          "builders_with_google",
-          "builders_with_phone",
-          "builders_with_website",
-          "builders_with_wsib",
-          "building_footprints_total",
-          "coa_avg_confidence",
-          "coa_high_confidence",
-          "coa_linked",
-          "coa_low_confidence",
-          "coa_total",
-          "cost_estimates_from_model",
-          "cost_estimates_from_permit",
-          "cost_estimates_null_cost",
-          "cost_estimates_total",
-          "created_at",
-          "inspections_not_passed_count",
-          "inspections_outstanding_count",
-          "inspections_passed_count",
-          "inspections_permits_scraped",
-          "inspections_total",
-          "last_sync_at",
-          "last_sync_status",
-          "null_builder_name_count",
-          "null_description_count",
-          "null_est_const_cost_count",
-          "null_geo_id_count",
-          "null_street_name_count",
-          "null_street_num_count",
-          "parcel_avg_confidence",
-          "parcel_exact_matches",
-          "parcel_name_matches",
-          "parcel_spatial_matches",
-          "parcels_with_buildings",
-          "permits_geocoded",
-          "permits_updated_24h",
-          "permits_updated_30d",
-          "permits_updated_7d",
-          "permits_with_builder",
-          "permits_with_detailed_tags",
-          "permits_with_neighbourhood",
-          "permits_with_parcel",
-          "permits_with_scope",
-          "permits_with_scope_tags",
-          "permits_with_trades",
-          "schema_column_counts",
-          "scope_project_type_breakdown",
-          "scope_tags_top",
-          "sla_permits_ingestion_hours",
-          "snapshot_date",
-          "timing_calibration_avg_sample",
-          "timing_calibration_freshness_hours",
-          "timing_calibration_total",
-          "total_permits",
-          "trade_avg_confidence",
-          "trade_commercial_classified",
-          "trade_commercial_total",
-          "trade_matches_total",
-          "trade_residential_classified",
-          "trade_residential_total",
-          "trade_tier1_count",
-          "trade_tier2_count",
-          "trade_tier3_count",
-          "violation_cost_out_of_range",
-          "violation_future_issued_date",
-          "violation_missing_status",
-          "violations_total"
-        ]
-      },
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "77737e907db982db",
+      "fingerprint": "72d5363169dea47a",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
         "permits": [
-          "builder_name",
-          "description",
-          "est_const_cost",
-          "geo_id",
-          "issued_date",
-          "last_seen_at",
-          "latitude",
-          "longitude",
-          "neighbourhood_id",
-          "scope_tags",
-          "status",
-          "street_name",
-          "street_num"
+          "first_seen_at"
         ]
       },
       "writes": {},
@@ -587,7 +575,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 10,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -668,6 +656,18 @@
       "rowCount": 1,
       "reads": {
         "permit_trades": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
       },
       "writes": {},
       "excluded": [],
@@ -770,20 +770,6 @@
       "error": null
     },
     {
-      "fingerprint": "eaf3fb3c61fd94b4",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "permits": [
-          "first_seen_at"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "ed10ec11bbfbc432",
       "kind": "read",
       "count": 2,
@@ -819,6 +805,32 @@
       "error": null
     },
     {
+      "fingerprint": "fe3816d484167f83",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "builder_name",
+          "description",
+          "est_const_cost",
+          "geo_id",
+          "issued_date",
+          "last_seen_at",
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "scope_tags",
+          "status",
+          "street_name",
+          "street_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "fedd16cf06d056de",
       "kind": "read",
       "count": 1,
@@ -833,9 +845,9 @@
   ],
   "transactions": [
     {
-      "client": "47053:2",
+      "client": "12934:2",
       "write_fingerprints": [
-        "73f5d76ba8569f71"
+        "4889f94ceb7c3a50"
       ]
     }
   ],
@@ -948,6 +960,7 @@
       "parcel_buildings": [
         "parcel_id"
       ],
+      "parcels": [],
       "permit_inspections": [
         "permit_num",
         "status"

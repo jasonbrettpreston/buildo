@@ -125,6 +125,9 @@ const CONFIG_VARS = {
   T5: 'load_ravines_mass_delete_fail_pct',
   T6: 'load_ravines_download_timeout_ms',
   T7: 'load_ravines_rows_changed_ratio_warn_pct',
+  // V3 ledger E (2026-10-17): display bounds, compared against nothing (load_centreline precedent).
+  T8: 'load_ravines_round_scale',
+  T9: 'load_ravines_max_detail_keys',
 } as const;
 const LIMIT_FROM_CONFIG_VARS = [CONFIG_VARS.T2, CONFIG_VARS.T3, CONFIG_VARS.T4, CONFIG_VARS.T5, CONFIG_VARS.T7];
 
@@ -169,7 +172,7 @@ const { validateDescriptor } = require(path.join(REPO_ROOT, 'scripts/lib/step/va
   validateDescriptor: (d: unknown) => unknown;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
-const { buildAuditTable, checkRow, deriveVerdict } = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+const { buildAuditTable, checkRow, deriveVerdict, makeWithinLimit } = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
   buildAuditTable: (
     descriptor: Descriptor,
     chainId: string | null,
@@ -177,6 +180,8 @@ const { buildAuditTable, checkRow, deriveVerdict } = require(path.join(REPO_ROOT
   ) => { rows: AuditRow[]; audit_table: { verdict: string } };
   checkRow: (check: Check, observation: unknown, onCheckError: string) => AuditRow | null;
   deriveVerdict: (rows: Array<{ status: string }>) => 'PASS' | 'WARN' | 'FAIL';
+  /** Spec 124 R-CY — the runner's `ctx.withinLimit` seam (a restating emit asks the declared bound). */
+  makeWithinLimit: (descriptor: Descriptor, config: Readonly<Record<string, number>>) => (id: string, value: number) => boolean;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
 const { RUN_STATUS } = require(path.join(REPO_ROOT, 'scripts/lib/step/ledger.js')) as {
@@ -649,6 +654,7 @@ const SABOTAGE_BY_VAR: Record<string, (w: World) => void> = {
 // Each flips ONLY the counter it names — healthy 0 → 40 — so #182 ("a sabotage must change
 // something") and #163 (the compute-swap control) both hold, and no other row moves.
 const SABOTAGE_BY_ID: Array<[RegExp, (w: World) => void]> = [
+  [/dataset_source_license/i, (w) => { w.acquired.license_url = ''; }], // O-2 (2026-10-17): WARN, not INFO — a threshold exists (R-H addendum / LG-29), so a missing licence URL must warn
   [/bad_objectid/i, (w) => { w.acquired.bad_key_count = 40; }], // D-4: CKAN schema drift, OBJECTID unusable
   [/null_geometry/i, (w) => { w.acquired.null_geometry_count = 40; }], // D-4: dropped BEFORE the geometry validation, so L8 cannot see it
   [/duplicate_objectid/i, (w) => { w.acquired.duplicate_key_count = 40; }], // D-4: two polygons collapsed onto one key
@@ -713,6 +719,7 @@ async function runCompute(compute: ComputeFn, d: Descriptor, w: World): Promise<
     fetch: () => { throw new Error('the compute must not fetch — acquisition is the library seam (A-2)'); },
     clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
     config,
+    withinLimit: makeWithinLimit(d, config),
     // A-1(b): the library-provided result the checks observe over.
     acquired: w.acquired,
     written: w.written,
@@ -1570,7 +1577,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     expect(byName[CONFIG_VARS.T2]?.on_invalid, 'T2 verdict bound: on_invalid fail').toBe('fail');
     expect(byName[CONFIG_VARS.T4]?.on_invalid, 'T4 verdict bound: on_invalid fail').toBe('fail');
     expect(byName[CONFIG_VARS.T5]?.on_invalid, 'T5 verdict bound: on_invalid fail').toBe('fail');
-    expect(byName[CONFIG_VARS.T6]?.on_invalid, 'T6 timeout: on_invalid clamp').toBe('clamp');
+    expect(byName[CONFIG_VARS.T6]?.on_invalid, 'T6 timeout: on_invalid fail (V3 ledger B12, 2026-10-17)').toBe('fail');
     for (const v of Object.values(CONFIG_VARS)) expect(byName[v]?.min !== 'none' && byName[v]?.max !== 'none', `${v} declares both bounds`).toBe(true);
     // A-4 (1) — T2–T5 are verdict bounds rendered from the resolved value; each bound to exactly one check
     for (const v of LIMIT_FROM_CONFIG_VARS) {
@@ -1860,6 +1867,7 @@ describe('LR-D1 — the dropped source ids are ONE row\'s detail, capped, count 
     expect(typeof check, 'the descriptor declares ravine_geometry_skipped_pct — the dispatch must carry it').toBe('function');
     const calls: Array<[string, SkipObservation]> = [];
     check!({
+      config: { load_ravines_max_detail_keys: CAP, load_ravines_round_scale: 1000 },
       acquired: {
         feature_count: LIVE_FEATURE_COUNT,
         invalid_geometry_skipped: droppedCount,
@@ -1870,10 +1878,11 @@ describe('LR-D1 — the dropped source ids are ONE row\'s detail, capped, count 
     return calls;
   }
 
-  const CAP = (loadComputeModule().MAX_DETAIL_KEYS as number | undefined) ?? -1;
+  // V3 ledger E (2026-10-17): the cap is the seeded logic variable load_ravines_max_detail_keys.
+  const CAP = (JSON.parse(fs.readFileSync(abs(SEED_REL), 'utf8')) as Record<string, { default: number }>).load_ravines_max_detail_keys?.default ?? -1;
 
-  it('the cap is declared by the compute and by the descriptor (a magic 50 in one place only is not a bound)', () => {
-    expect(CAP, `${COMPUTE_REL} must export MAX_DETAIL_KEYS`).toBeGreaterThan(0);
+  it('the cap is declared by a seeded logic variable and by the descriptor (a magic 50 in one place only is not a bound)', () => {
+    expect(CAP, `${SEED_REL} must seed load_ravines_max_detail_keys`).toBeGreaterThan(0);
     const d = loadDescriptor();
     const check = d.checks.find((c) => c.id === 'ravine_geometry_skipped_pct');
     expect(check, 'the check must be declared').toBeDefined();
@@ -2183,6 +2192,7 @@ describe('Fold C / LR-D9 — when:"pre_write" aborts BEFORE any write (Spec 59 L
           descriptor: d,
           checks: d.checks.map((c) => c.id),
           config,
+          withinLimit: makeWithinLimit(d, config),
           log: { info: () => {}, warn: () => {}, error: () => {} },
           clock: () => Date.parse(`${FIXTURE_REVIEWED}T00:00:00Z`),
           report: () => {},

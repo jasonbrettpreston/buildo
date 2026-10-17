@@ -440,7 +440,9 @@ describe('gate D — MQ-A5 unproduced-read predicate (converted inserter on the 
 
   // Ceiling lock: the committed count the live UNPRODUCED-UNWITNESSED count may only equal or go
   // below. Raising it needs a new Spec 124 §5 row + Operator-Ruling (never a silent bump).
-  const UNPRODUCED_UNWITNESSED_CEILING = 41;
+  // 41 → 42 (2026-10-17, Spec 124 R-DG (A5)): the G9 resolver newly records permit_inspections.created_at
+  // (src/app/api/permits/[id]/route.ts); its inserter is the exempt Python inspections step.
+  const UNPRODUCED_UNWITNESSED_CEILING = 42;
   it('A5-6 live: UNPRODUCED-UNWITNESSED count <= the committed ceiling; printed every run; every entry is on a table with no converted inserter', () => {
     const c = reg.checkConsumerContracts(reg.readRegistry(REPO_ROOT), [], REPO_ROOT);
     console.info(`[gate D MQ-A5] unproduced HARD: ${c.unproducedHard.length}; UNPRODUCED-UNWITNESSED: ${c.unproducedUnwitnessed.length}`);

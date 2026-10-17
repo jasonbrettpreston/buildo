@@ -336,7 +336,8 @@ function goldenDocs(): GoldenDoc[] {
   artifact(GOLDEN_DIR_REL, 'golden-master captures, commit 5');
   const docs = fs
     .readdirSync(abs(GOLDEN_DIR_REL))
-    .filter((f) => f.endsWith('.json'))
+    // explained-diffs.json is gate G's diff-explanation channel (Spec 124 R-DA), not a capture.
+    .filter((f) => f.endsWith('.json') && f !== 'explained-diffs.json')
     .map((f) => ({ ...(JSON.parse(fs.readFileSync(path.join(abs(GOLDEN_DIR_REL), f), 'utf8')) as GoldenDoc), file: f }));
   expect(docs.length, `${GOLDEN_DIR_REL} holds no capture docs`).toBeGreaterThan(0);
   for (const d of docs) expect(d.harness, `${d.file} is not a capture-step-golden doc`).toBe(GOLDEN_HARNESS_REL);
@@ -610,11 +611,17 @@ function inputFromLegacyStep(src: string): FenceInput {
   };
 }
 
-/** The converted step: compute source + descriptor. */
+/**
+ * The converted step: compute source + descriptor. Since CP-PLANA (Spec 124 R-BZ G10) every
+ * endpoint lives in the descriptor's `inputs.reads.externals[].url`, so the text a URL fence
+ * reads is the compute source PLUS those declared urls.
+ */
 function inputFromConverted(computeSrc: string, d: Descriptor): FenceInput {
   const head = checkById(d, 'source_archives_reachable').expect as { http_head_ok?: string[] };
+  const externals = ((d as unknown as { inputs?: { reads?: { externals?: Array<{ url?: string }> } } }).inputs?.reads?.externals) ?? [];
+  const declaredUrls = externals.map((e) => e.url ?? '').filter((u) => u.length > 0);
   return {
-    text: computeSrc,
+    text: [computeSrc, ...declaredUrls].join('\n'),
     addressPointExpect: checkById(d, 'address_point_columns').expect as string[],
     zoningRequired: zoningRequired(d),
     headOk: head && Array.isArray(head.http_head_ok) ? head.http_head_ok : [],
@@ -1404,9 +1411,10 @@ describe('RULING R-D — declared_logic_variables_present (cloud parity, chain-s
     collectDeclaredLogicVariableNames: () => string[];
   };
 
-  it('inputs.reads.tables declares logic_variables (the ONLY DB table this ASSERT step reads)', () => {
+  it('inputs.reads.tables declares no table: logic_variables is read through ctx.probePresence (V3 #44 G4, 2026-10-17)', () => {
+    // logic_variables is runner-owned (the resolver always excludes it), so a declaration could never be witnessed.
     const d = loadDescriptor();
-    expect(d.inputs.reads.tables.map((t) => t.table)).toContain('logic_variables');
+    expect(d.inputs.reads.tables.map((t) => t.table)).toEqual([]);
   });
 
   it('checks[].expect ≡ config.probe_presence ≡ the LIVE fleet derivation — none of the three may drift from the others', () => {

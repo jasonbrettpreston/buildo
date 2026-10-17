@@ -1,0 +1,12 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.forced_full.json": {
+      "via": "env",
+      "env": {
+        "ENRICH_CENTRELINE_FORCE_FULL": "1"
+      },
+      "why": "#38 evidence: the descriptor's force_full env recomputes every valid-geom parcel (V3 fleet night 2026-10-16 night.log)."
+    }
+  }
+}

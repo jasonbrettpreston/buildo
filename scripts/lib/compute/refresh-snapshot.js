@@ -59,9 +59,10 @@ const TABLE = 'data_quality_snapshots';
 /**
  * ① Consolidates the 10 scalar (non-GROUP-BY) permits.status-scoped aggregate
  * queries into a single no-WHERE pass — verbatim port, unchanged since 8cc99c78.
- * @returns {{ sql: string, params: [string[]] }}
+ * @param {Date|string} runAt - the run clock (the recorder runner's clockNow), bound as $2 — never NOW() (R-BZ G6)
+ * @returns {{ sql: string, params: [string[], Date|string] }}
  */
-function buildPermitsScalarQuery() {
+function buildPermitsScalarQuery(runAt, config) {
   return {
     sql: `SELECT
         COUNT(*) AS total,
@@ -74,21 +75,28 @@ function buildPermitsScalarQuery() {
         COUNT(*) FILTER (WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0 AND status = ANY($1)) AS scope_tags_count,
         COUNT(*) FILTER (WHERE scope_tags IS NOT NULL AND array_length(scope_tags, 1) > 0 AND status = ANY($1)
           AND EXISTS (SELECT 1 FROM unnest(scope_tags) AS t WHERE t NOT IN ('residential', 'commercial', 'mixed-use'))) AS detailed_tags_count,
-        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '24 hours') AS updated_24h,
-        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '7 days') AS updated_7d,
-        COUNT(*) FILTER (WHERE last_seen_at > NOW() - INTERVAL '30 days') AS updated_30d,
+        COUNT(*) FILTER (WHERE last_seen_at > $2::timestamptz - make_interval(hours => $3::int)) AS updated_24h,
+        COUNT(*) FILTER (WHERE last_seen_at > $2::timestamptz - make_interval(days => $4::int)) AS updated_7d,
+        COUNT(*) FILTER (WHERE last_seen_at > $2::timestamptz - make_interval(days => $5::int)) AS updated_30d,
         COUNT(*) FILTER (WHERE (description IS NULL OR description = '') AND status = ANY($1)) AS null_description,
         COUNT(*) FILTER (WHERE (builder_name IS NULL OR builder_name = '') AND status = ANY($1)) AS null_builder_name,
         COUNT(*) FILTER (WHERE est_const_cost IS NULL AND status = ANY($1)) AS null_est_const_cost,
         COUNT(*) FILTER (WHERE (street_num IS NULL OR street_num = '') AND status = ANY($1)) AS null_street_num,
         COUNT(*) FILTER (WHERE (street_name IS NULL OR street_name = '') AND status = ANY($1)) AS null_street_name,
         COUNT(*) FILTER (WHERE (geo_id IS NULL OR geo_id = '') AND status = ANY($1)) AS null_geo_id,
-        COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < 100 OR est_const_cost > 1000000000)
+        COUNT(*) FILTER (WHERE est_const_cost IS NOT NULL AND (est_const_cost < $6 OR est_const_cost > $7)
           AND status = ANY($1)) AS cost_oor,
-        COUNT(*) FILTER (WHERE issued_date > NOW() AND status = ANY($1)) AS future_issued,
+        COUNT(*) FILTER (WHERE issued_date > $2::timestamptz AND status = ANY($1)) AS future_issued,
         COUNT(*) FILTER (WHERE (status IS NULL OR status = '') AND status = ANY($1)) AS missing_status
       FROM permits`,
-    params: [ACTIVE_PERMIT_STATUSES],
+    // V3 ledger E (McDonald's Airtight V3, 2026-10-17): the windows (pinned to the metric names they define)
+    // and the cost out-of-range bounds are logic variables, bound as $3..$7.
+    params: [
+      ACTIVE_PERMIT_STATUSES, runAt,
+      config.refresh_snapshot_updated_24h_window_hours, config.refresh_snapshot_updated_7d_window_days,
+      config.refresh_snapshot_updated_30d_window_days, config.refresh_snapshot_cost_oor_min_cad,
+      config.refresh_snapshot_cost_oor_max_cad,
+    ],
   };
 }
 
@@ -172,11 +180,13 @@ function splitTagBreakdown(rows) {
  * guarantee); `optional` runs via plain reads, independently caught, each with a
  * generic prior-row carry-forward on failure (RS-D2).
  * @param {Record<string, number>} config
+ * @param {Date|string} runAt - the run clock (the recorder runner's clockNow)
  */
-function buildReads(config) {
+function buildReads(config, runAt) {
+  if (runAt === undefined || runAt === null) throw new Error('refresh_snapshot buildReads: the run clock (runAt) is required — the reads bind it, never NOW() (R-BZ G6)');
   const snapshotCoaConfHigh = config[T1_VAR];
   const coaConfMedium = config[T2_VAR];
-  const permitsScalar = buildPermitsScalarQuery();
+  const permitsScalar = buildPermitsScalarQuery(runAt, config);
   const tagBreakdown = buildTagBreakdownQuery();
   const tradeByType = buildTradeByTypeQuery();
   return {
@@ -249,18 +259,19 @@ function buildReads(config) {
         params: [],
       },
       {
+        // CP-S5 (Spec 124 R-CX) — a CATALOG op, not SQL text: the runner executes it through
+        // the runner-owned ctx.catalog reader (R-BZ G3) on the optional-read client, in the same
+        // `[{table_name, col_count}]` rows shape, with the same carry-forward on failure.
+        // `builders` (dropped by migration 056) is no longer named: it was never present, so
+        // its absence from the GROUP BY result is unchanged; every named table is declared in
+        // inputs.reads.tables (`parcels` declared for this read).
         key: 'schemaColumnCounts',
-        sql: `SELECT table_name, COUNT(*)::text as col_count
-       FROM information_schema.columns
-       WHERE table_schema = 'public'
-         AND table_name IN ('permits', 'builders', 'coa_applications', 'parcels', 'permit_trades', 'permit_parcels')
-       GROUP BY table_name ORDER BY table_name`,
-        params: [],
+        catalog: { op: 'columnCounts', tables: ['coa_applications', 'parcels', 'permit_parcels', 'permit_trades', 'permits'] },
       },
       {
         key: 'sla',
-        sql: `SELECT EXTRACT(EPOCH FROM (NOW() - MAX(first_seen_at))) / 3600 as hours FROM permits`,
-        params: [],
+        sql: `SELECT EXTRACT(EPOCH FROM ($1::timestamptz - MAX(first_seen_at))) / 3600 as hours FROM permits`,
+        params: [runAt],
       },
       {
         key: 'inspections',
@@ -569,16 +580,20 @@ function buildRow(results, prevRow, prior, config) {
  * pure JS, verbatim-ported SQL text (`:503-626` pre-conversion) — `guard:"none"`
  * per GAP-2 (Rule 9 grandfathered: a metrics-recording row's entire purpose is to
  * differ from the prior value every run, so an IS DISTINCT FROM guard is
- * near-vacuous), `snapshot_date` bound via the SAME server-side `CURRENT_DATE`
- * literal as before, never a JS-computed date value. `created_at`, by contrast, IS a
+ * near-vacuous), `snapshot_date` is the run clock's calendar date in
+ * `pipeline_timezone` (Spec 124 R-CE), computed in SQL from the bound `runAt` + zone
+ * — never the server-side `CURRENT_DATE`. `created_at`, by contrast, IS a
  * run-clock value: it binds the caller's `runAt` (FLEET-2 U1, source "run_at"), never
  * the server-side `NOW()` this function used to emit.
  * @param {Record<string, unknown>} row - from `buildRow()`
  * @param {Date|string} runAt - the run clock (pipeline.getDbTimestamp); created_at binds it (FLEET-2 U1, source "run_at")
+ * @param {Record<string, unknown>} config - the resolved config; `pipeline_timezone` names the snapshot_date zone (R-CE)
  * @returns {{ sql: string, params: unknown[] }}
  */
-function buildWriteSql(row, runAt) {
+function buildWriteSql(row, runAt, config) {
   if (runAt === undefined || runAt === null) throw new Error('refresh_snapshot buildWriteSql: the run clock (runAt) is required — created_at binds it, never NOW() (FLEET-2 U1)');
+  const zone = config && config.pipeline_timezone;
+  if (typeof zone !== 'string' || zone.length === 0) throw new Error('refresh_snapshot buildWriteSql: config.pipeline_timezone is required — snapshot_date is the run clock\'s date in that zone, never CURRENT_DATE (R-CE)');
   const cols = [
     'total_permits', 'active_permits',
     'permits_with_trades', 'trade_matches_total', 'trade_avg_confidence',
@@ -608,14 +623,16 @@ function buildWriteSql(row, runAt) {
   ];
   const jsonbCols = new Set(['scope_project_type_breakdown', 'scope_tags_top', 'schema_column_counts']);
   const placeholders = cols.map((c, i) => `$${i + 1}${jsonbCols.has(c) ? '::jsonb' : ''}`);
-  const runAtParam = `$${cols.length + 1}::timestamptz`;
+  // The zone rides BEFORE the run clock so `runAt` stays the LAST bound parameter (U1).
+  const zoneParam = `$${cols.length + 1}`;
+  const runAtParam = `$${cols.length + 2}::timestamptz`;
   const setClause = cols.map((c) => `${c}=EXCLUDED.${c}`).join(', ');
   const sql = `INSERT INTO ${TABLE} (
         snapshot_date,
         created_at,
         ${cols.join(',\n        ')}
       ) VALUES (
-        CURRENT_DATE,
+        (${runAtParam} AT TIME ZONE ${zoneParam})::date,
         ${runAtParam},
         ${placeholders.join(',')}
       )
@@ -623,7 +640,7 @@ function buildWriteSql(row, runAt) {
         ${setClause},
         created_at=${runAtParam}
       RETURNING (xmax::text::int = 0) AS is_insert, snapshot_date;`;
-  const params = [...cols.map((c) => row[c]), runAt];
+  const params = [...cols.map((c) => row[c]), zone, runAt];
   return { sql, params };
 }
 

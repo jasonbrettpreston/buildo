@@ -35,6 +35,7 @@
 'use strict';
 
 const sourceVersion = require('../source-version');
+const pipeline = require('../pipeline');
 // Commit 5 (WF1 cross-step ledger, Spec 122 §6, §11 dual path) — the
 // three-form slug expansion `deriveLedgerSlugs` computed as a private
 // closure is now the SAME `slugForms` `scripts/lib/ledger.js#stepUpstreams`
@@ -297,6 +298,40 @@ function skipCheckDecision({ lastModified, etag = null, contentHash = null, prio
     { lastModified, etag, contentHash, priorMeta: prior && typeof prior === 'object' ? prior : null },
     { style: sourceVersion.STYLE_VALIDATOR_EQUALITY, contentHashInNoValidatorsBail: false },
   );
+}
+
+/**
+ * R-DD (Spec 124, McDonald's Airtight V3; LBMA-D7) — a source-version skip is honoured only
+ * over a non-empty target. Every validator / content-hash / all-primaries decision compares the
+ * source with the PRIOR RUN's meta only, so a target emptied since that run (a truncate, a
+ * restore, a fresh DB) would read as "nothing to do" and the run would write 0 rows. That is
+ * the "can't tell" case the fail-safe LOAD rule (`../source-version.js` header) resolves to a
+ * LOAD. ONE helper, used at every skip site (acquire.js tier 1 + tier 2, index.js all-primaries);
+ * no descriptor field.
+ *
+ * `targetIsEmpty` probes the FIRST `outputs.writes[].table` (the narrowed primary's own target
+ * under a multi-primary run). `skipOnlyOverRows` probes only when the decision is a skip, so a
+ * load run issues no extra query; a skip that reaches it with no probe throws by name rather
+ * than skipping unprobed.
+ */
+const TARGET_EMPTY_REASON = 'target_empty';
+
+async function targetIsEmpty(pool, descriptor) {
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes) ? descriptor.outputs.writes : [];
+  if (writes.length === 0 || typeof writes[0].table !== 'string') {
+    throw new Error('R-DD target probe: the descriptor declares no outputs.writes[0].table, so a source-version skip cannot be proved safe.');
+  }
+  const res = await pool.query(`SELECT 1 AS target_has_rows FROM ${pipeline.quoteIdent(writes[0].table)} LIMIT 1`);
+  return res.rows.length === 0;
+}
+
+async function skipOnlyOverRows(decision, targetEmpty, tag) {
+  if (!decision || decision.skip !== true) return decision;
+  if (typeof targetEmpty !== 'function') {
+    throw new Error(`${tag} a source-version skip ("${decision.reason}") was reached with no target probe — `
+      + 'Spec 124 R-DD: a skip is honoured only over a non-empty target, so the caller must pass targetEmpty.');
+  }
+  return (await targetEmpty()) ? { ...decision, skip: false, reason: TARGET_EMPTY_REASON } : decision;
 }
 
 /**
@@ -748,6 +783,9 @@ module.exports = {
   readPriorEmit,
   preAcquisitionDecision,
   skipCheckDecision,
+  TARGET_EMPTY_REASON,
+  targetIsEmpty,
+  skipOnlyOverRows,
   deriveLedgerSlugs,
   declaredChains,
   ledgerGatedSkip,

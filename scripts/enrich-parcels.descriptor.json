@@ -67,13 +67,90 @@
           ]
         },
         {
-          "table": "zoning_bylaw_areas"
+          "table": "zoning_bylaw_areas",
+          "columns": [
+            "area_min_sqm",
+            "bylaw_chapter",
+            "bylaw_exception_ref",
+            "bylaw_section",
+            "coverage_max_pct",
+            "density_max",
+            "exception_number",
+            "exception_text",
+            "frontage_min_m",
+            "fsi_max",
+            "gen_zone",
+            "geom",
+            "pct_commercial_max",
+            "pct_employment_max",
+            "pct_office_max",
+            "pct_residential_max",
+            "source_dataset_version",
+            "source_id",
+            "standard_setback",
+            "units_max",
+            "zn_holding",
+            "zn_string",
+            "zn_zone",
+            "zone_status"
+          ]
         },
         {
-          "table": "zoning_height_overlay"
+          "table": "zoning_height_overlay",
+          "columns": [
+            "geom",
+            "height_max_m",
+            "ht_stories"
+          ]
         },
         {
-          "table": "zoning_lot_coverage_overlay"
+          "table": "zoning_lot_coverage_overlay",
+          "columns": [
+            "coverage_max_pct_override",
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_building_setback_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_parking_zone_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_policy_area_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_policy_road_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_priority_retail_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_queenstw_eat_overlay",
+          "columns": [
+            "geom"
+          ]
+        },
+        {
+          "table": "zoning_rooming_house_overlay",
+          "columns": [
+            "geom"
+          ]
         },
         {
           "table": "parcel_buildings",
@@ -81,7 +158,8 @@
             "parcel_id",
             "is_primary",
             "linked_at",
-            "building_id"
+            "building_id",
+            "confidence"
           ]
         },
         {
@@ -1710,6 +1788,7 @@
         "of": "parcels with zoning_dominant_area_share < 0.60 among scoped parcels"
       },
       "limit": "pct <= 5",
+      "limit_from_config": "enrich_parcels_ambiguous_zone_max_pct",
       "severity": "WARN",
       "blocking": false,
       "when": "post",
@@ -2986,6 +3065,12 @@
         "on_invalid": "fail"
       },
       {
+        "name": "enrich_parcels_ambiguous_zone_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
         "name": "enrich_parcels_scope_retire_after_hours",
         "min": 1,
         "max": 720,
@@ -3086,7 +3171,7 @@
       }
     },
     {
-      "id": "failed_precondition",
+      "id": "failed_missing_precondition",
       "kind": "fail_error",
       "status": "failed",
       "records_meta": {

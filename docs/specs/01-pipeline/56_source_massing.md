@@ -108,16 +108,16 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `scripts/link-massing.descriptor.json`
   - `scripts/link-massing.notes.json`
   - `scripts/lib/compute/link-massing.js`
-  - `src/tests/steps/link_massing/metamorphic.test.ts`
-  - `src/tests/steps/link_massing/nearest-determinism.test.ts`
+  - `src/tests/steps/link_massing/metamorphic.db.test.ts`
+  - `src/tests/steps/link_massing/nearest-determinism.db.test.ts`
   - `src/tests/steps/link_massing/o4-row5-rewrite-changed.logic.test.ts`
-  - `src/tests/steps/link_massing/rung1-inline-wkt.test.ts`
+  - `src/tests/steps/link_massing/rung1-inline-wkt.db.test.ts`
   - `src/tests/steps/link_massing/violations.test.ts`
   - `src/tests/steps/link_massing/written-by-target.logic.test.ts`
   - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_buildings` reads+writes (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: compute_centroids · enrich_parcels · massing · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity · enrich_parcels · refresh_snapshot
-  - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_deleted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_inserted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_updated) · scripts/analysis/link-massing-healing-cohort.js (records_meta parcels_flagged_lost_link) · scripts/analysis/link-massing-healing-cohort.js (records_meta primary_cleared) · src/app/api/admin/stats/route.ts (table parcel_buildings: 1 column) · src/app/api/permits/[id]/route.ts (table parcel_buildings: 4 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/lib/leads/lead-inspect-query.ts (table parcel_buildings: 2 columns) · src/lib/quality/metrics.ts (table parcel_buildings: 1 column)
+  - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_deleted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_inserted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_updated) · scripts/analysis/link-massing-healing-cohort.js (records_meta parcels_flagged_lost_link) · scripts/analysis/link-massing-healing-cohort.js (records_meta primary_cleared) · src/app/api/admin/stats/route.ts (table parcel_buildings: 1 column) · src/app/api/permits/[id]/route.ts (table parcel_buildings: 4 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/lib/leads/lead-inspect-query.ts (table parcel_buildings: 4 columns) · src/lib/quality/metrics.ts (table parcel_buildings: 1 column)
 <!-- /generated:target-files -->
 - `scripts/seeds/logic_variables.json` — the six massing keys: `massing_skip_rate_max_pct`, `massing_batch_error_rate_max_pct`, `massing_story_height_m`, `massing_download_timeout_ms`, `building_footprints_dead_tuple_ratio_warn_max`, `building_footprints_maintenance_timeout_minutes` (`sources_building_footprints_floor` is shared with assert_data_bounds).
 - `scripts/analysis/probe-shapefile-acquire.mjs` — batch-2 row 3.6 P-M memory/key probe: measures the massing shapefile through the runner's own `acquire.js` acquisition seam (read-only; opt-in one SELECT under `--db`) ahead of the `load-massing.js` conversion (Fold SF-7, WF2 row 3.6).

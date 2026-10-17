@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "98f15150fe92b076b0962ca5d81b2d6c3253323a3a47f08f3d33ef5f8167336b",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "2441d80a5cd595350786aef5b3f4068001eda9529d52d3566d54f7769efb0d4d",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 147,
+    "calls": 155,
     "distinct": 21,
     "utility": 5,
-    "tracer_self_ms": 2.778,
-    "wall_ms": 336
+    "tracer_self_ms": 2.571,
+    "wall_ms": 335
   },
   "statements": [
     {
@@ -53,7 +53,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 123,
+      "rowCount": 131,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -65,7 +65,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 107,
+      "rowCount": 115,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -101,7 +101,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -156,8 +156,8 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 126,
-      "rowCount": 11,
+      "count": 134,
+      "rowCount": 17,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -222,7 +222,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 123,
+      "rowCount": 131,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -269,7 +269,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 126,
+      "rowCount": 134,
       "reads": {},
       "writes": {},
       "excluded": [

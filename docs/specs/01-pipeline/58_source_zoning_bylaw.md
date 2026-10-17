@@ -409,7 +409,7 @@ Every test file MUST include the SPEC LINK header.
   - `src/tests/steps/load_zoning/violations.test.ts`
   - data (descriptor): `zoning_building_setback_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_bylaw_areas` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_height_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_lot_coverage_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_parking_zone_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_area_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_policy_road_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_priority_retail_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_queenstw_eat_overlay` writes (migrations/164_zoning_bylaw_tables.sql); `zoning_rooming_house_overlay` writes (migrations/164_zoning_bylaw_tables.sql)
   - upstream: none
-  - downstream: none
+  - downstream: enrich_parcels
   - consumers: enrich_parcels (records_meta base_layer_committed_after_overlays_failed) · enrich_parcels (records_meta zoning_layers_loaded) · enrich_parcels (records_meta zoning_partial_load) · enrich_parcels (records_meta zoning_rows_changed) · load_zoning (records_meta zoning_layer_versions)
 <!-- /generated:target-files -->
 - `load_bylaw_map_areas` — INGESTOR · pending (net-new, Spec 124 R-CS; the generated block lists converted steps only) · owner specs: 58 (§11.3)

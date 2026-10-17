@@ -9,7 +9,7 @@
       "text": "Registered in Spec 47 §A.5 (docs/specs/01-pipeline/47_pipeline_script_protocol.md:1948), category \"6 — Quality\", writes-DB column reads \"NO — snapshot recording\" — the registry's own pre-existing framing already read this step's write as recording, supporting the RECORDER ruling. Kept via identity.lock + the §5.4 source-text convention (ADVISORY_LOCK_ID = 104 declared, never read, in the frozen shell).",
       "liveness": { "kind": "file", "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md" }
     },
-    "spec": "41",
+    "spec": "60",
     "spec_version": "1.0",
     "archetype": "RECORDER",
     "contract_version": 1,
@@ -36,6 +36,8 @@
         "table": "engine_health_snapshots",
         "key": ["table_name", "snapshot_date"],
         "columns": [
+          { "name": "table_name", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "snapshot_date", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           { "name": "n_live_tup", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           { "name": "n_dead_tup", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
           { "name": "dead_ratio", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },

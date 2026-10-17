@@ -447,13 +447,16 @@ function centreline_geometry_skipped_pct(ctx) {
   const maxDetailKeys = ctx.config.load_centreline_max_detail_keys;
   const scale = ctx.config.load_centreline_round_scale;
   const dropped = a.skipped_keys || [];
+  // R-DC (McDonald's Airtight V3): "truncated" is a fact of the slice (fewer shown than dropped), never a
+  // comparison against the cap's config value inside this check body.
+  const shown = dropped.slice(0, maxDetailKeys);
   ctx.report('centreline_geometry_skipped_pct', {
     value: pct,
     detail: dropped.length === 0 ? round3(pct, scale) : {
       pct: round3(pct, scale),
       dropped_count: dropped.length,
-      dropped_source_ids: dropped.slice(0, maxDetailKeys),
-      dropped_ids_truncated: dropped.length > maxDetailKeys,
+      dropped_source_ids: shown,
+      dropped_ids_truncated: shown.length < dropped.length,
     },
   });
 }
@@ -557,7 +560,8 @@ function buildLoadMeta(ctx) {
   const raw = a.rows_read == null ? 0 : a.rows_read;
   const filtered = a.feature_count == null ? 0 : a.feature_count;
   const countDeltaPct = computeCountDeltaPct(filtered, priorFiltered(ctx));
-  const driftPassed = countDeltaPct <= ctx.config.load_centreline_count_drift_fail_pct;
+  // Spec 124 R-CY (McDonald's Airtight V3) — both cascade arms ask the declared checks' own bounds, via the runner.
+  const driftPassed = ctx.withinLimit('centreline_count_drift_pct', countDeltaPct);
   const skippedPct = filtered > 0 ? (a.invalid_geometry_skipped || 0) / filtered : 0;
 
   // 1. Count-drift FAILED and the operator never accepted it → the pre-write abort's
@@ -573,7 +577,7 @@ function buildLoadMeta(ctx) {
   }
 
   // 2. Geometry skipped beyond the FAIL bound → the same shape plus the skip count.
-  if (skippedPct > ctx.config.load_centreline_invalid_geometry_fail_pct) {
+  if (!ctx.withinLimit('centreline_geometry_skipped_pct', skippedPct)) {
     return {
       ...sk,
       feature_count_raw: raw,

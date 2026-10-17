@@ -222,14 +222,15 @@
       "id": "skip_rate_pct",
       "kind": "bound",
       "expect": { "of": "(bad_key_count + null_geometry_count + shaped_skipped) over rows_read, percent", "direction": "max" },
-      "limit": "viol == 0",
+      "limit": "pct <= 5",
+      "limit_from_config": "massing_skip_rate_max_pct",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Legacy `status: skipRate >= 5 ? 'FAIL'` [READ scripts/load-massing.js] is a STRICT boundary (5.0% fails) that `pct <=` cannot express, and a `pct` limit on a check that also reports `violations` compares the 0/1 flag (verdict.js `measured` prefers violations) so it could never fail; the compute therefore compares against `ctx.config.massing_skip_rate_max_pct` (Rule 3) and reports violations 0/1. No limit_from_config is declared for the same reason.",
+        "text": "Legacy `status: skipRate >= 5 ? 'FAIL'` [READ scripts/load-massing.js]. CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute reports the raw rate as `value` and the declared `pct <= 5` limit, substituted from `massing_skip_rate_max_pct` (Rule 3, seed default 5), decides. The legacy boundary was STRICT (exactly 5.0% failed); `pct <=` is inclusive, so a rate exactly at the ceiling now PASSes — a one-point boundary shift the verdict grammar has no strict form for, accepted with the operator-approved plan A (2026-10-16).",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/load-massing.js"
@@ -258,14 +259,15 @@
       "id": "batch_error_rate_pct",
       "kind": "bound",
       "expect": { "of": "batch_errors over ceil(rows_read / execution.batch), percent", "direction": "max" },
-      "limit": "viol == 0",
+      "limit": "pct <= 1",
+      "limit_from_config": "massing_batch_error_rate_max_pct",
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Legacy `errorRate >= 1 ? 'FAIL'` [READ scripts/load-massing.js] is a STRICT boundary that `pct <=` cannot express, and a `pct` limit on a check that also reports `violations` compares the 0/1 flag (verdict.js `measured` prefers violations) so it could never fail; the compute therefore compares against `ctx.config.massing_batch_error_rate_max_pct` (Rule 3) and reports violations 0/1, so no limit_from_config is declared. Under `txn_scope: \\\"step\\\"` a failed batch fails the step before checks run, so a completed run reads 0 (VERIFY-INT-5; address_points precedent). The denominator keeps the legacy per-1000 batch count (execution.batch); the library executor itself chunks statements at pipeline.maxRowsPerInsert(11) = 5957 rows, so the declared batch is the legacy unit, not the executor's.",
+        "text": "Legacy `errorRate >= 1 ? 'FAIL'` [READ scripts/load-massing.js]. CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute reports the raw rate as `value` and the declared `pct <= 1` limit, substituted from `massing_batch_error_rate_max_pct` (Rule 3, seed default 1), decides; the legacy STRICT boundary becomes inclusive (a rate exactly at the ceiling now PASSes). Under `txn_scope: \\\"step\\\"` a failed batch fails the step before checks run, so a completed run reads 0 (VERIFY-INT-5; address_points precedent). The denominator keeps the legacy per-1000 batch count (execution.batch); the library executor itself chunks statements at pipeline.maxRowsPerInsert(11) = 5957 rows, so the declared batch is the legacy unit, not the executor's.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/load-massing.js"

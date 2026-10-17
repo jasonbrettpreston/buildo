@@ -609,19 +609,35 @@ describe('row 3.6 — checks: skip_rate_pct / features_read_floor / batch_error_
     sources_building_footprints_floor: 400000,
   };
 
-  it('skip_rate_pct: bad_key + null_geometry + shaped_skipped over rows_read, FAIL at >= 5% (0s re-bucketing)', () => {
-    const fail = driveCheck('skip_rate_pct', {
+  it('skip_rate_pct: bad_key + null_geometry + shaped_skipped over rows_read, reported raw; the declared pct <= row decides (CP-PLANA, R-BZ G7)', () => {
+    // CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute reports the raw rate as `value`; the
+    // declared `pct <= 5` limit (limit_from_config massing_skip_rate_max_pct) decides. The
+    // legacy STRICT boundary is now inclusive: AT 5.0% PASSes, one skip past it FAILs.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const c = checkById(loadDescriptor(), 'skip_rate_pct');
+    const at = driveCheck('skip_rate_pct', {
       acquired: { rows_read: 1000, bad_key_count: 20, null_geometry_count: 10, shaped_skipped: 20 },
       config: CFG,
     });
-    expect(fail[0]![1]!.detail).toBe(5);
-    expect(fail[0]![1]!.violations).toBe(1);
+    expect(at[0]![1]!.detail).toBe(5);
+    expect(at[0]![1]!.value).toBe(5);
+    expect(at[0]![1]!.violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(c, at[0]![1], 'fail_step', CFG).status, 'AT the 5% ceiling ⇒ PASS (inclusive)').toBe('PASS');
+    const over = driveCheck('skip_rate_pct', {
+      acquired: { rows_read: 1000, bad_key_count: 20, null_geometry_count: 10, shaped_skipped: 21 },
+      config: CFG,
+    });
+    expect(over[0]![1]!.value).toBeCloseTo(5.1, 5);
+    expect(verdict.checkRow(c, over[0]![1], 'fail_step', CFG).status, 'past the ceiling ⇒ FAIL').toBe('FAIL');
     const pass = driveCheck('skip_rate_pct', {
       acquired: { rows_read: 1000, bad_key_count: 20, null_geometry_count: 10, shaped_skipped: 19 },
       config: CFG,
     });
     expect(pass[0]![1]!.detail).toBeCloseTo(4.9, 5);
-    expect(pass[0]![1]!.violations).toBe(0);
+    expect(verdict.checkRow(c, pass[0]![1], 'fail_step', CFG).status).toBe('PASS');
   });
 
   it.each<[string, Record<string, unknown>]>([
@@ -642,22 +658,26 @@ describe('row 3.6 — checks: skip_rate_pct / features_read_floor / batch_error_
     expect(verdict.checkRow(c, calls[0]![1], 'fail_step', CFG).status, 'unmeasured ⇒ FAIL, never PASS').toBe('FAIL');
   });
 
-  it('skip_rate_pct is declared: no limit_from_config, severity FAIL, and the compute reads the config bound', () => {
+  it('skip_rate_pct is declared: pct <= 5 with limit_from_config massing_skip_rate_max_pct, severity FAIL; the compute never reads the bound (CP-PLANA, R-BZ G7)', () => {
     const c = checkById(loadDescriptor(), 'skip_rate_pct');
-    // corrected at ②: the legacy boundary is STRICT (`skipRate >= 5 ? 'FAIL'`), which `pct <=`
-    // cannot express, and verdict.js compares `violations` first — so the compute compares against
-    // the config bound and reports violations 0/1, and NO limit_from_config is declared.
-    expect(c.limit).toBe('viol == 0');
+    expect(c.limit).toBe('pct <= 5');
     expect(c.severity).toBe('FAIL');
-    expect(c.limit_from_config).toBeUndefined();
-    expect(readText(COMPUTE_REL)).toContain('ctx.config.massing_skip_rate_max_pct');
+    expect(c.limit_from_config).toBe('massing_skip_rate_max_pct');
+    expect(readText(COMPUTE_REL)).not.toContain('ctx.config.massing_skip_rate_max_pct');
   });
 
-  it('features_read_floor: rows_read 399999 WARNs, 400000 passes (legacy WARN, not FAIL)', () => {
+  it('features_read_floor: rows_read 399999 WARNs, 400000 passes (legacy WARN, not FAIL) — the declared value_min row decides (CP-PLANA, R-BZ G7)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const c = checkById(loadDescriptor(), 'features_read_floor');
     const below = driveCheck('features_read_floor', { acquired: { rows_read: 399999 }, config: CFG });
-    expect(below[0]![1]!.violations).toBe(1);
+    expect(below[0]![1]!.value).toBe(399999);
+    expect(below[0]![1]!.violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(c, below[0]![1], 'fail_step', CFG).status).toBe('WARN');
     const at = driveCheck('features_read_floor', { acquired: { rows_read: 400000 }, config: CFG });
-    expect(at[0]![1]!.violations).toBe(0);
+    expect(verdict.checkRow(c, at[0]![1], 'fail_step', CFG).status).toBe('PASS');
   });
 
   it('features_read_floor is declared: limit_from_config sources_building_footprints_floor, severity WARN, limit in value_min form (AP-D6 trap)', () => {
@@ -668,31 +688,42 @@ describe('row 3.6 — checks: skip_rate_pct / features_read_floor / batch_error_
     expect(String(c.limit)).not.toMatch(/viol\s*==\s*0/);
   });
 
-  it('batch_error_rate_pct is declared: no limit_from_config, severity FAIL, and the compute reads the config bound', () => {
+  it('batch_error_rate_pct is declared: pct <= 1 with limit_from_config massing_batch_error_rate_max_pct, severity FAIL; the compute never reads the bound (CP-PLANA, R-BZ G7)', () => {
     const c = checkById(loadDescriptor(), 'batch_error_rate_pct');
-    // corrected at ②: same STRICT-boundary / violations-first reason as skip_rate_pct -> no
-    // limit_from_config, the compute compares against the registered config variable.
-    expect(c.limit).toBe('viol == 0');
+    expect(c.limit).toBe('pct <= 1');
     expect(c.severity).toBe('FAIL');
-    expect(c.limit_from_config).toBeUndefined();
-    expect(readText(COMPUTE_REL)).toContain('ctx.config.massing_batch_error_rate_max_pct');
+    expect(c.limit_from_config).toBe('massing_batch_error_rate_max_pct');
+    expect(readText(COMPUTE_REL)).not.toContain('ctx.config.massing_batch_error_rate_max_pct');
   });
 
   // NEW at ②: drive the batch_error_rate_pct check itself (the declaration above is not enough).
-  it('batch_error_rate_pct: 1 error over ceil(100000/1000)=100 batches = 1% FAILs, 0 errors passes', () => {
-    const fail = driveCheck('batch_error_rate_pct', {
+  it('batch_error_rate_pct: 1 error over 100 batches = 1% PASSes AT the inclusive ceiling, 2 errors (2%) FAIL, 0 errors passes (CP-PLANA, R-BZ G7)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const c = checkById(loadDescriptor(), 'batch_error_rate_pct');
+    const at = driveCheck('batch_error_rate_pct', {
       acquired: { rows_read: 100000, batch_errors: 1 },
       descriptor: { execution: { batch: 1000 } },
       config: CFG,
     });
-    expect(fail[0]![1]!.detail).toBe(1);
-    expect(fail[0]![1]!.violations).toBe(1);
+    expect(at[0]![1]!.detail).toBe(1);
+    expect(at[0]![1]!.value).toBe(1);
+    expect(at[0]![1]!.violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(c, at[0]![1], 'fail_step', CFG).status, 'AT the 1% ceiling ⇒ PASS (inclusive; legacy was strict)').toBe('PASS');
+    const fail = driveCheck('batch_error_rate_pct', {
+      acquired: { rows_read: 100000, batch_errors: 2 },
+      descriptor: { execution: { batch: 1000 } },
+      config: CFG,
+    });
+    expect(verdict.checkRow(c, fail[0]![1], 'fail_step', CFG).status, '2% ⇒ FAIL').toBe('FAIL');
     const pass = driveCheck('batch_error_rate_pct', {
       acquired: { rows_read: 100000, batch_errors: 0 },
       descriptor: { execution: { batch: 1000 } },
       config: CFG,
     });
-    expect(pass[0]![1]!.violations).toBe(0);
+    expect(verdict.checkRow(c, pass[0]![1], 'fail_step', CFG).status).toBe('PASS');
   });
 });
 

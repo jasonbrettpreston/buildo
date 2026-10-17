@@ -240,7 +240,7 @@ The cost is `rate × AREA`, so the **area driver is half the model**. Two driver
   - `scripts/compute-parcel-cost-estimates.descriptor.json`
   - `scripts/lib/compute/compute-parcel-cost-estimates.js`
   - `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`
-  - data (descriptor): `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `logic_variables` reads (migrations/092_control_panel.sql); `parcel_cost_lines` reads (migrations/248_parcel_cost_lines.sql); `parcels` reads+writes (migrations/011_parcels.sql)
+  - data (descriptor): `archetype_cost_rates` reads (migrations/205_archetype_cost_rates.sql); `parcel_cost_lines` reads (migrations/248_parcel_cost_lines.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: enrich_parcels · parcels
   - downstream: assert_global_coverage · assert_parcel_sanity
   - consumers: compute_parcel_cost_estimates (records_meta stranded_cost_rows_retracted)

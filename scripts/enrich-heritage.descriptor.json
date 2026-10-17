@@ -264,6 +264,19 @@
         }
       },
       {
+        "kind": "srid",
+        "name": "parcels.geom",
+        "equals": 4326,
+        "on_missing": "fail",
+        "why": {
+          "text": "CP-S5 (Spec 124 R-CX, 2026-10-16) — §3.10 SRID guard: the ST_Intersects containment joins compare parcels.geom with the heritage geometries in 4326 and the compute has no ST_Transform path. Probed by the runner (REQUIREMENT_PROBES.srid, Find_SRID) before the contract_read hook; it replaces the Find_SRID read and SRID throw that readHeritageContract carried (R-BZ G3/G8).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.geom"
+          }
+        }
+      },
+      {
         "kind": "extension",
         "name": "fuzzystrmatch",
         "on_missing": "fail",
@@ -663,6 +676,37 @@
           "ref": "scripts/lib/compute/enrich-heritage.js"
         }
       }
+    },
+    {
+      "id": "heritage_designated_by_zone",
+      "reads": [
+        {
+          "table": "parcels",
+          "columns": [
+            "zoning_class",
+            "is_heritage_designated"
+          ]
+        }
+      ],
+      "kind": "distribution",
+      "expect": {
+        "reports": "per-zone parcels and designated counts (8 named zones + (null) + other) — the FOLD-RC1 visibility row behind records_meta.heritage_designated_by_zone"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": [
+        "sources"
+      ],
+      "accept_until": "none",
+      "why": {
+        "text": "Un-thresholded, purely descriptive (link_parcel_addresses parcel_fanout_distribution form): always reported so an operator sees the designated share by zone. Its parcels.zoning_class read is a measurement read, homed here in checks[].reads, never inputs.reads, so it adds no producer edge to enrich_parcels (Spec 124 R-DG, McDonald's Airtight V3).",
+        "liveness": {
+          "kind": "table",
+          "ref": "parcels"
+        }
+      }
     }
   ],
   "invariants": [
@@ -935,7 +979,7 @@
       "check_id": "none"
     },
     {
-      "what": "RV-L2 class — guards.srid is DECLARATIVE, not runner-enforced: scripts/lib/step/index.js has no consumer for it, so the SRID=4326 assertion stays a hook check folded into contract_read (readHeritageContract), which is guaranteed to run pre-transaction on every invocation. guards.empty_source, by contrast, IS runner-enforced since P3-C1 #32 (2026-10-03): measureInputGuards (scripts/lib/step/index.js) counts every guards.empty_source table (string OR array) before any phase or hook and, on a zero count, writes a FAIL gate row with halt=true and skips every phase — so the L14 'both heritage source tables non-empty' HALTs were removed from the hook (S4) and live in the declared guard.",
+      "what": "RV-L2 class — guards.srid is DECLARATIVE, not runner-enforced: scripts/lib/step/index.js has no consumer for it. CLOSED for the halt by CP-S5 (2026-10-16, Spec 124 R-CX): the SRID=4326 assertion is the guards.requires {kind:\"srid\", name:\"parcels.geom\", equals:4326} row, probed by the runner (REQUIREMENT_PROBES.srid) before the contract_read hook; readHeritageContract holds no Find_SRID read and no SRID throw. guards.empty_source, by contrast, IS runner-enforced since P3-C1 #32 (2026-10-03): measureInputGuards (scripts/lib/step/index.js) counts every guards.empty_source table (string OR array) before any phase or hook and, on a zero count, writes a FAIL gate row with halt=true and skips every phase — so the L14 'both heritage source tables non-empty' HALTs were removed from the hook (S4) and live in the declared guard.",
       "measured": "scripts/lib/step/index.js measureInputGuards (runs pre-phase/pre-hook for non-INGESTOR steps; zero rows → FAIL row with halt=true) and src/tests/p3c1-32.logic.test.ts, 2026-10-03.",
       "check_id": "none"
     },
@@ -1181,7 +1225,7 @@
       }
     },
     {
-      "id": "failed_precondition",
+      "id": "failed_missing_precondition",
       "kind": "fail_error",
       "status": "failed",
       "records_meta": {

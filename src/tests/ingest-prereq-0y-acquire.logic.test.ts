@@ -166,6 +166,7 @@ function ckanArgs(opts: {
     keyColumn: opts.keyColumn ?? 'source_id',
     coerceKey: opts.coerceKey ?? ((raw: unknown) => (raw == null ? null : raw)),
     forced: false,
+    targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
     preAcquisitionGate: () => ({ skip: false, reason: 'fresh' }),
     emitSkeleton: {},
     validatorCache: opts.validatorCache ?? new Map(),
@@ -531,6 +532,7 @@ describe('INGESTOR prerequisite 0y — the CKAN DataStore acquisition arm', () =
       keyColumn: 'source_id',
       coerceKey: (raw: unknown) => raw,
       forced: false,
+      targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
       preAcquisitionGate: () => ({ skip: true, reason: 'unchanged' }),
       emitSkeleton: {},
       validatorCache: new Map(),

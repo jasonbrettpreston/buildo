@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=lot_size_sqm",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=lot_size_sqm IS NOT NULL",
+          "--order=id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=lot_size_sqm",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=lot_size_sqm IS NOT NULL",
+          "--order=id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/load-parcels.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/parcels/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence: ids 1..200 lot_size_sqm cohort the step heals (V3 fleet night 2026-10-16 nonzero-redo.sh; key-set md5 7883e32346 = the 18 night 1-4 backups)."
+    }
+  }
+}

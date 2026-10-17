@@ -62,14 +62,7 @@
         "retract": "departed"
       }
     ],
-    "invalidates": [
-      {
-        "table": "parcels",
-        "column": "ravine_dataset_version_when_enriched",
-        "when": "source_dataset_version changes — the lineage stamp enrich_ravines compares against, so a reload that moves the version must re-enrich or the stamp is a lie",
-        "by": "pin"
-      }
-    ],
+    "invalidates": [],
     "write_inventory": {
       "statements": 2,
       "why": {
@@ -173,7 +166,7 @@
       "kind": "invariant",
       "expect": { "license_url_present": true },
       "limit": "viol == 0",
-      "severity": "INFO",
+      "severity": "WARN",
       "blocking": false,
       "when": "pre",
       "chains": "all",
@@ -573,15 +566,6 @@
 
   "deviations": [
     {
-      "from": "the §1.2a P4 standard posture on_invalid: \"fail\" for a declared logic variable",
-      "why": {
-        "text": "All six variables are seeded by the mig-099 seed contract (scripts/seeds/logic_variables.json, applied at the END of npm run migrate), not by a migration, so the cloud database has none of them until the next migrate. Under \"fail\" the config resolver would REFUSE this step on every un-seeded database — a source loader that halts the sources chain because a knob was externalized. Under \"default\" the resolver falls back to the seed default, which is byte-equal to the pre-externalization Zod literal (20 / 0.5 / 0.5 / 0.05 / 0.5 / 60000), so behaviour is IDENTICAL pre-seed and the only cost is that an out-of-bounds operator edit degrades loudly instead of halting. Revisit at the cloud seed. The config object admits no per-variable why field, so the justification is recorded here.",
-        "liveness": { "kind": "file", "ref": "scripts/seeds/logic_variables.json" }
-      },
-      "adjudicated_by": "Spec 122 §1.2a P4 / pilot 2 plan T1-T6",
-      "date": "2026-08-25"
-    },
-    {
       "from": "promoting any FAIL check to blocking: true",
       "why": {
         "text": "PIN, DO NOT FIX (Spec 123 §3.1, plan D-8, LR-D3). Today every terminal of this step exits 0: pipeline.run discards the return value, run-chain records the FAIL verdict and folds it into chain status completed_with_errors, and the chain CONTINUES. blocking: true would make the library throw after the emit and halt the sources chain — a real behaviour change smuggled into a commit whose whole claim is that it changes nothing. Promoting a check is its own peel with its own lock.",
@@ -673,13 +657,15 @@
 
   "config": {
     "logic_variables": [
-      { "name": "load_ravines_dataset_age_warn_years", "min": 1, "max": 200, "on_invalid": "default" },
+      { "name": "load_ravines_dataset_age_warn_years", "min": 1, "max": 200, "on_invalid": "fail" },
       { "name": "load_ravines_count_drift_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "load_ravines_geometry_update_warn_pct", "min": 0, "max": 1, "on_invalid": "default" },
+      { "name": "load_ravines_geometry_update_warn_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_ravines_invalid_geometry_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_ravines_mass_delete_fail_pct", "min": 0, "max": 1, "on_invalid": "fail" },
       { "name": "load_ravines_rows_changed_ratio_warn_pct", "min": 0, "max": 1, "on_invalid": "fail" },
-      { "name": "load_ravines_download_timeout_ms", "min": 1000, "max": 600000, "on_invalid": "clamp" }
+      { "name": "load_ravines_download_timeout_ms", "min": 1000, "max": 600000, "on_invalid": "fail" },
+      { "name": "load_ravines_round_scale", "min": 1, "max": 100000, "on_invalid": "fail" },
+      { "name": "load_ravines_max_detail_keys", "min": 1, "max": 1000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true

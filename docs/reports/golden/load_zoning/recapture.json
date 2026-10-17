@@ -1,0 +1,31 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/load-zoning-cohort-differential.js",
+          "--run",
+          "--side=post",
+          "--chain=sources",
+          "--out=docs/reports/golden/load_zoning/post/sources.json"
+        ]
+      ],
+      "why": "the committed load_zoning cohort differential (R-AS), forced reload inside the script (V3 fleet night 2026-10-16 nonzero-redo.sh). #38 cohort evidence for all 10 tables."
+    },
+    "post/standalone.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/load-zoning-cohort-differential.js",
+          "--run",
+          "--side=post",
+          "--chain=none",
+          "--out=docs/reports/golden/load_zoning/post/standalone.json"
+        ]
+      ],
+      "why": "the committed load_zoning cohort differential (R-AS), forced reload inside the script (V3 fleet night 2026-10-16 nonzero-redo.sh)."
+    }
+  }
+}

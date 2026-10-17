@@ -33,7 +33,7 @@
 import fs from 'fs';
 import path from 'path';
 import { beforeAll, afterAll, expect } from 'vitest';
-import { undeclaredItems } from '../../../scripts/analysis/gates/witness.mjs';
+import { undeclaredItems, ownMeasurementSql } from '../../../scripts/analysis/gates/witness.mjs';
 
 /** The repo root, from `src/tests/steps/`. */
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -259,6 +259,21 @@ interface GuardState {
   readonly violations: Set<string>;
   readonly errors: Set<string>;
   readonly sessionTemps: Set<string>;
+  /** R-DG (G7): fingerprints of the descriptor's own plausibility[]/invariants[] SQL, built on first use. */
+  ownFingerprints: Set<string> | null;
+}
+
+/** R-DG (G7, McDonald's Airtight V3): the descriptor's own measurement SQL fingerprints (resolve.cjs's libpg). */
+function ownFingerprintsOf(state: GuardState): Set<string> {
+  if (state.ownFingerprints === null) {
+    const set = new Set<string>();
+    for (const sql of ownMeasurementSql(state.descriptor) as string[]) {
+      const r = resolve.resolveStatement(sql, state.catalog);
+      if (!r.error && typeof r.fingerprint === 'string') set.add(r.fingerprint);
+    }
+    state.ownFingerprints = set;
+  }
+  return state.ownFingerprints;
 }
 
 /** Record a read/write of a table (bare table touch -> empty column list). */
@@ -336,7 +351,10 @@ function wrapHandle(state: GuardState, handle: object): void {
           mergeTouch(state.reads, r.reads);
           mergeTouch(state.writes, r.writes);
         }
-        const items = undeclaredItems(state.descriptor, { reads: r.reads, writes: r.writes });
+        // R-DG (G7): a READ whose fingerprint is one of the step's own plausibility/invariants SQL is accounted
+        // against that SQL — never a violation of (a); it still witnesses the columns it really read.
+        const ownRead = !r.error && r.kind === 'read' && Object.keys(r.writes).length === 0 && ownFingerprintsOf(state).has(r.fingerprint);
+        const items = ownRead ? [] : undeclaredItems(state.descriptor, { reads: r.reads, writes: r.writes });
         for (const item of items) state.violations.add(item);
         if (items.length > 0 && state.status === 'pending') {
           throw new Error('FAIL:FIXTURE:' + state.slug + ':' + state.suite + ':' + items[0]);
@@ -365,6 +383,7 @@ export function createWitnessGuard(opts: WitnessGuardOptions): WitnessGuard {
     violations: new Set<string>(),
     errors: new Set<string>(),
     sessionTemps: new Set<string>(),
+    ownFingerprints: null,
   };
   return {
     slug: state.slug,

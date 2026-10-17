@@ -56,7 +56,7 @@
     { "id": "existing", "step": "enrich_parcels", "kind": "sql", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildExistingStructureSql", "temp_table": "parcel_existing_struct",
       "witness_args": { "scopeWhere": "TRUE", "full": true } },
     { "id": "comps", "step": "enrich_parcels", "kind": "sql", "file": "scripts/lib/compute/enrich-parcels.js", "builder": "buildComparableBuildsUpdateSql", "kind_default": "empirical_ref",
-      "temp_inputs": [{ "builder": "buildCompCandidatesSql", "temp_table": "comp_cand", "witness_args": { "asOfDateParamIndex": 1, "windowYears": 5 } }],
+      "temp_inputs": [{ "builder": "buildCompCandidatesSql", "temp_table": "comp_cand", "witness_args": { "asOfDateParamIndex": 1, "windowYearsParamIndex": 2 } }],
       "witness_args": { "comp": { "lotTol": 0.2, "knnOverfetch": 50, "topN": 10, "overCaptureClamp": 1.1, "fsiMinPlausible": 0.05, "fsiMaxPlausible": 8 } } },
     { "id": "optconfig", "step": "enrich_parcels", "kind": "js_array", "file": "scripts/lib/compute/enrich-parcels.js", "fn": "computeOptConfigRow",
       "columns_const": "OPTCFG_WRITE_COLS",

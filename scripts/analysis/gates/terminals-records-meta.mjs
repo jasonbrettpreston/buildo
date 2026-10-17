@@ -99,6 +99,35 @@ export function terminalsResult(descriptor, goldenMetas) {
 }
 
 /**
+ * Spec 124 R-DE (iii) (McDonald's Airtight V3): `terminals[].kind` is the cross-step grouping key, and ids
+ * follow it — a `fail_*` kind's id is `failed_<cause>`, a `skip_gated` id is `skipped_<reason>`, lock
+ * contention is `lock_held_elsewhere`, and a runner-owned exit uses the fleet id (`failed_missing_precondition`,
+ * never `failed_precondition`). The generator-owned ASSERT ids below predate the rule (closed list).
+ */
+export const TERMINAL_ID_GRANDFATHER = Object.freeze([
+  'coverage_gate_failed', 'data_bounds_check_error', 'data_bounds_check_failed', 'parcel_sanity_gate_failed', 'schema_drift_detected',
+]);
+const RUNNER_FLEET_IDS = Object.freeze({ failed_precondition: 'failed_missing_precondition' });
+
+/** R-DE (iii) on ONE descriptor. PURE. */
+export function terminalVocabularyViolations(descriptor) {
+  const step = (descriptor && descriptor.identity && descriptor.identity.name) || '(unknown-step)';
+  const out = [];
+  for (const term of Array.isArray(descriptor && descriptor.terminals) ? descriptor.terminals : []) {
+    if (!term || typeof term.id !== 'string' || typeof term.kind !== 'string') continue;
+    const { id, kind } = term;
+    if (TERMINAL_ID_GRANDFATHER.includes(id)) continue;
+    let why = null;
+    if (RUNNER_FLEET_IDS[id]) why = `a runner-owned exit uses the fleet id "${RUNNER_FLEET_IDS[id]}"`;
+    else if (kind.startsWith('fail') && !id.startsWith('failed_')) why = `a "${kind}" terminal id is failed_<cause>`;
+    else if (kind === 'skip_gated' && !id.startsWith('skipped_')) why = 'a "skip_gated" terminal id is skipped_<reason>';
+    else if (kind === 'skip_lock_contention' && id !== 'lock_held_elsewhere') why = 'lock contention is "lock_held_elsewhere"';
+    if (why) out.push({ step, item: `terminals.${id}.id`, detail: `${step}: terminal "${id}" (${kind}): ${why} (Spec 124 R-DE (iii))` });
+  }
+  return out;
+}
+
+/**
  * ROW #75 over the whole converted fleet.
  * @param {Array<{descriptor: object, goldenMetas: Array<{file: string, meta: object}>|null}>} entries
  * @returns {{pass: boolean, blockedSlugs: string[], detail: string, violations: Array<{step: string, item: string, detail: string}>, checked: number, unwitnessed: string[]}}
@@ -111,6 +140,7 @@ export function checkTerminalsRecordsMeta(entries) {
     const out = terminalsResult(entry?.descriptor, entry?.goldenMetas);
     checked += out.checked;
     violations.push(...out.violations);
+    if (entry?.descriptor) violations.push(...terminalVocabularyViolations(entry.descriptor));
     unwitnessed.push(...out.unwitnessed);
   }
   const blockedSlugs = [...new Set(violations.map((v) => v.step))].sort();
@@ -172,4 +202,13 @@ export function selfTest() {
   const both = mkDesc([mkTerm('ok', { n: 'int', e: 'array' }), mkTerm('skip', { reason: 'string' })]);
   const unwit = terminalsResult(both, [mkGold('a.json', { terminal: 'ok', n: 1, e: [] })]);
   want('unwitnessed length', unwit.unwitnessed.length, 1);
+
+  // R-DE (iii): ids follow their kind; grandfathered generator ids pass.
+  const vocab = (id, kind) => terminalVocabularyViolations({ identity: { name: 'fixture_step' }, terminals: [{ id, kind }] }).length;
+  want('failed_ prefix', vocab('failed_rows_floor', 'fail_check'), 0);
+  want('fail without failed_', vocab('rows_floor', 'fail_check'), 1);
+  want('runner fleet id', vocab('failed_precondition', 'fail_error'), 1);
+  want('skip_gated prefix', vocab('skip_gated_no_activity', 'skip_gated'), 1);
+  want('lock id', vocab('lock_busy', 'skip_lock_contention'), 1);
+  want('grandfathered ASSERT id', vocab('coverage_gate_failed', 'fail_check'), 0);
 }

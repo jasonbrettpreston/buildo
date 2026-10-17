@@ -1414,6 +1414,18 @@
         "min": 0,
         "max": 1,
         "on_invalid": "fail"
+      },
+      {
+        "name": "link_wsib_exact_name_min_length",
+        "min": 1,
+        "max": 50,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "link_wsib_fuzzy_name_min_length",
+        "min": 1,
+        "max": 50,
+        "on_invalid": "fail"
       }
     ],
     "validation": "strict",
@@ -1507,7 +1519,7 @@
       }
     },
     {
-      "id": "skip_gated_no_activity",
+      "id": "skipped_no_activity",
       "kind": "skip_gated",
       "status": "completed",
       "records_meta": {

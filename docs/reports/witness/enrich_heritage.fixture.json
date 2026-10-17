@@ -11,6 +11,7 @@
           "id"
         ],
         "heritage_properties": [
+          "address_text",
           "designated_date",
           "geom",
           "id",
@@ -37,9 +38,7 @@
           "is_heritage_designated"
         ]
       },
-      "violations": [
-        "a:parcels.zoning_class"
-      ],
+      "violations": [],
       "errors": []
     }
   }

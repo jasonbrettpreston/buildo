@@ -1,0 +1,33 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "env",
+      "env": {
+        "CENTRELINE_FORCE_RELOAD": "1"
+      },
+      "why": "forced reload so PRE and POST see the same upstream content_hash back to back (capture-guard sameSessionDecision; V3 fleet night 2026-10-16 centreline-redo2.sh, night-4 precedent 2d7b0d84). #38 evidence."
+    },
+    "post/standalone.json": {
+      "via": "env",
+      "env": {
+        "CENTRELINE_FORCE_RELOAD": "1"
+      },
+      "why": "forced reload so PRE and POST see the same upstream content_hash back to back (capture-guard sameSessionDecision; V3 fleet night 2026-10-16 centreline-redo2.sh, night-4 precedent 2d7b0d84)."
+    },
+    "pre/sources.json": {
+      "via": "env",
+      "env": {
+        "CENTRELINE_FORCE_RELOAD": "1"
+      },
+      "why": "forced reload so PRE and POST see the same upstream content_hash back to back (capture-guard sameSessionDecision; V3 fleet night 2026-10-16 centreline-redo2.sh, night-4 precedent 2d7b0d84)."
+    },
+    "pre/standalone.json": {
+      "via": "env",
+      "env": {
+        "CENTRELINE_FORCE_RELOAD": "1"
+      },
+      "why": "forced reload so PRE and POST see the same upstream content_hash back to back (capture-guard sameSessionDecision; V3 fleet night 2026-10-16 centreline-redo2.sh, night-4 precedent 2d7b0d84)."
+    }
+  }
+}

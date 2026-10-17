@@ -8,15 +8,18 @@
 // (scripts/lib/step/index.js runRecorderPhase).
 //
 // RED today (U1a, U1c): the compute still authors `created_at=NOW()` and takes no runAt.
-// GREEN control (U1b): `snapshot_date` stays bound to the server-side `CURRENT_DATE`
-// literal, unchanged — only `created_at` moves to the bound run clock.
+// U1b (CP-PLANA, R-CE): `snapshot_date` is the bound run clock's date in the bound
+// `pipeline_timezone` — the server-side `CURRENT_DATE` is gone too.
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS compute module (no DB, no network)
 const compute = require(join(process.cwd(), 'scripts/lib/compute/refresh-snapshot.js')) as {
-  buildWriteSql: (row: Record<string, unknown>, runAt?: unknown) => { sql: string; params: unknown[] };
+  buildWriteSql: (row: Record<string, unknown>, runAt?: unknown, config?: Record<string, unknown>) => { sql: string; params: unknown[] };
 };
+
+/** CP-PLANA (R-CE): snapshot_date's zone is the resolved `pipeline_timezone` logic variable. */
+const CFG = { pipeline_timezone: 'UTC' };
 
 describe('refresh_snapshot compute — U1: created_at binds the run clock (never NOW())', () => {
   // U1a — RED today: the run clock is a BOUND parameter, last in `params`, and the SQL
@@ -24,7 +27,7 @@ describe('refresh_snapshot compute — U1: created_at binds the run clock (never
   // reference the same `$N::timestamptz` placeholder.
   it('U1a: binds the run clock for created_at and emits no NOW()', () => {
     const runAt = new Date('2026-10-04T12:00:00Z');
-    const { sql, params } = compute.buildWriteSql({}, runAt);
+    const { sql, params } = compute.buildWriteSql({}, runAt, CFG);
 
     // no server-side clock default survives anywhere in the statement
     expect(sql).not.toMatch(/NOW\(\)/i);
@@ -43,13 +46,19 @@ describe('refresh_snapshot compute — U1: created_at binds the run clock (never
     expect(insertPart).toContain(runAtParam);
   });
 
-  // U1b — GREEN control: `snapshot_date` is untouched — still the server-side
-  // CURRENT_DATE literal (its own server-clock semantics are out of U1's scope).
-  it('U1b: snapshot_date still binds the server-side CURRENT_DATE literal (unchanged)', () => {
+  // U1b — CP-PLANA (Spec 124 R-BZ G6 + R-CE): `snapshot_date` is the run clock's calendar
+  // date in the declared `pipeline_timezone`, both bound — the server-side CURRENT_DATE is gone.
+  it('U1b: snapshot_date is the bound run clock in the bound pipeline_timezone — never CURRENT_DATE', () => {
     const runAt = new Date('2026-10-04T12:00:00Z');
-    const { sql } = compute.buildWriteSql({}, runAt);
+    const { sql, params } = compute.buildWriteSql({}, runAt, CFG);
 
-    expect(sql).toContain('CURRENT_DATE');
+    expect(sql).not.toMatch(/CURRENT_DATE/i);
+    const runAtParam = `$${params.length}::timestamptz`;
+    const zoneParam = `$${params.length - 1}`;
+    expect(params[params.length - 2]).toBe('UTC');
+    expect(sql).toContain(`(${runAtParam} AT TIME ZONE ${zoneParam})::date`);
+    // fail closed: no zone ⇒ a loud error, never a literal or session-zone fallback
+    expect(() => compute.buildWriteSql({}, runAt, {})).toThrow(/pipeline_timezone/);
   });
 
   // U1c — RED today: fail closed. A missing run clock is a loud error, never a silent

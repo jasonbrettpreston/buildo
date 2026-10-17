@@ -118,8 +118,8 @@ emitMeta writes — 16 persisted columns including derived `addr_num_normalized`
   - `scripts/link-parcel-addresses.descriptor.json`
   - `scripts/link-parcel-addresses.notes.json`
   - `scripts/lib/compute/link-parcel-addresses.js`
-  - `src/tests/steps/link_parcel_addresses/metamorphic.test.ts`
-  - `src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts`
+  - `src/tests/steps/link_parcel_addresses/metamorphic.db.test.ts`
+  - `src/tests/steps/link_parcel_addresses/rung1-inline-wkt.db.test.ts`
   - `src/tests/steps/link_parcel_addresses/violations.test.ts`
   - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` writes (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql)
   - upstream: address_points · parcels

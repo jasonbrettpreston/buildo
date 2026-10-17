@@ -157,7 +157,7 @@ function createFeaturesGuard(filePath) {
 }
 
 const sourceVersion = require('../source-version');
-const { triggersAt } = require('./staleness');
+const { triggersAt, skipOnlyOverRows } = require('./staleness');
 
 /** Pinned by fence 0b230472 — see header item 2. Overridable per trigger, never per call site. */
 const DEFAULT_CONTENT_HASH_ALGORITHM = 'md5';
@@ -1132,7 +1132,7 @@ async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, 
  */
 async function acquirePdfDocumentSet({
   ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-  timeoutMs, base, tier1, shapeDocument, sleep,
+  timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty,
 }) {
   if (typeof shapeDocument !== 'function') {
     throw new Error(`${tag} external "${external.id}" is a pdf_document_set but no shapeDocument seam was handed to the arm.`);
@@ -1147,9 +1147,10 @@ async function acquirePdfDocumentSet({
   const { manifest, docs, excluded, sha256 } = readDocumentManifest(tag, external, repoRoot);
   const logicVersion = descriptor.staleness && descriptor.staleness.logic_version;
   const contentHash = crypto.createHash('sha256').update(`${sha256}:${String(logicVersion)}`).digest('hex');
+  // R-DD: the content-hash skip is honoured only over a non-empty target.
   const tier2 = forced
     ? { skip: false, reason: 'force_run' }
-    : contentHashSkip({ descriptor, contentHash, prior });
+    : await skipOnlyOverRows(contentHashSkip({ descriptor, contentHash, prior }), targetEmpty, tag);
   const acquiredBase = { ...base, content_hash: contentHash, source_dataset_version: sha256 };
   if (tier2.skip) {
     log.info(tag, `pdf_document_set gate: skip (${tier2.reason}) — manifest + logic_version unchanged, nothing fetched`);
@@ -1258,6 +1259,10 @@ async function acquireExternal({
   // HEAD) and an injectable sleep for the document pace. Both UNDEFINED for every other format.
   shapeDocument,
   sleep,
+  // R-DD (Spec 124, McDonald's Airtight V3): `async () => boolean`, the runner's probe of the
+  // first write target (`staleness.targetIsEmpty`). A tier-1 or tier-2 source-version skip is
+  // honoured only when it answers false; it is called only when a gate would skip.
+  targetEmpty,
 }) {
   // ── 0w: A LOOKUP IS XLSX-ONLY, AND AN XLSX IS LOOKUP-ONLY (2026-09-28) ──────────
   // The TWO new declarations (`role: "lookup"`, `format: "xlsx"`) are one axis spelled
@@ -1359,7 +1364,7 @@ async function acquireExternal({
     ? { skip: false, reason: 'lookup_ungated' }
     : (isLocal && !local)
       ? { skip: true, reason: 'no_source_file' }
-      : preAcquisitionGate(head);
+      : await skipOnlyOverRows(preAcquisitionGate(head), targetEmpty, tag);
   if (tier1.skip) {
     log.info(tag, `pre-acquisition gate: skip (${tier1.reason}) — nothing downloaded`);
     return {
@@ -1387,7 +1392,7 @@ async function acquireExternal({
   if (isDocSet) {
     return acquirePdfDocumentSet({
       ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-      timeoutMs, base, tier1, shapeDocument, sleep,
+      timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty,
     });
   }
 
@@ -1423,7 +1428,7 @@ async function acquireExternal({
       ? { skip: false, reason: 'lookup_ungated' }
       : forced
         ? { skip: false, reason: 'force_run' }
-        : contentHashSkip({ descriptor, contentHash: dl.contentHash, prior });
+        : await skipOnlyOverRows(contentHashSkip({ descriptor, contentHash: dl.contentHash, prior }), targetEmpty, tag);
     if (tier2.skip) {
       log.info(tag, `post-acquisition gate: skip (${tier2.reason}) — bytes identical, nothing parsed`);
       return { acquired, tier1, tier2, features: [], emitBlock: buildSkipReEmitMeta({

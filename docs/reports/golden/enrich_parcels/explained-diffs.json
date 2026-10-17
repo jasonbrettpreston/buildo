@@ -1,0 +1,299 @@
+{
+  "contract_version": 1,
+  "step": "enrich_parcels",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/enrich_parcels/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio; dropped capture_as_of_utc_date, comps_window_as_of_date, parcels_total, parcels_with_nearby_builds_summary, pass3_scope_total_rows, pass3_scope_distinct_parcel_ids, pass3_scope_distinct_run_ids), so entries at the same index compare different invariants (sources_run1: {\"name\":\"pass3_scope_distinct_run_ids\",\"value\":\"2\"} → absent)."
+    },
+    {
+      "key": "invariants[].name",
+      "why": "the POST invariants file lists a different set of invariants (added opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio; dropped capture_as_of_utc_date, comps_window_as_of_date, parcels_total, parcels_with_nearby_builds_summary, pass3_scope_total_rows, pass3_scope_distinct_parcel_ids, pass3_scope_distinct_run_ids), so entries at the same index compare different invariants (sources_run1: \"capture_as_of_utc_date\" → \"opt_aor_gfa_gt_max_buildable_gfa_count\"; \"comps_window_as_of_date\" → \"zoning_dominant_area_share_out_of_range_count\"; +4 more)."
+    },
+    {
+      "key": "invariants[].value",
+      "why": "the POST invariants file lists a different set of invariants (added opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio; dropped capture_as_of_utc_date, comps_window_as_of_date, parcels_total, parcels_with_nearby_builds_summary, pass3_scope_total_rows, pass3_scope_distinct_parcel_ids, pass3_scope_distinct_run_ids), so entries at the same index compare different invariants (sources_run1: \"Fri Sep 04 2026 13:12:28 GMT-0400 (Eastern Daylight Time)\" → \"0\"; \"Fri Sep 04 2026 00:00:00 GMT-0400 (Eastern Daylight Time)\" → \"0\"; +4 more)."
+    },
+    {
+      "key": "meta[].reads.bylaw_map_areas",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources_run1: absent → [\"map_code\",\"source\",\"area_type\",\"geom\"])."
+    },
+    {
+      "key": "meta[].reads.enrich_parcels_pass3_scope",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"run_id\",\"parcel_id\",\"consumed_at\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.neighbourhood_build_norms[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources_run1: \"id\" → \"additions_5yr\"; \"neighbourhood_id\" → \"build_ratio_p50\"; +28 more)."
+    },
+    {
+      "key": "meta[].reads.neighbourhoods[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources_run1: \"id\" → \"avg_household_income\"; \"name\" → \"geom\"; +2 more)."
+    },
+    {
+      "key": "meta[].reads.parcel_buildings[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources_run1: \"building_id\" → \"is_primary\"; \"is_primary\" → \"linked_at\"; +2 more)."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources_run1: \"parcel_id\" → \"geom\"; \"geom\" → \"lot_size_sqm\"; +22 more)."
+    },
+    {
+      "key": "meta[].reads.permits[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources_run1: \"project_type\" → \"street_num\"; \"issued_date\" → \"street_name\"; +5 more)."
+    },
+    {
+      "key": "meta[].reads.zoning_building_setback_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_bylaw_areas[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: \"source_id\" → absent; \"zn_zone\" → absent; +22 more)."
+    },
+    {
+      "key": "meta[].reads.zoning_height_overlay[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: \"source_id\" → absent; \"height_max_m\" → absent; +3 more)."
+    },
+    {
+      "key": "meta[].reads.zoning_lot_coverage_overlay[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: \"source_id\" → absent; \"coverage_max_pct_override\" → absent; +2 more)."
+    },
+    {
+      "key": "meta[].reads.zoning_parking_zone_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_policy_area_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_policy_road_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"road_name\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_priority_retail_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_queenstw_eat_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].reads.zoning_rooming_house_overlay",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources_run1: [\"source_id\",\"geom\",\"source_dataset_version\"] → absent)."
+    },
+    {
+      "key": "meta[].writes.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources_run1: absent → \"in_sixplex_area\"; absent → \"sixplex_area_type\"; +1 more)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [enrich_parcels] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources_run1 4→15 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (sources_run1: \"Parcel zoning enrichment\" → \"Parcel Enrichment (Zoning / Max-Build / Existing-Structu…)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources_run1: 65 → 22)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources_run1.json: added parcels_with_zone_class_pct_warn, parcels_with_zone_class_pct_fail, pass5_post_commit_read_order, sixplex_map_missing, sixplex_basis_counts, sixplex_enriched_count, scope_backlog_at_step_start, scope_retired_rows, scope_retired_cohorts, pending_scope_parcels, scope_recovery_recovered_count, scope_recovery_batches, scope_stamped_without_recompute_count, zoning_stamp_null_count, zoning_stamp_only_count, enrich_parcels_deferred_to_full, zoning_change_scope, opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio, inputs_nonempty, empty_source_guard, producer_pin_load_zoning_records_meta_zoning_layers_loaded_base_true, producer_pin_load_zoning_pipeline_runs_status_not_failed; dropped parcels_with_zone_class_pct, parcels_no_base_zone_count, parcels_multi_zone_count, parcels_zone_conflict_count, bylaw_max_fsi_null_pct, bylaw_max_coverage_pct_null_pct, bylaw_max_height_m_null_pct, lot_size_confidence_high_count, lot_size_confidence_medium_count, lot_size_confidence_low_count, max_buildable_footprint_count, max_buildable_gfa_count, max_build_box_count, max_buildable_gfa_basis_fsi_count, max_buildable_gfa_basis_coverage_box_count, max_buildable_gfa_basis_coverage_only_count, max_build_min_dimension_m_applied, max_build_coverage_binding_count, max_build_confidence_high_count, max_build_confidence_medium_count, max_build_confidence_low_count, garden_suite_fits_count, envelope_constrained_count, max_build_stories_basis_bylaw_count, max_build_stories_basis_pocket_count, max_build_stories_basis_derived_count, market_exceeds_bylaw_count, neighbourhood_join_count, neighbourhood_premium_above_1_count, attached_modal_side_count_parcels, garage_fits_count, garage_permission_as_of_right_count, garage_permission_coa_required_count, rear_suite_laneway_count, rear_suite_garden_count, rear_suite_permission_as_of_right_count, rear_suite_permission_coa_required_count, imagery_roof_footprint_count, imagery_roof_gfa_count, existing_dims_count, existing_structure_confidence_high_count, existing_structure_confidence_low_count, existing_other_structures_present_count, existing_greenspace_count, max_newbuild_coa_gfa_count, cur_floor_gfa_count, cur_pot_2story_gfa_count, cur_pot_3story_gfa_count, cur_gfa_range_basis_count, cur_est_kitchen_gfa_count, cur_est_bath_gfa_count, reno_coa_uplift_pct_applied, reno_kitchen_gfa_pct_applied, reno_bath_gfa_pct_applied, mislink_footprint_lot_tol_applied, storey_height_m_applied, comp_zero_filled_count, comp_with_comps_count, comp_build_ratio_p50_count, comp_reset_ineligible_count, opt_config_reset_ineligible_count, opt_suite_fits_full_count, opt_config_confidence_high_count, opt_config_confidence_medium_count, opt_config_confidence_low_count, enrich_parcels_pass1_duration_ms, enrich_parcels_pass2_duration_ms, enrich_parcels_pass3_duration_ms, enrich_parcels_pass4_duration_ms, enrich_parcels_pass5_duration_ms, records_updated_aggregate_distinct_parcels). Measured sources_run1: {\"metric\":\"imagery_roof_gfa_count\",\"status\":\"INFO\",\"value… → absent; {\"metric\":\"existing_dims_count\",\"status\":\"INFO\",\"value\":4… → absent; +42 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources_run1.json: added parcels_with_zone_class_pct_warn, parcels_with_zone_class_pct_fail, pass5_post_commit_read_order, sixplex_map_missing, sixplex_basis_counts, sixplex_enriched_count, scope_backlog_at_step_start, scope_retired_rows, scope_retired_cohorts, pending_scope_parcels, scope_recovery_recovered_count, scope_recovery_batches, scope_stamped_without_recompute_count, zoning_stamp_null_count, zoning_stamp_only_count, enrich_parcels_deferred_to_full, zoning_change_scope, opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio, inputs_nonempty, empty_source_guard, producer_pin_load_zoning_records_meta_zoning_layers_loaded_base_true, producer_pin_load_zoning_pipeline_runs_status_not_failed; dropped parcels_with_zone_class_pct, parcels_no_base_zone_count, parcels_multi_zone_count, parcels_zone_conflict_count, bylaw_max_fsi_null_pct, bylaw_max_coverage_pct_null_pct, bylaw_max_height_m_null_pct, lot_size_confidence_high_count, lot_size_confidence_medium_count, lot_size_confidence_low_count, max_buildable_footprint_count, max_buildable_gfa_count, max_build_box_count, max_buildable_gfa_basis_fsi_count, max_buildable_gfa_basis_coverage_box_count, max_buildable_gfa_basis_coverage_only_count, max_build_min_dimension_m_applied, max_build_coverage_binding_count, max_build_confidence_high_count, max_build_confidence_medium_count, max_build_confidence_low_count, garden_suite_fits_count, envelope_constrained_count, max_build_stories_basis_bylaw_count, max_build_stories_basis_pocket_count, max_build_stories_basis_derived_count, market_exceeds_bylaw_count, neighbourhood_join_count, neighbourhood_premium_above_1_count, attached_modal_side_count_parcels, garage_fits_count, garage_permission_as_of_right_count, garage_permission_coa_required_count, rear_suite_laneway_count, rear_suite_garden_count, rear_suite_permission_as_of_right_count, rear_suite_permission_coa_required_count, imagery_roof_footprint_count, imagery_roof_gfa_count, existing_dims_count, existing_structure_confidence_high_count, existing_structure_confidence_low_count, existing_other_structures_present_count, existing_greenspace_count, max_newbuild_coa_gfa_count, cur_floor_gfa_count, cur_pot_2story_gfa_count, cur_pot_3story_gfa_count, cur_gfa_range_basis_count, cur_est_kitchen_gfa_count, cur_est_bath_gfa_count, reno_coa_uplift_pct_applied, reno_kitchen_gfa_pct_applied, reno_bath_gfa_pct_applied, mislink_footprint_lot_tol_applied, storey_height_m_applied, comp_zero_filled_count, comp_with_comps_count, comp_build_ratio_p50_count, comp_reset_ineligible_count, opt_config_reset_ineligible_count, opt_suite_fits_full_count, opt_config_confidence_high_count, opt_config_confidence_medium_count, opt_config_confidence_low_count, enrich_parcels_pass1_duration_ms, enrich_parcels_pass2_duration_ms, enrich_parcels_pass3_duration_ms, enrich_parcels_pass4_duration_ms, enrich_parcels_pass5_duration_ms, records_updated_aggregate_distinct_parcels). Measured sources_run1: \"parcels_with_zone_class_pct\" → \"parcels_with_zone_class_pct_warn\"; \"parcels_enriched_count\" → \"parcels_with_zone_class_pct_fail\"; +46 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].note",
+      "why": "report L958: S1-P producer-pin audit rows (scripts/lib/step/producer.js) carry a note naming the producer run (load_zoning run 2637); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources_run1: absent → \"after_write\"; absent → \"before_write\"; +2 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].order_guarantee",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources_run1: absent → {\"anchor\":\"78:read would be invisible\",\"guarantee\":\"pass …)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].pin_id",
+      "why": "report L958: S1-P producer-pin audit rows carry pin_id (load_zoning.records_meta.zoning_layers_loaded.base, load_zoning.pipeline_runs.status — R-CW not_failed); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].predicate",
+      "why": "report L958: S1-P producer-pin audit rows carry the pin predicate (zoning_layers_loaded.base true; pipeline_runs.status not_failed, R-CW); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].producer_completed_at",
+      "why": "report L958: S1-P producer-pin audit rows carry producer_completed_at of the pinned producer run; the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].producer_run_id",
+      "why": "report L958: S1-P producer-pin audit rows carry producer_run_id (2637, the pinned load_zoning run); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].producer_status",
+      "why": "report L958: S1-P producer-pin audit rows carry producer_status (completed_with_warnings); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].result",
+      "why": "report L958: S1-P producer-pin audit rows carry the pin result (PASS); the legacy PRE had no producer pins."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources_run1: absent → \"check\"; absent → \"invariant\"; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources_run1.json: added parcels_with_zone_class_pct_warn, parcels_with_zone_class_pct_fail, pass5_post_commit_read_order, sixplex_map_missing, sixplex_basis_counts, sixplex_enriched_count, scope_backlog_at_step_start, scope_retired_rows, scope_retired_cohorts, pending_scope_parcels, scope_recovery_recovered_count, scope_recovery_batches, scope_stamped_without_recompute_count, zoning_stamp_null_count, zoning_stamp_only_count, enrich_parcels_deferred_to_full, zoning_change_scope, opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio, inputs_nonempty, empty_source_guard, producer_pin_load_zoning_records_meta_zoning_layers_loaded_base_true, producer_pin_load_zoning_pipeline_runs_status_not_failed; dropped parcels_with_zone_class_pct, parcels_no_base_zone_count, parcels_multi_zone_count, parcels_zone_conflict_count, bylaw_max_fsi_null_pct, bylaw_max_coverage_pct_null_pct, bylaw_max_height_m_null_pct, lot_size_confidence_high_count, lot_size_confidence_medium_count, lot_size_confidence_low_count, max_buildable_footprint_count, max_buildable_gfa_count, max_build_box_count, max_buildable_gfa_basis_fsi_count, max_buildable_gfa_basis_coverage_box_count, max_buildable_gfa_basis_coverage_only_count, max_build_min_dimension_m_applied, max_build_coverage_binding_count, max_build_confidence_high_count, max_build_confidence_medium_count, max_build_confidence_low_count, garden_suite_fits_count, envelope_constrained_count, max_build_stories_basis_bylaw_count, max_build_stories_basis_pocket_count, max_build_stories_basis_derived_count, market_exceeds_bylaw_count, neighbourhood_join_count, neighbourhood_premium_above_1_count, attached_modal_side_count_parcels, garage_fits_count, garage_permission_as_of_right_count, garage_permission_coa_required_count, rear_suite_laneway_count, rear_suite_garden_count, rear_suite_permission_as_of_right_count, rear_suite_permission_coa_required_count, imagery_roof_footprint_count, imagery_roof_gfa_count, existing_dims_count, existing_structure_confidence_high_count, existing_structure_confidence_low_count, existing_other_structures_present_count, existing_greenspace_count, max_newbuild_coa_gfa_count, cur_floor_gfa_count, cur_pot_2story_gfa_count, cur_pot_3story_gfa_count, cur_gfa_range_basis_count, cur_est_kitchen_gfa_count, cur_est_bath_gfa_count, reno_coa_uplift_pct_applied, reno_kitchen_gfa_pct_applied, reno_bath_gfa_pct_applied, mislink_footprint_lot_tol_applied, storey_height_m_applied, comp_zero_filled_count, comp_with_comps_count, comp_build_ratio_p50_count, comp_reset_ineligible_count, opt_config_reset_ineligible_count, opt_suite_fits_full_count, opt_config_confidence_high_count, opt_config_confidence_medium_count, opt_config_confidence_low_count, enrich_parcels_pass1_duration_ms, enrich_parcels_pass2_duration_ms, enrich_parcels_pass3_duration_ms, enrich_parcels_pass4_duration_ms, enrich_parcels_pass5_duration_ms, records_updated_aggregate_distinct_parcels). Measured sources_run1: \"INFO\" → \"PASS\"; \"INFO\" → \"WARN\"; +1 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources_run1: absent → \"pct >= 95\"; absent → \"pct >= 90\"; +9 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources_run1.json: added parcels_with_zone_class_pct_warn, parcels_with_zone_class_pct_fail, pass5_post_commit_read_order, sixplex_map_missing, sixplex_basis_counts, sixplex_enriched_count, scope_backlog_at_step_start, scope_retired_rows, scope_retired_cohorts, pending_scope_parcels, scope_recovery_recovered_count, scope_recovery_batches, scope_stamped_without_recompute_count, zoning_stamp_null_count, zoning_stamp_only_count, enrich_parcels_deferred_to_full, zoning_change_scope, opt_aor_gfa_gt_max_buildable_gfa_count, zoning_dominant_area_share_out_of_range_count, comp_fsi_p50_small_n_sample_count, heritage_basis_coverage_distribution, existing_mislink_footprint_ratio_out_of_bound_count, parcels_dead_tuple_ratio, inputs_nonempty, empty_source_guard, producer_pin_load_zoning_records_meta_zoning_layers_loaded_base_true, producer_pin_load_zoning_pipeline_runs_status_not_failed; dropped parcels_with_zone_class_pct, parcels_no_base_zone_count, parcels_multi_zone_count, parcels_zone_conflict_count, bylaw_max_fsi_null_pct, bylaw_max_coverage_pct_null_pct, bylaw_max_height_m_null_pct, lot_size_confidence_high_count, lot_size_confidence_medium_count, lot_size_confidence_low_count, max_buildable_footprint_count, max_buildable_gfa_count, max_build_box_count, max_buildable_gfa_basis_fsi_count, max_buildable_gfa_basis_coverage_box_count, max_buildable_gfa_basis_coverage_only_count, max_build_min_dimension_m_applied, max_build_coverage_binding_count, max_build_confidence_high_count, max_build_confidence_medium_count, max_build_confidence_low_count, garden_suite_fits_count, envelope_constrained_count, max_build_stories_basis_bylaw_count, max_build_stories_basis_pocket_count, max_build_stories_basis_derived_count, market_exceeds_bylaw_count, neighbourhood_join_count, neighbourhood_premium_above_1_count, attached_modal_side_count_parcels, garage_fits_count, garage_permission_as_of_right_count, garage_permission_coa_required_count, rear_suite_laneway_count, rear_suite_garden_count, rear_suite_permission_as_of_right_count, rear_suite_permission_coa_required_count, imagery_roof_footprint_count, imagery_roof_gfa_count, existing_dims_count, existing_structure_confidence_high_count, existing_structure_confidence_low_count, existing_other_structures_present_count, existing_greenspace_count, max_newbuild_coa_gfa_count, cur_floor_gfa_count, cur_pot_2story_gfa_count, cur_pot_3story_gfa_count, cur_gfa_range_basis_count, cur_est_kitchen_gfa_count, cur_est_bath_gfa_count, reno_coa_uplift_pct_applied, reno_kitchen_gfa_pct_applied, reno_bath_gfa_pct_applied, mislink_footprint_lot_tol_applied, storey_height_m_applied, comp_zero_filled_count, comp_with_comps_count, comp_build_ratio_p50_count, comp_reset_ineligible_count, opt_config_reset_ineligible_count, opt_suite_fits_full_count, opt_config_confidence_high_count, opt_config_confidence_medium_count, opt_config_confidence_low_count, enrich_parcels_pass1_duration_ms, enrich_parcels_pass2_duration_ms, enrich_parcels_pass3_duration_ms, enrich_parcels_pass4_duration_ms, enrich_parcels_pass5_duration_ms, records_updated_aggregate_distinct_parcels). Measured sources_run1: 96.6 → 96.4; 0 → 96.4; +44 more."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → 3)."
+    },
+    {
+      "key": "summary.records_meta.comparable_builds_enriched_count",
+      "why": "declared emit (descriptor emits[] key \"comparable_builds_enriched_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 348967)."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → {\"accessory_max_coverage_pct\":0.3,\"car_footprint_sqm\":18.…)."
+    },
+    {
+      "key": "summary.records_meta.deferred",
+      "why": "declared emit (descriptor emits[] key \"deferred\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → null)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.existing_structure_enriched_count",
+      "why": "declared emit (descriptor emits[] key \"existing_structure_enriched_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → \"chain_owned\")."
+    },
+    {
+      "key": "summary.records_meta.max_build_enriched_count",
+      "why": "declared emit (descriptor emits[] key \"max_build_enriched_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.opt_config_engine_errors",
+      "why": "declared emit (descriptor emits[] key \"opt_config_engine_errors\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.optimal_config_enriched_count",
+      "why": "declared emit (descriptor emits[] key \"optimal_config_enriched_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 19)."
+    },
+    {
+      "key": "summary.records_meta.parcels_enriched_count",
+      "why": "declared emit (descriptor emits[] key \"parcels_enriched_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.records_updated_aggregate",
+      "why": "declared emit (descriptor emits[] key \"records_updated_aggregate\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → \"enriched_full_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.total_parcels_scanned",
+      "why": "declared emit (descriptor emits[] key \"total_parcels_scanned\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 496535)."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources_run1: absent → [\"massing_zero_link_ghost: 1577\",\"comp_fsi_p50_small_n_sa…)."
+    },
+    {
+      "key": "summary.records_meta.zone_class_pct",
+      "why": "declared emit (descriptor emits[] key \"zone_class_pct\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 96.4)."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "report L859/L871: records_new was NULL on every legacy/early run; the declared counter source makes it a literal 0 (this step INSERTs no parcel rows)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "report L859/L868: the legacy never populated records_total; the declared counter is the scanned parcel scope, 496,535 in the POST (input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since)."
+    },
+    {
+      "key": "table_state[].ceiling_bypassed",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources_run1: \"projected\" → absent)."
+    },
+    {
+      "key": "table_state[].columns[]",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources_run1: \"zoning_class\" → \"run_id\"; \"zoning_zn_string\" → \"parcel_id\"; +205 more)."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "content_hash is md5 over the projected, ordered rows (harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source)); in every instance the same table's projection or order also changed PRE→POST, so the hash is not comparable (sources_run1)."
+    },
+    {
+      "key": "table_state[].hash_method",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources_run1: \"row_hash_then_concat\" → absent; absent → \"row_hash_then_concat\")."
+    },
+    {
+      "key": "table_state[].order_columns[]",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources_run1: \"id\" → \"run_id\"; absent → \"parcel_id\"; +2 more)."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "report L419 EP-D10: enrich_parcels_pass3_scope is a transient scope table (884,488 at the PRE, emptied 0 after the POST full run); parcels 486,530 → 496,536 is input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since."
+    },
+    {
+      "key": "table_state[].table",
+      "why": "the POST capture's table list is the descriptor's declared write tables (capture-step-golden.js table_specs), the legacy PRE captured [parcels, enrich_parcels_pass3_scope]; POST [enrich_parcels_pass3_scope, parcels] (sources_run1)."
+    },
+    {
+      "key": "meta[].reads.zoning_building_setback_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_building_setback_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_parking_zone_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_parking_zone_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_policy_area_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_policy_area_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_policy_road_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_policy_road_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_priority_retail_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_priority_retail_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_queenstw_eat_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_queenstw_eat_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "meta[].reads.zoning_rooming_house_overlay[]",
+      "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_rooming_house_overlay with its traced columns, so deriveMeta lists them."
+    }
+  ]
+}

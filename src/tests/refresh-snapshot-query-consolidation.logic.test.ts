@@ -38,6 +38,10 @@ const SRC = readFileSync(join(process.cwd(), COMPUTE_REL), 'utf8');
 const DESC_SRC = readFileSync(join(process.cwd(), 'scripts/refresh-snapshot.descriptor.json'), 'utf8');
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real module's exports, not re-implementing them
 const mod = require(join(process.cwd(), COMPUTE_REL));
+/** CP-PLANA (R-BZ G6): the recorder runner's clockNow — the reads bind it, never NOW(). */
+const RUN_AT = new Date('2026-10-04T12:00:00Z');
+// V3 ledger E (2026-10-17): the scalar query's windows and cost_oor bounds, at their seeded defaults.
+const SCALAR_CFG = { refresh_snapshot_updated_24h_window_hours: 24, refresh_snapshot_updated_7d_window_days: 7, refresh_snapshot_updated_30d_window_days: 30, refresh_snapshot_cost_oor_min_cad: 100, refresh_snapshot_cost_oor_max_cad: 1000000000 };
 
 describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Spec 118 §1/§7.1)', () => {
   it('exports the three query builders + the tag-split helper', () => {
@@ -58,7 +62,7 @@ describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Sp
   });
 
   it('① the permits scalar query has NO top-level WHERE clause on `permits`', () => {
-    const { sql } = mod.buildPermitsScalarQuery();
+    const { sql } = mod.buildPermitsScalarQuery(RUN_AT, SCALAR_CFG);
     // The whole point of the fix: nothing outside a FILTER(...) may restrict which
     // rows are read, or the planner regains the incentive to satisfy the query via
     // idx_permits_status instead of scanning the table.
@@ -67,14 +71,17 @@ describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Sp
   });
 
   it('① every status-scoped metric FILTERs on status = ANY($1), never a literal IN-list', () => {
-    const { sql, params } = mod.buildPermitsScalarQuery();
+    const { sql, params } = mod.buildPermitsScalarQuery(RUN_AT, SCALAR_CFG);
     expect(sql).toMatch(/status = ANY\(\$1\)/);
     expect(sql).not.toMatch(/status IN \('Permit Issued'/);
-    expect(params).toEqual([mod.ACTIVE_PERMIT_STATUSES]);
+    // CP-PLANA (R-BZ G6): the run clock is bound as $2 — never NOW().
+    // V3 ledger E (2026-10-17): $3..$7 are the windows and cost_oor bounds from ctx.config.
+    expect(params).toEqual([mod.ACTIVE_PERMIT_STATUSES, RUN_AT, 24, 7, 30, 100, 1000000000]);
+    expect(sql).not.toMatch(/NOW\(\)/i);
   });
 
   it('① consolidates all 10 scalar permits aggregates into ONE query (metric ceiling stated)', () => {
-    const { sql } = mod.buildPermitsScalarQuery();
+    const { sql } = mod.buildPermitsScalarQuery(RUN_AT, SCALAR_CFG);
     const expectedMetrics = [
       'total', 'active', 'permits_with_builder', 'neighbourhood_count', 'geocoded_count',
       'scope_count', 'scope_tags_count', 'detailed_tags_count',
@@ -98,7 +105,7 @@ describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Sp
   });
 
   it('③ tradeByType runs under session-scoped enable_indexscan=off — DECLARED in the descriptor\'s execution.read_gucs (R-CF), issued by the runner; compute returns NO guc and holds no SET/RESET text', () => {
-    const reads = mod.buildReads({ snapshot_coa_conf_high: 0.8, coa_match_conf_medium: 0.5 });
+    const reads = mod.buildReads({ snapshot_coa_conf_high: 0.8, coa_match_conf_medium: 0.5 }, RUN_AT);
     const step = reads.main.find((s: { key: string }) => s.key === 'tradeByType');
     expect(step, 'buildReads().main must declare a tradeByType step').toBeTruthy();
     expect(step.guc, 'compute must NOT return a guc — a session GUC is declared in execution.read_gucs (R-CF)').toBeUndefined();

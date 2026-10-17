@@ -14,7 +14,8 @@
 //   FAIL:WITNESS:<slug>:a:<table>.<col>|a:<table>.* traced read/write not declared (declared = inputs.reads ∪ checks[].reads ∪ writes, R-BJ)
 //   FAIL:WITNESS:<slug>:a:unwitnessed:<table>.<col>|.*  a declared read touched by no fresh trace and no fixture record (P1-C4a)
 //   FAIL:WITNESS:<slug>:b:<table>[.<col>]           written tables must EQUAL declared write tables
-//   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory
+//   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory (by_mode[mode] when declared, R-BK/R-DB)
+//   FAIL:INPUT:<slug>:<invocation>:c:mode-unresolved  by_mode declared but the invocation's resolved mode is unknown (never a guess)
 //   FAIL:WITNESS:<slug>:d:txn_scope:<declared>:<observed>
 //   FAIL:WITNESS:<slug>:g:<key>                     PRE key absent from POST and unexplained
 //   FAIL:WITNESS:<slug>:e:missing:<step>|e:extra:<step>  inputs.reads.steps != the derived producer set (P1-C5)
@@ -29,6 +30,8 @@
 // P1-C8/C9, so `hardStop` is only ever true for a `pending` slug whose rows carry a FAIL:.
 // Check (e) lands at P1-C5: report-only for converted slugs, hard for a pending slug (the same
 // hardStop rule), until P1-C9.
+
+import { writeInventoryForMode, declaresWriteInventoryByMode } from './schema-homes.mjs';
 
 const FAIL_PREFIX = 'FAIL:';
 
@@ -97,15 +100,34 @@ export function declaredWrites(descriptor) {
     );
     out.push({ table: w.table, cols, dbDefault });
   }
+  // #44 G13 (Spec 124 R-BL(iv), McDonald's Airtight V3): an outputs.invalidates[] row carrying
+  // set_null_on_change_of is EXECUTED by codegen (`<column> = CASE … THEN NULL` in that write's DO UPDATE
+  // SET), so its column is this step's declared write — the same rule deriveMeta applies
+  // (scripts/lib/step/index.js, the LDG-10 invalidates loop). Other `by` values are someone else's write.
+  const invalidates = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.invalidates)
+    ? descriptor.outputs.invalidates
+    : [];
+  for (const inv of invalidates) {
+    if (!inv || typeof inv.table !== 'string' || typeof inv.column !== 'string' || typeof inv.set_null_on_change_of !== 'string') continue;
+    let entry = out.find((e) => e.table === inv.table);
+    if (!entry) {
+      entry = { table: inv.table, cols: [], dbDefault: new Set() };
+      out.push(entry);
+    }
+    if (!entry.cols.includes(inv.column)) entry.cols.push(inv.column);
+  }
   return out;
 }
 
-/** `descriptor.outputs.write_inventory.statements` when it is a real number, else null. */
-function declaredStatements(descriptor) {
-  const inv = descriptor && descriptor.outputs ? descriptor.outputs.write_inventory : null;
-  return inv && typeof inv.statements === 'number' && Number.isFinite(inv.statements)
-    ? inv.statements
-    : null;
+/**
+ * #44 (c) expected count for ONE invocation (Spec 124 R-BK, wired by R-DB — McDonald's Airtight V3):
+ * `writeInventoryForMode(descriptor, mode)` — `by_mode[mode].statements` when declared, else the
+ * mode-agnostic `statements`. A by_mode declarer whose mode is unresolved has NO expected count
+ * (`{unresolved: true}`), which the caller reports as FAIL:INPUT rather than guessing a mode.
+ */
+function expectedStatements(descriptor, mode) {
+  if (declaresWriteInventoryByMode(descriptor) && mode === null) return { count: null, unresolved: true };
+  return { count: writeInventoryForMode(descriptor, mode === null ? undefined : mode), unresolved: false };
 }
 
 /** `touched` with non-object members defaulted, so a malformed trace never throws. */
@@ -193,6 +215,64 @@ function hasWrite(trace) {
  *   `a:<table>.*` for an undeclared table (one per table, not per column),
  *   `a:<table>.<col>` for a declared table's undeclared column.
  */
+/**
+ * #44 G7 (Spec 124 R-DG, McDonald's Airtight V3; amends R-BJ): the step's OWN measurement SQL — every
+ * `plausibility[].sql` and `invariants[].sql` string of its descriptor. The runner executes it, the SQL
+ * declares itself, so a traced READ statement whose fingerprint equals one of these is accounted against
+ * that SQL (its reads are what the resolver resolved, column level) in the traced ⊆ declared half of (a)
+ * only. Never an acquisition read: it is not added to inputs.reads and never reaches stepUpstreams /
+ * derivedReadsSteps (those read the descriptor, not traces). It still witnesses a declared column it
+ * really executed (the declared ⊆ witnessed half is unchanged).
+ */
+export function ownMeasurementSql(descriptor) {
+  const out = [];
+  for (const key of ['plausibility', 'invariants']) {
+    for (const e of descriptor && Array.isArray(descriptor[key]) ? descriptor[key] : []) {
+      if (e && typeof e.sql === 'string' && e.sql.trim() !== '') out.push(e.sql);
+    }
+  }
+  return out;
+}
+
+/**
+ * `touched` with every read column that ONLY own-measurement statements touched removed (G7). A column also
+ * read by any other statement stays; an own-measurement statement that WRITES, or that carried a resolver
+ * error, is never accounted (its rows stay). `ownFingerprints` absent/empty → `touched` unchanged.
+ */
+export function withoutOwnMeasurementReads(trace, ownFingerprints) {
+  const touched = touchedOf(trace);
+  if (!(ownFingerprints instanceof Set) || ownFingerprints.size === 0) return touched;
+  const statements = Array.isArray(trace && trace.statements) ? trace.statements : [];
+  const isOwn = (s) => !!s && s.kind === 'read' && !s.error && ownFingerprints.has(s.fingerprint)
+    && (!s.writes || Object.keys(s.writes).length === 0);
+  const other = new Map();
+  for (const s of statements) {
+    if (isOwn(s)) continue;
+    for (const [table, cols] of Object.entries(s && s.reads && typeof s.reads === 'object' ? s.reads : {})) {
+      const set = other.get(table) || new Set();
+      for (const c of Array.isArray(cols) ? cols : []) set.add(c);
+      other.set(table, set);
+    }
+  }
+  const own = new Map();
+  for (const s of statements) {
+    if (!isOwn(s)) continue;
+    for (const [table, cols] of Object.entries(s.reads && typeof s.reads === 'object' ? s.reads : {})) {
+      const set = own.get(table) || new Set();
+      for (const c of Array.isArray(cols) ? cols : []) set.add(c);
+      own.set(table, set);
+    }
+  }
+  const reads = {};
+  for (const [table, cols] of Object.entries(touched.reads)) {
+    const o = own.get(table);
+    const keep = (Array.isArray(cols) ? cols : []).filter((c) => !o || !o.has(c) || (other.get(table) || new Set()).has(c));
+    // A table only an own-measurement statement touched (no column left, not read elsewhere) drops out.
+    if (keep.length > 0 || (!o && Array.isArray(cols)) || other.has(table)) reads[table] = keep;
+  }
+  return { reads, writes: touched.writes };
+}
+
 export function undeclaredItems(descriptor, touched) {
   const t = touchedOf({ touched });
   const tables = declaredTables(descriptor);
@@ -278,9 +358,9 @@ export function unwitnessedItems(descriptor, witnessed) {
  * (a)+(b)+(c)+(d) for ONE post trace. The caller has already skipped a stale trace.
  * @returns {string[]} violation strings, without rows for a trace with no writes at all.
  */
-function checkTraceAgainstDescriptor(slug, descriptor, trace) {
+function checkTraceAgainstDescriptor(slug, descriptor, trace, invocation = null, mode = null, ownFingerprints = null) {
   const rows = [];
-  const touched = touchedOf(trace);
+  const touched = withoutOwnMeasurementReads(trace, ownFingerprints);
 
   // (a) traced ⊆ declared (see undeclaredItems).
   for (const item of undeclaredItems(descriptor, touched)) rows.push(`FAIL:WITNESS:${slug}:${item}`);
@@ -310,10 +390,12 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace) {
     }
   }
 
-  // (c) distinct fingerprint count of STEP writes vs write_inventory.statements. A `kind:'write'`
+  // (c) distinct fingerprint count of STEP writes vs the expected count for this invocation's mode. A `kind:'write'`
   // statement whose only targets were excluded (runner-owned ledger etc., Spec 124 R-BG) is not
   // a step write and is not counted here.
-  const declaredCount = declaredStatements(descriptor);
+  const expected = expectedStatements(descriptor, mode);
+  if (expected.unresolved) rows.push(`FAIL:INPUT:${slug}:${invocation}:c:mode-unresolved`);
+  const declaredCount = expected.count;
   if (declaredCount !== null) {
     const fp = new Set();
     for (const s of Array.isArray(trace && trace.statements) ? trace.statements : []) {
@@ -609,6 +691,7 @@ export function attributionRows(slug, descriptor, invocation, trace, runnerSet) 
  *   preTraces: Record<string, object>, explainedDiffs: string[],
  *   derivedReadsSteps?: string[],
  *   runnerFingerprints?: Map<string, string>|Set<string>|string[],
+ *   modeByInvocation?: Record<string, 'full'|'incremental'|null>,
  *   fixtureRecords?: Record<string, {reads: object, writes: object,
  *     violations: string[], errors: string[]}>}} args
  * @returns {{answer: string, rows: string[], hardStop: boolean, attributed: string[]}}
@@ -624,7 +707,12 @@ export function evaluateWitness({
   derivedReadsSteps,
   fixtureRecords,
   runnerFingerprints,
+  // R-DB: each invocation's resolved `staleness.mode_select` mode ('full' | 'incremental'); absent → null.
+  modeByInvocation,
+  // R-DG (G7): libpg fingerprints of ownMeasurementSql(descriptor); absent → no accounting.
+  ownMeasurementFingerprints,
 } = {}) {
+  const ownFps = ownMeasurementFingerprints instanceof Set ? ownMeasurementFingerprints : null;
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
   const pres = preTraces && typeof preTraces === 'object' ? preTraces : {};
   const fixtures = fixtureRecords && typeof fixtureRecords === 'object' && !Array.isArray(fixtureRecords)
@@ -657,7 +745,10 @@ export function evaluateWitness({
         rows.push(`FAIL:STALE:${slug}:${invocation}`);
         continue;
       }
-      rows.push(...checkTraceAgainstDescriptor(slug, descriptor, trace));
+      const mode = modeByInvocation && typeof modeByInvocation === 'object' && typeof modeByInvocation[invocation] === 'string'
+        ? modeByInvocation[invocation]
+        : null;
+      rows.push(...checkTraceAgainstDescriptor(slug, descriptor, trace, invocation, mode, ownFps));
       rows.push(...producerRows(slug, trace));
       witnessedTouched.push(touchedOf(trace));
       freshTraces.push(trace);
@@ -781,15 +872,49 @@ export function selfTest() {
   };
   const green = evaluateWitness({ ...base, postTraces: { fixture_step: trace({ parcels: ['id', 'geom'] }) } });
   const red = evaluateWitness({ ...base, postTraces: { fixture_step: trace({ parcels: ['id', 'geom', 'lot_size_sqm'] }) } });
+  // R-DB: (c) reads by_mode[mode] (R-BK) — one traced write is right for incremental, wrong for
+  // full, and a by_mode declarer with no resolved mode is FAIL:INPUT, never a guessed mode.
+  const byMode = { ...base, descriptor: { ...descriptor, outputs: { ...descriptor.outputs, write_inventory: { statements: 1, by_mode: { full: { statements: 2 }, incremental: { statements: 1 } } } } } };
+  const okTrace = { fixture_step: trace({ parcels: ['id', 'geom'] }) };
+  const incr = evaluateWitness({ ...byMode, postTraces: okTrace, modeByInvocation: { fixture_step: 'incremental' } });
+  const full = evaluateWitness({ ...byMode, postTraces: okTrace, modeByInvocation: { fixture_step: 'full' } });
+  const unresolved = evaluateWitness({ ...byMode, postTraces: okTrace });
+  // G13 (R-BL(iv)): an invalidates[] set_null_on_change_of column is a declared write (and read) of its table;
+  // a `by:"trigger"` row is not (someone else writes it).
+  const invDescriptor = (by) => ({ ...descriptor, outputs: { ...descriptor.outputs, invalidates: [by === 'set_null'
+    ? { table: 'parcels', column: 'v_when', set_null_on_change_of: 'geom', by: 'set_null_on_change_of' }
+    : { table: 'parcels', column: 'v_when', by: 'trigger' }] } });
+  const invTouched = { reads: { parcels: ['id', 'geom', 'v_when'] }, writes: { parcels: ['a', 'b', 'v_when'] } };
+  const g13ok = undeclaredItems(invDescriptor('set_null'), invTouched).length === 0
+    && undeclaredItems(invDescriptor('trigger'), invTouched).includes('a:parcels.v_when');
+  // G7 (R-DG): a read statement whose fingerprint is the step's own plausibility SQL is accounted against that
+  // SQL; the same column read by any other statement, or by an own-fingerprint WRITE, still fails (a).
+  const ownTrace = (extra) => ({
+    statements: [
+      { fingerprint: 'w1', kind: 'write', reads: { parcels: ['id'] }, writes: { parcels: ['a', 'b'] }, error: null },
+      { fingerprint: 'p1', kind: 'read', reads: { permits: ['permit_num'] }, writes: {}, error: null },
+      ...extra,
+    ],
+    touched: { reads: { parcels: ['id', 'geom'], permits: ['permit_num', ...(extra.length ? ['status'] : [])] }, writes: { parcels: ['a', 'b'] } },
+  });
+  const own = new Set(['p1']);
+  const g7ok = undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([]), own)).length === 0
+    && undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([]), new Set())).includes('a:permits.*')
+    && undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([{ fingerprint: 'c9', kind: 'read', reads: { permits: ['status'] }, writes: {}, error: null }]), own)).includes('a:permits.*');
   const ok = green.rows.length === 0
+    && g13ok
+    && g7ok
     && green.answer === 'PASS'
     && green.hardStop === false
     && red.rows.includes('FAIL:WITNESS:fixture_step:a:parcels.lot_size_sqm')
-    && red.hardStop === true;
+    && red.hardStop === true
+    && incr.rows.length === 0
+    && full.rows.includes('FAIL:WITNESS:fixture_step:c:statements:2!=1')
+    && unresolved.rows.includes('FAIL:INPUT:fixture_step:fixture_step:c:mode-unresolved');
   return {
     ok,
     detail: ok
-      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row'
-      : `self-test FAILED: green=${JSON.stringify(green)} red=${JSON.stringify(red)}`,
+      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row; (c) counts by_mode[mode] and refuses an unresolved mode; G13 invalidates set_null columns are declared writes; G7 own-measurement reads are accounted, others are not'
+      : `self-test FAILED: g13=${g13ok} g7=${g7ok} green=${JSON.stringify(green)} red=${JSON.stringify(red)}`,
   };
 }

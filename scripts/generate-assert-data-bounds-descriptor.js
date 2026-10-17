@@ -48,8 +48,6 @@ function defaultFor(LOGIC_VAR_DEFS, name) {
 function boundFor(def, LOGIC_VAR_DEFS) {
   switch (def.kind) {
     case 'raw0':
-    case 'boolcfg_ge':
-    case 'boolcfg_gt':
       return { limit: 'viol == 0' };
     case 'floor_min':
       return { limit: `value_min ${defaultFor(LOGIC_VAR_DEFS, def.cfgVar)}`, limit_from_config: def.cfgVar };
@@ -85,17 +83,17 @@ const TABLE_COLUMNS = {
   wsib_registry: ['legal_name', 'predominant_class', 'subclass', 'naics_code', 'linked_entity_id'],
 };
 
-// inputs.reads.steps — the UNCONVERTED producers of the read columns above (gate #44 (e),
-// measured 2026-10-03 against the effective ledger). The 7 CONVERTED producers
-// (address_points, link_parcels, link_wsib, load_wsib, massing, neighbourhoods, parcels) are
-// NOT declared: the lineage snapshot gives this step no converted producer, so declaring
-// them would widen the LDG-4 KNOWN_GAPS ratchet — deferred to the FLEET-2 ordering-only home.
+// inputs.reads.steps — every producer of the read columns above, verbatim the set gate #44 (e)
+// derives from the effective ledger. The 7 sources-chain producers (the last 7 entries) were
+// deferred to the FLEET-2 ordering-only home; FLEET-2 landed, so they are declared (V3 #44 G2,
+// 2026-10-17; every one precedes this step in chains.sources).
 // The RETIRED slug (no manifest.scripts entry: create_pre_permits) is not declared: the effective ledger drops it (MQ-C1 (a), FLEET-2), so declaring it is #44 (e) extra.
 const READ_STEPS = [
   'backfill_realtor_permit_trades', 'classify_inspection_status', 'classify_lifecycle_phase',
   'classify_permit_phase', 'classify_permits', 'close_stale_permits', 'coa',
   'compute_coa_cost_estimates', 'compute_cost_estimates', 'enrich_coa_zoning',
   'inspections', 'link_coa', 'permits',
+  'address_points', 'link_parcels', 'link_wsib', 'load_wsib', 'massing', 'neighbourhoods', 'parcels',
 ];
 
 function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
@@ -117,7 +115,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
     return check;
   });
 
-  const configLogicVariables = LOGIC_VAR_DEFS.map((v) => ({ name: v.name, min: v.min, max: v.max, on_invalid: 'fail' }));
+  const configLogicVariables = LOGIC_VAR_DEFS.map((v) => ({ name: v.name, min: v.min, max: v.max, ...(v.enum ? { enum: v.enum } : {}), on_invalid: 'fail' }));
 
   const READ_TABLES = Object.keys(TABLE_COLUMNS)
     .sort()
@@ -128,13 +126,13 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
       name: 'assert_data_bounds',
       display_name: 'Data Quality Checks',
       owner: 'data',
-      description: 'Tier-2 CQA: post-ingestion data-bounds validation over 16 tables across 4 chains (permits/coa/sources/deep_scrapes) — 52 declared checks (49 pre-conversion metrics + 2 promoted warnings-only rows + 1 split id), 26 logic_variables (8 pre-existing + 18 newly-adjudicated) gate WARN/FAIL boundaries; 4 WSIB checks shared permits+sources (IL-4); the Phase-G Pre-Permit gate stays 2 independent checks (IL-3).',
+      description: 'Tier-2 CQA: post-ingestion data-bounds validation over 16 tables across 4 chains (permits/coa/sources/deep_scrapes) — 52 declared checks (49 pre-conversion metrics + 2 promoted warnings-only rows + 1 split id), 27 logic_variables (8 pre-existing + 18 newly-adjudicated + the shared pipeline_timezone, R-CE) gate WARN/FAIL boundaries; 4 WSIB checks shared permits+sources (IL-4); the Phase-G Pre-Permit gate stays 2 independent checks (IL-3).',
       lock: 103,
       why_lock: why(
         'Registered in Spec 47 §A.5 (row: docs/specs/01-pipeline/47_pipeline_script_protocol.md:1947), category "6 — Quality", writes-DB = NO (read-only probe). Kept via identity.lock + the §5.4 source-text convention (ADVISORY_LOCK_ID = 103 declared, never read, in the frozen shell).',
         { kind: 'file', ref: 'docs/specs/01-pipeline/47_pipeline_script_protocol.md' },
       ),
-      spec: '44',
+      spec: '60',
       spec_version: '1.0',
       archetype: 'ASSERT',
       contract_version: 1,
@@ -240,7 +238,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
       {
         from: 'checks[].limit_from_config on-invalid posture — Rule 3 default is "fail" for a verdict-affecting var with no safe fallback',
         why: why(
-          'All 26 logic_variables here carry a safe seed default (the exact pre-conversion literal, or — for inspection_ancient_dates_count_warn_max — a declared-not-yet-wired placeholder), so "fail" is the correct posture per Rule 3. Recorded here only because the config object forbids a per-variable why field (additionalProperties:false), mirroring assert_schema/assert_global_coverage\'s own precedent deviation entry.',
+          'All 27 logic_variables here carry a safe seed default (the exact pre-conversion literal, or — for inspection_ancient_dates_count_warn_max — a declared-not-yet-wired placeholder), so "fail" is the correct posture per Rule 3. Recorded here only because the config object forbids a per-variable why field (additionalProperties:false), mirroring assert_schema/assert_global_coverage\'s own precedent deviation entry.',
           { kind: 'file', ref: 'scripts/seeds/logic_variables.json' },
         ),
         adjudicated_by: 'Spec 124 §2 Rule 3',

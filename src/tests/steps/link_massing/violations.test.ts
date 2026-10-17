@@ -159,6 +159,9 @@ const CONFIG_VARS = {
   T6: 'link_massing_nearest_confidence',
   T7: 'link_massing_mass_retraction_ratio_fail_pct',
   T8: 'link_massing_rows_changed_ratio_warn_pct',
+  // V3 ledger E (2026-10-17): the bbox divisor (cost only) and the display precision.
+  T9: 'link_massing_bbox_degree_divisor',
+  T10: 'link_massing_round_scale',
 } as const;
 const LIMIT_FROM_CONFIG_VARS: string[] = [CONFIG_VARS.T4, CONFIG_VARS.T7, CONFIG_VARS.T8];
 
@@ -1337,7 +1340,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     for (const detect of [detectPrimaryClearFence, detectGuardFence, detectRetractionFence, detectNearestCapFence, detectNearestTiebreakFence]) expect(typeof detect).toBe('function');
     // F5's behavioural half is a SECOND file (it needs a database); the text half lives here, and
     // #184 keeps both next to the step. Named so a fence whose DB lock quietly disappeared shows up.
-    expect(stepTestDirFiles(), 'the LM-D13 determinism lock must live beside the step').toContain('src/tests/steps/link_massing/nearest-determinism.test.ts');
+    expect(stepTestDirFiles(), 'the LM-D13 determinism lock must live beside the step').toContain('src/tests/steps/link_massing/nearest-determinism.db.test.ts');
   });
 
   it('#157 Gate 4f — dead code proved dead by instrumentation, never by reading (U-5: buildings_indexed = 0, grid_cells = "N/A (PostGIS)" on every recorded run)', () => {
@@ -1791,7 +1794,7 @@ describe('the three files, one slug (Spec 122 §4.1 / §5.1 / §5.2) + the Fold 
     const names = cfg.logic_variables.map((v) => v.name).sort();
     expect(names).toEqual(Object.values(CONFIG_VARS).sort());
     const byName = Object.fromEntries(cfg.logic_variables.map((v) => [v.name, v]));
-    expect(byName[CONFIG_VARS.T3]?.on_invalid, 'T3: clamp (a 0 disables the fallback; a 5,000 nested-loops)').toBe('clamp');
+    expect(byName[CONFIG_VARS.T3]?.on_invalid, 'T3: fail (V3 ledger B12, 2026-10-17 — an out-of-bounds edit refuses the step)').toBe('fail');
     expect(byName[CONFIG_VARS.T4]?.on_invalid, 'T4 verdict bound: fail').toBe('fail');
     expect(byName[CONFIG_VARS.T5]?.on_invalid, 'T5 written confidence: fail').toBe('fail');
     expect(byName[CONFIG_VARS.T6]?.on_invalid, 'T6 written confidence: fail').toBe('fail');
@@ -2319,6 +2322,7 @@ describe('R-T addendum, commit 3 — LM-D6/LM-D11 severity flip (R-H) actually e
     // in the descriptor, until this compute-side change landed. That is the RED this locks.
     let observed: { violations?: number; detail?: Record<string, unknown> } | undefined;
     mod.checks.nearest_footprint_gt_lot_count({
+      config: { link_massing_round_scale: 10000 }, // V3 ledger E (2026-10-17): display precision via ctx.config
       matched: {
         footprint_exceeds_lot: { nearest: 50790, centroid_in_parcel: 13347 },
         primary_links_by_type: { nearest: 103530, centroid_in_parcel: 381605 },
@@ -2331,6 +2335,7 @@ describe('R-T addendum, commit 3 — LM-D6/LM-D11 severity flip (R-H) actually e
     // A zero-population run must still report 0 violations (not silently drop the check).
     let zeroCase: typeof observed;
     mod.checks.nearest_footprint_gt_lot_count({
+      config: { link_massing_round_scale: 10000 }, // V3 ledger E (2026-10-17): display precision via ctx.config
       matched: { footprint_exceeds_lot: {}, primary_links_by_type: {} },
       report: (id: string, o: typeof observed) => { if (id === 'nearest_footprint_gt_lot_count') zeroCase = o; },
     });

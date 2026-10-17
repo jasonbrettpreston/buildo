@@ -187,7 +187,7 @@
     "txn_scope": "batch",
     "statement_timeout": "none",
     "step_timeout": "15m",
-    "batch": "none",
+    "batch": 1000,
     "batch_size_from_config": "link_parcel_addresses_batch_size",
     "on_row_error": "fail_fast",
     "on_batch_error": "fail_step",
@@ -913,7 +913,7 @@
         "name": "link_parcel_addresses_batch_size",
         "min": 100,
         "max": 10000,
-        "on_invalid": "clamp"
+        "on_invalid": "fail"
       },
       {
         "name": "link_parcel_addresses_no_address_warn_pct",
@@ -1007,7 +1007,7 @@
       }
     },
     {
-      "id": "skip_gated_no_activity",
+      "id": "skipped_no_activity",
       "kind": "skip_gated",
       "status": "completed",
       "records_meta": {

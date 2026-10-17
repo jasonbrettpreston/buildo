@@ -75,15 +75,15 @@ describe('gate wiring — producer-side acceptance (source-scan)', () => {
     // emits exactly one row — verdict.js checkRow, "not reported by compute" never
     // reads PASS-by-default). The SAME producer-side, self-announcing acceptance
     // contract (Spec 48 §4.6/§4.9: lives in the gate, self-retires, live value every
-    // run) is now expressed declaratively instead: `coa_step7_estimated_cost` gets a
-    // fixed (non-config) `warnLimitLiteral: 'pct >= 0'` — always true, so `limit`
-    // failing NEVER falls through past WARN — and the self-announcing companion pair
+    // run) is now expressed declaratively instead: `coa_step7_estimated_cost` carries
+    // `severityOverride: 'WARN'` and no warn tier, so `limit` failing NEVER falls through
+    // past WARN — and the self-announcing companion pair
     // (`coa_cost_coverage_gate_accepted`/`_retighten`) is its own pair of declared
     // checks, one carrying `severityOverride: 'WARN'` for the exact reason the
     // shared helper exists: a companion row must never itself re-escalate the chain's
     // verdict to FAIL (measured live, report §7.2 — the bug this override fixes).
     const fields = read('scripts/lib/assert-global-coverage-fields.js');
-    expect(fields).toMatch(/id:\s*'coa_step7_estimated_cost'[\s\S]{0,200}warnLimitLiteral:\s*'pct >= 0'/);
+    expect(fields).toMatch(/id:\s*'coa_step7_estimated_cost'[\s\S]{0,200}severityOverride:\s*'WARN'/);
     expect(fields).toContain("id: 'coa_cost_coverage_gate_accepted'");
     expect(fields).toMatch(/id:\s*'coa_cost_coverage_gate_accepted'[\s\S]{0,200}severityOverride:\s*'WARN'/);
     expect(fields).toContain("id: 'coa_cost_coverage_gate_accepted_retighten'");

@@ -610,9 +610,10 @@
       "id": "doc_pair_rate_floor",
       "kind": "invariant",
       "expect": {
-        "violation_when": "a document with at least coa_notices_doc_pair_rate_min_items 569 items has a pair rate under coa_notices_doc_pair_rate_floor"
+        "violation_when": "the lowest pair rate among documents with at least coa_notices_doc_pair_rate_min_items 569 items is under coa_notices_doc_pair_rate_floor (LCN-D5, Spec 124 R-DC: the declared bound decides; 1 when no document is eligible)"
       },
-      "limit": "viol == 0",
+      "limit": "value_min 0.6",
+      "limit_from_config": "coa_notices_doc_pair_rate_floor",
       "severity": "WARN",
       "on_warn": "skip_write",
       "order_guarantee": {

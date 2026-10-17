@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/refresh-snapshot.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "b5c09e78568a72c647fac5f4bb874cd6303dc4f1dbe5167868f2571ea80eb4f4",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "f64043f4dcf2fe3175ca1bbadc4a9c481ebd45e5cbeb790342ef8801a7c94d5f",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 54,
-    "distinct": 46,
+    "calls": 55,
+    "distinct": 47,
     "utility": 15,
-    "tracer_self_ms": 1.793,
-    "wall_ms": 3351
+    "tracer_self_ms": 1.758,
+    "wall_ms": 3320
   },
   "statements": [
     {
@@ -79,6 +79,18 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "196e0e3fd68dde0c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 5,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
       "error": null
     },
     {
@@ -159,22 +171,97 @@
       "error": null
     },
     {
-      "fingerprint": "5117505b38a46b65",
-      "kind": "read",
+      "fingerprint": "4889f94ceb7c3a50",
+      "kind": "write",
       "count": 1,
-      "rowCount": 5,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "columns"
-      ],
+      "rowCount": 1,
+      "reads": {
+        "data_quality_snapshots": [
+          "snapshot_date"
+        ]
+      },
+      "writes": {
+        "data_quality_snapshots": [
+          "active_permits",
+          "builders_enriched",
+          "builders_total",
+          "builders_with_email",
+          "builders_with_google",
+          "builders_with_phone",
+          "builders_with_website",
+          "builders_with_wsib",
+          "building_footprints_total",
+          "coa_avg_confidence",
+          "coa_high_confidence",
+          "coa_linked",
+          "coa_low_confidence",
+          "coa_total",
+          "cost_estimates_from_model",
+          "cost_estimates_from_permit",
+          "cost_estimates_null_cost",
+          "cost_estimates_total",
+          "created_at",
+          "inspections_not_passed_count",
+          "inspections_outstanding_count",
+          "inspections_passed_count",
+          "inspections_permits_scraped",
+          "inspections_total",
+          "last_sync_at",
+          "last_sync_status",
+          "null_builder_name_count",
+          "null_description_count",
+          "null_est_const_cost_count",
+          "null_geo_id_count",
+          "null_street_name_count",
+          "null_street_num_count",
+          "parcel_avg_confidence",
+          "parcel_exact_matches",
+          "parcel_name_matches",
+          "parcel_spatial_matches",
+          "parcels_with_buildings",
+          "permits_geocoded",
+          "permits_updated_24h",
+          "permits_updated_30d",
+          "permits_updated_7d",
+          "permits_with_builder",
+          "permits_with_detailed_tags",
+          "permits_with_neighbourhood",
+          "permits_with_parcel",
+          "permits_with_scope",
+          "permits_with_scope_tags",
+          "permits_with_trades",
+          "schema_column_counts",
+          "scope_project_type_breakdown",
+          "scope_tags_top",
+          "sla_permits_ingestion_hours",
+          "snapshot_date",
+          "timing_calibration_avg_sample",
+          "timing_calibration_freshness_hours",
+          "timing_calibration_total",
+          "total_permits",
+          "trade_avg_confidence",
+          "trade_commercial_classified",
+          "trade_commercial_total",
+          "trade_matches_total",
+          "trade_residential_classified",
+          "trade_residential_total",
+          "trade_tier1_count",
+          "trade_tier2_count",
+          "trade_tier3_count",
+          "violation_cost_out_of_range",
+          "violation_future_issued_date",
+          "violation_missing_status",
+          "violations_total"
+        ]
+      },
+      "excluded": [],
       "error": null
     },
     {
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -344,112 +431,13 @@
       "error": null
     },
     {
-      "fingerprint": "73f5d76ba8569f71",
-      "kind": "write",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "data_quality_snapshots": [
-          "snapshot_date"
-        ]
-      },
-      "writes": {
-        "data_quality_snapshots": [
-          "active_permits",
-          "builders_enriched",
-          "builders_total",
-          "builders_with_email",
-          "builders_with_google",
-          "builders_with_phone",
-          "builders_with_website",
-          "builders_with_wsib",
-          "building_footprints_total",
-          "coa_avg_confidence",
-          "coa_high_confidence",
-          "coa_linked",
-          "coa_low_confidence",
-          "coa_total",
-          "cost_estimates_from_model",
-          "cost_estimates_from_permit",
-          "cost_estimates_null_cost",
-          "cost_estimates_total",
-          "created_at",
-          "inspections_not_passed_count",
-          "inspections_outstanding_count",
-          "inspections_passed_count",
-          "inspections_permits_scraped",
-          "inspections_total",
-          "last_sync_at",
-          "last_sync_status",
-          "null_builder_name_count",
-          "null_description_count",
-          "null_est_const_cost_count",
-          "null_geo_id_count",
-          "null_street_name_count",
-          "null_street_num_count",
-          "parcel_avg_confidence",
-          "parcel_exact_matches",
-          "parcel_name_matches",
-          "parcel_spatial_matches",
-          "parcels_with_buildings",
-          "permits_geocoded",
-          "permits_updated_24h",
-          "permits_updated_30d",
-          "permits_updated_7d",
-          "permits_with_builder",
-          "permits_with_detailed_tags",
-          "permits_with_neighbourhood",
-          "permits_with_parcel",
-          "permits_with_scope",
-          "permits_with_scope_tags",
-          "permits_with_trades",
-          "schema_column_counts",
-          "scope_project_type_breakdown",
-          "scope_tags_top",
-          "sla_permits_ingestion_hours",
-          "snapshot_date",
-          "timing_calibration_avg_sample",
-          "timing_calibration_freshness_hours",
-          "timing_calibration_total",
-          "total_permits",
-          "trade_avg_confidence",
-          "trade_commercial_classified",
-          "trade_commercial_total",
-          "trade_matches_total",
-          "trade_residential_classified",
-          "trade_residential_total",
-          "trade_tier1_count",
-          "trade_tier2_count",
-          "trade_tier3_count",
-          "violation_cost_out_of_range",
-          "violation_future_issued_date",
-          "violation_missing_status",
-          "violations_total"
-        ]
-      },
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "77737e907db982db",
+      "fingerprint": "72d5363169dea47a",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
       "reads": {
         "permits": [
-          "builder_name",
-          "description",
-          "est_const_cost",
-          "geo_id",
-          "issued_date",
-          "last_seen_at",
-          "latitude",
-          "longitude",
-          "neighbourhood_id",
-          "scope_tags",
-          "status",
-          "street_name",
-          "street_num"
+          "first_seen_at"
         ]
       },
       "writes": {},
@@ -543,7 +531,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 10,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -624,6 +612,18 @@
       "rowCount": 1,
       "reads": {
         "permit_trades": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
       },
       "writes": {},
       "excluded": [],
@@ -726,20 +726,6 @@
       "error": null
     },
     {
-      "fingerprint": "eaf3fb3c61fd94b4",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "permits": [
-          "first_seen_at"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "ed10ec11bbfbc432",
       "kind": "read",
       "count": 2,
@@ -775,6 +761,32 @@
       "error": null
     },
     {
+      "fingerprint": "fe3816d484167f83",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "permits": [
+          "builder_name",
+          "description",
+          "est_const_cost",
+          "geo_id",
+          "issued_date",
+          "last_seen_at",
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "scope_tags",
+          "status",
+          "street_name",
+          "street_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "fedd16cf06d056de",
       "kind": "read",
       "count": 1,
@@ -789,9 +801,9 @@
   ],
   "transactions": [
     {
-      "client": "44859:2",
+      "client": "10759:2",
       "write_fingerprints": [
-        "73f5d76ba8569f71"
+        "4889f94ceb7c3a50"
       ]
     }
   ],
@@ -901,6 +913,7 @@
       "parcel_buildings": [
         "parcel_id"
       ],
+      "parcels": [],
       "permit_inspections": [
         "permit_num",
         "status"

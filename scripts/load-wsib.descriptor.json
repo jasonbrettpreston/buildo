@@ -144,6 +144,12 @@
             "vocabulary": "none",
             "written": "db_default",
             "bind": "value"
+          },
+          {
+            "name": "id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
           }
         ],
         "write_discipline": {

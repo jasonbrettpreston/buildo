@@ -920,12 +920,13 @@ describe('LDG-10 — guards.requires kind "trigger" (T14) and unknown-kind refus
   });
 
   it('T16 RED: a kind missing from BOTH the probes and the owned-elsewhere set is REFUSED by probeRequirement (no vacuous pass)', async () => {
-    await expect(stepLib.probeRequirement(emptyPool(), { kind: 'srid', name: 'parcels.geom' }))
+    // CP-S5 (2026-10-16): 'srid' is now a probed kind (REQUIREMENT_PROBES.srid) — the unknown-kind example is 'tablespace'.
+    await expect(stepLib.probeRequirement(emptyPool(), { kind: 'tablespace', name: 'pg_default' }))
       .rejects.toThrow(/has no catalog probe and is not owned elsewhere/);
   });
 
   it('T16 RED: assertRequirements refuses a step declaring an unknown kind instead of skipping it', async () => {
-    await expect(stepLib.assertRequirements(emptyPool(), { guards: { requires: [{ kind: 'srid', name: 'parcels.geom', on_missing: 'fail' }] } }, { log: { warn: () => {} }, tag: '[test]' }))
+    await expect(stepLib.assertRequirements(emptyPool(), { guards: { requires: [{ kind: 'tablespace', name: 'pg_default', on_missing: 'fail' }] } }, { log: { warn: () => {} }, tag: '[test]' }))
       .rejects.toThrow(/has no catalog probe and is not owned elsewhere/);
   });
 

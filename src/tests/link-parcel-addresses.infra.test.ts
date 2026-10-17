@@ -63,7 +63,7 @@ describe('scripts/link-parcel-addresses.{descriptor.json,js} — the frozen shap
     expect(computeSrc).not.toMatch(/BATCH_SIZE\s*=\s*1000/);
     const t1 = descriptor.config.logic_variables.find((v: { name: string }) => v.name === 'link_parcel_addresses_batch_size');
     expect(t1, 'batch size not declared in config.logic_variables[]').toBeDefined();
-    expect(t1.on_invalid).toBe('clamp');
+    expect(t1.on_invalid).toBe('fail'); // V3 ledger B12 (2026-10-17): fail — a missing row already throws (config.js), so on_invalid only governs an out-of-bounds edit
   });
 
   it('LPA-D2: the batch loop is idempotent, NOT resumable (was: "checkpoints via lastParcelId" — the pre-conversion claim was FALSE)', () => {

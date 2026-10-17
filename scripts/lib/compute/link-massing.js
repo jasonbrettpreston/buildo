@@ -76,13 +76,11 @@ const { safeParseFloat } = require('../safe-math');
  * purpose: the prefilter must be a superset of the true distance cut, and the exact cut
  * is the geography ST_DWithin that follows it. Changing this number changes what "50 m"
  * COSTS to find, never how much of it is accepted — which is why it is a structural
- * constant and not an operator knob. Precedent: the same divisor in enrich-parcels, and
- * tasks/lessons.md records what happens without the prefilter at all.
+ * constant and not an operator knob. It is the logic variable link_massing_bbox_degree_divisor
+ * (default 78000; the enrich_parcels_bbox_degree_divisor precedent — V3 ledger E, 2026-10-17), and
+ * tasks/lessons.md records what happens without the prefilter at all. The display precision of the
+ * audit rows' ratio values is link_massing_round_scale (default 10000), compared against nothing.
  */
-const DEGREES_PER_METRE_DIVISOR = 78000.0;
-
-/** Display precision for the ratio values in the audit rows; compared against nothing. */
-const ROUND_SCALE = 10000;
 
 /**
  * THE ELIGIBILITY PREDICATE — which parcels this step is allowed to link at all.
@@ -316,7 +314,7 @@ function buildMatchSql(descriptor, config, mode) {
     primary_counter: 'centroid_in_parcel',
     fallback_counter: 'nearest',
     // B-10's prefilter span, in degrees, and the metre cap it must over-cover.
-    fallback_bbox_degrees: cap === null ? null : cap / DEGREES_PER_METRE_DIVISOR,
+    fallback_bbox_degrees: cap === null ? null : cap / config.link_massing_bbox_degree_divisor,
     fallback_max_distance: cap,
   };
 }
@@ -480,8 +478,8 @@ function link_rate(ctx) {
   ctx.report('link_rate', {
     value: unlinked,
     detail: {
-      link_rate_pct: round(rate),
-      unlinked_pct: round(unlinked),
+      link_rate_pct: round(rate, ctx.config.link_massing_round_scale),
+      unlinked_pct: round(unlinked, ctx.config.link_massing_round_scale),
       linked_parcels: linked,
       parcels_with_centroid: total,
     },
@@ -535,8 +533,8 @@ function nearest_footprint_gt_lot_count(ctx) {
       nearest: over.nearest,
       centroid_in_parcel: over.centroid_in_parcel,
       of_primary_links: { nearest: of.nearest, centroid_in_parcel: of.centroid_in_parcel },
-      nearest_pct: pct(over.nearest, of.nearest),
-      centroid_in_parcel_pct: pct(over.centroid_in_parcel, of.centroid_in_parcel),
+      nearest_pct: pct(over.nearest, of.nearest, ctx.config.link_massing_round_scale),
+      centroid_in_parcel_pct: pct(over.centroid_in_parcel, of.centroid_in_parcel, ctx.config.link_massing_round_scale),
     },
   });
 }
@@ -574,7 +572,7 @@ function mass_retraction_ratio(ctx) {
   const ratio = total > 0 ? deleted / total : 0;
   ctx.report('mass_retraction_ratio', {
     value: ratio,
-    detail: { deleted, derived, deleted_ratio: round(ratio) },
+    detail: { deleted, derived, deleted_ratio: round(ratio, ctx.config.link_massing_round_scale) },
   });
 }
 
@@ -585,7 +583,7 @@ function rows_changed_ratio(ctx) {
   const ratio = scanned > 0 ? (w.rows_changed || 0) / scanned : 0;
   ctx.report('rows_changed_ratio', {
     value: ratio,
-    detail: { scanned, changed: w.rows_changed || 0, ratio: round(ratio) },
+    detail: { scanned, changed: w.rows_changed || 0, ratio: round(ratio, ctx.config.link_massing_round_scale) },
   });
 }
 
@@ -626,8 +624,8 @@ function targetCount(ctx, target, field) {
   return Number.isFinite(v) ? v : null;
 }
 
-function round(n) {
-  return Math.round(n * ROUND_SCALE) / ROUND_SCALE;
+function round(n, scale) {
+  return Math.round(n * scale) / scale;
 }
 
 /**
@@ -636,8 +634,8 @@ function round(n) {
  * detail field that cannot tell them apart is the class this whole contract exists to
  * retire.
  */
-function pct(n, of) {
-  return Number.isFinite(n) && Number.isFinite(of) && of > 0 ? round((n / of) * 100) : null;
+function pct(n, of, scale) {
+  return Number.isFinite(n) && Number.isFinite(of) && of > 0 ? round((n / of) * 100, scale) : null;
 }
 
 /**
@@ -745,7 +743,6 @@ module.exports.classifyMatches = classifyMatches;
 module.exports.classifyFallback = classifyFallback;
 module.exports.buildLinkMeta = buildLinkMeta;
 // Structural constants, exported so their locks read the real value rather than a copy.
-module.exports.DEGREES_PER_METRE_DIVISOR = DEGREES_PER_METRE_DIVISOR;
 module.exports.PARCEL_ELIGIBILITY = PARCEL_ELIGIBILITY;
 module.exports.UNLINKED_ONLY = UNLINKED_ONLY;
 module.exports.NOT_DERIVED = NOT_DERIVED;

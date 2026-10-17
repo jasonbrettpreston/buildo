@@ -1009,7 +1009,11 @@ describe('Ghost record detection in assert-data-bounds', () => {
       path.join(__dirname, '../../scripts/lib/compute/assert-data-bounds.js'),
       'utf-8'
     );
-    expect(source).toMatch(/last_seen_at[\s\S]{0,100}30\s*days/i);
+    // Ledger E (McDonald's Airtight V3, migration 263): the 30 days is a bound logic variable, seeded 30.
+    expect(source).toMatch(/last_seen_at[\s\S]{0,140}make_interval\(days => \$3::int\)/);
+    expect(source).toContain('assert_data_bounds_ghost_last_seen_days');
+    const seeds = JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')) as Record<string, { default: number }>;
+    expect(seeds.assert_data_bounds_ghost_last_seen_days?.default).toBe(30);
   });
 
   it('excludes already-terminal permits (P19/P20) from ghost count so vacuumed permits are not double-counted', () => {

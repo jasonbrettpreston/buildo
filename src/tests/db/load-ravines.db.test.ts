@@ -21,14 +21,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { dbAvailable, getTestPool } from './db/setup-testcontainer';
+import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const writeLib = require('../../scripts/lib/step/write.js');
+const writeLib = require('../../../scripts/lib/step/write.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const descriptor = require('../../scripts/load-ravines.descriptor.json');
+const descriptor = require('../../../scripts/load-ravines.descriptor.json');
 
-const read = (rel: string): string => fs.readFileSync(path.resolve(__dirname, '../../', rel), 'utf8');
+const read = (rel: string): string => fs.readFileSync(path.resolve(__dirname, '../../../', rel), 'utf8');
 
 const STEP = read('scripts/load-ravines.js');
 const ACQUIRE = read('scripts/lib/step/acquire.js');
@@ -48,7 +48,7 @@ describe('load_ravines — source contract (Spec 59 §3/§9), across the three f
 
   it('the chain-scoped prior-run name is derived, not hardcoded (DEC-F / #409: sources:load_ravines)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ledgerPipelineName } = require('../../scripts/lib/step/index.js');
+    const { ledgerPipelineName } = require('../../../scripts/lib/step/index.js');
     expect(ledgerPipelineName(descriptor, 'sources')).toBe('sources:load_ravines');
     // A STANDALONE run must read the SAME history, or every manual invocation looks
     // like a first run and every drift guard degrades to "no baseline".
@@ -176,7 +176,7 @@ describe('load_ravines — the behaviours that became descriptor data (§1.2a P1
 
   it('emits the table-keyed PIPELINE_META (L17) with all five declared columns + records_total = feature_count (§11)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { deriveMeta } = require('../../scripts/lib/step/index.js');
+    const { deriveMeta } = require('../../../scripts/lib/step/index.js');
     const meta = deriveMeta(descriptor);
     // Declaration ORDER matches the pre-conversion emitMeta literal exactly, so
     // PIPELINE_META.writes is byte-identical across the conversion (plan D-2).

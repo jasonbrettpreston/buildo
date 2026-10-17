@@ -1,0 +1,167 @@
+{
+  "contract_version": 1,
+  "step": "link_parcel_addresses",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/link_parcel_addresses/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added none; dropped stale_st_within_count, fanout_max_condo, noncondo_gt_20_count), so entries at the same index compare different invariants (sources/standalone: {\"name\":\"fanout_max_noncondo\",\"value\":\"155\"} → absent; {\"name\":\"noncondo_gt_20_count\",\"value\":\"130\"} → absent; +1 more)."
+    },
+    {
+      "key": "invariants[].name",
+      "why": "the POST invariants file lists a different set of invariants (added none; dropped stale_st_within_count, fanout_max_condo, noncondo_gt_20_count), so entries at the same index compare different invariants (sources/standalone: \"stale_st_within_count\" → \"multi_parcel_address_count\"; \"missed_link_count\" → \"dup_count\"; +3 more)."
+    },
+    {
+      "key": "invariants[].value",
+      "why": "the POST invariants file lists a different set of invariants (added none; dropped stale_st_within_count, fanout_max_condo, noncondo_gt_20_count), so entries at the same index compare different invariants (sources/standalone: \"511224\" → \"526598\"; \"0\" → \"1164\"; +3 more)."
+    },
+    {
+      "key": "meta[].reads.address_points[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → \"address_class_desc\"; absent → \"retired_at\")."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [link_parcel_addresses] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources 2→3 lines; standalone 2→3 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (sources/standalone: \"Parcel ↔ Address Points spatial bridge\" → \"Parcel ↔ Address Points Spatial Bridge\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources/standalone: 54 → 9)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added gate_decision, parcels_with_geom_pre_run, address_points_with_geom_pre_run, address_points_with_null_geom, new_links_written, final_link_count, parcels_with_links, parcel_link_rate_pct, parcels_with_no_address_pct, parcel_fanout_outliers, parcel_fanout_condo_outliers, parcel_fanout_distribution, parcel_address_points_stale_st_within_count, parcel_address_points_missed_link_count, address_points_link_rate_by_class, structure_class_link_rate_warn, parcel_fanout_rd_rs_outliers, rows, multi_parcel_address_count, dup_count, fanout_max_noncondo, land_entrance_count, inputs_nonempty; dropped status, reason, non_completed_upstream, completed_with_changes_upstream, consecutive_skips). Measured sources/standalone: absent → {\"metric\":\"parcel_link_rate_pct\",\"observed\":\"after_write\"…; absent → {\"metric\":\"parcels_with_no_address_pct\",\"observed\":\"after…; +21 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added gate_decision, parcels_with_geom_pre_run, address_points_with_geom_pre_run, address_points_with_null_geom, new_links_written, final_link_count, parcels_with_links, parcel_link_rate_pct, parcels_with_no_address_pct, parcel_fanout_outliers, parcel_fanout_condo_outliers, parcel_fanout_distribution, parcel_address_points_stale_st_within_count, parcel_address_points_missed_link_count, address_points_link_rate_by_class, structure_class_link_rate_warn, parcel_fanout_rd_rs_outliers, rows, multi_parcel_address_count, dup_count, fanout_max_noncondo, land_entrance_count, inputs_nonempty; dropped status, reason, non_completed_upstream, completed_with_changes_upstream, consecutive_skips). Measured sources/standalone: \"status\" → \"gate_decision\"; \"reason\" → \"parcels_with_geom_pre_run\"; +6 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"after_write\"; absent → \"before_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added gate_decision, parcels_with_geom_pre_run, address_points_with_geom_pre_run, address_points_with_null_geom, new_links_written, final_link_count, parcels_with_links, parcel_link_rate_pct, parcels_with_no_address_pct, parcel_fanout_outliers, parcel_fanout_condo_outliers, parcel_fanout_distribution, parcel_address_points_stale_st_within_count, parcel_address_points_missed_link_count, address_points_link_rate_by_class, structure_class_link_rate_warn, parcel_fanout_rd_rs_outliers, rows, multi_parcel_address_count, dup_count, fanout_max_noncondo, land_entrance_count, inputs_nonempty; dropped status, reason, non_completed_upstream, completed_with_changes_upstream, consecutive_skips). Measured sources: \"INFO\" → \"PASS\"; \"PASS\" → \"INFO\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: null → \"viol == 0\"; \"< 4\" → \"viol == 0\"; +3 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added gate_decision, parcels_with_geom_pre_run, address_points_with_geom_pre_run, address_points_with_null_geom, new_links_written, final_link_count, parcels_with_links, parcel_link_rate_pct, parcels_with_no_address_pct, parcel_fanout_outliers, parcel_fanout_condo_outliers, parcel_fanout_distribution, parcel_address_points_stale_st_within_count, parcel_address_points_missed_link_count, address_points_link_rate_by_class, structure_class_link_rate_warn, parcel_fanout_rd_rs_outliers, rows, multi_parcel_address_count, dup_count, fanout_max_noncondo, land_entrance_count, inputs_nonempty; dropped status, reason, non_completed_upstream, completed_with_changes_upstream, consecutive_skips). Measured sources/standalone: \"SKIPPED\" → {\"gated_skip\":false,\"mode\":\"incremental\",\"reason\":\"upstre…; \"no_upstream_changes\" → 496535; +6 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "sources only: the PRE was a skip-gate run with a hardcoded PASS audit; the POST ran the materialize phase and the declared WARN checks fired — parcel_fanout_outliers 163 and parcel_fanout_rd_rs_outliers 19 (measured POST audit rows)."
+    },
+    {
+      "key": "summary.records_meta.batches_processed",
+      "why": "sources: the POST materialize processed 497 batches over the grown inputs (PRE skip run carried the prior 487); standalone POST is a skip_gated_no_activity run and carries no batch counter (report L650)."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (standalone: absent → \"all\")."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 2; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.completed_naturally",
+      "why": "report L650: a pre-conversion SKIP-shape field of the legacy hand-rolled script; the converted runner's skip path emits only RUNNER_META_KEYS, so it is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"link_parcel_addresses_batch_size\":1000,\"link_parcel_add…)."
+    },
+    {
+      "key": "summary.records_meta.consecutive_skips",
+      "why": "report L648/L650: a pre-conversion SKIP-shape field (b92ad16f, report L111); the converted runner's gate emits the gate object instead, so it is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"gated_skip\":false,\"own_last_completed_at\":\"<TS>\",\"own_s…; absent → {\"gated_skip\":true,\"own_last_completed_at\":\"<TS>\",\"own_sl…)."
+    },
+    {
+      "key": "summary.records_meta.gated_skip",
+      "why": "report L648/L650: a pre-conversion SKIP-shape field; the converted runner stamps the gate decision under records_meta.gate (RUNNER_META_KEYS), so the legacy key is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.last_full_run_at",
+      "why": "report L111/L363: a skip-path-only timestamp of the legacy script; the converted runner does not emit it (gate and staleness live in records_meta.gate)."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.own_started",
+      "why": "report L111/L359: a skip-path-only timestamp of the legacy script; the converted runner does not emit it."
+    },
+    {
+      "key": "summary.records_meta.pipeline_meta",
+      "why": "report L650: the legacy script embedded its PIPELINE_META in records_meta; the converted runner emits meta once via pipeline.emitMeta from deriveMeta (scripts/lib/step/index.js:246, :7096)."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.telemetry",
+      "why": "report L648/L650: a pre-conversion telemetry object (before/after counts) of the legacy script; the converted runner does not emit it — counts are the declared counters."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"materialized_with_warnings\"; absent → \"skip_gated_no_activity\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [\"parcel_fanout_outliers: 163\",\"parcel_fanout_rd_rs_outli…; absent → [])."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "sources: the POST ran the materialize phase and inserted 3 links (PRE was a 0-write skip run); standalone POST is a gated skip, whose counters the runner emits null (index.js:6934-6936)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "sources: the POST ran the materialize phase over 496,535 parcels (PRE was a 0-write skip run); standalone POST is a gated skip, whose counters the runner emits null (index.js:6934-6936)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "standalone POST is a skip_gated_no_activity run, whose counters the runner emits null (scripts/lib/step/index.js:6934-6936); the legacy skip path wrote 0."
+    },
+    {
+      "key": "table_state[].columns[]",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources/standalone: absent → \"computed_at\")."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "content_hash is md5 over the projected, ordered rows (harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source)); in every instance the same table's projection or order also changed PRE→POST, so the hash is not comparable (sources/standalone)."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "report L695: DB drift, not code — address_points was reloaded and parcels grew 486,530 → 496,536 after the PRE, so parcel_address_points holds 526,598 rows in the 2026-10-16 POST vs 511,224 at the PRE."
+    }
+  ]
+}

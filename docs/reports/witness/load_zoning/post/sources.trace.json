@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-zoning.js",
   "chain": "sources",
-  "source_fingerprint": "029d4f3728bf684ffe32970684eed10f53b6043ae0ad41ce09e1101b3f0c7412",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "cc6b479a51298981089fc1035286917ef91546cea5960d45cae1859ff049dfc6",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 197,
     "distinct": 35,
     "utility": 25,
-    "tracer_self_ms": 98.48,
-    "wall_ms": 21972
+    "tracer_self_ms": 110.733,
+    "wall_ms": 22562
   },
   "statements": [
     {
@@ -221,7 +221,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -688,70 +688,70 @@
   ],
   "transactions": [
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "97417a42dd62e2c8",
         "f6b9e9c688fcf935"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "25b26e118f8d6b8c",
         "7213b69d1d8ff0a4"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "75bc5831e1c5deb3",
         "c35344b32780aef7"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "3123d9dafc5f9a72",
         "d7a4cfaa340eba34"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "c944e1884093525f",
         "fae385ebad6dc055"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "11042ff70e88c6d4",
         "5d45f224e510f7d2"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "5b04a038c1c368da",
         "872a4435ba16de3c"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "20a748cc6701240a",
         "3ac9b5bd79d131c8"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "24910b63ab342851",
         "d470d51101606e43"
       ]
     },
     {
-      "client": "17034:2",
+      "client": "49830:2",
       "write_fingerprints": [
         "f2d0b1e73baf7ba9",
         "f85d40305ea8658f"

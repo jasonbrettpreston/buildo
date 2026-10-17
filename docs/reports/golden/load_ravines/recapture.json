@@ -1,0 +1,26 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.forced.idempotent.json": {
+      "via": "env",
+      "env": {
+        "RAVINE_FORCE_RELOAD": "1"
+      },
+      "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
+    },
+    "post/sources.forced.json": {
+      "via": "env",
+      "env": {
+        "RAVINE_FORCE_RELOAD": "1"
+      },
+      "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
+    },
+    "post/standalone.forced.json": {
+      "via": "env",
+      "env": {
+        "RAVINE_FORCE_RELOAD": "1"
+      },
+      "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
+    }
+  }
+}

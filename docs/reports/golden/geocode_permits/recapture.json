@@ -1,0 +1,41 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/permits.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=permits",
+          "--key=permit_num",
+          "--column=latitude",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.latitude IS NOT NULL AND t.geo_id <> '' AND t.geo_id !~ '[^0-9]' AND NOT EXISTS (SELECT 1 FROM permits p2 WHERE p2.permit_num = t.permit_num AND p2.revision_num <> t.revision_num) AND EXISTS (SELECT 1 FROM address_points ap WHERE ap.address_point_id = t.geo_id::int AND ap.retired_at IS NULL AND ap.latitude = t.latitude AND ap.longitude = t.longitude)",
+          "--order=t.permit_num",
+          "--backup-table=permits_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=permits",
+          "--key=permit_num",
+          "--column=latitude",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.latitude IS NOT NULL AND t.geo_id <> '' AND t.geo_id !~ '[^0-9]' AND NOT EXISTS (SELECT 1 FROM permits p2 WHERE p2.permit_num = t.permit_num AND p2.revision_num <> t.revision_num) AND EXISTS (SELECT 1 FROM address_points ap WHERE ap.address_point_id = t.geo_id::int AND ap.retired_at IS NULL AND ap.latitude = t.latitude AND ap.longitude = t.longitude)",
+          "--order=t.permit_num",
+          "--backup-table=permits_cohort_bak_{ts}",
+          "--step=scripts/geocode-permits.js",
+          "--chain=permits",
+          "--out=docs/reports/golden/geocode_permits/post/permits.json",
+          "--capture-arg=--invariants=docs/reports/golden/geocode_permits/invariants.json",
+          "--capture-arg=--table-columns=permits:permit_num,revision_num,latitude,longitude",
+          "--capture-arg=--table-order=permits:permit_num,revision_num"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, McDonald's Airtight V3, N6 2026-10-17): the first 200 single-revision geocoded permits by permit_num (permit_num is unique within the cohort, so the single-column key is exact) get latitude +1; the step's own guard `p.latitude IS DISTINCT FROM ap.latitude` (scripts/lib/compute/geocode-permits.js:120) re-geocodes and heals all 200. Replaces the data-dependent plain recipe (0 rows on 2026-10-17). Cohort key-set md5 3456048743; healed 200, restore 0."
+    }
+  }
+}

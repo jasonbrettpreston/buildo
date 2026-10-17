@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "coa",
-  "source_fingerprint": "98f15150fe92b076b0962ca5d81b2d6c3253323a3a47f08f3d33ef5f8167336b",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "2441d80a5cd595350786aef5b3f4068001eda9529d52d3566d54f7769efb0d4d",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 149,
-    "distinct": 22,
-    "utility": 7,
-    "tracer_self_ms": 4.435,
-    "wall_ms": 640
+    "calls": 169,
+    "distinct": 28,
+    "utility": 19,
+    "tracer_self_ms": 2.835,
+    "wall_ms": 403
   },
   "statements": [
     {
@@ -38,6 +38,36 @@
       "error": null
     },
     {
+      "fingerprint": "2e892014fe0f5d12",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3218bd4f59094271",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "33b5f5419cddba83",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "34958cc103bfee4f",
       "kind": "read",
       "count": 1,
@@ -53,7 +83,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 123,
+      "rowCount": 131,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -65,7 +95,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 107,
+      "rowCount": 115,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -101,7 +131,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -142,6 +172,16 @@
       "error": null
     },
     {
+      "fingerprint": "88e44b7a31def4ac",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
@@ -154,10 +194,30 @@
       "error": null
     },
     {
+      "fingerprint": "9a73f71a26870c6d",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9ac71940268b1e7a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 126,
-      "rowCount": 57,
+      "count": 134,
+      "rowCount": 134,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -222,7 +282,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 123,
+      "rowCount": 131,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -248,7 +308,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 3,
+      "count": 9,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -266,25 +326,25 @@
       "error": null
     },
     {
-      "fingerprint": "e923f9ba2635da6b",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 126,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
-      "error": null
-    },
-    {
-      "fingerprint": "fa138b34753c9e4f",
+      "fingerprint": "e5f9a77903ed9193",
       "kind": "utility",
       "count": 1,
       "rowCount": 0,
       "reads": {},
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e923f9ba2635da6b",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 134,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_stat_user_tables"
+      ],
       "error": null
     }
   ],

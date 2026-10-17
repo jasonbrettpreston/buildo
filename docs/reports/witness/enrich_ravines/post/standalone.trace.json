@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/enrich-ravines.js",
   "chain": "none",
-  "source_fingerprint": "8d73217e20cc244f03458364783e719cf52e2cc3c819f69c0eebd164fa0b5f2b",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "24050666ad107e7991f9c12c3b70d3f6de939b1fce1194708dd6e16dc2745cd2",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 48,
     "distinct": 35,
     "utility": 13,
-    "tracer_self_ms": 1.558,
-    "wall_ms": 1802
+    "tracer_self_ms": 1.548,
+    "wall_ms": 1735
   },
   "statements": [
     {
@@ -127,7 +127,7 @@
             "enrich_ravines",
             "enrich-ravines"
           ],
-          2891
+          3118
         ]
       ]
     },
@@ -146,13 +146,13 @@
       "params": [
         [
           "completed",
-          1585,
+          1524,
           null,
-          2891,
+          3118,
           496535,
           0,
           0,
-          "{\"duration_ms\":707,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100,\"enrich_ravines_producer_invalid_geom_max_pct\":5},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"31ab81f87495ceb22cbe64c3408eab29488879dd\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":707,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_spec_version\",\"pin_id\":\"load_ravines.records_meta.ravine_load.spec_version\",\"predicate\":\"records_meta.ravine_load.spec_version equals \\\"1.2\\\"\",\"observed\":\"1.2\",\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.2\",\"threshold\":\"1.2\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \\\"1.2\\\" — expected \\\"1.2\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero\",\"pin_id\":\"load_ravines.records_meta.ravine_load.source_dataset_version\",\"predicate\":\"records_meta.ravine_load.source_dataset_version nonzero\",\"observed\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"nonzero\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \\\"97b4ac7fb3f9808726a106a4b67083ac\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard\",\"pin_id\":\"load_ravines.records_meta.ravine_load.delete_skipped_empty_guard\",\"predicate\":\"records_meta.ravine_load.delete_skipped_empty_guard equals \\\"false\\\"\",\"observed\":false,\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":false,\"threshold\":\"false\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \\\"false\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.drift_check_passed\",\"predicate\":\"records_meta.ravine_load.drift_check_passed true\",\"observed\":true,\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.mass_delete_check_passed\",\"predicate\":\"records_meta.ravine_load.mass_delete_check_passed true\",\"observed\":true,\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound\",\"pin_id\":\"load_ravines.records_meta.ravine_load.invalid_geometry_skipped\",\"predicate\":\"records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5\",\"observed\":0,\"producer_run_id\":2815,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-16T15:54:57.539Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":0,\"threshold\":\"pct <= 5\",\"note\":\"load_ravines run 2815 (completed @ Fri Oct 16 2026 11:54:57 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":393,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":394,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":398,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":451,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":430,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":474,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":453,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":313469.07,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1584,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"duration_ms\":648,\"code_version\":\"none\",\"config\":{\"enrich_ravines_distance_coverage_pass_pct\":95,\"enrich_ravines_distance_coverage_warn_pct\":90,\"enrich_ravines_heartbeat_minutes\":5,\"enrich_ravines_lock_timeout_ms\":1800000,\"enrich_ravines_phase_timeout_minutes\":240,\"enrich_ravines_distance_plausible_min_magnitude_m\":2000,\"enrich_ravines_distance_plausible_max_m\":20000,\"enrich_ravines_distance_collapse_floor_m\":100,\"enrich_ravines_producer_invalid_geom_max_pct\":5},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":12,\"name\":\"Parcel Ravine Enrichment\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_with_ravine_distance_pct\",\"value\":100,\"threshold\":\"pct >= 95\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct >= 90\",\"observed\":\"after_write\"},{\"metric\":\"parcels_in_ravine_count\",\"value\":33006,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_ravine_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_source_dataset_version\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_ravines_duration_ms\",\"value\":648,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_sign_flag_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_flag_true_distance_null_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_min_magnitude_observed\",\"value\":1470.30059243,\"threshold\":\"value_max 2000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_max_observed\",\"value\":2739.69388118,\"threshold\":\"value_max 20000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_dataset_version_distinct_count\",\"value\":1,\"threshold\":\"value_max 1\",\"status\":\"INFO\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"ravine_distance_m_collapse_floor\",\"value\":2739.69388118,\"threshold\":\"value_min 100\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"ravines\":854},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"ravines\":854},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_spec_version\",\"pin_id\":\"load_ravines.records_meta.ravine_load.spec_version\",\"predicate\":\"records_meta.ravine_load.spec_version equals \\\"1.2\\\"\",\"observed\":\"1.2\",\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.2\",\"threshold\":\"1.2\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.spec_version = \\\"1.2\\\" — expected \\\"1.2\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_source_dataset_version_nonzero\",\"pin_id\":\"load_ravines.records_meta.ravine_load.source_dataset_version\",\"predicate\":\"records_meta.ravine_load.source_dataset_version nonzero\",\"observed\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"97b4ac7fb3f9808726a106a4b67083ac\",\"threshold\":\"nonzero\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.source_dataset_version = \\\"97b4ac7fb3f9808726a106a4b67083ac\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_delete_skipped_empty_guard\",\"pin_id\":\"load_ravines.records_meta.ravine_load.delete_skipped_empty_guard\",\"predicate\":\"records_meta.ravine_load.delete_skipped_empty_guard equals \\\"false\\\"\",\"observed\":false,\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":false,\"threshold\":\"false\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.delete_skipped_empty_guard = false — expected \\\"false\\\" — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_drift_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.drift_check_passed\",\"predicate\":\"records_meta.ravine_load.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_mass_delete_check_passed_true\",\"pin_id\":\"load_ravines.records_meta.ravine_load.mass_delete_check_passed\",\"predicate\":\"records_meta.ravine_load.mass_delete_check_passed true\",\"observed\":true,\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.mass_delete_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_ravines_records_meta_ravine_load_invalid_geometry_skipped_bound\",\"pin_id\":\"load_ravines.records_meta.ravine_load.invalid_geometry_skipped\",\"predicate\":\"records_meta.ravine_load.invalid_geometry_skipped / records_meta.ravine_load.feature_count (pct) <= 5\",\"observed\":0,\"producer_run_id\":3042,\"producer_status\":\"completed\",\"producer_completed_at\":\"2026-10-17T18:02:08.159Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":0,\"threshold\":\"pct <= 5\",\"note\":\"load_ravines run 3042 (completed @ Sat Oct 17 2026 14:02:08 GMT-0400 (Eastern Daylight Time)): records_meta.ravine_load.invalid_geometry_skipped 0 / records_meta.ravine_load.feature_count 854 = 0% — expected pct <= 5 — PASS\"},{\"metric\":\"sys_ravine_sign_flag_agree_flagged_side_duration_ms\",\"value\":404,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_sign_flag_agree_unflagged_side_duration_ms\",\"value\":404,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_flag_true_distance_null_count_duration_ms\",\"value\":405,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_min_magnitude_observed_duration_ms\",\"value\":433,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_max_observed_duration_ms\",\"value\":432,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_dataset_version_distinct_count_duration_ms\",\"value\":463,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_ravine_distance_m_collapse_floor_duration_ms\",\"value\":437,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":325596.72,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":1525,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -160,7 +160,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -300,6 +300,16 @@
       "error": null
     },
     {
+      "fingerprint": "7cb354fa8e2d5aed",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "81fddf573258d48a",
       "kind": "utility",
       "count": 2,
@@ -332,16 +342,6 @@
       "error": null
     },
     {
-      "fingerprint": "9b97ae14cd1eaa94",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "9bfd7f400254e558",
       "kind": "write",
       "count": 2,
@@ -357,7 +357,7 @@
         [
           "ravine_join",
           0,
-          2891
+          3118
         ]
       ]
     },
@@ -524,7 +524,7 @@
   ],
   "transactions": [
     {
-      "client": "81549:3",
+      "client": "31962:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]

@@ -1,49 +1,49 @@
 {
   "entries": {
     "rows": {
-      "value": 526598,
+      "value": 526602,
       "cost_ms": 12,
-      "at": "2026-10-16T16:27:39.356Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2834",
+      "at": "2026-10-17T18:35:28.131Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3061",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 14
     },
     "multi_parcel_address_count": {
-      "value": 1164,
-      "cost_ms": 44,
-      "at": "2026-10-16T16:27:39.356Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2834",
+      "value": 1165,
+      "cost_ms": 40,
+      "at": "2026-10-17T18:35:28.131Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3061",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 14
     },
     "dup_count": {
       "value": 0,
-      "cost_ms": 47,
-      "at": "2026-10-16T16:27:39.356Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2834",
+      "cost_ms": 44,
+      "at": "2026-10-17T18:35:28.131Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3061",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 14
     },
     "fanout_max_noncondo": {
       "value": 155,
-      "cost_ms": 414,
-      "at": "2026-10-16T16:27:39.356Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2834",
+      "cost_ms": 399,
+      "at": "2026-10-17T18:35:28.131Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3061",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 14
     },
     "land_entrance_count": {
-      "value": 744,
+      "value": 747,
       "cost_ms": 12,
-      "at": "2026-10-16T16:27:39.356Z",
-      "commit": "31ab81f87495ceb22cbe64c3408eab29488879dd",
-      "run_id": "2834",
+      "at": "2026-10-17T18:35:28.131Z",
+      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "run_id": "3061",
       "chain": null,
-      "sample_n": 12
+      "sample_n": 14
     }
   }
 }

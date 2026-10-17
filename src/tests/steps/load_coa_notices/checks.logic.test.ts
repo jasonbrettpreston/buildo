@@ -71,7 +71,7 @@ const CHECKS: Check[] = [
     when: 'pre_write',
   },
   { id: 'target_unit_mismatch_items', limit: 'viol == 0', severity: 'WARN', when: 'pre_write' },
-  { id: 'doc_pair_rate_floor', limit: 'viol == 0', severity: 'WARN', when: 'pre_write' },
+  { id: 'doc_pair_rate_floor', limit: 'value_min 0.6', limit_from_config: 'coa_notices_doc_pair_rate_floor', severity: 'WARN', when: 'pre_write' }, // LCN-D5 (R-DC)
   { id: 'docs_no_notices', limit: 'viol == 0', severity: 'FAIL', when: 'pre_write' },
   {
     id: 'items_total_floor',
@@ -163,6 +163,7 @@ interface Fixture {
     pair_rate_569: number | null;
     doc_pair_rates: Record<string, number>;
     doc_items_569: Record<string, number>;
+    doc_pair_rate_min_eligible: { rate: number; doc_id: string | null; eligible_docs: number };
     mail_lag: { measured: number; unmeasured: number; out_of_bounds: number | null; min: number | null; max: number | null };
     unit_target_mismatch: number;
     target_unit_mismatch_items: number;
@@ -226,6 +227,7 @@ function healthy(): Fixture {
       pair_rate_569: 0.9,
       doc_pair_rates: { 'doc-a': 0.9, 'doc-b': 0.88 },
       doc_items_569: { 'doc-a': 3000, 'doc-b': 2000 },
+      doc_pair_rate_min_eligible: { rate: 0.88, doc_id: 'doc-b', eligible_docs: 2 },
       mail_lag: { measured: 11, unmeasured: 1, out_of_bounds: 0, min: 3, max: 28 },
       unit_target_mismatch: 0,
       target_unit_mismatch_items: 0,
@@ -377,6 +379,7 @@ describe('load_coa_notices checks — §D10 (T-CHECKS)', () => {
     expect(await status('doc_pair_rate_floor', (f) => {
       f.reconcile.doc_pair_rates = { ...f.reconcile.doc_pair_rates, 'doc-c': 0.4 };
       f.reconcile.doc_items_569 = { ...f.reconcile.doc_items_569, 'doc-c': 12 };
+      f.reconcile.doc_pair_rate_min_eligible = { rate: 0.4, doc_id: 'doc-c', eligible_docs: 3 }; // the builder's classification (LCN-D5)
     })).toBe('WARN');
   });
 

@@ -214,12 +214,17 @@ describe('assert_engine_health — measured facts, true today (plain it)', () =>
     expect(md).toContain('### 4.3 DEFECT');
   });
 
-  it('the defect ledger table in the report carries all 5 AEH-D rows, each OPEN · PIN (none fixed during this commit)', () => {
+  // 2026-10-17 (gate I #36, Q10 a precedent cd714db4): the report table mirrors the
+  // register status verbatim, so a closed defect reads CLOSED here too, never a stale OPEN.
+  it('the defect ledger table in the report carries all 5 AEH-D rows, each with its defect-ledger.md status verbatim', () => {
     const md = fs.readFileSync(artifact(REPORT_REL), 'utf8');
+    const register = fs.readFileSync(artifact('docs/reports/defect-ledger.md'), 'utf8').split(/\r?\n/);
     for (let n = 1; n <= 5; n++) {
       const row = md.split(/\r?\n/).find((l) => l.includes(`| AEH-D${n} `));
+      const regRow = register.find((l) => l.startsWith(`| AEH-D${n} `));
       expect(row, `report §4.3 missing AEH-D${n}`).toBeDefined();
-      expect(row, `AEH-D${n} must be OPEN · PIN, not silently closed`).toMatch(/OPEN\s*\xB7\s*PIN/);
+      expect(regRow, `defect-ledger.md missing AEH-D${n}`).toBeDefined();
+      expect(row?.split('|')[5]?.trim(), `AEH-D${n} status must mirror the register`).toBe(regRow?.split('|')[5]?.trim());
     }
   });
 

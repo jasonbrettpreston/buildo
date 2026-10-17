@@ -108,7 +108,7 @@ describe('enrich_heritage — descriptor structure (RED at commit 1, FLIPS at co
 
   it('checks.length === 10, execution.phases.length === 1, outputs.writes.length === 1, invariants.length === 4, plausibility.length === 3 [flips at commit 2]', () => {
     const descriptor = loadDescriptor();
-    expect(descriptor.checks).toHaveLength(10);
+    expect(descriptor.checks).toHaveLength(11); // + heritage_designated_by_zone (Spec 124 R-DG, 2026-10-17)
     expect(descriptor.execution.phases).toHaveLength(1);
     expect(descriptor.outputs.writes).toHaveLength(1);
     expect(descriptor.invariants).toHaveLength(4);
@@ -301,11 +301,15 @@ describe('enrich_heritage — EH-D2, the declared Part IV WARN diff', () => {
   });
 });
 
-describe('enrich_heritage — unhappy paths: the §9 producer-contract HALTs are DECLARED pins (S1-P-5, runner-evaluated FAIL rows); the hook keeps the SRID throw; the empty-source HALT is the runner guard\'s (L14) [flips at commit 2]', () => {
-  it('readHeritageContract keeps only the SRID throw; every other former §9 HALT fragment is gone from the compute and declared as an evaluated staleness.pins row; empty-source is guards.empty_source (runner, before the hook; S4) [flips at commit 2]', () => {
+describe('enrich_heritage — unhappy paths: the §9 producer-contract HALTs are DECLARED pins (S1-P-5, runner-evaluated FAIL rows); the SRID HALT is the runner srid requirement (CP-S5); the empty-source HALT is the runner guard\'s (L14) [flips at commit 2]', () => {
+  it('readHeritageContract keeps no throw (CP-S5 moved the SRID guard to guards.requires srid); every former §9 HALT fragment is gone from the compute and declared as an evaluated staleness.pins row; empty-source is guards.empty_source (runner, before the hook; S4) [flips at commit 2]', () => {
     const src = read(COMPUTE_REL);
-    // Fence (was: seven named throws in the hook): each former throw is now one pin row. The compute keeps ONLY the SRID throw (own-table read, not a producer-protocol datum).
-    expect(src).toContain('expected 4326');
+    // Fence (was: seven named throws in the hook): each former throw is now one pin row. The SRID throw
+    // (own-table read, not a producer-protocol datum) is the declared guards.requires srid row since
+    // CP-S5 (Spec 124 R-CX), probed by the runner before this hook.
+    expect(src).not.toContain('expected 4326');
+    expect(src).not.toMatch(/Find_SRID/i);
+    expect(JSON.parse(read(DESCRIPTOR_REL)).guards.requires.find((r: { kind: string }) => r.kind === 'srid')).toMatchObject({ name: 'parcels.geom', equals: 4326, on_missing: 'fail' });
     for (const gone of ['no successful', 'spec_version=', 'sub-block is missing', 'ingested zero features', 'drift_check_passed=false', 'source_dataset_version is null/empty']) {
       expect(src, `former HALT fragment must be a pin now, not a throw: ${gone}`).not.toContain(gone);
     }

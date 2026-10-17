@@ -1343,8 +1343,8 @@ function libraryConsumedVars(relFile: string): string[] {
  * top-level const `configSimpleConstMap` can resolve, because the same evaluator
  * function serves many different config names across many call sites (the generic
  * dispatch this fleet's row-builder-census steps use on purpose to avoid one
- * hand-written function per threshold — `assert_data_bounds`'s own `evalBoolCfgGe`/
- * `evalBoolCfgGt`, `scripts/lib/compute/assert-data-bounds.js`). Detected
+ * hand-written function per threshold — `assert_data_bounds`'s own `evalValueBound`,
+ * `scripts/lib/compute/assert-data-bounds.js`). Detected
  * STRUCTURALLY, never hardcoded to one slug: if the compute source contains a literal
  * `config[<ident>.cfgVar]` bracket read, every `cfgVar` value declared in the step's
  * own sibling fields/census module — resolved by the fleet's `scripts/lib/<basename>-
@@ -2447,7 +2447,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // of scope for a conversion that must not touch link_parcels' behaviour. Same ledger id
     // (LDG-D1), filed in review_followups.md.
     link_parcels: { missing: ['compute_centroids'], extra: [] }, // LDG-D1 (narrowed 2026-09-03: link_parcel_addresses now declared; widened 2026-09-16: geocode_permits became derivable at its cutover; widened 2026-09-24: address_points and parcels became derivable at their own cutovers; narrowed 2026-10-03 by P1-C8a: address_points, geocode_permits, parcels now declared)
-    refresh_snapshot: { missing: [], extra: ['link_massing', 'link_parcels', 'link_wsib'] }, // LDG-D2
+    refresh_snapshot: { missing: [], extra: ['geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcels', 'link_wsib'] }, // LDG-D2 (widened 2026-10-17 by LDG-D3)
     // WIDENED at the batch-2 row 2.1 cutover (2026-09-18): enrich_ravines became a CONVERTED
     // producer that day, so the ledger's column-overlap derivation can now SEE a dependency
     // enrich_parcels' compute has always had — it reads is_in_ravine_protection_area,
@@ -2500,6 +2500,16 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
     // which the same column-overlap derivation also treats as a read dependency.
     link_neighbourhoods: { missing: ['parcels'], extra: [] }, // batch-2 row 3.7
     // assert_parcel_sanity row CLOSED 2026-10-03 by P1-C8a (fold 9 D-C, narrowed in the same commit): it now declares parcels.
+    // WIDENED 2026-10-17 (N6, McDonald's Airtight V3; LDG-D3) — a MEASUREMENT, not a concession: #44 G2 declared the
+    // producer edges the WITNESSED traces derive (#44 (e) PASS on each of these steps after N6), but the LDG-4 input reads
+    // each consumer's reads from the committed lineage snapshot, whose rows predate G2. `lineage-docs --refresh` cannot
+    // fix that: it reads pipeline_runs.records_meta.pipeline_meta, which only run-chain writes (generate-lineage-docs.mjs
+    // :113-117), so harness captures never reach it (measured: a refresh after N6 cut enrich_parcels to 9 stale tables —
+    // not adopted). Witnessed truth wins (Spec 124 R-BF, Spec 122 §6.6.1); this ratchet records the snapshot-side
+    // disagreement exactly until LDG-10 replaces the snapshot ledger with the witnessed one and P1-C9 deletes this block.
+    assert_global_coverage: { missing: [], extra: ['compute_centroids', 'compute_parcel_cost_estimates', 'enrich_parcels', 'geocode_permits', 'link_massing', 'link_neighbourhoods', 'link_parcels', 'link_wsib', 'massing', 'neighbourhoods', 'parcels', 'refresh_snapshot'] }, // LDG-D3
+    assert_data_bounds: { missing: [], extra: ['address_points', 'link_parcels', 'link_wsib', 'load_wsib', 'massing', 'neighbourhoods', 'parcels'] }, // LDG-D3
+    assert_parcel_sanity: { missing: [], extra: ['link_massing'] }, // LDG-D3
   };
 
   for (const [name, { descriptor }] of Object.entries(byName)) {
@@ -2563,7 +2573,7 @@ describe('LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, conv
           .sort()
           .map((k) => [k, { missing: m[k]!.missing.slice().sort(), extra: m[k]!.extra.slice().sort() }]),
       );
-    expect(Object.keys(got).length).toBe(3);
+    expect(Object.keys(got).length).toBe(6);
     expect(norm(got)).toEqual(norm(KNOWN_GAPS));
   });
 });
@@ -2888,9 +2898,28 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
   const TEST_DB_SCRIPT = PKG.scripts?.['test:db'] ?? '';
   // `runVitest()`'s only DIRECTORY target — the one that can over-collect.
   const HARVEST_DIR = 'src/tests/steps/';
+  // B5 (V3, McDonald's Airtight V3; 122a §A27 trap 13): the live-DB tier is ONE suffix rule —
+  // a test that needs Postgres is `*.db.test.ts` (under src/tests/db/, or beside its step under
+  // src/tests/steps/<slug>/). `npm run test` excludes the suffix; `npm run test:db` runs it.
+  const TIER_GLOB = '**/*.db.test.ts';
+  const DB_SUFFIX = '.db.test.ts';
+  const walkTs = (dir: string): string[] => fs.readdirSync(path.join(REPO_ROOT, dir), { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() ? walkTs(`${dir}/${e.name}`) : [`${dir}/${e.name}`]));
 
-  /** The live-DB step suites, read straight off `test:db`'s own argument list — never a hand-typed list here. */
-  const liveDbStepSuites = TEST_DB_SCRIPT.split(/\s+/).filter((t) => t.startsWith(HARVEST_DIR));
+  /** The live-DB step suites: every `*.db.test.ts` under the harvest directory, read off the tree — never a hand-typed list. */
+  const liveDbStepSuites = walkTs(HARVEST_DIR.replace(/\/$/, '')).filter((t) => t.endsWith(DB_SUFFIX)).sort();
+
+  it('B5 — the two tier scripts have exactly the suffix-rule shape (no hand-kept per-file list in either)', () => {
+    expect(TEST_SCRIPT).toBe(`vitest run --exclude "${TIER_GLOB}"`);
+    expect(TEST_DB_SCRIPT).toBe(`cross-env BUILDO_TEST_DB=1 vitest run ${DB_SUFFIX} --no-file-parallelism`);
+  });
+
+  it('B5 — every test that opens the Postgres harness (getTestPool) is a *.db.test.ts, so the suffix rule owns the whole tier', () => {
+    const offTier = walkTs('src/tests')
+      .filter((t) => /\.test\.tsx?$/.test(t) && !t.endsWith(DB_SUFFIX))
+      .filter((t) => /\bgetTestPool\s*\(/.test(stripComments(fs.readFileSync(path.join(REPO_ROOT, t), 'utf8'))));
+    expect(offTier, `these tests need Postgres but are not *.db.test.ts (npm run test would run them): ${offTier.join(', ')}`).toEqual([]);
+  });
 
   /** Every `--exclude` spelling an npm script may legally use. */
   function excludedBy(script: string, target: string): boolean {
@@ -2902,17 +2931,18 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
   });
 
   it('every live-DB step suite `npm run test:db` owns is STRUCTURALLY excluded from `npm run test` (R-AG :214 — never merely conditional on an exported DATABASE_URL)', () => {
-    const notExcluded = liveDbStepSuites.filter((t) => !excludedBy(TEST_SCRIPT, t));
-    expect(notExcluded, `these live-DB suites are owned by test:db but not --exclude'd from \`npm run test\`: ${notExcluded.join(', ')}`).toEqual([]);
+    // The tier is excluded by its suffix glob, and every live-DB step suite carries the suffix.
+    expect(excludedBy(TEST_SCRIPT, TIER_GLOB), `\`npm run test\` does not --exclude "${TIER_GLOB}"`).toBe(true);
+    expect(TEST_DB_SCRIPT.split(/\s+/), `\`npm run test:db\` does not run the ${DB_SUFFIX} tier`).toContain(DB_SUFFIX);
+    const notSuffixed = liveDbStepSuites.filter((t) => !t.endsWith(DB_SUFFIX));
+    expect(notSuffixed).toEqual([]);
   });
 
-  it('RED canary — a live-DB suite dropped from `npm run test`\'s --exclude list IS caught (proves the predicate fires, not merely agrees)', () => {
-    const victim = liveDbStepSuites[0];
-    expect(victim, 'no live-DB step suite to tamper with').toBeDefined();
-    const tampered = TEST_SCRIPT.replace(`--exclude "${victim}"`, '');
-    expect(tampered, `the tamper did not change the script — the --exclude spelling for ${victim} changed`).not.toBe(TEST_SCRIPT);
-    expect(excludedBy(tampered, victim as string)).toBe(false);
-    expect(excludedBy(TEST_SCRIPT, victim as string)).toBe(true);
+  it('RED canary — the tier glob dropped from `npm run test`\'s --exclude IS caught (proves the predicate fires, not merely agrees)', () => {
+    const tampered = TEST_SCRIPT.replace(`--exclude "${TIER_GLOB}"`, '');
+    expect(tampered, `the tamper did not change the script — the --exclude spelling for ${TIER_GLOB} changed`).not.toBe(TEST_SCRIPT);
+    expect(excludedBy(tampered, TIER_GLOB)).toBe(false);
+    expect(excludedBy(TEST_SCRIPT, TIER_GLOB)).toBe(true);
   });
 
   it('step-validate.mjs DERIVES that list instead of re-typing it (a second hand-maintained copy is the cross-layer duplicate the standards forbid)', () => {
@@ -2942,14 +2972,12 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
     expect([...mod.VITEST_TARGETS]).toContain(HARVEST_DIR);
   });
 
-  it('BEHAVIOURAL — the argv runVitest() spawns carries an `--exclude <path>` PAIR for every live-DB step suite `test:db` owns, and excludes no non-DB step suite', async () => {
+  it('BEHAVIOURAL — the argv runVitest() spawns carries the `--exclude **/*.db.test.ts` PAIR that sheds every live-DB step suite, and excludes no non-DB step suite', async () => {
     const { vitestSpawnArgs } = await loadValidator();
     const plan = vitestSpawnArgs(TEST_SCRIPT, '/tmp/val9-probe.json');
-    for (const t of liveDbStepSuites) {
-      const at = plan.argv.indexOf(t);
-      expect(at, `${t} does not appear in the child argv at all: ${plan.argv.join(' ')}`).toBeGreaterThan(0);
-      expect(plan.argv[at - 1], `${t} appears in the argv but not as an --exclude pair`).toBe('--exclude');
-    }
+    const at = plan.argv.indexOf(TIER_GLOB);
+    expect(at, `${TIER_GLOB} does not appear in the child argv at all: ${plan.argv.join(' ')}`).toBeGreaterThan(0);
+    expect(plan.argv[at - 1], `${TIER_GLOB} appears in the argv but not as an --exclude pair`).toBe('--exclude');
     // Inverse direction — a REAL non-DB suite under the same directory target
     // must survive, or the exclusion has over-reached and the harvest is a lie
     // in the other direction.
@@ -2957,7 +2985,8 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
     expect(fs.existsSync(path.join(REPO_ROOT, nonDb)), `${nonDb} must exist for this inverse check to mean anything`).toBe(true);
     expect(liveDbStepSuites).not.toContain(nonDb);
     expect(plan.argv, `${nonDb} is owned by \`npm run test\` and must NOT be excluded from the harvest`).not.toContain(nonDb);
-    expect([...plan.scoped].sort()).toEqual([...liveDbStepSuites].sort());
+    expect(nonDb.endsWith(DB_SUFFIX), `${nonDb} must not match the tier glob`).toBe(false);
+    expect([...plan.scoped]).toEqual([TIER_GLOB]);
   });
 
   it('RED (in memory) — a `scripts.test` with its --exclude flags stripped yields an argv with NO exclusion at all: exactly the pre-fix harvest, proven to differ from the real one', async () => {

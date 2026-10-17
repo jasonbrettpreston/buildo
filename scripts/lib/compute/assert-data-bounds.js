@@ -103,26 +103,27 @@ function isMissingTable(err, table) {
 async function loadPermitsBranch(ctx) {
   return memo(ctx, 'permits', async () => {
     const pool = ctx.pool;
+    const nowMs = ctx.clock();
     const costOutliersRes = await pool.query(
       `SELECT COUNT(*) FROM permits WHERE est_const_cost < 0 OR est_const_cost > $1`,
       [ctx.config.cost_outlier_ceiling_cad],
     );
     const costOutliers = parseInt(costOutliersRes.rows[0].count, 10);
 
-    const recentTotalRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day'`);
+    const recentTotalRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $2::int)`, [nowMs, ctx.config.assert_data_bounds_recent_window_hours]);
     const recentTotal = parseInt(recentTotalRes.rows[0].count, 10);
 
     let descNull = 0, descPct = 0, builderNull = 0, builderPct = 0, statusNull = 0;
     if (recentTotal > 0) {
-      const descNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND description IS NULL`);
+      const descNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $2::int) AND description IS NULL`, [nowMs, ctx.config.assert_data_bounds_recent_window_hours]);
       descNull = parseInt(descNullRes.rows[0].count, 10);
       descPct = Math.round((descNull / recentTotal) * 1000) / 10;
 
-      const builderNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND builder_name IS NULL`);
+      const builderNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $2::int) AND builder_name IS NULL`, [nowMs, ctx.config.assert_data_bounds_recent_window_hours]);
       builderNull = parseInt(builderNullRes.rows[0].count, 10);
       builderPct = Math.round((builderNull / recentTotal) * 1000) / 10;
 
-      const statusNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > NOW() - INTERVAL '1 day' AND status IS NULL`);
+      const statusNullRes = await pool.query(`SELECT COUNT(*) FROM permits WHERE last_seen_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $2::int) AND status IS NULL`, [nowMs, ctx.config.assert_data_bounds_recent_window_hours]);
       statusNull = parseInt(statusNullRes.rows[0].count, 10);
     }
 
@@ -181,13 +182,15 @@ async function loadCoaBranch(ctx) {
 
     // coa_future_hearing_window_years (new var, report §2.4 item 12) — bound as
     // a parameterised interval multiplier, never a literal (Fold A item 3 style fix).
+    // R-CE: "today" is the run clock in pipeline_timezone, bound as $2/$3 — never CURRENT_DATE.
     const futureHearingRes = await pool.query(
-      `SELECT COUNT(*) FROM coa_applications WHERE hearing_date > CURRENT_DATE + ($1 * INTERVAL '1 year')`,
-      [ctx.config.coa_future_hearing_window_years],
+      `SELECT COUNT(*) FROM coa_applications WHERE hearing_date > (to_timestamp($2::float8 / 1000) AT TIME ZONE $3)::date + make_interval(years => $1::int)`,
+      [ctx.config.coa_future_hearing_window_years, ctx.clock(), ctx.config.pipeline_timezone],
     );
     const futureHearing = parseInt(futureHearingRes.rows[0].count, 10);
 
-    const ancientHearingRes = await pool.query(`SELECT COUNT(*) FROM coa_applications WHERE hearing_date < '2010-01-01'`);
+    // V3 ledger E (2026-10-17): the 'ancient' cut-offs and magnitude bounds are logic variables, bound as parameters.
+    const ancientHearingRes = await pool.query(`SELECT COUNT(*) FROM coa_applications WHERE hearing_date < make_date($1::int, 1, 1)`, [ctx.config.assert_data_bounds_ancient_hearing_before_year]);
     const ancientHearing = parseInt(ancientHearingRes.rows[0].count, 10);
 
     const coaCostGt10mRes = await pool.query(
@@ -240,7 +243,8 @@ async function loadSourcesBranch(ctx) {
     const parcelDupes = parseInt(parcelDupesRes.rows[0].count, 10);
 
     const lotOutliersRes = await pool.query(
-      `SELECT COUNT(*) FROM parcels WHERE lot_size_sqm IS NOT NULL AND (lot_size_sqm <= 0 OR lot_size_sqm > 1000000)`,
+      `SELECT COUNT(*) FROM parcels WHERE lot_size_sqm IS NOT NULL AND (lot_size_sqm <= 0 OR lot_size_sqm > $1)`,
+      [ctx.config.assert_data_bounds_lot_size_max_sqm],
     );
     const lotOutliers = parseInt(lotOutliersRes.rows[0].count, 10);
 
@@ -248,7 +252,8 @@ async function loadSourcesBranch(ctx) {
     const bfCount = parseInt(bfCountRes.rows[0].count, 10);
 
     const heightOutliersRes = await pool.query(
-      `SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m < 0 OR max_height_m > 500)`,
+      `SELECT COUNT(*) FROM building_footprints WHERE max_height_m IS NOT NULL AND (max_height_m < 0 OR max_height_m > $1)`,
+      [ctx.config.assert_data_bounds_max_height_max_m],
     );
     const heightOutliers = parseInt(heightOutliersRes.rows[0].count, 10);
 
@@ -367,8 +372,11 @@ async function loadInspectionBranch(ctx) {
       const inspDupesRes = await pool.query(
         `SELECT COUNT(*) FROM (SELECT permit_num, stage_name FROM permit_inspections GROUP BY permit_num, stage_name HAVING COUNT(*) > 1) d`,
       );
-      const futureDatesRes = await pool.query(`SELECT COUNT(*) FROM permit_inspections WHERE inspection_date > CURRENT_DATE`);
-      const ancientDatesRes = await pool.query(`SELECT COUNT(*) FROM permit_inspections WHERE inspection_date < '2020-01-01'`);
+      const futureDatesRes = await pool.query(
+        `SELECT COUNT(*) FROM permit_inspections WHERE inspection_date > (to_timestamp($1::float8 / 1000) AT TIME ZONE $2)::date`,
+        [ctx.clock(), ctx.config.pipeline_timezone],
+      );
+      const ancientDatesRes = await pool.query(`SELECT COUNT(*) FROM permit_inspections WHERE inspection_date < make_date($1::int, 1, 1)`, [ctx.config.assert_data_bounds_ancient_inspection_before_year]);
       const dateBeforePermitRes = await pool.query(
         `SELECT COUNT(*) FROM permit_inspections
          WHERE inspection_date IS NOT NULL
@@ -417,42 +425,35 @@ async function loadCostMagBranch(ctx) {
   });
 }
 
-// ── cost_estimates coverage (non-fatal — swallows ALL errors, :923-925) ──────
+// ── cost_estimates coverage (an errored query is that check's errored FAIL row — CP-PLANA G13) ──
 async function loadCostEstBranch(ctx) {
   return memo(ctx, 'costest', async () => {
     const pool = ctx.pool;
-    try {
-      const ceTotalRes = await pool.query(`SELECT COUNT(*) FROM cost_estimates`);
-      const ceTotal = parseInt(ceTotalRes.rows[0].count, 10);
-      if (ceTotal === 0) return { ceTotal: 0, ceNull: 0, nullPct: 0, tierCount: 0, skip: 'cost_estimates table is empty' };
-      const ceNullRes = await pool.query(`SELECT COUNT(*) FROM cost_estimates WHERE estimated_cost IS NULL`);
-      const ceNull = parseInt(ceNullRes.rows[0].count, 10);
-      const tiersRes = await pool.query(`SELECT COUNT(DISTINCT cost_tier) as tiers FROM cost_estimates WHERE cost_tier IS NOT NULL`);
-      const tierCount = parseInt(tiersRes.rows[0].tiers, 10);
-      const nullPct = Math.round((ceNull / ceTotal) * 1000) / 10;
-      return { ceTotal, ceNull, nullPct, tierCount, skip: null };
-    } catch (err) {
-      return { ceTotal: 0, ceNull: 0, nullPct: 0, tierCount: 0, skip: `cost_estimates check failed: ${err.message}` };
-    }
+    const ceTotalRes = await pool.query(`SELECT COUNT(*) FROM cost_estimates`);
+    const ceTotal = parseInt(ceTotalRes.rows[0].count, 10);
+    if (ceTotal === 0) return { ceTotal: 0, ceNull: 0, nullPct: 0, tierCount: 0, skip: 'cost_estimates table is empty' };
+    const ceNullRes = await pool.query(`SELECT COUNT(*) FROM cost_estimates WHERE estimated_cost IS NULL`);
+    const ceNull = parseInt(ceNullRes.rows[0].count, 10);
+    const tiersRes = await pool.query(`SELECT COUNT(DISTINCT cost_tier) as tiers FROM cost_estimates WHERE cost_tier IS NOT NULL`);
+    const tierCount = parseInt(tiersRes.rows[0].tiers, 10);
+    const nullPct = Math.round((ceNull / ceTotal) * 1000) / 10;
+    return { ceTotal, ceNull, nullPct, tierCount, skip: null };
   });
 }
 
-// ── ghost records (non-fatal — swallows ALL errors, :958-961) ────────────────
+// ── ghost records (an errored query is that check's errored FAIL row — CP-PLANA G13) ──
 async function loadGhostBranch(ctx) {
   return memo(ctx, 'ghost', async () => {
     const pool = ctx.pool;
-    try {
-      const res = await pool.query(
-        `SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest
-         FROM permits
-         WHERE last_seen_at < CURRENT_DATE - INTERVAL '30 days'
-           AND lifecycle_phase IS NOT NULL
-           AND lifecycle_phase NOT IN ('P19', 'P20')`,
-      );
-      return { ghostCount: parseInt(res.rows[0].count, 10), oldest: res.rows[0].oldest, skip: null };
-    } catch (err) {
-      return { ghostCount: 0, oldest: null, skip: `Ghost record check failed: ${err.message}` };
-    }
+    const res = await pool.query(
+      `SELECT COUNT(*) AS count, MIN(last_seen_at) AS oldest
+       FROM permits
+       WHERE last_seen_at < (to_timestamp($1::float8 / 1000) AT TIME ZONE $2)::date - make_interval(days => $3::int)
+         AND lifecycle_phase IS NOT NULL
+         AND lifecycle_phase NOT IN ('P19', 'P20')`,
+      [ctx.clock(), ctx.config.pipeline_timezone, ctx.config.assert_data_bounds_ghost_last_seen_days],
+    );
+    return { ghostCount: parseInt(res.rows[0].count, 10), oldest: res.rows[0].oldest, skip: null };
   });
 }
 
@@ -502,34 +503,9 @@ async function evalRaw0(ctx, def) {
   ctx.report(def.id, { violations: Number.isFinite(value) ? value : 0 });
 }
 
-/** A real JS `count >= ctx.config[cfgVar]` comparison, booleanized (avoids the
- * compute-shape `compute-no-literal-threshold` class entirely — the comparator
- * reads ctx.config, never a numeric literal — and sidesteps the `viol <=`
- * grammar's off-by-one risk against a WARN-triggers-at-N default). */
-async function evalBoolCfgGe(ctx, def) {
-  const branch = await loadBranch(ctx, def.loader);
-  const value = getPath(branch, def.field);
-  const bound = ctx.config[def.cfgVar];
-  const over = Number.isFinite(value) && Number.isFinite(bound) && value >= bound;
-  ctx.report(def.id, { violations: over ? 1 : 0, detail: value });
-}
-
-/** A real JS `count > ctx.config[cfgVar]` comparison, booleanized — the strict
- * form (vs `evalBoolCfgGe`'s `>=`), for a bound whose pre-conversion display
- * text promised "count <= N is safe" (i.e. WARN triggers only ABOVE N, not AT
- * N). ADB-D7 (`ancient_dates`, commit 8c): the pre-conversion `checkInsp()`
- * helper's displayed `'<= N'` label was never itself compared — every call
- * site evaluated unconditionally `value > 0`. Wiring the real bound here uses
- * `>` (not `>=`) to match that "<=N is safe" framing exactly, not
- * `evalBoolCfgGe`'s off-by-one-different `>=` semantics its 3 existing
- * siblings (`cost_outliers`/`null_address`/`ancient_hearing`) use. */
-async function evalBoolCfgGt(ctx, def) {
-  const branch = await loadBranch(ctx, def.loader);
-  const value = getPath(branch, def.field);
-  const bound = ctx.config[def.cfgVar];
-  const over = Number.isFinite(value) && Number.isFinite(bound) && value > bound;
-  ctx.report(def.id, { violations: over ? 1 : 0, detail: value });
-}
+// Spec 124 R-DC (McDonald's Airtight V3, operator y 2026-10-17 "inclusive ceiling_max"): the former
+// boolcfg_ge / boolcfg_gt evaluators compared ctx.config in compute (a G7 value alias in a check body). Their
+// four checks are `ceiling_max` now — the raw count is reported and the declared check's own bound decides.
 
 /** value_min / value_max forms — the raw measured count/value, config-substituted. */
 async function evalValueBound(ctx, def) {
@@ -555,8 +531,6 @@ async function evalPctMax(ctx, def) {
 
 const EVALUATORS = {
   raw0: evalRaw0,
-  boolcfg_ge: evalBoolCfgGe,
-  boolcfg_gt: evalBoolCfgGt,
   floor_min: evalValueBound,
   ceiling_max: evalValueBound,
   pctmax_cfg: evalPctMax,
@@ -575,8 +549,9 @@ for (const def of CHECK_DEFS) {
   CHECKS[def.id] = dispatchFn;
 }
 
-// Loaders whose underlying query errors are NEVER fatal (costest/ghost swallow
-// internally already) — every OTHER check's dispatch call is intentionally left
+// Loaders whose query errors are NEVER fatal to the step: the per-check boundary in
+// compute() reports them as that check's errored row (CP-PLANA G13; the loaders no longer
+// swallow) — every OTHER check's dispatch call is intentionally left
 // UNCAUGHT here so a genuine query failure propagates out of compute() (see the
 // file header's halt-classification note).
 const NON_FATAL_LOADERS = new Set(['costest', 'ghost']);
@@ -585,7 +560,7 @@ const NON_FATAL_LOADERS = new Set(['costest', 'ghost']);
  * §5.5 (2) — run the SELECTED checks, and nothing else.
  *
  * Only `costest`/`ghost`-loader checks get a per-check error boundary here
- * (matching their own internal swallow-everything catch, belt-and-braces).
+ * (the ONLY catch for those loaders: the error becomes `ctx.report(id, { error })`, an errored FAIL row under on_check_error "fail_step").
  * Every other check's error is left to propagate — Spec 30 §5.4.1's halt
  * contract (see file header).
  */
@@ -619,5 +594,6 @@ module.exports.checks = CHECKS;
 // assert_data_bounds/missing-table-guard.test.ts). The loaders already took
 // `ctx` as their only argument; exporting them changes no production path
 // (loadBranch — the sole internal caller — is untouched).
+module.exports.loadPermitsBranch = loadPermitsBranch;
 module.exports.loadWsibBranch = loadWsibBranch;
 module.exports.loadInspectionBranch = loadInspectionBranch;

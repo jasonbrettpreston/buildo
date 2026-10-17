@@ -1,0 +1,223 @@
+{
+  "contract_version": 1,
+  "step": "assert_data_bounds",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/assert_data_bounds/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "meta[].reads.address_points[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"address_point_id\"; absent → \"retired_at\")."
+    },
+    {
+      "key": "meta[].reads.building_footprints[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"max_height_m\")."
+    },
+    {
+      "key": "meta[].reads.coa_applications[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"address\"; absent → \"application_number\"; +7 more)."
+    },
+    {
+      "key": "meta[].reads.cost_estimates",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [\"cost_tier\",\"estimated_cost\",\"modeled_gfa_sqm\",\"permit_n…)."
+    },
+    {
+      "key": "meta[].reads.entities",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [\"id\"])."
+    },
+    {
+      "key": "meta[].reads.heritage_districts",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.heritage_properties",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.neighbourhoods[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"neighbourhood_id\")."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"lot_size_sqm\"; absent → \"parcel_id\")."
+    },
+    {
+      "key": "meta[].reads.permit_inspections[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"inspection_date\"; absent → \"permit_num\"; +3 more)."
+    },
+    {
+      "key": "meta[].reads.permit_parcels",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [\"permit_num\",\"revision_num\"])."
+    },
+    {
+      "key": "meta[].reads.permit_trades",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [\"permit_num\",\"revision_num\"])."
+    },
+    {
+      "key": "meta[].reads.permits[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"*\" → \"builder_name\"; absent → \"description\"; +7 more)."
+    },
+    {
+      "key": "meta[].reads.ravines",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.toronto_centreline",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.wsib_registry",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [\"legal_name\",\"linked_entity_id\",\"naics_code\",\"predominan…)."
+    },
+    {
+      "key": "meta[].writes.pipeline_runs",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (coa/deep_scrapes/permits/sources/standalone: [\"checks_passed\",\"checks_failed\",\"checks_warned\"] → absent)."
+    },
+    {
+      "key": "pipeline_runs[].error_message",
+      "why": "the legacy ledger UPDATE put the WARN text into error_message; the converted runner sets error_message only from a phase deadline, blocking FAIL checks or a thrown error (scripts/lib/step/index.js:6912, :7102, :7130), so a WARN-only run records null; warnings live in records_meta.warnings (standalone ledger row only)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (standalone: 15 → 0)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → {\"metric\":\"cost_estimates_min_tiers\",\"observed\":\"before_w…; absent → {\"metric\":\"orphan_link_count\",\"observed\":\"before_write\",\"…; +38 more)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].metric",
+      "why": "standalone ledger row: the converted audit rows are the descriptor's declared checks[] in declared order (null_descriptions_24h, null_builders_24h, …) where the legacy table listed orphaned_permit_* first, so rows compare different metrics by index."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → \"before_write\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → \"check\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].status",
+      "why": "standalone ledger row: statuses compare different checks after the declared-order reshuffle (same index, different metric); per-metric, ghost_permits_30d is WARN on both sides (207,632)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: \"< 20\" → \"viol == 0\"; \"== 0\" → \"pct <= 5\"; +5 more)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value",
+      "why": "standalone ledger row: values compare different checks after the declared-order reshuffle (e.g. 207,632 is ghost_permits_30d on both sides at different indexes)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → {\"builder_null_rate_warn_pct\":95,\"coa_ancient_hearing_cou…)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → [])."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → \"owned\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → 0)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → \"checks_passed_with_warnings\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.warnings[]",
+      "why": "warning strings are now \"<check_id>: <value>\" (verdict.js:440-441) instead of the legacy prose (\"207632 non-terminal permits not seen…\"); same facts: ghost_permits_30d 207,632 and parcel_lot_outliers."
+    },
+    {
+      "key": "pipeline_runs[].records_new",
+      "why": "the descriptor declares counters:\"none\" (ASSERT), so the converted runner emits null counters (deriveCounters, scripts/lib/step/index.js:340-343); the legacy PRE reported numbers (standalone: 0 → null)."
+    },
+    {
+      "key": "pipeline_runs[].records_total",
+      "why": "the descriptor declares counters:\"none\" (ASSERT), so the converted runner emits null counters (deriveCounters, scripts/lib/step/index.js:340-343); the legacy PRE reported numbers (standalone: 0 → null)."
+    },
+    {
+      "key": "pipeline_runs[].records_updated",
+      "why": "the descriptor declares counters:\"none\" (ASSERT), so the converted runner emits null counters (deriveCounters, scripts/lib/step/index.js:340-343); the legacy PRE reported numbers (standalone: 0 → null)."
+    },
+    {
+      "key": "pipeline_runs[].status",
+      "why": "standalone: the runner stamps completed_with_warnings when a WARN row fires (ghost_permits_30d, parcel_lot_outliers); the legacy ledger wrote completed for the same WARN run."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [assert_data_bounds] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (coa 14→3 lines; deep_scrapes 18→3 lines; permits 19→3 lines; sources 24→3 lines; standalone 54→3 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (coa/deep_scrapes/sources: \"CoA Data Quality\" → \"Data Quality Checks\"; \"Data Quality\" → \"Data Quality Checks\"; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (coa/deep_scrapes/permits/sources/standalone: 8 → 13; 3 → 5; +3 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/standalone: absent → {\"metric\":\"cost_estimates_min_tiers\",\"observed\":\"before_w…; absent → {\"metric\":\"wsib_no_legal_name\",\"observed\":\"before_write\",…; +38 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (coa.json: added coa_permits_pre_permit_count; dropped permits_pre_permit_count). Measured coa/permits/standalone: \"permits_pre_permit_count\" → \"coa_permits_pre_permit_count\"; \"orphaned_permit_trades\" → \"null_descriptions_24h\"; +10 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: absent → \"before_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (permits.json: added null_descriptions_24h, null_builders_24h, null_status_24h, cost_estimates_null_rate, cost_estimates_min_tiers; dropped none). Measured permits/standalone: \"PASS\" → \"WARN\"; \"WARN\" → \"PASS\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: \"== 0\" → \"viol == 0\"; \"<= 59\" → \"pct <= 59\"; +19 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit row values compare different checks after the declared-order reshuffle, plus parcel_lot_outliers 4 → 8 (the parcels reload since the PRE: 486,530 → 496,536 rows); ghost_permits_30d 207,632 on both sides."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → {\"builder_null_rate_warn_pct\":95,\"coa_ancient_hearing_cou…)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → \"all_checks_passed\"; absent → \"checks_passed_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.warnings[]",
+      "why": "warning strings are now \"<check_id>: <value>\" (verdict.js:440-441) instead of the legacy prose; facts: ghost_permits_30d 207,632 unchanged, parcel_lot_outliers 4 → 8 after the parcels reload (486,530 → 496,536)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "the descriptor declares counters:\"none\" (ASSERT), so the converted runner emits null counters (deriveCounters, scripts/lib/step/index.js:340-343); the legacy PRE reported numbers (coa/deep_scrapes/permits/sources/standalone: 0 → null)."
+    }
+  ]
+}

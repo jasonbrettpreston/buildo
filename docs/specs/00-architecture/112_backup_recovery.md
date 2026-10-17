@@ -505,7 +505,7 @@ the fix isn't independently rediscovered as a second bug. No file under
   retention-prune-failure-is-WARN-not-FAIL, advisory-lock skip-on-concurrent-run, non-integer
   `BACKUP_RETAIN_DAYS` Zod throw, baseline-manifest sidecar written alongside the dump. MUST be
   rewritten in the same commit as `backup-db.js` itself (Phase 3.3) — not a follow-up.
-- **Infra:** `src/tests/restore-db.infra.test.ts` (needs a live target DB —
+- **Infra:** `src/tests/db/restore-db.db.test.ts` (needs a live target DB —
   `BUILDO_TEST_DB=1`) — `--single-transaction --exit-on-error` failure propagation; stderr-gated
   wrapper's "any stderr = fail" behavior against real binary output; TOC-preflight parse of real
   `pg_restore --list` output; the C1 fail-closed probe (`countTableRowsSafe` null on non-42P01/
@@ -557,7 +557,7 @@ artifact for a standalone operator CLI.
 - `scripts/manifest.json` — `backup_db` step entry, L90 position (re-homing only — `step_name`
   and chain position unchanged, per Spec 113 §9.3)
 - `src/tests/backup-db.logic.test.ts` — rewrite, same commit as `scripts/backup-db.js`
-- `src/tests/restore-db.infra.test.ts` — **NEW**, same commit as `scripts/restore-db.js`
+- `src/tests/db/restore-db.db.test.ts` — **NEW**, same commit as `scripts/restore-db.js`
 - `.github/workflows/` — new nightly permits-chain workflow + secondary backup-only safety-net
   workflow (Spec 113 §8.1/§8.2; this spec does not own the workflow YAML content, only the
   trigger semantics described in §6)

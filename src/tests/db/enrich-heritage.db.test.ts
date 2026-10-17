@@ -15,14 +15,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { dbAvailable, getTestPool } from './db/setup-testcontainer';
+import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const eh = require('../../scripts/enrich-heritage.js');
+const eh = require('../../../scripts/enrich-heritage.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const compute = require('../../scripts/lib/compute/enrich-heritage.js');
+const compute = require('../../../scripts/lib/compute/enrich-heritage.js');
 
-const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/enrich-heritage.js'), 'utf8');
+const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../../scripts/lib/compute/enrich-heritage.js'), 'utf8');
 
 // ── (A) Source-contract ─────────────────────────────────────────────────────
 describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED against descriptor + compute', () => {
@@ -51,7 +51,7 @@ describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED aga
     ]);
   });
 
-  it('guards.requires declares both planar heritage GISTs + parcels GIST + fuzzystrmatch + the 4 M-2 columns; SRID + L14 live in readHeritageContract', () => {
+  it('guards.requires declares both planar heritage GISTs + parcels GIST + fuzzystrmatch + the 4 M-2 columns + the srid row (CP-S5); L14 is guards.empty_source', () => {
     const names = eh.descriptor.guards.requires.map((r: { kind: string; name: string }) => `${r.kind}:${r.name}`);
     expect(names).toEqual(expect.arrayContaining([
       'extension:postgis',
@@ -63,8 +63,12 @@ describe('enrich-heritage — source contract (Spec 61 §8d/§9), RE-DERIVED aga
       'column:parcels.is_heritage_designated',
       'column:parcels.heritage_designation_type',
       'column:parcels.heritage_designation_date',
+      'srid:parcels.geom',
     ]));
-    expect(COMPUTE_SRC).toMatch(/Find_SRID\([^)]*parcels[^)]*geom/);
+    // CP-S5 (Spec 124 R-CX): the SRID=4326 guard is the runner-probed srid requirement — the
+    // compute holds no Find_SRID read and no SRID throw.
+    expect(eh.descriptor.guards.requires.find((r: { kind: string }) => r.kind === 'srid')).toMatchObject({ name: 'parcels.geom', equals: 4326, on_missing: 'fail' });
+    expect(COMPUTE_SRC).not.toMatch(/Find_SRID/i);
     // L14's non-empty count now lives in the declared guards.empty_source (runner-evaluated, S4),
     // not as hand-rolled COUNT probes inside the hook.
     const emptySource = eh.descriptor.guards.empty_source;
@@ -190,8 +194,8 @@ describe.skipIf(!dbAvailable())('enrich-heritage — §11.1 containment join (re
     // S1-P-5 the producer contract is DECLARED in staleness.pins[] and the RUNNER (before any
     // phase or hook) evaluates it: every pin evaluates MISSING and the run HALTs.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { measureProducerPins } = require('../../scripts/lib/step/index.js');
-    const descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-heritage.descriptor.json'), 'utf8'));
+    const { measureProducerPins } = require('../../../scripts/lib/step/index.js');
+    const descriptor = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../scripts/enrich-heritage.descriptor.json'), 'utf8'));
     const r = await measureProducerPins(pool, descriptor);
     expect(r.halt).toBe(true);
     expect(r.rows.length).toBeGreaterThan(0);

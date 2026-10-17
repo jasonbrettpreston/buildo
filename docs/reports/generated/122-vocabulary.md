@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 490 declarable fields
+# The step contract — 20 categories, 491 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -18,7 +18,7 @@
 | 2 | `inputs` | 35 | 6 | 0 |
 | 3 | `outputs` | 94 | 27 | 1 |
 | 4 | `staleness` | 36 | 9 | 0 |
-| 5 | `guards` | 21 | 7 | 0 |
+| 5 | `guards` | 22 | 7 | 0 |
 | 6 | `execution` | 75 | 14 | 0 |
 | 7 | `checks` | 35 | 7 | 0 |
 | 8 | `invariants` | 33 | 6 | 0 |
@@ -342,9 +342,10 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 
 | Field | Menu | Markers |
 |---|---|---|
-| `requires` | list of object {kind, name, on_missing, algorithm, why} | † |
-| `requires[].kind` | `extension` · `index` · `function` · `column` · `fk` · `rls_bypass_or_policy` · `trigger` | † ! |
+| `requires` | list of object {kind, name, equals, on_missing, algorithm, why} | † |
+| `requires[].kind` | `extension` · `index` · `function` · `column` · `fk` · `rls_bypass_or_policy` · `trigger` · `srid` | † ! |
 | `requires[].name` | string | † |
+| `requires[].equals` | integer | — |
 | `requires[].on_missing` | `fail` · `degrade` | † ! |
 | `requires[].algorithm` | string | — |
 | `requires[].why` | object {text, liveness} | — |

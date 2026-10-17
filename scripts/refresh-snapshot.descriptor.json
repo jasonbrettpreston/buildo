@@ -77,6 +77,12 @@
         },
         {
           "step": "permits"
+        },
+        {
+          "step": "geocode_permits"
+        },
+        {
+          "step": "link_neighbourhoods"
         }
       ],
       "tables": [
@@ -150,6 +156,9 @@
         },
         {
           "table": "building_footprints"
+        },
+        {
+          "table": "parcels"
         },
         {
           "table": "parcel_buildings",
@@ -1162,7 +1171,19 @@
         "min": 0,
         "max": 15,
         "on_invalid": "fail"
-      }
+      },
+      {
+        "name": "pipeline_timezone",
+        "min": "none",
+        "max": "none",
+        "enum": ["UTC", "America/Toronto"],
+        "on_invalid": "fail"
+      },
+      { "name": "refresh_snapshot_updated_24h_window_hours", "min": 24, "max": 24, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_updated_7d_window_days", "min": 7, "max": 7, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_updated_30d_window_days", "min": 30, "max": 30, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_cost_oor_min_cad", "min": 0, "max": 100000, "on_invalid": "fail" },
+      { "name": "refresh_snapshot_cost_oor_max_cad", "min": 1000000, "max": 100000000000, "on_invalid": "fail" }
     ],
     "validation": "strict",
     "hoisted_above_gate": true,

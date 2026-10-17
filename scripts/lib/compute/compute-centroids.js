@@ -146,7 +146,7 @@ function buildFullRecomputeSql(descriptor, config) {
      centroid_lng = ST_X(ST_Centroid(geom))
    WHERE id = ANY($1::int[])
    RETURNING id`,
-    batch_size: (config && config[batchSizeVar]) || 10000,
+    batch_size: config ? config[batchSizeVar] : undefined, // R-DE (i): the runner refuses a missing size
   };
 }
 

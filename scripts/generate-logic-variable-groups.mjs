@@ -246,6 +246,8 @@ const GROUP_ORDER = [
       "massing_shed_threshold_sqm",
       "massing_garage_max_sqm",
       "massing_nearest_max_distance_m",
+      "link_massing_bbox_degree_divisor",
+      "link_massing_round_scale",
       "link_massing_link_rate_fail_pct",
       "link_massing_centroid_confidence",
       "link_massing_nearest_confidence",
@@ -296,7 +298,8 @@ const GROUP_ORDER = [
     "keys": [
       "link_neighbourhoods_link_rate_warn_pct",
       "link_neighbourhoods_link_rate_fail_pct",
-      "link_neighbourhoods_no_match_warn_count"
+      "link_neighbourhoods_no_match_warn_count",
+      "link_neighbourhoods_loaded_warn_min"
     ]
   },
   {
@@ -322,7 +325,9 @@ const GROUP_ORDER = [
       "link_wsib_tier3_confidence",
       "link_wsib_entity_fanin_warn",
       "link_wsib_tier3_token_overlap_fail_pct",
-      "link_wsib_mass_relink_max_pct"
+      "link_wsib_mass_relink_max_pct",
+      "link_wsib_exact_name_min_length",
+      "link_wsib_fuzzy_name_min_length"
     ]
   },
   {
@@ -368,6 +373,21 @@ const GROUP_ORDER = [
       "enrich_parcels_zone_class_pct_pass_floor",
       "enrich_parcels_zone_class_pct_warn_floor",
       "enrich_parcels_pending_scope_warn_max",
+      "enrich_parcels_ambiguous_zone_max_pct",
+      "refresh_snapshot_updated_24h_window_hours",
+      "refresh_snapshot_updated_7d_window_days",
+      "refresh_snapshot_updated_30d_window_days",
+      "refresh_snapshot_cost_oor_min_cad",
+      "refresh_snapshot_cost_oor_max_cad",
+      "assert_global_coverage_pre_permit_aged_months",
+      "assert_global_coverage_engine_health_window_hours",
+      "assert_global_coverage_forecast_lookback_years",
+      "assert_data_bounds_recent_window_hours",
+      "assert_data_bounds_ghost_last_seen_days",
+      "assert_data_bounds_ancient_hearing_before_year",
+      "assert_data_bounds_ancient_inspection_before_year",
+      "assert_data_bounds_lot_size_max_sqm",
+      "assert_data_bounds_max_height_max_m",
       "parcels_dead_tuple_ratio_warn_max",
       "building_footprints_dead_tuple_ratio_warn_max",
       "neighbourhoods_dead_tuple_ratio_warn_max",
@@ -475,6 +495,8 @@ const GROUP_ORDER = [
       "load_ravines_mass_delete_fail_pct",
       "load_ravines_rows_changed_ratio_warn_pct",
       "load_ravines_download_timeout_ms",
+      "load_ravines_round_scale",
+      "load_ravines_max_detail_keys",
       "road_overlay_distance_m",
       "geocode_permits_coverage_warn_pct",
       "geocode_permits_heartbeat_minutes",

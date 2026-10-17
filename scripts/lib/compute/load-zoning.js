@@ -19,8 +19,8 @@
  * `ctx.written.by_target[table]`, and `ctx.prior` is the whole prior records_meta
  * (0y all-primaries: one prior for the step). `lanes(ctx)` folds both shapes.
  *
- * ⚠️ §5.5 SHAPE: one named function per declared check, in descriptor order (built
- * from the declared check ids and asserted at require time); no literal threshold —
+ * ⚠️ §5.5 SHAPE: one named function per declared check, in descriptor order (as
+ * a literal dispatch table locked to the declared ids by the conformance suite); no literal threshold —
  * every bound is a `checks[].limit_from_config` / `warn_limit_from_config` the library
  * resolves; the verdict is `scripts/lib/step/verdict.js`'s, never this file's.
  */
@@ -28,14 +28,12 @@
 
 const { MS_PER_DAY } = require('../units');
 const { checkAttrDrift } = require('../zoning-attr-drift');
-// The descriptor ships beside the shell; read once at require() time (heritage precedent).
-const DESCRIPTOR = require('../../load-zoning.descriptor.json');
+// Spec 124 R-CY (McDonald's Airtight V3) — the descriptor is the runner's: every descriptor
+// fact below is read off `ctx.descriptor` (or a seam's `descriptor`) inside the call, never
+// required beside the shell (R-BZ G12; heritage precedent).
 
 /** The declared primaries in declared order: id = the legacy layer key, target = its table. */
-const LANES = DESCRIPTOR.inputs.reads.externals.map((e) => ({ id: e.id, target: e.target, resourceId: e.ckan.resource_id }));
-const BASE = LANES[0].id;
-const LICENSE_URL = DESCRIPTOR.inputs.reads.externals[0].license;
-const GEOM_KIND = Object.fromEntries(DESCRIPTOR.outputs.writes.map((w) => [w.table, w.geometry_kind]));
+const lanesOf = (d) => d.inputs.reads.externals.map((e) => ({ id: e.id, target: e.target, resourceId: e.ckan.resource_id }));
 
 const NUM = 'num';
 const INT = 'int';
@@ -140,15 +138,25 @@ const LAYER_COLUMNS = {
   },
 };
 
+/**
+ * The layer keys in declared order — the vocabulary's own keys. Equal, in order, to
+ * `inputs.reads.externals[].id` (locked by src/tests/purity-r-cy-runner-seam.logic.test.ts).
+ */
+const LANE_IDS = Object.keys(LAYER_COLUMNS);
+const BASE = LANE_IDS[0];
+
 /** The legacy-shaped layer registry, derived (descriptor ids/tables/resources + the vocabulary above). */
-const LAYERS = LANES.map((l) => ({
-  key: l.id,
-  table: l.target,
-  resourceId: l.resourceId,
-  geomKind: GEOM_KIND[l.target] === 'multiline' ? 'linestring' : 'polygon',
-  isBase: l.id === BASE,
-  cols: LAYER_COLUMNS[l.id].cols,
-}));
+function layersOf(d) {
+  const geomKind = Object.fromEntries(d.outputs.writes.map((w) => [w.table, w.geometry_kind]));
+  return lanesOf(d).map((l) => ({
+    key: l.id,
+    table: l.target,
+    resourceId: l.resourceId,
+    geomKind: geomKind[l.target] === 'multiline' ? 'linestring' : 'polygon',
+    isBase: l.id === BASE,
+    cols: LAYER_COLUMNS[l.id].cols,
+  }));
+}
 
 /** F-H3: the frozen required field set of a layer (the legacy requiredAttrColumns). */
 function requiredAttrColumns(layerKey) {
@@ -267,11 +275,11 @@ function coerceKey(raw) {
  */
 const SIGNATURES = (() => {
   const groups = [];
-  for (const l of LANES) {
-    const key = JSON.stringify(LAYER_COLUMNS[l.id].cols);
+  for (const id of LANE_IDS) {
+    const key = JSON.stringify(LAYER_COLUMNS[id].cols);
     const g = groups.find((x) => x.key === key);
-    if (g) g.layers.push(l.id);
-    else groups.push({ key, layers: [l.id], srcs: LAYER_COLUMNS[l.id].cols.map((c) => c.src) });
+    if (g) g.layers.push(id);
+    else groups.push({ key, layers: [id], srcs: LAYER_COLUMNS[id].cols.map((c) => c.src) });
   }
   return groups.map((g) => {
     const others = new Set(groups.filter((x) => x !== g).flatMap((x) => x.srcs));
@@ -345,13 +353,14 @@ function shouldSkipDelete(sourceIds) {
 const GATED = new Set(['gating', 'loaded', 'write_skipped']);
 
 function lanes(ctx) {
+  const declared = lanesOf(ctx.descriptor);
   if (ctx.primary) {
-    const lane = LANES.find((l) => l.id === ctx.primary) || { id: ctx.primary, target: null };
+    const lane = declared.find((l) => l.id === ctx.primary) || { id: ctx.primary, target: null };
     return [{ ...lane, outcome: 'gating', acquired: ctx.acquired || {}, written: null }];
   }
   const primaries = (ctx.acquired && ctx.acquired.primaries) || {};
   const byTarget = (ctx.written && ctx.written.by_target) || {};
-  return LANES.map((l) => {
+  return declared.map((l) => {
     const a = primaries[l.id] || {};
     return { ...l, outcome: a.outcome || 'not_reached', acquired: a, written: byTarget[l.target] || null };
   });
@@ -387,8 +396,9 @@ const metricPrefix = (id) => (id === BASE ? 'zoning_areas' : id);
 // Observers — the per-check functions, by family (named + dispatched below)
 // ===========================================================================
 
-function obsLicense() {
-  return { violations: LICENSE_URL ? 0 : 1, detail: LICENSE_URL || null };
+function obsLicense(ctx) {
+  const url = ctx.descriptor.inputs.reads.externals[0].license;
+  return { violations: url ? 0 : 1, detail: url || null };
 }
 
 function obsForce(ctx) {
@@ -645,21 +655,65 @@ function observerFor(id) {
     loaded_count: obsOverlayLoadedCount,
     loaded_pct: obsLoadedPct,
   };
-  for (const lane of LANES) {
-    const p = `${metricPrefix(lane.id)}_`;
+  for (const laneId of LANE_IDS) {
+    const p = `${metricPrefix(laneId)}_`;
     if (!id.startsWith(p)) continue;
     const fn = family[id.slice(p.length)];
-    if (fn) return (ctx) => fn(ctx, lane.id);
+    if (fn) return (ctx) => fn(ctx, laneId);
   }
   return null;
 }
 
-/** §5.5 (1) — the dispatch table: keys are exactly the descriptor's check ids, in DESCRIPTOR ORDER. */
+/**
+ * §5.5 (1) — the dispatch table: keys are exactly the descriptor's check ids, in DESCRIPTOR ORDER
+ * (enforced both directions by src/tests/step-conformance.infra.test.ts, "§5.5 compute shape —
+ * dispatch table ≡ declared checks"; never by a require of the descriptor here, R-BZ G12 / R-CY).
+ */
+const CHECK_IDS = [
+  'dataset_source_license', 'zoning_override_force_reload_present', 'no_op_refresh',
+  'zoning_areas_attr_drift', 'zoning_areas_loaded_count', 'zoning_areas_out_of_range_nulled_count',
+  'zoning_areas_duplicate_source_id_count', 'zoning_areas_invalid_polygon_count',
+  'zoning_areas_invalid_polygon_pct', 'zoning_areas_repaired_polygon_count',
+  'zoning_areas_orphans_removed_count', 'zoning_areas_unchanged_skipped', 'zoning_areas_loaded_pct',
+  'zoning_areas_with_exceptions_count', 'zoning_areas_distribution_top20', 'coverage_max_pct_null_count',
+  'fsi_max_null_count', 'frontage_min_m_null_count', 'zoning_height_overlay_unparseable_label_count',
+  'height_overlay_out_of_range_nulled_count', 'height_overlay_invalid_polygon_count',
+  'height_overlay_repaired_polygon_count', 'height_overlay_orphans_removed_count',
+  'height_overlay_unchanged_skipped', 'height_overlay_loaded_count', 'height_overlay_loaded_pct',
+  'lot_coverage_overlay_out_of_range_nulled_count', 'lot_coverage_overlay_invalid_polygon_count',
+  'lot_coverage_overlay_repaired_polygon_count', 'lot_coverage_overlay_orphans_removed_count',
+  'lot_coverage_overlay_unchanged_skipped', 'lot_coverage_overlay_loaded_count',
+  'lot_coverage_overlay_loaded_pct', 'building_setback_overlay_invalid_polygon_count',
+  'building_setback_overlay_repaired_polygon_count', 'building_setback_overlay_orphans_removed_count',
+  'building_setback_overlay_unchanged_skipped', 'building_setback_overlay_loaded_count',
+  'building_setback_overlay_loaded_pct', 'policy_area_overlay_invalid_polygon_count',
+  'policy_area_overlay_repaired_polygon_count', 'policy_area_overlay_orphans_removed_count',
+  'policy_area_overlay_unchanged_skipped', 'policy_area_overlay_loaded_count',
+  'policy_area_overlay_loaded_pct', 'policy_road_overlay_invalid_polygon_count',
+  'policy_road_overlay_repaired_polygon_count', 'policy_road_overlay_orphans_removed_count',
+  'policy_road_overlay_unchanged_skipped', 'policy_road_overlay_loaded_count',
+  'policy_road_overlay_loaded_pct', 'rooming_house_overlay_invalid_polygon_count',
+  'rooming_house_overlay_repaired_polygon_count', 'rooming_house_overlay_orphans_removed_count',
+  'rooming_house_overlay_unchanged_skipped', 'rooming_house_overlay_loaded_count',
+  'rooming_house_overlay_loaded_pct', 'parking_zone_overlay_invalid_polygon_count',
+  'parking_zone_overlay_repaired_polygon_count', 'parking_zone_overlay_orphans_removed_count',
+  'parking_zone_overlay_unchanged_skipped', 'parking_zone_overlay_loaded_count',
+  'parking_zone_overlay_loaded_pct', 'priority_retail_overlay_invalid_polygon_count',
+  'priority_retail_overlay_repaired_polygon_count', 'priority_retail_overlay_orphans_removed_count',
+  'priority_retail_overlay_unchanged_skipped', 'priority_retail_overlay_loaded_count',
+  'priority_retail_overlay_loaded_pct', 'queenstw_eat_overlay_invalid_polygon_count',
+  'queenstw_eat_overlay_repaired_polygon_count', 'queenstw_eat_overlay_orphans_removed_count',
+  'queenstw_eat_overlay_unchanged_skipped', 'queenstw_eat_overlay_loaded_count',
+  'queenstw_eat_overlay_loaded_pct', 'zoning_overlay_attr_drift', 'zoning_attr_drift_extra_columns',
+  'zoning_non_integer_source_id_count', 'zoning_null_geometry_count',
+  'zoning_overlay_duplicate_source_id_count', 'zoning_orphan_delete_skipped', 'zoning_duration_ms',
+  'dataset_version_age_days',
+];
 const CHECKS = {};
-for (const c of DESCRIPTOR.checks) {
-  const fn = observerFor(c.id);
-  if (!fn) throw new Error(`load-zoning compute: descriptor check "${c.id}" has no observer`);
-  CHECKS[c.id] = named(c.id, fn);
+for (const id of CHECK_IDS) {
+  const fn = observerFor(id);
+  if (!fn) throw new Error(`load-zoning compute: dispatch check "${id}" has no observer`);
+  CHECKS[id] = named(id, fn);
 }
 for (const [id, fn] of Object.entries(CHECKS)) {
   if (fn.name !== id) throw new Error(`load-zoning compute: checks.${id} is bound to a function named "${fn.name}"`);
@@ -697,7 +751,7 @@ module.exports.validatorCounterDelta = validatorCounterDelta;
 module.exports.shouldSkipDelete = shouldSkipDelete;
 module.exports.buildLoadMeta = buildLoadMeta;
 // The pure domain functions, importable one at a time (the re-pointed legacy locks).
-module.exports.LAYERS = LAYERS;
+module.exports.layersOf = layersOf;
 module.exports.LAYER_COLUMNS = LAYER_COLUMNS;
 module.exports.requiredAttrColumns = requiredAttrColumns;
 module.exports.parseNum = parseNum;

@@ -81,6 +81,13 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_parcels_lock_timeout_ms', // WF3 enrich_parcels stall commit 1 (2026-09-03) — bounded, LOUD SET LOCAL lock_timeout for passes 1-4
   'enrich_parcels_scope_recovery_batch_size', // WF3 EP-D14 (2026-09-10) — pass-5 D4' recovery batch size (incremental mode; --full stamps set-based)
   'enrich_parcels_pending_scope_warn_max', // WF3 EP-D14 (2026-09-10) — pre_write WARN bound on pending pass-3 scope parcels before pass 5
+  'enrich_parcels_ambiguous_zone_max_pct', // V3 ledger A8 (2026-10-17) — parcels_ambiguous_zone_count WARN bound, formerly the literal "pct <= 5"
+  // V3 ledger E (2026-10-17) — refresh_snapshot's windows (pinned to their metric names) and cost_oor bounds.
+  'refresh_snapshot_updated_24h_window_hours', 'refresh_snapshot_updated_7d_window_days', 'refresh_snapshot_updated_30d_window_days', 'refresh_snapshot_cost_oor_min_cad', 'refresh_snapshot_cost_oor_max_cad',
+  // V3 ledger E (2026-10-17) — assert_global_coverage's three former SQL interval literals.
+  'assert_global_coverage_pre_permit_aged_months', 'assert_global_coverage_engine_health_window_hours', 'assert_global_coverage_forecast_lookback_years',
+  // V3 ledger E (2026-10-17) — assert_data_bounds' six former SQL literals.
+  'assert_data_bounds_recent_window_hours', 'assert_data_bounds_ghost_last_seen_days', 'assert_data_bounds_ancient_hearing_before_year', 'assert_data_bounds_ancient_inspection_before_year', 'assert_data_bounds_lot_size_max_sqm', 'assert_data_bounds_max_height_max_m',
   'enrich_parcels_scope_retire_after_hours', // WF3 EP-PASS3-BACKLOG (2026-09-15) — retention window for a PRIOR run's unconsumed pass-3 scope rows, retired at step start
   // Batch-2 row 2.1 `enrich_ravines` (2026-09-18, commit 1) — 8 vars, seeded at commit 1 ahead of
   // the compute/shell landing at commit 2b (Rule 3 externalization; RV-L3 removed an 8th proposed
@@ -276,6 +283,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'massing_shed_threshold_sqm',    // E19
   'massing_garage_max_sqm',        // E19
   'massing_nearest_max_distance_m', // E19
+  'link_massing_bbox_degree_divisor', 'link_massing_round_scale', // V3 ledger E (2026-10-17) — were DEGREES_PER_METRE_DIVISOR / ROUND_SCALE
   // ── Spec 122 §1.2a P4, LINK pilot (link_massing conversion, 2026-08-27) ────
   // The step declared three tunables and registered all three; its ONE verdict-bound
   // threshold and its two WRITTEN confidences were bare literals with zero registered
@@ -303,6 +311,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_neighbourhoods_link_rate_warn_pct',
   'link_neighbourhoods_link_rate_fail_pct',
   'link_neighbourhoods_no_match_warn_count',
+  'link_neighbourhoods_loaded_warn_min', // V3 ledger A8 (2026-10-17) — neighbourhoods_loaded WARN floor, formerly the literal "value_min 1"
   'wsib_fuzzy_match_threshold',       // E20
   // C1 pilot 4 (link_wsib, MATCHER, 2026-08-28) — T2-T8. Same P4-externalization class
   // as link_massing's trio above: T2 is the verdict-bound link-rate floor (LW-D1, reached
@@ -318,6 +327,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'link_wsib_tier3_confidence',
   'link_wsib_entity_fanin_warn',
   'link_wsib_mass_relink_max_pct', // O4 row 6 (2026-10-03) — the mass-relink guard ceiling; replaced the retired T7
+  'link_wsib_exact_name_min_length', 'link_wsib_fuzzy_name_min_length', // V3 ledger E (2026-10-17) — were EXACT/FUZZY_LENGTH_FLOOR
   'link_wsib_tier3_token_overlap_fail_pct',
   // C1 pilot 5 (link_parcel_addresses, MATERIALIZER, 2026-08-29) — T1-T5. T1 is the
   // batch-size pacing knob (not verdict-affecting); T2/T3 are the coverage-gap WARN
@@ -452,6 +462,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'load_ravines_mass_delete_fail_pct',
   'load_ravines_rows_changed_ratio_warn_pct', // WF2 L1 (McDonald's Airtight, 2026-09-26) — D-13, Rule 3
   'load_ravines_download_timeout_ms',
+  'load_ravines_round_scale', 'load_ravines_max_detail_keys', // V3 ledger E (2026-10-17) — were the ROUND_SCALE / MAX_DETAIL_KEYS compute literals
   // WF2 "Step Validator, Data-First" (Spec 124 §2 Rule 13 addendum, VAL-WF2, commit 1) —
   // the every_run/validate_only frequency-default budget for invariants[]/plausibility[]
   // candidates, rendered under GROUPS "Step Validator".

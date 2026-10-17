@@ -799,7 +799,7 @@ describe('CC-D3 — the FULL-mode repair target (LG-22, set_based_scoped/set_sou
     const cfg = d.config as Exclude<Descriptor['config'], 'none'>;
     const entry = cfg.logic_variables.find((v) => v.name === batchVar);
     expect(entry, `${batchVar} must be a declared logic_variables[] entry (LM-D15 presence rule)`).toBeDefined();
-    expect(entry!.on_invalid).toBe('clamp');
+    expect(entry!.on_invalid).toBe('fail'); // V3 ledger B12 (2026-10-17): fail — a missing row already throws (config.js), so on_invalid only governs an out-of-bounds edit
     // NOT verdict-affecting (R-G/GAP-G-4): no checks[].limit_from_config names it.
     expect(d.checks.some((c) => c.limit_from_config === batchVar)).toBe(false);
   });

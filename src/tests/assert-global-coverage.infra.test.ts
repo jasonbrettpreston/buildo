@@ -246,7 +246,12 @@ describe('assert-global-coverage.js — denominator gates (source-script mirrori
   });
 
   it('trade_forecasts denominator uses COALESCE 3-year recency gate', () => {
-    expect(computeSource()).toMatch(/COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*NOW\(\)\s*-\s*INTERVAL\s*'3 years'/);
+    // CP-PLANA (R-BZ G6): the 3-year gate is measured from the BOUND run clock, never NOW().
+    // Ledger E (McDonald's Airtight V3, migration 263): the 3 years is a bound logic variable, seeded 3.
+    expect(computeSource()).toMatch(/COALESCE\(p\.phase_started_at,\s*p\.issued_date,\s*p\.application_date\)\s*>=\s*to_timestamp\(\$1::float8 \/ 1000\)\s*-\s*make_interval\(years => \$2::int\)/);
+    expect(computeSource()).toContain('assert_global_coverage_forecast_lookback_years');
+    const seeds = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts', 'seeds', 'logic_variables.json'), 'utf8')) as Record<string, { default: number }>;
+    expect(seeds.assert_global_coverage_forecast_lookback_years?.default).toBe(3);
   });
 
   it('opportunity_score denominator filters urgency IS NULL OR urgency != expired (mirrors compute-opportunity-scores.js)', () => {

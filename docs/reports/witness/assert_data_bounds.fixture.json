@@ -14,8 +14,23 @@
           "stage_name",
           "status"
         ],
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_trades": [
+          "permit_num",
+          "revision_num"
+        ],
         "permits": [
-          "permit_num"
+          "builder_name",
+          "description",
+          "est_const_cost",
+          "last_seen_at",
+          "permit_num",
+          "permit_type",
+          "revision_num",
+          "status"
         ],
         "wsib_registry": [
           "legal_name",

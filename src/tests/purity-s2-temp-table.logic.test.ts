@@ -268,7 +268,7 @@ describe('compute owns only the SELECT (R-BZ G4)' , () => {
       () =>
         (parcelsMod.buildCompCandidatesSql as (o: Record<string, unknown>) => string)({
           asOfDateParamIndex: 1,
-          windowYears: 5,
+          windowYearsParamIndex: 2,
         }),
     ],
   ];

@@ -303,7 +303,7 @@ dedicated test files went unnamed.
   - `scripts/quality/assert-schema.notes.json`
   - `scripts/lib/compute/assert-schema.js`
   - `src/tests/steps/assert_schema/violations.test.ts`
-  - data (descriptor): `logic_variables` reads (migrations/092_control_panel.sql)
+  - data (descriptor): none in the cross-step ledger
   - upstream: none
   - downstream: none
   - consumers: src/components/FreshnessTimeline.tsx (records_meta checks_failed)
@@ -328,7 +328,7 @@ dedicated test files went unnamed.
   - data (descriptor): `address_points` reads (migrations/018_address_points.sql); `parcel_address_points` reads (migrations/162_address_points_expanded_fields_and_parcel_bridge.sql); `parcels` reads (migrations/011_parcels.sql); `permit_parcels` reads+writes (migrations/012_permit_parcels.sql); `permits` reads+writes (migrations/001_permits.sql)
   - upstream: address_points · geocode_permits · link_parcel_addresses · parcels · permits
   - downstream: assert_data_bounds · assert_global_coverage · compute_cost_estimates · enrich_permits · refresh_snapshot
-  - consumers: link_parcels (records_meta code_version) · src/app/api/admin/stats/route.ts (table permit_parcels: 3 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/features/leads/lib/timing.ts (table permit_parcels: 3 columns) · src/lib/leads/lead-inspect-query.ts (table permit_parcels: 3 columns) · src/lib/quality/metrics.ts (table permit_parcels: 4 columns) · src/lib/sync/process.ts (table permits: 1 column)
+  - consumers: link_parcels (records_meta code_version) · src/app/api/admin/stats/route.ts (table permit_parcels: 3 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/features/leads/lib/timing.ts (table permit_parcels: 3 columns) · src/lib/leads/lead-inspect-query.ts (table permit_parcels: 4 columns) · src/lib/quality/metrics.ts (table permit_parcels: 4 columns) · src/lib/sync/process.ts (table permits: 1 column)
 - `link_neighbourhoods` — LINK · converted · owner specs: 60
   - `scripts/link-neighbourhoods.js`
   - `scripts/link-neighbourhoods.descriptor.json`
@@ -360,7 +360,7 @@ dedicated test files went unnamed.
   - `src/tests/steps/refresh_snapshot/u1-run-clock.logic.test.ts`
   - `src/tests/steps/refresh_snapshot/violations.test.ts`
   - `src/tests/steps/refresh_snapshot/witness-fixture.logic.test.ts`
-  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` reads+writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `coa_applications` reads (migrations/009_coa_applications.sql); `cost_estimates` reads (migrations/071_cost_estimates.sql); `data_quality_snapshots` reads+writes (migrations/015_data_quality_snapshots.sql); `entities` reads (migrations/042_entities.sql); `lead_parcels` reads (migrations/125_create_lead_parcels.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads (migrations/011_parcels.sql); `permit_inspections` reads (migrations/045_permit_inspections.sql); `permit_parcels` reads (migrations/012_permit_parcels.sql); `permit_trades` reads (migrations/006_permit_trades.sql); `permits` reads (migrations/001_permits.sql); `sync_runs` reads (migrations/003_sync_runs.sql); `trade_forecasts` reads (migrations/086_predictive_timing_schema.sql)
   - upstream: backfill_realtor_permit_trades · classify_inspection_status · classify_lifecycle_phase · classify_permit_phase · classify_permits · classify_scope · close_stale_permits · compute_coa_cost_estimates · compute_cost_estimates · compute_opportunity_scores · compute_trade_forecasts · geocode_permits · inspections · link_coa · link_coa_to_parcels · link_massing · link_neighbourhoods · link_parcels · link_similar · link_wsib · permits
   - downstream: assert_global_coverage
   - consumers: src/lib/quality/metrics.ts (table data_quality_snapshots: 71 columns)

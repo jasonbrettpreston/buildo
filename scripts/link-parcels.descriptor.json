@@ -12,7 +12,7 @@
         "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
       }
     },
-    "spec": "41",
+    "spec": "60",
     "spec_version": "2.0",
     "archetype": "LINK",
     "contract_version": 1,
@@ -1128,7 +1128,7 @@
         "name": "spatial_match_max_distance_m",
         "min": 1,
         "max": 500,
-        "on_invalid": "clamp"
+        "on_invalid": "fail"
       },
       {
         "name": "spatial_match_confidence",

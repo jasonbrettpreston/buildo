@@ -1,0 +1,135 @@
+{
+  "contract_version": 1,
+  "step": "enrich_heritage",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/enrich_heritage/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added heritage_flag_type_agree_flagged_side, heritage_flag_type_agree_unflagged_side, heritage_date_without_type_count, heritage_part_iv_null_date_count, heritage_designated_share_max_pct, heritage_designated_count_collapse_floor, heritage_part_iv_matched_le_source; dropped none), so entries at the same index compare different invariants (sources/standalone: absent → {\"name\":\"heritage_flag_type_agree_flagged_side\",\"value\":\"0\"}; absent → {\"name\":\"heritage_flag_type_agree_unflagged_side\",\"value\"…; +5 more)."
+    },
+    {
+      "key": "meta[].reads.heritage_districts[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources/standalone: \"geom\" → \"id\"; \"designated_date\" → \"geom\"; +1 more)."
+    },
+    {
+      "key": "meta[].reads.heritage_properties[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (sources/standalone: \"geom\" → \"id\"; \"status\" → \"geom\"; +3 more)."
+    },
+    {
+      "key": "meta[].reads.parcels[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → \"is_heritage_designated\"; absent → \"heritage_designation_type\"; +2 more)."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [enrich_heritage] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources 4→4 lines; standalone 4→4 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (sources/standalone: \"Parcel heritage enrichment\" → \"Parcel Heritage Designation\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources/standalone: 62 → 13)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → {\"metric\":\"heritage_flag_type_agree_flagged_side\",\"observ…; absent → {\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"obse…; +9 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added heritage_flag_type_agree_flagged_side, heritage_flag_type_agree_unflagged_side, heritage_date_without_type_count, heritage_part_iv_null_date_count, heritage_designated_share_max_pct, heritage_designated_count_collapse_floor, heritage_part_iv_matched_le_source, inputs_nonempty, empty_source_guard, producer_pin_load_heritage_records_meta_heritage_load_spec_version, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero, retired_var_row_present:heritage_point_match_radius_m; dropped none). Measured sources/standalone: \"INFO\" → \"PASS\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"value_min 1\"; absent → \"viol == 0\"; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added heritage_flag_type_agree_flagged_side, heritage_flag_type_agree_unflagged_side, heritage_date_without_type_count, heritage_part_iv_null_date_count, heritage_designated_share_max_pct, heritage_designated_count_collapse_floor, heritage_part_iv_matched_le_source, inputs_nonempty, empty_source_guard, producer_pin_load_heritage_records_meta_heritage_load_spec_version, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true, producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero, producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero, retired_var_row_present:heritage_point_match_radius_m; dropped none). Measured sources/standalone: 9958 → 10616; 1217 → 1362; +7 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].warn_threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"pct <= 30\")."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"all\")."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.code_version",
+      "why": "declared emit (descriptor emits[] key \"code_version\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → \"none\")."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"enrich_heritage_address_levenshtein_threshold\":2,\"enric…)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.heritage_designated_by_zone",
+      "why": "declared emit (descriptor emits[] key \"heritage_designated_by_zone\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → {\"(null)\":{\"designated\":515,\"parcels\":17829},\"CR\":{\"desig…)."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"enriched\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_new",
+      "why": "WF3 counter sources (as enrich_parcels report L859-L871): records_new was NULL from conversion; the declared counter source makes it 0 (the step inserts no parcel rows)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "WF3 counter sources: the declared records_total is the scanned parcel scope, 496,535 in the POST, where the earlier capture emitted NULL (input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since)."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "content_hash is md5 over the projected, ordered rows (harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source)); in every instance the same table's projection or order also changed PRE→POST, so the hash is not comparable (sources/standalone)."
+    },
+    {
+      "key": "table_state[].order_by",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources/standalone: \"pk\" → \"explicit\")."
+    },
+    {
+      "key": "table_state[].order_columns",
+      "why": "harness table projection (capture-step-golden.js resolveTableSpec :490-499, table_specs columns_source/order_source): the POST capture projects/orders the table by the declared columns and key, the legacy PRE capture used the pre-projection full-row pk form (sources/standalone: absent → [\"id\"])."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since."
+    }
+  ]
+}

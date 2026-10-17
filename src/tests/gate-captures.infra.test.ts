@@ -64,7 +64,12 @@ const captures = capturesRaw as unknown as {
   ) => { states: Array<{ slug: string; file: string; state: string; allowed: boolean }>; violations: Array<{ step: string; item: string; detail: string }> };
   normaliseDiffKey: (key: string) => string;
   explainedDecision: (key: string, explained: unknown) => ExplainedResult;
-  fleetExplained: (keys: string[], explained: unknown, reportCitationAllowed?: boolean) => { unexplained: Array<{ item: string }>; listed: unknown[] };
+  fleetExplained: (keys: string[], explained: unknown) => { unexplained: Array<{ item: string }>; listed: unknown[] };
+  explainedChannelDecision: (
+    slugs: string[],
+    loadDoc: (slug: string) => Record<string, unknown> | null,
+    rows: Array<Record<string, unknown>>,
+  ) => { violations: Array<{ step: string; item: string; detail: string }>; orphans: Array<{ step: string; item: string }> };
   loadPostCaptures: (repoRoot: string, slug: string) => Capture[];
   loadCohort: (repoRoot: string, slug: string) => Record<string, unknown> | null;
   loadExplained: (repoRoot: string, slug: string) => Record<string, unknown> | null;
@@ -287,6 +292,27 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
       const out = captures.fleetExplained(['a.b', 'c.d'], { contract_version: 1, diffs: [{ key: 'a.b', why: 'a long enough explanation here' }] });
       expect(out.listed).toHaveLength(1);
       expect(out.unexplained.map((u) => u.item)).toEqual(['explained:c.d']);
+    });
+
+    // Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): explained-diffs.json is the ONLY
+    // G8 channel — prose citation explains nothing and its ledger rows are orphans.
+    it('T2z: R-DA — a leftover explained:report-citation row is an orphan; a step with no file is a violation', () => {
+      const leftover = { gate: 'G', step: 'fixture_step', item: 'explained:report-citation', disposition: 'pending_remediation', why: 'w', closing_brief: 'b', filed: '2026-09-26', adjudicated_by: 'operator' };
+      const withFile = captures.explainedChannelDecision(['fixture_step'], () => ({ contract_version: 1, diffs: [] }), [leftover]);
+      expect(withFile.orphans).toEqual([{ step: 'fixture_step', item: 'explained:report-citation' }]);
+      expect(withFile.violations).toEqual([]);
+      const noFile = captures.explainedChannelDecision(['fixture_step'], () => null, []);
+      expect(noFile.violations.map((v) => v.item)).toEqual(['explained:missing']);
+      const malformed = captures.explainedChannelDecision(['fixture_step'], () => ({ contract_version: 2, diffs: [] }), []);
+      expect(malformed.violations.map((v) => v.item)).toEqual(['explained:malformed']);
+    });
+
+    it('T2z2: R-DA — step-validate.mjs has no report-substring citation channel left', () => {
+      const sv = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs'), 'utf8');
+      const body = sv.slice(sv.indexOf('function checkCaptures('), sv.indexOf('// Fast invariants'));
+      expect(body).not.toMatch(/reportCitationAllowed|countRe|GENERIC_WRAPPERS|report\.toLowerCase/);
+      expect(body).toContain('explainedDecision(key, explainedRegistry)');
+      expect(sv).not.toContain('EXPLAINED_REPORT_ITEM');
     });
   });
 

@@ -249,6 +249,7 @@ describe('compute_parcel_cost_estimates — test 14: cross-step ledger', () => {
       .filter((p: { upstream: string; downstream: string }) => p.upstream === 'compute_parcel_cost_estimates' || p.downstream === 'compute_parcel_cost_estimates')
       .map((p: { upstream: string; downstream: string }) => `${p.upstream}>${p.downstream}`);
     expect(own).toEqual([
+      'compute_parcel_cost_estimates>assert_global_coverage', // V3 #44 G2 (2026-10-17): AGC declares its sources-chain producers
       'compute_parcel_cost_estimates>assert_parcel_sanity',
       'enrich_parcels>compute_parcel_cost_estimates',
       'parcels>compute_parcel_cost_estimates',
@@ -278,7 +279,7 @@ describe('compute_parcel_cost_estimates — test 16: the stream batch size is LI
   it('GREEN — the pass calls ctx.stream with an explicit batchSize option sourced from config.compute_parcel_cost_stream_batch_size', () => {
     const compute = loadCompute();
     const src = compute.runCostMenuPass.toString();
-    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(maxExistingGfaSqm\),\s*\[\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
+    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(\),\s*\[maxExistingGfaSqm\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
     expect(src).toMatch(/streamBatchSize\s*=\s*Number\(config\.compute_parcel_cost_stream_batch_size\)/);
   });
 });
@@ -335,7 +336,7 @@ describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs,
     expect(result.matched.cost_rates_stale_detail).toBe('undatable');
   });
 
-  it('both directions — fresh(2mo)=0/false, stale(9mo)=1/true, future-dated=2/"future_dated" (the FAIL tier is not swallowed by the fix)', async () => {
+  it('both directions — fresh(2mo)=0/false, stale(9mo)=1/true, future-dated → cost_rates_stale_future_dated=1/"future_dated" and NOT stale (V3 ledger A8 split; the FAIL tier is not swallowed)', async () => {
     const fresh = await runPost({ rates_as_of: '2026-07-01', rates_age_months: 2, index_age_months: 2, rates_future: false });
     expect(fresh.matched.cost_rates_stale).toBe(0);
     expect(fresh.matched.cost_rates_stale_detail).toBe(false);
@@ -345,8 +346,10 @@ describe('compute_parcel_cost_estimates — CPCE-D1: undatable rate table WARNs,
     expect(stale.matched.cost_rates_stale_detail).toBe(true);
 
     const future = await runPost({ rates_as_of: '2099-01-01', rates_age_months: -900, index_age_months: 2, rates_future: true });
-    expect(future.matched.cost_rates_stale).toBe(2);
+    expect(future.matched.cost_rates_stale).toBe(0);
+    expect(future.matched.cost_rates_stale_future_dated).toBe(1);
     expect(future.matched.cost_rates_stale_detail).toBe('future_dated');
+    expect(stale.matched.cost_rates_stale_future_dated).toBe(0);
   });
 });
 
@@ -553,12 +556,12 @@ describe('compute_parcel_cost_estimates — CPCE-D2: writes[1] codegen lock (fak
     expect(descriptor.recovery.interrupted).toBe('none');
   });
 
-  it('the new declared observables: stranded_cost_rows_retracted (INFO, value_min 0) + no_cost_outside_population (FAIL invariant, viol==0, post)', () => {
+  it('the new declared observables: stranded_cost_rows_retracted (INFO, viol == 0) + no_cost_outside_population (FAIL invariant, viol==0, post)', () => {
     const descriptor = loadDescriptor();
     const check = descriptor.checks.find((c: { id: string }) => c.id === 'stranded_cost_rows_retracted');
     expect(check).toBeDefined();
     expect(check.severity).toBe('INFO');
-    expect(check.limit).toBe('value_min 0');
+    expect(check.limit).toBe('viol == 0'); // V3 ledger A8 (2026-10-17): the closed zero-tolerance form, count in detail
     const inv = descriptor.invariants.find((i: { id: string }) => i.id === 'no_cost_outside_population');
     expect(inv).toBeDefined();
     expect(inv.severity).toBe('FAIL');
@@ -622,7 +625,7 @@ describe('compute_parcel_cost_estimates — CPCE peel O1: buildZoneBuckets order
 
   it('buildZoneSql declares ORDER BY 1 (read determinism, belt-and-suspenders with the order-independent JS fold)', () => {
     const { buildZoneSql } = loadCompute();
-    expect(buildZoneSql(750)).toMatch(/ORDER BY 1\s*$/);
+    expect(buildZoneSql()).toMatch(/ORDER BY 1\s*$/);
   });
 });
 
@@ -658,21 +661,21 @@ describe('compute_parcel_cost_estimates — CPCE peel O3 (refuted): stream/flush
 // NULLs any of them still carrying a stale menu from before this bound existed.
 describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 §2.1, FOLD-I1/FOLD-RC2)', () => {
   it('buildSourceSql excludes out-of-model parcels (max_buildable_gfa_sqm IS NULL) and oversized-existing parcels (cur_floor_gfa_sqm > bound)', () => {
-    const { buildSourceSql } = loadCompute();
-    const sql = buildSourceSql(750);
+    const { buildSourceSql, buildZoneSql } = loadCompute();
+    const sql = buildSourceSql();
     expect(sql).toContain('AND p.max_buildable_gfa_sqm IS NOT NULL');
-    expect(sql).toContain('p.cur_floor_gfa_sqm <= 750');
-    // the bound is a genuine parameter, not a re-baked literal — a different config value renders differently.
-    const sql2 = buildSourceSql(500);
-    expect(sql2).toContain('p.cur_floor_gfa_sqm <= 500');
-    expect(sql2).not.toBe(sql);
+    // #44 G16 (McDonald's Airtight V3): the bound is BIND parameter $1 (runCostMenuPass passes
+    // [maxExistingGfaSqm], test 16), never interpolated — no config value ever reaches the SQL text.
+    expect(sql).toContain('p.cur_floor_gfa_sqm <= $1::numeric');
+    expect(sql).not.toMatch(/<=\s*\d/);
+    expect(buildZoneSql()).toContain('cur_floor_gfa_sqm <= $1::numeric');
   });
 
   it('runCostMenuPass threads config.product_scope_max_existing_gfa_sqm into buildSourceSql (source text proof, mirrors test 16\'s own pattern)', () => {
     const compute = loadCompute();
     const src = compute.runCostMenuPass.toString();
     expect(src).toMatch(/maxExistingGfaSqm\s*=\s*Number\(config\.product_scope_max_existing_gfa_sqm\)/);
-    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(maxExistingGfaSqm\),\s*\[\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
+    expect(src).toMatch(/ctx\.stream\(buildSourceSql\(\),\s*\[maxExistingGfaSqm\],\s*\{\s*batchSize:\s*streamBatchSize\s*\}\)/);
   });
 
   it('descriptor declares product_scope_max_existing_gfa_sqm, on_invalid:"fail", default 750 in the seed', () => {

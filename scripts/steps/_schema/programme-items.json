@@ -1521,7 +1521,7 @@
       "title": "admin GROUPS reverse-coverage — every unclassified seed key gets a real group or a reviewed hidden reason",
       "promised": "unclassified count = 0",
       "status": "BUILT",
-      "evidence": "0 of 713 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
+      "evidence": "0 of 735 scripts/seeds/logic_variables.json keys carry admin.hidden === \"unclassified\" as of scripts/generate-logic-variable-groups.mjs (WF2 \"ADMIN-1 ratchet to zero\" batch 5, 2026-09-09) — refreshed by that generator on every regeneration (npm run logic-var-groups); high-water mark pinned at 0 in scripts/steps/_schema/admin-unclassified-high-water-mark.json (monotonic ratchet, src/tests/logic-var-admin-declarations.logic.test.ts). Closed in 5 reviewed batches (CoA chain 17, cost/archetype chain 19, lifecycle chain 10, coverage asserts + residue 14, lifecycle_seq_band_* family 220 — GlobalConfigCard.tsx's bespoke seq-band render path deleted in the same batch, single render path proven by an exactly-once-render fixture) — see .cursor/wf2_admin1_ratchet_to_zero_active_task.md. Batch 6 (this evidence) additionally RETIRED \"unclassified\" from the closed hidden-reason enum (derived|internal|deprecated|migration-only) — a new unclassified key is now a structural error, not merely ratcheted. review_followups.md — \"WF3 cloud-parity FIX 3 remediation — admin GROUPS reverse-coverage gap (2026-09-03)\" is the originating followup this item batches.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-ADMIN-1"
@@ -2523,8 +2523,8 @@
       "spec": "124 R-BZ",
       "title": "Compute-purity seam S5: catalog / SRID probe",
       "promised": "guards.requires {kind:\"srid\"} and a library column-count probe replace compute-authored catalog reads.",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: compute-purity.mjs --list / compute-literals.mjs --list measure the open rows this item closes (G3 6, G8 2); standard-gates-ledger.json rows with closing_brief \"CP-S5\"",
+      "status": "BUILT",
+      "evidence": "wf2/v3-cp-s5 (2026-10-16, .cursor/wf2_purity_s5_active_task.md; Spec 124 R-CX, RE-FREEZE #36): guards.requires kind \"srid\" probed by REQUIREMENT_PROBES.srid (scripts/lib/step/index.js anchor probeRequirement) — enrich_heritage + enrich_ravines declare {kind:\"srid\", name:\"parcels.geom\", equals:4326} and their contract_read hooks hold no Find_SRID read and no SRID throw; ctx.catalog (scripts/lib/step/catalog.js makeCatalog: columnCount/columnCounts/columnType, declared-read-set refusal) replaces the information_schema reads in assert-global-coverage.js (x2), refresh-snapshot.js (a recorder catalog op) and vocab-coverage.js (opts.columnType). Gate E measured 2026-10-16: 0 standard-gates-ledger.json rows with closing_brief \"CP-S5\", 0 G3/G8 sites in the five files, 0 orphans. Locks: src/tests/purity-s5-catalog-srid.logic.test.ts.",
       "owner": {
         "kind": "wf",
         "ref": "wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5)"
@@ -2533,7 +2533,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-16"
     },
     {
       "id": "CP-PLANA",

@@ -914,7 +914,7 @@ Five edge classes. **All five are real today; none is declared anywhere a machin
 | `heritage_load` (2 sub-blocks) | `load-heritage.js:751-765` | `enrich-heritage.js:54-89` | version mismatch · missing sub-block · zero `feature_count` · drift false · missing dataset version |
 | `centreline_load` (18 fields) | `load-centreline.js:630-672` | `enrich-centreline.js:318-338` | version mismatch · `features_inserted` not > 0 · missing dataset version |
 
-Regression-locked at `load-ravines.infra.test.ts:102`, `load-heritage.infra.test.ts:53`, `enrich-ravines.logic.test.ts:38-73`.
+Regression-locked at `db/load-ravines.db.test.ts:102`, `load-heritage.infra.test.ts:53`, `enrich-ravines.logic.test.ts:38-73`.
 
 **Ten further CONTRACT keys** with real consumers: `step_verdicts` and `step_completeness` (→ `check-chain-verdict.js`, CI gates) · `deferred` (→ `run-chain.js:266-287 / :964-990`, routes `deferred_to_full`) · `gated_skip` (→ `api/quality/route.ts:59-65`) · `pipeline_meta` (→ `FunnelPanels.tsx`) · `audit_table` (→ `FreshnessTimeline.tsx` ×6, `observe-chain.js:77`) · `engine_health` · `telemetry` · `warnings`/`errors` · `zoning_layer_versions` (self, cross-run).
 
@@ -1171,13 +1171,12 @@ Today this is **vacuously exercised**: 0 descriptors declare `recovery.reset: "g
 
 **MOVED to `122a_step_optimization_appendix.md` ## Appendix §A28 — RE-FREEZE #32–#33 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16 — 2026-10-16 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; V3 fleet night (QUEUE 2026-10-16): Spec 122 had ~80 B of arm (iv) headroom and owes the RE-FREEZE #35 entry (CP-S1 `not_failed` pin op). The #32 and #33 entries stay in force; #32 detail is §A24, #33 detail §A25. New RE-FREEZE entries are still added to Spec 122 §8.
 
-**RE-FREEZE #34 — compute-purity Phase 2 seams S1–S4 + S1-P + F3-2 (2026-10-14, H5 fleet recapture night 4):**
-- **Producer pins (S1-P, R-CB):** a closed `op`, plus `statuses`, `meta_object` and `bound`/`of`/`limit_from_config`, with if/then exclusions. The runner evaluates them before compute (`index.js measureProducerPins` → `producer.js evaluatePins`). `x-trust` moves from enrich-ravines to `producer.js`.
-- **`execution.read_gucs` (R-CF).**
-- **`maintenance` gains `select: dead_tuple_ratio` (R-CG).**
-- **A string `enum` logic-variable kind (R-CE, F3-2).**
+**M23 — moved to `122a_step_optimization_appendix.md` ## Appendix §A29 — RE-FREEZE #34–#35 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16, 2026-10-16.**
 
-**RE-FREEZE #35 — `staleness.pins[].op` gains `not_failed` (2026-10-16, V3 fleet night, CP-S1; Spec 124 R-CW):** one enum value plus one if/then rule (valid only on stamp `pipeline_runs.status`; requires `statuses`, forbids `equals`), evaluated by `producer.js` before compute. Replaces enrich_parcels' #12c compute throw. Recapture paid by the V3 fleet night (with the CP-S1 library change).
+**MOVED to `122a_step_optimization_appendix.md` ## Appendix §A29 — RE-FREEZE #34–#35 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16 — 2026-10-16 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; CP-S5 (2026-10-16): Spec 122 was over its arm (iv) byte budget with the RE-FREEZE #36 entry (guards.requires kind srid). #34 and #35 stay in force. New RE-FREEZE entries are still added to Spec 122 §8.
+
+
+**RE-FREEZE #36 — `guards.requires[].kind` gains `srid` (2026-10-16, CP-S5; Spec 124 R-CX):** one enum value, an integer `equals` and one if/then rule (srid requires `equals` and a `<table>.<column>` name), probed by `REQUIREMENT_PROBES.srid` before any hook. Replaces the heritage/ravines compute SRID throw. Recapture paid by the next fleet night.
 
 Existing declarations validate unchanged. Register rows R-CB…R-CM.
 

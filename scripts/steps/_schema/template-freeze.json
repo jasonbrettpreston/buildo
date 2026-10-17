@@ -13,9 +13,9 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "frozen_at": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "frozen_after_pilot": 9,
-  "schema_sha256": "73ddc02459be7c39b371cd5f0a31ac017f9640c0930a5fe628456670eb33b4df",
+  "schema_sha256": "76275d5786455b87c4a66bf31ebaf355c8a794a8a3ab0f251b2efffba34e3810",
   "categories": [
     "identity",
     "inputs",
@@ -143,6 +143,7 @@
         "write.assertWritePrivileges",
         "acquire.acquireExternal",
         "staleness.preAcquisitionDecision",
+        "staleness.targetIsEmpty",
         "write.validateGeometries",
         "preWriteGate",
         "write.executeStagingReplace",

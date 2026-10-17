@@ -10,9 +10,9 @@ Total items: **138**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 30 |
+| ⬜ NOT_STARTED | 29 |
 | ⚠️ PARTIAL | 16 |
-| ✅ BUILT | 86 |
+| ✅ BUILT | 87 |
 | ⏭️ SUPERSEDED | 6 |
 
 **blocks batching: 0**
@@ -165,7 +165,7 @@ Total items: **138**
 | `CP-S2` | 124 R-BZ | Compute-purity seam S2: temp tables, maintenance, transactions | ✅ BUILT | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S2) | — | 2026-10-14 |
 | `CP-S3` | 124 R-BZ | Compute-purity seam S3: ENRICHER write seam | ✅ BUILT | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S3) | — | 2026-10-14 |
 | `CP-S4` | 124 R-BZ | Compute-purity seam S4: ctx to contract_read / defer_scope hooks | ✅ BUILT | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S4) | — | 2026-10-14 |
-| `CP-S5` | 124 R-BZ | Compute-purity seam S5: catalog / SRID probe | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5) | — | 2026-10-11 |
+| `CP-S5` | 124 R-BZ | Compute-purity seam S5: catalog / SRID probe | ✅ BUILT | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5) | — | 2026-10-16 |
 | `CP-PLANA` | 124 R-BZ | Compute-purity plan A: pure bans | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 plan A) | — | 2026-10-11 |
 | `CP-PERMITS` | 124 R-BZ | Compute-purity: refresh_snapshot sync_runs read closes at the permits conversion | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Q4; permits chain conversion) | — | 2026-10-11 |
 | `P1-C9` | 122 §6.6.1 | #44 witness hard for every converted step | ⬜ NOT_STARTED | wf: wf: registry-truth plan (QUEUE H13 P1-C9+C10) | — | 2026-10-11 |

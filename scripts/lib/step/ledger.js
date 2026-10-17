@@ -299,6 +299,8 @@ module.exports = {
   RUN_STATUS,
   BASELINE_STATUSES,
   WARN_SKIP_PREDICATE_SQL,
+  RUN_HISTORY_COLUMNS,
+  RUN_HISTORY_ORDER_BY,
   readRunHistory,
   ownsLedgerRow,
   openLedgerRow,

@@ -76,7 +76,7 @@ describe('enrich_ravines — descriptor + compute constants', () => {
   });
 });
 
-describe('readRavineContract — §9/L18 consumer protocol through ctx.producer (F1), the SRID guard stays (F3, RV-L2)', () => {
+describe('readRavineContract — §9/L18 consumer protocol through ctx.producer (F1); the SRID guard is the runner srid requirement (F3, CP-S5)', () => {
   it('reads the producer through ctx.producer: slugForms, baseline statuses, completed_at DESC, id DESC', async () => {
     const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }]);
     await compute.readRavineContract(contractCtx(pool));
@@ -114,11 +114,15 @@ describe('readRavineContract — §9/L18 consumer protocol through ctx.producer 
     await expect(compute.readRavineContract(contractCtx(pool))).resolves.toBeTruthy();
   });
 
-  // ── F3 (SRID) half — folded into this hook, RV-L2: not a runner-enforced guards.srid, and the
-  // ONE throw S1-P-6 deliberately LEAVES in the compute (an own-table guard, not a producer contract) ──
-  it('HALTs when parcels.geom SRID is not 4326', async () => {
+  // ── F3 (SRID) half — RETARGETED (CP-S5, Spec 124 R-CX): the declared guards.requires
+  // {kind:"srid", name:"parcels.geom", equals:4326} row, probed by the runner BEFORE this hook
+  // (REQUIREMENT_PROBES.srid; the refusal is locked in purity-s5-catalog-srid.logic L1). The
+  // hook no longer reads the SRID, so a 3857 answer cannot make it throw. ──
+  it('the SRID HALT is the declared srid requirement (runner, before the hook) — the hook issues no Find_SRID read', async () => {
+    expect(descriptor.guards.requires.find((r: { kind: string }) => r.kind === 'srid')).toMatchObject({ name: 'parcels.geom', equals: 4326, on_missing: 'fail' });
     const pool = makeContractPool([{ id: 5, status: 'completed', records_meta: { ravine_load: GOOD_RL } }], { srid: 3857 });
-    await expect(compute.readRavineContract(contractCtx(pool))).rejects.toThrow(/SRID is 3857, expected 4326/);
+    await expect(compute.readRavineContract(contractCtx(pool))).resolves.toBeTruthy();
+    expect(pool.query.mock.calls.some((c: unknown[]) => /Find_SRID/i.test(String(c[0])))).toBe(false);
   });
 });
 

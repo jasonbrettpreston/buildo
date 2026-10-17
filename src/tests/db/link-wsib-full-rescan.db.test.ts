@@ -86,6 +86,9 @@ const CONFIG: Record<string, number> = Object.freeze({
   link_wsib_entity_fanin_warn: 20,
   link_wsib_tier3_token_overlap_fail_pct: 50,
   link_wsib_mass_relink_max_pct: 0.1,
+  // seeded defaults (migration 263, ledger E, McDonald's Airtight V3): the former EXACT_LENGTH_FLOOR / FUZZY_LENGTH_FLOOR literals
+  link_wsib_exact_name_min_length: 3,
+  link_wsib_fuzzy_name_min_length: 5,
 });
 
 /** The real FLEET-2 descriptor (O4 row 6 landed in it — seat B); guards and triggers stay REAL (live DB). The former shape overlay is retired: the real descriptor carries it, and staleness.scope is deleted by Phase 3 #28 (FLEET-2 ASSEMBLY C3). */

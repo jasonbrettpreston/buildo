@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-global-coverage.js",
   "chain": "permits",
-  "source_fingerprint": "06d8f25d3fefd6b3a5abfa02dcc00af7f45390be07caa419178bebe23bb81fdb",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "9ecf121155ae5bdabf39409c34ba2529501c15e133c3b7c9897ed8beec2f1326",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
-    "calls": 48,
+    "calls": 49,
     "distinct": 30,
-    "utility": 17,
-    "tracer_self_ms": 6.674,
-    "wall_ms": 20209
+    "utility": 18,
+    "tracer_self_ms": 2.187,
+    "wall_ms": 13343
   },
   "statements": [
     {
@@ -35,6 +35,18 @@
       },
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "0ff40e4763f609e5",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
       "error": null
     },
     {
@@ -116,6 +128,61 @@
       "reads": {
         "permits": [
           "enriched_status",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "33fd57edaaaecd5a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "decision",
+          "lifecycle_phase",
+          "linked_permit_num"
+        ],
+        "cost_estimates": [
+          "permit_num",
+          "revision_num"
+        ],
+        "data_quality_snapshots": [
+          "snapshot_date"
+        ],
+        "engine_health_snapshots": [
+          "captured_at"
+        ],
+        "lead_analytics": [],
+        "parcel_buildings": [
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "lot_size_sqm"
+        ],
+        "permit_parcels": [
+          "permit_num",
+          "revision_num"
+        ],
+        "permit_trades": [
+          "is_active",
+          "permit_num",
+          "revision_num"
+        ],
+        "permits": [
+          "latitude",
+          "permit_num",
+          "revision_num"
+        ],
+        "phase_calibration": [
+          "median_days"
+        ],
+        "tracked_projects": [
           "status"
         ]
       },
@@ -246,7 +313,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -339,7 +406,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 21,
+      "rowCount": 25,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -384,61 +451,6 @@
       "error": null
     },
     {
-      "fingerprint": "9df152bf2e388fe5",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "coa_applications": [
-          "decision",
-          "lifecycle_phase",
-          "linked_permit_num"
-        ],
-        "cost_estimates": [
-          "permit_num",
-          "revision_num"
-        ],
-        "data_quality_snapshots": [
-          "snapshot_date"
-        ],
-        "engine_health_snapshots": [
-          "captured_at"
-        ],
-        "lead_analytics": [],
-        "parcel_buildings": [
-          "parcel_id"
-        ],
-        "parcels": [
-          "centroid_lat",
-          "centroid_lng",
-          "lot_size_sqm"
-        ],
-        "permit_parcels": [
-          "permit_num",
-          "revision_num"
-        ],
-        "permit_trades": [
-          "is_active",
-          "permit_num",
-          "revision_num"
-        ],
-        "permits": [
-          "latitude",
-          "permit_num",
-          "revision_num"
-        ],
-        "phase_calibration": [
-          "median_days"
-        ],
-        "tracked_projects": [
-          "status"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "a40b467b78be5fc7",
       "kind": "read",
       "count": 1,
@@ -467,7 +479,19 @@
       "error": null
     },
     {
-      "fingerprint": "ad50bacfd166cef3",
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b0d24198511a3568",
       "kind": "read",
       "count": 1,
       "rowCount": 1,
@@ -488,18 +512,6 @@
       },
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "afd4d45d41748e8c",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 35,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "trade_configurations"
-      ],
       "error": null
     },
     {
@@ -533,23 +545,11 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 2,
+      "count": 3,
       "rowCount": 0,
       "reads": {},
       "writes": {},
       "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "d7d483e99dc2415e",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {},
-      "writes": {},
-      "excluded": [
-        "columns"
-      ],
       "error": null
     },
     {

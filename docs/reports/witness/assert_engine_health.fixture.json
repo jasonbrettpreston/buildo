@@ -31,10 +31,7 @@
           "table_name"
         ]
       },
-      "violations": [
-        "a:engine_health_snapshots.snapshot_date",
-        "a:engine_health_snapshots.table_name"
-      ],
+      "violations": [],
       "errors": []
     }
   }

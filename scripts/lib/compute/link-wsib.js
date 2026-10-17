@@ -60,10 +60,10 @@
  */
 'use strict';
 
-/** S2 — the length floor on the two EXACT-match tiers (LW-D6: exact tolerates a shorter string than fuzzy). */
-const EXACT_LENGTH_FLOOR = 3;
-/** S2 — the length floor inside the fuzzy tier's CTEs (higher: a fuzzy match on a short string is garbage). */
-const FUZZY_LENGTH_FLOOR = 5;
+// S2 — the name length floors are logic variables bound as $5/$6 (V3 ledger E, 2026-10-17; were the
+// EXACT_LENGTH_FLOOR = 3 / FUZZY_LENGTH_FLOOR = 5 literals): link_wsib_exact_name_min_length on the two
+// EXACT-match tiers and link_wsib_fuzzy_name_min_length inside the fuzzy CTEs (LW-D6: exact tolerates a
+// shorter string than fuzzy, because a fuzzy match on a short string is garbage).
 
 /** `execution.tiers[].id` values, in cascade order (highest confidence first). */
 const TIER_IDS = Object.freeze({
@@ -232,14 +232,14 @@ function buildDerivationSql(descriptor, config) {
   FROM wsib_registry w
   JOIN entities e ON e.name_normalized = w.trade_name_normalized
   WHERE w.trade_name_normalized IS NOT NULL
-    AND LENGTH(w.trade_name_normalized) >= ${EXACT_LENGTH_FLOOR}
+    AND LENGTH(w.trade_name_normalized) >= $5::int
 ),
 exact2 AS (
   SELECT w.id AS wsib_id, e.id AS entity_id
   FROM wsib_registry w
   JOIN entities e ON e.name_normalized = w.legal_name_normalized
   WHERE w.legal_name_normalized IS NOT NULL
-    AND LENGTH(w.legal_name_normalized) >= ${EXACT_LENGTH_FLOOR}
+    AND LENGTH(w.legal_name_normalized) >= $5::int
     AND NOT EXISTS (SELECT 1 FROM exact1 x WHERE x.wsib_id = w.id)
 ),
 exact AS (
@@ -256,8 +256,8 @@ trade_matches AS (
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
     AND ${tokenOverlapClause(stopwords, 'w.trade_name_normalized', 'e.name_normalized')}
   WHERE w.trade_name_normalized IS NOT NULL
-    AND LENGTH(w.trade_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+    AND LENGTH(w.trade_name_normalized) >= $6::int
+    AND LENGTH(e.name_normalized) >= $6::int
     AND similarity(w.trade_name_normalized, e.name_normalized) > $1::float
     AND NOT EXISTS (SELECT 1 FROM exact x WHERE x.wsib_id = w.id)
 ),
@@ -269,8 +269,8 @@ legal_matches AS (
     AND LEFT(REGEXP_REPLACE(w.legal_name_normalized, '^(THE|A|AN) ', ''), 1)
       = LEFT(REGEXP_REPLACE(e.name_normalized, '^(THE|A|AN) ', ''), 1)
     AND ${tokenOverlapClause(stopwords, 'w.legal_name_normalized', 'e.name_normalized')}
-  WHERE LENGTH(w.legal_name_normalized) >= ${FUZZY_LENGTH_FLOOR}
-    AND LENGTH(e.name_normalized) >= ${FUZZY_LENGTH_FLOOR}
+  WHERE LENGTH(w.legal_name_normalized) >= $6::int
+    AND LENGTH(e.name_normalized) >= $6::int
     AND similarity(w.legal_name_normalized, e.name_normalized) > $1::float
     AND NOT EXISTS (SELECT 1 FROM exact x WHERE x.wsib_id = w.id)
 ),
@@ -302,12 +302,15 @@ LEFT JOIN derived d ON d.wsib_id = w.id
 WHERE (w.linked_entity_id, w.match_confidence) IS DISTINCT FROM (d.entity_id, d.confidence)
 ORDER BY w.id`,
     // $1 similarity threshold; $2/$3/$4 the tier-1/2/3 confidences, cast to the column's own
-    // NUMERIC(3,2) so a stored value and its re-derived value compare equal (never churn).
+    // NUMERIC(3,2) so a stored value and its re-derived value compare equal (never churn);
+    // $5/$6 the exact/fuzzy name length floors.
     diff_params: [
       threshold,
       tierConfidence(descriptor, config, TIER_IDS.EXACT_TRADE),
       tierConfidence(descriptor, config, TIER_IDS.EXACT_LEGAL),
       tierConfidence(descriptor, config, TIER_IDS.FUZZY),
+      config.link_wsib_exact_name_min_length,
+      config.link_wsib_fuzzy_name_min_length,
     ],
   };
 }
@@ -829,6 +832,4 @@ module.exports.tokenOverlapStopwords = tokenOverlapStopwords;
 module.exports.TOKEN_OVERLAP_CHECK_ID = TOKEN_OVERLAP_CHECK_ID;
 module.exports.ENTITIES_FLAG_SCOPE = ENTITIES_FLAG_SCOPE;
 module.exports.TIER_IDS = TIER_IDS;
-module.exports.EXACT_LENGTH_FLOOR = EXACT_LENGTH_FLOOR;
-module.exports.FUZZY_LENGTH_FLOOR = FUZZY_LENGTH_FLOOR;
 module.exports.buildLinkMeta = buildLinkMeta;

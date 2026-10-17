@@ -126,6 +126,7 @@ function acquireArgs(opts: {
     keyColumn: 'legal_name_normalized',
     coerceKey: (raw: unknown) => (typeof raw === 'string' && raw.length > 0 ? raw : null),
     forced: opts.forced ?? false,
+    targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
     preAcquisitionGate: opts.gate,
     emitSkeleton: {},
     repoRoot: opts.repoRoot,

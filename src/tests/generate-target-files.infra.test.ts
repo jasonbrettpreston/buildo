@@ -95,33 +95,40 @@ describe('generate-target-files — the CLI and the generator (gtf-02)', () => {
         return null;
       };
 
-      // The first registry row that is an inchain key with at least one read column — stable, because
-      // registryRows order is manifest.chains.sources order.
-      const row = reg
-        .registryRows(inputs)
-        .find(
-          (candidate: { slug: string }) =>
-            Object.prototype.hasOwnProperty.call(inchain, candidate.slug) && firstReadColumn(candidate.slug) !== null,
-        );
-      expect(row, 'no registry row with a ledger read column').toBeTruthy();
-
-      const slug = row!.slug;
-      const spec = String(row!.owner_specs[0]);
-      const entry = effective[slug]!;
-      const [table, column] = firstReadColumn(slug)!;
-
       // FLEET-2 MQ-C1 (a): effectiveLedger DROPS a snapshot row with no manifest.scripts entry (ORDER-RETIRED), so an
       // invented slug is no longer an edge. The extra write goes on an EXISTING live, snapshot-only producer that shares
       // a chain with the chosen row and does not already write the column, so the drift is a real new upstream edge.
       type SnapRow = { chains?: string[]; writes?: Record<string, string[]>; [k: string]: unknown };
       const effAll = inputs.ledger.inchain as Record<string, SnapRow & { source?: string }>;
-      const writerSlug = Object.keys(effAll).find((n) => {
-        const e = effAll[n]!;
-        const snapRow = (inchain as Record<string, SnapRow>)[n];
-        return e.source === 'snapshot' && n !== slug && snapRow !== undefined
-          && (e.chains || []).some((c) => entry.chains.includes(c))
-          && !((snapRow.writes || {})[table] || []).includes(column);
-      });
+      const writerFor = (slug: string): string | undefined => {
+        const [table, column] = firstReadColumn(slug)!;
+        const chains = effective[slug]!.chains;
+        return Object.keys(effAll).find((n) => {
+          const e = effAll[n]!;
+          const snapRow = (inchain as Record<string, SnapRow>)[n];
+          return e.source === 'snapshot' && n !== slug && snapRow !== undefined
+            && (e.chains || []).some((c) => chains.includes(c))
+            && !((snapRow.writes || {})[table] || []).includes(column);
+        });
+      };
+
+      // The first registry row (manifest.chains.sources order, so stable) that is an inchain key with a read column
+      // AND a live snapshot-only producer to drift. Once a chain is fully converted it has no snapshot-only producer,
+      // so the row is chosen by that property, not by position (McDonald's Airtight V3: #44 G4 removed assert_schema's
+      // logic_variables read, which was the first such row before).
+      const row = reg
+        .registryRows(inputs)
+        .find(
+          (candidate: { slug: string }) =>
+            Object.prototype.hasOwnProperty.call(inchain, candidate.slug) && firstReadColumn(candidate.slug) !== null
+            && writerFor(candidate.slug) !== undefined,
+        );
+      expect(row, 'no registry row with a ledger read column and a live snapshot-only producer').toBeTruthy();
+
+      const slug = row!.slug;
+      const spec = String(row!.owner_specs[0]);
+      const [table, column] = firstReadColumn(slug)!;
+      const writerSlug = writerFor(slug);
       expect(writerSlug, 'no live snapshot-only producer shares a chain with the chosen row').toBeTruthy();
       const writerRow = (inchain as Record<string, SnapRow>)[writerSlug!]!;
       const drifted = {

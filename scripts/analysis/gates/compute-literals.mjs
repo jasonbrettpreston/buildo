@@ -112,7 +112,6 @@ export function standardFor(moduleBase, ledgerRows) {
 /** Proposed dispositions for the orchestrator's `--list` output. */
 const PROPOSED_UNIT_CONVERSION = /^(MS_PER_DAY|DAYS_PER_JULIAN_YEAR|SQM_TO_SQFT|M_TO_FT)$/;
 const PROPOSED_COORDINATE_REFERENCE = /^SOURCE_CRS$/;
-const PROPOSED_PHYSICAL_CONSTANT = /^DEGREES_PER_METRE_DIVISOR$/;
 
 function astGrepBinary() {
   const candidates = process.platform === 'win32'
@@ -348,7 +347,6 @@ function main(argv) {
       let disposition = 'pending_remediation';
       if (name && PROPOSED_UNIT_CONVERSION.test(name)) disposition = 'unit_conversion';
       else if (name && PROPOSED_COORDINATE_REFERENCE.test(name)) disposition = 'coordinate_reference';
-      else if (name && PROPOSED_PHYSICAL_CONSTANT.test(name)) disposition = 'physical_constant';
       return {
         gate: 'E', step: v.step, file: v.file, item: v.item, disposition,
         why: disposition === 'pending_remediation' ? 'measured 2026-09-26 — rides the step remediation commit' : null,

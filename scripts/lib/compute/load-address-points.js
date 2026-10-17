@@ -63,10 +63,11 @@ function field(record, name) {
  * carried limitation), then the LATITUDE/LONGITUDE fallback. `parsed` is true when the
  * `geometry` cell was non-empty but unparseable (AP-D2's silent swallow, now counted).
  *
+ * @param {{ tag?: (name: string) => void }} [report] the runner's per-record report seam (shapeRecord's seam)
  * @returns {{lat: number, lng: number, parsed: boolean}|null} null when NEITHER source
  *   yields a finite pair — the row is not loadable and `shapeRecord` returns null.
  */
-function resolveCoordinates(record) {
+function resolveCoordinates(record, report) {
   let lat;
   let lng;
   let parsed = false;
@@ -81,7 +82,10 @@ function resolveCoordinates(record) {
         lat = coord[1];
       }
     } catch {
-      // AP-D2 — the swallow is carried verbatim; the counter lives in the check below.
+      // AP-D2 — the per-record tolerance is carried (the row falls back to LATITUDE/LONGITUDE),
+      // but the failure is REPORTED: counted through the runner's per-record report seam and
+      // surfaced by the declared `geom_parse_failures` check (CP-PLANA, R-BZ G13).
+      if (report && typeof report.tag === 'function') report.tag('geom_parse_failure');
       parsed = true;
     }
   }
@@ -106,10 +110,11 @@ function resolveCoordinates(record) {
  * so a fallback row still lands a geom.
  *
  * @param {Record<string, string>} record one parsed CSV row (publisher's verbatim shape)
+ * @param {{ tag?: (name: string) => void }} [seam] the runner's seam; only `tag` is read (AP-D2 parse-failure count)
  * @returns {Record<string, unknown>|null}
  */
-function shapeRecord(record) {
-  const coords = resolveCoordinates(record || {});
+function shapeRecord(record, seam) {
+  const coords = resolveCoordinates(record || {}, seam);
   if (coords == null) return null;
   const addressNumber = field(record, 'ADDRESS_NUMBER');
   const linearNameFull = field(record, 'LINEAR_NAME_FULL');
@@ -305,13 +310,13 @@ function rows_read_floor(ctx) {
   // POST golden read verdict FAIL). `value_min <n>` (verdict.js VALUE_MIN_RE) reads
   // `observation.value` directly instead — the form the file's own R-T addendum built for
   // exactly this shape ("a raw measured value... needed for e.g. pb_rows sanity"). The
-  // descriptor now declares `"limit": "value_min 500000"`; `value` is reported alongside
-  // the existing `detail`/`violations` (kept for the audit row's displayed number and for
-  // any future consumer reading the pre-fix shape) so the check reads TRUE health.
+  // descriptor now declares `"limit": "value_min 500000"`; `value` is the ONLY measured
+  // number reported (CP-PLANA, R-BZ G7): the parallel 0/1 `violations` flag the compute
+  // used to compute against `ctx.config` is gone, so the declared `value_min` row is the
+  // one verdict.
   ctx.report('rows_read_floor', {
     detail: rowsRead,
     value: rowsRead,
-    violations: rowsRead < ctx.config.sources_address_points_floor ? 1 : 0,
   });
 }
 
@@ -323,7 +328,8 @@ function rows_read_floor(ctx) {
  * reports `violations: 0` always and the COUNT in `detail`.
  */
 function geom_parse_failures(ctx) {
-  const n = numberOrNull(ctx.acquired && ctx.acquired.geom_parse_failures) || 0;
+  const tags = (ctx.acquired && ctx.acquired.shaped_tags) || {};
+  const n = numberOrNull(tags.geom_parse_failure) || 0;
   ctx.report('geom_parse_failures', { violations: 0, detail: n });
 }
 

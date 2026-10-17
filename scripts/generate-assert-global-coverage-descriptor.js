@@ -40,8 +40,8 @@ function boundFor(def) {
       return { limit: 'pct >= 90', limit_from_config: 'profiling_coverage_pass_pct', warn_limit: 'pct >= 70', warn_limit_from_config: 'profiling_coverage_warn_pct' };
     case 'calibrated': {
       const out = { limit: 'pct >= 80', limit_from_config: def.passVar };
-      if (def.warnLimitLiteral) out.warn_limit = def.warnLimitLiteral;
-      else { out.warn_limit = 'pct >= 75'; out.warn_limit_from_config = def.warnVar; }
+      // No warnVar = no warn tier (coa_step7_estimated_cost: severityOverride WARN carries the accepted baseline).
+      if (def.warnVar) { out.warn_limit = 'pct >= 75'; out.warn_limit_from_config = def.warnVar; }
       return out;
     }
     case 'external':
@@ -147,12 +147,10 @@ function heartbeatReads(def) {
   return [...byTable.entries()].map(([table, columns]) => ({ table, columns: columns.sort() }));
 }
 
-// inputs.reads.steps — the UNCONVERTED producers of the read columns above (gate #44 (e),
-// measured 2026-10-03 against the effective ledger). The 10 CONVERTED producers
-// (compute_centroids, compute_parcel_cost_estimates, enrich_parcels, geocode_permits,
-// link_massing, link_neighbourhoods, link_parcels, link_wsib, massing, parcels) are NOT
-// declared: the lineage snapshot gives this step no converted producer, so declaring them
-// would widen the LDG-4 KNOWN_GAPS ratchet — deferred to the FLEET-2 ordering-only home.
+// inputs.reads.steps — every producer of the read columns above, verbatim the set gate #44 (e)
+// derives from the effective ledger. The 12 sources-chain producers (the last 12 entries) were
+// deferred to the FLEET-2 ordering-only home; FLEET-2 landed, so they are declared (V3 #44 G2,
+// 2026-10-17; every one precedes this step in chains.sources).
 // The four RETIRED slugs (no manifest.scripts entry: assert_pre_permit_aging, classify_scope_class, classify_scope_tags, create_pre_permits) are not declared: the effective ledger drops them (MQ-C1 (a), FLEET-2), so declaring them is #44 (e) extra.
 const READ_STEPS = [
   'backfill_realtor_permit_trades', 'builders', 'classify_coa_scope',
@@ -162,6 +160,9 @@ const READ_STEPS = [
   'compute_phase_calibration', 'compute_timing_calibration_v2', 'compute_trade_forecasts',
   'enrich_coa_zoning', 'enrich_permits', 'link_coa', 'link_coa_to_parcels',
   'link_similar', 'permits', 'update_tracked_projects',
+  'compute_centroids', 'compute_parcel_cost_estimates', 'enrich_parcels', 'geocode_permits',
+  'link_massing', 'link_neighbourhoods', 'link_parcels', 'link_wsib', 'massing', 'neighbourhoods',
+  'parcels', 'refresh_snapshot',
 ];
 
 /** Leading column of a vocab triple's filter constant (applied by vocab-coverage.js in its WHERE). */
@@ -219,9 +220,8 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
   // Query-only tables/columns not surfaced as a named field/value (§1.2 of the report).
   addCol('permit_type_classifications', 'permit_type');
   addCol('permit_type_classifications', 'class');
-  addCol('pipeline_runs', 'records_meta');
-  addCol('pipeline_runs', 'pipeline');
-  addCol('pipeline_runs', 'started_at');
+  // pipeline_runs is NOT declared: compute reads producer runs through ctx.producer (a runner-owned
+  // relation the resolver always excludes, so the declaration could never be witnessed; V3 #44 G4).
   addCol('information_schema.columns', 'table_name');
   addCol('information_schema.columns', 'table_schema');
   addCol('trades', 'id');
@@ -286,7 +286,7 @@ function buildDescriptor(CHECK_DEFS, LOGIC_VAR_DEFS) {
   // config.logic_variables[] — 20 vars (6 pre-existing + 14 new, report §2.4), all
   // verdict-affecting -> on_invalid: "fail" (Rule 3).
   // -------------------------------------------------------------------------
-  const configLogicVariables = LOGIC_VAR_DEFS.map((v) => ({ name: v.name, min: v.min, max: v.max, on_invalid: 'fail' }));
+  const configLogicVariables = LOGIC_VAR_DEFS.map((v) => ({ name: v.name, min: v.min, max: v.max, ...(v.enum ? { enum: v.enum } : {}), on_invalid: 'fail' }));
 
   return {
     identity: {

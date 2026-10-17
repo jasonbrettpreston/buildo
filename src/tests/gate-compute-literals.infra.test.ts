@@ -97,23 +97,16 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
       expect(findings).toEqual([]);
     });
 
-    it('T2b2: assert-schema.js yields ONLY compute-no-literal-url hits (9) among the 11 gate-E ids', () => {
-      // The real step-1 compute module is NOT gate-E-clean: it holds nine literal
-      // `https://` CKAN endpoints — the measured G10 `compute-no-literal-url`
-      // sites that receive ledger rows at Step 3. Until those rows exist this is
-      // RED by design, so the sites stay visible here rather than disappearing
-      // behind a "clean module" claim. What this locks is the SHAPE: no other
-      // gate-E id may fire on this file, so a future rule regression cannot hide
-      // behind the nine known URL findings.
+    it('T2b2: assert-schema.js yields 0 gate-E hits — its nine CKAN endpoints live in the descriptor (CP-PLANA, R-BZ G10)', () => {
+      // The real step-1 compute module held nine literal `https://` CKAN endpoints —
+      // the measured G10 `compute-no-literal-url` sites. CP-PLANA moved them,
+      // byte-identical, into scripts/quality/assert-schema.descriptor.json
+      // `inputs.reads.externals[].url`, read through `ctx.descriptor`. A URL literal
+      // (or any other gate-E id) re-appearing here is a regression, not a ledger row.
       const findings = gateE.scanGateE(['scripts/lib/compute/assert-schema.js']);
-      expect(findings.length).toBe(9);
-      for (const f of findings as { ruleId: string }[]) {
-        expect(f.ruleId).toBe('compute-no-literal-url');
-      }
-      // Every one of the nine is a real gate-E id (not a pre-existing rule that
-      // scanGateE happens to keep), and it is the URL id — nothing else.
-      const seen = new Set(findings.map((f: { ruleId: string | undefined }) => f.ruleId));
-      expect([...seen]).toEqual(['compute-no-literal-url']);
+      expect(findings).toEqual([]);
+      // The reverse direction stays proven by T2a: the known-bad fixture still fires
+      // compute-no-literal-url, so the rule itself is not what went quiet.
       expect(gateE.GATE_E_RULE_IDS).toContain('compute-no-literal-url');
     });
 
@@ -199,10 +192,14 @@ describe('gate E — no hard-coded compute literals (SQL INTERVAL/date, module-l
   // T4 — the live scan actually finds something (a suite whose fleet scan
   // silently matches nothing proves nothing — Spec 121 §12b.6).
   // -------------------------------------------------------------------------
-  it('T4: the live compute corpus has ≥1 real gate-E finding (all ledger-allowed)', () => {
+  // STRICT ZERO reached 2026-10-17 (McDonald's Airtight V3 ledger E, operator y): the last 24 gate-E rows
+  // closed, so the live scan must find NOTHING; the scan is proven non-vacuous by the real corpus size
+  // here and by the fixture cases above (which must still fire).
+  it('T4: the live compute corpus is scanned (non-vacuous) and has ZERO gate-E findings (strict zero, V3 ledger E)', () => {
     const files = gateE.loadComputeFiles(REPO_ROOT);
+    expect(files.length, 'the scan must cover the real compute corpus').toBeGreaterThan(20);
     const findings = gateE.scanGateE(files, REPO_ROOT);
-    expect(findings.length).toBeGreaterThan(0);
+    expect(findings).toEqual([]);
   });
 });
 
@@ -249,8 +246,10 @@ describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
 
   it('V5: standardFor speaks V2 for a frozen module, V3 for a clean one', () => {
     const rows = loadRows();
-    // enrich-parcels left the frozen set when CP-S1 closed its purity rows (2026-10-16); load-zoning is still frozen.
-    expect(gateE.standardFor('load-zoning', rows)).toBe('V2');
+    // enrich-parcels left the frozen set when CP-S1 closed its purity rows (2026-10-16); load-zoning left it
+    // when R-CY closed its G12 row (2026-10-17). refresh-snapshot is still frozen (its CP-PERMITS row).
+    expect(gateE.standardFor('refresh-snapshot', rows)).toBe('V2');
+    expect(gateE.standardFor('load-zoning', rows)).toBe('V3');
     expect(gateE.standardFor('load-wsib', rows)).toBe('V3');
   });
 

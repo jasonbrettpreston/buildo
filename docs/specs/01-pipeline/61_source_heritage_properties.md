@@ -446,7 +446,7 @@ Write per-resource `last_modified`, `etag`, `content_hash` into `records_meta.he
 - L14 empty-source guard: first-run-empty -> FAIL; subsequent-run-empty -> WARN
 - Advisory lock 62 contention
 
-### 4.3 Enrich-side tests -- `src/tests/enrich-heritage.infra.test.ts`
+### 4.3 Enrich-side tests -- `src/tests/db/enrich-heritage.db.test.ts`
 
 - L23 empty-source guard: 3-tier (no prior run / zero feature_count / external truncation)
 - §11 LATERAL LIMIT 1 + tie-break: 3 Part IV points equidistant -> Levenshtein -> spatial -> hp.id cascade

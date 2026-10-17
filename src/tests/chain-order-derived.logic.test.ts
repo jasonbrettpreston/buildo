@@ -214,9 +214,9 @@ describe('chainOrderViolations — live manifest × effective ledger', () => {
     const r = ledger.chainOrderViolations(chains, eff);
     console.info(`[LDG-10 class 5] ORDER-BLIND: ${r.blind.length}; ORDER-UNLEDGERED: ${r.unledgered.length}`);
     for (const e of [...r.blind, ...r.unledgered]) console.info(`  ${e}`);
-    // chain.logic.test.ts assertion "enrich_parcels == load_zoning + 1" stays hand-written until this
-    // missing declaration lands (P1-C8a): enrich_parcels reads zoning_bylaw_areas with no columns.
-    expect(r.blind).toContain('ORDER-BLIND:sources:enrich_parcels:zoning_bylaw_areas');
+    // CLOSED 2026-10-17 (V3 #44 G12): enrich_parcels now declares every zoning layer table with the
+    // columns its trace reads, so the zoning_bylaw_areas edge is no longer blind.
+    expect(r.blind).not.toContain('ORDER-BLIND:sources:enrich_parcels:zoning_bylaw_areas');
   });
 
   // Replaces chain.logic.test.ts "enrich_ravines == link_parcels + 1" (Spec 122 §6.5: false — the

@@ -1,0 +1,287 @@
+{
+  "contract_version": 1,
+  "step": "assert_engine_health",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/assert_engine_health/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added duplicate_snapshot_key_count; dropped none), so entries at the same index compare different invariants (coa/deep_scrapes/permits/sources/standalone: absent → {\"name\":\"duplicate_snapshot_key_count\",\"value\":\"0\"})."
+    },
+    {
+      "key": "meta[].reads.coa_applications",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.permit_inspections",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "meta[].reads.pg_stat_user_tables[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (coa/deep_scrapes/permits/sources/standalone: absent → \"last_autovacuum\")."
+    },
+    {
+      "key": "meta[].writes.engine_health_snapshots[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is listed with different columns/ids (coa/deep_scrapes/permits/sources/standalone: \"table_name\" → \"n_live_tup\"; \"n_live_tup\" → \"n_dead_tup\"; +7 more)."
+    },
+    {
+      "key": "pipeline_runs[].error_message",
+      "why": "report L264: genuine fix — the old code conflated a WARN message into the ERROR column; the runner now sets error_message only from a deadline, blocking FAIL or thrown error (scripts/lib/step/index.js:6912, :7102, :7130)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (standalone: \"Engine Health\" → \"Engine Health & Volume Volatility\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (standalone: 16 → 0)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → {\"metric\":\"insp_update_insert_ratio\",\"observed\":\"before_w…; absent → {\"metric\":\"coa_dead_tuple_pct\",\"observed\":\"before_write\",…; +3 more)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].metric",
+      "why": "report L254: the old ad hoc row names (tables_checked, tables_vacuumed, …) are replaced by the declared checks[] (dead_tuple_ratio_high, seq_scan_ratio_high, …), so rows compare different metrics by index."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → \"before_write\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: absent → \"check\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].status",
+      "why": "report L254: rows are the declared checks with real PASS/WARN statuses (verdict.js checkRow) where the legacy rows were INFO-only counts."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (standalone: null → \"value_max 0.1\"; null → \"value_max 0.8\"; +1 more)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.rows[].value",
+      "why": "report L254: declared check values are the offending-table lists (e.g. [{ratio, table}]) where the legacy rows held counts (90, 0)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.audit_table.verdict",
+      "why": "report L296: live DB state, not code — the POST has two WARN rows (seq_scan_ratio_high, update_ping_pong_high: parcels ratio 23.56) where the PRE had one."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.checks_warned",
+      "why": "report L296: checks_warned 1 → 2 is live DB state, not code — the POST's two WARN rows are seq_scan_ratio_high and update_ping_pong_high."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → {\"engine_health_dead_tuple_min_rows\":1000,\"engine_health_…)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[]",
+      "why": "report L257: engine_health[] is one pg_stat_user_tables snapshot per table; the set of tables differs (90 → 126 tables, incl. the _backup_* tables created by later heals), so entries are added and shift."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].dead_ratio",
+      "why": "report L257: pg_stat_user_tables counters are cumulative/monotonic live stats (descriptor write_discipline.idempotent_rerun_why); the PRE and POST are different snapshots over a different table set."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].idx_scan",
+      "why": "report L257: pg_stat_user_tables counters are cumulative/monotonic live stats; the PRE and POST are different snapshots over a different table set (90 → 126 tables)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].n_dead_tup",
+      "why": "report L257: pg_stat_user_tables counters are cumulative/monotonic live stats; the PRE and POST are different snapshots over a different table set (90 → 126 tables)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].n_live_tup",
+      "why": "report L257: pg_stat_user_tables counters are live stats; the PRE and POST are different snapshots over a different table set (90 → 126 tables)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].seq_ratio",
+      "why": "report L257: derived from cumulative pg_stat_user_tables counters; the PRE and POST are different snapshots over a different table set (90 → 126 tables)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].seq_scan",
+      "why": "report L257: pg_stat_user_tables counters are cumulative/monotonic live stats; the PRE and POST are different snapshots over a different table set (90 → 126 tables)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.engine_health[].table_name",
+      "why": "report L257: the snapshot covers every user table, sorted by name; the POST set (126) adds the _backup_* tables created by later heals, so names shift by index."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → [])."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → \"owned\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → 0)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.records_updated",
+      "why": "report L260: new records_meta field feeding the declared counters.records_updated source; the value (snapshot rows changed) varies by capture time."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.tables_checked",
+      "why": "live DB state: the database holds 126 user tables at the POST vs 90 at the PRE (the _backup_* heal tables and later migrations)."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.tables_vacuumed",
+      "why": "report L259/L282: the legacy tables_vacuumed count is replaced by the declared vacuumed_tables list; the old key is absent in the POST."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the run's pipeline_runs row; the legacy PRE never emitted it (standalone: absent → \"recorded_with_warnings\")."
+    },
+    {
+      "key": "pipeline_runs[].records_meta.warnings[]",
+      "why": "warning strings are now \"<check_id>: <value>\" (verdict.js:440-441) for the declared checks (seq_scan_ratio_high, update_ping_pong_high) instead of the legacy prose; report L296 live DB state."
+    },
+    {
+      "key": "pipeline_runs[].records_new",
+      "why": "report L265: genuine fix — the old ledger UPDATE never set the counter columns (0/0/0); the declared counters give records_new null (no declared new-row source)."
+    },
+    {
+      "key": "pipeline_runs[].records_total",
+      "why": "report L265: genuine fix — the old ledger UPDATE never set records_total; the declared counter is tables checked (126 live tables at the POST)."
+    },
+    {
+      "key": "pipeline_runs[].records_updated",
+      "why": "report L265: genuine fix — the old ledger UPDATE never set records_updated; the declared counter is snapshot rows changed (10 at this capture)."
+    },
+    {
+      "key": "pipeline_runs[].status",
+      "why": "the runner stamps completed_with_warnings when WARN rows fire (seq_scan_ratio_high, update_ping_pong_high; report L296); the legacy ledger wrote completed."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [assert_engine_health] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (coa 97→3 lines; deep_scrapes 97→2 lines; permits 100→2 lines; sources 97→2 lines; standalone 97→2 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (coa/deep_scrapes/permits/sources/standalone: \"CoA Engine Health\" → \"Engine Health & Volume Volatility\"; \"Engine Health\" → \"Engine Health & Volume Volatility\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (coa/permits/sources/standalone: 9 → 14; 16 → 23; +2 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: absent → {\"metric\":\"duplicate_snapshot_key_count\",\"observed\":\"befo…; absent → {\"metric\":\"inputs_nonempty\",\"status\":\"INFO\",\"threshold\":\"…; +3 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (coa.json: added dead_tuple_ratio_high, seq_scan_ratio_high, update_ping_pong_high, coa_dead_tuple_pct, engine_health_write_failed, duplicate_snapshot_key_count, inputs_nonempty; dropped live_rows, dead_rows, dead_tuple_pct, update_insert_ratio, last_autovacuum). Measured coa/deep_scrapes/permits/sources/standalone: \"live_rows\" → \"dead_tuple_ratio_high\"; \"dead_rows\" → \"seq_scan_ratio_high\"; +10 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: absent → \"before_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (coa.json: added dead_tuple_ratio_high, seq_scan_ratio_high, update_ping_pong_high, coa_dead_tuple_pct, engine_health_write_failed, duplicate_snapshot_key_count, inputs_nonempty; dropped live_rows, dead_rows, dead_tuple_pct, update_insert_ratio, last_autovacuum). Measured coa/deep_scrapes/permits/sources/standalone: \"INFO\" → \"PASS\"; \"INFO\" → \"WARN\"; +1 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (coa/deep_scrapes/permits/sources/standalone: null → \"value_max 0.1\"; null → \"value_max 0.8\"; +7 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (coa.json: added dead_tuple_ratio_high, seq_scan_ratio_high, update_ping_pong_high, coa_dead_tuple_pct, engine_health_write_failed, duplicate_snapshot_key_count, inputs_nonempty; dropped live_rows, dead_rows, dead_tuple_pct, update_insert_ratio, last_autovacuum). Measured coa/deep_scrapes/permits/sources/standalone: 0 → [{\"ratio\":0.0979,\"table\":\"permits\"},{\"ratio\":0.0965,\"tabl…; 0 → [{\"ratio\":1,\"table\":\"_wsib_isgta_bak_20261001\"},{\"ratio\":…; +8 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "report L296: live DB state, not code — two WARN rows (seq_scan_ratio_high, update_ping_pong_high: parcels ratio 23.56) in every POST."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "report L296: checks_warned 1 → 2 is live DB state — the POST's two WARN rows are seq_scan_ratio_high and update_ping_pong_high."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → {\"engine_health_dead_tuple_min_rows\":1000,\"engine_health_…)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[]",
+      "why": "report L257: one pg_stat_user_tables snapshot per user table; the table set grew 90 → 126 (incl. the _backup_* heal tables), so entries are added and shift."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].dead_ratio",
+      "why": "report L257: cumulative/monotonic pg_stat_user_tables live stats (descriptor idempotent_rerun_why); different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].idx_scan",
+      "why": "report L257: cumulative/monotonic pg_stat_user_tables live stats; different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].n_dead_tup",
+      "why": "report L257: cumulative/monotonic pg_stat_user_tables live stats; different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].n_live_tup",
+      "why": "report L257: live pg_stat_user_tables stats; different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].seq_ratio",
+      "why": "report L257: derived from cumulative pg_stat_user_tables counters; different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].seq_scan",
+      "why": "report L257: cumulative/monotonic pg_stat_user_tables live stats; different snapshot over a different table set (90 → 126)."
+    },
+    {
+      "key": "summary.records_meta.engine_health[].table_name",
+      "why": "report L257: every user table sorted by name; the POST set (126) adds the _backup_* heal tables, so names shift by index."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.records_updated",
+      "why": "declared emit (descriptor emits[] key \"records_updated\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (coa/deep_scrapes/permits/sources/standalone: absent → 57; absent → 11; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.tables_checked",
+      "why": "live DB state: 126 user tables at the POST vs 90 at the PRE (the _backup_* heal tables and later migrations)."
+    },
+    {
+      "key": "summary.records_meta.tables_vacuumed",
+      "why": "report L259/L282: the legacy tables_vacuumed count is replaced by the declared vacuumed_tables list; the old key is absent in the POST."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (coa/deep_scrapes/permits/sources/standalone: absent → \"recorded_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.warnings[]",
+      "why": "warning strings are now \"<check_id>: <value>\" (verdict.js:440-441) for the declared checks instead of the legacy prose; report L296 live DB state."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "declared counter = tables checked: 126 live user tables at the POST vs 90 at the PRE (report L262 monotonic drift)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "report L262: snapshot rows changed varies with capture time (monotonic pg_stat drift); 6/5 at the PRE vs 57/11 at the POST."
+    },
+    {
+      "key": "table_state[]",
+      "why": "the POST capture's table list is the descriptor's declared write tables (capture-step-golden.js table_specs), the legacy PRE captured []; POST [engine_health_snapshots] (coa/deep_scrapes/permits/sources/standalone)."
+    }
+  ]
+}

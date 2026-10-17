@@ -1,0 +1,18 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "{sql}",
+          "DELETE FROM parcel_abutments"
+        ],
+        [
+          "{harness}"
+        ]
+      ],
+      "why": "run 1 of a net-new step must be nonzero (#38): DELETE FROM parcel_abutments is the descriptor recovery.reset, then a plain run rebuilds every pair (V3 fleet night 2026-10-16 run-night.sh reset)."
+    }
+  }
+}

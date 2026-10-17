@@ -89,6 +89,42 @@
         },
         {
           "step": "update_tracked_projects"
+        },
+        {
+          "step": "compute_centroids"
+        },
+        {
+          "step": "compute_parcel_cost_estimates"
+        },
+        {
+          "step": "enrich_parcels"
+        },
+        {
+          "step": "geocode_permits"
+        },
+        {
+          "step": "link_massing"
+        },
+        {
+          "step": "link_neighbourhoods"
+        },
+        {
+          "step": "link_parcels"
+        },
+        {
+          "step": "link_wsib"
+        },
+        {
+          "step": "massing"
+        },
+        {
+          "step": "neighbourhoods"
+        },
+        {
+          "step": "parcels"
+        },
+        {
+          "step": "refresh_snapshot"
         }
       ],
       "tables": [
@@ -445,14 +481,6 @@
           "table": "phase_stay_calibration",
           "columns": [
             "permit_type"
-          ]
-        },
-        {
-          "table": "pipeline_runs",
-          "columns": [
-            "pipeline",
-            "records_meta",
-            "started_at"
           ]
         },
         {
@@ -2508,7 +2536,7 @@
         "field": "coa_applications.estimated_cost"
       },
       "limit": "pct >= 80",
-      "severity": "FAIL",
+      "severity": "WARN",
       "blocking": false,
       "when": "post",
       "chains": [
@@ -2522,8 +2550,7 @@
           "ref": "docs/specs/01-pipeline/49_data_completeness_profiling.md"
         }
       },
-      "limit_from_config": "profiling_coverage_pass_pct",
-      "warn_limit": "pct >= 0"
+      "limit_from_config": "profiling_coverage_pass_pct"
     },
     {
       "id": "coa_cost_coverage_gate_accepted",
@@ -8201,6 +8228,34 @@
         "name": "external_coverage_warn_pct",
         "min": 0,
         "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_global_coverage_pre_permit_aged_months",
+        "min": 1,
+        "max": 120,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_global_coverage_engine_health_window_hours",
+        "min": 1,
+        "max": 168,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_global_coverage_forecast_lookback_years",
+        "min": 1,
+        "max": 20,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "pipeline_timezone",
+        "min": "none",
+        "max": "none",
+        "enum": [
+          "UTC",
+          "America/Toronto"
+        ],
         "on_invalid": "fail"
       }
     ],

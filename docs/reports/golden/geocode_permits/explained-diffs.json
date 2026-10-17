@@ -1,0 +1,103 @@
+{
+  "contract_version": 1,
+  "step": "geocode_permits",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/geocode_permits/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[].value",
+      "why": "address_points-backed invariant 525,346 → 525,699: address_points was reloaded after the 2026-09-16 PRE (525,699 rows in golden/address_points/post, measured); report L759 records the same drift."
+    },
+    {
+      "key": "meta[].reads.address_points[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (permits/sources/standalone: absent → \"retired_at\")."
+    },
+    {
+      "key": "meta[].reads.permits[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (permits/sources/standalone: absent → \"geocoded_at\")."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [geocode_permits] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (permits 6→6 lines; sources 6→6 lines; standalone 6→6 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "summary.records_meta.address_points_loaded",
+      "why": "declared emit (descriptor emits[] key \"address_points_loaded\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → 525372)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (permits/sources/standalone: 6 → 8; 3 → 4; +1 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources/standalone: absent → {\"metric\":\"lat_xor_lng_null_count\",\"observed\":\"after_writ…; absent → {\"metric\":\"geocoded_at_set_but_no_geo_id_count\",\"observed…; +2 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources/standalone: absent → \"check\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (permits/sources/standalone: null → \"viol == 0\"; \">= 95%\" → \"pct >= 95\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (permits.json: added lat_xor_lng_null_count, geocoded_at_set_but_no_geo_id_count, coords_outside_toronto_bbox_count, inputs_nonempty; dropped none). Measured permits/sources/standalone: 0 → 4; \"91.3%\" → 91.28155477365574; +1 more."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → 1)."
+    },
+    {
+      "key": "summary.records_meta.code_version",
+      "why": "declared emit (descriptor emits[] key \"code_version\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (permits/sources/standalone: absent → \"none\")."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → {\"geocode_permits_coverage_warn_pct\":95,\"geocode_permits_…)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → \"geocoded_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (permits/sources/standalone: absent → [\"geocode_coverage: 91.28155477365574\"])."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "permits scenario: the POST run = the first geocode POST of the 2026-10-16 night (recapture order) and geocoded 4 permits; later scenarios 0; the PRE run found 0 — the zero-work steady state is 33/40 runs (report L267)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "permits scenario = the first geocode POST of the 2026-10-16 night (recapture order): 4 permits updated (report L267: non-zero runs are normal); the PRE run updated 0."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "report L759: data drift between the 2026-09-16 PRE and the POST, not code — the hash covers permit_num, revision_num, latitude, longitude, and address_points was reloaded since (permits row count 254,082 unchanged)."
+    }
+  ]
+}

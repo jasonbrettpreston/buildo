@@ -769,7 +769,7 @@ Every site answers exactly one token: `PASS | FAIL:<CODE>:<file>:<line>`. `<CODE
 | G4 | `compute-ddl-txn` | R-BZ (R-CA) | DDL, txn control, `VACUUM`/`ANALYZE`, `SET LOCAL`, advisory locks, `.connect(`/`.release(` | `compute-purity.mjs` SQL pass + AST call |
 | G5 | `compute-direct-write` | R-BZ (R-CA) | DML text reaching `<x>.query(` inside compute. Closed seam set: `ctx.joinUpdate`, `ctx.flushBatch`, `ctx.retract`, `ctx.stream`, `ctx.exec` (Spec 124 R-CK, counter-neutral), `ctx.tempTable` (compute owns the CTAS SELECT, the seam owns the DDL wrapper; S2), `ctx.readSnapshot` (R-CH, read-only), the returned `write_plan` (R-CD), and `*_sql` properties of the returned plan object. Anything else, including unresolved def-use, is FAIL | `compute-purity.mjs` def-use walk |
 | G6 | `compute-no-sql-clock` | R-BZ | SQL clock literals; **extends** `compute-no-sql-interval-literal` (same string shape) | ast-grep [`compute-shape.yml`](scripts/ast-grep-rules/compute-shape.yml) |
-| G7 | `compute-decides` | R-BZ | `<`/`<=`/`>`/`>=` with a `ctx.config` operand or alias (e.g. `cfg = ctx.config \|\| {}`); compute only | `compute-purity.mjs` alias table |
+| G7 | `compute-decides` | R-BZ | `<`/`<=`/`>`/`>=` with a `ctx.config` operand or alias (e.g. `cfg = ctx.config \|\| {}`; a value alias inside a check body, Spec 124 R-DC); compute only | `compute-purity.mjs` alias table |
 | G8 | `compute-halt` | R-BZ | A `throw` reachable from a declared `enrich_hooks.contract_read`/`defer_scope` export | `compute-purity.mjs` call graph |
 | G9 | `compute-no-local-numeric-const` | R-BZ | A function-scope tunable const; **extends** `compute-no-module-numeric-const` to function scope (as a sibling id, so the existing rule's row keys stay stable) | ast-grep `compute-shape.yml` |
 | G10 | `compute-no-literal-url` | R-BZ | Any `http(s)://` literal; **extends** `compute-no-literal-url-tunable`; the fix is `externals[].url` | ast-grep `compute-shape.yml` |
@@ -805,12 +805,13 @@ Every new step and every conversion walks this list before its first capture. Ea
 4. **Invalidators:** an `outputs.invalidates` row is declared by the column's WRITER (#44 arm). `by:"trigger"` means a trigger that NULLs the column, checked in the live function body (MQ-D3, live only); a trigger that deletes rows is a presence-only `guards.requires` (Spec 124 R-CR).
 5. **Emits:** every key the compute emits is a declared `emits[]` entry (gate C, measured at capture).
 6. **`explained-diffs.json`** exists; `{"contract_version":1,"diffs":[]}` for a net-new step (#40; load_coa_notices precedent).
-7. **Finish the descriptor, notes and compute before capturing.** Any edit stales `source_fingerprint` (#44 STALE, G8) and forces a recapture. A recapture over a loaded target needs the step's own reset or force path to produce a nonzero capture (#38; coa `.forced.json`; LBMA-D7: a content-hash skip does not see an empty target).
+7. **Finish the descriptor, notes and compute before capturing.** Any edit stales `source_fingerprint` (#44 STALE, G8) and forces a recapture. A recapture over a loaded target needs the step's own reset or force path to produce a nonzero capture (#38; coa `.forced.json`). Superseded for empty targets by Spec 124 R-DD: every source-version skip probes the first write target, and an empty target LOADs with reason `target_empty`.
 8. **The harness overwrites only tracked goldens:** stage the previous capture by path before `--overwrite`.
 9. **Runbook stop bounds quote the governing spec's population** (Spec 65:302 bounds residential lots, not all parcels).
 10. **Host:** local Supabase DSM `mmap`; worktree DB env via `DOTENV_CONFIG_PATH` for one process; `db:generate` on a restored DB is spliced, not taken whole (`docs/runbook/dev_host_setup.md` §4).
 11. **A recapture repeats the original capture's flags.** A capture records its own `invariants_file`; retaking it without `--invariants=<that file>` falls back to the descriptor's invariants and drops the rest, which G8 reads as unexplained diffs (refresh_snapshot, H6 A2, 2026-10-16). Read `invariants_file`, `chain` and `args` from the previous capture first.
-12. **A recapture also replays what the capture does not store in `args`** (V3 fleet night, 2026-10-16). (a) Harness projections: a `table_specs[].columns_source`/`order_source` of `"arg"` means the original passed `--table-columns`/`--table-order`; rebuild them from the previous capture, or the descriptor default re-hashes clock columns (`updated_at`, `last_seen_at`, `linked_at`) and G8 fails (`capture-step-golden.js:487-498`). (b) Brackets: a nonzero capture taken inside a perturbation bracket (`ingestor-forced-cohort.js`, the `*-cohort-differential.js` scripts, `link-massing-healing-cohort.js`) is replayed through that bracket with its committed cohort, never as a plain run (#38). (c) Inputs: a filesystem-source step needs its file in this worktree's `data/` (gitignored; clone it in with `cp -c`), or it skips with `no_source_file`.
+12. **A recapture also replays what the capture does not store in `args`** (V3 fleet night, 2026-10-16). (a) Harness projections: a `table_specs[].columns_source`/`order_source` of `"arg"` means the original passed `--table-columns`/`--table-order`; rebuild them from the previous capture, or the descriptor default re-hashes clock columns (`updated_at`, `last_seen_at`, `linked_at`) and G8 fails (`capture-step-golden.js:487-498`). (b) Brackets: a nonzero capture taken inside a perturbation bracket (`ingestor-forced-cohort.js`, the `*-cohort-differential.js` scripts, `link-massing-healing-cohort.js`) is replayed through that bracket with its committed cohort, never as a plain run (#38). (c) Inputs: a filesystem-source step needs its file in this worktree's `data/` (gitignored; clone it in with `cp -c`), or it skips with `no_source_file`. (d) A fleet night runs only `node scripts/analysis/capture-step-golden.js --replay-all` output, executed as printed (Spec 124 R-CZ); a capture a plain harness call cannot retake has an entry in `docs/reports/golden/<slug>/recapture.json` naming every flag, and #38 is RED without it. (e) A recapture regenerates traces under the G9–G11 resolver (Spec 124 R-DG, #44); declare any new ORDER BY / DISTINCT ON read the same night, never a ledger row.
+13. **A test that needs Postgres is `*.db.test.ts`** (McDonald's Airtight V3, B5, Spec 124 R-DH, 2026-10-17): under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`. `npm run test` excludes `**/*.db.test.ts` and `npm run test:db` runs `.db.test.ts`; never a per-file package.json list (`step-conformance.infra`).
 
 
 ---
@@ -822,3 +823,25 @@ Moved from Spec 122 — V3 fleet night (QUEUE 2026-10-16): Spec 122 had ~80 B of
 **RE-FREEZE #32 — `inputs.reads.externals[].format` "pdf_document_set" + `externals[].manifest` + `externals[].pdf` (2026-10-07, WF1 load_coa_notices, Spec 129 §11):** a pinned, sha256-verified PDF document SET read in memory; one additive arm in `acquire.js` (`acquirePdfDocumentSet`) and one dispatch branch in `runIngestPhase` (compute seams `shapeDocument` / `reconcileDocuments`); every other format byte-identical. Detail 122a §A24; register row R-BY.
 
 **RE-FREEZE #33 — `outputs.writes[].columns[].materiality` (2026-10-08, WF3 parcels geom drift Commit 2, Spec 55):** an opt-in per-column change predicate `{sql_function, tolerance_from_config, carries}`. The codegen renders `M = public.<fn>(<table>.<col>, EXCLUDED.<col>)` as the column's own SET, the carried columns' SETs, every `set_null_on_change_of` arm watching it, and its WHERE term. `validate.js` adds 7 refusals. Every axis-free target renders byte-identical (the 0t/0u ravines/address_points pins and step-library T5/T7 are unchanged). Adopted by parcels only (`geom`, carrying `geometry`). Detail 122a §A25; register row R-BX.
+
+
+---
+
+## Appendix §A29 — RE-FREEZE #34–#35 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-16
+
+Moved from Spec 122 — CP-S5 (2026-10-16): Spec 122 was over its arm (iv) byte budget with the RE-FREEZE #36 entry (guards.requires kind srid). #34 and #35 stay in force. New RE-FREEZE entries are still added to Spec 122 §8.
+
+**RE-FREEZE #34 — compute-purity Phase 2 seams S1–S4 + S1-P + F3-2 (2026-10-14, H5 fleet recapture night 4):**
+- **Producer pins (S1-P, R-CB):** a closed `op`, plus `statuses`, `meta_object` and `bound`/`of`/`limit_from_config`, with if/then exclusions. The runner evaluates them before compute (`index.js measureProducerPins` → `producer.js evaluatePins`). `x-trust` moves from enrich-ravines to `producer.js`.
+- **`execution.read_gucs` (R-CF).**
+- **`maintenance` gains `select: dead_tuple_ratio` (R-CG).**
+- **A string `enum` logic-variable kind (R-CE, F3-2).**
+
+**RE-FREEZE #35 — `staleness.pins[].op` gains `not_failed` (2026-10-16, V3 fleet night, CP-S1; Spec 124 R-CW):** one enum value plus one if/then rule (valid only on stamp `pipeline_runs.status`; requires `statuses`, forbids `equals`), evaluated by `producer.js` before compute. Replaces enrich_parcels' #12c compute throw. Recapture paid by the V3 fleet night (with the CP-S1 library change).
+
+## Appendix §A30 — Spec 122 sentences superseded by McDonald's Airtight V3 (2026-10-17)
+
+Spec 122 has no byte room, so these supersessions are recorded here. The Spec 124 rows are the live rules.
+- **122:1041 (f), "Report-only: #46 SCHEMA-HOMES":** superseded by Spec 124 R-DB. R-BJ/R-BK are enforced by #44 (a)/(c), and #46 is a labelled adoption print.
+- **The legacy G8 report-citation channel** (any Spec 122 text that describes a diff explained by its leaf name in assessment prose): retired by Spec 124 R-DA. `explained-diffs.json` is the only channel.
+- **Standard versions:** McDonald's Airtight V3 is the final standard (Spec 124 R-DF). Where Spec 122 says V2 or "Airtight", read V3 for every future step.

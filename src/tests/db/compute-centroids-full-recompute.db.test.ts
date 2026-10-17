@@ -127,13 +127,15 @@ describe.skipIf(!dbAvailable())('CC-D3 — compute_centroids FULL-mode repair (g
       expect(sql.drift_select_sql).toMatch(/ST_Centroid\(geom\)/);
     });
 
-    it('batch_size falls back to a sane default and reads execution.batch_size_from_config when config supplies it', () => {
+    // R-DE (i) (McDonald's Airtight V3, operator y 2026-10-17): the compute no longer invents a 10000 fallback — a missing size
+    // reaches the runner as undefined and the runner refuses it by name (`step-library.logic` R-DE (i) lock).
+    it('batch_size reads execution.batch_size_from_config when config supplies it, and carries NO silent default when it does not', () => {
       const withConfig = computeCentroids.buildFullRecomputeSql(descriptor, {
         [computeCentroids.FULL_RECOMPUTE_BATCH_VAR]: 250,
       });
       expect(withConfig.batch_size).toBe(250);
       const withoutConfig = computeCentroids.buildFullRecomputeSql(descriptor, {});
-      expect(withoutConfig.batch_size).toBeGreaterThan(0);
+      expect(withoutConfig.batch_size).toBeUndefined();
     });
   });
 

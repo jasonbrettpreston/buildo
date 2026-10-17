@@ -1,0 +1,9 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa.json": {
+      "via": "plain",
+      "why": "#38 evidence: every run inserts one data_quality_snapshots row; a plain run is the evidence."
+    }
+  }
+}

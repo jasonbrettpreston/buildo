@@ -594,9 +594,16 @@ describe('row 3.2 — buildLoadMeta reproduces the frozen §9 producer block (lo
     const mod = loadComputeModule();
     expect(typeof mod.buildLoadMeta, 'the frozen §9 producer block is built by a NAMED export, not inline in compute()').toBe('function');
     const fn = mod.buildLoadMeta as (c: unknown) => Record<string, unknown>;
+    // Spec 124 R-CY — the runner's own withinLimit seam over the REAL descriptor's bounds.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict lib
+    const { makeWithinLimit } = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      makeWithinLimit: (d: unknown, c: unknown) => (id: string, v: number) => boolean;
+    };
+    const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, DESCRIPTOR_REL), 'utf8'));
     return fn({
       acquired: ACQUIRED, written: WRITTEN, prior: null, config: CONFIG_VARS,
       descriptor: { identity: { name: 'load_centreline', spec_version: '1.1' } },
+      withinLimit: makeWithinLimit(real, CONFIG_VARS),
       ...ctx,
     }) as Record<string, unknown>;
   }

@@ -71,6 +71,7 @@ describe('INGESTOR prerequisite 0r — on_head_error', () => {
     keyColumn: 'ravine_id',
     coerceKey: (raw: unknown) => { const n = Number(raw); return Number.isFinite(n) ? n : null; },
     forced: false,
+    targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
     preAcquisitionGate: gate,
     emitSkeleton: {},
   });

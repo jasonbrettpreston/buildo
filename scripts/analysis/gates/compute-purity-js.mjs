@@ -51,6 +51,70 @@ function configAliases(sf) {
   return { names, destructured };
 }
 
+/**
+ * Spec 124 R-DC (McDonald's Airtight V3; amends R-BZ G7): VALUE aliases of a config bound,
+ * scoped to a CHECK BODY — a function whose own body calls `ctx.report(…)`. Inside it, a local bound to
+ * `ctx.config.<x>` / `ctx.config[<x>]` / `<object alias>.<x>` (through parens, `||`, `??`, a conditional's
+ * branches, or a one-argument Number/parseInt/parseFloat), or destructured from `ctx.config` / an object
+ * alias, is a G7 operand. Config read outside a check body (a classifier of domain output) is not judged,
+ * and parameter flow is not tracked.
+ * @returns {Map<ts.Node, Set<string>>} check-body function node → its value-alias names
+ */
+function checkBodyValueAliases(sf, table) {
+  const out = new Map();
+  const isFn = (n) => ts.isFunctionDeclaration(n) || ts.isFunctionExpression(n) || ts.isArrowFunction(n) || ts.isMethodDeclaration(n);
+  const isConfigObj = (n) => !!n && ((ts.isPropertyAccessExpression(n) && n.name.text === 'config'
+    && ts.isIdentifier(n.expression) && n.expression.text === 'ctx') || (ts.isIdentifier(n) && table.names.has(n.text)));
+  const isConfigValue = (n) => !!n && (ts.isPropertyAccessExpression(n) || ts.isElementAccessExpression(n)) && isConfigObj(n.expression);
+  const valueOf = (init) => {
+    if (!init) return false;
+    if (ts.isParenthesizedExpression(init) || ts.isAsExpression(init) || ts.isNonNullExpression(init)) return valueOf(init.expression);
+    if (ts.isBinaryExpression(init)) {
+      const k = init.operatorToken.kind;
+      if (k === ts.SyntaxKind.BarBarToken || k === ts.SyntaxKind.QuestionQuestionToken) return valueOf(init.left) || valueOf(init.right);
+      return false;
+    }
+    if (ts.isConditionalExpression(init)) return valueOf(init.whenTrue) || valueOf(init.whenFalse);
+    if (ts.isCallExpression(init) && init.arguments.length === 1 && ts.isIdentifier(init.expression)
+      && ['Number', 'parseInt', 'parseFloat'].includes(init.expression.text)) return valueOf(init.arguments[0]);
+    return isConfigValue(init);
+  };
+  // Does this function's OWN body (not a nested function's) call ctx.report?
+  const callsReport = (fn) => {
+    let found = false;
+    const v = (n) => {
+      if (found || (n !== fn && isFn(n))) return;
+      if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && n.expression.name.text === 'report'
+        && ts.isIdentifier(n.expression.expression) && n.expression.expression.text === 'ctx') { found = true; return; }
+      ts.forEachChild(n, v);
+    };
+    ts.forEachChild(fn, v);
+    return found;
+  };
+  const visitFn = (fn) => {
+    if (!callsReport(fn)) return;
+    const names = new Set();
+    const v = (n) => {
+      if (n !== fn && isFn(n)) return;
+      if (ts.isVariableDeclaration(n) && n.initializer) {
+        if (ts.isIdentifier(n.name) && valueOf(n.initializer)) names.add(n.name.text);
+        else if (ts.isObjectBindingPattern(n.name) && isConfigObj(n.initializer)) {
+          for (const el of n.name.elements) if (ts.isIdentifier(el.name)) names.add(el.name.text);
+        }
+      }
+      ts.forEachChild(n, v);
+    };
+    ts.forEachChild(fn, v);
+    if (names.size) out.set(fn, names);
+  };
+  const walk = (n) => {
+    if (isFn(n)) visitFn(n);
+    ts.forEachChild(n, walk);
+  };
+  ts.forEachChild(sf, walk);
+  return out;
+}
+
 /** Is `node` a property access rooted at `ctx.config`, or at a local `ctx.config` alias? */
 function isConfigOperand(node, table) {
   if (!node || !ts.isPropertyAccessExpression(node)) return false;
@@ -424,11 +488,22 @@ function lineFp(lineText) {
 export function G7Sites(sf, text) {
   const lines = text.split(/\r?\n/);
   const table = configAliases(sf);
+  const valueAliases = checkBodyValueAliases(sf, table);
+  // R-DC: a bare identifier operand that is a value alias of the check body it sits in.
+  const isValueAlias = (operand, at) => {
+    if (!operand || !ts.isIdentifier(operand) || valueAliases.size === 0) return false;
+    for (let fn = enclosingFunction(at); fn && !ts.isSourceFile(fn); fn = enclosingFunction(fn)) {
+      const names = valueAliases.get(fn);
+      if (names && names.has(operand.text)) return true;
+    }
+    return false;
+  };
   const out = [];
   const seen = new Set();
   const visit = (node) => {
     if (ts.isBinaryExpression(node) && COMPARE_OPS.has(node.operatorToken.kind)
-      && (isConfigOperand(node.left, table) || isConfigOperand(node.right, table))) {
+      && (isConfigOperand(node.left, table) || isConfigOperand(node.right, table)
+        || isValueAlias(node.left, node) || isValueAlias(node.right, node))) {
       const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
       if (!seen.has(line)) {
         seen.add(line);

@@ -562,6 +562,7 @@ describe('row 3.8 — D4 shapeRecord name fallback: AREA_NAME ‖ AREA_LONG_CODE
       config: {},
       run_at: new Date(0),
       tag: (name: string) => { tags.push(name); },
+      descriptor: loadDescriptor(), // Spec 124 R-CY — the runner hands the descriptor IN
       lookups: { [LOOKUP_ID]: {} },
     });
     // legacy L1: (a) AREA_NAME 'Alpha'; (b) has no AREA_NAME so the AREA_LONG_CODE fallback
@@ -582,7 +583,7 @@ describe('row 3.8 — D4 shapeRecord name fallback: AREA_NAME ‖ AREA_LONG_CODE
 describe('row 3.8 — D5 buildLookup: the B6–B8 census pivot (GREEN at ②)', () => {
   it('D5 — buildLookup(LOOKUP_ID, gridToRows(grid), {config:{}}) ⇒ .map normalised over CENSUS_COLUMNS = EXPECTED_CENSUS and .stats.matched_rows = EXPECTED_MATCHED (flipped GREEN at ②)', () => {
     const compute = loadComputeModule();
-    const out = compute.buildLookup!(LOOKUP_ID, gridToRows(censusGrid()), { config: {} }) as {
+    const out = compute.buildLookup!(LOOKUP_ID, gridToRows(censusGrid()), { config: {}, descriptor: loadDescriptor() }) as {
       map: Record<number, Record<string, CensusCell>>;
       stats: { matched_rows: number };
     };
@@ -608,6 +609,7 @@ describe('row 3.8 — D6 the lookup merge into shapeRecord (GREEN at ②)', () =
       config: {},
       run_at: new Date(0),
       tag: () => {},
+      descriptor: loadDescriptor(), // Spec 124 R-CY — the runner hands the descriptor IN
       lookups,
     }) as Record<string, unknown>;
     // legacy L5: nid 1's income is Math.round(100000.4) = 100000.
@@ -693,18 +695,26 @@ describe('row 3.8 — D9 the three pre_write/B11/N-D17/N-D6 refusals (GREEN at �
 });
 
 describe('row 3.8 — D10 the floor check: B12 (GREEN at ②)', () => {
-  it('D10 — boundaries_loaded: rows_shaped 157 vs floor 158 ⇒ violations > 0 and value 157; rows_shaped 158 ⇒ violations 0 (flipped GREEN at ②)', () => {
+  it('D10 — boundaries_loaded: rows_shaped 157 vs floor 158 ⇒ value 157, verdict FAIL; rows_shaped 158 ⇒ verdict PASS (the declared value_min row decides — CP-PLANA, R-BZ G7)', () => {
     const d = loadDescriptor();
     const c = checkById(d, 'boundaries_loaded');
     // legacy L7: `boundaries_loaded >= 158` FAILs at 157, PASSes at 158; the bound is the
     // SHARED registered variable `sources_neighbourhoods_floor`.
     expect(c.limit_from_config).toBe('sources_neighbourhoods_floor');
     expect(c.severity).toBe('FAIL');
-    const fail = driveCheck('boundaries_loaded', { acquired: { rows_shaped: 157 }, config: { sources_neighbourhoods_floor: 158 } });
-    expect(fail[0]![1]!.violations as number).toBeGreaterThan(0);
+    // CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute reports the raw count only; the
+    // verdict resolves the floor from ctx.config (limit_from_config) and decides.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (ch: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const cfg = { sources_neighbourhoods_floor: 158 };
+    const fail = driveCheck('boundaries_loaded', { acquired: { rows_shaped: 157 }, config: cfg });
     expect(fail[0]![1]!.value).toBe(157);
-    const at = driveCheck('boundaries_loaded', { acquired: { rows_shaped: 158 }, config: { sources_neighbourhoods_floor: 158 } });
-    expect(at[0]![1]!.violations).toBe(0);
+    expect(fail[0]![1]!.violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(c, fail[0]![1], 'fail_step', cfg).status, 'one below the floor ⇒ FAIL').toBe('FAIL');
+    const at = driveCheck('boundaries_loaded', { acquired: { rows_shaped: 158 }, config: cfg });
+    expect(verdict.checkRow(c, at[0]![1], 'fail_step', cfg).status, 'AT the floor ⇒ PASS').toBe('PASS');
   });
 });
 

@@ -48,6 +48,8 @@ const CONFIG = {
   massing_nearest_max_distance_m: 50,
   link_massing_centroid_confidence: 0.95,
   link_massing_nearest_confidence: 0.6,
+  // seeded default (migration 263, ledger E, McDonald's Airtight V3): the former DEGREES_PER_METRE_DIVISOR literal
+  link_massing_bbox_degree_divisor: 78000,
 };
 
 const PLAN = compute.buildMatchSql(descriptor, CONFIG, 'full');

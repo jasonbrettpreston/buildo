@@ -1,0 +1,75 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=is_gta",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=is_gta IS NOT NULL",
+          "--order=id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=is_gta",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=is_gta IS NOT NULL",
+          "--order=id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}",
+          "--step=scripts/load-wsib.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/load_wsib/post/sources.json",
+          "--capture-arg=--table-columns=wsib_registry:legal_name_normalized,mailing_address,legal_name,trade_name,trade_name_normalized,predominant_class,naics_code,naics_description,subclass,subclass_description,business_size,is_gta,linked_entity_id",
+          "--capture-arg=--table-order=wsib_registry:legal_name_normalized,mailing_address"
+        ]
+      ],
+      "why": "ids 1..200 is_gta negate_bool cohort the step heals, with the capture's own wsib_registry projection passed through (V3 fleet night 2026-10-16 proj-redo.sh; key-set md5 7883e32346). #38 evidence."
+    },
+    "post/standalone.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=is_gta",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=is_gta IS NOT NULL",
+          "--order=id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=is_gta",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=is_gta IS NOT NULL",
+          "--order=id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}",
+          "--step=scripts/load-wsib.js",
+          "--chain=none",
+          "--out=docs/reports/golden/load_wsib/post/standalone.json",
+          "--capture-arg=--table-columns=wsib_registry:legal_name_normalized,mailing_address,legal_name,trade_name,trade_name_normalized,predominant_class,naics_code,naics_description,subclass,subclass_description,business_size,is_gta,linked_entity_id",
+          "--capture-arg=--table-order=wsib_registry:legal_name_normalized,mailing_address"
+        ]
+      ],
+      "why": "ids 1..200 is_gta negate_bool cohort the step heals, with the capture's own wsib_registry projection passed through (V3 fleet night 2026-10-16 proj-redo.sh; key-set md5 7883e32346)."
+    }
+  }
+}

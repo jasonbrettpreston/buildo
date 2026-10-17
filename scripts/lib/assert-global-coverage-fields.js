@@ -85,6 +85,13 @@ const LOGIC_VAR_DEFS = [
   // IL-8 — permits :1073,:1075 (externalRow's own hard-coded 10/5, promoted to a var).
   { name: 'external_coverage_pass_pct', default: 10, min: 0, max: 100, group: 'Coverage & Quality', description: 'assert-global-coverage: scraper-sourced (external) field coverage -> PASS (AGC-D3)' },
   { name: 'external_coverage_warn_pct', default: 5, min: 0, max: 100, group: 'Coverage & Quality', description: 'assert-global-coverage: scraper-sourced (external) field coverage -> WARN, else FAIL (AGC-D3)' },
+  // V3 ledger E (McDonald's Airtight V3, operator 2026-10-17; Spec 124 R-BA gate E): three former SQL interval literals.
+  { name: 'assert_global_coverage_pre_permit_aged_months', default: 18, min: 1, max: 120, group: 'Data Quality Thresholds', description: 'assert-global-coverage: a PRE- permit issued more than this many months before the run clock counts as aged (formerly the SQL literal INTERVAL \'18 months\').' },
+  { name: 'assert_global_coverage_engine_health_window_hours', default: 25, min: 1, max: 168, group: 'Data Quality Thresholds', description: 'assert-global-coverage: an engine_health_snapshots row captured within this many hours of the run clock counts as today\'s (formerly the SQL literal INTERVAL \'25 hours\' at both sites).' },
+  { name: 'assert_global_coverage_forecast_lookback_years', default: 3, min: 1, max: 20, group: 'Data Quality Thresholds', description: 'assert-global-coverage: a permit whose phase/issue/application date is within this many years of the run clock is forecast-eligible (formerly the SQL literal INTERVAL \'3 years\').' },
+  // R-CE (Spec 124, CP-PLANA G6): the zone the run clock's calendar date is taken in — the
+  // shared string-typed variable assert_engine_health already declares (seed default UTC).
+  { name: 'pipeline_timezone', default: 'UTC', min: 'none', max: 'none', enum: ['UTC', 'America/Toronto'], group: 'Pipeline Clock', description: 'R-CE: the IANA zone a calendar date is derived in from ctx.clock (shared with assert_engine_health / refresh_snapshot).' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -179,10 +186,10 @@ push({ id: 'coa_step6_lead_products_rows', chain: 'coa', builder: 'info', loader
 push({ id: 'coa_step7_cost_classified_at', chain: 'coa', builder: 'coverage', loader: 'coa', pop: 'ca.cost_classified_pop', denom: 'coaTotal', stepTarget: 'CoA Step 7 — compute_coa_cost_estimates', field: 'coa_applications.cost_classified_at' });
 // Pipeline Rehab P4 (2026-08-03) — PRODUCER-SIDE accepted baseline (Spec 48 §4.6/§4.9).
 // Original: a would-be FAIL below the global passPct is downgraded to WARN unconditionally
-// (never re-FAILs no matter how low), self-retiring at >= passPct. `warnLimitLiteral: 'pct >= 0'`
-// (a fixed, non-config floor — always true for any real percentage) reproduces exactly that
-// "PASS >= passPct, else always WARN" shape without a config-driven warn tier.
-push({ id: 'coa_step7_estimated_cost', chain: 'coa', builder: 'calibrated', loader: 'coa', pop: 'ca.estimated_cost_pop', denom: 'coaTotal', passVar: 'profiling_coverage_pass_pct', warnLimitLiteral: 'pct >= 0', stepTarget: 'CoA Step 7 — compute_coa_cost_estimates', field: 'coa_applications.estimated_cost' });
+// (never re-FAILs no matter how low), self-retiring at >= passPct. `severityOverride: 'WARN'` with no
+// warn tier reproduces exactly that "PASS >= passPct, else always WARN" shape (V3 ledger A8,
+// 2026-10-17: it replaces the old always-true `warn_limit: "pct >= 0"` literal, which gate A could not close).
+push({ id: 'coa_step7_estimated_cost', chain: 'coa', builder: 'calibrated', loader: 'coa', pop: 'ca.estimated_cost_pop', denom: 'coaTotal', passVar: 'profiling_coverage_pass_pct', severityOverride: 'WARN', stepTarget: 'CoA Step 7 — compute_coa_cost_estimates', field: 'coa_applications.estimated_cost' });
 // The self-announcing accepted-WARN companion pair (Spec 48 §4.9) — declared as their OWN checks
 // rather than conditionally-spread extra rows (the checks[] framework always emits one row per
 // declared check; a declared-but-inert reading at >= passPct is the Nothing-Hidden-consistent

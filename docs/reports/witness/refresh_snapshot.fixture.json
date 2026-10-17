@@ -108,6 +108,7 @@
         "parcel_buildings": [
           "parcel_id"
         ],
+        "parcels": [],
         "permit_inspections": [
           "permit_num",
           "status"

@@ -1,0 +1,239 @@
+{
+  "contract_version": 1,
+  "step": "compute_parcel_cost_estimates",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3, 2026-10-17): migrated from the retired report-citation channel. Every entry is the measured PRE→POST diff of docs/reports/golden/compute_parcel_cost_estimates/{pre,post} at 2a96590c, explained from the assessment report line it cites (L<n>), the runner code it names, or the captures' own measured values.",
+  "diffs": [
+    {
+      "key": "invariants[]",
+      "why": "the POST invariants file lists a different set of invariants (added no_priced_null_lot_parcel, new_build_cost_not_gt_coa_cost, no_cost_outside_population; dropped none), so entries at the same index compare different invariants (sources/standalone: absent → {\"name\":\"no_priced_null_lot_parcel\",\"value\":\"0\"}; absent → {\"name\":\"new_build_cost_not_gt_coa_cost\",\"value\":\"0\"}; +1 more)."
+    },
+    {
+      "key": "meta[].reads.logic_variables[]",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the legacy PRE literal (sources/standalone: \"cost_escalation_index\" → absent; \"cost_rates_stale_months\" → absent; +1 more)."
+    },
+    {
+      "key": "meta[].reads.parcel_cost_lines",
+      "why": "POST meta is derived from the descriptor by deriveMeta (scripts/lib/step/index.js:246), replacing the legacy hand-written PIPELINE_META literal: this entry is present only in the POST meta (sources/standalone: absent → [\"id\",\"archetype\",\"base_confidence\",\"fit_permitted_values…)."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "the converted runner opens its own pipeline_runs ledger row on a run that owns its ledger (openLedgerRow, scripts/lib/step/ledger.js:221-235; ledger_row \"owned\"); the legacy PRE wrote none in this scenario (standalone)."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "stdout is log text: the converted runner logs under the [compute_parcel_cost_estimates] tag with its own target/gate/phase lines (scripts/lib/step/index.js:296, :4783) where the legacy script logged its own lines, so line-by-line text differs (sources 13→4 lines; standalone 13→4 lines). Verdict-bearing facts are compared in summary/audit_table, not here."
+    },
+    {
+      "key": "step",
+      "why": "the PRE was captured from the legacy checkout ../buildo-legacy-2_4 (report L31-L32 PRE measurements); the POST runs the converted scripts/compute-parcel-cost-estimates.js in this repo."
+    },
+    {
+      "key": "summary.records_meta.area_confidence.high",
+      "why": "report L461-L474/L535: area_confidence buckets are counts over the residential population, which changed with the parcels reload and re-enrichment (residential_parcels_examined 437,279 → 416,187)."
+    },
+    {
+      "key": "summary.records_meta.area_confidence.low",
+      "why": "report L461-L474/L535: area_confidence buckets are counts over the residential population, which changed with the parcels reload and re-enrichment (residential_parcels_examined 437,279 → 416,187)."
+    },
+    {
+      "key": "summary.records_meta.area_confidence.medium",
+      "why": "report L461/L474: the medium bucket is a straight count over the residential population, which shrank 437,279 → 416,187."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "audit_table.name is set by the converted runner's buildAuditTable (scripts/lib/step/verdict.js:467-471) from descriptor.identity.display_name, replacing the legacy PRE's own table name (sources/standalone: \"Parcel Cost Estimation\" → \"Parcel Renovation Cost Model\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.phase",
+      "why": "audit_table.phase is resolvePhase() over the descriptor's sharing.varies_by_chain.phase (scripts/lib/step/verdict.js:52-61), the manifest position; the legacy PRE stamped its own literal phase number (sources/standalone: 88 → 23)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added compute_parcel_cost_menu_coverage_min_pct, compute_parcel_cost_empty_menu_max_pct, compute_parcel_cost_line_total_max_cad, stranded_cost_rows_retracted, no_priced_null_lot_parcel, new_build_cost_not_gt_coa_cost, no_cost_outside_population, inputs_nonempty, empty_source_guard; dropped parcels_with_menu_pct, null_geom_basis_count, area_confidence_high, area_confidence_medium, area_confidence_low, fit_gated_suite_count, fit_gated_garage_count, cost_rates_age_months, cost_escalation_index, rates_max_as_of_date, records_updated, records_skipped, dry_run). Measured sources/standalone: {\"metric\":\"unmapped_residential_family_fallback_count\",\"s… → absent; {\"metric\":\"records_updated\",\"status\":\"INFO\",\"threshold\":n… → absent; +2 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added compute_parcel_cost_menu_coverage_min_pct, compute_parcel_cost_empty_menu_max_pct, compute_parcel_cost_line_total_max_cad, stranded_cost_rows_retracted, no_priced_null_lot_parcel, new_build_cost_not_gt_coa_cost, no_cost_outside_population, inputs_nonempty, empty_source_guard; dropped parcels_with_menu_pct, null_geom_basis_count, area_confidence_high, area_confidence_medium, area_confidence_low, fit_gated_suite_count, fit_gated_garage_count, cost_rates_age_months, cost_escalation_index, rates_max_as_of_date, records_updated, records_skipped, dry_run). Measured sources/standalone: \"parcels_with_menu_pct\" → \"fsi_implausible_count\"; \"null_geom_basis_count\" → \"new_build_fallback_count\"; +26 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"after_write\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: absent → \"check\"; absent → \"invariant\")."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added compute_parcel_cost_menu_coverage_min_pct, compute_parcel_cost_empty_menu_max_pct, compute_parcel_cost_line_total_max_cad, stranded_cost_rows_retracted, no_priced_null_lot_parcel, new_build_cost_not_gt_coa_cost, no_cost_outside_population, inputs_nonempty, empty_source_guard; dropped parcels_with_menu_pct, null_geom_basis_count, area_confidence_high, area_confidence_medium, area_confidence_low, fit_gated_suite_count, fit_gated_garage_count, cost_rates_age_months, cost_escalation_index, rates_max_as_of_date, records_updated, records_skipped, dry_run). Measured sources/standalone: \"INFO\" → \"PASS\"; \"INFO\" → \"WARN\"."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455); the converted runner adds this field/row to every declared check row, the legacy PRE's hand-built audit rows did not carry it in this form (sources/standalone: \"> 0\" → \"value_min 1\"; null → \"value_min 0\"; +11 more)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "audit rows are built per declared check by verdict.js checkRow row() (:257-271; observed :437/:455): the POST row list is the descriptor's declared checks[], not the legacy PRE's hand-built list, so rows at the same index compare different metrics (sources.json: added compute_parcel_cost_menu_coverage_min_pct, compute_parcel_cost_empty_menu_max_pct, compute_parcel_cost_line_total_max_cad, stranded_cost_rows_retracted, no_priced_null_lot_parcel, new_build_cost_not_gt_coa_cost, no_cost_outside_population, inputs_nonempty, empty_source_guard; dropped parcels_with_menu_pct, null_geom_basis_count, area_confidence_high, area_confidence_medium, area_confidence_low, fit_gated_suite_count, fit_gated_garage_count, cost_rates_age_months, cost_escalation_index, rates_max_as_of_date, records_updated, records_skipped, dry_run). Measured sources/standalone: 437279 → 416187; \"98.2%\" → 0; +22 more."
+    },
+    {
+      "key": "summary.records_meta.audit_table.verdict",
+      "why": "PRE PASS → POST WARN: the declared WARN checks compute_parcel_cost_menu_coverage_min_pct (93.9) and unmapped_residential_family_fallback_count (99,270) fire on today's data (measured POST rows)."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 2)."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → {\"compute_parcel_cost_adjustment_factor_default\":1,\"compu…)."
+    },
+    {
+      "key": "summary.records_meta.cost_by_zone",
+      "why": "declared emit (descriptor emits[] key \"cost_by_zone\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → {\"R\":{\"empty_menus\":0,\"max_cost_gut\":8859759.26,\"menus\":9…)."
+    },
+    {
+      "key": "summary.records_meta.cost_index_age_months",
+      "why": "report L65/L118: cost_index_age_months is months since the cost index date; the POST ran ~1 month later (2 → 3), no code change."
+    },
+    {
+      "key": "summary.records_meta.cost_lines_updated_at",
+      "why": "declared emit (descriptor emits[] key \"cost_lines_updated_at\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → \"<TS>\")."
+    },
+    {
+      "key": "summary.records_meta.cost_rates_age_months",
+      "why": "report L121: months since the cost-rates as-of date; the POST ran ~1 month later (2 → 3), no code change."
+    },
+    {
+      "key": "summary.records_meta.dry_run",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST no longer carries it in the emitted summary; the legacy PRE emitted it (sources/standalone: false → absent)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [])."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"chain_owned\"; absent → \"owned\")."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.addition",
+      "why": "report L463: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the zoning/max-build re-enrichment (report L491)."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.basement",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.basement_underpin",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.bath",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.coa_build",
+      "why": "report L463: every line_coverage.<id> entry moved with the residential population and the zoning/max-build re-enrichment (report L491)."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.garage",
+      "why": "report L463-L464/L535: every line_coverage.<id> entry moved with the residential population and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.garden_suite",
+      "why": "report L463-L464/L535: every line_coverage.<id> entry moved with the residential population and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.gut",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.kitchen",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population (437,279 → 416,187) and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.laneway_suite",
+      "why": "report L463-L464: every line_coverage.<id> entry moved with the residential population and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.max_build",
+      "why": "report L463/L491: every line_coverage.<id> entry moved with the population and the legitimate zoning_class / max_buildable_gfa_sqm re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.solar_coa",
+      "why": "report L463: every line_coverage.<id> entry moved with the residential population and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.line_coverage.solar_max",
+      "why": "report L463: every line_coverage.<id> entry moved with the residential population and the re-enrichment."
+    },
+    {
+      "key": "summary.records_meta.null_geom_basis_count",
+      "why": "report L458/L474: fewer NULL-geom-basis parcels remain in the smaller population; the parcels reload left 0 (7,674 at the PRE)."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.rates_max_as_of_date",
+      "why": "declared emit (descriptor emits[] key \"rates_max_as_of_date\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → \"Tue Jun 30 2026 00:00:00 GMT-0400 (Eastern Daylight Time)\")."
+    },
+    {
+      "key": "summary.records_meta.records_skipped",
+      "why": "report L107/L454: skipped residential parcels follow the population, 437,279 → 416,169/416,187 (residential_parcels_examined in the same capture)."
+    },
+    {
+      "key": "summary.records_meta.records_updated",
+      "why": "declared emit (descriptor emits[] key \"records_updated\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → 18; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.residential_parcels_examined",
+      "why": "report L454/L533: the residential population shrank 437,279 → 416,187 after the parcels reload and the C5 scope (report L533)."
+    },
+    {
+      "key": "summary.records_meta.row_limit",
+      "why": "report L130-L132: the legacy --limit=N CLI flag is ruled retired, so the converted step emits no row_limit key at all."
+    },
+    {
+      "key": "summary.records_meta.stranded_cost_rows_retracted",
+      "why": "declared emit (descriptor emits[] key \"stranded_cost_rows_retracted\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → 5; absent → 0)."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → \"priced_with_warnings\")."
+    },
+    {
+      "key": "summary.records_meta.unmapped_residential_family_fallback_count",
+      "why": "declared emit (descriptor emits[] key \"unmapped_residential_family_fallback_count\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources/standalone: absent → 99270)."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "runner-stamped records_meta key (RUNNER_META_KEYS, scripts/lib/step/index.js:190-206; assembled :7040-7093): the converted POST stamps it in the emitted summary; the legacy PRE never emitted it (sources/standalone: absent → [\"compute_parcel_cost_menu_coverage_min_pct: 93.9\",\"unmap…)."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "records_total = residential_parcels_examined: 437,279 → 416,187 with the population change (report L454)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources scenario = the first cost-estimates POST of the 2026-10-16 night (recapture order, after enrich_parcels re-ran): it rewrote 18 changed cost rows; standalone ran after and wrote 0; the PRE wrote 0 (report L45)."
+    },
+    {
+      "key": "table_state[].content_hash",
+      "why": "report L487-L488: the parcels projection moved because enrich_parcels re-enrichment ran between captures; input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since."
+    },
+    {
+      "key": "table_state[].row_count",
+      "why": "input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since."
+    },
+    {
+      "key": "meta[].reads.logic_variables",
+      "why": "N6 (2026-10-17, #44 class D group G4, Spec 124 R-DG): logic_variables is read by the runner config loader (ctx.config), not by this step, so the descriptor no longer declares it and deriveMeta drops it from meta reads."
+    }
+  ]
+}

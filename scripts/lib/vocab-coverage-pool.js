@@ -16,7 +16,22 @@
  * count to `./vocab-coverage` on the connected client. The compute-usable core is a
  * SEPARATE file (R-CH / R-CA(i)) so that BEGIN / SET / ROLLBACK can never be pulled into an
  * ASSERT compute's require closure.
+ *
+ * CP-S5 (Spec 124 R-CX, amends R-CH) — the core no longer authors the column-type read; this
+ * wrapper (outside the compute closure) hands it its OWN reader, bound to the same connected
+ * client and therefore the same transaction and statement_timeout as before.
  */
+
+/** The legacy wrapper's column-type reader — the core's former `typeOf`, verbatim, on the wrapper's client. */
+function clientColumnType(client) {
+  return async (table, col) => {
+    const r = await client.query(
+      `SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2`,
+      [table, col],
+    );
+    return r.rows[0]?.data_type ?? null;
+  };
+}
 
 const { resolveAndCountTripleWithClient } = require('./vocab-coverage');
 
@@ -53,7 +68,7 @@ async function resolveAndCountTriple(pool, t, opts = {}) {
     await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
 
     // Resolution + intersection count happen in the core (no txn control of its own).
-    return await resolveAndCountTripleWithClient(client, t, opts);
+    return await resolveAndCountTripleWithClient(client, t, { ...opts, columnType: clientColumnType(client) });
   } catch (err) {
     const reason = err.code === '57014' ? 'timeout' : 'query error'; // 57014 = query_canceled (statement_timeout)
     logWarn('[vocab-coverage]', `${t.dataTable}.${t.dataColumn} → ${reason}`, { error: err.message });

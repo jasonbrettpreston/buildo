@@ -175,7 +175,7 @@ describe('assert-data-bounds — threshold externalization (§6.4, repointed to 
     expect(COMPUTE).not.toMatch(/validateLogicVars/);
     expect(DESCRIPTOR.config.validation).toBe('strict');
     expect(Array.isArray(DESCRIPTOR.config.logic_variables)).toBe(true);
-    expect(DESCRIPTOR.config.logic_variables.length).toBe(26);
+    expect(DESCRIPTOR.config.logic_variables.length).toBe(33); // + the shared pipeline_timezone (R-CE, CP-PLANA G6) + 6 former SQL literals (ledger E, migration 263, McDonald's Airtight V3)
     for (const v of DESCRIPTOR.config.logic_variables) {
       expect(v.on_invalid, `${v.name} on_invalid`).toBe('fail');
     }

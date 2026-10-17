@@ -21,18 +21,18 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { dbAvailable, getTestPool } from './db/setup-testcontainer';
+import { dbAvailable, getTestPool } from './setup-testcontainer';
 
 declare const __filename: string;
 declare const __dirname: string;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const descriptor = require('../../scripts/enrich-ravines.descriptor.json');
+const descriptor = require('../../../scripts/enrich-ravines.descriptor.json');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const compute = require('../../scripts/lib/compute/enrich-ravines.js');
+const compute = require('../../../scripts/lib/compute/enrich-ravines.js');
 // S4: the empty-source HALT is owned by the DECLARED guard, measured pre-compute by the runner.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const runner = require('../../scripts/lib/step/index.js');
+const runner = require('../../../scripts/lib/step/index.js');
 const ravinesDescriptor = descriptor;
 
 /**
@@ -43,10 +43,10 @@ const ravinesDescriptor = descriptor;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const runnerProducer = (p: any) =>
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('../../scripts/lib/step/producer').makeProducer({ pool: p, chains: ['sources'] });
+  require('../../../scripts/lib/step/producer').makeProducer({ pool: p, chains: ['sources'] });
 
-const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/lib/compute/enrich-ravines.js'), 'utf8');
-const SHELL_SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/enrich-ravines.js'), 'utf8');
+const COMPUTE_SRC = fs.readFileSync(path.resolve(__dirname, '../../../scripts/lib/compute/enrich-ravines.js'), 'utf8');
+const SHELL_SRC = fs.readFileSync(path.resolve(__dirname, '../../../scripts/enrich-ravines.js'), 'utf8');
 
 // ── (A) Source-contract ─────────────────────────────────────────────────────
 describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () => {
@@ -79,8 +79,9 @@ describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () 
     for (const r of descriptor.guards.requires) expect(r.on_missing).toBe('fail');
   });
 
-  it('the SRID=4326 assertion is folded into readRavineContract (RV-L2 — guards.srid is declarative only, unconsumed by the runner)', () => {
-    expect(COMPUTE_SRC).toMatch(/Find_SRID\([^)]*parcels[^)]*geom/);
+  it('the SRID=4326 assertion is the runner-probed guards.requires srid row (CP-S5, Spec 124 R-CX) — not a readRavineContract read/throw', () => {
+    expect(COMPUTE_SRC).not.toMatch(/Find_SRID/i);
+    expect(descriptor.guards.requires.find((r: { kind: string }) => r.kind === 'srid')).toMatchObject({ name: 'parcels.geom', equals: 4326, on_missing: 'fail' });
     expect(descriptor.guards.srid).toBe(4326);
   });
 
@@ -120,9 +121,10 @@ describe('enrich_ravines — source contract (Spec 59 §8d/§9, converted)', () 
     );
     expect(COMPUTE_SRC).not.toMatch(/spec_version|delete_skipped_empty_guard|drift_check_passed|mass_delete_check_passed|invalid_geometry_skipped/);
     expect(COMPUTE_SRC).not.toMatch(/pinnedEquals|staleness-pins|\.descriptor\.json|MAX_INVALID_GEOM_RATIO|0\.05/);
-    // ...and the L14 / SRID sentences that DO stay are still readable in the hook's own doc block.
+    // ...and the L14 / SRID sentences are still readable in the hook's own doc block (both now
+    // runner-owned: guards.empty_source, and the guards.requires srid row since CP-S5).
     expect(COMPUTE_SRC).toContain('guards.empty_source');
-    expect(COMPUTE_SRC).toMatch(/Find_SRID/);
+    expect(COMPUTE_SRC).toMatch(/kind:"srid"/);
   });
 
   it('#418 Layer-1 is RETIRED AS A MECHANISM (F9) — no standalone stale-count early return; Layer-2 stays embedded in the ONE statement', () => {

@@ -38,6 +38,8 @@ const CONFIG: Record<string, number> = Object.freeze({
   link_wsib_entity_fanin_warn: 20,
   link_wsib_tier3_token_overlap_fail_pct: 50,
   link_wsib_mass_relink_max_pct: 0.1,
+  link_wsib_exact_name_min_length: 3,
+  link_wsib_fuzzy_name_min_length: 5,
 });
 
 type DiffRow = {
@@ -155,7 +157,7 @@ describe('O4 row 6 — link_wsib full_rescan: derive every row, apply only the d
     const der = compute.buildDerivationSql(d, CONFIG);
     expect(der.setup_sql).toMatch(/^SELECT set_config\('pg_trgm\.similarity_threshold', \$1::text, true\)$/);
     expect(der.setup_params).toEqual([0.6]);
-    expect(der.diff_params, '$1 threshold, $2/$3/$4 = the three tier confidences in cascade order').toEqual([0.6, 0.95, 0.9, 0.6]);
+    expect(der.diff_params, '$1 threshold, $2/$3/$4 = the three tier confidences in cascade order, $5/$6 = the exact/fuzzy name length floors').toEqual([0.6, 0.95, 0.9, 0.6, 3, 5]);
     const sql: string = der.diff_sql;
     expect(sql).not.toMatch(/linked_entity_id IS NULL/);
     expect(sql).not.toMatch(/\bLIMIT\b/);

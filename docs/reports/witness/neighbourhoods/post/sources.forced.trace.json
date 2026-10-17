@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/load-neighbourhoods.js",
   "chain": "sources",
-  "source_fingerprint": "069505a60c5847f2e1215af0ee0eb66638bb65eb26941969af651c16d2964610",
-  "git_head": "31ab81f87495ceb22cbe64c3408eab29488879dd",
+  "source_fingerprint": "8f0b3943d307f3189d23d2a9d2b841f64d4d884f59100ba7dffedeb7bdef72d2",
+  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
   "header": {
     "processes": 1,
     "calls": 19,
     "distinct": 15,
     "utility": 7,
-    "tracer_self_ms": 2.786,
-    "wall_ms": 2226
+    "tracer_self_ms": 3.21,
+    "wall_ms": 2277
   },
   "statements": [
     {
@@ -55,7 +55,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 738,
+      "rowCount": 760,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -237,7 +237,7 @@
   ],
   "transactions": [
     {
-      "client": "16298:2",
+      "client": "42437:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]

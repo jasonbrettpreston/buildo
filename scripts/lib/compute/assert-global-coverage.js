@@ -26,8 +26,9 @@
  *   4. Every I/O goes through `ctx.pool` (this step's DB seam — PH-5 §3.1: "DB seam =
  *      ctx.pool"; ASSERT's usual HTTP-only shape does not apply here — this step's
  *      entire subject IS the live database) — no bare `pg`, no `fetch` (none used),
- *      no `Date.now()`/`new Date()` (none used — the 6 clock-relative reads are all
- *      SQL-side `NOW()`/`CURRENT_DATE`, §3.2 of the assessment report). Every tunable
+ *      no `Date.now()`/`new Date()` — every clock-relative read binds the run clock
+ *      `ctx.clock()` (and, for a calendar date, `pipeline_timezone`) as a parameter;
+ *      no SQL-side `NOW()`/`CURRENT_DATE` (Spec 124 R-CE, R-BZ G6). Every tunable
  *      goes through `ctx.config` (20 logic_variables — 6 pre-existing + 14 newly
  *      adjudicated, report §2.4).
  *   5. Branch loaders appear first; the generic per-builder evaluators next; the
@@ -188,9 +189,9 @@ async function loadCoaBranch(ctx) {
           COUNT(*) FILTER (WHERE rear_suite_permission = 'as_of_right')                   AS rear_suite_aor_pop,
           COUNT(*) FILTER (WHERE rear_suite_permission = 'coa_required')                  AS rear_suite_coa_pop,
           ${COST_PROP_FILTER_SQL},
-          EXTRACT(days FROM NOW() - MAX(last_seen_at))::int                               AS days_since_latest
+          EXTRACT(days FROM to_timestamp($1::float8 / 1000) - MAX(last_seen_at))::int   AS days_since_latest
         FROM coa_applications
-      `);
+      `, [ctx.clock()]);
     const ca = parseCountRow(caRaw);
 
     const { rows: [cxRaw] } = await pool.query(`
@@ -206,21 +207,18 @@ async function loadCoaBranch(ctx) {
     const { rows: [cmRaw] } = await pool.query(`
         SELECT
           COUNT(DISTINCT permit_num) FILTER (WHERE permit_num LIKE 'PRE-%')                AS pre_permit_total,
-          COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%' AND issued_date < NOW() - INTERVAL '18 months') AS aged_pre_permits,
-          (SELECT COUNT(*) FROM data_quality_snapshots WHERE snapshot_date = CURRENT_DATE) AS snapshot_today,
-          (SELECT COUNT(*) FROM engine_health_snapshots WHERE captured_at > NOW() - INTERVAL '25 hours') AS engine_health_today,
+          COUNT(*) FILTER (WHERE permit_num LIKE 'PRE-%' AND issued_date < to_timestamp($1::float8 / 1000) - make_interval(months => $3::int)) AS aged_pre_permits,
+          (SELECT COUNT(*) FROM data_quality_snapshots WHERE snapshot_date = (to_timestamp($1::float8 / 1000) AT TIME ZONE $2)::date) AS snapshot_today,
+          (SELECT COUNT(*) FROM engine_health_snapshots WHERE captured_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $4::int)) AS engine_health_today,
           (SELECT COUNT(*) FROM (
             SELECT application_number, COUNT(*) FROM coa_applications GROUP BY 1 HAVING COUNT(*) > 1
           ) sub)                                                                             AS dup_coa_pks
         FROM permits
-      `);
+      `, [ctx.clock(), ctx.config.pipeline_timezone, ctx.config.assert_global_coverage_pre_permit_aged_months, ctx.config.assert_global_coverage_engine_health_window_hours]);
     const cm = parseCountRow(cmRaw);
 
-    const { rows: [csSchemaRaw] } = await pool.query(`
-        SELECT COUNT(*) AS cols FROM information_schema.columns
-         WHERE table_schema = 'public' AND table_name = 'coa_applications'
-      `);
-    const csSchema = parseCountRow(csSchemaRaw);
+    // CP-S5 (Spec 124 R-CX) — a catalog fact, read through the runner-owned ctx.catalog (R-BZ G3).
+    const csSchema = { cols: await ctx.catalog.columnCount('coa_applications') };
 
     const coaTotal = ca.coa_total || 0;
     const linkedTotal = ca.linked_pop || 0;
@@ -542,14 +540,14 @@ async function loadPermitsBranch(ctx) {
           (SELECT COUNT(*) FROM tracked_projects)                                           AS tracked_total,
           (SELECT COUNT(*) FROM lead_analytics)                                             AS lead_analytics_total,
           (SELECT COUNT(*) FROM data_quality_snapshots
-            WHERE snapshot_date = CURRENT_DATE)                                             AS snapshot_today,
+            WHERE snapshot_date = (to_timestamp($1::float8 / 1000) AT TIME ZONE $2)::date) AS snapshot_today,
           (SELECT COUNT(*) FROM engine_health_snapshots
-            WHERE captured_at > NOW() - INTERVAL '25 hours')                               AS engine_health_today,
+            WHERE captured_at > to_timestamp($1::float8 / 1000) - make_interval(hours => $3::int)) AS engine_health_today,
           (SELECT COUNT(*) FROM (
             SELECT permit_num, revision_num FROM permits
              GROUP BY 1, 2 HAVING COUNT(*) > 1
           ) sub)                                                                            AS dup_permit_pks
-      `);
+      `, [ctx.clock(), ctx.config.pipeline_timezone, ctx.config.assert_global_coverage_engine_health_window_hours]);
     const misc = parseCountRow(miscRaw);
 
     const { rows: [tfdRaw] } = await pool.query(`
@@ -561,8 +559,8 @@ async function loadPermitsBranch(ctx) {
          WHERE p.permit_num NOT LIKE 'PRE-%'
            AND p.lifecycle_phase IS NOT NULL
            AND p.lifecycle_phase NOT IN ${SKIP_PHASES_SQL}
-           AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= NOW() - INTERVAL '3 years'
-      `);
+           AND COALESCE(p.phase_started_at, p.issued_date, p.application_date) >= to_timestamp($1::float8 / 1000) - make_interval(years => $2::int)
+      `, [ctx.clock(), ctx.config.assert_global_coverage_forecast_lookback_years]);
     const tfd = parseCountRow(tfdRaw);
     const forecastEligible = tfd.forecast_eligible_permits || 0;
 
@@ -593,11 +591,8 @@ async function loadPermitsBranch(ctx) {
     const forecastTotal = tfa.forecast_total || 0;
     const oppScoreDenom = tfa.opp_score_denom || 0;
 
-    const { rows: [pSchemaRaw] } = await pool.query(`
-        SELECT COUNT(*) AS cols FROM information_schema.columns
-         WHERE table_schema = 'public' AND table_name = 'permits'
-      `);
-    const pSchema = parseCountRow(pSchemaRaw);
+    // CP-S5 (Spec 124 R-CX) — a catalog fact, read through the runner-owned ctx.catalog (R-BZ G3).
+    const pSchema = { cols: await ctx.catalog.columnCount('permits') };
 
     // #8 (S1-P-9) — assert_entity_tracing's last recorded outcome. A verdict read, not a baseline (R-CB): every terminal status, so a covered-FAIL run is the latest, never hidden by an older PASS;
     // ordering key unchanged (started_at). A run with no recorded outcome (failed before writing an audit table) or no run at all reads as not-PASS = 0, as the old 'NO_RUN' did.
@@ -692,7 +687,8 @@ async function evalVocab(ctx, def) {
   // default, byte-identical) — ONE snapshot per triple, so one triple's timeout cannot
   // abort another's. NOTE: unlike the old pool wrapper, a connect/BEGIN failure now
   // PROPAGATES (loud) instead of degrading to `unresolved`.
-  const result = await ctx.readSnapshot((client) => resolveAndCountTripleWithClient(client, t, { logWarn: ctx.log.warn }));
+  // CP-S5 (R-CX): the column types come from the runner-owned ctx.catalog, never core SQL.
+  const result = await ctx.readSnapshot((client) => resolveAndCountTripleWithClient(client, t, { logWarn: ctx.log.warn, columnType: ctx.catalog.columnType }));
   if (result.unresolved) {
     ctx.report(def.id, { value: null, detail: `unresolved: ${result.unresolved}` });
     return;

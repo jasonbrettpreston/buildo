@@ -91,6 +91,10 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261017t1801z": [
+      "address_point_id",
+      "latitude"
+    ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
       "address_class_desc",
@@ -1028,6 +1032,14 @@
       "id",
       "lot_size_sqm"
     ],
+    "parcels_cohort_bak_20261017t1650z": [
+      "cost_fb_total",
+      "id"
+    ],
+    "parcels_cohort_bak_20261017t1802z": [
+      "id",
+      "lot_size_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1284,6 +1296,10 @@
       "zoning_dominant_parcel_method",
       "zoning_enriched_at",
       "zoning_parcel_count"
+    ],
+    "permits_cohort_bak_20261017t1640z": [
+      "latitude",
+      "permit_num"
     ],
     "phase_calibration": [
       "computed_at",
@@ -1678,6 +1694,14 @@
       "is_gta"
     ],
     "wsib_registry_cohort_bak_20261016t1906z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261017t1803z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261017t1804z": [
       "id",
       "is_gta"
     ],

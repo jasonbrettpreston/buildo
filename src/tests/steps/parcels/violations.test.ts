@@ -873,6 +873,17 @@ describe('row 3.7 — compute.shapeRecord maps a CSV record to the bound columns
     expect(r.is_irregular, 'estimateLotDimensions(null, ...) returns null -> is_irregular defaults false (loader :520)').toBe(false);
   });
 
+  it('row 6 — the unparsable geometry is COUNTED through the seam (CP-PLANA, R-BZ G13) and geom_parse_failures reads that count', () => {
+    const rows = parseCsvFixture(CSV_6ROWS_REL);
+    const tags: Record<string, number> = {};
+    const seam = { tag: (name: string) => { tags[name] = (tags[name] || 0) + 1; } };
+    const r = (shapeRecord() as unknown as (rec: Record<string, string>, sm?: unknown) => Shape | null)(rows[5] as Record<string, string>, seam);
+    expect(r, 'per-record tolerance: the row still loads').not.toBeNull();
+    expect(tags.geom_parse_failure, 'the swallow is now a reported count').toBe(1);
+    const calls = driveCheck('geom_parse_failures', { acquired: { shaped_tags: tags }, config: {} });
+    expect(calls[0]![1]).toMatchObject({ violations: 0, detail: 1 });
+  });
+
   it('coerceKey is PARCELID trimmed, null when unusable (never empty string) — loader :499', () => {
     const coerce = coerceKey();
     expect(coerce('9000001')).toBe('9000001');
@@ -958,10 +969,20 @@ describe('row 3.7 — the checks fire on their fixtures (Spec 124 Rule 3/5/10, r
   });
 
   it('rows_read_floor reads sources_parcels_floor via ctx.config (SHARED key, Rule 3, report §6 PR-D5 pin — the loader\'s own WARN stays WARN, never promoted to FAIL)', () => {
-    const below = driveCheck('rows_read_floor', { acquired: { rows_read: 449999 }, config: CFG });
-    expect(below[0]![1].violations, 'below the loader\'s legacy 450000 WARN threshold ⇒ violation').toBeGreaterThan(0);
-    const at = driveCheck('rows_read_floor', { acquired: { rows_read: 498479 }, config: CFG });
-    expect(at[0]![1].violations, 'at the measured live row count ⇒ clean').toBe(0);
+    // CP-PLANA (Spec 124 R-BZ G7, Rule 10): the compute reports the raw count only; the
+    // declared `value_min` row, its floor resolved from ctx.config (limit_from_config), decides.
+    const check = checkById(loadDescriptor(), 'rows_read_floor');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict library
+    const verdict = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+      checkRow: (c: unknown, o: unknown, onErr: string, cfg: unknown) => { status: string };
+    };
+    const floor = (CFG as Record<string, number>)[SHARED_FLOOR_VAR] as number;
+    const below = driveCheck('rows_read_floor', { acquired: { rows_read: floor - 1 }, config: CFG });
+    expect(below[0]![1].value, 'the raw count is the observation').toBe(floor - 1);
+    expect(below[0]![1].violations, 'CP-PLANA: no compute-side flag').toBeUndefined();
+    expect(verdict.checkRow(check, below[0]![1], 'fail_step', CFG).status, 'one below the floor ⇒ WARN (PR-D5: never promoted to FAIL)').toBe('WARN');
+    const at = driveCheck('rows_read_floor', { acquired: { rows_read: floor }, config: CFG });
+    expect(verdict.checkRow(check, at[0]![1], 'fail_step', CFG).status, 'AT the floor ⇒ PASS (value_min is inclusive)').toBe('PASS');
   });
 
   it('null_address_pct reads the GENERIC runner counters (prerequisite 0o rename, commit ③) — rows_shaped / column_nulls.address_number, WARN at >= 10%', () => {
@@ -1078,7 +1099,9 @@ describe('row 3.7 — Rule 3 literal ledger (report §6): logic_variables ≡ se
       }
       expect(src.includes(`ctx.config.${v}`), `the compute must read ${v} via ctx.config`).toBe(true);
     }
-    expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the floor check reads the SHARED variable via ctx.config').toBe(true);
+    // CP-PLANA (R-BZ G7): the floor is read by the VERDICT (limit_from_config), never compared here.
+    expect(src.includes(`ctx.config.${SHARED_FLOOR_VAR}`), 'the compute no longer compares against the shared floor').toBe(false);
+    expect(checkById(loadDescriptor(), 'rows_read_floor').limit_from_config, 'the verdict reads the SHARED floor via limit_from_config').toBe(SHARED_FLOOR_VAR);
     // The IRREGULARITY_THRESHOLD (0.95) must be a config read inside shapeRecord too, not the
     // bare module-level constant the legacy script hard-coded at :99.
     expect(/0\.95/.test(src.replace(/ctx\.config\.parcels_irregularity_threshold/g, '')), 'no bare 0.95 literal survives outside the config read').toBe(false);

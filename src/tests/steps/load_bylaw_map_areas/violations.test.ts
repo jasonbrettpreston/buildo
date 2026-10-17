@@ -425,7 +425,7 @@ describe('load_bylaw_map_areas — behaviour', () => {
     const d = desc();
     const check = d.checks.find((x: any) => x.id === 'dataset_source_license');
     expect(check, 'check dataset_source_license missing').toBeDefined();
-    expect(check.severity).toBe('INFO');
+    expect(check.severity).toBe('WARN'); // O-2 (2026-10-17): a threshold exists (R-H addendum / LG-29), so not INFO
 
     const ok = run('dataset_source_license', { acquired: {} });
     expect(ok.violations).toBe(0);

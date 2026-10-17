@@ -752,6 +752,15 @@ function readText(rel: string): string {
   return fs.readFileSync(artifact(rel), 'utf8');
 }
 
+/** Spec 124 R-CY — the runner's own `ctx.withinLimit` (scripts/lib/step/verdict.js makeWithinLimit). */
+function withinLimitOf(descriptor: unknown, config: Record<string, number>): (id: string, value: number) => boolean {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- the real CJS verdict lib
+  const { makeWithinLimit } = require(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as {
+    makeWithinLimit: (d: unknown, c: unknown) => (id: string, value: number) => boolean;
+  };
+  return makeWithinLimit(descriptor, config);
+}
+
 function loadDescriptor(): Descriptor {
   const d = JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
   validateDescriptor(d); // throws with the AJV error list — the loader property (Spec 122 §4.2)
@@ -919,8 +928,9 @@ describe('row 3.4 — converted claims part A (flipped GREEN at ②)', () => {
       expect(writeByTable(d, 'heritage_properties')).toBeDefined();
       expect(writeByTable(d, 'heritage_districts')).toBeDefined();
 
-      // The second copy of both urls must not drift (the assert-schema.js §3.5 constants).
-      const assertSchema = fs.readFileSync(abs('scripts/lib/compute/assert-schema.js'), 'utf8');
+      // The second copy of both urls must not drift — since CP-PLANA (R-BZ G10) it lives in
+      // assert_schema's DESCRIPTOR (inputs.reads.externals[].url), never in its compute.
+      const assertSchema = fs.readFileSync(abs('scripts/quality/assert-schema.descriptor.json'), 'utf8');
       expect(assertSchema).toContain(REGISTER_URL);
       expect(assertSchema).toContain(HCD_URL);
     },
@@ -1339,6 +1349,7 @@ describe('row 3.4 — converted claims part B (flipped GREEN at ②)', () => {
       };
 
       const meta = buildLoadMeta({
+        descriptor: loadDescriptor(),
         acquired: {
           primaries: {
             heritage_register: {
@@ -1355,6 +1366,8 @@ describe('row 3.4 — converted claims part B (flipped GREEN at ②)', () => {
           by_target: { heritage_properties: { inserted: 3, updated: 0, deleted: 0 } },
         },
         config: { load_heritage_round_scale: 1000 },
+        // Spec 124 R-CY — the runner's withinLimit seam over the real descriptor's declared bounds.
+        withinLimit: withinLimitOf(loadDescriptor(), { load_heritage_round_scale: 1000 }),
         prior: null,
       });
 

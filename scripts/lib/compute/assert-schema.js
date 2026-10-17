@@ -61,8 +61,6 @@
 
 const { hasCoordinateSource } = require('../address-points-csv-drift');
 
-const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
-
 // Resource IDs
 const PERMITS_RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
 const COA_ACTIVE_RESOURCE_ID = '51fd09cd-99d6-430a-9d42-c24a937b0cb0';
@@ -83,33 +81,17 @@ const EXPECTED_COA_COLUMNS = [
   'DESCRIPTION', 'SUB_TYPE',
 ];
 
-// Source data download URLs
-const ADDRESS_POINTS_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/abedd8bc-e3dd-4d45-8e69-79165a76e4fa/resource/64d4e54b-738f-4cd9-a9e7-8050fac8a52f/download/address-points-4326.csv';
-const PARCELS_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/property-boundaries/resource/23d1f792-018f-4069-ac5d-443e932e1b78/download/Property%20Boundaries%20-%204326.csv';
-const MASSING_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/387b2e3b-2a76-4199-8b3b-0b7d22e2ec10/resource/667237d6-4d3c-4cf3-8cb7-e91c48d59375/download/3dmassingshapefile_2025_wgs84.zip';
-const RAVINE_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ravine-natural-feature-protection-area/resource/bb81bb0f-f88a-4f3e-bca7-a328154ba31b/download/ravine-natural-feature-protection-area-wgs84.zip';
-const HERITAGE_REGISTER_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/e41da515-5ad1-4bc3-85ea-18ec9e55cd33/resource/108b1080-d048-439f-a9e8-e8d6cd81bddb/download/heritage_register_address_points_wgs84.zip';
-const HERITAGE_HCD_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/37a3c911-0813-4e87-90ed-3b9fa6156a63/resource/8e6b9347-63a8-4dac-91fb-a6491a8c1e5a/download/heritageconservationdistrict.zip';
-const CENTRELINE_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/d86bdca4-ab2c-470d-80fb-34647ea0e87f/download/centreline-version-2-4326.zip';
-const NEIGHBOURHOODS_URL =
-  'https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/fc443770-ef0a-4025-9c2c-2cb558bfab00/resource/0719053b-28b7-48ea-b863-068823a93aaa/download/neighbourhoods-4326.geojson';
+// Every endpoint is the descriptor's `inputs.reads.externals[].url` (Spec 124 R-BZ G10),
+// read off `ctx.descriptor` at call time — the compute holds no URL literal.
 
-// The reachability subject set — the declared twin is
-// `source_archives_reachable.expect.http_head_ok` + `inputs.reads.externals`.
-const SOURCE_ARCHIVES = [
-  { url: MASSING_URL, label: '3D Massing' },
-  { url: RAVINE_URL, label: 'Ravine Protection' },
-  { url: HERITAGE_REGISTER_URL, label: 'Heritage Register' },
-  { url: HERITAGE_HCD_URL, label: 'Heritage Conservation Districts' },
-  { url: CENTRELINE_URL, label: 'Toronto Centreline' },
-];
+/** Operator-facing labels for the archives `source_archives_reachable.expect.http_head_ok` names. */
+const ARCHIVE_LABELS = {
+  massing_zip: '3D Massing',
+  ravine_zip: 'Ravine Protection',
+  heritage_register_zip: 'Heritage Register',
+  heritage_hcd_zip: 'Heritage Conservation Districts',
+  centreline_zip: 'Toronto Centreline',
+};
 
 // Declared twins: `address_point_columns.expect` / `parcel_columns.expect`. The
 // coordinate columns are deliberately absent from the flat list — their OR-contract
@@ -208,20 +190,20 @@ async function coa_columns(ctx) {
 }
 
 async function address_point_columns(ctx) {
-  const headers = await csvHeaders(ctx, ADDRESS_POINTS_URL, 'Address Points');
+  const headers = await csvHeaders(ctx, externalUrl(ctx, 'address_points_csv'), 'Address Points');
   const ok = checkColumns(ctx, headers, EXPECTED_ADDRESS_POINT_COLUMNS, 'Address Points');
   ctx.report('address_point_columns', { violations: ok ? 0 : 1 });
 }
 
 async function address_point_coordinate_source(ctx) {
-  const headers = await csvHeaders(ctx, ADDRESS_POINTS_URL, 'Address Points');
+  const headers = await csvHeaders(ctx, externalUrl(ctx, 'address_points_csv'), 'Address Points');
   const ok = hasCoordinateSource(new Set(headers));
   if (!ok) ctx.log.error(tag(ctx), 'FAIL: Address Points — no coordinate source column present');
   ctx.report('address_point_coordinate_source', { violations: ok ? 0 : 1 });
 }
 
 async function parcel_columns(ctx) {
-  const headers = await csvHeaders(ctx, PARCELS_URL, 'Parcels');
+  const headers = await csvHeaders(ctx, externalUrl(ctx, 'parcels_csv'), 'Parcels');
   const ok = checkColumns(ctx, headers, EXPECTED_PARCEL_COLUMNS, 'Parcels');
   ctx.report('parcel_columns', { violations: ok ? 0 : 1 });
 }
@@ -229,19 +211,20 @@ async function parcel_columns(ctx) {
 async function source_archives_reachable(ctx) {
   // One try per archive: one unreachable archive must not hide the other four.
   let failures = 0;
-  for (const archive of SOURCE_ARCHIVES) {
+  for (const id of declaredArchives(ctx)) {
+    const label = ARCHIVE_LABELS[id] || id;
     try {
-      await checkUrlAccessible(ctx, archive.url, archive.label);
+      await checkUrlAccessible(ctx, externalUrl(ctx, id), label);
     } catch (err) {
       failures += 1;
-      ctx.log.error(tag(ctx), `FAIL: ${archive.label} — ${err.message}`);
+      ctx.log.error(tag(ctx), `FAIL: ${label} — ${err.message}`);
     }
   }
   ctx.report('source_archives_reachable', { violations: failures });
 }
 
 async function neighbourhood_id_property(ctx) {
-  const keys = await fetchGeoJsonPropertyKeys(ctx, NEIGHBOURHOODS_URL, 'Neighbourhoods');
+  const keys = await fetchGeoJsonPropertyKeys(ctx, externalUrl(ctx, 'neighbourhoods_geojson'), 'Neighbourhoods');
   const ok = NEIGHBOURHOOD_ID_PROPS.some((p) => keys.includes(p));
   if (!ok) ctx.log.error(tag(ctx), `FAIL: Neighbourhoods — no ID property found in: ${keys.join(', ')}`);
   else ctx.log.info(tag(ctx), `OK: Neighbourhoods — ID property found (${keys.length} total properties)`);
@@ -278,6 +261,24 @@ function tag(ctx) {
  */
 const CSV_HEADER_MEMO = new WeakMap();
 
+/** The declared url of external `id` (`inputs.reads.externals[]`); a missing one is a descriptor fault, thrown by name. */
+function externalUrl(ctx, id) {
+  const ext = (ctx.descriptor.inputs.reads.externals || []).find((e) => e.id === id);
+  if (!ext || typeof ext.url !== 'string' || ext.url.length === 0) {
+    throw new Error(`${tag(ctx)} descriptor declares no url for external "${id}"`);
+  }
+  return ext.url;
+}
+
+/** The archive ids `source_archives_reachable` HEADs, in declared order (`expect.http_head_ok`); a missing list is a descriptor fault, thrown by name (never an empty silent pass). */
+function declaredArchives(ctx) {
+  const check = ctx.descriptor.checks.find((c) => c.id === 'source_archives_reachable');
+  if (!check || !check.expect || !Array.isArray(check.expect.http_head_ok)) {
+    throw new Error(`${tag(ctx)} descriptor declares no expect.http_head_ok for check "source_archives_reachable"`);
+  }
+  return check.expect.http_head_ok;
+}
+
 function csvHeaders(ctx, url, label) {
   let byUrl = CSV_HEADER_MEMO.get(ctx);
   if (!byUrl) {
@@ -289,7 +290,7 @@ function csvHeaders(ctx, url, label) {
 }
 
 async function fetchFieldNames(ctx, resourceId, label) {
-  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`;
+  const url = `${externalUrl(ctx, 'ckan_datastore_api')}?resource_id=${resourceId}&limit=0`;
   ctx.log.info(tag(ctx), `Fetching metadata for ${label}...`);
 
   const res = await ctx.fetch(url);
@@ -329,7 +330,7 @@ function parseCost(v) {
 }
 
 async function validateTypeSample(ctx, resourceId, label) {
-  const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${resourceId}&limit=${ctx.config.assert_schema_type_sample_rows}`;
+  const url = `${externalUrl(ctx, 'ckan_datastore_api')}?resource_id=${resourceId}&limit=${ctx.config.assert_schema_type_sample_rows}`;
   const res = await ctx.fetch(url);
   if (!res.ok) return true; // non-fatal — declared in the descriptor's limitations[]
 

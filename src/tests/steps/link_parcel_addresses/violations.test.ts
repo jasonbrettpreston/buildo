@@ -768,7 +768,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
         if (gate?.gated_skip === true) {
           // A gated skip is the only way a POST may omit final_link_count; assert the skip explicitly.
           expect(gate.reason, `${p.file}: gated skip must carry the no_upstream_changes reason`).toBe('no_upstream_changes');
-          expect(records_meta?.terminal, `${p.file}: gated skip must record terminal: skip_gated_no_activity`).toBe('skip_gated_no_activity');
+          expect(records_meta?.terminal, `${p.file}: gated skip must record terminal: skipped_no_activity`).toBe('skipped_no_activity');
         } else {
           const audit = ((p as unknown as { summary?: { records_meta?: { audit_table?: { rows?: Array<{ metric: string; value: unknown }> } } } })
             .summary?.records_meta?.audit_table?.rows ?? []).find((r) => r.metric === 'final_link_count');
@@ -1001,7 +1001,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(/pg_stat_activity|pg_locks/i.test(own), 'this suite directly asserts lock/transaction internals').toBe(false);
   });
 
-  it('#169 Rung 1 inline-WKT is non-negotiable for every azimuth / KNN / area step — this IS a spatial containment step (ST_Within), needing a rung-1 inline-WKT fixture (flipped: peel 8a, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.test.ts)', () => {
+  it('#169 Rung 1 inline-WKT is non-negotiable for every azimuth / KNN / area step — this IS a spatial containment step (ST_Within), needing a rung-1 inline-WKT fixture (flipped: peel 8a, src/tests/steps/link_parcel_addresses/rung1-inline-wkt.db.test.ts)', () => {
     // Post-commit-7 the spatial predicate lives in the compute (G2's "verbatim" guarantee,
     // Rule 2 compute-owns-SQL) — the frozen STEP_REL wrapper (§5.1) has no SQL text at all.
     const src = stripComments(computeSource());
@@ -1035,7 +1035,7 @@ describe('55-A — the hard per-conversion gate (44, k=PER_STEP)', () => {
     expect(ledger.includes('LPA-D5'), 'no LPA-D5 row in the defect ledger').toBe(true);
   });
 
-  it('#172 Metamorphic invariants hold — a spatial compute ships a metamorphic suite (a parcel translated +1000/+1000 with its address points must link identically; ST_Within is scale-invariant under uniform translation) (flipped: peel 8a, src/tests/steps/link_parcel_addresses/metamorphic.test.ts)', () => {
+  it('#172 Metamorphic invariants hold — a spatial compute ships a metamorphic suite (a parcel translated +1000/+1000 with its address points must link identically; ST_Within is scale-invariant under uniform translation) (flipped: peel 8a, src/tests/steps/link_parcel_addresses/metamorphic.db.test.ts)', () => {
     const src = stripComments(computeSource());
     expect(/\bST_Within\b/i.test(src)).toBe(true);
     expect(stepTestDirFiles().some((f) => /metamorphic/i.test(f)), 'a spatial compute with no metamorphic suite').toBe(true);

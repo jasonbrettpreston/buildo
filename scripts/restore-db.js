@@ -320,7 +320,7 @@ function unquoteTocIdent(s) {
  * TOC preflight (Spec 112 §4.3, the CRITICAL gate) — pure parse of
  * `pg_restore --list <dump>` output into the set of tables the dump can
  * actually restore. Extracted as a pure function (no spawn) so
- * src/tests/restore-db.infra.test.ts can feed it real `pg_restore --list`
+ * src/tests/db/restore-db.db.test.ts can feed it real `pg_restore --list`
  * output and src/tests/restore-db.logic.test.ts can feed it synthetic
  * fixtures without spawning a process.
  *

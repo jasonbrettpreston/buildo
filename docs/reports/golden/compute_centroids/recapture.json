@@ -1,0 +1,12 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources-full-forced-1.json": {
+      "via": "env",
+      "env": {
+        "COMPUTE_CENTROIDS_FORCE_FULL": "1"
+      },
+      "why": "the descriptor's force_full env (V3 fleet night 2026-10-16 night.log)."
+    }
+  }
+}

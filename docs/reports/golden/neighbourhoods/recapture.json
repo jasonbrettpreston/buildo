@@ -1,0 +1,18 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/neighbourhoods-cohort-differential.js",
+          "--run",
+          "--side=post",
+          "--step=scripts/load-neighbourhoods.js",
+          "--out=docs/reports/golden/neighbourhoods/post/sources.forced.json"
+        ]
+      ],
+      "why": "#38 evidence: the committed neighbourhoods/forced/cohort.json differential (R-AS) (V3 fleet night 2026-10-16 nonzero-redo.sh)."
+    }
+  }
+}

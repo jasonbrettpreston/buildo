@@ -1240,4 +1240,14 @@ describe('closed runner template set (R-BZ)', () => {
     const countLine = fs.readFileSync(path.resolve(process.cwd(), 'scripts/lib/step/index.js'), 'utf8').split(/\r?\n/).findIndex((l) => l.includes('COUNT(*)::bigint AS n FROM')) + 1;
     expect(map.get('4253520a71996e5c')).toBe(`scripts/lib/step/index.js:${countLine}`);
   }, 60000);
+
+  it('#44 G1 (McDonald\'s Airtight V3): every run-history reader shape is runner-owned, derived from readRunHistory itself; a compute pipeline_runs literal is not', async () => {
+    const map = await mod.buildRunnerFingerprints();
+    const readerLine = fs.readFileSync(path.resolve(process.cwd(), 'scripts/lib/step/ledger.js'), 'utf8').split(/\r?\n/).findIndex((l) => l.startsWith('async function readRunHistory(')) + 1;
+    // The five fingerprints the 2026-10-16 traces attributed to 24 steps (diagnosis G1).
+    for (const fp of ['107ed6b6df1704a1', '1d2c7f53e482c10a', '16eb6379c778a859', '26579f51a731e28e', '5a51af92125e085b']) {
+      expect(map.get(fp)).toBe(`scripts/lib/step/ledger.js:${readerLine}`);
+    }
+    expect(map.has(lq.fingerprintSync('SELECT id, records_meta FROM pipeline_runs WHERE pipeline = $1 ORDER BY id DESC LIMIT 1'))).toBe(false);
+  }, 60000);
 });

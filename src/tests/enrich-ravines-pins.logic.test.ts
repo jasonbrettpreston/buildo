@@ -18,7 +18,7 @@
 //
 // The test loads the REAL descriptor (fs + JSON.parse) so a pin that exists only in prose cannot
 // pass: the hook's reads and the declared pins are locked against the SAME artifact the runner
-// evaluates. The ONLY throw that stays in the compute is the own-table SRID guard (case (p)).
+// evaluates. The own-table SRID guard is no longer a compute throw (CP-S5: the runner srid requirement; case (o)).
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -298,11 +298,12 @@ describe('readRavineContract — the producer read IS the library read (G1/G12)'
 });
 
 // ---------------------------------------------------------------------------
-// D. The ONE throw that stays: the own-table SRID guard (out of scope — never a producer pin)
+// D. The own-table SRID guard — never a producer pin; since CP-S5 (Spec 124 R-CX) it is the
+//    declared guards.requires srid row the runner probes before this hook, not a compute throw
 // ---------------------------------------------------------------------------
 
-describe('the SRID assertion stays in the compute (own-table guard, not a producer contract)', () => {
-  it('(o) parcels.geom at 3857 still rejects by name', async () => {
+describe('the SRID assertion is not in the compute (own-table guard → the runner srid requirement, CP-S5)', () => {
+  it('(o) parcels.geom at 3857 no longer reaches the hook: readRavineContract issues no Find_SRID read and resolves', async () => {
     const calls: Array<{ sql: string; params: unknown[] }> = [];
     const pool = {
       query: async (sql: string, params: unknown[] = []) => {
@@ -316,6 +317,7 @@ describe('the SRID assertion stays in the compute (own-table guard, not a produc
     };
     await expect(
       compute.readRavineContract({ pool, producer: makeProducer({ pool, chains: ['sources'] }) }),
-    ).rejects.toThrow(/SRID is 3857, expected 4326/);
+    ).resolves.toBeTruthy();
+    expect(calls.some((c) => /Find_SRID/i.test(c.sql))).toBe(false);
   });
 });

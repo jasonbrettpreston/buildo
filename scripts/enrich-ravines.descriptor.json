@@ -156,7 +156,7 @@
         "stamp": "records_meta.ravine_load.source_dataset_version",
         "op": "nonzero",
         "why": {
-          "text": "#418 Layer-2 lineage: the write scope compares parcels.ravine_dataset_version_when_enriched against this producer stamp — load_ravines' outputs.invalidates by:pin resolves here. Also the empty-lineage producer contract (formerly a throw).",
+          "text": "#418 Layer-2 lineage: the write scope compares parcels.ravine_dataset_version_when_enriched against this producer stamp, so a load_ravines reload that moves source_dataset_version re-enriches every parcel whose stamp no longer matches (the edge is this pin, declared by the column's writer; load_ravines carries no invalidates row, 122a §A27 trap 4). Also the empty-lineage producer contract (formerly a throw).",
           "liveness": {
             "kind": "file",
             "ref": "scripts/lib/compute/enrich-ravines.js"
@@ -227,6 +227,19 @@
           "liveness": {
             "kind": "external",
             "ref": "postgis"
+          }
+        }
+      },
+      {
+        "kind": "srid",
+        "name": "parcels.geom",
+        "equals": 4326,
+        "on_missing": "fail",
+        "why": {
+          "text": "CP-S5 (Spec 124 R-CX, 2026-10-16) — F3 half of DEC-F §3.10: the boolean join and the centroid geography KNN assume parcels.geom is 4326 and the compute has no ST_Transform path. Probed by the runner (REQUIREMENT_PROBES.srid, Find_SRID) before the contract_read hook; it replaces the Find_SRID read and SRID throw that readRavineContract carried (R-BZ G3/G8).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.geom"
           }
         }
       },
@@ -769,7 +782,7 @@
       "check_id": "none"
     },
     {
-      "what": "RV-L2 — guards.srid is DECLARATIVE, not runner-enforced: scripts/lib/step/index.js has no consumer for it, so the SRID=4326 assertion stays a hook check folded into contract_read (readRavineContract), which is guaranteed to run pre-transaction on every invocation (the value is also read by COMPUTE modules directly where a step needs it, per the link-massing.js / link-neighbourhoods.js precedent). guards.empty_source, by contrast, IS runner-enforced since P3-C1 #32 (2026-10-03): measureInputGuards (scripts/lib/step/index.js) counts every guards.empty_source table (string OR array) before any phase or hook and, on a zero count, writes a FAIL gate row with halt=true and skips every phase — so the L14 'ravines must be non-empty' HALT was removed from the hook (S4) and lives in the declared guard.",
+      "what": "RV-L2 — guards.srid is DECLARATIVE, not runner-enforced: scripts/lib/step/index.js has no consumer for it (the value is also read by COMPUTE modules directly where a step needs it, per the link-massing.js / link-neighbourhoods.js precedent). CLOSED for the halt by CP-S5 (2026-10-16, Spec 124 R-CX): the SRID=4326 assertion is the guards.requires {kind:\"srid\", name:\"parcels.geom\", equals:4326} row, probed by the runner (REQUIREMENT_PROBES.srid) before the contract_read hook; readRavineContract holds no Find_SRID read and no SRID throw. guards.empty_source, by contrast, IS runner-enforced since P3-C1 #32 (2026-10-03): measureInputGuards (scripts/lib/step/index.js) counts every guards.empty_source table (string OR array) before any phase or hook and, on a zero count, writes a FAIL gate row with halt=true and skips every phase — so the L14 'ravines must be non-empty' HALT was removed from the hook (S4) and lives in the declared guard.",
       "measured": "scripts/lib/step/index.js measureInputGuards (runs pre-phase/pre-hook for non-INGESTOR steps; zero rows → FAIL row with halt=true) and src/tests/p3c1-32.logic.test.ts, 2026-10-03.",
       "check_id": "none"
     }
@@ -968,7 +981,7 @@
         "terminal": "string"
       },
       "why": {
-        "text": "readRavineContract threw — the F2 L14 empty-ravines HALT (now the declared guards.empty_source, runner-enforced) OR the SRID=4326 assertion (still thrown by this pre-transaction hook per RV-L2). The former F1 §9/L18 producer-protocol conditions — missing/failed/stale producer, an invalid-geometry ratio over enrich_ravines_producer_invalid_geom_max_pct, an empty source_dataset_version — are no longer thrown by this hook: they are DECLARED staleness.pins[] rows evaluated by the runner before any phase (S1-P-6, Rule 10), so they FAIL the run as rows. PRESERVED behaviour: the legacy also halts before any transaction opens for every one of these conditions.",
+        "text": "readRavineContract threw — the F2 L14 empty-ravines HALT (now the declared guards.empty_source, runner-enforced) (the SRID=4326 assertion is no longer thrown here: since CP-S5 it is the declared guards.requires srid row, refused by the runner before this hook — failed_missing_precondition). The former F1 §9/L18 producer-protocol conditions — missing/failed/stale producer, an invalid-geometry ratio over enrich_ravines_producer_invalid_geom_max_pct, an empty source_dataset_version — are no longer thrown by this hook: they are DECLARED staleness.pins[] rows evaluated by the runner before any phase (S1-P-6, Rule 10), so they FAIL the run as rows. PRESERVED behaviour: the legacy also halts before any transaction opens for every one of these conditions.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/enrich-ravines.js"
@@ -976,7 +989,7 @@
       }
     },
     {
-      "id": "failed_precondition",
+      "id": "failed_missing_precondition",
       "kind": "fail_error",
       "status": "failed",
       "records_meta": {

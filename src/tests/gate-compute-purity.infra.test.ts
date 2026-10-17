@@ -221,12 +221,29 @@ describe('G1–G8 — compute purity (Rule 2 / §5.5: compute MEASURES only)', (
 
   // ---------------------------------------------------------------------------
   // T8 — ordinals: two sites in ONE file sharing `rule@fp` get `#1`, `#2` … in
-  // source order. The real tree carries such a group (enrich-centreline.js has the
-  // same `pipeline_runs` read twice → two G1 sites on one fingerprint), so the
-  // property is asserted over REAL output, not a synthetic fixture.
+  // source order. The real tree USED to carry such a group (the last one was
+  // assert-global-coverage.js's two information_schema column counts, closed by CP-S5
+  // 2026-10-16), so the group is now proven on a temp repo whose one compute entry reads
+  // `pipeline_runs` twice (two G1 sites on one fingerprint); every real group that still
+  // exists is held to the same 1..n property.
   // ---------------------------------------------------------------------------
-  it('T8: a real file has a rule@fp group of size ≥2 whose ordinals are 1..n in line order', async () => {
-    const sites = await purityMod.scanPurity({ repoRoot: REPO_ROOT });
+  it('T8: a file with a rule@fp group of size ≥2 gets ordinals 1..n in line order (temp repo + every real group)', async () => {
+    const dup = fs.mkdtempSync(path.join(os.tmpdir(), 'compute-purity-ordinals-'));
+    fs.mkdirSync(path.join(dup, 'scripts/lib/compute'), { recursive: true });
+    fs.writeFileSync(
+      path.join(dup, 'scripts/lib/compute/dup-compute.js'),
+      [
+        "async function a(ctx) { return ctx.pool.query('SELECT max(started_at) FROM pipeline_runs'); }",
+        "async function b(ctx) { return ctx.pool.query('SELECT max(started_at) FROM pipeline_runs'); }",
+        'module.exports = { a, b };',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    const sites = [
+      ...(await purityMod.scanPurity({ repoRoot: dup, files: ['scripts/lib/compute/dup-compute.js'], entries: ['scripts/lib/compute/dup-compute.js'] })),
+      ...(await purityMod.scanPurity({ repoRoot: REPO_ROOT })),
+    ];
 
     const groups = new Map<string, Array<{ line: number; key: string }>>();
     for (const s of sites as Array<{ file: string; rule: string; fp: string; line: number; key: string }>) {

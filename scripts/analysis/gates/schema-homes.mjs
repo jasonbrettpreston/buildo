@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6.1 (#44 witness — registry-truth plan fold 9 C7-1 checks[] SQL reads home, C7-2 per-mode write_inventory; REPORT-ONLY until FLEET-2)
+// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §6.6.1 (#44 witness — registry-truth plan fold 9 C7-1 checks[] SQL reads home, C7-2 per-mode write_inventory; report-only adoption print — enforced by #44 (a)/(c), Spec 124 R-DB)
 //
 // THE TWO FOLD-9 SCHEMA HOMES — the runner contract's two missing declaration
 // sites — and the ONE gate that witnesses them. Nothing here BLOCKS.
@@ -18,8 +18,12 @@
 //   state a single honest integer today; `statements` remains the mode-agnostic default and
 //   `by_mode[mode].statements` is the exact per-mode value when declared.
 //
-// POSTURE. REPORT-ONLY until the FLEET-2 landing commit populates the homes:
-// `pass` is ALWAYS true, every unresolvable row is PRINTED as an
+// POSTURE (Spec 124 R-DB, McDonald's Airtight V3, 2026-10-17). This gate is a REPORT-ONLY
+// ADOPTION PRINT, permanently: the rules it once waited to arm are enforced by #44 instead —
+// R-BJ by #44 (a) (a traced check read outside `inputs.reads` ∪ `checks[].reads` is
+// `FAIL:WITNESS:<slug>:a:<table>.<col>`, `witness.mjs` undeclaredItems) and R-BK by #44 (c)
+// (the expected count is `writeInventoryForMode`, by_mode[mode] when declared). FLEET-2
+// landed (3965900e), so the old "until FLEET-2" label was stale. `pass` is ALWAYS true, every unresolvable row is PRINTED as an
 // `R:check-reads:<slug>:<table>.<column>` row, and there is NO exception list
 // (a hand-kept allowlist is exactly the drift this plan deletes). The gate's
 // job today is to measure adoption and name the gap, not to redden a fleet
@@ -112,9 +116,9 @@ function inputTableCovers(descriptor) {
  * COVERED when `inputs.reads.tables` has that table with no `columns` or with
  * that column, OR when `declaredCheckReads` carries `table.column`/`table.*`.
  *
- * `pass` is ALWAYS true: this is REPORT-ONLY until the FLEET-2 landing commit
- * populates `checks[].reads`, so every uncovered read is reported and nothing
- * blocks.
+ * `pass` is ALWAYS true: this is a report-only adoption print (R-DB); the
+ * enforcing half of R-BJ is #44 (a), so every uncovered read is reported here and
+ * nothing blocks here.
  * @param {any} descriptor
  * @param {Array<{table: string, column?: string}>} traced
  * @returns {{reportOnly: true, pass: true, uncovered: string[], rows: string[], detail: string}}
@@ -202,7 +206,7 @@ export function homesReport(descriptors) {
     checkReadsDeclarers: sortedUnique(checkReadsDeclarers),
     byModeDeclarers: sortedUnique(byModeDeclarers),
     detail:
-      `REPORT-ONLY until FLEET-2 (fold 9 C7-1/C7-2): checks[].reads declared by ` +
+      `report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by ` +
       `${checkReadsDeclarers.length}/${list.length} step(s); write_inventory.by_mode declared by ` +
       `${byModeDeclarers.length}/${list.length}`,
   };
