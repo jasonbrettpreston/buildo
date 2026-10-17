@@ -1924,8 +1924,8 @@
       "spec": "122 §1.10",
       "title": "Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering)",
       "promised": "Spec 122 §1.10's archetype census, today scoped to the 27 `sources` steps only, is widened to declare a real archetype for the 36 non-`sources` unconverted files (permits/coa/deep_scrapes/entities+wsib/orphan) — required before C6 can be archetype-grouped and risk-ordered the way C4/C5 are",
-      "status": "NOT_STARTED",
-      "evidence": "scripts/steps/_schema/step-archetype-census.json (WF1 commit 1, 2026-09-10): 39 of its 58 entries carry archetype \"UNDECLARED\" — the 36 C6 files plus `reconcile` (chain-head). Seeding real archetypes for them is this item's own future WF, deliberately not built here (Ask A3's own ruling: one WF before C6 opens, not per-step at PH-0)",
+      "status": "PARTIAL",
+      "evidence": "scripts/steps/_schema/step-archetype-census.json (WF1 commit 1, 2026-09-10): 39 of its 58 entries carry archetype \"UNDECLARED\" — the 36 C6 files plus `reconcile` (chain-head). Seeding real archetypes for them is this item's own future WF, deliberately not built here (Ask A3's own ruling: one WF before C6 opens, not per-step at PH-0) 2026-10-17 key-step scope (operator y, phase-4 decision 1): 9 rows declared (permits, coa, link_coa, classify_lifecycle_phase, assert_lifecycle_phase_distribution, compute_phase_calibration, compute_cost_estimates, compute_trade_forecasts, compute_opportunity_scores), each PROVISIONAL until PH-0 (R-AO); dispatch_notifications and the remaining C6 files stay UNDECLARED (deferred to the full-conversion phase).",
       "owner": {
         "kind": "wf",
         "ref": "wf: unassigned"
@@ -1934,7 +1934,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-09-10"
+      "last_reviewed": "2026-10-17"
     },
     {
       "id": "CLAIMS-MTX",

@@ -124,9 +124,9 @@
     {
       "slug": "classify_lifecycle_phase",
       "file": "scripts/classify-lifecycle-phase.js",
-      "archetype": "UNDECLARED",
+      "archetype": "ENRICHER",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Derives classification columns on rows other steps produced: UPDATE permits (scripts/classify-lifecycle-phase.js:310) and UPDATE coa_applications (:347) lifecycle phase, with append-only history into lifecycle_transitions (:395), permit_phase_transitions (:875), lifecycle_status_history (:902), and a declared notifications INSERT (:86; stays a declared write target of this step, operator decision 5). Multi-pass, multi-target ENRICHER, precedent enrich_parcels."
     },
     {
       "slug": "classify_permit_phase",
@@ -173,16 +173,16 @@
     {
       "slug": "compute_cost_estimates",
       "file": "scripts/compute-cost-estimates.js",
-      "archetype": "UNDECLARED",
+      "archetype": "MATERIALIZER",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Materializes one derived row per permit into its own table: INSERT INTO cost_estimates … ON CONFLICT DO UPDATE (scripts/compute-cost-estimates.js:213-220), plus a second declared write target UPDATE data_quality_snapshots (:617; MQ-B1 batch_why, operator decision 7). Not an ENRICHER: it never updates columns of the rows it reads."
     },
     {
       "slug": "compute_opportunity_scores",
       "file": "scripts/compute-opportunity-scores.js",
-      "archetype": "UNDECLARED",
+      "archetype": "ENRICHER",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Derives one column on rows another step produced: UPDATE trade_forecasts SET opportunity_score (scripts/compute-opportunity-scores.js:237); trade_forecasts is materialized by compute_trade_forecasts. Precedent geocode_permits (ENRICHER: derived columns on existing rows)."
     },
     {
       "slug": "compute_parcel_cost_estimates",
@@ -197,9 +197,9 @@
     {
       "slug": "compute_phase_calibration",
       "file": "scripts/compute-phase-calibration.js",
-      "archetype": "UNDECLARED",
+      "archetype": "MATERIALIZER",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Rebuilds a derived table from other tables: TRUNCATE + INSERT phase_stay_calibration (scripts/compute-phase-calibration.js:154, :415) computed from lifecycle history; no per-row enrichment of a source table. Precedent link_parcel_addresses (derived cache table)."
     },
     {
       "slug": "compute_storey_norms",
@@ -218,9 +218,9 @@
     {
       "slug": "compute_trade_forecasts",
       "file": "scripts/compute-trade-forecasts.js",
-      "archetype": "UNDECLARED",
+      "archetype": "MATERIALIZER",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Rebuilds the derived trade_forecasts table: DELETE FROM trade_forecasts (scripts/compute-trade-forecasts.js:1116) then INSERT … ON CONFLICT DO UPDATE (:1277-1283), computed from permits, trades and calibration inputs. Precedent link_parcel_addresses."
     },
     {
       "slug": "dispatch_notifications",
@@ -323,9 +323,9 @@
     {
       "slug": "link_coa",
       "file": "scripts/link-coa.js",
-      "archetype": "UNDECLARED",
+      "archetype": "LINK",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Address-tier cascade (street_num + street_name_normalized, ward booster, description FTS; scripts/link-coa.js header :1-20) that writes the link columns coa_applications.linked_permit_num/linked_confidence and permits.linked_coa_application_number, with retraction (unlinks stale links, :121-126 and :150-154). Same shape as link_parcels (LINK: address cascade + retraction), not link_wsib (MATCHER: no un-match path)."
     },
     {
       "slug": "link_neighbourhoods",
@@ -367,9 +367,9 @@
     {
       "slug": "coa",
       "file": "scripts/load-coa.js",
-      "archetype": "UNDECLARED",
+      "archetype": "INGESTOR",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Acquires an external source and writes its own tables: CKAN DataStore pull (scripts/load-coa.js:25 CKAN_BASE, :111 fetch), upsert into coa_applications (:293 INSERT … ON CONFLICT), status-change history rows into lifecycle_status_history (:390), departed-application marking UPDATE coa_applications (:576). Multi-target INGESTOR, precedent load_zoning."
     },
     {
       "slug": "load_heritage",
@@ -416,9 +416,9 @@
     {
       "slug": "permits",
       "file": "scripts/load-permits.js",
-      "archetype": "UNDECLARED",
+      "archetype": "INGESTOR",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Acquires an external source and writes its own tables: CKAN DataStore pull (scripts/load-permits.js:33 CKAN_BASE), upsert into permits (:338 INSERT … ON CONFLICT), status-change history rows into lifecycle_status_history (:459), legacy run row into sync_runs (:725; retires to pipeline_runs at cutover, CP-PERMITS). Multi-target INGESTOR, precedent load_zoning."
     },
     {
       "slug": "load_wsib",
@@ -468,9 +468,9 @@
     {
       "slug": "assert_lifecycle_phase_distribution",
       "file": "scripts/quality/assert-lifecycle-phase-distribution.js",
-      "archetype": "UNDECLARED",
+      "archetype": "ASSERT",
       "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Read-only distribution and cross-checks over permits/coa_applications/universal_stream_catalog (scripts/quality/assert-lifecycle-phase-distribution.js:203-702, pool.query SELECTs only; the DELETE at :286 is recovery text in a message, not a statement) with a halting rule as a pure function (:114-119) and posture flags (:74-75). No domain write, so outputs \"none\" fits. Precedent assert_data_bounds."
     },
     {
       "slug": "assert_network_health",

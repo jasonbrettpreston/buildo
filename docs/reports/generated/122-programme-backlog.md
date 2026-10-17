@@ -10,8 +10,8 @@ Total items: **138**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 29 |
-| ⚠️ PARTIAL | 16 |
+| ⬜ NOT_STARTED | 28 |
+| ⚠️ PARTIAL | 17 |
 | ✅ BUILT | 87 |
 | ⏭️ SUPERSEDED | 6 |
 
@@ -138,7 +138,7 @@ Total items: **138**
 | `ACC-1` | 122 §7.2 | Acceptance is per-slug and row-derived, never a GitHub run tick | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `LAND-1` | 124 §R-8 | Landing discipline declared: derived-artifact regen, EOL normalisation, exact-command cloud-write allow rules | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
 | `PH2-EXT` | 123 §2 | PH-2 churn×complexity population widened from 27 sources steps to all 65 chain slugs | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
-| `ARCH-CENSUS` | 122 §1.10 | Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering) | ⬜ NOT_STARTED | wf: wf: unassigned | — | 2026-09-10 |
+| `ARCH-CENSUS` | 122 §1.10 | Archetype declared for the 36 non-sources unconverted files (blocks any C6 ordering) | ⚠️ PARTIAL | wf: wf: unassigned | — | 2026-10-17 |
 | `CLAIMS-MTX` | 123 §5 | Claims × steps matrix generated (plan-claims.mjs emits the 44/5/6 split today, not a per-step × per-claim grid) | ⬜ NOT_STARTED | followup: review_followups.md (WF1 'conversion roadmap' filing, 2026-09-10) | — | 2026-09-10 |
 | `POST-B1-1` | 124 R-AE / 122 §5 | on_check_error "fail_step" enforced fleet-wide | ✅ BUILT | followup: review_followups.md: commit-8 HIGH row (verdict.js checkRow downgrades to WARN) — CLOSED 2026-09-15 | — | 2026-09-15 |
 | `POST-B1-2` | 124 R-AE / 02-web-admin | admin engine health reads the pipeline's declared write | ✅ BUILT | followup: review_followups.md:3544 family (HIGH admin duplicate compute) | — | 2026-09-15 |
