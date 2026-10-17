@@ -3,15 +3,14 @@
 # 1-8 unchanged (static/staged checks) + typecheck + lint + `vitest related`
 # scoped to what THIS commit actually touches. The full Vitest suite moved to
 # pre-push (once per push, gating a whole landed group instead of every
-# commit) and still runs in CI (test.yml). Live-DB infra tests (files under
-# src/tests/db/, plus the handful of *.infra.test.ts that connect to a real
-# Postgres via src/tests/db/setup-testcontainer.ts's dbAvailable()/getTestPool
-# — restore-db.infra, enrich-heritage/enrich-ravines/load-ravines.infra, the
-# link_massing/link_parcel_addresses metamorphic + rung1-inline-wkt suites)
-# never run here at all — package.json's own "test" script excludes them
-# structurally, so even a developer with BUILDO_TEST_DB=1 exported globally
-# cannot have them fire on every commit; "npm run test:db" is their only
-# path. Pinned by src/tests/hooks-composition.infra.test.ts (both directions).
+# commit) and still runs in CI (test.yml). Tests that need Postgres are
+# *.db.test.ts (Spec 124 R-DH, 2026-10-17: under src/tests/db/ or beside their
+# step) and never run here at all — package.json's own "test" script excludes
+# **/*.db.test.ts structurally, so even a developer with BUILDO_TEST_DB=1
+# exported globally cannot have them fire on every commit; "npm run test:db"
+# is their only path. Pinned by src/tests/hooks-composition.infra.test.ts.
+# CHAIN-TOOLING (Spec 124 R-DJ, R-BC (e)): every chain-era generator --check
+# runs here, file-only (no DB, no network); the budget is measured per stage.
 # Item 5 (WF2 conversion simplification): the hook tests the INDEX — a staged
 # file that also has unstaged edits is blocked before any check reads the tree.
 bash scripts/hooks/check-partial-staging.sh && \
@@ -21,6 +20,18 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/analysis/src-sql-ledger.mjs --check && \
   node scripts/analysis/generate-chain-args.mjs --check && \
   node scripts/generate-bylaw-provisions.mjs --check && \
+  node scripts/generate-ingest-batch.js --check && \
+  node scripts/generate-sharing-phase.js --check && \
+  node scripts/generate-logic-variable-groups.mjs --check && \
+  node scripts/generate-logic-vars-docs.mjs --check && \
+  node scripts/generate-assert-schema-probe-lists.js --check && \
+  node scripts/generate-assert-parcel-sanity-descriptor.js --check && \
+  node scripts/generate-assert-global-coverage-descriptor.js --check && \
+  node scripts/generate-assert-data-bounds-descriptor.js --check && \
+  node scripts/analysis/report-fields.mjs --check && \
+  node scripts/violations/generate-conversion-roadmap.mjs --check && \
+  node scripts/violations/generate-programme-backlog.mjs --check && \
+  node scripts/violations/generate-surface-registry.mjs --check && \
   node scripts/analysis/spec-split-check.mjs --check && \
   node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md && \
   npx vitest src/tests/system-map.infra.test.ts --run && \

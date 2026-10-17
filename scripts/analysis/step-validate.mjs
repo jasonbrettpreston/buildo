@@ -383,11 +383,33 @@ function gitStagedFiles() {
  * checks), so `--staged` must select the WHOLE registry, not just the steps
  * whose own files happen to be staged alongside it. PURE — one closed
  * predicate, self-testable with no git invocation.
+ *
+ * CHAIN-TOOLING part 1 (Spec 124 R-DJ, McDonald's Airtight V3, extends R-BC (e)(1)):
+ * the same selection for every REGISTRY INPUT — a file the fleet-wide fast
+ * invariants (#22, #36, #38–#42, #45–#49) read. Without it a commit that touches
+ * only the gates ledger, a golden, recapture.json, explained-diffs.json, the
+ * defect ledger, red evidence or a gate module skips every invariant until
+ * pre-push. Closed prefix list; anything else keeps the per-step selection.
  * @param {string[]} stagedPaths
  * @returns {boolean}
  */
+export const REGISTRY_INPUT_PREFIXES = Object.freeze([
+  'scripts/lib/step/',
+  'scripts/lib/sql-witness/',
+  'scripts/steps/_schema/',
+  'scripts/analysis/gates/',
+  'scripts/analysis/step-validate.mjs',
+  'scripts/manifest.json',
+  'scripts/seeds/logic_variables.json',
+  'docs/reports/golden/',
+  'docs/reports/red-evidence/',
+  'docs/reports/defect-ledger.md',
+]);
+
 function libStagedSelectsAll(stagedPaths) {
-  return (Array.isArray(stagedPaths) ? stagedPaths : []).some((p) => String(p).startsWith('scripts/lib/step/'));
+  return (Array.isArray(stagedPaths) ? stagedPaths : []).some((p) =>
+    REGISTRY_INPUT_PREFIXES.some((prefix) => String(p).startsWith(prefix)),
+  );
 }
 
 function filterToStaged(registry) {
@@ -5182,6 +5204,15 @@ function selfTest() {
   }
   if (libStagedSelectsAll(['docs/specs/01-pipeline/124_step_standard_policy.md'])) {
     throw new Error('self-test FAILED (gate G2): a non-lib-step staged path must NOT select the whole registry');
+  }
+  // CHAIN-TOOLING part 1 (Spec 124 R-DJ): every registry input selects the whole registry; a step's
+  // own report or a src/ file does not.
+  for (const p of ['scripts/steps/_schema/standard-gates-ledger.json', 'docs/reports/golden/parcels/recapture.json',
+    'docs/reports/defect-ledger.md', 'scripts/analysis/gates/witness.mjs']) {
+    if (!libStagedSelectsAll([p])) throw new Error(`self-test FAILED (R-DJ): registry input ${p} must select the whole registry`);
+  }
+  for (const p of ['docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md', 'src/app/page.tsx', 'docs/reports/golden-notes.md']) {
+    if (libStagedSelectsAll([p])) throw new Error(`self-test FAILED (R-DJ): ${p} is not a registry input`);
   }
   // GOLD-PRE-FRESH (fast invariant #22, C4 step H commit 2, Spec 124 R-AC,
   // 2026-09-11) — checkPreCapturesRecoverable, proven both directions on

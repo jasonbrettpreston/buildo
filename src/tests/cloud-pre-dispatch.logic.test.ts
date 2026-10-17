@@ -25,7 +25,7 @@ const cloudPre = require('../../scripts/analysis/cloud-pre-dispatch.mjs') as unk
   checkMigrationsMissing: (pool: unknown, deps?: Record<string, unknown>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkDeclaredGuardsPresent: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkTableFloors: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
-  checkSeedRowsPresent: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
+  checkSeedRowsPresent: (pool: unknown, descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>, seedKeys?: string[]) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkSharingChainRunning: (pool: unknown, chainId?: string) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   checkCiGreenForSha: (opts: { sha: string; listCiRuns: (sha: string) => Promise<Array<{ workflowName: string; status: string; conclusion: string }>> }) => Promise<{ id: string; severity: string; value: unknown; limit: string; why: string }>;
   CHECK_IDS: string[];
@@ -36,7 +36,8 @@ const cloudPre = require('../../scripts/analysis/cloud-pre-dispatch.mjs') as unk
   usage: () => string;
   reportStamp: (date?: Date) => string;
   convertedWriteTables: (descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => string[];
-  declaredLogicVariables: (descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>) => string[];
+  declaredLogicVariables: (descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>, seedKeys?: string[]) => string[];
+  seedFileKeys: (seedFile?: string) => string[];
 };
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -151,7 +152,7 @@ describe('checkMigrationsMissing — both directions (filename-keyed, never vers
     // them, so a FAIL is the only correct answer; the point is that the REAL file
     // listing is what drives it (the check is not fed a hand-written list).
     const pool = fakePool([['FROM schema_migrations', [{ filename: '001_permits.sql' }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     const r = report.rows.find((x) => x.id === 'migrations_missing');
     expect(r?.severity).toBe('FAIL');
     expect((r?.value as string[]).length).toBeGreaterThan(100);
@@ -329,7 +330,7 @@ describe('checkSeedRowsPresent — both directions (LM-D15 cloud hole)', () => {
         { variable_key: 'compute_centroids_full_recompute_batch_size' },
       ]],
     ]);
-    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName());
+    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName(), []);
     expect(r.severity).toBe('FAIL');
     expect(r.value).toEqual(['compute_parcel_cost_menu_coverage_min_pct']);
   });
@@ -338,14 +339,33 @@ describe('checkSeedRowsPresent — both directions (LM-D15 cloud hole)', () => {
     const pool = fakePool([
       ['FROM logic_variables', cloudPre.declaredLogicVariables(descriptorsByName()).map((variable_key) => ({ variable_key }))],
     ]);
-    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName());
+    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName(), []);
     expect(r.severity).toBe('INFO');
     expect(r.value).toEqual([]);
   });
 
+  // CHAIN-TOOLING part 4 (Spec 124 R-DJ, McDonald's Airtight V3, R-BC (e)(4)): the checked set is the descriptors'
+  // declared variables UNIONED with every key of scripts/seeds/logic_variables.json, so a runner-owned variable no
+  // descriptor declares (run_stranded_after_minutes, run_heartbeat_fresh_minutes) is checked too.
+  it('RED: a seed-file key no descriptor declares (runner-owned) is still a FAIL when unseeded (R-DJ part 4)', async () => {
+    const pool = fakePool([['FROM logic_variables', cloudPre.declaredLogicVariables(descriptorsByName()).map((variable_key) => ({ variable_key }))]]);
+    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName(), ['run_stranded_after_minutes']);
+    expect(r.severity).toBe('FAIL');
+    expect(r.value).toEqual(['run_stranded_after_minutes']);
+  });
+
+  it('GREEN: the default checked set is the whole committed seed file (735+ keys) plus the declared names (R-DJ part 4)', () => {
+    const keys = cloudPre.seedFileKeys();
+    expect(keys).toContain('run_stranded_after_minutes');
+    expect(keys).toContain('run_heartbeat_fresh_minutes');
+    const all = cloudPre.declaredLogicVariables(descriptorsByName(), keys);
+    expect(all.length).toBeGreaterThanOrEqual(keys.length);
+    for (const n of cloudPre.declaredLogicVariables(descriptorsByName())) expect(all).toContain(n);
+  });
+
   it('queries the registry ONCE with the whole declared set (never per-variable)', async () => {
     const pool = fakePool([['FROM logic_variables', []]]);
-    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName());
+    const r = await cloudPre.checkSeedRowsPresent(pool, descriptorsByName(), []);
     expect(r.value).toEqual([
       'compute_centroids_failed_geometries_warn',
       'compute_centroids_full_recompute_batch_size',
@@ -407,7 +427,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
   it('one FAIL row among otherwise-INFO rows yields verdict FAIL', async () => {
     // Everything healthy EXCEPT a stranded running row.
     const pool = healthyPool([['stranded', [{ id: 7, pipeline: 'sources:parcels', started_at: null }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     const severities = report.rows.map((r) => r.severity);
     expect(severities.filter((s) => s === 'FAIL')).toHaveLength(1);
     expect(severities.filter((s) => s === 'INFO').length).toBeGreaterThanOrEqual(4);
@@ -416,7 +436,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
 
   it('only WARN rows yields verdict WARN, never FAIL', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, {
+    const report = await cloudPre.buildReport(pool, { seedKeys: [],
       descriptorsByName: fakeDescriptors({
         enrich_heritage: { guards: { requires: [{ kind: 'column', name: 'parcels.heritage_verified_flag', on_missing: 'warn' }] } },
       }),
@@ -429,7 +449,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
 
   it('all seven checks emit exactly one row each, in declaration order', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     expect(report.rows.map((r) => r.id)).toEqual([
       'stranded_running_rows',
       'migrations_missing',
@@ -443,7 +463,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
 
   it('every row carries the {id, severity, value, limit, why} shape (one row per check, Spec 48 §3.6)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), listCiRuns: greenCi });
     for (const r of report.rows) {
       expect(typeof r.id).toBe('string');
       expect(['FAIL', 'WARN', 'INFO']).toContain(r.severity);
@@ -456,7 +476,7 @@ describe('buildReport — the verdict reads off the rows alone (Spec 124 Rule 10
 
   it('the report names the database it graded (never silent about the target)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
     expect(report.database).toBe('postgres');
   });
 });
@@ -483,7 +503,7 @@ describe('buildReport { only } — selected subset, declaration order, unselecte
 
   it('runs ONLY the selected checks, and in CHECK_IDS declaration order (migrations_missing first)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, {
+    const report = await cloudPre.buildReport(pool, { seedKeys: [],
       descriptorsByName: fakeDescriptors({}),
       only: ['seed_rows_present', 'migrations_missing'],
       listCiRuns: greenCi,
@@ -495,7 +515,7 @@ describe('buildReport { only } — selected subset, declaration order, unselecte
 
   it('an UNSELECTED check never runs — no stranded-rows query text is ever issued', async () => {
     const pool = healthyPool();
-    await cloudPre.buildReport(pool, {
+    await cloudPre.buildReport(pool, { seedKeys: [],
       descriptorsByName: fakeDescriptors({
         compute_centroids: { config: { logic_variables: [{ name: 'compute_centroids_full_recompute_batch_size' }] } },
       }),
@@ -510,17 +530,17 @@ describe('buildReport { only } — selected subset, declaration order, unselecte
 
   it('only: null runs all seven checks (the default is unchanged)', async () => {
     const pool = healthyPool();
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: null, listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), only: null, listCiRuns: greenCi });
     expect(report.rows.map((r) => r.id)).toEqual(cloudPre.CHECK_IDS);
   });
 
   it('an unknown id rejects with an Error naming it AND listing the known ids', async () => {
     const pool = healthyPool();
-    await expect(cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi }))
+    await expect(cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi }))
       .rejects.toThrow(/nope/);
     let err: Error | null = null;
     try {
-      await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi });
+      await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), only: ['nope'], listCiRuns: greenCi });
     } catch (e) {
       err = e as Error;
     }
@@ -533,7 +553,7 @@ describe('buildReport { only } — selected subset, declaration order, unselecte
     // checks over zero measurements would yield verdict PASS and let a chain dispatch
     // unchecked — the "green because it never looked" failure this checklist closes.
     const pool = healthyPool();
-    await expect(cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), only: [], listCiRuns: greenCi }))
+    await expect(cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), only: [], listCiRuns: greenCi }))
       .rejects.toThrow(/selected no checks/);
     // Nothing ran: the refusal is BEFORE any check touches the pool.
     expect(pool.calls).toHaveLength(0);
@@ -697,7 +717,7 @@ describe('READ-ONLY lock — no write verb in the script outside comments', () =
 describe('argv + usage', () => {
   it('DEBUG prints buildReport rows', async () => {
     const pool = fakePool([['ORDER BY id', [{ id: 7, pipeline: 'x', started_at: null }]]]);
-    const r = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}) });
+    const r = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}) });
     expect(r.rows).toBeDefined();
   });
 
@@ -803,7 +823,7 @@ describe('probeRequirement — extracted from index.js, and the runner still cal
 describe('the seven checks cover the runbook §3c pre-checks\' DB-side items', () => {
   it('the report renders as both markdown and a console table without throwing', async () => {
     const pool = fakePool([['FROM pipeline_runs', [{ id: 7, pipeline: 'chain_sources', started_at: null }]]]);
-    const report = await cloudPre.buildReport(pool, { descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
+    const report = await cloudPre.buildReport(pool, { seedKeys: [], descriptorsByName: fakeDescriptors({}), database: 'postgres', listCiRuns: greenCi });
     const md = cloudPre.renderMarkdown(report);
     expect(md).toContain('CLOUD-PRE');
     expect(md).toContain(report.verdict);

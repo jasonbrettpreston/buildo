@@ -15,6 +15,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { X509Certificate } from 'crypto';
 import hostMemory from './lib/host-memory.js';
+import { chainStatusLines } from './analysis/gates/chain-status.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -240,6 +241,14 @@ try {
   console.log(`✘ Uncommitted files: FAILED — ${errorMsg}`);
 }
 run('git log --oneline -1', 'Last commit');
+
+// 4b. Chain status (Spec 124 R-DJ CHAIN-TOOLING part 3, R-BC (a)–(e)): one line per chain, derived from
+// the registries only (file-only, no DB). A line reads ✔ only when every R-BC gate holds.
+try {
+  for (const line of chainStatusLines()) console.log(line);
+} catch (e) {
+  console.log(`✘ Chain status: FAILED — ${e.message}`);
+}
 
 // 5. API Keys
 const deepseekKey = process.env.DEEPSEEK_API_KEY;

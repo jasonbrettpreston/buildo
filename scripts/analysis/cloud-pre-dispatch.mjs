@@ -40,8 +40,9 @@
 //                                probe (probeRequirement, extracted from index.js).
 //   4. table_floors            — COUNT(*) for every converted outputs.writes[].table,
 //                                against `sources_<table>_floor` when one is seeded.
-//   5. seed_rows_present       — every converted config.logic_variables[].name must have a
-//                                logic_variables row. This is the LM-D15 cloud hole: the
+//   5. seed_rows_present       — every converted config.logic_variables[].name AND every key of
+//                                scripts/seeds/logic_variables.json (runner-owned vars included;
+//                                Spec 124 R-DJ, CHAIN-TOOLING part 4) must have a logic_variables row. This is the LM-D15 cloud hole: the
 //                                runtime throw is per-step and fires mid-run, AFTER the
 //                                dispatch has already been spent.
 //   6. sharing_chain_running   — isChainRunning('sources'). Dispatch while the chain is up
@@ -317,9 +318,20 @@ export async function checkTableFloors(pool, descriptorsByName) {
 // 5. seed_rows_present — the LM-D15 cloud hole.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Every `config.logic_variables[].name` declared by every converted descriptor. */
-export function declaredLogicVariables(descriptorsByName) {
-  const names = new Set();
+const SEED_FILE = path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json');
+
+/**
+ * Every key of the committed seed file (CHAIN-TOOLING part 4, Spec 124 R-DJ, McDonald's Airtight V3, R-BC (e)(4)):
+ * runner-owned variables (e.g. `run_stranded_after_minutes`, `run_heartbeat_fresh_minutes`) are declared by no
+ * converted descriptor, so a descriptor-only set never checked them.
+ */
+export function seedFileKeys(seedFile = SEED_FILE) {
+  return Object.keys(JSON.parse(readFileSync(seedFile, 'utf8'))).sort();
+}
+
+/** Every `config.logic_variables[].name` declared by every converted descriptor, unioned with `seedKeys`. */
+export function declaredLogicVariables(descriptorsByName, seedKeys = []) {
+  const names = new Set(seedKeys);
   for (const { descriptor } of Object.values(descriptorsByName)) {
     const vars = (descriptor.config && descriptor.config.logic_variables) || [];
     for (const v of vars) if (v && v.name) names.add(v.name);
@@ -341,8 +353,8 @@ export function declaredLogicVariables(descriptorsByName) {
  * @param {Record<string, {descriptor: object}>} descriptorsByName
  * @returns {Promise<string[]>} the missing variable names, sorted
  */
-export async function queryMissingLogicVariables(pool, descriptorsByName) {
-  const declared = declaredLogicVariables(descriptorsByName);
+export async function queryMissingLogicVariables(pool, descriptorsByName, seedKeys = seedFileKeys()) {
+  const declared = declaredLogicVariables(descriptorsByName, seedKeys);
   if (declared.length === 0) return [];
   const res = await pool.query('SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)', [declared]);
   const seeded = new Set(res.rows.map((r) => r.variable_key));
@@ -354,13 +366,13 @@ export async function queryMissingLogicVariables(pool, descriptorsByName) {
  * @param {Record<string, {descriptor: object}>} descriptorsByName
  * @returns {Promise<ReturnType<typeof row>>}
  */
-export async function checkSeedRowsPresent(pool, descriptorsByName) {
-  const missing = await queryMissingLogicVariables(pool, descriptorsByName);
+export async function checkSeedRowsPresent(pool, descriptorsByName, seedKeys = seedFileKeys()) {
+  const missing = await queryMissingLogicVariables(pool, descriptorsByName, seedKeys);
   return row(
     'seed_rows_present',
     missing.length > 0 ? 'FAIL' : 'INFO',
     missing,
-    'every converted config.logic_variables[].name has a logic_variables row',
+    'every converted config.logic_variables[].name and every scripts/seeds/logic_variables.json key has a logic_variables row',
     'LM-D15 — scripts/lib/step/config.js throws on an unseeded variable. On cloud that throw lands MID-RUN, after the dispatch is spent: this check is the same failure mode measured before dispatch instead of after.',
   );
 }
@@ -530,7 +542,7 @@ export async function buildReport(pool, opts = {}) {
       case 'migrations_missing': rows.push(await checkMigrationsMissing(pool, { listMigrations: opts.listMigrations })); break;
       case 'declared_guards_present': rows.push(await checkDeclaredGuardsPresent(pool, descriptorsByName)); break;
       case 'table_floors': rows.push(await checkTableFloors(pool, descriptorsByName)); break;
-      case 'seed_rows_present': rows.push(await checkSeedRowsPresent(pool, descriptorsByName)); break;
+      case 'seed_rows_present': rows.push(await checkSeedRowsPresent(pool, descriptorsByName, opts.seedKeys ?? seedFileKeys())); break;
       case 'sharing_chain_running': rows.push(await checkSharingChainRunning(pool, 'sources')); break;
       case 'ci_green_for_sha': rows.push(await checkCiGreenForSha({ sha, listCiRuns: opts.listCiRuns })); break;
       default: throw new Error(`unhandled check id: ${id}`);

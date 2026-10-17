@@ -300,6 +300,58 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     expect(tampered).not.toBe(PRE_COMMIT);
     expect(stripComments(tampered)).not.toContain('generate-bylaw-provisions.mjs --check');
   });
+
+  // CHAIN-TOOLING part 1/2 (Spec 124 R-DJ, R-BC (e)(1)–(2), McDonald's Airtight V3, 2026-10-17): every
+  // chain-era generator drift check runs at pre-commit (a data-only commit that `vitest related` never
+  // selects would otherwise reach pre-push with a stale generated artifact), each exactly once, after the
+  // McBylaw check and before step-validate; and pre-commit stays file-only — no DB, no network.
+  const CHAIN_ERA_GENERATOR_CHECKS = [
+    'node scripts/generate-ingest-batch.js --check',
+    'node scripts/generate-sharing-phase.js --check',
+    'node scripts/generate-logic-variable-groups.mjs --check',
+    'node scripts/generate-logic-vars-docs.mjs --check',
+    'node scripts/generate-assert-schema-probe-lists.js --check',
+    'node scripts/generate-assert-parcel-sanity-descriptor.js --check',
+    'node scripts/generate-assert-global-coverage-descriptor.js --check',
+    'node scripts/generate-assert-data-bounds-descriptor.js --check',
+    'node scripts/analysis/report-fields.mjs --check',
+    'node scripts/violations/generate-conversion-roadmap.mjs --check',
+    'node scripts/violations/generate-programme-backlog.mjs --check',
+    'node scripts/violations/generate-surface-registry.mjs --check',
+  ];
+
+  it('GREEN — runs all 12 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+    const code = stripComments(PRE_COMMIT);
+    const bylaw = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
+    const sv = code.indexOf('step-validate.mjs --staged --fast');
+    for (const cmd of CHAIN_ERA_GENERATOR_CHECKS) {
+      const at = code.indexOf(cmd);
+      expect(at, `pre-commit missing ${cmd}`).toBeGreaterThan(bylaw);
+      expect(at, `${cmd} must run before step-validate`).toBeLessThan(sv);
+      expect(code.split(cmd).length, `${cmd} must appear exactly once`).toBe(2);
+    }
+  });
+
+  it('RED — a tampered pre-commit with one chain-era --check stripped is caught (R-DJ)', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/report-fields\.mjs --check && \\\n\s*/, '');
+    expect(tampered).not.toBe(PRE_COMMIT);
+    const code = stripComments(tampered);
+    expect(CHAIN_ERA_GENERATOR_CHECKS.filter((c) => !code.includes(c))).toEqual(['node scripts/analysis/report-fields.mjs --check']);
+  });
+
+  // File-only (R-BC (e)(2)): DB checks live in test:db / cloud:pre, never in a commit hook.
+  function preCommitTouchesDbOrNetwork(hookText: string): boolean {
+    return /DATABASE_URL|-r dotenv\/config|\bpsql\b|\bcurl\b|\bwget\b|test:db|cloud:pre/.test(stripComments(hookText));
+  }
+
+  it('GREEN — pre-commit is file-only: no DB URL, dotenv preload, psql, curl, test:db or cloud:pre (R-DJ)', () => {
+    expect(preCommitTouchesDbOrNetwork(PRE_COMMIT)).toBe(false);
+  });
+
+  it('RED — a tampered pre-commit that preloads the DB env is caught (R-DJ)', () => {
+    const tampered = PRE_COMMIT.replace('node scripts/generate-ingest-batch.js --check', 'node -r dotenv/config scripts/generate-ingest-batch.js --check');
+    expect(preCommitTouchesDbOrNetwork(tampered)).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
