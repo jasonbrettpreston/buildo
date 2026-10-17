@@ -377,7 +377,11 @@ describe('R-BF — registry + cross-step ledger truth: the status line is honest
   it('fixture: NOT MET + marker -> RED (a stale status)', () => expect(rBfStatusHonest(fx('NOT MET'), WITH)).toBe(false));
 
   it('Spec 124 §5 has an R-BF row that cites Spec 122 §6.6.1', () => {
-    const row = fs.readFileSync(SPEC_124, 'utf8').match(/^\| R-BF \|[^\n]*$/m);
+    // M24 (phase 4 step 0, 2026-10-17) moved R-AX…R-BH (R-BF included) to a 124a LIVE REGISTER section (§B10),
+    // so the register is read from both, as the M21 precedent above does.
+    const SPEC_124A = path.join(REPO_ROOT, 'docs', 'specs', '01-pipeline', '124a_step_standard_policy_appendix.md');
+    const register = `${fs.readFileSync(SPEC_124, 'utf8')}\n${fs.readFileSync(SPEC_124A, 'utf8')}`;
+    const row = register.match(/^\| R-BF \|[^\n]*$/m);
     expect(row, 'R-BF register row').toBeTruthy();
     expect(row?.[0]).toContain('Spec 122 §6.6.1');
   });
