@@ -959,6 +959,9 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   geocode_permits: 'permits', link_parcels: 'permit_parcels',
   link_neighbourhoods: 'permits', link_massing: 'parcel_buildings',
   link_coa: 'coa_applications', link_wsib: 'entities',
+  // R-DL (2026-10-17): each value is one of the step's declared outputs.writes tables.
+  link_parcel_addresses: 'parcel_address_points', link_parcel_abutments: 'parcel_abutments',
+  load_coa_notices: 'coa_notice_variances', load_bylaw_map_areas: 'bylaw_map_areas',
   enrich_wsib_builders: 'entities', enrich_named_builders: 'entities', enrich_wsib_registry: 'wsib_registry',
   link_similar: 'permits', create_pre_permits: 'coa_applications',
   compute_centroids: 'parcels', classify_scope: 'permits',
@@ -972,7 +975,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   compute_phase_calibration: 'phase_stay_calibration',
   refresh_snapshot: 'data_quality_snapshots', assert_schema: 'pipeline_runs',
   reconcile: 'pipeline_runs',
-  assert_data_bounds: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
+  assert_data_bounds: 'pipeline_runs', assert_global_coverage: 'pipeline_runs', assert_parcel_sanity: 'pipeline_runs', assert_engine_health: 'engine_health_snapshots',
   assert_network_health: 'pipeline_runs', assert_staleness: 'pipeline_runs',
   assert_coa_freshness: 'pipeline_runs',
   assert_pre_permit_aging: 'pipeline_runs',
