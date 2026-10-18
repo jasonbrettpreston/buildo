@@ -36,12 +36,15 @@
 
 import { describe, expect, it } from 'vitest';
 import fs from 'fs';
+import { spawnSync } from 'node:child_process';
 import path from 'path';
 import { PIPELINE_REGISTRY } from '@/components/FreshnessTimeline';
 import { STEP_DESCRIPTIONS, PIPELINE_TABLE_MAP, STEP_EXPECTED_RANGES, RANGE_BADGE_MARGIN_VARIABLE, getRangeStatus } from '@/lib/admin/funnel';
+import * as gate from '../../scripts/analysis/gates/admin-registration.mjs';
+import { rowBlocks } from '../../scripts/analysis/step-validate.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
-const ASSERT_AUDIT_TABLE = 'pipeline_runs';
+const ASSERT_AUDIT_TABLE = gate.ASSERT_AUDIT_TABLE;
 
 type ManifestEntry = { file?: string; telemetry_tables?: string[] };
 type Check = { id: string; limit_from_config?: string; warn_limit_from_config?: string };
@@ -61,51 +64,15 @@ type Step = { slug: string; descriptor: Descriptor | null };
 
 const readJson = <T>(rel: string): T => JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8')) as T;
 
-const descriptorRel = (file: string) => file.replace(/\.(js|py)$/, '') + '.descriptor.json';
-
-/**
- * Every converted and pending step with its descriptor — the expected set, derived. Pure over
- * the injected readers. A pending entry whose descriptor file is absent keeps its slug with
- * descriptor null (R-DV); a converted entry always reads its descriptor.
- */
-function convertedAndPendingSteps(
+// ONE definition (operator y 2026-10-18): the pure functions live in the #51 gate module, which
+// step-validate runs at pre-commit (--staged --fast) and pre-push (--all --fast); this lock imports them.
+const convertedAndPendingSteps = gate.convertedAndPendingSteps as (
   scripts: Record<string, ManifestEntry>,
   converted: { converted: string[]; pending: Array<{ file: string }> },
   exists: (rel: string) => boolean,
   read: (rel: string) => Descriptor,
-): Step[] {
-  const pending = converted.pending.map((p) => p.file);
-  const isPending = new Set(pending);
-  return [...converted.converted, ...pending].map((file) => {
-    const slug = Object.entries(scripts).find(([, e]) => e.file === file)?.[0];
-    if (!slug) throw new Error(`no manifest.scripts entry points at ${file}`);
-    const rel = descriptorRel(file);
-    if (isPending.has(file) && !exists(rel)) return { slug, descriptor: null };
-    return { slug, descriptor: read(rel) };
-  });
-}
-
-function declaredWriteTables(d: Descriptor): string[] {
-  return d.outputs === 'none' ? [] : [...new Set((d.outputs.writes || []).map((w) => w.table))];
-}
-
-/** The R-DL violations for a set of steps, each `<slug>: <datum>` (pure). */
-function adminRegistrationViolations(steps: Step[], reg: Registered): string[] {
-  const out: string[] = [];
-  for (const { slug, descriptor } of steps) {
-    if (!(slug in reg.registry)) out.push(`${slug}: PIPELINE_REGISTRY`);
-    if (!(slug in reg.descriptions)) out.push(`${slug}: STEP_DESCRIPTIONS`);
-    if (descriptor === null) continue; // R-DV: the descriptor-derived arms wait for ②
-    const writes = declaredWriteTables(descriptor);
-    const mapped = reg.tableMap[slug];
-    const allowed = writes.length === 0 && descriptor.identity.archetype === 'ASSERT' ? [ASSERT_AUDIT_TABLE] : writes;
-    if (mapped === undefined) out.push(`${slug}: PIPELINE_TABLE_MAP (expected one of ${allowed.join(', ')})`);
-    else if (!allowed.includes(mapped)) out.push(`${slug}: PIPELINE_TABLE_MAP "${mapped}" is not a declared write table (${allowed.join(', ')})`);
-    const telemetry = new Set(reg.scripts[slug]?.telemetry_tables || []);
-    for (const t of writes) if (!telemetry.has(t)) out.push(`${slug}: telemetry_tables missing ${t}`);
-  }
-  return out;
-}
+) => Step[];
+const adminRegistrationViolations = gate.adminRegistrationViolations as (steps: Step[], reg: Registered) => string[];
 
 /**
  * R-DW — the UNCONVERTED steps whose hand-written STEP_EXPECTED_RANGES entries remain (closed,
@@ -118,22 +85,12 @@ const UNCONVERTED_RANGE_GRANDFATHER = Object.freeze([
 ]);
 
 /**
- * The R-DW badge violations (pure): a descriptor-bearing step with a hand-written range entry, a
- * check whose badge bound names an unregistered variable, and a range entry outside the closed
- * grandfather list. A pending step with no descriptor (R-DV) has no checks to derive from yet.
+ * The R-DW badge violations: the gate's descriptor-bearing arms (a hand-written range, an
+ * unregistered check-bound variable) plus the suite-only arm — a range entry outside the closed
+ * grandfather list (not a converted/pending slug, so no step-validate row can carry it).
  */
 function rangeBadgeViolations(steps: Step[], rangeKeys: string[], seedKeys: Set<string>, grandfather: readonly string[]): string[] {
-  const out: string[] = [];
-  const ranged = new Set(rangeKeys);
-  for (const { slug, descriptor } of steps) {
-    if (descriptor === null) continue;
-    if (ranged.has(slug)) out.push(`${slug}: STEP_EXPECTED_RANGES hand-written bound — its badge is its audit_table check row (checks[].limit_from_config)`);
-    for (const c of descriptor.checks || []) {
-      for (const v of [c.limit_from_config, c.warn_limit_from_config]) {
-        if (v !== undefined && !seedKeys.has(v)) out.push(`${slug}: check ${c.id} badge bound reads ${v}, not a registered logic variable`);
-      }
-    }
-  }
+  const out = (gate.rangeBadgeViolations as (s: Step[], r: string[], k: Set<string>) => string[])(steps, rangeKeys, seedKeys);
   const allowed = new Set(grandfather);
   for (const k of rangeKeys) if (!allowed.has(k)) out.push(`${k}: STEP_EXPECTED_RANGES entry outside the closed unconverted grandfather list`);
   return out;
@@ -277,4 +234,71 @@ describe("R-DW — admin range badges derive from each step's own declared bound
     const route = fs.readFileSync(path.join(REPO_ROOT, 'src/app/api/quality/route.ts'), 'utf8');
     expect(route).toMatch(/LOGIC_VAR_DEFAULTS\[RANGE_BADGE_MARGIN_VARIABLE\]/);
   });
+});
+
+describe('fast invariant #51 ADMIN-REGISTRATION — the R-DL lock at pre-commit (step-validate --staged/--all --fast)', () => {
+  const live = gate.loadAdminRegistration(REPO_ROOT) as {
+    steps: Step[]; reg: Registered; rangeKeys: string[]; seedKeys: Set<string>;
+  };
+
+  it('the file-only source parsers read exactly the live TypeScript maps (no drift between #51 and the modules)', () => {
+    expect(Object.keys(live.reg.registry).sort()).toEqual(Object.keys(PIPELINE_REGISTRY).sort());
+    expect(Object.keys(live.reg.descriptions).sort()).toEqual(Object.keys(STEP_DESCRIPTIONS).sort());
+    expect(live.reg.tableMap).toEqual(PIPELINE_TABLE_MAP);
+    expect([...live.rangeKeys].sort()).toEqual(Object.keys(STEP_EXPECTED_RANGES).sort());
+  });
+
+  it('GREEN on the live tree; the step set is the suite\'s own derived set', () => {
+    const r = gate.checkAdminRegistration(live);
+    expect(r.pass, r.detail).toBe(true);
+    expect(r.blockedSlugs).toEqual([]);
+    expect(live.steps.map((s) => s.slug).sort()).toEqual(
+      convertedAndPendingSteps(
+        readJson<{ scripts: Record<string, ManifestEntry> }>('scripts/manifest.json').scripts,
+        readJson<{ converted: string[]; pending: Array<{ file: string }> }>('scripts/steps/_schema/converted.json'),
+        (rel) => fs.existsSync(path.join(REPO_ROOT, rel)),
+        (rel) => readJson<Descriptor>(rel),
+      ).map((s) => s.slug).sort(),
+    );
+  });
+
+  it('RED — a converted step missing its admin registration, or carrying a hand-written range, blocks by slug', () => {
+    const conv = live.steps.find((s) => s.descriptor !== null)!;
+    const registry = { ...live.reg.registry };
+    delete registry[conv.slug];
+    const missing = gate.checkAdminRegistration({ ...live, reg: { ...live.reg, registry } });
+    expect(missing.pass).toBe(false);
+    expect(missing.blockedSlugs).toEqual([conv.slug]);
+    expect(missing.detail).toContain(`${conv.slug}: PIPELINE_REGISTRY`);
+    const ranged = gate.checkAdminRegistration({ ...live, rangeKeys: [...live.rangeKeys, conv.slug] });
+    expect(ranged.blockedSlugs).toEqual([conv.slug]);
+    expect(ranged.detail).toContain(`${conv.slug}: STEP_EXPECTED_RANGES hand-written bound`);
+  });
+
+  it('R-DV + R-DU — a pending row with no descriptor is checked on its slug arms only, and never gates', () => {
+    const red = live.steps.find((s) => s.descriptor === null);
+    expect(red, 'a pending red_suite entry exists to exercise the carve-out').toBeDefined();
+    // R-DV: its range entry and missing table-map entry are not violations; its registry row still is.
+    expect(live.rangeKeys).toContain(red!.slug);
+    const descriptions = { ...live.reg.descriptions };
+    delete descriptions[red!.slug];
+    const r = gate.checkAdminRegistration({ ...live, reg: { ...live.reg, descriptions } });
+    expect(r.blockedSlugs).toEqual([red!.slug]);
+    // R-DU: the row it names never blocks (rowBlocks keys on the absent descriptor file), so
+    // step-validate prints the #51 FAIL as informational; the descriptor-bearing row blocks.
+    const scripts = readJson<{ scripts: Record<string, ManifestEntry> }>('scripts/manifest.json').scripts;
+    const exists = (rel: string) => fs.existsSync(path.join(REPO_ROOT, rel));
+    expect(rowBlocks({ slug: red!.slug, relFile: scripts[red!.slug]!.file!, stage: 'pending' }, { exists })).toBe(false);
+    const conv = live.steps.find((s) => s.descriptor !== null)!;
+    expect(rowBlocks({ slug: conv.slug, relFile: scripts[conv.slug]!.file!, stage: 'converted' }, { exists })).toBe(true);
+  });
+
+  it('wired: step-validate prints #51 as a registry fast invariant, PASS on the live tree, and self-tests the gate', () => {
+    const sv = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs'), 'utf8');
+    expect(sv).toMatch(/const admin51 = checkAdminRegistration\(loadAdminRegistration\(REPO_ROOT\)\);\s*results\.push\(\{\s*id: 51,/);
+    expect(sv).toContain('adminRegistrationSelfTest();');
+    expect(gate.selfTest()).toBe('admin-registration self-test PASSED');
+    const run = spawnSync('node', ['scripts/analysis/step-validate.mjs', `--step=${live.steps.find((s) => s.descriptor !== null)!.slug}`, '--fast'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
+    expect(run.stdout).toMatch(/\| 51 \| \(registry\) \| PASS \| ADMIN-REGISTRATION \(R-DL\/R-DW\)/);
+  }, 150_000);
 });

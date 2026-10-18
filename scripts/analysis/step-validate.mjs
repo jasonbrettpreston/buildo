@@ -264,6 +264,7 @@ import { homesReport, loadConvertedFleetDescriptors, selfTest as schemaHomesSelf
 import { checkModeEmitsType, loadModeEmitsFleet, selfTest as modeEmitsTypeSelfTest } from './gates/mode-emits-type.mjs';
 import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfTest } from './gates/logic-version.mjs';
 import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
+import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistrationSelfTest } from './gates/admin-registration.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { scanPurity } from './gates/compute-purity.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
@@ -2566,6 +2567,25 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
       pass: terminals49.pass,
       blockedSlugs: terminals49.blockedSlugs,
       detail: terminals49.detail,
+    });
+  }
+
+  // 51. ADMIN-REGISTRATION (Spec 124 R-DL, R-DW; operator y 2026-10-18: the R-DL lock moves to
+  // pre-commit) — every converted or pending step is admin-verifiable, derived from its descriptor:
+  // PIPELINE_REGISTRY + STEP_DESCRIPTIONS; PIPELINE_TABLE_MAP names a declared write table; telemetry_tables
+  // covers every write table; no hand-written STEP_EXPECTED_RANGES entry, and every check bound names a
+  // registered variable (R-DW). R-DV: a pending row with no descriptor file keeps only the slug arms.
+  // Registry-scoped with `blockedSlugs`, so R-DU holds: such a row never blocks, and its violation prints
+  // as informational. File-only (R-DJ (2)); the suite lock admin-step-registration.logic imports the same
+  // pure functions. #50 is LDG-10's status line (main(), --all only).
+  {
+    const admin51 = checkAdminRegistration(loadAdminRegistration(REPO_ROOT));
+    results.push({
+      id: 51,
+      slug: '(registry)',
+      pass: admin51.pass,
+      blockedSlugs: admin51.blockedSlugs,
+      detail: admin51.detail,
     });
   }
 
@@ -5308,6 +5328,8 @@ function selfTest() {
   logicVersionSelfTest();
   // TERMINALS-RECORDS-META (fast invariant #49) — its fixtures live in scripts/analysis/gates/terminals-records-meta.mjs.
   terminalsRecordsMetaSelfTest();
+  // ADMIN-REGISTRATION (fast invariant #51, R-DL/R-DW) — its fixtures live in scripts/analysis/gates/admin-registration.mjs.
+  adminRegistrationSelfTest();
   // ON-INVALID-CLOSED (fast invariant #29, Spec 124 §5 R-BA gate B, Rule 3,
   // §5 R-G, WF2 "standardized gates", 2026-09-26) — the closed on_invalid answer
   // set + the orphan direction live entirely in scripts/analysis/gates/on-invalid.mjs
