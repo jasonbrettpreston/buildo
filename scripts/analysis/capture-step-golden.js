@@ -1299,20 +1299,41 @@ function replayOrder(names, entries) {
 }
 
 /**
+ * Spec 124 R-DU: the pending[] step files whose descriptor FILE is absent (an early ①, stage
+ * red_suite). Such a step has nothing a descriptor-reading tool can read before ②, and no
+ * golden captures either. Keyed on the file, never the stage label; a converted entry is
+ * never in this set. Pure over the injected `exists(relPath)`.
+ */
+function pendingWithoutDescriptor(conv, exists) {
+  return (conv.pending || [])
+    .map((p) => (typeof p === 'string' ? p : p && p.file))
+    .filter((file) => typeof file === 'string' && !exists(descriptorPathFor(file)));
+}
+
+/**
  * Every capture's retake, in fleet order: converted.json then pending[] (the order the
  * fleet nights use); per step its post captures in replayOrder (plain/env by filename, then
  * brackets by filename — Spec 124 R-DQ), each PRE that has an entry immediately before its
  * same-named POST (back to back, as sameSessionDecision needs).
- * Returns {blocks: [{rel, via, lines}], errors: [{rel, reason}]}. Reads the repo only.
+ * A pending step with no descriptor file (Spec 124 R-DU) has zero captures: it is skipped by
+ * name into `skipped`, never an error and never silently dropped.
+ * Returns {blocks: [{rel, via, lines}], errors: [{rel, reason}], skipped: [{file, reason}]}.
+ * Reads the repo only.
  */
 function replayAll(repoRoot, base) {
   const conv = JSON.parse(fs.readFileSync(path.join(repoRoot, 'scripts/steps/_schema/converted.json'), 'utf8'));
-  const files = [...conv.converted, ...conv.pending.map((p) => p.file)];
+  const files = [...conv.converted, ...conv.pending.map((p) => (typeof p === 'string' ? p : p.file))];
   const blocks = [];
   const errors = [];
+  const skipped = [];
   let k = 0;
   const exists = (rel) => fs.existsSync(path.join(repoRoot, rel));
+  const noDescriptor = new Set(pendingWithoutDescriptor(conv, exists));
   for (const file of files) {
+    if (noDescriptor.has(file)) {
+      skipped.push({ file, reason: 'pending with no descriptor yet — no captures to replay (Spec 124 R-DU)' });
+      continue;
+    }
     const descriptor = JSON.parse(fs.readFileSync(path.join(repoRoot, descriptorPathFor(file)), 'utf8'));
     const slug = descriptor.identity.name;
     const dir = path.join(repoRoot, GOLDEN_REL, slug);
@@ -1347,7 +1368,7 @@ function replayAll(repoRoot, base) {
       }
     }
   }
-  return { blocks, errors };
+  return { blocks, errors, skipped };
 }
 
 /** Print one block: a `#` header naming the capture and its via, then its lines. */
@@ -1381,8 +1402,9 @@ async function main() {
   if (opts.replay || opts['replay-all']) {
     const base = opts['replay-ts'] ? parseReplayTs(opts['replay-ts']) : new Date();
     if (opts['replay-all']) {
-      const { blocks, errors } = replayAll(REPO_ROOT, base);
+      const { blocks, errors, skipped } = replayAll(REPO_ROOT, base);
       console.log(`# fleet recapture (Spec 124 R-CZ): ${blocks.length} capture(s); run from the repo root with DOTENV_CONFIG_PATH (and DATABASE_URL for {sql} steps) exported`);
+      for (const sk of skipped) console.log(`# SKIPPED ${sk.file}: ${sk.reason}`);
       for (const b of blocks) printReplayBlock(b);
       for (const e of errors) console.log(`# UNREPLAYABLE ${e.rel}: ${e.reason}`);
       if (errors.length > 0) process.exitCode = 1;
@@ -1676,4 +1698,5 @@ module.exports = {
   parseReplayTs,
   replayAll,
   replayOrder,
+  pendingWithoutDescriptor,
 };

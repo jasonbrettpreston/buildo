@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 13, §5 R-BA (gate F);
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md Rule 13, §5 R-BA (gate F), R-DU;
 //            123_step_opt_assessment_validation.md §6
 //
 // WF2 gate F — `scripts/analysis/gates/score-floor.mjs`, fast invariant #37
@@ -23,7 +23,9 @@ import path from 'node:path';
 import * as gateF from '../../scripts/analysis/gates/score-floor.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
 import { readConvertedJson } from '../../scripts/analysis/gates/converted-set.mjs';
-import { notLookedReasons, parseSummaryScores } from './helpers/step-validate-run';
+import {
+  notLookedReasons, parseNonBlockingSlugs, parseSummaryScores, pendingNoDescriptorSlugs, rduScoreScope,
+} from './helpers/step-validate-run';
 
 const REPO_ROOT = process.cwd();
 
@@ -121,6 +123,14 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
   // K's scoreG7 tightening, commit 7d807c0b) now carries its own dated
   // `{gate:'F', step:'link_massing', item:'score'}` ledger row instead — this
   // suite asserts a fully clean fleet, no exemption needed.
+  //
+  // Spec 124 R-DU (amended 2026-10-18): a pending entry whose descriptor FILE is
+  // absent (an early ①, e.g. permits/coa at red_suite) prints its red scorecard
+  // but does not gate — its scorecard reads a descriptor that does not exist yet.
+  // T6 scores every other row: every converted step and every pending step WITH a
+  // descriptor. The skipped set is derived from the files, never the stage label,
+  // and must equal the rows step-validate itself labels non-blocking, so no
+  // converted row can be dropped this way.
   it('T6: live — every converted step scores >= 14/17 or has a gate-F score row; 0 orphans', () => {
     // timeout 420 s: a direct run measured 214 s (2026-10-14); the old 180 s
     // killed it, leaving 0 rows. notLookedReasons names any such run (LM-D14).
@@ -129,10 +139,38 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
     });
     expect(notLookedReasons(run, readConvertedJson(REPO_ROOT).converted.length)).toEqual([]);
     const scores = parseSummaryScores(`${run.stdout || ''}`);
+    const convertedJson = readConvertedJson(REPO_ROOT);
+    const scripts = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')).scripts;
+    const noDescriptor = pendingNoDescriptorSlugs(convertedJson, scripts, (rel) => fs.existsSync(path.join(REPO_ROOT, rel)));
+    expect([...parseNonBlockingSlugs(`${run.stdout || ''}`)].sort()).toEqual([...noDescriptor].sort());
+    const { gated } = rduScoreScope(scores, noDescriptor);
     const { rows } = ledger.loadLedger(REPO_ROOT);
-    const out = gateF.checkScoreFloor(scores, rows);
+    const out = gateF.checkScoreFloor(gated, rows);
     expect(out.orphans).toEqual([]);
     expect(out.violations).toEqual([]);
+  });
+
+  // -------------------------------------------------------------------------
+  // T6-RDU — the R-DU scope, fixtures only: a pending row with no descriptor
+  // file is skipped by name; a pending row WITH a descriptor and every
+  // converted row are still scored (a converted below-floor row still fails).
+  // -------------------------------------------------------------------------
+  it('T6-RDU: only a pending row with no descriptor file leaves the score-floor walk', () => {
+    const conv = { converted: ['scripts/c.js'], pending: [{ file: 'scripts/red.js' }, { file: 'scripts/desc.js' }] };
+    const scripts = { c: { file: 'scripts/c.js' }, red: { file: 'scripts/red.js' }, desc: { file: 'scripts/desc.js' } };
+    const onDisk = new Set(['scripts/desc.descriptor.json']); // c's descriptor absent: converted, never skipped
+    const skip = pendingNoDescriptorSlugs(conv, scripts, (rel) => onDisk.has(rel));
+    expect(skip).toEqual(['red']);
+    const scores = [
+      { slug: 'c', total: 10, maxTotal: 17 }, { slug: 'red', total: 7, maxTotal: 17 }, { slug: 'desc', total: 13, maxTotal: 17 },
+    ];
+    const { gated, skipped } = rduScoreScope(scores, skip);
+    expect(skipped).toEqual(['red']);
+    expect(gateF.checkScoreFloor(gated, []).violations.map((v) => v.step)).toEqual(['c', 'desc']);
+    expect(parseNonBlockingSlugs([
+      '  c: 10/17 hard-stop=true #44-attributed=0 | X',
+      '  red: 7/17 hard-stop=true (non-blocking: doc-only touch or R-DU no-descriptor pending) #44-attributed=0 | X',
+    ].join('\n'))).toEqual(['red']);
   });
 
   // -------------------------------------------------------------------------

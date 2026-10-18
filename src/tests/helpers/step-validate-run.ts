@@ -45,3 +45,38 @@ export function notLookedReasons(run: StepValidateRun, convertedCount: number): 
   if (n < convertedCount) reasons.push(`${n} score rows < ${convertedCount} converted`);
   return reasons;
 }
+
+/** A summary row step-validate labels non-blocking (`--all`: only the R-DU no-descriptor pending row). */
+const NON_BLOCKING_ROW = /^\s*(\S+): \d+\/17 hard-stop=\S+ \(non-blocking:/gm;
+
+/** The slugs the summary labels non-blocking, in print order. */
+export function parseNonBlockingSlugs(stdout: string): string[] {
+  return [...String(stdout).matchAll(NON_BLOCKING_ROW)].map((m) => m[1] as string);
+}
+
+/**
+ * Spec 124 R-DU: the manifest slugs of the pending[] entries whose descriptor FILE is absent (an
+ * early ①). Keyed on the file, never the stage label; a converted entry is never returned.
+ * Pure over the injected `exists(relPath)`.
+ */
+export function pendingNoDescriptorSlugs(
+  converted: { pending?: Array<string | { file: string }> },
+  scripts: Record<string, { file?: string }>,
+  exists: (rel: string) => boolean,
+): string[] {
+  const out: string[] = [];
+  for (const p of converted.pending || []) {
+    const file = typeof p === 'string' ? p : p.file;
+    if (exists(file.replace(/\.(js|py)$/, '') + '.descriptor.json')) continue;
+    const slug = Object.entries(scripts).find(([, e]) => e.file === file)?.[0];
+    if (!slug) throw new Error(`no manifest.scripts entry points at ${file}`);
+    out.push(slug);
+  }
+  return out;
+}
+
+/** Split summary scores into the gated rows and the R-DU no-descriptor pending rows, by slug. */
+export function rduScoreScope<T extends { slug: string }>(scores: T[], noDescriptorSlugs: string[]): { gated: T[], skipped: string[] } {
+  const skip = new Set(noDescriptorSlugs);
+  return { gated: scores.filter((s) => !skip.has(s.slug)), skipped: scores.filter((s) => skip.has(s.slug)).map((s) => s.slug) };
+}

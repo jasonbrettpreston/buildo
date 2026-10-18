@@ -1,4 +1,4 @@
-// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-CZ (McDonald's Airtight V3)
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-CZ, R-DU (McDonald's Airtight V3)
 // SPEC LINK: docs/specs/01-pipeline/122a_step_optimization_appendix.md §A27 traps 11-12
 //
 // A capture is reproducible from committed data alone. `capture-step-golden.js --replay`
@@ -146,6 +146,31 @@ describe('gate G #38 recipe (Spec 124 R-CZ)', () => {
     const r = g.checkNonzero(g.loadCapturesFleet(), l.loadLedger(path.resolve(__dirname, '../..')).rows);
     expect(r.detail).not.toMatch(/R-CZ/);
     expect(r.pass).toBe(true);
+  });
+
+  it('R-DU — --replay-all skips a pending step with no descriptor file by name; a pending step with one is still replayed', () => {
+    const root = tmpRepo();
+    const RED = 'scripts/load-red.js';
+    const DESC = 'scripts/load-desc.js';
+    fs.writeFileSync(path.join(root, 'scripts/steps/_schema/converted.json'), JSON.stringify({
+      converted: [STEP], pending: [{ file: RED, stage: 'red_suite' }, { file: DESC, stage: 'descriptor_only' }],
+    }));
+    fs.writeFileSync(path.join(root, 'scripts/load-desc.descriptor.json'), JSON.stringify({ identity: { name: 'desc_step' } }));
+    fs.mkdirSync(path.join(root, 'docs/reports/golden/desc_step/post'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'docs/reports/golden/desc_step/post/sources.json'), JSON.stringify({ ...plain, step: DESC }));
+    fs.writeFileSync(path.join(root, G, 'post/sources.json'), JSON.stringify(plain));
+    const r = replayAll(root, parseReplayTs('20261017t2200z'));
+    expect(r.errors).toEqual([]);
+    expect(r.skipped).toEqual([{ file: RED, reason: expect.stringContaining('R-DU') }]);
+    expect(r.blocks.map((b: { rel: string }) => b.rel)).toEqual([
+      `${G}/post/sources.json`, 'docs/reports/golden/desc_step/post/sources.json',
+    ]);
+    expect(harness.pendingWithoutDescriptor(
+      { converted: [STEP], pending: [{ file: RED }, { file: DESC }] }, (rel: string) => fs.existsSync(path.join(root, rel)),
+    )).toEqual([RED]);
+    // A converted step whose descriptor is missing is never skipped: it still fails loudly.
+    fs.rmSync(path.join(root, 'scripts/load-fixture.descriptor.json'));
+    expect(() => replayAll(root, parseReplayTs('20261017t2200z'))).toThrow(/ENOENT/);
   });
 
   it('--replay-all reproduces every committed capture with no unreplayable entry', () => {
