@@ -70221,6 +70221,100 @@
       "rule": "Spec 69a M-149, M-172(3), M-75",
       "unit": "150.7.60.20(5)#(5)(A)",
       "value": "If the garden suite has doors or windows in a side main wall facing a side lot line that does not abut a street: that side yard setback is at least the greater of 1.5 m or 10% of the lot frontage, to a maximum of 3.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.80.1(2)#(2)(A)/archetype",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18 (operator 'fix now'): (2)(A) limits the distance of an ancillary OUTDOOR AREA for parking or storing more than 3 vehicles from a residential building; separation_m is the distance between buildings (vocab concept), and no dsl_target names an outdoor-parking-area distance or a vehicle count, so the agreed LIMIT cannot be keyed and the borrowed target set the garden-suite separation to 6.0 m on every lot",
+      "rule": "Spec 69a M-223; M-102, M-98, M-159; Spec 68 §7.1, §7.3; KEYING_CONVENTIONS P4 (never borrow a target)",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.80.1(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: no licensed target for an outdoor parking area's distance from a residential building; UNUSUAL carries no target",
+      "rule": "Spec 69a M-223; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.80.1(2)#(2)(A)/bound",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: UNUSUAL carries no bound",
+      "rule": "Spec 69a M-223; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.80.1(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: UNUSUAL carries no expression",
+      "rule": "Spec 69a M-223; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.80.1(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: the 6.0 m limit is not modelled (M-82 Q7), as at sibling (2)(E) and 150.45.50.1(1)(B)",
+      "rule": "Spec 69a M-223; M-82 Q7, M-102; Spec 68 §9 G-CLAUSE",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "3",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(2)(A)",
+          "literal": "6.0",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.80.1(2)#(2)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: the unit is not modelled; its subject is the outdoor parking area",
+      "rule": "Spec 69a M-223; M-75; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": {
+        "description": "On a lot with a residential building other than a detached house, semi-detached house or duplex, an ancillary outdoor area for parking or storing more than 3 vehicles must be at least 6.0 metres from a residential building on the same lot.",
+        "gaps": "The subject is the outdoor parking area, not a building: no dsl_target names its distance from a residential building and no input holds the number of vehicles parked or stored outside (Spec 69a M-223). It never limits the principal building or a suite.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-18",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.80.1(2)#(2)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: an UNUSUAL unit carries a disclosure (Spec 68 §7.3)",
+      "rule": "Spec 69a M-223; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "If the lot has a residential building other than a detached house, semi-detached house or duplex and an outdoor area for parking or storing more than 3 vehicles: that area must be at least 6.0 m from every residential building on the lot. The tool does not evaluate this."
     }
   ]
 }
