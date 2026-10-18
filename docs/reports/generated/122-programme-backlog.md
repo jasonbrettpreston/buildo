@@ -10,9 +10,9 @@ Total items: **138**
 
 | status | count |
 |---|---|
-| ⬜ NOT_STARTED | 28 |
-| ⚠️ PARTIAL | 17 |
-| ✅ BUILT | 87 |
+| ⬜ NOT_STARTED | 26 |
+| ⚠️ PARTIAL | 18 |
+| ✅ BUILT | 88 |
 | ⏭️ SUPERSEDED | 6 |
 
 **blocks batching: 0**
@@ -32,7 +32,7 @@ Total items: **138**
 
 | id | spec | title | status | owner | blocks | last reviewed |
 |---|---|---|---|---|---|---|
-| `LDG-10` | 122 §6 / 124 R-AQ.1 | Cross-step ledger COMPLETE for the sources chain — proven by a gate, not assumed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — cross-step ledger completeness gate (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
+| `LDG-10` | 122 §6 / 124 R-AQ.1 | Cross-step ledger COMPLETE for the sources chain — proven by a gate, not assumed | ⚠️ PARTIAL | wf: wf: end-of-sources acceptance — cross-step ledger completeness gate (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-10-17 |
 | `CHAIN-TOOLING` | 124 chain completion (e) | Chain completion (e): tooling integration — new gates wired into hooks within a speed budget, preflight shows chain status, cloud:pre covers every seed | ⬜ NOT_STARTED | wf: wf: end-of-sources acceptance — chain tooling integration (to be planned) | assert_coa_freshness, assert_entity_tracing, assert_lifecycle_phase_distribution, assert_network_health, assert_staleness, backfill_realtor_permit_trades, backup_db, builders, classify_coa_scope, classify_coa_trades, classify_inspection_status, classify_lifecycle_phase, classify_permit_phase, classify_permits, classify_scope, close_stale_permits, coa, compute_build_norms, compute_coa_cost_estimates, compute_cost_estimates, compute_opportunity_scores, compute_phase_calibration, compute_storey_norms, compute_timing_calibration_v2, compute_trade_forecasts, dispatch_notifications, enrich_coa_zoning, enrich_named_builders, enrich_permits, enrich_wsib_builders, enrich_wsib_registry, link_coa, link_coa_to_parcels, link_similar, observe_chain, permits, reclassify_all, update_tracked_projects | 2026-09-29 |
 | `STA-2` | 120 §6b | reset generated per archetype | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
 | `STA-3` | 120 §6b | 3 destructive-reset guards | ✅ BUILT | wf: wf: programme-STA-2 | refresh_snapshot | 2026-09-03 |
@@ -168,7 +168,7 @@ Total items: **138**
 | `CP-S5` | 124 R-BZ | Compute-purity seam S5: catalog / SRID probe | ✅ BUILT | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 S5) | — | 2026-10-16 |
 | `CP-PLANA` | 124 R-BZ | Compute-purity plan A: pure bans | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Phase 2 plan A) | — | 2026-10-11 |
 | `CP-PERMITS` | 124 R-BZ | Compute-purity: refresh_snapshot sync_runs read closes at the permits conversion | ⬜ NOT_STARTED | wf: wf: .cursor/wf1_compute_purity_active_task.md (Q4; permits chain conversion) | — | 2026-10-11 |
-| `P1-C9` | 122 §6.6.1 | #44 witness hard for every converted step | ⬜ NOT_STARTED | wf: wf: registry-truth plan (QUEUE H13 P1-C9+C10) | — | 2026-10-11 |
+| `P1-C9` | 122 §6.6.1 | #44 witness hard for every converted step | ✅ BUILT | wf: wf: registry-truth plan (QUEUE H13 P1-C9+C10) | — | 2026-10-17 |
 
 ---
 

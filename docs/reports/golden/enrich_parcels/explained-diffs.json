@@ -297,7 +297,7 @@
     },
     {
       "key": "summary.records_updated",
-      "why": "sources_run1: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 parcels with max_buildable_footprint_sqm +1 are rewritten and healed by the --full pass-2 max-build recompute, plus 1 parcel that drifted since N6 (max_build_enriched_count 201); the PRE wrote 0."
+      "why": "sources_run1 is retaken through its #38 bracket (docs/reports/golden/enrich_parcels/recapture.json, via:bracket — ingestor-forced-cohort add_number:1 on parcels.max_buildable_footprint_sqm, 200 rows; Spec 124 R-CZ), so the run re-enriches the 200 perturbed parcels: records_updated 0 → 200 is the nonzero proof the bracket exists for (2026-10-17)."
     }
   ]
 }

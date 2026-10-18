@@ -16,7 +16,17 @@
           "snapshot_date",
           "table_name"
         ],
-        "permit_inspections": []
+        "permit_inspections": [],
+        "pg_stat_user_tables": [
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "n_tup_ins",
+          "n_tup_upd",
+          "relname",
+          "schemaname",
+          "seq_scan"
+        ]
       },
       "writes": {
         "engine_health_snapshots": [

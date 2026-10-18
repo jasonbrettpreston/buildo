@@ -790,10 +790,12 @@ describe('gate #44 hardStop — pending vs converted (contract: converted is REP
     expect(out.hardStop).toBe(true);
   });
 
-  it('RED: the same FAIL with status converted yields hardStop false', () => {
+  // P1-C9 (folded into LDG-10, Spec 124 R-DI, 2026-10-17): converted is HARD too — re-pinned from the
+  // report-only posture this case locked before the flip.
+  it('RED: the same FAIL with status converted yields hardStop true (P1-C9, R-DI)', () => {
     const out = run({ status: 'converted', postTraces: { sources: undeclared() } });
     expect(out.rows.some((r) => r.startsWith('FAIL:'))).toBe(true);
-    expect(out.hardStop).toBe(false);
+    expect(out.hardStop).toBe(true);
   });
 
   it('GREEN control: a PASS with status pending yields hardStop false', () => {
@@ -935,11 +937,11 @@ describe('gate #44 (e) — reads.steps equals the derived set (contract: FAIL:WI
     expect(out.rows).toContain('FAIL:WITNESS:sources:e:missing:p');
   });
 
-  it('hardStop: (e) hard-stops a pending slug, report-only for a converted slug', () => {
+  it('hardStop: (e) hard-stops a pending slug AND a converted slug (P1-C9, R-DI)', () => {
     const pending = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'], status: 'pending' });
     expect(pending.hardStop).toBe(true);
     const converted = run({ descriptor: withSteps([]), derivedReadsSteps: ['p'], status: 'converted' });
-    expect(converted.hardStop).toBe(false);
+    expect(converted.hardStop).toBe(true);
   });
 
   it('load_heritage (the only pending slug) yields zero (e) rows on the effective ledger', () => {
@@ -1133,7 +1135,7 @@ describe('gate #44 — witness attribution (Spec 124 R-BZ, CP-B6)', () => {
 });
 
 describe('flip dependency (Spec 124 R-BZ, Q7)', () => {
-  it('P1-C9 is still owned by the plan (promise + the witness.mjs hardStop line)', () => {
+  it('P1-C9 is BUILT (folded into LDG-10, R-DI): its promise names CP-S1 and the witness.mjs hardStop line covers converted', () => {
     const items = JSON.parse(
       fs.readFileSync(path.join(process.cwd(), 'scripts/steps/_schema/programme-items.json'), 'utf8'),
     ) as { items: Array<{ id: string; promised: string }> };
@@ -1142,7 +1144,7 @@ describe('flip dependency (Spec 124 R-BZ, Q7)', () => {
     expect(item!.promised).toContain('CP-S1');
 
     const src = fs.readFileSync(MODULE_PATH, 'utf8');
-    expect(src).toContain('hardStop: status === \'pending\' && unique.some((r) => r.startsWith(FAIL_PREFIX)),');
+    expect(src).toContain('hardStop: (status === \'pending\' || status === \'converted\') && unique.some((r) => r.startsWith(FAIL_PREFIX)),');
   });
 
   it('a converted slug with a compute-attributed FAIL still has hardStop false', () => {

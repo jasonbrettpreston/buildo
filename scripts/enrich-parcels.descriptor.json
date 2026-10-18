@@ -100,7 +100,8 @@
           "columns": [
             "geom",
             "height_max_m",
-            "ht_stories"
+            "ht_stories",
+            "source_id"
           ]
         },
         {

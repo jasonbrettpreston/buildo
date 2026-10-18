@@ -331,9 +331,9 @@
       "id": "LDG-10",
       "spec": "122 §6 / 124 R-AQ.1",
       "title": "Cross-step ledger COMPLETE for the sources chain — proven by a gate, not assumed",
-      "promised": "At the end of sources conversion, a mechanical check proves the cross-step ledger is complete for every `sources` step across all five Spec 122 §6 edge classes: (1) table edges — every step's declared reads/writes reconcile with runtime lineage (records_meta.pipeline_meta) with zero undeclared reads/writes; (2) records_meta contracts — gate D completeness scan finds zero undeclared readers of any sources table or records_meta key (incl. readers outside the chain, e.g. enrich_wsib, lead feed, admin routes); (3) version pins/watermarks declared in staleness; (4) invalidation — every derived join key has an invalidator (re-verify the §6.4a centroid gap, apparently closed by migration 245's trigger); (5) ordering derived from declared edges, replacing the hand-written chain-order assertions. Proven both directions on fixtures.",
-      "status": "NOT_STARTED",
-      "evidence": "Operator ruling 2026-09-29: the end-of-sources milestone requires BOTH the deferred cloud proof (EP-PIN-D17) and a proven-complete cross-step ledger. Today: edges of the 4 unconverted sources steps come only from runtime emitMeta; gate D machine-checks only the records_meta class; Spec 122 §6 documents real omissions (massing parcel_buildings DELETE, enrich_parcels undeclared INSERT) and 5 hand ordering assertions for 27 steps, one wrong.",
+      "promised": "At the end of sources conversion, a mechanical check proves the cross-step ledger is complete for every `sources` step across all five Spec 122 §6 edge classes: (1) table edges — every step's declared reads/writes reconcile with the #44 WITNESS traces (observed SQL, column level; operator y 2026-10-17, Spec 124 R-DI — for a converted step records_meta.pipeline_meta is the declaration re-emitted, which Spec 122 §6.6.1 forbids) with zero undeclared reads/writes; (2) records_meta contracts — gate D completeness scan finds zero undeclared readers of any sources table or records_meta key (incl. readers outside the chain, e.g. enrich_wsib, lead feed, admin routes); (3) version pins/watermarks declared in staleness; (4) invalidation — every derived join key has an invalidator (re-verify the §6.4a centroid gap, apparently closed by migration 245's trigger); (5) ordering derived from declared edges, replacing the hand-written chain-order assertions. Proven both directions on fixtures.",
+      "status": "PARTIAL",
+      "evidence": "PARTIAL 2026-10-17 (Spec 124 R-DI, McDonald's Airtight V3): fast invariant #50 prints the sources conjunction — class 1 #44 hard for converted slugs (P1-C9 BUILT); class 2 gate D #31 also counts unconverted steps' observed reads (unproducedStepReads); class 3 #44 (h) pins witnessed and verified; class 5 derived order (the 2 sources adjacency pins deleted). PENDING: EP-PIN-D17 cloud proof (operator deferred until after the by-law work); #44 (i) invalidation check and the #44 (h) h:undeclared closure (drafted rulings); R-BC (a) link_parcel_abutments still pending (R-DK).",
       "owner": {
         "kind": "wf",
         "ref": "wf: end-of-sources acceptance — cross-step ledger completeness gate (to be planned)"
@@ -381,7 +381,7 @@
           "update_tracked_projects"
         ]
       },
-      "last_reviewed": "2026-09-29"
+      "last_reviewed": "2026-10-17"
     },
     {
       "id": "CHAIN-TOOLING",
@@ -2574,8 +2574,8 @@
       "spec": "122 §6.6.1",
       "title": "#44 witness hard for every converted step",
       "promised": "#44 SQL-witness FAILs turn hard for converted steps (witness.mjs hardStop, today status === pending only). Precondition: CP-S1 (compute-attributed #44 FAILs turn hard at max(S1 landing, P1-C9), Spec 124 R-BZ).",
-      "status": "NOT_STARTED",
-      "evidence": "NOT_STARTED 2026-10-11: scripts/analysis/gates/witness.mjs hardStop is status === 'pending' only; QUEUE H13 orders P1-C9 after the S1 batch (Q7 a+b, .cursor/wf1_compute_purity_active_task.md)",
+      "status": "BUILT",
+      "evidence": "BUILT 2026-10-17 (folded into LDG-10, Spec 124 R-DI, McDonald's Airtight V3): scripts/analysis/gates/witness.mjs hardStop is (status === 'pending' || status === 'converted') && a FAIL row; step-validate.mjs also hard-stops on compute-attributed FAILs (R-BZ, max(CP-S1, P1-C9)); LDG-4 + KNOWN_GAPS deleted ((e) on the effective ledger carries the lock). Locks: src/tests/ldg10-gate.logic.test.ts, src/tests/sql-witness-gate.logic.test.ts.",
       "owner": {
         "kind": "wf",
         "ref": "wf: registry-truth plan (QUEUE H13 P1-C9+C10)"
@@ -2584,7 +2584,7 @@
         "kind": "nice_to_have",
         "blocks": []
       },
-      "last_reviewed": "2026-10-11"
+      "last_reviewed": "2026-10-17"
     }
   ]
 }

@@ -1050,7 +1050,15 @@
         "d8f6b0053ef9722e",
         "db3e42d62cb9055f"
       ],
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "relname",
+          "seq_scan"
+        ]
+      },
       "writes": {}
     },
     "src/app/api/subscribe/exchange/route.ts": {

@@ -34,6 +34,7 @@ import fs from 'fs';
 import path from 'path';
 import { beforeAll, afterAll, expect } from 'vitest';
 import { undeclaredItems, ownMeasurementSql } from '../../../scripts/analysis/gates/witness.mjs';
+import { buildRunnerFingerprints } from '../../../scripts/analysis/gates/witness-runner-set.mjs';
 
 /** The repo root, from `src/tests/steps/`. */
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -194,7 +195,15 @@ function readJson(relPath: string): unknown {
 /** Load the `resolve.cjs` WASM grammar exactly once (idempotent, safe at module scope). */
 export async function initWitnessGuard(): Promise<void> {
   await resolve.init();
+  if (RUNNER_FINGERPRINTS === null) RUNNER_FINGERPRINTS = new Set((await buildRunnerFingerprints()).keys());
 }
+
+/**
+ * The runner-owned statement fingerprints (#44's own derivation, `witness-runner-set.mjs`), loaded once per
+ * worker. A statement the runner issues (maintenance, telemetry, run history) is the runner's, never a
+ * step violation — the same attribution #44 applies (Spec 124 R-BG; R-DI G5 made pg_* reads visible).
+ */
+let RUNNER_FINGERPRINTS: Set<string> | null = null;
 
 /** The step's descriptor path: manifest `.scripts[slug].file` with `.js` -> `.descriptor.json`. */
 function descriptorRelFor(slug: string): string {
@@ -347,14 +356,16 @@ function wrapHandle(state: GuardState, handle: object): void {
         for (const temp of resolve.collectSessionTemps(sql, state.catalog)) sessionTemps.add(temp);
         const r = resolve.resolveStatement(sql, state.catalog, { sessionTemps });
         if (r.error) state.errors.add(r.error);
-        if (r.kind !== 'utility') {
+        // A runner-owned statement (#44 runner set) is the runner's, not the step's: never merged, never a violation.
+        const runnerOwned = !r.error && RUNNER_FINGERPRINTS !== null && RUNNER_FINGERPRINTS.has(r.fingerprint);
+        if (r.kind !== 'utility' && !runnerOwned) {
           mergeTouch(state.reads, r.reads);
           mergeTouch(state.writes, r.writes);
         }
         // R-DG (G7): a READ whose fingerprint is one of the step's own plausibility/invariants SQL is accounted
         // against that SQL — never a violation of (a); it still witnesses the columns it really read.
         const ownRead = !r.error && r.kind === 'read' && Object.keys(r.writes).length === 0 && ownFingerprintsOf(state).has(r.fingerprint);
-        const items = ownRead ? [] : undeclaredItems(state.descriptor, { reads: r.reads, writes: r.writes });
+        const items = ownRead || runnerOwned ? [] : undeclaredItems(state.descriptor, { reads: r.reads, writes: r.writes });
         for (const item of items) state.violations.add(item);
         if (items.length > 0 && state.status === 'pending') {
           throw new Error('FAIL:FIXTURE:' + state.slug + ':' + state.suite + ':' + items[0]);

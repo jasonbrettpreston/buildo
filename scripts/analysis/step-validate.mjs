@@ -280,6 +280,7 @@ import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
 import { loadNetNew, headDoc, NET_NEW_TAG, selfTest as netNewSelfTest } from './gates/net-new.mjs';
 import { evaluateWitness, ownMeasurementSql, selfTest as witnessSelfTest } from './gates/witness.mjs';
+import { ldg10Status, selfTest as ldg10SelfTest } from './gates/ldg10.mjs';
 import { buildRunnerFingerprints, sqlFingerprinter } from './gates/witness-runner-set.mjs';
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
@@ -5924,9 +5925,30 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints, finger
     try { ownMeasurementFingerprints.add(fingerprintSql(sql)); } catch { /* not parseable SQL: nothing to match */ }
   }
 
+  // LDG-10 (R-DI) #44 (h): each pinned producer's POST golden `summary` objects (file-only), so a pin's
+  // `equals` is verified against what the producer really stamped. A golden that does not parse is skipped.
+  const producerSummaries = {};
+  const pins = descriptorInfo.descriptor && descriptorInfo.descriptor.staleness && Array.isArray(descriptorInfo.descriptor.staleness.pins)
+    ? descriptorInfo.descriptor.staleness.pins
+    : [];
+  for (const producer of [...new Set(pins.map((pin) => pin && pin.step).filter((s) => typeof s === 'string'))]) {
+    const dir = path.join(GOLDEN_ROOT, producer, 'post');
+    const list = [];
+    if (existsSync(dir)) {
+      for (const f of readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
+        try {
+          const doc = JSON.parse(readFileSync(path.join(dir, f), 'utf8'));
+          if (doc && doc.summary && typeof doc.summary === 'object') list.push(doc.summary);
+        } catch { /* unreadable golden: G8 owns it */ }
+      }
+    }
+    producerSummaries[producer] = list;
+  }
+
   return evaluateWitness({
     derivedReadsSteps,
     ownMeasurementFingerprints,
+    producerSummaries,
     slug: row.slug,
     descriptor: descriptorInfo.descriptor,
     status: row.stage === 'pending' ? 'pending' : 'converted',
@@ -5944,6 +5966,7 @@ async function main() {
   const opts = parseArgs(process.argv.slice(2));
   selfTest();
   { const w = witnessSelfTest(); if (!w.ok) throw new Error(`self-test FAILED (#44 WITNESS): ${w.detail}`); }
+  { const l = ldg10SelfTest(); if (!l.ok) throw new Error(`self-test FAILED (#50 LDG-10): ${l.detail}`); }
   if (opts.selfTestOnly) {
     console.log('[step-validate] self-test PASSED');
     return;
@@ -6010,6 +6033,8 @@ async function main() {
   let anyHardStop = false;
   if (ownerSpecHardStop) anyHardStop = true; // #43 is not in invariantResults — set explicitly (panel I-2)
   const summaries = [];
+  // #50 LDG-10 (Spec 124 R-DI): every evaluated slug's #44 rows, for the sources-chain status line below.
+  const witnessRowsBySlug = {};
 
   for (const row of targets) {
     const descriptorInfo = checkDescriptor(row);
@@ -6021,6 +6046,7 @@ async function main() {
     }
     const captureFindings = checkCaptures(row, descriptorInfo, computePath);
     const witness44 = witnessFor(row, descriptorInfo, computePath, runnerFingerprints, fingerprintSql);
+    if (witness44) witnessRowsBySlug[row.slug] = witness44.rows;
     const p3 = measureP3Footprint(row, descriptorInfo);
     // matrix computed BEFORE the scorecard (Rule 13 hard-stop wiring, WF3
     // commit 4) — computeScorecard now folds an unpinned enforced-red matrix
@@ -6040,15 +6066,14 @@ async function main() {
     console.log(block);
 
     if (witness44) {
-      const reportOnly = row.stage === 'pending' ? '' : ', report-only';
-      console.log(`[step-validate] #44 WITNESS ${row.slug} (${row.stage}${reportOnly}): ${witness44.answer}`);
+      console.log(`[step-validate] #44 WITNESS ${row.slug} (${row.stage}): ${witness44.answer}`);
       if (witness44.rows.length > 1) {
         for (const r of witness44.rows.slice(0, 20)) console.log(`  - ${r}`);
         if (witness44.rows.length > 20) console.log(`  … +${witness44.rows.length - 20} more`);
       }
       const attributed = witness44.attributed || [];
       if (attributed.length > 0) {
-        console.log(`[step-validate] #44 ATTRIBUTION ${row.slug} (report-only until max(CP-S1, P1-C9), Spec 124 R-BZ): ${attributed.length} compute-attributed FAIL(s)`);
+        console.log(`[step-validate] #44 ATTRIBUTION ${row.slug} (hard since max(CP-S1, P1-C9), Spec 124 R-BZ / R-DI): ${attributed.length} compute-attributed FAIL(s)`);
         for (const r of attributed.slice(0, 20)) console.log(`  - ${r}`);
         if (attributed.length > 20) console.log(`  … +${attributed.length - 20} more`);
       }
@@ -6081,8 +6106,35 @@ async function main() {
       console.log(`[step-validate] ${row.slug}: hard-stop scored but NOT gating — only its report/tests are staged, not its code (--staged doc-only rule)`);
     }
     if (sc.hardStop && isBlocking) anyHardStop = true;
-    if (witness44 && witness44.hardStop && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 WITNESS failed for pending slug ${row.slug}`); }
+    if (witness44 && witness44.hardStop && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 WITNESS failed for ${row.stage} slug ${row.slug}`); }
+    // R-BZ: #44 compute-attributed FAILs turn hard at max(CP-S1, P1-C9); both are BUILT (P1-C9 folded into LDG-10, R-DI).
+    if (witness44 && (witness44.attributed || []).length > 0 && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 ATTRIBUTION — ${witness44.attributed.length} compute-attributed FAIL(s) for ${row.slug}`); }
     summaries.push({ slug: row.slug, total: sc.total, maxTotal: sc.maxTotal, hardStop: sc.hardStop, blocking: isBlocking, fiveWord, attributedFails: (witness44 && witness44.attributed ? witness44.attributed.length : 0) });
+  }
+
+  // #50 LDG-10 (Spec 124 R-DI, McDonald's Airtight V3) — printed on a whole-fleet run only (it reads every
+  // sources slug's #44 rows). A pure conjunction of gates that already hard-stop on their own (#44, #31, L-A),
+  // so it adds no hard stop; it is the one place the sources ledger's completeness is answered, with every
+  // pending clause (cloud proof, unruled checks) named — never a PASS by absence.
+  if (opts.all) {
+    const manifest50 = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8'));
+    const census50 = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8'));
+    const sourcesSlugs = (manifest50.chains && manifest50.chains.sources) || [];
+    const exemptSlugs = (census50.exemptions || []).map((e) => e && e.slug).filter(Boolean);
+    const convertedSet = crossStepLedger.convertedSlugs();
+    const effective50 = effectiveCrossStepLedger();
+    const order50 = crossStepLedger.chainOrderViolations(
+      { sources: sourcesSlugs },
+      effective50,
+      { traces: crossStepLedger.loadTraceStatements(), converted: new Set(crossStepLedger.convertedSlugs()) },
+    );
+    const gateD = invariantResults.find((r) => r.id === 31) || { pass: false };
+    const epPin = programmeItemsAll.find((it) => it && it.id === 'EP-PIN-D17');
+    const pending = [];
+    if (!epPin || epPin.status !== 'BUILT') pending.push(`EP-PIN-D17 cloud proof (${epPin ? epPin.status : 'missing'}; operator-run)`);
+    pending.push('#44 (h) h:undeclared closure set not ruled');
+    const status50 = ldg10Status({ sourcesSlugs, convertedSlugs: convertedSet, exemptSlugs, witnessRowsBySlug, gateD, orderRows: order50.rows, pending });
+    console.log(`[step-validate] #50 ${status50.detail}`);
   }
 
   const registryFails = invariantResults.filter((r) => r.slug === '(registry)' && !r.pass);

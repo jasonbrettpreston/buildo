@@ -59,20 +59,83 @@ function traceEnv(env, traceDir) {
 }
 
 /**
- * Snapshot the resolver's catalog: `information_schema.columns` for the public
- * schema, grouped `{ table: [cols…] }` with both keys and each column list sorted.
- * Reads only — never writes, never logs.
+ * The system relations (`pg_*`) a descriptor DECLARES as reads (`inputs.reads.tables` ∪
+ * `checks[].reads`), sorted. LDG-10 G5 (Spec 124 R-DI, McDonald's Airtight V3): only a DECLARED
+ * system relation enters the catalog, so it is witnessed at column level like any table (R-BF,
+ * Spec 122 §6.6.1 (a)); an undeclared `pg_*` read stays excluded, exactly as before.
  *
- * @param {{query: (sql: string) => Promise<{rows: Array<object>}>}} pool
+ * @param {object|null} descriptor
+ * @returns {string[]}
+ */
+function declaredSystemRelations(descriptor) {
+  const out = new Set();
+  const tables = descriptor && descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.tables)
+    ? descriptor.inputs.reads.tables
+    : [];
+  const checkReads = descriptor && Array.isArray(descriptor.checks)
+    ? descriptor.checks.flatMap((c) => (c && Array.isArray(c.reads) ? c.reads : []))
+    : [];
+  for (const r of [...tables, ...checkReads]) {
+    if (r && typeof r.table === 'string' && r.table.startsWith('pg_')) out.add(r.table);
+  }
+  return [...out].sort();
+}
+
+/**
+ * Every system relation declared by ANY step descriptor under `scripts/` (the fleet set), sorted.
+ * The committed catalog is written by every capture (writeCatalog), so it must not depend on WHICH
+ * step was captured last: every capture snapshots the same fleet-wide set (Spec 124 R-DI, standardized).
+ * Fixture descriptors under `scripts/steps/_schema/fixtures/` are not steps and are skipped.
+ *
+ * @param {string} [root] — repo root (defaults to REPO_ROOT)
+ * @returns {string[]}
+ */
+function fleetSystemRelations(root = REPO_ROOT) {
+  const out = new Set();
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || full.includes(path.join('steps', '_schema', 'fixtures'))) continue;
+        walk(full);
+      } else if (entry.name.endsWith('.descriptor.json')) {
+        let d = null;
+        try { d = JSON.parse(fs.readFileSync(full, 'utf8')); } catch { d = null; }
+        for (const r of declaredSystemRelations(d)) out.add(r);
+      }
+    }
+  };
+  walk(path.join(root, 'scripts'));
+  return [...out].sort();
+}
+
+/**
+ * Snapshot the resolver's catalog: `information_schema.columns` for the public
+ * schema, grouped `{ table: [cols…] }` with both keys and each column list sorted —
+ * plus, when `systemRelations` names any, those `pg_catalog` relations' columns (LDG-10 G5,
+ * `declaredSystemRelations`). Reads only — never writes, never logs.
+ *
+ * @param {{query: (sql: string, params?: unknown[]) => Promise<{rows: Array<object>}>}} pool
+ * @param {{systemRelations?: string[]}} [opts]
  * @returns {Promise<Record<string, string[]>>}
  */
-async function snapshotCatalog(pool) {
+async function snapshotCatalog(pool, opts = {}) {
   const res = await pool.query(
     `SELECT table_name, column_name
        FROM information_schema.columns
       WHERE table_schema = 'public'`
   );
-  const rows = (res && res.rows) || [];
+  const rows = [...((res && res.rows) || [])];
+  const systemRelations = Array.isArray(opts.systemRelations) ? opts.systemRelations.filter((r) => typeof r === 'string' && r.startsWith('pg_')) : [];
+  if (systemRelations.length > 0) {
+    const sys = await pool.query(
+      `SELECT table_name, column_name
+         FROM information_schema.columns
+        WHERE table_schema = 'pg_catalog' AND table_name = ANY($1::text[])`,
+      [systemRelations],
+    );
+    rows.push(...((sys && sys.rows) || []));
+  }
   const byTable = {};
   for (const row of rows) {
     if (!row || row.table_name == null || row.column_name == null) continue;
@@ -194,6 +257,8 @@ module.exports = {
   CATALOG_REL,
   traceEnv,
   snapshotCatalog,
+  declaredSystemRelations,
+  fleetSystemRelations,
   writeCatalog,
   dsmGuard,
   writeTraceFromDir,

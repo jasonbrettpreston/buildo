@@ -236,7 +236,7 @@ describe('P1-C4a canary 4 — a declared-but-unwitnessed column', () => {
       fixtureRecords: {},
     });
     expect(out.rows).toContain('FAIL:WITNESS:s:a:unwitnessed:parcels.zone');
-    expect(out.hardStop).toBe(false); // converted is report-only
+    expect(out.hardStop).toBe(true); // converted is HARD since P1-C9 (LDG-10, Spec 124 R-DI, 2026-10-17)
   });
 
   it('GREEN control: a fixture record witnessing the column yields no a:unwitnessed row', async () => {
@@ -318,7 +318,7 @@ describe('P1-C4a — FAIL:FIXTURE rows in #44', () => {
     },
   };
 
-  it('a fully-witnessed trace still emits FAIL:FIXTURE rows; converted is report-only, pending hard-stops', async () => {
+  it('a fully-witnessed trace still emits FAIL:FIXTURE rows; converted and pending both hard-stop (P1-C9, R-DI)', async () => {
     const gate = await loadGate();
     const common = {
       ...base,
@@ -328,7 +328,7 @@ describe('P1-C4a — FAIL:FIXTURE rows in #44', () => {
     const converted = gate.evaluateWitness({ ...common, status: 'converted' });
     expect(converted.rows).toContain('FAIL:FIXTURE:s:src/x.test.ts:a:parcels.lot_size_sqm');
     expect(converted.rows).toContain('FAIL:FIXTURE:s:src/x.test.ts:input:no-text');
-    expect(converted.hardStop).toBe(false);
+    expect(converted.hardStop).toBe(true);
 
     const pending = gate.evaluateWitness({ ...common, status: 'pending' });
     expect(pending.hardStop).toBe(true);

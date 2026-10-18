@@ -428,6 +428,34 @@ export function unproducedReads(effective) {
   return [...out].sort();
 }
 
+/**
+ * LDG-10 class 2 widening (Spec 124 R-DI, McDonald's Airtight V3; Spec 122 §6.6 (c) "the table-reader half is
+ * LDG-10's widening"): every read by an UNCONVERTED in-chain step (an effective-ledger row with `source ===
+ * "snapshot"` — its lineage is the legacy script's own runtime emitMeta, i.e. observed, never a re-emitted
+ * descriptor) of a table some step writes, whose COLUMN no step declares writing — sorted, unique
+ * `unproduced:step:<slug>:<table>.<column>`. Split by the same MQ-A5 predicate as src/ reads: HARD when the table
+ * has a converted inserter, otherwise counted UNPRODUCED-UNWITNESSED until that inserter converts.
+ * @param {{inchain?: object}} effective the effective ledger
+ * @returns {string[]}
+ */
+export function unproducedStepReads(effective) {
+  const inchain = (effective && effective.inchain) || {};
+  const writerWrites = Object.values(inchain).map((row) => writersOf(row));
+  const out = new Set();
+  for (const slug of Object.keys(inchain).sort()) {
+    const row = inchain[slug];
+    if (!row || row.source !== 'snapshot') continue;
+    const reads = row.reads && typeof row.reads === 'object' ? row.reads : {};
+    for (const table of Object.keys(reads).sort()) {
+      if (!writerWrites.some((writes) => Object.prototype.hasOwnProperty.call(writes, table))) continue;
+      for (const column of Array.isArray(reads[table]) ? reads[table] : []) {
+        if (!writerWrites.some((writes) => Array.isArray(writes[table]) && writes[table].includes(column))) out.add(`unproduced:step:${slug}:${table}.${column}`);
+      }
+    }
+  }
+  return [...out].sort();
+}
+
 /** Build the whole registry, deterministic order, from the five sources. DISK. */
 export function buildRegistry(repoRoot = REPO_ROOT) {
   const descriptors = loadConvertedDescriptors(repoRoot);
@@ -809,7 +837,8 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
     ...scanConsumers(registry, repoRoot),
   ];
   if (posture && posture.mode === 'hard') {
-    for (const item of splitUnproduced(unproducedReads(effective || effectiveLedger()), inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot))).hard) {
+    const eff = effective || effectiveLedger();
+    for (const item of splitUnproduced([...unproducedReads(eff), ...unproducedStepReads(eff)], inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot))).hard) {
       const rest = item.slice('unproduced:'.length);
       const idx = rest.lastIndexOf(':');
       const file = rest.slice(0, idx);
@@ -832,13 +861,19 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
  */
 export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE, inserterTables } = {}) {
   const violations = allConsumerViolations(registry, repoRoot, { effective, posture, inserterTables });
-  const unproduced = unproducedReads(effective || effectiveLedger());
-  const split = splitUnproduced(unproduced, inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot)));
+  const eff = effective || effectiveLedger();
+  const unproduced = unproducedReads(eff);
+  const inserters = inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot));
+  const split = splitUnproduced(unproduced, inserters);
+  // LDG-10 class 2 (R-DI): unconverted steps' observed reads, split the same way, counted on their own line.
+  const stepUnproduced = unproducedStepReads(eff);
+  const stepSplit = splitUnproduced(stepUnproduced, inserters);
   const { unallowed, orphans, allowed } = matchLedger('D', violations, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const where = (v) => `${v.step} ${v.item}`;
   const unproducedLine = `; ${unproduced.length} unproduced src read(s) (${posture.mode} until ${posture.flips_hard_at}) [${unproduced.join('; ')}]`
-    + `; UNPRODUCED-UNWITNESSED: ${split.unwitnessed.length} (report-only until the table's inserter converts) [${split.unwitnessed.join('; ')}]`;
+    + `; UNPRODUCED-UNWITNESSED: ${split.unwitnessed.length} (report-only until the table's inserter converts) [${split.unwitnessed.join('; ')}]`
+    + `; LDG-10 step readers: ${stepSplit.hard.length} hard, ${stepSplit.unwitnessed.length} UNPRODUCED-UNWITNESSED (unconverted inserter) [${stepSplit.unwitnessed.join('; ')}]`;
   const listed = unconvertedProducerReads(registry, repoRoot);
   const listedLine = `; ${listed.length} unconverted-producer read(s) listed (O3, red once the producer converts) [${listed.join('; ')}]`;
   const detail = (unallowed.length || orphans.length)
@@ -851,7 +886,7 @@ export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROO
       + `(${allowed.length} ledger-allowed, ${violations.length - allowed.length} present+typed/excluded)`
       + unproducedLine
       + listedLine;
-  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced, unproducedHard: split.hard, unproducedUnwitnessed: split.unwitnessed, listed };
+  return { pass: unallowed.length === 0 && orphans.length === 0, blockedSlugs, detail, unallowed, orphans, allowed, unproduced, unproducedHard: split.hard, unproducedUnwitnessed: split.unwitnessed, stepUnproducedHard: stepSplit.hard, stepUnproducedUnwitnessed: stepSplit.unwitnessed, listed };
 }
 
 /**

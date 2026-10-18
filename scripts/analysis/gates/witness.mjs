@@ -26,10 +26,9 @@
 //
 // OUT of slice A (still implemented later): the C9 marker string — a later commit
 // owns those. The declared ⊆ witnessed half of (a) IS armed here at P1-C4a (it needs a fresh post
-// trace, so a trace-less slug stays UNWITNESSED). `status === 'converted'` is REPORT-ONLY until
-// P1-C8/C9, so `hardStop` is only ever true for a `pending` slug whose rows carry a FAIL:.
-// Check (e) lands at P1-C5: report-only for converted slugs, hard for a pending slug (the same
-// hardStop rule), until P1-C9.
+// trace, so a trace-less slug stays UNWITNESSED). Since P1-C9 (folded into LDG-10, Spec 124 R-DI,
+// 2026-10-17) `hardStop` is true for a pending OR converted slug whose rows carry a FAIL:, check (e)
+// included — the witnessed ledger IS the effective ledger.
 
 import { writeInventoryForMode, declaresWriteInventoryByMode } from './schema-homes.mjs';
 
@@ -187,8 +186,117 @@ function observedTxnScope(trace) {
   return null;
 }
 
+/**
+ * LDG-10 (Spec 124 R-DI, McDonald's Airtight V3): the descriptor's DECLARED mixture of write
+ * disciplines. A step whose execution scope is transactional (`step`/`batch`) and which declares at
+ * least one `outputs.writes[].write_discipline.txn_scope` of `none`/`statement` (enrich_parcels pass 5,
+ * a separate autocommit connection by design) declares a mixed trace, so an observed `mixed` is the
+ * declaration witnessed, not a drift. Every other combination keeps the strict table below.
+ */
+function declaresMixedScope(descriptor) {
+  const exec = descriptor && descriptor.execution ? descriptor.execution.txn_scope : null;
+  if (exec !== 'step' && exec !== 'batch') return false;
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes) ? descriptor.outputs.writes : [];
+  return writes.some((w) => {
+    const s = w && w.write_discipline && typeof w.write_discipline === 'object' ? w.write_discipline.txn_scope : null;
+    return s === 'none' || s === 'statement';
+  });
+}
+
+/**
+ * LDG-10 (Spec 124 R-DI; R-BG "observes what a step really does", R-BZ attribution): a statement whose
+ * fingerprint is in the RUNNER set is the runner's own SQL (e.g. scope-retire.js's pass3_scope hygiene on
+ * a step-owned table), so it is the runner's in checks (a) traced ⊆ declared, (b), (c) and (d) — never
+ * the step's — exactly as attributionRows already treats it for excluded tables. The returned trace keeps
+ * every other statement; `touched` is re-derived the way assemble.cjs builds it (reads = reads ∪ writes),
+ * transaction blocks and autocommit lists drop the runner fingerprints. The declared ⊆ witnessed half of
+ * (a) still reads the FULL trace (a column the runner really touched stays witnessed).
+ */
+export function withoutRunnerStatements(trace, runnerSet) {
+  if (!trace || typeof trace !== 'object' || !runnerSet || typeof runnerSet.has !== 'function' || runnerSet.size === 0) return trace;
+  const all = Array.isArray(trace.statements) ? trace.statements : [];
+  const statements = all.filter((s) => !(s && typeof s.fingerprint === 'string' && runnerSet.has(s.fingerprint)));
+  if (statements.length === all.length) return trace;
+  const union = (lists) => {
+    const out = {};
+    for (const map of lists) {
+      for (const [table, cols] of Object.entries(map && typeof map === 'object' ? map : {})) {
+        const set = new Set(out[table] || []);
+        for (const c of Array.isArray(cols) ? cols : []) set.add(c);
+        out[table] = [...set].sort();
+      }
+    }
+    return out;
+  };
+  const writes = union(statements.map((s) => s && s.writes));
+  const reads = union([...statements.map((s) => s && s.reads), writes]);
+  const keep = (fp) => !(typeof fp === 'string' && runnerSet.has(fp));
+  return {
+    ...trace,
+    statements,
+    touched: { reads, writes },
+    transactions: (Array.isArray(trace.transactions) ? trace.transactions : []).map((b) => ({
+      ...b,
+      write_fingerprints: (Array.isArray(b && b.write_fingerprints) ? b.write_fingerprints : []).filter(keep),
+    })),
+    autocommit_writes: (Array.isArray(trace.autocommit_writes) ? trace.autocommit_writes : []).filter(keep),
+  };
+}
+
+/**
+ * #44 check (h) — version pins are witnessed and verified (Spec 124 R-BL (v), armed after P1-C9 by LDG-10 / R-DI). PURE.
+ * For every EVALUATED `staleness.pins[]` row of the READING step (one declaring `op`, `equals` or `bound` —
+ * the only pins the runner reads, `producer.js` evaluatePins; a bare watermark pin is a producer-edge
+ * declaration, R-BL (i), and is not read):
+ *   h:unwitnessed:<producer>.<stamp>  — no fresh trace statement reads `pipeline_runs` (the runner's pin read; the
+ *                                       resolver records `pipeline_runs` as runner-owned, read OR excluded);
+ *   h:mismatch:<producer>.<path>:<pinned>!=<stamped> — the pin's `equals` differs from the value at <path> in ANY
+ *                                       producer POST golden carrying it (the golden's `summary.records_meta`);
+ *   h:unverifiable:<producer>.<path>  — a pin with `equals` whose <path> NO producer POST golden carries (no vacuous
+ *                                       pass, lens 13).
+ * `producerSummaries`: { <producer>: [POST golden `summary` objects] }; absent → mismatch/unverifiable are not
+ * evaluated. h:undeclared (a traced cross-step stamp read with no pin) needs its closure set ruled first (LDG-10
+ * drafted ruling) and is not evaluated here.
+ */
+function valueAtPath(obj, dotted) {
+  let cur = obj;
+  for (const k of dotted.split('.')) {
+    if (cur === null || typeof cur !== 'object' || !Object.prototype.hasOwnProperty.call(cur, k)) return { found: false };
+    cur = cur[k];
+  }
+  return { found: true, value: cur };
+}
+
+/** Does any fresh trace statement touch `pipeline_runs` (as a read or as a runner-owned exclusion)? */
+export function tracesTouchRuns(freshTraces) {
+  return (Array.isArray(freshTraces) ? freshTraces : []).some((tr) => (Array.isArray(tr && tr.statements) ? tr.statements : []).some((s) => s
+    && ((Array.isArray(s.excluded) && s.excluded.includes('pipeline_runs')) || (s.reads && Object.prototype.hasOwnProperty.call(s.reads, 'pipeline_runs')))));
+}
+
+export function pinItems(descriptor, runsTouched, producerSummaries) {
+  const pins = descriptor && descriptor.staleness && Array.isArray(descriptor.staleness.pins) ? descriptor.staleness.pins : [];
+  const out = [];
+  for (const pin of pins) {
+    if (!pin || typeof pin.step !== 'string' || typeof pin.stamp !== 'string') continue;
+    const evaluated = pin.op !== undefined || pin.equals !== undefined || pin.bound !== undefined;
+    if (!evaluated) continue;
+    const label = `${pin.step}.${pin.stamp}`;
+    if (runsTouched === false) out.push(`h:unwitnessed:${label}`);
+    if (pin.equals !== undefined && pin.stamp.startsWith('records_meta.') && producerSummaries && typeof producerSummaries === 'object') {
+      const summaries = Array.isArray(producerSummaries[pin.step]) ? producerSummaries[pin.step] : [];
+      const found = summaries.map((s) => valueAtPath(s, pin.stamp)).filter((v) => v.found);
+      if (found.length === 0) out.push(`h:unverifiable:${label}`);
+      for (const v of found) {
+        if (String(v.value) !== String(pin.equals)) out.push(`h:mismatch:${label}:${pin.equals}!=${v.value}`);
+      }
+    }
+  }
+  return [...new Set(out)].sort();
+}
+
 /** (d) declared → observed compatibility, per the contract's table. */
-function txnScopeOk(declared, observed) {
+function txnScopeOk(declared, observed, descriptor = null) {
+  if (observed === 'mixed' && declaresMixedScope(descriptor)) return true;
   if (declared === 'step') return observed === 'step';
   if (declared === 'batch') return observed === 'step' || observed === 'batch';
   if (declared === 'statement') return observed === 'statement';
@@ -410,7 +518,7 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace, invocation = null,
   const declaredScope = descriptor && descriptor.execution ? descriptor.execution.txn_scope : null;
   if (typeof declaredScope === 'string') {
     const observed = observedTxnScope(trace);
-    if (observed && !txnScopeOk(declaredScope, observed)) {
+    if (observed && !txnScopeOk(declaredScope, observed, descriptor)) {
       rows.push(`FAIL:WITNESS:${slug}:d:txn_scope:${declaredScope}:${observed}`);
     }
   }
@@ -711,6 +819,8 @@ export function evaluateWitness({
   modeByInvocation,
   // R-DG (G7): libpg fingerprints of ownMeasurementSql(descriptor); absent → no accounting.
   ownMeasurementFingerprints,
+  // LDG-10 (R-DI) #44 (h): { <producer>: [POST golden summary objects] } for pin mismatch / unverifiable.
+  producerSummaries,
 } = {}) {
   const ownFps = ownMeasurementFingerprints instanceof Set ? ownMeasurementFingerprints : null;
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
@@ -748,8 +858,9 @@ export function evaluateWitness({
       const mode = modeByInvocation && typeof modeByInvocation === 'object' && typeof modeByInvocation[invocation] === 'string'
         ? modeByInvocation[invocation]
         : null;
-      rows.push(...checkTraceAgainstDescriptor(slug, descriptor, trace, invocation, mode, ownFps));
-      rows.push(...producerRows(slug, trace));
+      const stepTrace = runnerSet ? withoutRunnerStatements(trace, runnerSet) : trace;
+      rows.push(...checkTraceAgainstDescriptor(slug, descriptor, stepTrace, invocation, mode, ownFps));
+      rows.push(...producerRows(slug, stepTrace));
       witnessedTouched.push(touchedOf(trace));
       freshTraces.push(trace);
       if (runnerSet && runnerSet.size > 0) {
@@ -787,6 +898,8 @@ export function evaluateWitness({
     for (const item of unwitnessedItems(descriptor, witnessed)) {
       rows.push(`FAIL:WITNESS:${slug}:${item}`);
     }
+    // (h) pins witnessed and verified (R-BL (v); LDG-10, Spec 124 R-DI).
+    for (const item of pinItems(descriptor, tracesTouchRuns(freshTraces), producerSummaries)) rows.push(`FAIL:WITNESS:${slug}:${item}`);
   }
 
   // O4 fold 14 — full_rescan EVIDENCE. Declaration-only for the arm half (so it fires with no
@@ -829,7 +942,9 @@ export function evaluateWitness({
   return {
     answer: unique.length === 0 ? 'PASS' : unique[0],
     rows: unique,
-    hardStop: status === 'pending' && unique.some((r) => r.startsWith(FAIL_PREFIX)),
+    // P1-C9 (folded into LDG-10, Spec 124 R-DI, McDonald's Airtight V3): #44 is HARD for a converted slug
+    // as for a pending one — the witnessed ledger is the effective ledger only when every FAIL stops.
+    hardStop: (status === 'pending' || status === 'converted') && unique.some((r) => r.startsWith(FAIL_PREFIX)),
     attributed: [...new Set(attributed)].sort(),
   };
 }
@@ -872,6 +987,9 @@ export function selfTest() {
   };
   const green = evaluateWitness({ ...base, postTraces: { fixture_step: trace({ parcels: ['id', 'geom'] }) } });
   const red = evaluateWitness({ ...base, postTraces: { fixture_step: trace({ parcels: ['id', 'geom', 'lot_size_sqm'] }) } });
+  // P1-C9 (LDG-10, R-DI): the same FAIL on a CONVERTED slug is hard too; a green converted slug is not.
+  const redConverted = evaluateWitness({ ...base, status: 'converted', postTraces: { fixture_step: trace({ parcels: ['id', 'geom', 'lot_size_sqm'] }) } });
+  const greenConverted = evaluateWitness({ ...base, status: 'converted', postTraces: { fixture_step: trace({ parcels: ['id', 'geom'] }) } });
   // R-DB: (c) reads by_mode[mode] (R-BK) — one traced write is right for incremental, wrong for
   // full, and a by_mode declarer with no resolved mode is FAIL:INPUT, never a guessed mode.
   const byMode = { ...base, descriptor: { ...descriptor, outputs: { ...descriptor.outputs, write_inventory: { statements: 1, by_mode: { full: { statements: 2 }, incremental: { statements: 1 } } } } } };
@@ -908,13 +1026,15 @@ export function selfTest() {
     && green.hardStop === false
     && red.rows.includes('FAIL:WITNESS:fixture_step:a:parcels.lot_size_sqm')
     && red.hardStop === true
+    && redConverted.hardStop === true
+    && greenConverted.hardStop === false
     && incr.rows.length === 0
     && full.rows.includes('FAIL:WITNESS:fixture_step:c:statements:2!=1')
     && unresolved.rows.includes('FAIL:INPUT:fixture_step:fixture_step:c:mode-unresolved');
   return {
     ok,
     detail: ok
-      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row; (c) counts by_mode[mode] and refuses an unresolved mode; G13 invalidates set_null columns are declared writes; G7 own-measurement reads are accounted, others are not'
+      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row (pending and converted, P1-C9); (c) counts by_mode[mode] and refuses an unresolved mode; G13 invalidates set_null columns are declared writes; G7 own-measurement reads are accounted, others are not'
       : `self-test FAILED: g13=${g13ok} g7=${g7ok} green=${JSON.stringify(green)} red=${JSON.stringify(red)}`,
   };
 }

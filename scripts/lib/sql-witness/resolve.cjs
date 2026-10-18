@@ -198,8 +198,15 @@ function baseTable(name) {
   return name;
 }
 
-/** Is a resolved (schema-qualified) relation runner/system-owned? */
+/**
+ * Is a resolved (schema-qualified) relation runner/system-owned? LDG-10 G5 (Spec 124 R-DI): a
+ * `pg_*` relation the CATALOG carries (it does only when a descriptor declares it, capture-witness
+ * `declaredSystemRelations`) is resolved like a table, at column level; every other system relation
+ * stays excluded.
+ */
 function isSystemOwned(schema, relname) {
+  if (relname.startsWith('pg_') && (!schema || schema === 'pg_catalog')
+    && Object.prototype.hasOwnProperty.call(currentCatalog, relname)) return false;
   if (schema && SYSTEM_SCHEMAS.has(schema)) return true;
   if (relname.startsWith('pg_')) return true;
   return RUNNER_OWNED_NAMES.has(relname);

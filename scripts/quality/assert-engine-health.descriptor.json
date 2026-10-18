@@ -20,7 +20,7 @@
     "reads": {
       "steps": [],
       "tables": [
-        { "table": "pg_stat_user_tables", "columns": ["relname", "n_live_tup", "n_dead_tup", "seq_scan", "idx_scan", "n_tup_ins", "n_tup_upd", "last_autovacuum"] },
+        { "table": "pg_stat_user_tables", "columns": ["relname", "n_live_tup", "n_dead_tup", "seq_scan", "idx_scan", "n_tup_ins", "n_tup_upd", "last_autovacuum", "schemaname"] },
         { "table": "permit_inspections", "columns": [] },
         { "table": "coa_applications", "columns": [] }
       ],

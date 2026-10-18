@@ -843,7 +843,10 @@ async function capture({ step, chain, args, tables, tablesSource, ceiling, table
     let snapTables = tables;
     let snapSource = tablesSource;
     if (traceDir && traceOut) {
-      traceOut.catalog = await witness.snapshotCatalog(pool);
+      // LDG-10 G5 (Spec 124 R-DI): every system relation (pg_*) a step descriptor DECLARES joins the
+      // catalog (the same fleet-wide set on every capture, so the committed catalog does not depend on
+      // which step ran last); it is then witnessed at column level, an undeclared one stays excluded.
+      traceOut.catalog = await witness.snapshotCatalog(pool, { systemRelations: witness.fleetSystemRelations() });
       traceOut.wall_ms = wallMs;
       if (tables.length === 0) {
         const { trace } = await witness.writeTraceFromDir({

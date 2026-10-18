@@ -845,3 +845,4 @@ Spec 122 has no byte room, so these supersessions are recorded here. The Spec 12
 - **122:1041 (f), "Report-only: #46 SCHEMA-HOMES":** superseded by Spec 124 R-DB. R-BJ/R-BK are enforced by #44 (a)/(c), and #46 is a labelled adoption print.
 - **The legacy G8 report-citation channel** (any Spec 122 text that describes a diff explained by its leaf name in assessment prose): retired by Spec 124 R-DA. `explained-diffs.json` is the only channel.
 - **Standard versions:** McDonald's Airtight V3 is the final standard (Spec 124 R-DF). Where Spec 122 says V2 or "Airtight", read V3 for every future step.
+- **122 §6.6 (c), "reconcile with runtime lineage (`records_meta.pipeline_meta` …)":** superseded by Spec 124 R-DI (2026-10-17). LDG-10 reconciles against the #44 witness traces; `pipeline_meta` stays the observed source only for unconverted steps (gate D's `unproducedStepReads`).

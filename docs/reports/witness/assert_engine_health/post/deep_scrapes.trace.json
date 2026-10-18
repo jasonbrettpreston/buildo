@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "deep_scrapes",
-  "source_fingerprint": "2441d80a5cd595350786aef5b3f4068001eda9529d52d3566d54f7769efb0d4d",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "source_fingerprint": "dff27c5f2967fc0b4564ca7994275f3980842a2408a224e10778006e2b343365",
+  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
   "header": {
     "processes": 1,
-    "calls": 155,
+    "calls": 173,
     "distinct": 21,
     "utility": 5,
-    "tracer_self_ms": 2.571,
-    "wall_ms": 335
+    "tracer_self_ms": 3.01,
+    "wall_ms": 316
   },
   "statements": [
     {
@@ -18,11 +18,17 @@
       "kind": "read",
       "count": 1,
       "rowCount": 29,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "idx_scan",
+          "n_live_tup",
+          "relname",
+          "schemaname",
+          "seq_scan"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -53,24 +59,32 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 131,
-      "reads": {},
+      "rowCount": 149,
+      "reads": {
+        "pg_stat_user_tables": [
+          "relname",
+          "schemaname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 115,
-      "reads": {},
+      "rowCount": 133,
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_tup_ins",
+          "n_tup_upd",
+          "relname",
+          "schemaname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -78,11 +92,16 @@
       "kind": "read",
       "count": 1,
       "rowCount": 1,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "last_autovacuum",
+          "n_tup_ins",
+          "n_tup_upd",
+          "relname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -90,11 +109,11 @@
       "kind": "read",
       "count": 1,
       "rowCount": 1,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": []
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -156,8 +175,8 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 134,
-      "rowCount": 17,
+      "count": 152,
+      "rowCount": 10,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -189,11 +208,16 @@
       "kind": "read",
       "count": 1,
       "rowCount": 40,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_dead_tup",
+          "n_live_tup",
+          "relname",
+          "schemaname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -222,12 +246,17 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 131,
-      "reads": {},
+      "rowCount": 149,
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_dead_tup",
+          "n_live_tup",
+          "relname",
+          "schemaname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -269,12 +298,20 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 134,
-      "reads": {},
+      "rowCount": 152,
+      "reads": {
+        "pg_stat_user_tables": [
+          "idx_scan",
+          "n_dead_tup",
+          "n_live_tup",
+          "n_tup_ins",
+          "n_tup_upd",
+          "relname",
+          "seq_scan"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     }
   ],
@@ -296,7 +333,18 @@
         "snapshot_date",
         "table_name"
       ],
-      "permit_inspections": []
+      "permit_inspections": [],
+      "pg_stat_user_tables": [
+        "idx_scan",
+        "last_autovacuum",
+        "n_dead_tup",
+        "n_live_tup",
+        "n_tup_ins",
+        "n_tup_upd",
+        "relname",
+        "schemaname",
+        "seq_scan"
+      ]
     },
     "writes": {
       "engine_health_snapshots": [

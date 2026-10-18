@@ -195,6 +195,7 @@ Moved blocks stay byte-identical (spec-split-check arm i), so an amendment to a 
 
 ---
 
+- **R-BC (c) amended by Spec 124 R-DI (2026-10-17, McDonald's Airtight V3; R-BC now in §B10, moved by M24):** "reconcile declared reads/writes with runtime lineage (`records_meta.pipeline_meta`)" reads "reconcile declared reads/writes with the #44 witness traces (observed SQL, column level) — for a converted step `records_meta.pipeline_meta` is the declaration re-emitted (Spec 122 §6.6.1); it stays the observed source only for unconverted steps (gate D `unproducedStepReads`)".
 ## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17
 
 Moved from Spec 124 — Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.

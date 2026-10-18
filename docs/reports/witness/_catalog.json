@@ -1060,6 +1060,10 @@
       "id",
       "max_buildable_footprint_sqm"
     ],
+    "parcels_cohort_bak_20261017t2226z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1332,6 +1336,34 @@
     "permits_cohort_bak_20261017t2211z": [
       "latitude",
       "permit_num"
+    ],
+    "pg_stat_user_tables": [
+      "analyze_count",
+      "autoanalyze_count",
+      "autovacuum_count",
+      "idx_scan",
+      "idx_tup_fetch",
+      "last_analyze",
+      "last_autoanalyze",
+      "last_autovacuum",
+      "last_idx_scan",
+      "last_seq_scan",
+      "last_vacuum",
+      "n_dead_tup",
+      "n_ins_since_vacuum",
+      "n_live_tup",
+      "n_mod_since_analyze",
+      "n_tup_del",
+      "n_tup_hot_upd",
+      "n_tup_ins",
+      "n_tup_newpage_upd",
+      "n_tup_upd",
+      "relid",
+      "relname",
+      "schemaname",
+      "seq_scan",
+      "seq_tup_read",
+      "vacuum_count"
     ],
     "phase_calibration": [
       "computed_at",

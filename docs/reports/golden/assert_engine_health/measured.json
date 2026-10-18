@@ -2,12 +2,12 @@
   "entries": {
     "duplicate_snapshot_key_count": {
       "value": 0,
-      "cost_ms": 1,
-      "at": "2026-10-17T19:06:50.653Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3101",
+      "cost_ms": 0,
+      "at": "2026-10-17T22:56:13.806Z",
+      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
+      "run_id": "3229",
       "chain": null,
-      "sample_n": 35
+      "sample_n": 45
     }
   }
 }

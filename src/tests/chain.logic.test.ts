@@ -178,11 +178,12 @@ describe('Pipeline Chain Definitions', () => {
     // No hardcoded step count: PIPELINE_CHAINS.steps is DERIVED from manifest.chains (single
     // source of truth). The bidirectional parity tests below guard manifest⇄UI coverage; a
     // magic length here just re-encodes the drift class this WF2 removed.
-    // enrich_parcels runs immediately after load_zoning (consumes its tables).
     const slugs = chain!.steps.map((s) => s.slug);
-    expect(slugs.indexOf('enrich_parcels')).toBe(slugs.indexOf('load_zoning') + 1);
-    // load_ravines runs immediately after parcels (independent source load).
-    expect(slugs.indexOf('load_ravines')).toBe(slugs.indexOf('parcels') + 1);
+    // RETIRED (LDG-10 class 5, Spec 124 R-DI, 2026-10-17): "enrich_parcels == load_zoning + 1" and
+    // "load_ravines == parcels + 1". The real dependency (load_zoning > enrich_parcels, via the zoning
+    // column reads) is DERIVED and HARD in src/tests/chain-order-derived.logic.test.ts; load_ravines after
+    // parcels was never a dependency (its own comment: "independent source load"). Adjacency is not a
+    // dependency, so neither pin survives the derived order.
     // RETIRED (L-A, LDG-10 class 5, plan Fold 14): "enrich_ravines == link_parcels + 1". Fence: the pin
     // existed to keep enrich_ravines after its inputs; its comment claimed a link_parcels dependency that
     // Spec 122 §6.5 measured false (enrich-ravines reads only parcels + ravines). The real dependencies
