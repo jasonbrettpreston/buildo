@@ -7,13 +7,14 @@
   ],
   "$comment": "Spec 124 §5 R-BA gate I #34 (R-X) — every staleness.fingerprint_inputs entry declared by a converted step needs an adjudicated disposition row here: \"executed\" (a named executor.{file,symbol} genuinely reads it), \"descriptive\" (declared, documents intent, 0 readers today), or \"retire\" (dead, should be removed from the descriptor). Measured 2026-09-26: all 29 distinct entries were 0-reader. Reconciled 2026-10-03 with registry-truth ruling 1 (FLEET-2 P2-C6): the retired link_massing full-gate module's row went with it; the remaining 28 are real imports (24) or declared data signals (4), still 0-reader, so every row below stays \"descriptive\". A future step that wires a real executor over one of these entries must flip its row to \"executed\" with executor.{file,symbol} in the SAME commit (R-X: an unexecuted \"executed\" claim is a rotted citation, checked live by dispositionRowFindings).",
   "spec_version": {
-    "$comment": "identity.spec_version per-step disposition (registry-truth fold 8c item 8, home ruled by fold 8d item 8; ravines per fold 12 F3). x-trust class of the field: executed:scripts/lib/step/acquire.js#acquireExternal — but ONLY on the INGESTOR skip path. Every converted step that does not execute it is named here with why, so the gap stays visible (Phase 3 exit: not D). Locked by src/tests/spec-version-disposition.infra.test.ts (every converted step exactly once; executed == the INGESTOR set; executor resolves).",
+    "$comment": "identity.spec_version per-step disposition (registry-truth fold 8c item 8, home ruled by fold 8d item 8; ravines per fold 12 F3). x-trust class of the field: executed:scripts/lib/step/acquire.js#acquireExternal — but ONLY on the INGESTOR skip path. Every converted step that does not execute it is named here with why, so the gap stays visible (Phase 3 exit: not D). Locked by src/tests/spec-version-disposition.infra.test.ts (every converted step exactly once; executed == the INGESTOR set; executor resolves). load_bylaw_map_areas joined executed[] at the R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18): a single-primary INGESTOR with no skip_scope, whose kind:\"filesystem\" external runs through acquireExternal, so its tier-1/tier-2 content_hash skip re-emit pins identity.spec_version.",
     "executor": {
       "file": "scripts/lib/step/acquire.js",
       "symbol": "acquireExternal"
     },
     "executed": [
       "address_points",
+      "load_bylaw_map_areas",
       "load_centreline",
       "load_heritage",
       "load_ravines",
@@ -96,6 +97,11 @@
       "link_parcel_addresses": {
         "why": {
           "text": "MATERIALIZER: measured 2026-10-04 (registry-truth fold 8c item 8 / fold 8d item 8): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: the only reads are acquire.js acquireExternal's INGESTOR skip-path re-emit pins and three INGESTOR computes stamping their own load block), so the value is declared, not executed."
+        }
+      },
+      "link_parcel_abutments": {
+        "why": {
+          "text": "LINK: measured 2026-10-18 at the R-DK cutover (Spec 124 R-K, R-DK): no runner path and no compute reads this step's own identity.spec_version (grep of scripts/lib: compute/link-parcel-abutments.js has no spec_version read; the only reads remain acquire.js acquireExternal's INGESTOR skip-path re-emit pins and INGESTOR computes stamping their own load block), so the value is declared, not executed."
         }
       },
       "link_parcels": {

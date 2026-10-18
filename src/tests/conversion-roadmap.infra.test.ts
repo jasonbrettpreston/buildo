@@ -310,7 +310,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 0 -> 1 at WF1 load_coa_notices commit B (2026-10-07): the net-new step's census row is batch "pending"
     // from day one (no C-batch to flip from). Returns to 0 at its cutover (R-AO retention).
     // 1 -> 3 at H6 (2026-10-16): load_bylaw_map_areas + link_parcel_abutments, net-new, batch "pending" (R-CS).
-    expect(pendingBatch.size).toBe(3);
+    // 3 -> 1 at the R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18): the load_bylaw_map_areas and
+    // link_parcel_abutments rows are RETAINED with `status: "converted"` (R-AO), batch "pending" kept
+    // verbatim. Measured: only load_coa_notices remains (still in converted.json pending[]).
+    expect(pendingBatch.size).toBe(1);
     expect(c6.size).toBe(36);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });

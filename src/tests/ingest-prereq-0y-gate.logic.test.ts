@@ -1102,8 +1102,10 @@ describe('0y — converted INGESTORs are untouched by the 0y gate (Regression Gu
 
   // 7 -> 8 at batch-2 row 3.4 ③ (load_heritage, 2026-10-03): the INGESTOR joined converted.json.
   // 8 -> 9 at batch-2 row 3.3 ③ (load_zoning, 2026-10-05): the first multi-primary CKAN DataStore INGESTOR joined.
-  it('the registry declares exactly NINE converted INGESTORs (the R1 scope is not vacuous)', () => {
-    expect(convertedIngestors(), 'the R1 lock covers every converted INGESTOR, and there are nine').toHaveLength(9);
+  // 9 -> 10 at the R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18): load_bylaw_map_areas (net-new, chain
+  // bylaw_maps) joined converted.json. Measured from the real registry; link_parcel_abutments is a LINK.
+  it('the registry declares exactly TEN converted INGESTORs (the R1 scope is not vacuous)', () => {
+    expect(convertedIngestors(), 'the R1 lock covers every converted INGESTOR, and there are ten').toHaveLength(10);
   });
 
   it('every converted INGESTOR survives the 0y gate (RED: the five `trigger:"none"` steps die in Y5 today)', async () => {

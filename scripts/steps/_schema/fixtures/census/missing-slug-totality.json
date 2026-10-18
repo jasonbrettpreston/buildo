@@ -68,7 +68,9 @@
       "file": "scripts/link-parcel-abutments.js",
       "archetype": "LINK",
       "batch": "pending",
-      "reason": "NET-NEW step, converted from day one (WF1 McBylaw Phase 2 inputs B2, Spec 130; .cursor/wf1_mcbylaw_phase2_inputs_active_task.md). Classified LINK from the plan: it relates existing parcels to each other (ordered abutment pairs) in parcel_abutments, reading no external source; there is no legacy script to classify. In converted.json pending[] until its cutover (H6 runbook step 5)."
+      "reason": "RETAINED at cutover per Spec 124 R-AO: archetype and batch are the census's own pre-cutover values, kept verbatim and never re-derived from the descriptor (a copy would make fast invariant #25 compare a value to itself); converted.json registers the file in converted[] and deletes its pending[] entry in the same commit (R-K).",
+      "status": "converted",
+      "converted_at": "commit-3"
     },
     {
       "slug": "backfill_realtor_permit_trades",

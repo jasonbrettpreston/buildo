@@ -273,6 +273,10 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       { upstream: 'enrich_heritage', downstream: 'enrich_parcels' },
       { upstream: 'enrich_ravines', downstream: 'enrich_parcels' },
       { upstream: 'link_massing', downstream: 'enrich_parcels' },
+      // R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18) — 58 -> 65 PAIRS, SEVEN NEW (measured, deriveSeamPairs over
+      // the real registry). load_bylaw_map_areas declares inputs.reads.steps [] (a leaf INGESTOR) but enrich_parcels
+      // already declares it (the sixplex pass, H6), so its registration resolves that edge to a live producer.
+      { upstream: 'load_bylaw_map_areas', downstream: 'enrich_parcels' },
       // FLEET-2 assembly (2026-10-05): enrich_parcels declares load_zoning (converted at ③; P1-C8a rule) — 35 -> 36 PAIRS.
       { upstream: 'load_zoning', downstream: 'enrich_parcels' },
       { upstream: 'massing', downstream: 'enrich_parcels' },
@@ -295,6 +299,16 @@ describe('deriveSeamPairs — derived from converted.json + manifest.json, never
       // batch-2 row 3.8 (2026-09-28) — sorts here: 'link_neighbourhoods:neighbourhoods' falls
       // immediately after 'link_neighbourhoods:geocode_permits' ('geocode_permits' < 'neighbourhoods').
       { upstream: 'neighbourhoods', downstream: 'link_neighbourhoods' },
+      // R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18) — the other SIX of the seven: link_parcel_abutments registering
+      // adds its six declared inputs.reads.steps (parcels, massing, load_centreline, link_massing, enrich_centreline,
+      // enrich_parcels — measured, scripts/link-parcel-abutments.descriptor.json), all already converted, as the
+      // DOWNSTREAM half. 'link_parcel_abutments' < 'link_parcel_addresses', so they sort here.
+      { upstream: 'enrich_centreline', downstream: 'link_parcel_abutments' },
+      { upstream: 'enrich_parcels', downstream: 'link_parcel_abutments' },
+      { upstream: 'link_massing', downstream: 'link_parcel_abutments' },
+      { upstream: 'load_centreline', downstream: 'link_parcel_abutments' },
+      { upstream: 'massing', downstream: 'link_parcel_abutments' },
+      { upstream: 'parcels', downstream: 'link_parcel_abutments' },
       // batch-2 row 3.1 (2026-09-24) — sorts here: 'link_parcel_addresses:address_points'
       // falls between 'link_neighbourhoods:geocode_permits' and
       // 'link_parcel_addresses:link_parcels' ('address_points' < 'link_parcels').
@@ -524,6 +538,15 @@ describe('runSeamChecks — one row per derived pair', () => {
     'seam_geocode_permits_before_link_neighbourhoods',
     // batch-2 row 3.8 cutover (2026-09-28) — neighbourhoods registering resolves link_neighbourhoods' declared read.
     'seam_neighbourhoods_before_link_neighbourhoods',
+    // R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18) — 58 -> 64 rows (measured, runSeamChecks chainId 'sources'):
+    // link_parcel_abutments' six declared reads, all 'sources' members. The seventh new pair,
+    // load_bylaw_map_areas -> enrich_parcels, is chain-scoped out (upstream_not_in_chain: bylaw_maps chain).
+    'seam_enrich_centreline_before_link_parcel_abutments',
+    'seam_enrich_parcels_before_link_parcel_abutments',
+    'seam_link_massing_before_link_parcel_abutments',
+    'seam_load_centreline_before_link_parcel_abutments',
+    'seam_massing_before_link_parcel_abutments',
+    'seam_parcels_before_link_parcel_abutments',
     'seam_address_points_before_link_parcel_addresses',
     'seam_parcels_before_link_parcel_addresses',
     'seam_address_points_before_link_parcels',
