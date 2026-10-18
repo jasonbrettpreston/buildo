@@ -88,6 +88,13 @@
       "reason": "Phase 4 wave 1 (coa, INGESTOR multi-target: two CKAN DataStore resources Active + Closed -> coa_applications upsert + lifecycle_status_history ledger rows; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md). ① lands the assessment docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md + red suite (L1-L24 legacy pins executing the frozen oracle, D1-D8 it.fails) + gate-K red evidence + COA-D1..COA-D10; ② the descriptor/compute/shell/notes/seeds (operator 2026-10-17: prefix COA, prior-status via the ingest lookup seam, portal rot from the newest hearing on/before the run date, stats query dropped, R-DM on_error warn_row for lifecycle_status_history) + PRE/POST goldens under the DB lock (R-CQ) with an R-CZ forced cohort; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-17",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/quality/assert-coa-freshness.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (phase-4 wave 4)",
+      "reason": "Phase-4 wave 4 (assert_coa_freshness, ASSERT: one aggregate SELECT over coa_applications -> a three-tier portal-rot verdict on MAX(last_seen_at), no write; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-DL admin visibility; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text, D1-D7 it.fails) + gate-K red evidence + ACF-D1..ACF-D7; ② the descriptor/compute/shell/notes + migration 270 (the two bounds renamed into assert_coa_freshness_*, values carried; inclusive ceiling per R-DC) + admin text; PRE on the ① tree (night P3, trap 7) and POST at night P4; ③ registers, per Spec 124 R-K. Consumes R-DW (the coa root's last_seen_at touch for every fed key) unchanged.",
+      "declared": "2026-10-18",
+      "stage": "red_suite"
     }
   ],
   "converted": [

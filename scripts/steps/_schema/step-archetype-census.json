@@ -462,10 +462,11 @@
     },
     {
       "slug": "assert_coa_freshness",
+      "owner_specs": ["docs/specs/01-pipeline/42_chain_coa.md"],
       "file": "scripts/quality/assert-coa-freshness.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "ASSERT",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step scope (wave-4 plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 recommendation 8; McDonald's Airtight V3) declared ASSERT; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: read-only (scripts/quality/assert-coa-freshness.js:9), one aggregate SELECT over coa_applications (:53-60), a WARN/FAIL portal-rot verdict on two logic variables (:92-94), no write (emitMeta writes {} :133-136). Precedent assert_data_bounds."
     },
     {
       "slug": "assert_entity_tracing",
