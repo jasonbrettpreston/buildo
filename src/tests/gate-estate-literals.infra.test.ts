@@ -11,6 +11,7 @@ import path from 'path';
 import * as estate from '../../scripts/analysis/gates/estate-literals.mjs';
 import * as vars from '../../scripts/analysis/gates/variables.mjs';
 import { standardFor } from '../../scripts/analysis/gates/compute-literals.mjs';
+import { createRequire } from 'module';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const SEED = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: unknown; min?: unknown; max?: unknown; admin?: { hidden?: string } }>;
@@ -131,5 +132,36 @@ describe('R-EB (b) — gate and tooling variables are pinned seeds, read by one 
   it('standardFor is unchanged by the estate arm (R-DT reads the same inputs)', () => {
     expect(standardFor('m', [], { hardStop: false })).toBe('V3');
     expect(standardFor('m', [], { hardStop: true })).toBe('V2');
+  });
+});
+
+// RE-FREEZE #37 half of R-EB (census rows 1-16): scripts/lib/step/** joins the estate scope once its
+// literals are registered runner-owned step_* variables (RUNNER_VARIABLES, config.js) or deleted
+// fallbacks. Any scripts/lib/step byte moves lib_fingerprint and stales every capture, so these rows land
+// with the one replay-all night (N1). RED on the pre-#37 tree (19 findings: census 16 + acquire.js:506,
+// index.js:4463, verdict.js:412); flips at RE-FREEZE #37.
+describe('R-EB (a) — the runner scope (RE-FREEZE #37)', () => {
+  it.fails('scripts/lib/step/** is in ESTATE_SCOPES and has 0 findings (flips at RE-FREEZE #37)', () => {
+    expect(estate.ESTATE_SCOPES).toContain('scripts/lib/step');
+    expect(estate.scanFiles(estate.scopeFiles(['scripts/lib/step'], REPO_ROOT), REPO_ROOT)).toEqual([]);
+  });
+
+  it.fails('RUNNER_VARIABLES is a closed config.js export of step_* names, each a bounded seed in the "Pipeline Runner" admin group (flips at RE-FREEZE #37)', () => {
+    const req = createRequire(import.meta.url);
+    const { RUNNER_VARIABLES } = req(path.join(REPO_ROOT, 'scripts/lib/step/config.js')) as { RUNNER_VARIABLES?: readonly string[] };
+    expect(Array.isArray(RUNNER_VARIABLES)).toBe(true);
+    expect(Object.isFrozen(RUNNER_VARIABLES)).toBe(true);
+    for (const n of ['step_post_check_concurrency', 'step_maintenance_default_timeout_minutes', 'step_audit_value_max_chars', 'step_acquire_pdf_pace_ms', 'step_acquire_max_redirects', 'step_phase_recancel_max_ms', 'step_phase_recancel_min_ms', 'step_phase_recancel_divisor', 'step_stall_ticker_multiplier', 'step_seam_chain_run_scan_limit']) {
+      expect(RUNNER_VARIABLES, n).toContain(n);
+    }
+    for (const n of RUNNER_VARIABLES ?? []) {
+      expect(n.startsWith('step_'), n).toBe(true);
+      const e = SEED[n];
+      expect(e, `${n} must be a registered seed`).toBeDefined();
+      expect(typeof e!.min === 'number' && typeof e!.max === 'number', `${n} bounded`).toBe(true);
+      expect((e as { admin?: { group?: string } }).admin?.group, n).toBe('Pipeline Runner');
+    }
+    // the politeness floor is a bound, not a default (Spec 129 §2)
+    expect(SEED.step_acquire_pdf_pace_ms!.min).toBe(2000);
   });
 });
