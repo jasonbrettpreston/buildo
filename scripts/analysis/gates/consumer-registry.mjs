@@ -130,17 +130,21 @@ export function convertedInserterTables(descriptors) {
 }
 
 /**
- * MQ-A5 predicate: an `unproduced:<file>:<table>.<column>` read is HARD when its table has a converted
- * inserter; otherwise its row producer is unconverted — no descriptor exists to carry the declaration —
- * and it is reported as `UNPRODUCED-UNWITNESSED:<file>:<table>.<column>` (printed, counted every run,
- * ceiling-locked, report-only). It goes hard by itself when the inserter converts. Never a column list.
- * Order preserved.
+ * MQ-A5 predicate, amended by Spec 124 R-EE (part 2): an `unproduced:<file>:<table>.<column>` read is
+ * HARD when its table has a converted inserter AND no unconverted in-chain step (an effective-ledger
+ * row with `source: "snapshot"`) writes that table. Otherwise the column's declaration home is a writer
+ * that has no descriptor yet (Rule 1: never the inserter), so it is reported as
+ * `UNPRODUCED-UNWITNESSED:<file>:<table>.<column>` (printed, counted every run, ceiling-locked,
+ * report-only). It goes hard by itself when the inserter converts and the table's last unconverted
+ * writer converts. Never a column list. Order preserved.
  * @param {string[]} unproduced
  * @param {Iterable<string>} inserterTables
+ * @param {Iterable<string>} [unconvertedWriters] tables some unconverted in-chain step writes
  * @returns {{hard: string[], unwitnessed: string[]}}
  */
-export function splitUnproduced(unproduced, inserterTables) {
+export function splitUnproduced(unproduced, inserterTables, unconvertedWriters) {
   const tables = new Set(inserterTables || []);
+  const pendingWriters = new Set(unconvertedWriters || []);
   const hard = [];
   const unwitnessed = [];
   for (const item of unproduced || []) {
@@ -148,7 +152,7 @@ export function splitUnproduced(unproduced, inserterTables) {
     const idx = rest.lastIndexOf(':');
     const tableColumn = rest.slice(idx + 1);
     const table = tableColumn.slice(0, tableColumn.indexOf('.'));
-    if (tables.has(table)) hard.push(item);
+    if (tables.has(table) && !pendingWriters.has(table)) hard.push(item);
     else unwitnessed.push(`UNPRODUCED-UNWITNESSED:${rest}`);
   }
   return { hard, unwitnessed };
@@ -368,6 +372,34 @@ const rowSortKey = (r) => `${r.consumer}\u0000${r.producer}\u0000${r.kind}\u0000
 const writersOf = (step) => (step && typeof step.writes === 'object' && step.writes) || {};
 
 /**
+ * Spec 124 R-EE part 2: tables an UNCONVERTED in-chain step writes (an effective-ledger row with
+ * `source === "snapshot"`, its lineage observed from the legacy script). Sorted, unique. PURE.
+ * @param {{inchain?: object}} effective the effective ledger
+ * @returns {string[]}
+ */
+export function unconvertedWriterTables(effective) {
+  const inchain = (effective && effective.inchain) || {};
+  const out = new Set();
+  for (const row of Object.values(inchain)) {
+    if (!row || row.source !== 'snapshot') continue;
+    for (const table of Object.keys(writersOf(row))) out.add(table);
+  }
+  return [...out].sort();
+}
+
+/**
+ * Spec 124 R-EE part 1 (one converted-set view): the effective ledger built over the SAME descriptor set
+ * every other gate-D input reads (`loadConvertedDescriptors`, i.e. converted-set.mjs, THE ONE READ, with
+ * any pending overlay), never `seam.js`'s converted-only list. With no overlay the two sets are equal, so
+ * the committed view is unchanged. DISK.
+ * @param {string} [repoRoot]
+ */
+export function gateEffectiveLedger(repoRoot = REPO_ROOT) {
+  const descriptors = Object.fromEntries(loadConvertedDescriptors(repoRoot).map((d) => [d.identity.name, d]));
+  return effectiveLedger({ descriptors });
+}
+
+/**
  * One `table` row per (static-parsed src/ SQL read column, effective-ledger
  * column writer). Every `effective.src[file].reads[table]` column that >=1
  * `effective.inchain` step declares writing becomes one row PER such writer;
@@ -465,7 +497,7 @@ export function buildRegistry(repoRoot = REPO_ROOT) {
     ...buildEmitsRows(descriptors),
     ...buildCountersRows(descriptors),
     ...buildTriggerRows(descriptors),
-    ...buildSrcTableRows(effectiveLedger()),
+    ...buildSrcTableRows(gateEffectiveLedger(repoRoot)),
   ].sort((a, b) => (rowSortKey(a) < rowSortKey(b) ? -1 : rowSortKey(a) > rowSortKey(b) ? 1 : 0));
   return {
     contract_version: 1,
@@ -837,8 +869,8 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
     ...scanConsumers(registry, repoRoot),
   ];
   if (posture && posture.mode === 'hard') {
-    const eff = effective || effectiveLedger();
-    for (const item of splitUnproduced([...unproducedReads(eff), ...unproducedStepReads(eff)], inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot))).hard) {
+    const eff = effective || gateEffectiveLedger(repoRoot);
+    for (const item of splitUnproduced([...unproducedReads(eff), ...unproducedStepReads(eff)], inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot)), unconvertedWriterTables(eff)).hard) {
       const rest = item.slice('unproduced:'.length);
       const idx = rest.lastIndexOf(':');
       const file = rest.slice(0, idx);
@@ -861,18 +893,19 @@ export function allConsumerViolations(registry, repoRoot = REPO_ROOT, { effectiv
  */
 export function checkConsumerContracts(registry, ledgerRows, repoRoot = REPO_ROOT, { effective, posture = UNPRODUCED_POSTURE, inserterTables } = {}) {
   const violations = allConsumerViolations(registry, repoRoot, { effective, posture, inserterTables });
-  const eff = effective || effectiveLedger();
+  const eff = effective || gateEffectiveLedger(repoRoot);
   const unproduced = unproducedReads(eff);
   const inserters = inserterTables || convertedInserterTables(loadConvertedDescriptors(repoRoot));
-  const split = splitUnproduced(unproduced, inserters);
+  const pendingWriters = unconvertedWriterTables(eff);
+  const split = splitUnproduced(unproduced, inserters, pendingWriters);
   // LDG-10 class 2 (R-DI): unconverted steps' observed reads, split the same way, counted on their own line.
   const stepUnproduced = unproducedStepReads(eff);
-  const stepSplit = splitUnproduced(stepUnproduced, inserters);
+  const stepSplit = splitUnproduced(stepUnproduced, inserters, pendingWriters);
   const { unallowed, orphans, allowed } = matchLedger('D', violations, ledgerRows);
   const blockedSlugs = [...new Set(unallowed.map((v) => v.step))];
   const where = (v) => `${v.step} ${v.item}`;
   const unproducedLine = `; ${unproduced.length} unproduced src read(s) (${posture.mode} until ${posture.flips_hard_at}) [${unproduced.join('; ')}]`
-    + `; UNPRODUCED-UNWITNESSED: ${split.unwitnessed.length} (report-only until the table's inserter converts) [${split.unwitnessed.join('; ')}]`
+    + `; UNPRODUCED-UNWITNESSED: ${split.unwitnessed.length} (report-only until the table's inserter and its last unconverted writer convert, R-EE) [${split.unwitnessed.join('; ')}]`
     + `; LDG-10 step readers: ${stepSplit.hard.length} hard, ${stepSplit.unwitnessed.length} UNPRODUCED-UNWITNESSED (unconverted inserter) [${stepSplit.unwitnessed.join('; ')}]`;
   const listed = unconvertedProducerReads(registry, repoRoot);
   const listedLine = `; ${listed.length} unconverted-producer read(s) listed (O3, red once the producer converts) [${listed.join('; ')}]`;

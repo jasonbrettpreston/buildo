@@ -29,6 +29,8 @@ import fs from 'fs';
 import path from 'path';
 import * as reg from '../../scripts/analysis/gates/consumer-registry.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
+import { setAsConverted } from '../../scripts/analysis/gates/converted-set.mjs';
+import { createRequire } from 'module';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -448,6 +450,69 @@ describe('gate D — MQ-A5 unproduced-read predicate (converted inserter on the 
     console.info(`[gate D MQ-A5] unproduced HARD: ${c.unproducedHard.length}; UNPRODUCED-UNWITNESSED: ${c.unproducedUnwitnessed.length}`);
     for (const u of c.unproducedUnwitnessed) console.info(`  ${u}`);
     expect(c.unproducedUnwitnessed.length).toBeLessThanOrEqual(UNPRODUCED_UNWITNESSED_CEILING);
+    expect(c.unproducedHard.length + c.unproducedUnwitnessed.length).toBe(c.unproduced.length);
+  });
+});
+
+// Spec 124 R-EE (McDonald's Airtight V3, operator y 2026-10-18; amends MQ-A5 / R-DI (2) / R-DG (A5)).
+// Part 1: gate D reads ONE converted-set view — the effective ledger is built over the same descriptors
+// (converted-set.mjs, with any pending overlay) as the inserter set. Part 2: an unproduced read is HARD only
+// when its table has a converted inserter AND no unconverted in-chain step (source "snapshot") writes it.
+// Measured 2026-10-18 (scratch, permits ② descriptor from the w1p lane overlaid): today 23 HARD; part 1 → 9;
+// part 1 + part 2 → 0. Committed: 0 HARD before and after, 67 unproduced, no row lost.
+describe('gate D — R-EE one converted-set view + the unconverted-writer predicate', () => {
+  const hardPosture = { mode: 'hard', flips_hard_at: 'x' };
+  const registry = { rows: [] };
+  // t: converted inserter p, plus an unconverted writer u (snapshot). w: converted inserter only.
+  const eff = {
+    inchain: {
+      p: { writes: { t: ['a'], w: ['a'] }, source: 'descriptor' },
+      u: { writes: { t: ['b'] }, source: 'snapshot' },
+    },
+    src: { 'src/x.ts': { reads: { t: ['c'], w: ['d'] } } },
+  };
+
+  it('EE-1: unconvertedWriterTables lists only tables written by snapshot (unconverted) rows', () => {
+    expect(reg.unconvertedWriterTables(eff)).toEqual(['t']);
+    expect(reg.unconvertedWriterTables({ inchain: { p: { writes: { t: ['a'] } } } })).toEqual([]);
+  });
+
+  it('EE-2: a read on a table with a converted inserter AND an unconverted writer is UNPRODUCED-UNWITNESSED, not HARD', () => {
+    const v = reg.allConsumerViolations(registry, REPO_ROOT, { effective: eff, posture: hardPosture, inserterTables: ['t', 'w'] });
+    const items = v.map((x: { item: string }) => x.item);
+    expect(items).not.toContain('unproduced.src/x.ts.t.c');
+    expect(items).toContain('unproduced.src/x.ts.w.d');
+    const c = reg.checkConsumerContracts(registry, [], REPO_ROOT, { effective: eff, inserterTables: ['t', 'w'] });
+    expect(c.unproducedHard).toEqual(['unproduced:src/x.ts:w.d']);
+    expect(c.unproducedUnwitnessed).toEqual(['UNPRODUCED-UNWITNESSED:src/x.ts:t.c']);
+  });
+
+  it('EE-3 auto-close: when the last unconverted writer converts, the read goes HARD by itself', () => {
+    const converted = { ...eff, inchain: { ...eff.inchain, u: { writes: { t: ['b'] }, source: 'descriptor' } } };
+    const v = reg.allConsumerViolations(registry, REPO_ROOT, { effective: converted, posture: hardPosture, inserterTables: ['t', 'w'] });
+    expect(v.map((x: { item: string }) => x.item)).toContain('unproduced.src/x.ts.t.c');
+  });
+
+  it('EE-4 one view, committed: gateEffectiveLedger equals the seam view when no pending step is overlaid', () => {
+    const req = createRequire(import.meta.url);
+    const { effectiveLedger } = req(path.join(REPO_ROOT, 'scripts/lib/ledger.js'));
+    expect(JSON.stringify(reg.gateEffectiveLedger(REPO_ROOT))).toBe(JSON.stringify(effectiveLedger()));
+  });
+
+  it('EE-5 one view, overlay: a pending step evaluated as converted is a descriptor row in the effective ledger too (RED before R-EE: seam.js read converted[] only)', () => {
+    try {
+      setAsConverted(['scripts/load-coa-notices.js'], REPO_ROOT);
+      const row = reg.gateEffectiveLedger(REPO_ROOT).inchain.load_coa_notices;
+      expect(row && row.source).toBe('descriptor');
+    } finally {
+      setAsConverted([], REPO_ROOT);
+    }
+  });
+
+  it('EE-6 live committed: 0 HARD unproduced reads, and HARD + UNWITNESSED still partitions every unproduced read', () => {
+    const c = reg.checkConsumerContracts(reg.readRegistry(REPO_ROOT), [], REPO_ROOT);
+    expect(c.unproducedHard).toEqual([]);
+    expect(c.stepUnproducedHard).toEqual([]);
     expect(c.unproducedHard.length + c.unproducedUnwitnessed.length).toBe(c.unproduced.length);
   });
 });
