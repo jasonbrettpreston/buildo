@@ -486,6 +486,18 @@ function filterToStaged(registry) {
   return stagedRowsFor(registry, gitStagedFiles(), { exists: (rel) => existsSync(path.join(REPO_ROOT, rel)) });
 }
 
+/**
+ * Whether a row's own hard stop gates the run. PURE over an injected `exists(relPath)`.
+ * `--staged` sets `row.blocking` (stagedRowsFor) and that answer stands. For `--all` / `--step`
+ * (pre-push, fleet runs) Spec 124 R-DU (amended 2026-10-18, operator y: "extend R-DU to --all")
+ * applies the same rule: a `pending` row whose descriptor FILE is absent (an early ①) prints its
+ * red scorecard but does not gate. Every other row blocks on its own hard stop.
+ */
+export function rowBlocks(row, { exists }) {
+  if (row.blocking !== undefined) return row.blocking;
+  return !(row.stage === 'pending' && !exists(harness.descriptorPathFor(row.relFile)));
+}
+
 // ---------------------------------------------------------------------------
 // Step registry — derived from converted.json + pending + manifest.json, never
 // hand-maintained (a hardcoded list would drift the moment pilot 6 lands).
@@ -6208,11 +6220,11 @@ async function main() {
     }
 
     if (!descriptorInfo.ok) console.error(`[step-validate] ${row.slug}: descriptor validation FAILED — ${descriptorInfo.error}`);
-    // row.blocking is only set by --staged (filterToStaged); --all/--step have no
-    // doc-only distinction to make and always block on their own hard stops.
-    const isBlocking = row.blocking === undefined ? true : row.blocking;
+    // row.blocking is set by --staged (filterToStaged). For --all/--step, rowBlocks applies
+    // Spec 124 R-DU: a pending row with no descriptor file (early ①) does not gate.
+    const isBlocking = rowBlocks(row, { exists: (rel) => existsSync(path.join(REPO_ROOT, rel)) });
     if (sc.hardStop && !isBlocking) {
-      console.log(`[step-validate] ${row.slug}: hard-stop scored but NOT gating — only its report/tests are staged, not its code (--staged doc-only rule)`);
+      console.log(`[step-validate] ${row.slug}: hard-stop scored but NOT gating — ${row.blocking === undefined ? 'pending with no descriptor yet (Spec 124 R-DU)' : 'only its report/tests are staged, not its code (--staged doc-only rule), or pending with no descriptor (R-DU)'}`);
     }
     if (sc.hardStop && isBlocking) anyHardStop = true;
     if (witness44 && witness44.hardStop && isBlocking) { anyHardStop = true; console.error(`[step-validate] HARD STOP: #44 WITNESS failed for ${row.stage} slug ${row.slug}`); }
@@ -6283,7 +6295,7 @@ async function main() {
     const words = Object.entries(s.fiveWord || {})
       .map(([w, v]) => `${w}:${v.status}${v.deferred ? `(${v.deferred} deferred)` : ''}`)
       .join(' ');
-    console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch)'} #44-attributed=${s.attributedFails || 0} | ${words}`);
+    console.log(`  ${s.slug}: ${s.total}/${s.maxTotal} hard-stop=${s.hardStop}${s.blocking ? '' : ' (non-blocking: doc-only touch or R-DU no-descriptor pending)'} #44-attributed=${s.attributedFails || 0} | ${words}`);
   }
   if (registryFails.length) {
     console.log('[step-validate] registry-level fast invariant failures:');

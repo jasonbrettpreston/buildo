@@ -77,3 +77,25 @@ describe('Spec 124 R-DU — whole-registry --staged selection: a pending row wit
     expect(stagedRowsFor(REGISTRY, [], { exists })).toEqual([]);
   });
 });
+
+// R-DU amended 2026-10-18 (operator y, "extend R-DU to --all"): --all / --step (pre-push, fleet
+// runs) set no row.blocking, so rowBlocks applies the same rule. Red-first: before the amendment
+// every --all row blocked (`row.blocking === undefined ? true`), so the first case was false → true.
+describe('Spec 124 R-DU (amended) — --all / --step: a pending row with no descriptor does not gate', () => {
+  type RowBlocksFn = (row: Row & { blocking?: boolean }, io: { exists: (rel: string) => boolean }) => boolean;
+  let rowBlocks: RowBlocksFn;
+  beforeAll(async () => {
+    rowBlocks = ((await import(pathToFileURL(STEP_VALIDATE).href)) as { rowBlocks: RowBlocksFn }).rowBlocks;
+  });
+
+  it('pending + no descriptor file → not gating; pending with a descriptor and converted → gating', () => {
+    expect(rowBlocks(PENDING_NO_DESC, { exists })).toBe(false);
+    expect(rowBlocks(PENDING_WITH_DESC, { exists })).toBe(true);
+    expect(rowBlocks(CONVERTED, { exists: () => false })).toBe(true);
+  });
+
+  it('an explicit --staged blocking flag always wins', () => {
+    expect(rowBlocks({ ...PENDING_NO_DESC, blocking: true }, { exists })).toBe(true);
+    expect(rowBlocks({ ...CONVERTED, blocking: false }, { exists })).toBe(false);
+  });
+});
