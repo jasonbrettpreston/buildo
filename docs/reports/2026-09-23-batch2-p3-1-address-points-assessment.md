@@ -709,7 +709,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | address_points | PASS | min_migration=18 <= migrations count=260 |
+| 1 | address_points | PASS | min_migration=18 <= migrations count=261 |
 | 2 | address_points | PASS | 6 declared, missing from seeds: none |
 | 3 | address_points | PASS | retired=0 overlap-with-declared=none |
 | 7 | address_points | PASS | SPEC LINK header present=true |

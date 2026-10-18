@@ -816,7 +816,11 @@ describe('GET /api/quality — engine health uses the logic_variables threshold 
   const healthyStatRow = { ...bloatedStatRow, n_dead_tup: '2500' };
 
   function seededLogicVarRows(overrides: Record<string, string> = {}) {
-    const defaults = qualityTypes.ENGINE_HEALTH_DEFAULTS as unknown as Record<string, number>;
+    // A fully seeded table: the 7 engine_health_* rows plus the R-DW range-badge margin row.
+    const defaults: Record<string, number> = {
+      ...(qualityTypes.ENGINE_HEALTH_DEFAULTS as unknown as Record<string, number>),
+      admin_range_badge_borderline_margin_ratio: 0.2,
+    };
     return Object.keys(defaults).map((variable_key) => ({
       variable_key,
       variable_value: overrides[variable_key] ?? String(defaults[variable_key]),
@@ -845,6 +849,7 @@ describe('GET /api/quality — engine health uses the logic_variables threshold 
       engineHealth: { table_name: string }[];
       engineHealthAnomalies: { table: string; type: string; threshold: number }[];
       engineHealthThresholds?: Record<string, number>;
+      rangeBadgeMargin?: number;
     };
   }
 
@@ -860,6 +865,14 @@ describe('GET /api/quality — engine health uses the logic_variables threshold 
     expect(Object.keys(body.engineHealthThresholds ?? {}).sort()).toEqual(
       Object.keys(qualityTypes.ENGINE_HEALTH_DEFAULTS).sort()
     );
+  });
+
+  it('emits the resolved range-badge margin (R-DW), and falls back to the SEEDED default when the row is absent', async () => {
+    stubPool({ statRows: [healthyStatRow], logicVarRows: seededLogicVarRows({ admin_range_badge_borderline_margin_ratio: '0.35' }) });
+    expect((await callRoute()).rangeBadgeMargin).toBe(0.35);
+    const seed = JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')) as Record<string, { default: number }>;
+    stubPool({ statRows: [healthyStatRow], logicVarRows: [] });
+    expect((await callRoute()).rangeBadgeMargin).toBe(seed.admin_range_badge_borderline_margin_ratio!.default);
   });
 
   it('INVERSE: an unreadable pg_stat_user_tables still emits the resolved thresholds', async () => {
@@ -1041,18 +1054,17 @@ describe('Ghost record detection in assert-data-bounds', () => {
 });
 
 describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
-  it('STEP_EXPECTED_RANGES is exported from funnel.ts and covers telemetry-enabled steps', async () => {
+  it('STEP_EXPECTED_RANGES is exported from funnel.ts and covers the UNCONVERTED telemetry-enabled steps', async () => {
     const funnel = await import('@/lib/admin/funnel');
     expect(funnel.STEP_EXPECTED_RANGES).toBeDefined();
     expect(typeof funnel.STEP_EXPECTED_RANGES).toBe('object');
-    // Must cover all steps that have telemetry_tables in manifest
+    // The unconverted steps that have telemetry_tables in manifest. Spec 124 R-DW: the converted
+    // ones (address_points … assert_engine_health) carry NO entry — their badges are their audit_table
+    // check rows; admin-step-registration.logic fails a converted slug that carries one.
     const telemetrySteps = [
-      'permits', 'coa', 'builders', 'address_points', 'parcels', 'massing',
-      'neighbourhoods', 'load_wsib', 'geocode_permits', 'link_parcels',
-      'link_neighbourhoods', 'link_massing', 'link_coa', 'link_wsib',
+      'permits', 'coa', 'builders', 'link_coa',
       'enrich_wsib_builders', 'enrich_named_builders', 'classify_scope',
-      'classify_permits', 'compute_centroids', 'link_similar',
-      'refresh_snapshot', 'assert_engine_health',
+      'classify_permits', 'link_similar',
     ];
     for (const slug of telemetrySteps) {
       expect(funnel.STEP_EXPECTED_RANGES[slug], `Missing expected range for ${slug}`).toBeDefined();
@@ -1060,17 +1072,24 @@ describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
     }
   });
 
-  it('getRangeStatus returns correct status for in-range, borderline, and anomaly values', async () => {
+  it('getRangeStatus returns correct status for in-range, borderline, and anomaly values (margin = the logic variable)', async () => {
     const { getRangeStatus } = await import('@/lib/admin/funnel');
-    expect(getRangeStatus(100, [50, 150])).toBe('normal');
-    expect(getRangeStatus(50, [50, 150])).toBe('normal');
-    expect(getRangeStatus(150, [50, 150])).toBe('normal');
-    // borderline = within 20% beyond range boundary
-    expect(getRangeStatus(170, [50, 150])).toBe('borderline');
-    expect(getRangeStatus(42, [50, 150])).toBe('borderline');
-    // anomaly = beyond 20% of range boundary
-    expect(getRangeStatus(200, [50, 150])).toBe('anomaly');
-    expect(getRangeStatus(20, [50, 150])).toBe('anomaly');
+    // Spec 124 R-DW: the margin is admin_range_badge_borderline_margin_ratio, read from the seed here.
+    const seed = JSON.parse(fs.readFileSync(path.join(__dirname, '../../scripts/seeds/logic_variables.json'), 'utf-8')) as Record<string, { default: number }>;
+    const m = seed.admin_range_badge_borderline_margin_ratio!.default;
+    expect(getRangeStatus(100, [50, 150], m)).toBe('normal');
+    expect(getRangeStatus(50, [50, 150], m)).toBe('normal');
+    expect(getRangeStatus(150, [50, 150], m)).toBe('normal');
+    // borderline = within margin × span beyond the range boundary
+    expect(getRangeStatus(170, [50, 150], m)).toBe('borderline');
+    expect(getRangeStatus(42, [50, 150], m)).toBe('borderline');
+    // anomaly = beyond it
+    expect(getRangeStatus(200, [50, 150], m)).toBe('anomaly');
+    expect(getRangeStatus(20, [50, 150], m)).toBe('anomaly');
+    // the parameter, not a literal, decides: a tighter margin turns 170 into an anomaly
+    expect(getRangeStatus(170, [50, 150], 0.1)).toBe('anomaly');
+    // an exact range (min = max) has no borderline
+    expect(getRangeStatus(1, [0, 0], m)).toBe('anomaly');
   });
 
   it('TelemetrySection header says "DB State Changes" not "Last Run Telemetry"', () => {

@@ -81,14 +81,12 @@ describe('chain-status (R-BC (a)–(e), CHAIN-TOOLING part 3)', () => {
     expect(() => chainStatus.objectLiteralKeys(src, 'Missing')).toThrow(/Missing not found/);
   });
 
-  it('admin — live: every converted step has a STEP_DESCRIPTIONS entry; the unregistered set is the STEP_EXPECTED_RANGES gap', () => {
+  it('admin — live: every converted step has a STEP_DESCRIPTIONS entry, so none is unregistered (R-DW: STEP_EXPECTED_RANGES is not an arm)', () => {
     const src = fs.readFileSync(path.join(REPO_ROOT, 'src/lib/admin/funnel.ts'), 'utf8');
     const desc = chainStatus.objectLiteralKeys(src, 'STEP_DESCRIPTIONS');
-    const ranges = chainStatus.objectLiteralKeys(src, 'STEP_EXPECTED_RANGES');
+    expect([...chainStatus.adminRegisteredSlugs(REPO_ROOT)].sort()).toEqual([...desc].sort());
     const reg = chainStatus.loadRegistries(REPO_ROOT);
-    for (const s of chainStatus.computeChainStatus(reg)) {
-      for (const slug of s.adminUnregistered ?? []) expect(desc.has(slug) && ranges.has(slug), slug).toBe(false);
-    }
+    for (const s of chainStatus.computeChainStatus(reg)) expect(s.adminUnregistered ?? [], s.chain).toEqual([]);
   });
 
   it('the module self-test passes', () => {

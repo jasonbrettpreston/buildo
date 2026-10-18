@@ -501,6 +501,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'engine_health_seq_scan_min_rows', 'engine_health_ping_pong_ratio_warn_max',
   'engine_health_insp_dead_tuple_fail_pct', 'engine_health_insp_update_insert_fail_ratio',
   'engine_health_dead_tuple_min_rows',
+  // Spec 124 R-DW (McDonald's Airtight V3, 2026-10-18, migration 266): the admin range-badge margin,
+  // formerly getRangeStatus's bare 20% (src/lib/admin/funnel.ts), served by /api/quality.
+  'admin_range_badge_borderline_margin_ratio',
 
   // batch2 P1.1 (2026-09-18, assert_parcel_sanity) — 36 new parcel_sanity_* variables
   // (+ parcel_sanity_lot_geom_tolerance_ratio, WF3 inert 2026-10-01)

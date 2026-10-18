@@ -762,16 +762,22 @@ interface ExpectedRanges {
 }
 
 /**
+ * The logic variable holding getRangeStatus's borderline margin (Spec 124 R-DW; R-DF EXTERNALIZED).
+ * /api/quality resolves it and the admin passes the value in; no margin literal lives in admin code.
+ */
+export const RANGE_BADGE_MARGIN_VARIABLE = 'admin_range_badge_borderline_margin_ratio' as const;
+
+/**
  * Returns range status for a given value against an expected range.
  * - 'normal':     value is within [min, max]
- * - 'borderline': value is outside range but within 20% of the nearest boundary
- * - 'anomaly':    value is more than 20% beyond the nearest boundary
+ * - 'borderline': value is outside the range by at most `marginRatio` × the range's span
+ * - 'anomaly':    value is further outside than that (an exact range, min = max, has no borderline)
+ * `marginRatio` is the resolved `admin_range_badge_borderline_margin_ratio` logic variable (R-DW).
  */
-export function getRangeStatus(value: number, range: ValueRange): 'normal' | 'borderline' | 'anomaly' {
+export function getRangeStatus(value: number, range: ValueRange, marginRatio: number): 'normal' | 'borderline' | 'anomaly' {
   const [min, max] = range;
   if (value >= min && value <= max) return 'normal';
-  const span = max - min || 1;
-  const margin = span * 0.20;
+  const margin = (max - min) * marginRatio;
   if (value < min) {
     return value >= min - margin ? 'borderline' : 'anomaly';
   }
@@ -779,8 +785,14 @@ export function getRangeStatus(value: number, range: ValueRange): 'normal' | 'bo
 }
 
 /**
- * Per-step expected behavior ranges, populated from observed pipeline_runs data.
+ * Per-step expected behavior ranges for UNCONVERTED steps only (Spec 124 R-DW, amending R-DL).
  * Used by TelemetrySection and Last Run tiles to display range indicators.
+ *
+ * A converted step (or a pending step whose descriptor exists) carries NO entry: its badges are
+ * its own records_meta.audit_table check rows — status = the row verdict, bound = the value the
+ * runner resolved from that step's checks[].limit_from_config logic variable. A hand-written range
+ * here would be a second threshold source (R-BF), so admin-step-registration.logic fails it. The
+ * entries below are a closed grandfather list that shrinks as each step converts.
  *
  * Values reflect steady-state runs (no new upstream data). When upstream data
  * changes (e.g. new permits from City), totals will temporarily spike — that is
@@ -806,73 +818,13 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     mutations: { entities: { ins: [0, 50], upd: [0, 20], del: [0, 0] } },
     row_delta: { entities: [0, 50] },
   },
-  address_points: {
-    behavior: 'Loads Toronto address point reference data. Quarterly refresh — typically 0 changes between refreshes.',
-    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 100] },
-    mutations: { address_points: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
-    row_delta: { address_points: [0, 1000] },
-  },
-  parcels: {
-    behavior: 'Loads Toronto property parcels. Quarterly refresh — typically 0 changes between refreshes.',
-    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 500] },
-    mutations: { parcels: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
-    row_delta: { parcels: [0, 1000] },
-  },
-  massing: {
-    behavior: 'Loads 3D building massing models from City shapefile. Quarterly refresh — typically 0 changes between refreshes.',
-    summary: { records_total: [0, 1000], records_new: [0, 1000], records_updated: [0, 500] },
-    mutations: { building_footprints: { ins: [0, 1000], upd: [0, 1000], del: [0, 0] } },
-    row_delta: { building_footprints: [0, 1000] },
-  },
-  neighbourhoods: {
-    behavior: 'Loads 158 neighbourhood boundaries from GeoJSON, then enriches all rows with Census demographics across 8 characteristics. The ~2,054 SQL UPDATEs are normal — each demographic dimension updates all 158 rows individually.',
-    summary: { records_total: [155, 165], records_new: [155, 165], records_updated: [20, 50] },
-    mutations: { neighbourhoods: { ins: [0, 10], upd: [1800, 2500], del: [0, 0] } },
-    row_delta: { neighbourhoods: [0, 10] },
-  },
-  load_wsib: {
-    behavior: 'Loads WSIB registry snapshot. Typically 0 changes unless a new WSIB file is provided.',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 200] },
-    mutations: { wsib_registry: { ins: [0, 500], upd: [0, 500], del: [0, 0] } },
-    row_delta: { wsib_registry: [0, 500] },
-  },
 
   // ── Link & Enrich ──────────────────────────────────────────────────────
-  geocode_permits: {
-    behavior: 'Matches permit addresses to address points for lat/lng. Steady-state: 0 geocoded (all already done). After new permits: matches new addresses.',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 100] },
-    mutations: { permits: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
-    row_delta: { permits: [0, 0] },
-  },
-  link_parcels: {
-    behavior: 'Links permits to property parcels via address match. Steady-state: 0 linked. After new permits: links new ones.',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
-    mutations: { permit_parcels: { ins: [0, 500], upd: [0, 100], del: [0, 0] } },
-    row_delta: { permit_parcels: [0, 500] },
-  },
-  link_neighbourhoods: {
-    behavior: 'Spatially links permits to neighbourhood boundaries. Steady-state: 0 linked. After new permits: links new ones.',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
-    mutations: { permits: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
-    row_delta: { permits: [0, 0] },
-  },
-  link_massing: {
-    behavior: 'Links permits to 3D building footprints via parcel intersection. Steady-state: 0 linked. Uses in-memory grid index for efficiency.',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
-    mutations: { parcel_buildings: { ins: [0, 500], upd: [0, 5000], del: [0, 0] } },
-    row_delta: { parcel_buildings: [0, 500] },
-  },
   link_coa: {
     behavior: 'Links CoA applications to building permits by address and ward. Typically 0-40 links per run.',
     summary: { records_total: [0, 50], records_new: [0, 50], records_updated: [0, 50] },
     mutations: { coa_applications: { ins: [0, 0], upd: [0, 50], del: [0, 0] } },
     row_delta: { coa_applications: [0, 0] },
-  },
-  link_wsib: {
-    behavior: 'Matches extracted entities against WSIB registry by name. Steady-state: 0 matches. After new entities: fuzzy-matches names.',
-    summary: { records_total: [0, 20], records_new: [0, 20], records_updated: [0, 10] },
-    mutations: { entities: { ins: [0, 0], upd: [0, 200], del: [0, 0] } },
-    row_delta: { entities: [0, 0] },
   },
   enrich_wsib_builders: {
     behavior: 'Web-scrapes contact info for WSIB-matched entities via Serper API. Batch size capped at 50 per run.',
@@ -895,12 +847,6 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     mutations: { permits: { ins: [0, 0], upd: [10000, 12000], del: [0, 0] } },
     row_delta: { permits: [0, 0] },
   },
-  compute_centroids: {
-    behavior: 'Computes geometric centroids for parcel polygons. Steady-state: 0 computed (all already done).',
-    summary: { records_total: [0, 500], records_new: [0, 500], records_updated: [0, 500] },
-    mutations: { parcels: { ins: [0, 0], upd: [0, 500], del: [0, 0] } },
-    row_delta: { parcels: [0, 0] },
-  },
   create_pre_permits: {
     behavior: 'Creates placeholder permit records from eligible CoA applications. Typically ~370 candidates checked, 0 new on steady-state.',
     summary: { records_total: [350, 400], records_new: [0, 20], records_updated: [0, 10] },
@@ -921,27 +867,6 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
   },
 
   // ── Snapshot & Quality ──────────────────────────────────────────────────
-  refresh_snapshot: {
-    behavior: 'Captures daily data quality metrics snapshot. Always produces exactly 1 record (upsert on snapshot_date).',
-    summary: { records_total: [1, 1], records_new: [1, 1], records_updated: [0, 0] },
-    mutations: { data_quality_snapshots: { ins: [0, 1], upd: [0, 1], del: [0, 0] } },
-    row_delta: { data_quality_snapshots: [0, 1] },
-  },
-  // POST-B1-11: bounds re-derived from the measured fleet. The step discovers
-  // every public-schema table at runtime (no hardcoded list) and writes ONE row
-  // per table, so records_total tracks the schema's table count: 87 on
-  // 2026-09-14, 87 on 2026-08-24, 86 on 2026-08-01, 91 on 2026-07-17. The old
-  // [10, 15] band predated runtime discovery and classified every healthy run
-  // 'anomaly' by ~6x. [50, 150] absorbs normal schema growth without going
-  // green on a collapse (a run that snapshots 40 tables is a real defect).
-  // The threshold is named, not quoted: the literal lives in the
-  // engine_health_dead_tuple_ratio_warn_max logic variable (Spec 26 §3.4).
-  assert_engine_health: {
-    behavior: 'Discovers every public-schema table at runtime and records dead tuples, seq scans, and update ping-pong for each. After the compute, the runner (execution.maintenance dynamic arm, Spec 124 R-CG) VACUUM ANALYZEs every table with live rows whose dead/(live+dead) exceeds the engine_health_dead_tuple_ratio_warn_max logic variable — the step itself does not VACUUM. Snapshots one row per table to engine_health_snapshots (87 tables measured 2026-09-14). The admin dashboard does NOT read that snapshot — /api/quality runs its own live pg_stat_user_tables query over a curated 11-table list (Spec 26 §3.4); the two share their thresholds, not their data.',
-    summary: { records_total: [50, 150], records_new: [0, 0], records_updated: [0, 150] },
-    mutations: { engine_health_snapshots: { ins: [0, 150], upd: [0, 150], del: [0, 0] } },
-    row_delta: { engine_health_snapshots: [0, 150] },
-  },
   inspections: {
     behavior: 'Scrapes inspection stages from AIC portal via REST API. Weekly cadence, ~104K target permits across 5 types. Each run processes BATCH_SIZE permits (default 10).',
     summary: { records_total: [1, 500], records_new: [0, 5000], records_updated: [0, 0] },

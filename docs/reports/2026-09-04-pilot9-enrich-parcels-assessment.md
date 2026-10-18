@@ -1001,7 +1001,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=260 |
+| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=261 |
 | 2 | enrich_parcels | PASS | 49 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |

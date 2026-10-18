@@ -1039,7 +1039,7 @@
     },
     "src/app/api/quality/route.ts": {
       "class": "static",
-      "statements": 4,
+      "statements": 5,
       "interpolated": 0,
       "unparsed": [],
       "skipped": 0,

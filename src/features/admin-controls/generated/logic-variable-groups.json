@@ -345,6 +345,7 @@
       "engine_health_insp_dead_tuple_fail_pct",
       "engine_health_insp_update_insert_fail_ratio",
       "engine_health_dead_tuple_min_rows",
+      "admin_range_badge_borderline_margin_ratio",
       "parcel_sanity_lot_size_min_sqm",
       "parcel_sanity_lot_size_max_sqm",
       "parcel_sanity_lot_geom_tolerance_ratio",

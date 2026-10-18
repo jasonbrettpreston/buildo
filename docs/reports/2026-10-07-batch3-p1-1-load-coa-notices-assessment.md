@@ -135,7 +135,7 @@ pin and the samples (§12).
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=260 |
+| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=261 |
 | 2 | load_coa_notices | PASS | 39 declared, missing from seeds: none |
 | 3 | load_coa_notices | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_coa_notices | PASS | SPEC LINK header present=true |

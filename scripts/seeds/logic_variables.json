@@ -6153,6 +6153,16 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "admin_range_badge_borderline_margin_ratio": {
+    "default": 0.2,
+    "type": "number",
+    "description": "Admin data-quality surface (Spec 124 R-DW, McDonald's Airtight V3, operator y 2026-10-18): how far outside an UNCONVERTED step's STEP_EXPECTED_RANGES range a value may sit, as a fraction of the range's span, before the Last Run / DB State Changes badge turns from borderline to anomaly (getRangeStatus, src/lib/admin/funnel.ts). 0.2 = the former bare 20% literal, carried exactly. Admin-owned, not a step's variable: a converted step's badge is its own audit_table check row, whose bound the runner resolved from that step's checks[].limit_from_config. Served by /api/quality. CONSUMED by src/app/api/quality/route.ts.",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "parcel_sanity_lot_size_min_sqm": {
     "default": 40,
     "type": "number",

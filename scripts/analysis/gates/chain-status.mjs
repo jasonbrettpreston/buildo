@@ -12,8 +12,10 @@
 //
 // Admin visibility (operator 2026-10-17: "when we are adding new steps we need to be aware of the admin as
 // well — this is how we verify the output"): the line also counts converted steps the admin data-quality
-// surface cannot verify — no `STEP_DESCRIPTIONS` entry or no `STEP_EXPECTED_RANGES` entry in
-// src/lib/admin/funnel.ts (the description and the expected-range tiles the dashboard renders per step).
+// surface cannot verify — no `STEP_DESCRIPTIONS` entry in src/lib/admin/funnel.ts (the drill-down the
+// dashboard renders per step). Spec 124 R-DW (amends R-DJ (3)): `STEP_EXPECTED_RANGES` is no longer an
+// arm — a converted step's badges are its own audit_table check rows, and a converted step carrying a
+// hand-written range entry is an R-DL violation (admin-step-registration.logic), not a registration.
 // REPORT-ONLY: it never decides `complete` (no Spec 124 rule makes it a gate yet).
 
 import fs from 'node:fs';
@@ -110,12 +112,10 @@ export function objectLiteralKeys(source, name) {
   return keys;
 }
 
-/** The converted-step slugs the admin surface can verify: both a description and an expected-range entry. */
+/** The converted-step slugs the admin surface can verify: a description (R-DW: badges come from audit_table). */
 export function adminRegisteredSlugs(repoRoot = REPO_ROOT) {
   const src = fs.readFileSync(path.join(repoRoot, 'src/lib/admin/funnel.ts'), 'utf8');
-  const desc = objectLiteralKeys(src, 'STEP_DESCRIPTIONS');
-  const ranges = objectLiteralKeys(src, 'STEP_EXPECTED_RANGES');
-  return new Set([...desc].filter((k) => ranges.has(k)));
+  return objectLiteralKeys(src, 'STEP_DESCRIPTIONS');
 }
 
 /** Reads the five registries from disk (file-only). */

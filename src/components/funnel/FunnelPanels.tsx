@@ -55,10 +55,14 @@ export interface TelemetryData {
   engine?: Record<string, { n_live_tup: number; n_dead_tup: number; dead_ratio: number; seq_scan: number; idx_scan: number; seq_ratio: number }>;
 }
 
-/** Small inline range badge — green/yellow/red based on expected range */
-function RangeBadge({ value, range }: { value: number; range?: [number, number] | undefined }) {
-  if (!range) return null;
-  const status = getRangeStatus(value, range);
+/**
+ * Small inline range badge — green/yellow/red based on an UNCONVERTED step's expected range.
+ * `marginRatio` = the admin_range_badge_borderline_margin_ratio logic variable from /api/quality
+ * (Spec 124 R-DW); until it arrives no badge renders, so no margin literal lives here.
+ */
+function RangeBadge({ value, range, marginRatio }: { value: number; range?: [number, number] | undefined; marginRatio?: number | undefined }) {
+  if (!range || marginRatio === undefined) return null;
+  const status = getRangeStatus(value, range, marginRatio);
   if (status === 'normal') return <span className="text-[7px] px-1 py-0.5 rounded bg-green-50 text-green-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2713'}</span>;
   if (status === 'borderline') return <span className="text-[7px] px-1 py-0.5 rounded bg-yellow-50 text-yellow-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u26A0'}</span>;
   return <span className="text-[7px] px-1 py-0.5 rounded bg-red-50 text-red-600 font-medium" title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{'\u2717'}</span>;
@@ -68,8 +72,9 @@ function RangeBadge({ value, range }: { value: number; range?: [number, number] 
  * Renders T1/T2/T4/T6 telemetry inline — displayed in Performance Metrics section after audit table.
  * `thresholds` = the engine_health_* logic variables resolved by /api/quality (Spec 26 §3.4); the T6
  * amber colouring reads them, never a literal. Absent (before the fetch lands) → the seeded defaults.
+ * `rangeMargin` = the resolved admin_range_badge_borderline_margin_ratio (R-DW) for the range badges.
  */
-export function TelemetrySection({ telemetry, stepSlug, thresholds = ENGINE_HEALTH_DEFAULTS }: { telemetry: TelemetryData; stepSlug?: string; thresholds?: EngineHealthThresholds | undefined }) {
+export function TelemetrySection({ telemetry, stepSlug, thresholds = ENGINE_HEALTH_DEFAULTS, rangeMargin }: { telemetry: TelemetryData; stepSlug?: string; thresholds?: EngineHealthThresholds | undefined; rangeMargin?: number | undefined }) {
   const tables = Object.keys(telemetry.counts ?? {});
   if (tables.length === 0) return null;
 
@@ -101,15 +106,15 @@ export function TelemetrySection({ telemetry, stepSlug, thresholds = ENGINE_HEAL
                   <span className={count.delta > 0 ? 'text-green-600 font-medium' : count.delta < 0 ? 'text-red-600 font-medium' : 'text-gray-400'}>
                     ({count.delta > 0 ? '+' : ''}{count.delta.toLocaleString()})
                   </span>
-                  <RangeBadge value={count.delta} range={deltaRange} />
+                  <RangeBadge value={count.delta} range={deltaRange} marginRatio={rangeMargin} />
                 </span>
               )}
               {/* T2: pg_stat mutation badges */}
               {stats && (stats.ins > 0 || stats.upd > 0 || stats.del > 0) && (
                 <span className="flex gap-1">
-                  {stats.ins > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">SQL Inserts: {stats.ins.toLocaleString()} <RangeBadge value={stats.ins} range={mutRanges?.ins} /></span>}
-                  {stats.upd > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">SQL Updates: {stats.upd.toLocaleString()} <RangeBadge value={stats.upd} range={mutRanges?.upd} /></span>}
-                  {stats.del > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">SQL Deletes: {stats.del.toLocaleString()} <RangeBadge value={stats.del} range={mutRanges?.del} /></span>}
+                  {stats.ins > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-medium tabular-nums">SQL Inserts: {stats.ins.toLocaleString()} <RangeBadge value={stats.ins} range={mutRanges?.ins} marginRatio={rangeMargin} /></span>}
+                  {stats.upd > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 text-blue-700 font-medium tabular-nums">SQL Updates: {stats.upd.toLocaleString()} <RangeBadge value={stats.upd} range={mutRanges?.upd} marginRatio={rangeMargin} /></span>}
+                  {stats.del > 0 && <span className="text-[8px] px-1 py-0.5 rounded bg-red-100 text-red-700 font-medium tabular-nums">SQL Deletes: {stats.del.toLocaleString()} <RangeBadge value={stats.del} range={mutRanges?.del} marginRatio={rangeMargin} /></span>}
                 </span>
               )}
             </div>

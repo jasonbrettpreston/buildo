@@ -243,6 +243,7 @@ interface FreshnessTimelineProps {
   /** T3: Fast approximate row counts from pg_class.reltuples */
   liveTableCounts?: Record<string, number> | undefined;
   engineHealthThresholds?: EngineHealthThresholds | undefined; // engine_health_* logic vars from /api/quality (Spec 26 §3.4)
+  rangeBadgeMargin?: number | undefined; // admin_range_badge_borderline_margin_ratio from /api/quality (Spec 124 R-DW)
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -409,7 +410,7 @@ function computeStepNumbers(steps: ChainStep[]): (string | null)[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap, liveTableCounts, engineHealthThresholds }: FreshnessTimelineProps) {
+export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger, slaTargets, disabledPipelines, onToggle, triggerError, funnelData, onCancel, dbSchemaMap, liveTableCounts, engineHealthThresholds, rangeBadgeMargin }: FreshnessTimelineProps) {
   const thresholds = engineHealthThresholds ?? ENGINE_HEALTH_DEFAULTS; // engine-health colouring: logic vars, never a literal
   const [errorPopover, setErrorPopover] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
@@ -1111,9 +1112,10 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                         {!funnelRow && (() => {
                           const stepExpected = STEP_EXPECTED_RANGES[step.slug];
                           const summaryRanges = stepExpected?.summary;
+                          // Unconverted steps only (R-DW): a converted step has no entry — its badges are its audit_table check rows.
                           const rangeBadge = (value: number, range?: [number, number]) => {
-                            if (!range) return null;
-                            const status = getRangeStatus(value, range);
+                            if (!range || rangeBadgeMargin === undefined) return null;
+                            const status = getRangeStatus(value, range, rangeBadgeMargin);
                             const cls = status === 'normal' ? 'bg-green-50 text-green-600' : status === 'borderline' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600';
                             const icon = status === 'normal' ? '\u2713' : status === 'borderline' ? '\u26A0' : '\u2717';
                             return <span className={`text-[7px] px-1 py-0.5 rounded font-medium ml-1 ${cls}`} title={`Expected: ${range[0].toLocaleString()}–${range[1].toLocaleString()}`}>{icon}</span>;
@@ -1264,7 +1266,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                     {(() => {
                                       const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                                       if (!telemetry) return null;
-                                      return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />;
+                                      return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} rangeMargin={rangeBadgeMargin} />;
                                     })()}
                                   </div>
                                 );
@@ -1283,7 +1285,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                 return (
                                   <div className="mt-3">
                                     <ColumnarAuditTable key={`audit-${atIdx}`} cat={cat} wrapperClass="" />
-                                    {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />}
+                                    {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} rangeMargin={rangeBadgeMargin} />}
                                   </div>
                                 );
                               }
@@ -1340,7 +1342,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                                       </table>
                                     </div>
                                   )}
-                                  {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />}
+                                  {telemetry && <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} rangeMargin={rangeBadgeMargin} />}
                                 </div>
                               );
                             })()}
@@ -1422,7 +1424,7 @@ export function FreshnessTimeline({ pipelineLastRun, runningPipelines, onTrigger
                               {(() => {
                                 const telemetry = (info?.records_meta as Record<string, unknown>)?.telemetry as TelemetryData | undefined;
                                 if (!telemetry) return null;
-                                return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} />;
+                                return <TelemetrySection telemetry={telemetry} stepSlug={step.slug} thresholds={thresholds} rangeMargin={rangeBadgeMargin} />;
                               })()}
                             </div>
                           );

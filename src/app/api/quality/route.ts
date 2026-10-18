@@ -13,6 +13,8 @@ import {
   ENGINE_HEALTH_DEFAULTS,
   PipelineFailure,
 } from '@/lib/quality/types';
+import { RANGE_BADGE_MARGIN_VARIABLE } from '@/lib/admin/funnel';
+import { LOGIC_VAR_DEFAULTS } from '@/lib/admin/control-panel';
 import type {
   EngineHealthEntry,
   EngineHealthAnomaly,
@@ -97,6 +99,36 @@ async function loadEngineHealthThresholds(): Promise<EngineHealthThresholds> {
   }
 
   return resolved;
+}
+
+/**
+ * Resolve the admin range-badge margin `admin_range_badge_borderline_margin_ratio` (Spec 124 R-DW,
+ * R-DF EXTERNALIZED) from `logic_variables`. The fallback is the SEEDED default
+ * (`LOGIC_VAR_DEFAULTS`, derived from scripts/seeds/logic_variables.json), never a literal. Same
+ * posture as loadEngineHealthThresholds: a failed query is `logError`, an absent or unparseable row
+ * is one `logWarn`; it never throws.
+ */
+async function loadRangeBadgeMargin(): Promise<number> {
+  const fallback = LOGIC_VAR_DEFAULTS[RANGE_BADGE_MARGIN_VARIABLE] as number;
+  let rows: { variable_key: string; variable_value: string | null }[];
+  try {
+    rows = await query<{ variable_key: string; variable_value: string | null }>(
+      `SELECT variable_key, variable_value
+         FROM logic_variables
+        WHERE variable_key = ANY($1)`,
+      [[RANGE_BADGE_MARGIN_VARIABLE]]
+    );
+  } catch (err) {
+    logError('[api/quality]', err, { phase: 'range_badge_margin', fallback: 'seeded default' });
+    return fallback;
+  }
+  const raw = rows.find((r) => r.variable_key === RANGE_BADGE_MARGIN_VARIABLE)?.variable_value ?? null;
+  const parsed = NumericVariableValue.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  logWarn('[api/quality]', `${RANGE_BADGE_MARGIN_VARIABLE} missing or non-finite in logic_variables — keeping the seeded fallback`, {
+    phase: 'range_badge_margin', fell_back: [{ variable_key: RANGE_BADGE_MARGIN_VARIABLE, raw, fallback }],
+  });
+  return fallback;
 }
 
 /**
@@ -219,6 +251,7 @@ export const GET = withApiEnvelope(async function GET() {
     // Never throws (see its doc), so it resolves outside the pg_stat try: the
     // payload carries the thresholds even when pg_stat_user_tables is unreadable.
     const thresholds = await loadEngineHealthThresholds();
+    const rangeBadgeMargin = await loadRangeBadgeMargin();
     try {
       const engineRows = await query<{
         table_name: string;
@@ -280,6 +313,7 @@ export const GET = withApiEnvelope(async function GET() {
       schemaDrift,
       health,
       ...enginePayload,
+      rangeBadgeMargin,
     });
   } catch (err) {
     logError('[api/quality]', err, { handler: 'GET' });

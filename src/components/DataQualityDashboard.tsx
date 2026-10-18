@@ -93,6 +93,8 @@ interface ExtendedQualityResponse {
   health: SystemHealthSummary;
   /** The engine_health_* logic variables, resolved live by /api/quality (Spec 26 §3.4). */
   engineHealthThresholds?: EngineHealthThresholds;
+  /** admin_range_badge_borderline_margin_ratio, resolved live by /api/quality (Spec 124 R-DW). */
+  rangeBadgeMargin?: number;
 }
 
 const POLL_INTERVAL_MS = 5000;
@@ -552,6 +554,7 @@ export function DataQualityDashboard() {
             slaTargets={SLA_TARGETS}
             funnelData={funnelData}
             engineHealthThresholds={data?.engineHealthThresholds}
+            rangeBadgeMargin={data?.rangeBadgeMargin}
             disabledPipelines={new Set(
               Object.entries(stats?.pipeline_schedules ?? {})
                 .filter(([, s]) => s.enabled === false)
