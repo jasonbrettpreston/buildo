@@ -440,22 +440,37 @@ function libStagedSelectsAll(stagedPaths) {
   );
 }
 
-function filterToStaged(registry) {
-  const staged = new Set(gitStagedFiles());
+/**
+ * The --staged selection (Spec 124 R-K doc-only rule; R-DJ whole-registry selection), PURE over
+ * `stagedPaths` and an injected `exists(relPath)` so a lock can drive it with no git and no files.
+ * `filterToStaged` below is its one live caller.
+ *
+ * R-DU (McDonald's Airtight V3, operator y 2026-10-18; amends R-DJ): in the whole-registry branch a
+ * PENDING row whose descriptor file is ABSENT does not block. Keyed on the file, never the stage
+ * label. Reason, already stated at the overlayRows site in main(): a pending step with no descriptor
+ * yet (early ①) has nothing a registry gate reads — so its red ① scorecard is the expected red
+ * suite, not a registry regression. Once the descriptor exists (②) the row blocks again, and a
+ * converted row always blocks. Lock: `step-validate-staged-rdu.logic`.
+ * @param {Array<{slug: string, relFile: string, stage: string, report?: string|null}>} registry
+ * @param {string[]} stagedPaths repo-relative, forward slashes
+ * @param {{ exists: (relPath: string) => boolean }} io
+ */
+export function stagedRowsFor(registry, stagedPaths, { exists }) {
+  const staged = new Set(Array.isArray(stagedPaths) ? stagedPaths : []);
   if (staged.size === 0) return [];
-  const ownCodeStaged = (row) => {
-    const notesPath = path.dirname(row.relFile) + '/' + path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json';
-    return [row.relFile, harness.descriptorPathFor(row.relFile), notesPath, harness.computePathFor(row.relFile)]
-      .filter(Boolean).some((c) => staged.has(c));
-  };
+  const notesPathFor = (row) => path.dirname(row.relFile) + '/' + path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json';
+  const codeCandidatesFor = (row) =>
+    [row.relFile, harness.descriptorPathFor(row.relFile), notesPathFor(row), harness.computePathFor(row.relFile)].filter(Boolean);
   if (libStagedSelectsAll([...staged])) {
-    return registry.map((row) => ({ ...row, blocking: true, ownCodeStaged: ownCodeStaged(row) }));
+    return registry.map((row) => {
+      const ownCodeStaged = codeCandidatesFor(row).some((c) => staged.has(c));
+      const noDescriptorPending = row.stage === 'pending' && !exists(harness.descriptorPathFor(row.relFile));
+      return { ...row, blocking: !noDescriptorPending, ownCodeStaged };
+    });
   }
   const out = [];
   for (const row of registry) {
-    const notesPath = path.dirname(row.relFile) + '/' + path.basename(row.relFile).replace(/\.(js|py)$/, '') + '.notes.json';
-    const computePath = harness.computePathFor(row.relFile);
-    const codeCandidates = [row.relFile, harness.descriptorPathFor(row.relFile), notesPath, computePath].filter(Boolean);
+    const codeCandidates = codeCandidatesFor(row);
     const docCandidates = [
       row.report ? path.relative(REPO_ROOT, row.report).replace(/\\/g, '/') : null,
       `src/tests/steps/${row.slug}/violations.test.ts`,
@@ -465,6 +480,10 @@ function filterToStaged(registry) {
     if (codeTouched || docTouched) out.push({ ...row, blocking: codeTouched, ownCodeStaged: codeTouched });
   }
   return out;
+}
+
+function filterToStaged(registry) {
+  return stagedRowsFor(registry, gitStagedFiles(), { exists: (rel) => existsSync(path.join(REPO_ROOT, rel)) });
 }
 
 // ---------------------------------------------------------------------------
