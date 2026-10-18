@@ -680,25 +680,27 @@ describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA f
 // now gates every C6 (post-sources) cutover instead of enrich_centreline's. Blocks are the census
 // C6 slugs, derived, never retyped. B2-OWNER-SPEC-DIFF is BUILT (fast invariant #43, R-BB).
 // ---------------------------------------------------------------------------
+type CensusRow = { slug: string; file: string; batch: string; status?: string; legacy?: string };
+/** Spec 124 R-ED: the derived EP-PIN-D17 block set. PURE. Status-independent; net-new = `legacy: "none"`. */
+function deriveD17Blocks(entries: CensusRow[], sourcesChain: Set<string>): string[] {
+  return entries
+    .filter((e) => !sourcesChain.has(e.slug) && e.legacy !== 'none' && (e.batch === 'C6' || e.batch === 'pending'))
+    .map((e) => e.slug)
+    .sort();
+}
+
 describe('R-AQ.1 — EP-PIN-D17 gates the end-of-sources boundary, never a sources cutover', () => {
   const CENSUS_ENTRIES = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8')) as {
-    entries: Array<{ slug: string; file: string; batch: string; status?: string }>;
+    entries: CensusRow[];
   }).entries;
-  // A post-sources (C6) step stays gated while its conversion is in flight: phase-4 wave 1 commit ①
-  // (permits, 2026-10-17) flipped its census batch C6 -> "pending", the first post-sources row to do so.
-  // In flight = pending, outside the sources chain, and converting a LEGACY script (its frozen legacy
-  // oracle exists, Spec 123 §4.5); net-new steps (no legacy oracle) were never C6. Draft R-DU (draft, id at integration).
+  // Spec 124 R-ED (operator y 2026-10-18; amends the permits-lane draft): EP-PIN-D17 blocks every census
+  // slug outside the sources chain whose `legacy` is not "none" (R-DK's closed net-new field) and whose batch
+  // is C6 or pending, REGARDLESS of status. A ③ cutover that sets status "converted" therefore keeps the slug
+  // blocked, so checkCutoverPrereqs still stops it (R-AQ.1 as written). Never a fixture-file heuristic.
   const SOURCES_CHAIN = new Set(
     (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')) as { chains: { sources: string[] } }).chains.sources,
   );
-  const inFlightPostSources = CENSUS_ENTRIES.filter(
-    (e) =>
-      e.batch === 'pending' &&
-      e.status !== 'converted' &&
-      !SOURCES_CHAIN.has(e.slug) &&
-      fs.existsSync(path.join(REPO_ROOT, 'src/tests/steps', e.slug, 'fixtures', `legacy-${path.basename(e.file)}.txt`)),
-  ).map((e) => e.slug);
-  const c6 = [...CENSUS_ENTRIES.filter((e) => e.batch === 'C6').map((e) => e.slug), ...inFlightPostSources].sort();
+  const c6 = deriveD17Blocks(CENSUS_ENTRIES, SOURCES_CHAIN);
   const c5 = CENSUS_ENTRIES.filter((e) => e.batch === 'C5').map((e) => e.slug);
 
   it('EP-PIN-D17 stays PARTIAL and a cutover_prereq (deferred, never waived)', () => {
@@ -715,6 +717,31 @@ describe('R-AQ.1 — EP-PIN-D17 gates the end-of-sources boundary, never a sourc
     expect([...d17.gate.blocks].sort()).toEqual(c6);
     expect(d17.gate.blocks.filter((s) => c5.includes(s))).toEqual([]);
     expect(d17.gate.blocks).not.toContain('enrich_centreline');
+  });
+
+  it('R-ED (i): a ③-converted post-sources LEGACY slug stays blocked (the cutover status flip cannot drop it)', () => {
+    const src = new Set(['load_x']);
+    const inFlight: CensusRow = { slug: 'permits_like', file: 'scripts/load-p.js', batch: 'pending', status: 'pending' };
+    const cutOver: CensusRow = { ...inFlight, status: 'converted' };
+    expect(deriveD17Blocks([inFlight], src)).toEqual(['permits_like']);
+    expect(deriveD17Blocks([cutOver], src)).toEqual(['permits_like']);
+  });
+
+  it('R-ED (ii): a net-new slug (legacy "none") and a sources-chain slug are never blocked; a C6 legacy slug is', () => {
+    const src = new Set(['load_x']);
+    expect(deriveD17Blocks([
+      { slug: 'net_new', file: 'scripts/n.js', batch: 'pending', status: 'converted', legacy: 'none' },
+      { slug: 'load_x', file: 'scripts/x.js', batch: 'pending', status: 'pending' },
+      { slug: 'c6_step', file: 'scripts/c.js', batch: 'C6' },
+      { slug: 'c5_step', file: 'scripts/d.js', batch: 'C5' },
+    ], src)).toEqual(['c6_step']);
+  });
+
+  it('R-ED live: no converted post-sources legacy slug exists today, so the derived set equals the committed blocks (38)', () => {
+    const convertedPostSourcesLegacy = CENSUS_ENTRIES.filter((e) => e.status === 'converted' && !SOURCES_CHAIN.has(e.slug) && e.legacy !== 'none');
+    expect(convertedPostSourcesLegacy).toEqual([]);
+    expect(c6).toContain('permits');
+    expect(c6).toContain('coa');
   });
 
   it('B2-OWNER-SPEC-DIFF is BUILT', () => {
