@@ -504,6 +504,10 @@
       "id",
       "is_wsib_registered"
     ],
+    "entities_cohort_bak_20261018t0300z": [
+      "id",
+      "is_wsib_registered"
+    ],
     "entitlements": [
       "created_at",
       "current_period_end",

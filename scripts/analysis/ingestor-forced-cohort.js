@@ -192,7 +192,7 @@ function parseArgs(argv) {
     where: null, order: null, backupTable: null,
     step: null, chain: null, out: null,
     sourceCsv: null, sourceKey: null,
-    env: [], captureArgs: [],
+    env: [], captureArgs: [], countPath: null,
   };
   const setMode = (name) => {
     if (out.mode !== null) {
@@ -223,6 +223,7 @@ function parseArgs(argv) {
       where: 'where', order: 'order', 'backup-table': 'backupTable',
       step: 'step', chain: 'chain', out: 'out',
       'source-csv': 'sourceCsv', 'source-key': 'sourceKey',
+      'count-path': 'countPath',
     }[name];
     if (!slot) throw new Error(`unknown flag --${name} (try --help)`);
     out[slot] = value;
@@ -307,6 +308,16 @@ function validateFlags(args) {
       throw new Error(`--source-csv ${JSON.stringify(sourceCsv)} does not exist (resolved ${abs}) — pass the path of the source CSV whose keys the cohort must come from`);
     }
   }
+  // R-DN (Spec 124, McDonald's Airtight V3): an optional per-table write count read from the SAME
+  // `count_path` gate G #38 reads (countPathDecision, gates/captures.mjs) — never a second count
+  // source. Only --run reads a capture, so any other mode refuses it before any DB connect.
+  const countPath = args.countPath === null || args.countPath === undefined ? null : args.countPath;
+  if (countPath !== null) {
+    if (mode !== 'run') throw new Error(`--count-path is a --run flag (got it with --${modeFlag(mode)})`);
+    if (typeof countPath !== 'string' || !/^[a-z][a-z0-9_]*$/.test(countPath)) {
+      throw new Error(`--count-path must be a top-level emits key (got ${JSON.stringify(countPath)})`);
+    }
+  }
   if (mode === 'run') {
     const step = need('step', args.step);
     const chain = need('chain', args.chain);
@@ -350,6 +361,7 @@ function validateFlags(args) {
     mode, table, key, column, op, opRaw, count, where, order, backupTable,
     sourceCsv, sourceKey,
     step: args.step, chain: args.chain, out: args.out, env: args.env, captureArgs: args.captureArgs,
+    countPath,
   };
 }
 
@@ -544,7 +556,15 @@ function sameValueMap(a, b) {
  * requires. The heal check is the differential: every cohort row must be back to its
  * backed-up value.
  */
-function captureClaim({ recordsUpdated, recordsNew, liveValues, backupValues }) {
+function captureClaim({ recordsUpdated, recordsNew, liveValues, backupValues, countPathResult }) {
+  // R-DN: with --count-path the write count is gate G's own per-table count_path decision
+  // (`{ok, n}` | `{ok:false, reason}`), not the step-level summary counters.
+  if (countPathResult !== undefined && countPathResult !== null) {
+    if (!countPathResult.ok) return { ok: false, reason: `count_path: ${countPathResult.reason} (gate G #38)` };
+    const same = sameValueMap(canonicalValueMap(backupValues), canonicalValueMap(liveValues));
+    if (!same.ok) return { ok: false, reason: `the step did not heal the perturbation — ${same.reason}` };
+    return { ok: true, written: countPathResult.n };
+  }
   const written = (Number(recordsUpdated) || 0) + (Number(recordsNew) || 0);
   if (written < 1) {
     return { ok: false, reason: `the harness summary reports 0 rows written (records_updated=${recordsUpdated}, records_new=${recordsNew}) — a zero-write POST capture proves nothing (gate G #38)` };
@@ -1183,6 +1203,20 @@ function removeSignalHandlers() {
  * 0. every connecting mode refuses a non-loopback target FIRST (F1, `assertLocalTarget`,
  *    called from `makePool`, on the resolved description and before any query).
  */
+/**
+ * R-DN: gate G #38's own per-table count for this run — `countPathDecision` over the step's
+ * descriptor and the capture the harness just wrote. The descriptor sits beside the step
+ * (`<step>.descriptor.json`, the fleet convention); a missing one refuses by name.
+ */
+async function countPathFromCapture(o, outAbs) {
+  const descAbs = path.resolve(REPO_ROOT, o.step.replace(/\.js$/, '.descriptor.json'));
+  if (!fs.existsSync(descAbs)) return { ok: false, reason: `no descriptor beside ${o.step}` };
+  const descriptor = JSON.parse(fs.readFileSync(descAbs, 'utf8'));
+  const doc = JSON.parse(fs.readFileSync(outAbs, 'utf8'));
+  const { countPathDecision } = await import(require('url').pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/gates/captures.mjs')).href);
+  return countPathDecision(descriptor, { file: o.out, doc }, o.countPath);
+}
+
 async function run(o) {
   // Assembled FIRST, from pure inputs, so a bad --capture-arg refuses before a pool is even
   // constructed — a mistyped passthrough must cost seconds and touch NO database.
@@ -1284,13 +1318,18 @@ async function run(o) {
       // whose summary reads 0/0 by design; reading the LAST one would fail a genuine run.
       const summary = firstSummary(stdout);
       const after = await liveCohortValues(pool, o, cohortKeys);
+      const countPathResult = o.countPath ? await countPathFromCapture(o, outAbs) : null;
       const claim = captureClaim({
         recordsUpdated: summary.records_updated,
         recordsNew: summary.records_new,
         liveValues: after,
         backupValues: backupRows,
+        countPathResult,
       });
-      const written = (Number(summary.records_updated) || 0) + (Number(summary.records_new) || 0);
+      const written = countPathResult && countPathResult.ok
+        ? countPathResult.n
+        : (Number(summary.records_updated) || 0) + (Number(summary.records_new) || 0);
+      if (o.countPath) console.log(`[cohort:run] count_path ${o.countPath}: ${countPathResult.ok ? countPathResult.n : countPathResult.reason}`);
       console.log(`[cohort:run] summary: records_updated=${summary.records_updated} records_new=${summary.records_new} -> written=${written}`);
       console.log(`[cohort:run] assert ${claim.ok ? 'PASS' : 'FAIL'} the step wrote >= 1 row AND healed the cohort (${claim.ok ? written + ' row(s) written' : claim.reason})`);
       asserted = claim.ok;
@@ -1463,6 +1502,12 @@ function selfTest() {
   assert(captureClaim({ recordsUpdated: 0, recordsNew: 2, liveValues: live, backupValues: live }).ok === true, 'captureClaim rejected a nonzero records_new, healed run');
   assert(captureClaim({ recordsUpdated: 0, recordsNew: 0, liveValues: live, backupValues: live }).ok === false, 'captureClaim accepted a zero-write run');
   assert(captureClaim({ recordsUpdated: 2, recordsNew: 0, liveValues: [{ key: 1, value: 'z' }, { key: 2, value: null }], backupValues: live }).ok === false, 'captureClaim accepted an unhealed cohort');
+  // R-DN: --count-path replaces the step-level counters with gate G's per-table count, both ways.
+  assert(captureClaim({ recordsUpdated: 0, recordsNew: 0, liveValues: live, backupValues: live, countPathResult: { ok: true, n: 7 } }).written === 7, 'captureClaim ignored a passing count_path on a zero-summary run');
+  assert(captureClaim({ recordsUpdated: 9, recordsNew: 0, liveValues: live, backupValues: live, countPathResult: { ok: false, reason: 'emitted 0' } }).ok === false, 'captureClaim accepted a failing count_path because the summary was nonzero');
+  assert(captureClaim({ recordsUpdated: 0, recordsNew: 0, liveValues: [{ key: 1, value: 'z' }, { key: 2, value: null }], backupValues: live, countPathResult: { ok: true, n: 7 } }).ok === false, 'captureClaim accepted an unhealed cohort under count_path');
+  throws(() => validateFlags(parseArgs(['--plan', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--count-path=run_matched'])), 'validateFlags accepted --count-path outside --run');
+  throws(() => validateFlags(parseArgs(['--run', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/address_points/post/sources.json', '--count-path=meta.x'])), 'validateFlags accepted a dotted --count-path');
 
   // canonicalValueMap: a bigint/number round-trip compares equal (the driver types differ).
   assert(canonicalValueMap([{ key: 1, value: 5 }]).get('1') === '5', 'canonicalValueMap did not stringify the value');
@@ -1607,6 +1652,9 @@ Shared flags (plan/backup/run/restore):
               its backed-up value, then restore unconditionally (cohort-scoped).
               Exit 1 on a failed claim; exit 2 if the restore failed or did not verify (the exact
               --restore command is printed before the COMMIT and on every failed-restore path).
+  --count-path=<emit key>  (--run only; Spec 124 R-DN) prove the write count from gate G #38's
+              per-table count_path in the capture just written, instead of the step-level
+              records_updated/records_new — for a step that reports one table's writes in its own emit.
   --restore   Put the before-image back and re-verify the cohort.
   --self-test No DB. Asserts the argv/SQL/decision invariants. Prints 'self-test PASSED'.
   --help      This text.

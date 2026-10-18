@@ -504,8 +504,9 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     // link_wsib:wsib_registry via cohort.json count_path) and their ledger rows deleted. Two stay ledgered: no int emit
     // counts enrich_parcels_pass3_scope writes, and the bracket instrument asserts only the step-level counters, which
     // do not carry link_wsib's entities correction (is_wsib_registered_corrected).
+    // re-pinned 2026-10-18 (Spec 124 R-DN): link_wsib:entities CLOSED — the R-DN --count-path bracket proves the 200
+    // entity corrections through gate G's own count_path (is_wsib_registered_corrected); ledger row deleted.
     'enrich_parcels:enrich_parcels_pass3_scope',
-    'link_wsib:entities',
   ];
 
   it('T4: live — every measured nonzero violation is now ledger-allowed (landed 2026-09-26), and zero orphans', () => {

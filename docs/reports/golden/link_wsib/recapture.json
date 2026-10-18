@@ -34,6 +34,41 @@
         ]
       ],
       "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 50 linked wsib_registry rows by id (872 linked) get match_confidence -0.01; under LINK_WSIB_FORCE_FULL=1 the full re-derivation's diff (scripts/lib/compute/link-wsib.js:302) rewrites and heals all 50 (run_matched 50). Cohort 50, not 200: 200 moves of 872 links = 23% trips the step's own pre_write mass-relink FAIL (link_wsib_mass_relink_max_pct, seeded 0.10), and 50 = 5.7% stays under it without the accept-anomaly override (the link_massing healing-cohort precedent, 50 links). Plan hash 020d20eba2112aed1d36d47f9186d3b6."
+    },
+    "post/sources-full-forced-5.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=entities",
+          "--key=id",
+          "--column=is_wsib_registered",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=t.is_wsib_registered = false AND t.id NOT IN (SELECT linked_entity_id FROM wsib_registry WHERE linked_entity_id IS NOT NULL)",
+          "--order=t.id",
+          "--backup-table=entities_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=entities",
+          "--key=id",
+          "--column=is_wsib_registered",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=t.is_wsib_registered = false AND t.id NOT IN (SELECT linked_entity_id FROM wsib_registry WHERE linked_entity_id IS NOT NULL)",
+          "--order=t.id",
+          "--backup-table=entities_cohort_bak_{ts}",
+          "--step=scripts/link-wsib.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/link_wsib/post/sources-full-forced-5.json",
+          "--env=LINK_WSIB_FORCE_FULL=1",
+          "--count-path=is_wsib_registered_corrected"
+        ]
+      ],
+      "why": "#38 evidence for entities (Spec 124 R-CZ + R-DN, 2026-10-18): the first 200 entities by id with is_wsib_registered = false and NO wsib link get is_wsib_registered flipped to true; under LINK_WSIB_FORCE_FULL=1 the LW-D19 self-heal unflag (ENTITIES_UNFLAG_SCOPE, scripts/lib/compute/link-wsib.js:379) corrects all 200 (is_wsib_registered_corrected 200, the declared int emit gate G count_path reads; records_updated is 0 because the step counts link writes). Healed 200/200, restore put 0 back, post-restore cohort == before-image."
     }
   }
 }

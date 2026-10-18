@@ -6,6 +6,12 @@
       "capture": "sources-full-forced-4.json",
       "count_path": "run_matched",
       "why": "POST docs/reports/golden/link_wsib/post/sources-full-forced-4.json (2026-10-17, Spec 124 R-CZ bracket in recapture.json): ingestor-forced-cohort.js lowered match_confidence by 0.01 on the first 50 linked wsib_registry rows; the full re-derivation rewrote and healed all 50 links (run_matched 50, the per-run link-write count of writes[0] wsib_registry). Restore verified."
+    },
+    {
+      "table": "entities",
+      "capture": "sources-full-forced-5.json",
+      "count_path": "is_wsib_registered_corrected",
+      "why": "POST docs/reports/golden/link_wsib/post/sources-full-forced-5.json (2026-10-18, Spec 124 R-CZ bracket via R-DN --count-path): ingestor-forced-cohort.js flipped is_wsib_registered to true on 200 unlinked entities; the LW-D19 unflag self-heal corrected all 200 (is_wsib_registered_corrected 200 — writes[1]/[4] entities.is_wsib_registered). Restore verified."
     }
   ]
 }
