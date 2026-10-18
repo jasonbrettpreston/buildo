@@ -9,6 +9,26 @@
       "group": "Coverage & Quality"
     }
   },
+  "enrich_permits_centreline_coverage_min": {
+    "default": 0.9,
+    "type": "number",
+    "description": "§8e L24c (Spec 62) — minimum fraction of valid-geom parcels that must carry centreline_dataset_version_when_enriched before enrich_permits propagates the centreline columns onto permits; below it the step HALTs (failed_missing_precondition). 0.9 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs. Copied from the shared centreline_propagation_coverage_min by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it); the coa twin is enrich_coa_zoning_centreline_coverage_min. CONSUMED by enrich_permits (scripts/lib/compute/enrich-lead-zoning.js, compared in SQL as a bound parameter).",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
+  "enrich_coa_zoning_centreline_coverage_min": {
+    "default": 0.9,
+    "type": "number",
+    "description": "§8e L24c (Spec 62) — the coa twin of enrich_permits_centreline_coverage_min: minimum centreline-enriched share of valid-geom parcels before enrich_coa_zoning propagates onto coa_applications. Copied from the shared centreline_propagation_coverage_min by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by enrich_coa_zoning (scripts/lib/compute/enrich-lead-zoning.js).",
+    "min": 0,
+    "max": 1,
+    "admin": {
+      "group": "Coverage & Quality"
+    }
+  },
   "road_overlay_distance_m": {
     "default": 5,
     "type": "number",
@@ -1099,10 +1119,30 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "enrich_permits_bylaw_max_fsi_null_warn_pct": {
+    "default": 88,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich_permits bylaw_max_fsi NULL-rate WARN floor. Nulls are ~100% STRUCTURAL (residential zones regulate by coverage-not-FSI) so this WARNs only above baseline+margin (83.0+5); never FAIL. Copied from permits_bylaw_max_fsi_null_warn_pct by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by enrich_permits via checks[].limit_from_config (permits_bylaw_max_fsi_null_pct).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "permits_bylaw_max_coverage_null_warn_pct": {
     "default": 72,
     "type": "number",
     "description": "WF2 P6.5 — enrich-permits bylaw_max_coverage NULL-rate WARN floor (density zones regulate by FSI-not-coverage). Baseline 66.3+5.75; WARN-above-baseline, never FAIL.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_permits_bylaw_max_coverage_null_warn_pct": {
+    "default": 72,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich_permits bylaw_max_coverage NULL-rate WARN floor (density zones regulate by FSI-not-coverage). Baseline 66.3+5.75; WARN-above-baseline, never FAIL. Copied from permits_bylaw_max_coverage_null_warn_pct by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by enrich_permits via checks[].limit_from_config (permits_bylaw_max_coverage_pct_null_pct).",
     "min": 0,
     "max": 100,
     "admin": {
@@ -1119,10 +1159,70 @@
       "group": "Data Quality Thresholds"
     }
   },
+  "enrich_coa_zoning_bylaw_max_fsi_null_warn_pct": {
+    "default": 97,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich_coa_zoning bylaw_max_fsi NULL-rate WARN floor. Baseline 93.9+3; structural nulls, WARN-above-baseline, never FAIL. Copied from coa_bylaw_max_fsi_null_warn_pct by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by enrich_coa_zoning via checks[].limit_from_config (coa_bylaw_max_fsi_null_pct).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
   "coa_bylaw_max_coverage_null_warn_pct": {
     "default": 66,
     "type": "number",
     "description": "WF2 P6.5 — enrich-permits (coa target) bylaw_max_coverage NULL-rate WARN floor. Baseline 59.6+6.4; structural nulls, WARN-above-baseline, never FAIL.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_coa_zoning_bylaw_max_coverage_null_warn_pct": {
+    "default": 66,
+    "type": "number",
+    "description": "WF2 P6.5 — enrich_coa_zoning bylaw_max_coverage NULL-rate WARN floor. Baseline 59.6+6.4; structural nulls, WARN-above-baseline, never FAIL. Copied from coa_bylaw_max_coverage_null_warn_pct by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by enrich_coa_zoning via checks[].limit_from_config (coa_bylaw_max_coverage_pct_null_pct).",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_permits_zoning_coverage_fail_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "enrich_permits F-H12 FAIL floor (Spec 66 DEC-5): construction-permit zoning_class coverage below this percent FAILs the run. Formerly PERMITS_COVERAGE_FAIL = 80, a literal \"pinned against _contracts.json\" (enrich-permits.js:20). CONSUMED by enrich_permits via checks[].warn_limit_from_config (permits_zoning_class_coverage_pct). Seeded by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_permits_zoning_coverage_pass_min_pct": {
+    "default": 83,
+    "type": "number",
+    "description": "enrich_permits F-H12 PASS floor (Spec 66 DEC-5): coverage at or above this percent PASSes; between the FAIL floor and this one WARNs. Formerly the literal margin \"g.fail + 3\" (enrich-permits.js:637). CONSUMED by enrich_permits via checks[].limit_from_config (permits_zoning_class_coverage_pct). Seeded by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_coa_zoning_zoning_coverage_fail_pct": {
+    "default": 80,
+    "type": "number",
+    "description": "enrich_coa_zoning F-H12 FAIL floor (Spec 66 DEC-5): coa_applications zoning_class coverage below this percent FAILs the run. Formerly COA_COVERAGE_FAIL = 80 (enrich-permits.js:21). CONSUMED by enrich_coa_zoning via checks[].warn_limit_from_config (coa_zoning_class_coverage_pct). Seeded by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_coa_zoning_zoning_coverage_pass_min_pct": {
+    "default": 83,
+    "type": "number",
+    "description": "enrich_coa_zoning F-H12 PASS floor (Spec 66 DEC-5): coverage at or above this percent PASSes; between the FAIL floor and this one WARNs. Formerly the literal margin \"g.fail + 3\" (enrich-permits.js:637). CONSUMED by enrich_coa_zoning via checks[].limit_from_config (coa_zoning_class_coverage_pct). Seeded by migration 273 (phase-4 wave 4 lane B, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), byte-identical to the former literal.",
     "min": 0,
     "max": 100,
     "admin": {

@@ -1,0 +1,113 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 — the INTERPRETATION file for enrich_coa_zoning, capped at 12 prose entries (notes-cap.mjs).",
+    "Phase-4 wave 4 lane B commit ② (2026-10-18). One of the two notes files of the ONE shared lead-zoning",
+    "compute module (scripts/lib/enrich-lead-zoning.js); its twin carries the same module facts for the",
+    "other target. Every measured block was read against the dev DB on 2026-10-18 (read-only session)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "enrich_coa_zoning is one of two slugs over ONE compute module (operator-approved 2026-10-18, wave-4 plan question 9). The target is selected by the descriptor identity (identity.name -> target in TARGET_OF), never by an environment variable: the legacy ENRICH_TARGET selector retires with the ③ shell swap. The two slugs run in different chains (permits / coa), share advisory lock 66, and are independent steps with independent goldens.",
+      "measured": {
+        "value": "scripts/lib/compute/enrich-coa-zoning.js is one line over the shared module; the legacy scripts/enrich-permits.js served both slugs through process.env.ENRICH_TARGET (:601).",
+        "date": "2026-10-18",
+        "query": "n/a (code read)"
+      }
+    },
+    {
+      "what": "The max-build, existing-structure, scenario, optimal-config and cost columns on coa_applications are a COPY of the dominant linked parcel's enrich_parcels outputs (Spec 65, Spec 78 §4D), not a lead-level computation: max_build_confidence degrades to 'low' when a lead links more than one parcel (no coherent envelope on an assembly). Every lead-level consumer of those columns depends on this copy staying exact; the conversion keeps it byte-identical (operator brief 2026-10-18).",
+      "measured": {
+        "value": "run 1548 (2026-07-17): scope 33,400, updated 59, coverage 86.5 % PASS, no-link 3,706, multi-parcel 0, fsi-null 93.9 % (floor 97), coverage-null 59.6 % (floor 66).",
+        "date": "2026-10-18",
+        "query": "SELECT id, started_at, records_total, records_updated, records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline = 'coa:enrich_coa_zoning' ORDER BY started_at DESC LIMIT 5"
+      }
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "coa_zoning_class_coverage_pct sits around 84-87 % — the structural ceiling (about 5.5 % of leads have no parcel link, about 10 % link a gap parcel with no zoning). Spec 66 DEC-5 calibrated the FAIL floor at 80 and the PASS floor at 83 against it; a reading in that band is health, not degradation.",
+      "measured": {
+        "value": "run 1548 (2026-07-17): scope 33,400, updated 59, coverage 86.5 % PASS, no-link 3,706, multi-parcel 0, fsi-null 93.9 % (floor 97), coverage-null 59.6 % (floor 66).",
+        "date": "2026-10-18",
+        "query": "SELECT id, started_at, records_total, records_updated, records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline = 'coa:enrich_coa_zoning' ORDER BY started_at DESC LIMIT 5"
+      }
+    }
+  ],
+  "known_bad": [
+    {
+      "what": "Coverage below the fail floor (enrich_coa_zoning_zoning_coverage_fail_pct) means the upstream link (link_coa_to_parcels) or enrich_parcels' zoning pass regressed, not that this step is wrong: this step copies what is linked.",
+      "measured": {
+        "value": "No FAIL in the recorded history of either slug (latest runs PASS).",
+        "date": "2026-10-18",
+        "query": "SELECT id, started_at, records_total, records_updated, records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline = 'coa:enrich_coa_zoning' ORDER BY started_at DESC LIMIT 5"
+      }
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "The F-H12 gate measures zoning_class coverage only. The other ~120 propagated columns have INFO population counts and no bound, so a regression that blanks, say, the cost columns on a still-linked lead shows only as an INFO count falling.",
+      "measured": {
+        "value": "checks[]: one FAIL-capable row (coverage), two WARN-capable null floors (plus the two permit_type disagreement rows on permits), every other row INFO.",
+        "date": "2026-10-18",
+        "query": "n/a (descriptor read)"
+      }
+    }
+  ],
+  "suspicious_if": [
+    {
+      "signal": "coa_unlink_cleared_count is large. The orphan nullify resets only leads that lost ALL their lead_parcels rows; a large number means the link table lost rows upstream (expected ONCE on the first night after link_coa_to_parcels adopts re-check every run, LCTP-D3/D6; ECZ-D4). Check the generated before image (recovery.before_image) before re-running: after the nullify commits the prior feed values exist nowhere else.",
+      "check": "coa_unlink_cleared_count",
+      "measured": {
+        "value": "Latest run: coa_unlink_cleared_count 0.",
+        "date": "2026-10-18",
+        "query": "SELECT id, started_at, records_total, records_updated, records_meta->'audit_table'->'rows' FROM pipeline_runs WHERE pipeline = 'coa:enrich_coa_zoning' ORDER BY started_at DESC LIMIT 5"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The lineage and centreline-coverage preconditions stay named HALTs inside the enrich pass (the enrich_centreline assertCentrelineNonEmpty precedent): they read parcels, not the run ledger. The centreline recency read moved to the contract_read hook through the runner producer reader, which returns the two stamps and never throws (R-BZ G1/G8); the 16 catalog probes became database.min_migration (G3). Drafted deviations, operator ruling owed at integration."
+    },
+    {
+      "what": "The legacy zero-denominator row (coa_row_count_zero) now renders on every run (false on a normal run): a declared check always produces a row. Declared diff."
+    }
+  ],
+  "fences": [
+    {
+      "const": "the dominant-parcel pick ROW_NUMBER() OVER (PARTITION BY <lead> ORDER BY par.lot_size_sqm DESC NULLS LAST, <link>.confidence DESC NULLS LAST, par.id ASC) and the jsonb_agg(... ORDER BY area_share DESC NULLS LAST, parcel_id)",
+      "value": "scripts/lib/enrich-lead-zoning.js buildEnrichmentSelectSql, ported verbatim",
+      "incident": "Without the explicit ORDER BY the jsonb arrays come back in heap order and the IS DISTINCT FROM guard rewrites every multi-parcel lead on every run (the WF2 float/jsonb idempotency lesson, Spec 66 §2).",
+      "commit": "ae56cecf",
+      "lock_test": "src/tests/steps/enrich_coa_zoning/violations.test.ts"
+    },
+    {
+      "const": "the orphan nullify resets the NOT NULL booleans to false (set_value false), never NULL",
+      "value": "outputs.writes[1].columns[].set_value",
+      "incident": "NULLing a NOT NULL boolean crashes the whole statement (PG 23502) and with it the shared transaction — the ravine, heritage, centreline and max-build propagations each had to add their booleans to the false list.",
+      "commit": "27d96901",
+      "lock_test": "src/tests/steps/enrich_coa_zoning/violations.test.ts"
+    },
+    {
+      "const": "zoning_enriched_at stays OUT of the UPDATE guard",
+      "value": "outputs.writes[0].write_discipline.guard_columns (every propagated column, no run-clock column)",
+      "incident": "A run-clock column inside an IS DISTINCT FROM guard makes the guard vacuous (LG-9/D-5): every lead would be rewritten every run.",
+      "commit": "ae56cecf",
+      "lock_test": "src/tests/steps/enrich_coa_zoning/violations.test.ts"
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 1,
+    "unpromoted_suspicious_if": 1
+  },
+  "review_notes": [
+    {
+      "what": "Phase-4 wave 4 lane B ② (2026-10-18): compute ported, shell still legacy (stage compute_ported). PRE captures on the legacy shell (night P3) precede the ③ shell swap; the POST + forced bracket ride night P4 in chain order.",
+      "measured": {
+        "value": "converted.json pending stage compute_ported.",
+        "date": "2026-10-18",
+        "query": "n/a"
+      }
+    }
+  ]
+}

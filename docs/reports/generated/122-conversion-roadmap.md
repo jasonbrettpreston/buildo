@@ -31,8 +31,8 @@ Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pe
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-coa-freshness.js` | assert_coa_freshness [pending: red_suite] | coa (1) | — | — | LDG-10 (assert_coa_freshness); CHAIN-TOOLING (assert_coa_freshness); EP-PIN-D17 (assert_coa_freshness) |
 | ENRICHER | `scripts/classify-coa-scope.js` | classify_coa_scope [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (classify_coa_scope); CHAIN-TOOLING (classify_coa_scope); EP-PIN-D17 (classify_coa_scope) |
-| ENRICHER | `scripts/enrich-coa-zoning.js` | enrich_coa_zoning [pending: red_suite] | coa (1) | — | — | LDG-10 (enrich_coa_zoning); CHAIN-TOOLING (enrich_coa_zoning); EP-PIN-D17 (enrich_coa_zoning) |
-| ENRICHER | `scripts/enrich-permits.js` | enrich_permits [pending: red_suite] | permits (1) | — | — | LDG-10 (enrich_permits); CHAIN-TOOLING (enrich_permits); EP-PIN-D17 (enrich_permits) |
+| ENRICHER | `scripts/enrich-coa-zoning.js` | enrich_coa_zoning [pending: compute_ported] | coa (1) | — | — | LDG-10 (enrich_coa_zoning); CHAIN-TOOLING (enrich_coa_zoning); EP-PIN-D17 (enrich_coa_zoning) |
+| ENRICHER | `scripts/enrich-permits.js` | enrich_permits [pending: compute_ported] | permits (1) | — | — | LDG-10 (enrich_permits); CHAIN-TOOLING (enrich_permits); EP-PIN-D17 (enrich_permits) |
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
 | INGESTOR | `scripts/load-coa.js` | coa [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (coa); CHAIN-TOOLING (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); CHAIN-TOOLING (permits); EP-PIN-D17 (permits) |

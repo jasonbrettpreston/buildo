@@ -11,7 +11,7 @@
 // enrich_permits, so it shares the legacy oracle `../enrich_permits/fixtures/legacy-harness` (the frozen
 // enrich-permits text plus the frozen split shell). Commit form compressed (R-PACE-1).
 // PART 1 = the legacy ORACLE PINS L1–L10 for the coa target: plain `it(...)`, GREEN today.
-// PART 2 = the CONVERTED claims D1–D7: `it.fails(...)`, RED as NAMED MISSING ARTIFACTS until ② and ③.
+// PART 2 = the CONVERTED claims: D1–D4, D4b, D6 GREEN since ② (compute_ported); D5 (env), D7 (shell), D8 (registry) `it.fails` until ③.
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -20,7 +20,7 @@ import { loadLegacy, maxBuild, legacyCoaShellText, type LegacyOracle, type Legac
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 const DESCRIPTOR_REL = 'scripts/enrich-coa-zoning.descriptor.json';
-const COMPUTE_REL = 'scripts/lib/compute/enrich-lead-zoning.js';
+const COMPUTE_REL = 'scripts/lib/enrich-lead-zoning.js';
 const SHELL_REL = 'scripts/enrich-coa-zoning.js';
 const REPORT_REL = 'docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md';
 const LOCK_ID = 66;
@@ -161,54 +161,94 @@ describe('enrich_coa_zoning ① — legacy oracle pins B: gate, floors, audit an
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
-// PART 2 — the converted claims D1–D7 (`it.fails` at ①).
+// PART 2 — the converted claims. ② (compute_ported, 2026-10-18) flipped D1–D4 and D6 to `it`; D5 (the env
+// selector retires with the shell), D7 (the frozen shell) and D8 (registry) stay `it.fails` until ③.
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
+type Col = { name: string; set_value?: boolean | null; source?: string };
 type Descriptor = {
   identity: { name: string; archetype: string; lock: number; spec: string };
-  outputs: { writes: Array<{ table: string; columns?: Array<{ name: string } | string> }> };
+  outputs: { writes: Array<{ table: string; columns?: Col[]; write_discipline?: { class?: string; scope?: string } }> };
   guards?: { requires?: Array<{ kind: string; name: string }> };
+  execution?: { phases?: Array<{ name: string; writes_ref: number; txn: string }> };
+  checks: Array<{ id: string; limit_from_config?: string; warn_limit_from_config?: string }>;
+  config: { logic_variables: Array<{ name: string }> };
 };
-const colName = (c: { name: string } | string): string => (typeof c === 'string' ? c : c.name);
+type Core = {
+  allWriteCols: (t: string) => string[];
+  nullifyScope: (o: { target: string }) => string;
+  checkIds: (t: string) => string[];
+  buildEnrichmentSelectSql: (o: { target: string }) => string;
+  buildUpdateSql: (o: { target: string }) => string;
+};
+const code = (rel: string): string => readText(rel).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const core = (): Core => require(path.join(REPO_ROOT, COMPUTE_REL)) as Core;
 
-describe('enrich_coa_zoning ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype ENRICHER, lock 66, spec "66", name enrich_coa_zoning; shell is pipeline.step() over the shared compute module (flips at ②)', () => {
+describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; D5/D7/D8 flip at ③)', () => {
+  it('D1 — the descriptor exists: archetype ENRICHER, lock 66, spec "66", name enrich_coa_zoning; its compute entry is one line over the shared module (flips at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.identity).toMatchObject({ name: 'enrich_coa_zoning', archetype: 'ENRICHER', lock: LOCK_ID, spec: '66' });
-    const shell = readText(SHELL_REL);
-    expect(shell).toMatch(/pipeline\.step\(/);
-    expect(shell).toContain("require('./lib/compute/enrich-lead-zoning')");
+    expect((d.execution?.phases ?? []).map((p) => [p.name, p.writes_ref, p.txn])).toEqual([['zoning_coa', 0, 'shared'], ['orphan_nullify_coa', 1, 'shared']]);
+    expect(readText('scripts/lib/compute/enrich-coa-zoning.js')).toContain("module.exports = require('../enrich-lead-zoning').forTarget('coa');");
   });
 
-  it.fails('D2 — O-11 contract kept: the coa_applications write declares every propagated max-build / existing / scenario column, plus rls_bypass_or_policy on coa_applications (flips at ②)', () => {
+  it('D2 — O-11 contract kept: writes[0] declares exactly the shared propagated columns (variance_context as the coa jsonb) + zoning_enriched_at, and coa_applications carries rls_bypass_or_policy (flips at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
-    const w = d.outputs.writes.find((x) => x.table === 'coa_applications');
-    const declared = new Set((w?.columns ?? []).map(colName));
+    const declared = (d.outputs.writes[0]?.columns ?? []).map((c) => c.name);
+    expect(declared).toEqual([...core().allWriteCols('coa'), 'zoning_enriched_at']);
     const mb = maxBuild();
-    for (const c of [...(mb.LOT_MAXBUILD_COLS ?? []), ...(mb.EXISTING_COLS ?? []), ...(mb.SCENARIO_COLS ?? [])]) expect(declared.has(c)).toBe(true);
+    for (const c of [...(mb.LOT_MAXBUILD_COLS ?? []), ...(mb.EXISTING_COLS ?? []), ...(mb.SCENARIO_COLS ?? [])]) expect(declared).toContain(c);
     expect((d.guards?.requires ?? []).some((r) => r.kind === 'rls_bypass_or_policy' && r.name === 'coa_applications')).toBe(true);
   });
 
-  it.fails('D3 — compute purity (R-BZ): the shared module has no logic_variables SQL, no information_schema probe, no Date.now (flips at ②)', () => {
-    expect(readText(COMPUTE_REL)).not.toMatch(/FROM logic_variables|information_schema|Date\.now\(/);
+  it('D3 — compute purity (R-BZ): the shared module has no logic_variables SQL, no information_schema, no pipeline_runs, no Date.now, no DDL (flips at ②)', () => {
+    expect(code(COMPUTE_REL)).not.toMatch(/FROM logic_variables|information_schema|FROM pipeline_runs|Date\.now\(|CREATE TEMP|DROP TABLE/);
   });
 
-  it.fails('D4 — EXTERNALIZED (R-DF): the coa 80 % gate and +3 margin are enrich_coa_zoning_* variables; the 0.90 / 97 / 66 fallbacks are deleted (flips at ②)', () => {
-    const seeds = readText('scripts/seeds/logic_variables.json');
-    for (const k of ['enrich_coa_zoning_zoning_coverage_fail_pct', 'enrich_coa_zoning_zoning_coverage_pass_margin_pct']) expect(seeds).toContain(k);
-    expect(readText(COMPUTE_REL)).not.toMatch(/fsiDefault|covDefault|CENTRELINE_COVERAGE_MIN_DEFAULT/);
+  it('D4 — EXTERNALIZED (R-DF): every config name is enrich_coa_zoning_* (R-DE (v)), seeded byte-identical (80 / 83 / 97 / 66 / 0.9), carried by migration 273 (flips at ②)', () => {
+    const d = readJson<Descriptor>(DESCRIPTOR_REL);
+    const names = d.config.logic_variables.map((v) => v.name);
+    const seeds = readJson<Record<string, { default: number }>>('scripts/seeds/logic_variables.json');
+    expect(names.map((n) => [n, seeds[n]?.default])).toEqual([
+      ['enrich_coa_zoning_zoning_coverage_fail_pct', 80], ['enrich_coa_zoning_zoning_coverage_pass_min_pct', 83],
+      ['enrich_coa_zoning_bylaw_max_fsi_null_warn_pct', 97], ['enrich_coa_zoning_bylaw_max_coverage_null_warn_pct', 66],
+      ['enrich_coa_zoning_centreline_coverage_min', 0.9],
+    ]);
+    const mig = readText('migrations/273_enrich_lead_zoning_logic_variables.sql');
+    for (const n of names) expect(mig).toContain(`'${n}'`);
+    expect(code(COMPUTE_REL)).not.toMatch(/fsiDefault|covDefault|CENTRELINE_COVERAGE_MIN_DEFAULT/);
   });
 
-  it.fails('D5 — the ENRICH_TARGET env retires: the descriptor identity selects the target, and manifest enrich_coa_zoning has no env (flips at ②)', () => {
+  it('D4b — SQL parity with the frozen oracle for the coa target: materialize SELECT, guarded UPDATE, nullify set/scope, and the check order (flips at ②)', async () => {
+    const { o } = await run();
+    expect('\nCREATE TEMP TABLE lead_zoning_enrich ON COMMIT DROP AS\n' + core().buildEnrichmentSelectSql({ target: 'coa' })).toBe(sqlOf(o, /^\s*CREATE TEMP TABLE lead_zoning_enrich/)[0]?.sql);
+    expect(core().buildUpdateSql({ target: 'coa' })).toBe(sqlOf(o, /^\s*UPDATE coa_applications c SET/)[0]?.sql);
+    const legacyNullify = sqlOf(o, /zoning_enriched_at = NULL\s+WHERE/)[0]?.sql ?? '';
+    const d = readJson<Descriptor>(DESCRIPTOR_REL);
+    const w1 = d.outputs.writes[1];
+    for (const c of w1?.columns ?? []) {
+      if (c.name !== 'zoning_enriched_at') expect(legacyNullify).toContain(`${c.name} = ${c.set_value === false ? 'false' : 'NULL'}`);
+    }
+    expect(w1?.write_discipline?.scope).toBe(core().nullifyScope({ target: 'coa' }));
+    expect(d.checks.map((c) => c.id)).toEqual(['coa_row_count_zero', ...rows(o).map((r) => r.metric)]);
+  });
+
+  it.fails('D5 — the ENRICH_TARGET env retires: manifest enrich_coa_zoning has no env once the frozen shell lands (flips at ③)', () => {
     const m = readJson<{ scripts: Record<string, { env?: Record<string, string> }> }>('scripts/manifest.json');
     expect(m.scripts.enrich_coa_zoning?.env).toBeUndefined();
-    expect(readText(COMPUTE_REL)).not.toMatch(/process\.env/);
   });
 
-  it.fails('D6 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
+  it('D6 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 
-  it.fails('D7 — registered: converted.json converted[] holds scripts/enrich-coa-zoning.js (③) (flips at ③)', () => {
+  it.fails('D7 — the frozen shell: pipeline.step() over ./lib/compute/enrich-coa-zoning (flips at ③)', () => {
+    const shell = readText(SHELL_REL);
+    expect(shell).toMatch(/pipeline\.step\(/);
+    expect(shell).toContain("require('./lib/compute/enrich-coa-zoning')");
+  });
+
+  it.fails('D8 — registered: converted.json converted[] holds scripts/enrich-coa-zoning.js (③) (flips at ③)', () => {
     const conv = readJson<{ converted: string[] }>('scripts/steps/_schema/converted.json');
     expect(conv.converted).toContain(SHELL_REL);
   });

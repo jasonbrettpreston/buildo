@@ -435,6 +435,18 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'permits_bylaw_max_coverage_null_warn_pct',
   'coa_bylaw_max_fsi_null_warn_pct',
   'coa_bylaw_max_coverage_null_warn_pct',
+  // phase-4 wave 4 lane B ② (migration 273) — the step-owned copies the converted enrich_permits / enrich_coa_zoning read
+  // (Spec 124 R-DE (v)); the five legacy keys above stay until the ③ cutover retires the legacy shell.
+  'enrich_permits_centreline_coverage_min',
+  'enrich_coa_zoning_centreline_coverage_min',
+  'enrich_permits_bylaw_max_fsi_null_warn_pct',
+  'enrich_permits_bylaw_max_coverage_null_warn_pct',
+  'enrich_coa_zoning_bylaw_max_fsi_null_warn_pct',
+  'enrich_coa_zoning_bylaw_max_coverage_null_warn_pct',
+  'enrich_permits_zoning_coverage_fail_pct',
+  'enrich_permits_zoning_coverage_pass_min_pct',
+  'enrich_coa_zoning_zoning_coverage_fail_pct',
+  'enrich_coa_zoning_zoning_coverage_pass_min_pct',
   // P16 §5.C [BUG-6] — hard gate for the lean scope-mapped inference layer (seeded OFF).
   'p16_inference_layer_enabled',
   // P16 16E — provenance weight for inference-basis forecast inputs (0.5× default).

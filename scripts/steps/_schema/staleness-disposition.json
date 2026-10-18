@@ -227,6 +227,14 @@
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
     },
+    "scripts/lib/optimal-config-cols.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-18 (phase-4 wave 4 lane B ②, enrich_permits + enrich_coa_zoning): a real import of both lead-zoning steps — reached from the legacy scripts/enrich-permits.js today and from scripts/lib/compute/enrich-lead-zoning.js after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
+    },
+    "scripts/lib/parcel-cost-cols.js": {
+      "disposition": "descriptive",
+      "why": "measured 2026-10-18 (phase-4 wave 4 lane B ②, enrich_permits + enrich_coa_zoning): a real import of both lead-zoning steps — reached from the legacy scripts/enrich-permits.js today and from scripts/lib/compute/enrich-lead-zoning.js after the ③ shell swap — so the import half of ruling 1's fingerprint_inputs E rule holds at every stage. It has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."
+    },
     "scripts/lib/optimal-config.js": {
       "disposition": "descriptive",
       "why": "measured 2026-10-03 (registry-truth P2-C6, ruling 1 / fold 8 item 1): a require walk from scripts/<step>.js + scripts/lib/compute/<step>.js finds this file is a real import of every converted step that declares it, which is the import half of ruling 1's fingerprint_inputs E rule. It still has 0 runtime readers: nothing hashes these files. A semantic change is signalled by the hand-bumped staleness.logic_version on a step with a code_version trigger, so the row stays descriptive."

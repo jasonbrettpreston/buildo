@@ -1,0 +1,3438 @@
+{
+  "identity": {
+    "name": "enrich_coa_zoning",
+    "display_name": "Enrich CoA Zoning",
+    "owner": "data",
+    "description": "Two-phase ENRICHER over coa_applications, both phases inside ONE shared transaction (the legacy single withTransaction): (1) materialize each lead's dominant linked parcel (largest lot, then link confidence, then parcel id — Spec 66 DEC-1) into a session temp table and copy the zoning / ravine / heritage / centreline / max-build / existing-structure / scenario / optimal-config / cost feed onto coa_applications through lead_parcels with an IS DISTINCT FROM guard; (2) reset every lead that lost ALL its parcel links (the orphan nullify). Always full (DEC-3). One of two thin shells over the ONE shared compute module scripts/lib/enrich-lead-zoning.js (operator-approved 2026-10-18, wave-4 plan question 9).",
+    "lock": 66,
+    "why_lock": {
+      "text": "Spec 66 DEC-2: advisory lock 66 = the spec number, shared by both slugs of the one module (the permits and coa chains run apart and are chain-locked, so the shared lock never serialises them in practice).",
+      "liveness": {
+        "kind": "spec",
+        "ref": "docs/specs/01-pipeline/66_enrich_permits.md"
+      }
+    },
+    "spec": "66",
+    "spec_version": "1.0",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "link_coa_to_parcels"
+        },
+        {
+          "step": "enrich_parcels"
+        },
+        {
+          "step": "enrich_ravines"
+        },
+        {
+          "step": "enrich_heritage"
+        },
+        {
+          "step": "enrich_centreline"
+        }
+      ],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "id",
+            "lead_id",
+            "zoning_enriched_at",
+            "bylaw_max_fsi",
+            "bylaw_max_coverage_pct",
+            "bylaw_max_height_m",
+            "zoning_class",
+            "is_in_ravine_protection_area",
+            "ravine_distance_m",
+            "is_heritage_designated",
+            "heritage_designation_type",
+            "is_corner_lot",
+            "is_through_lot",
+            "abuts_laneway",
+            "primary_frontage_street_name",
+            "lot_size_confidence",
+            "max_buildable_footprint_sqm",
+            "max_buildable_gfa_sqm",
+            "max_build_confidence",
+            "garden_suite_fits",
+            "envelope_constrained",
+            "max_build_stories_aggressive",
+            "market_exceeds_bylaw",
+            "neighbourhood_cost_premium",
+            "imagery_roof_footprint_sqm",
+            "imagery_roof_gfa_sqm",
+            "existing_structure_confidence",
+            "existing_greenspace_sqm",
+            "existing_data_quality_flag",
+            "opt_config_confidence",
+            "opt_suite_fits_full",
+            "comp_count",
+            "comp_build_ratio_p50",
+            "max_newbuild_coa_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "cur_pot_3story_gfa_sqm",
+            "cur_gfa_range_basis",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "max_garage_gfa_sqm",
+            "garage_permission",
+            "rear_suite_type",
+            "rear_suite_permission"
+          ]
+        },
+        {
+          "table": "lead_parcels",
+          "columns": [
+            "lead_id",
+            "parcel_id",
+            "confidence"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "geom",
+            "zoning_class",
+            "bylaw_max_coverage_pct",
+            "bylaw_max_fsi",
+            "bylaw_max_height_m",
+            "exception_number",
+            "zoning_overlays",
+            "lot_size_sqm",
+            "zoning_enriched_at",
+            "ravine_dataset_version_when_enriched",
+            "heritage_dataset_version_when_enriched",
+            "centreline_dataset_version_when_enriched",
+            "is_in_ravine_protection_area",
+            "ravine_distance_m",
+            "is_heritage_designated",
+            "heritage_designation_type",
+            "heritage_designation_date",
+            "is_corner_lot",
+            "is_through_lot",
+            "abuts_laneway",
+            "primary_frontage_street_name",
+            "in_policy_area",
+            "on_policy_road",
+            "in_rooming_house_overlay",
+            "in_parking_zone_overlay",
+            "in_building_setback_overlay",
+            "on_priority_retail",
+            "in_queenstw_eat_overlay",
+            "frontage_m",
+            "depth_m",
+            "lot_size_confidence",
+            "lot_size_basis",
+            "max_build_setback_basis",
+            "max_buildable_footprint_sqm",
+            "max_build_width_m",
+            "max_build_length_m",
+            "max_build_height_m",
+            "max_build_stories",
+            "max_build_stories_basis",
+            "max_build_basis",
+            "max_buildable_gfa_sqm",
+            "max_buildable_gfa_basis",
+            "max_build_confidence",
+            "max_garden_suite_gfa_sqm",
+            "garden_suite_fits",
+            "envelope_constrained",
+            "envelope_constraint_reason",
+            "max_garage_gfa_sqm",
+            "garage_capacity_cars",
+            "garage_constraint_reason",
+            "garage_permission",
+            "max_laneway_suite_gfa_sqm",
+            "max_rear_suite_gfa_sqm",
+            "rear_suite_type",
+            "rear_suite_permission",
+            "max_build_stories_aggressive",
+            "market_exceeds_bylaw",
+            "neighbourhood_cost_premium",
+            "imagery_roof_footprint_sqm",
+            "existing_stories",
+            "existing_height_m",
+            "imagery_roof_gfa_sqm",
+            "existing_width_m",
+            "existing_length_m",
+            "existing_structure_confidence",
+            "existing_other_structures_count",
+            "existing_other_structures_sqm",
+            "existing_greenspace_sqm",
+            "existing_data_quality_flag",
+            "max_newbuild_coa_gfa_sqm",
+            "cur_basement_gfa_sqm",
+            "cur_storey_gfa_sqm",
+            "cur_interior_reno_gfa_sqm",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "cur_pot_3story_gfa_sqm",
+            "cur_gfa_range_basis",
+            "opt_aor_storeys",
+            "opt_aor_gfa_sqm",
+            "opt_aor_units",
+            "opt_coa_storeys",
+            "opt_coa_gfa_sqm",
+            "opt_suite_type",
+            "opt_suite_fits_full",
+            "opt_binding_constraint",
+            "opt_config_confidence",
+            "comp_count",
+            "comp_dominant_build",
+            "comp_build_ratio_p50",
+            "comp_fsi_p50",
+            "cost_fb_total",
+            "cost_coa_total",
+            "cost_solar_total",
+            "cost_garden_suite_total",
+            "cost_laneway_suite_total",
+            "cost_garage_total",
+            "cost_gut_total",
+            "cost_addition_total",
+            "cost_kitchen_per_sqm",
+            "cost_bath_per_sqm",
+            "cost_basement_per_sqm",
+            "cost_basement_underpin_per_sqm",
+            "max_build_fsi",
+            "coa_fsi",
+            "realized_fsi_p90"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": true,
+    "on_missing": "halt"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "coa_applications",
+        "key": [
+          "id"
+        ],
+        "columns": [
+          {
+            "name": "zoning_class",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "bylaw_max_coverage_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "bylaw_max_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "bylaw_max_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "exception_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "variance_context",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "zoning_parcel_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "zoning_dominant_parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "zoning_dominant_parcel_method",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_in_ravine_protection_area",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "ravine_distance_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_heritage_designated",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "heritage_designation_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "heritage_designation_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_corner_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_through_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "primary_frontage_street_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "abuts_laneway",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "lot_size_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "frontage_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "depth_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "lot_size_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "lot_size_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_setback_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_buildable_footprint_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_width_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_length_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_stories",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_stories_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_buildable_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_buildable_gfa_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_garden_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "garden_suite_fits",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "envelope_constrained",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "envelope_constraint_reason",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_garage_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "garage_capacity_cars",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "garage_constraint_reason",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "garage_permission",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_laneway_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_rear_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "rear_suite_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "rear_suite_permission",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_stories_aggressive",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "market_exceeds_bylaw",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "neighbourhood_cost_premium",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "imagery_roof_footprint_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_stories",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "imagery_roof_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_width_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_length_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_structure_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_other_structures_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_other_structures_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_greenspace_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "existing_data_quality_flag",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_newbuild_coa_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_basement_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_storey_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_interior_reno_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_est_kitchen_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_est_bath_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_floor_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_pot_2story_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_pot_3story_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cur_gfa_range_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_aor_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_aor_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_aor_units",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_coa_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_coa_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_suite_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_suite_fits_full",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_binding_constraint",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "opt_config_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "comp_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "comp_dominant_build",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "comp_build_ratio_p50",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "comp_fsi_p50",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_fb_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_coa_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_solar_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_garden_suite_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_laneway_suite_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_garage_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_gut_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_addition_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_kitchen_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_bath_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_basement_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_basement_underpin_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "max_build_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "coa_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "realized_fsi_p90",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "zoning_enriched_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_join_update",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "zoning_class",
+            "bylaw_max_coverage_pct",
+            "bylaw_max_fsi",
+            "bylaw_max_height_m",
+            "exception_number",
+            "variance_context",
+            "zoning_parcel_count",
+            "zoning_dominant_parcel_id",
+            "zoning_dominant_parcel_method",
+            "is_in_ravine_protection_area",
+            "ravine_distance_m",
+            "is_heritage_designated",
+            "heritage_designation_type",
+            "heritage_designation_date",
+            "is_corner_lot",
+            "is_through_lot",
+            "primary_frontage_street_name",
+            "abuts_laneway",
+            "lot_size_sqm",
+            "frontage_m",
+            "depth_m",
+            "lot_size_confidence",
+            "lot_size_basis",
+            "max_build_setback_basis",
+            "max_buildable_footprint_sqm",
+            "max_build_width_m",
+            "max_build_length_m",
+            "max_build_height_m",
+            "max_build_stories",
+            "max_build_stories_basis",
+            "max_build_basis",
+            "max_buildable_gfa_sqm",
+            "max_buildable_gfa_basis",
+            "max_build_confidence",
+            "max_garden_suite_gfa_sqm",
+            "garden_suite_fits",
+            "envelope_constrained",
+            "envelope_constraint_reason",
+            "max_garage_gfa_sqm",
+            "garage_capacity_cars",
+            "garage_constraint_reason",
+            "garage_permission",
+            "max_laneway_suite_gfa_sqm",
+            "max_rear_suite_gfa_sqm",
+            "rear_suite_type",
+            "rear_suite_permission",
+            "max_build_stories_aggressive",
+            "market_exceeds_bylaw",
+            "neighbourhood_cost_premium",
+            "imagery_roof_footprint_sqm",
+            "existing_stories",
+            "existing_height_m",
+            "imagery_roof_gfa_sqm",
+            "existing_width_m",
+            "existing_length_m",
+            "existing_structure_confidence",
+            "existing_other_structures_count",
+            "existing_other_structures_sqm",
+            "existing_greenspace_sqm",
+            "existing_data_quality_flag",
+            "max_newbuild_coa_gfa_sqm",
+            "cur_basement_gfa_sqm",
+            "cur_storey_gfa_sqm",
+            "cur_interior_reno_gfa_sqm",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "cur_pot_3story_gfa_sqm",
+            "cur_gfa_range_basis",
+            "opt_aor_storeys",
+            "opt_aor_gfa_sqm",
+            "opt_aor_units",
+            "opt_coa_storeys",
+            "opt_coa_gfa_sqm",
+            "opt_suite_type",
+            "opt_suite_fits_full",
+            "opt_binding_constraint",
+            "opt_config_confidence",
+            "comp_count",
+            "comp_dominant_build",
+            "comp_build_ratio_p50",
+            "comp_fsi_p50",
+            "cost_fb_total",
+            "cost_coa_total",
+            "cost_solar_total",
+            "cost_garden_suite_total",
+            "cost_laneway_suite_total",
+            "cost_garage_total",
+            "cost_gut_total",
+            "cost_addition_total",
+            "cost_kitchen_per_sqm",
+            "cost_bath_per_sqm",
+            "cost_basement_per_sqm",
+            "cost_basement_underpin_per_sqm",
+            "max_build_fsi",
+            "coa_fsi",
+            "realized_fsi_p90"
+          ],
+          "guard_columns_why": {
+            "text": "Every propagated column, and ONLY those: zoning_enriched_at is the run-clock stamp (columns[].source \"run_at\") and stays out of the guard (LG-9/D-5), exactly as legacy (enrich-permits.js:463-478) — so a re-run over an unchanged feed writes zero rows and leaves the stamp alone.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/enrich-lead-zoning.js"
+            }
+          },
+          "scope": "every coa_applications row with at least one lead_parcels link — the rows of the dominant-parcel temp table lead_zoning_enrich (always full, Spec 66 DEC-3)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The compute-authored UPDATE … FROM lead_zoning_enrich (ported verbatim from the legacy buildUpdateSql) through ctx.joinUpdate(0, …). The temp table is created through ctx.tempTable (R-BZ G4). The max-build propagation from enrich_parcels — the dominant parcel's lot inputs and envelope outputs, max_build_confidence 'low' on a multi-parcel assembly — is kept exactly (operator brief 2026-10-18).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/enrich-lead-zoning.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "coa_applications",
+        "key": [
+          "id"
+        ],
+        "columns": [
+          {
+            "name": "zoning_class",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "bylaw_max_coverage_pct",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "bylaw_max_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "bylaw_max_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "exception_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "variance_context",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "zoning_parcel_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "zoning_dominant_parcel_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "zoning_dominant_parcel_method",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "is_in_ravine_protection_area",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "ravine_distance_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "is_heritage_designated",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "heritage_designation_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "heritage_designation_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "is_corner_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "is_through_lot",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "primary_frontage_street_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "abuts_laneway",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "lot_size_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "frontage_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "depth_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "lot_size_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "lot_size_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_setback_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_buildable_footprint_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_width_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_length_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_stories",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_stories_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_buildable_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_buildable_gfa_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_garden_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "garden_suite_fits",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "envelope_constrained",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "envelope_constraint_reason",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_garage_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "garage_capacity_cars",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "garage_constraint_reason",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "garage_permission",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_laneway_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_rear_suite_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "rear_suite_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "rear_suite_permission",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_stories_aggressive",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "market_exceeds_bylaw",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": false
+          },
+          {
+            "name": "neighbourhood_cost_premium",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "imagery_roof_footprint_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_stories",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_height_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "imagery_roof_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_width_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_length_m",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_structure_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_other_structures_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_other_structures_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_greenspace_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "existing_data_quality_flag",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_newbuild_coa_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_basement_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_storey_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_interior_reno_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_est_kitchen_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_est_bath_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_floor_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_pot_2story_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_pot_3story_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cur_gfa_range_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_aor_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_aor_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_aor_units",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_coa_storeys",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_coa_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_suite_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_suite_fits_full",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_binding_constraint",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "opt_config_confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "comp_count",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "comp_dominant_build",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "comp_build_ratio_p50",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "comp_fsi_p50",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_fb_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_coa_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_solar_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_garden_suite_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_laneway_suite_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_garage_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_gut_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_addition_total",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_kitchen_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_bath_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_basement_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "cost_basement_underpin_per_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "max_build_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "coa_fsi",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "realized_fsi_p90",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          },
+          {
+            "name": "zoning_enriched_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute",
+            "set_value": null
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_null_retract",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "zoning_enriched_at"
+          ],
+          "guard_columns_why": {
+            "text": "The runner renders the guard as zoning_enriched_at IS DISTINCT FROM NULL, i.e. the legacy \"zoning_enriched_at IS NOT NULL\" filter: a lead already reset is never touched again (idempotent).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          },
+          "scope": "NOT EXISTS (SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = coa_applications.lead_id)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun_why": {
+            "text": "After one pass every orphan has zoning_enriched_at NULL, so the guard excludes it on the next run.",
+            "liveness": {
+              "kind": "check",
+              "ref": "coa_unlink_cleared_count"
+            }
+          },
+          "txn_scope": "step",
+          "why": {
+            "text": "The legacy orphan nullify (enrich-permits.js:518-549): a lead that WAS enriched but has since lost ALL its parcel links is absent from the temp table, so the UPDATE never clears its stale feed. The NOT NULL booleans (is_in_ravine_protection_area, is_heritage_designated, is_corner_lot, is_through_lot, abuts_laneway, garden_suite_fits, envelope_constrained, market_exceeds_bylaw) reset to false — declared as set_value false — and every other column to NULL.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/enrich-lead-zoning.js"
+            }
+          }
+        },
+        "retract": "all",
+        "retract_when": "always"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "coa_applications",
+        "column": "zoning_enriched_at",
+        "when": "any upstream change to a lead's lead_parcels links or to a linked parcel's feed columns. The step re-reads every lead on every run (always full, DEC-3; staleness.mode_select \"none\"), so no separate invalidator is needed.",
+        "by": "full_rescan"
+      }
+    ],
+    "write_inventory": {
+      "statements": 2,
+      "why": {
+        "text": "Two write statements, ONE transaction: the guarded UPDATE (writes[0]) and the orphan nullify (writes[1]). The temp-table DDL is runner-owned (ctx.tempTable) and writes no persistent table.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/enrich-lead-zoning.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/max-build.js",
+      "scripts/lib/optimal-config-cols.js",
+      "scripts/lib/parcel-cost-cols.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "none",
+    "pins": [
+      {
+        "step": "enrich_parcels",
+        "stamp": "parcels.zoning_enriched_at",
+        "why": {
+          "text": "The WF2 precondition (Spec 58 §10): the enrich pass HALTs when no parcel carries zoning_enriched_at (enrich-permits.js:130-135, kept in compute — EPM-L1).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.zoning_enriched_at"
+          }
+        }
+      },
+      {
+        "step": "enrich_ravines",
+        "stamp": "parcels.ravine_dataset_version_when_enriched",
+        "why": {
+          "text": "§8e DEC-D: the pass HALTs when no parcel carries the ravine lineage stamp (enrich-permits.js:141-146).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.ravine_dataset_version_when_enriched"
+          }
+        }
+      },
+      {
+        "step": "enrich_heritage",
+        "stamp": "parcels.heritage_dataset_version_when_enriched",
+        "why": {
+          "text": "Spec 61 DEC-F: the pass HALTs when no parcel carries the heritage lineage stamp (enrich-permits.js:151-156).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.heritage_dataset_version_when_enriched"
+          }
+        }
+      },
+      {
+        "step": "enrich_centreline",
+        "stamp": "parcels.centreline_dataset_version_when_enriched",
+        "why": {
+          "text": "§8e L24c: the pass HALTs when the centreline-enriched share of valid-geom parcels is below the declared floor; L24b reads the run stamps through the contract_read hook (enrich-permits.js:304-332).",
+          "liveness": {
+            "kind": "column",
+            "ref": "parcels.centreline_dataset_version_when_enriched"
+          }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "coa_applications has relrowsecurity = true and 0 policies (measured 2026-10-18); a non-bypass role would update 0 rows silently (Spec 124 R-CT, trap 2).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_applications"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "none",
+    "lock_timeout_ms_from_config": "none",
+    "enrich_hooks": {
+      "contract_read": "readFeedContract",
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "zoning_coa",
+        "order": 1,
+        "txn": "shared",
+        "writes_ref": 0,
+        "scope": "full",
+        "timeout_minutes_from_config": "none"
+      },
+      {
+        "name": "orphan_nullify_coa",
+        "order": 2,
+        "txn": "shared",
+        "writes_ref": 1,
+        "scope": "full",
+        "timeout_minutes_from_config": "none"
+      }
+    ],
+    "txn_scope": "step",
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a count the post_phase hook already measured in the same run; a check that throws is a defect and must redden the run (the geocode_permits precedent).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "coa_row_count_zero",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "whether the F-H12 coverage denominator (every coa_applications row (no construction filter)) is zero this run"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "The legacy zero-denominator row (enrich-permits.js:631-633), named per target. Legacy emitted it ONLY on an empty denominator; a declared check always renders a row, so it now reads false on a normal run (declared diff, see deviations[]).",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_zoning_class_coverage_pct"
+        }
+      }
+    },
+    {
+      "id": "coa_zoning_class_coverage_pct",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "100 * zoning_class IS NOT NULL / every coa_applications row (no construction filter), rounded to 0.1 — the F-H12 coverage gate (Spec 66 DEC-5)"
+      },
+      "limit": "pct >= 83",
+      "limit_from_config": "enrich_coa_zoning_zoning_coverage_pass_min_pct",
+      "warn_limit": "pct >= 80",
+      "warn_limit_from_config": "enrich_coa_zoning_zoning_coverage_fail_pct",
+      "severity": "FAIL",
+      "why": {
+        "text": "Spec 66 DEC-5: a regression catch, not an aspirational target (~84 % structural ceiling = no-link + gap parcels). PASS at or above the pass floor, WARN between the two floors, FAIL below the fail floor — the legacy three-state cascade (enrich-permits.js:637, PASS >= 80 + 3) with both bounds now step-owned variables (migration 273; R-DF EXTERNALIZED). An empty denominator reports INERT (INFO, value null), the legacy null-coverage INFO row. Live: 86.5 % (run 1548, 2026-07-17).",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/66_enrich_permits.md"
+        }
+      }
+    },
+    {
+      "id": "coa_enriched_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_enriched_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_no_parcel_link_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_no_parcel_link_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_unlink_cleared_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_unlink_cleared_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_multi_parcel_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_multi_parcel_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_heterogeneous_assembly_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_heterogeneous_assembly_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_bylaw_max_fsi_null_pct",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "percent of coa_applications rows with a NULL bylaw_max_fsi (rounded to 0.1)"
+      },
+      "limit": "pct <= 97",
+      "limit_from_config": "enrich_coa_zoning_bylaw_max_fsi_null_warn_pct",
+      "severity": "WARN",
+      "why": {
+        "text": "WF2 P6.5 (173f0d1e): the null rate is ~100 % STRUCTURAL (residential zones regulate by coverage, density zones by FSI, plus the no-link tail), so it WARNs only above the per-target baseline + margin floor and NEVER FAILs. The floor was read by SQL with a literal fallback; it is now a declared, step-owned variable (renamed by migration 273, value preserved).",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_bylaw_max_coverage_pct_null_pct",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "percent of coa_applications rows with a NULL bylaw_max_coverage_pct (rounded to 0.1)"
+      },
+      "limit": "pct <= 66",
+      "limit_from_config": "enrich_coa_zoning_bylaw_max_coverage_null_warn_pct",
+      "severity": "WARN",
+      "why": {
+        "text": "WF2 P6.5 (173f0d1e): the null rate is ~100 % STRUCTURAL (residential zones regulate by coverage, density zones by FSI, plus the no-link tail), so it WARNs only above the per-target baseline + margin floor and NEVER FAILs. The floor was read by SQL with a literal fallback; it is now a declared, step-owned variable (renamed by migration 273, value preserved).",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_bylaw_max_height_m_null_pct",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_bylaw_max_height_m_null_pct (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_in_ravine_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_in_ravine_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_with_ravine_distance_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_with_ravine_distance_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_heritage_designated_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_heritage_designated_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_part_iv_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_part_iv_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_part_v_hcd_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_part_v_hcd_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_corner_lot_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_corner_lot_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_through_lot_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_through_lot_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_abuts_laneway_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_abuts_laneway_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_with_frontage_name_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_with_frontage_name_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_with_lot_confidence_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_with_lot_confidence_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_buildable_footprint_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_buildable_footprint_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_buildable_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_buildable_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_build_confidence_high_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_build_confidence_high_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_build_confidence_medium_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_build_confidence_medium_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_build_confidence_low_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_build_confidence_low_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_garden_suite_fits_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_garden_suite_fits_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_envelope_constrained_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_envelope_constrained_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_build_stories_aggressive_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_build_stories_aggressive_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_market_exceeds_bylaw_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_market_exceeds_bylaw_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_neighbourhood_premium_above_1_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_neighbourhood_premium_above_1_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_imagery_roof_footprint_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_imagery_roof_footprint_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_imagery_roof_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_imagery_roof_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_existing_structure_confidence_high_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_existing_structure_confidence_high_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_existing_structure_confidence_low_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_existing_structure_confidence_low_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_existing_greenspace_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_existing_greenspace_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_existing_mislinked_footprint_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_existing_mislinked_footprint_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_optimal_config_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_optimal_config_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_opt_suite_fits_full_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_opt_suite_fits_full_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_comparable_builds_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_comparable_builds_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_comp_build_ratio_p50_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_comp_build_ratio_p50_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_max_newbuild_coa_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_max_newbuild_coa_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_floor_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_floor_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_pot_2story_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_pot_2story_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_pot_3story_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_pot_3story_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_gfa_range_basis_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_gfa_range_basis_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_est_kitchen_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_est_kitchen_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_cur_est_bath_gfa_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_cur_est_bath_gfa_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_garage_fits_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_garage_fits_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_garage_permission_as_of_right_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_garage_permission_as_of_right_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_garage_permission_coa_required_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_garage_permission_coa_required_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_rear_suite_laneway_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_rear_suite_laneway_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_rear_suite_garden_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_rear_suite_garden_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_rear_suite_permission_as_of_right_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_rear_suite_permission_as_of_right_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "coa_rear_suite_permission_coa_required_count",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "the legacy INFO count coa_rear_suite_permission_coa_required_count (post-commit observation of coa_applications)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "A legacy INFO observability row (enrich-permits.js:640-770), measured by the post_phase hook after the shared transaction commits — the same read-after-write position as legacy. It never gates the verdict.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "enrich_coa_zoning_duration_ms",
+      "kind": "field_coverage",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "expect": {
+        "reports": "wall-clock duration of this step's run, in milliseconds (runner-measured)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "why": {
+        "text": "The legacy last audit row (enrich-permits.js:781-782), now measured by the runner (ctx.elapsed_ms) instead of Date.now() in compute (R-BZ G6).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "duration_ms",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "target",
+      "type": "string",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "the legacy zero-denominator branch, which emitted coa_row_count_zero only when the coverage denominator was 0 (enrich-permits.js:629-634)",
+      "why": {
+        "text": "A declared check renders a row on every run, so coa_row_count_zero now reads false on a normal run and true on an empty denominator; the coverage row stays null (INERT, INFO) on the empty denominator exactly as before.",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_row_count_zero"
+        }
+      },
+      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the 16 information_schema column / link-table probes (enrich-permits.js:163-356)",
+      "why": {
+        "text": "The probes asserted that migrations 171-207 had run. database.min_migration is the declared form of the same fact (a migration-count floor the runner enforces before any phase); the catalog reads leave compute (R-BZ G3). The HALT message changes from a per-column list to the runner's floor message.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/resolve-db.js"
+        }
+      },
+      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the pipeline_runs recency read inside assertCentrelineEnriched (enrich-permits.js:308-317)",
+      "why": {
+        "text": "The two completed_at stamps are read through the runner's producer reader in the contract_read hook (R-BZ G1), which never throws (G8); the pass compares them and HALTs with the legacy message, inside the transaction, where the legacy HALT ran. Same statuses (completed only) and the same slug forms (sources:<slug> and the bare slug).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/enrich-lead-zoning.js"
+        }
+      },
+      "adjudicated_by": "wave-4 lane B ② (drafted; operator ruling owed at integration)",
+      "date": "2026-10-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "ECZ-L1 — the lineage and centreline-coverage preconditions stay compute HALTs inside the enrich pass (the enrich_centreline assertCentrelineNonEmpty precedent): they read parcels, not the run ledger, so no producer pin expresses them without changing what they measure. The centreline floor is a declared variable compared in SQL against a bound parameter.",
+      "measured": "enrich-permits.js:130-157 and :304-332 at a0e3074e; the producer records_meta of enrich_parcels / enrich_ravines / enrich_heritage / enrich_centreline carries no lineage count (read-only pipeline_runs read, 2026-10-18).",
+      "check_id": "none"
+    },
+    {
+      "what": "ECZ-L2 — two numeric constants stay in the SQL as definitional, not tunable: neighbourhood_cost_premium > 1.00 (a premium above the 1.0 baseline) and round(area_share, 4) (the frozen jsonb display precision, Spec 66 frozen shapes).",
+      "measured": "enrich-permits.js:696 and :400 at a0e3074e (EPM-D8).",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "enrich-coa-zoning.notes.json"
+  },
+  "recovery": {
+    "reset": "No TRUNCATE or rebuild path exists and none is needed: the step is always full (DEC-3), so the next run recomputes every lead with a link and resets every orphan. NULLing coa_applications.zoning_enriched_at changes nothing the next run would not redo.",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "force_full_on_next_run",
+    "interrupted_why": {
+      "text": "Both writes sit in ONE shared transaction, so a killed run leaves the table exactly as it found it; and every run is already full.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "generated",
+    "before_image_why": {
+      "text": "ctx.retract (the orphan nullify) is destructive; R-M requires a generated before image, which the runner writes before executeSetBasedClear.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 204,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.records_total_aggregate",
+      "why": {
+        "text": "Rows in the enrichment scope (every coa_applications row) — the legacy result.scoped headline (Spec 30 §2.1: a Mutator reports its scope).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/enrich-lead-zoning.js"
+        }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "why": {
+        "text": "An enrichment never inserts; always 0, as legacy.",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/47_pipeline_script_protocol.md"
+        }
+      }
+    },
+    "records_updated": {
+      "source": "matched.compute.records_updated_aggregate",
+      "why": {
+        "text": "Rows the guarded UPDATE actually changed — the legacy result.updated.",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_enriched_count"
+        }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "enrich_coa_zoning_zoning_coverage_fail_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_coa_zoning_zoning_coverage_pass_min_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_coa_zoning_bylaw_max_fsi_null_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_coa_zoning_bylaw_max_coverage_null_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_coa_zoning_centreline_coverage_min",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa": 5
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "enriched",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Every check PASS or INFO.",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_zoning_class_coverage_pct"
+        }
+      }
+    },
+    {
+      "id": "enriched_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A WARN row (coverage between the floors, a null rate above its floor, or a permit_type disagreement).",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_zoning_class_coverage_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_check",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "duration_ms": "int",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The F-H12 coverage gate below its fail floor (DEC-5: a machine FAIL, never demoted).",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_zoning_class_coverage_pct"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Lock 66 is shared with the twin slug.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A legacy HALT: no WF2 / ravine / heritage lineage on parcels, no completed enrich_centreline run, a centreline run older than the latest parcels load, or centreline coverage below its floor.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/enrich-lead-zoning.js"
+        }
+      }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A declared logic variable outside its min/max (on_invalid \"fail\").",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/config.js"
+        }
+      }
+    },
+    {
+      "id": "failed_write_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A write statement failed; the shared transaction rolls back both writes.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  ]
+}
