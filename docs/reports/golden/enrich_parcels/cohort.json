@@ -1,0 +1,11 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "parcels",
+      "capture": "sources_run1.json",
+      "count_path": "max_build_enriched_count",
+      "why": "POST docs/reports/golden/enrich_parcels/post/sources_run1.json (2026-10-17, Spec 124 R-CZ bracket in recapture.json): ingestor-forced-cohort.js raised max_buildable_footprint_sqm by 1 on the first 200 parcels by id; the --full run's pass-2 max-build recompute rewrote and healed them (max_build_enriched_count 201, the pass-2 parcels write count). Restore verified."
+    }
+  ]
+}

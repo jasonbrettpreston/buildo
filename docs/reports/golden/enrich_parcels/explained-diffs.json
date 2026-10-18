@@ -294,6 +294,10 @@
     {
       "key": "meta[].reads.zoning_rooming_house_overlay[]",
       "why": "N6 (2026-10-17, #44 class D group G12, Spec 124 R-DG): enrich_parcels reads every zoning overlay layer in its zoning join but declared only some; the descriptor now declares zoning_rooming_house_overlay with its traced columns, so deriveMeta lists them."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources_run1: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 parcels with max_buildable_footprint_sqm +1 are rewritten and healed by the --full pass-2 max-build recompute, plus 1 parcel that drifted since N6 (max_build_enriched_count 201); the PRE wrote 0."
     }
   ]
 }

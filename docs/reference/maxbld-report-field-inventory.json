@@ -19751,7 +19751,7 @@
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "7c609c9b05c41d05"
+      "sha256": "25b97c269df2e072"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",

@@ -2,13 +2,13 @@
   "entries": {
     "missed_link_count": {
       "value": 0,
-      "cost_ms": 12607,
-      "at": "2026-10-17T20:17:33.033Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "cost_ms": 12462,
+      "at": "2026-10-17T22:19:01.986Z",
+      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
       "run_id": null,
       "chain": null,
       "event": "step_validate_write",
-      "sample_n": 21
+      "sample_n": 23
     }
   }
 }

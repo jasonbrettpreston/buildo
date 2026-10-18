@@ -110,6 +110,22 @@
     {
       "key": "table_state[].content_hash",
       "why": "permits row count is unchanged (254,082 PRE and POST); the hash moves because neighbourhood_id changed on the rows the FLEET-2 full-rescan NULL-out arm un-stamped (9,017) and re-stamped (5,138 mislinks), per the invariants[].value entry (3965900e, link-neighbourhoods.js:103-106)."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 permits with neighbourhood_id +1 are re-stamped by the full-rescan UPDATE (scripts/lib/compute/link-neighbourhoods.js:156-166), so the run counts 200 where the PRE (converged, legacy unmatched-only scope) counted 0."
+    },
+    {
+      "key": "summary.records_total",
+      "why": "sources: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 permits with neighbourhood_id +1 are re-stamped by the full-rescan UPDATE (scripts/lib/compute/link-neighbourhoods.js:156-166), so the run counts 200 where the PRE (converged, legacy unmatched-only scope) counted 0."
+    },
+    {
+      "key": "summary.records_meta.permits_processed",
+      "why": "sources: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 permits with neighbourhood_id +1 are re-stamped by the full-rescan UPDATE (scripts/lib/compute/link-neighbourhoods.js:156-166), so the run counts 200 where the PRE (converged, legacy unmatched-only scope) counted 0."
+    },
+    {
+      "key": "summary.records_meta.permits_linked",
+      "why": "sources: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17; recapture.json): 200 permits with neighbourhood_id +1 are re-stamped by the full-rescan UPDATE (scripts/lib/compute/link-neighbourhoods.js:156-166), so the run counts 200 where the PRE (converged, legacy unmatched-only scope) counted 0."
     }
   ]
 }

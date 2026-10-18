@@ -214,8 +214,8 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 383 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (11 ledger-allowed, 4 outputs:"none" vacuous) |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 384 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 38 | (registry) | FAIL | CAPTURE-NONZERO (gate G): 0 write target(s) with no nonzero capture or no recapture recipe (R-CZ); 9 orphan ledger row(s) [load_ravines nonzero:ravines; link_wsib nonzero:wsib_registry; link_parcels nonzero:permit_parcels; link_parcels nonzero:permits; enrich_parcels nonzero:parcels; compute_centroids nonzero:parcels; enrich_ravines nonzero:parcels; enrich_heritage nonzero:parcels; link_neighbourhoods nonzero:permits] |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1) |
@@ -234,25 +234,12 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 - compare ran: true · diffs found: 667 · unexplained: 0
 
 ### Test suite (item iii)
-- 2373/2387 passed (suite success=false)
+- 2386/2387 passed (suite success=false)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing (14):
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > refresh_snapshot — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_global_coverage — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_data_bounds — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_parcel_sanity — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > KNOWN_GAPS is a retained ratchet: gate #44 (e) on the LDG-4 input reproduces exactly its rows (P1-C5)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (1):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
-  - src/tests/steps/refresh_snapshot/violations.test.ts > golden capture — PRE (commit 5, LANDED, testable today) + POST (commit 7) > LANDED (commit 7) — all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan's own declared non-determinism posture, since every invocation re-derives live-DB counts by construction
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 

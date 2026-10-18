@@ -9,11 +9,38 @@
       "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
     },
     "post/sources.forced.json": {
-      "via": "env",
-      "env": {
-        "RAVINE_FORCE_RELOAD": "1"
-      },
-      "why": "the descriptor's force_run env bypasses the content-hash skip (V3 fleet night 2026-10-16 night.log)."
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=ravines",
+          "--key=source_id",
+          "--column=source_dataset_version",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.source_dataset_version IS NOT NULL",
+          "--order=t.source_id",
+          "--backup-table=ravines_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=ravines",
+          "--key=source_id",
+          "--column=source_dataset_version",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.source_dataset_version IS NOT NULL",
+          "--order=t.source_id",
+          "--backup-table=ravines_cohort_bak_{ts}",
+          "--step=scripts/load-ravines.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/load_ravines/post/sources.forced.json",
+          "--env=RAVINE_FORCE_RELOAD=1"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, McDonald's Airtight V3, 2026-10-17): the first 200 ravines by source_id (854 eligible) get source_dataset_version suffixed \"-forced\"; under RAVINE_FORCE_RELOAD=1 the guarded upsert (descriptor write_discipline guard_columns [geom, source_dataset_version]) rewrites and heals all 200 (records_updated 200), then the bracket restores. Plan whole-table hash 1065cb05897fdd3cc754817aad3eb2b6. Replaces the env-only recipe, which wrote 0."
     },
     "post/standalone.forced.json": {
       "via": "env",

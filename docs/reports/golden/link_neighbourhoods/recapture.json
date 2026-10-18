@@ -1,0 +1,39 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=permits",
+          "--key=permit_num",
+          "--column=neighbourhood_id",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.neighbourhood_id IS NOT NULL AND t.neighbourhood_id BETWEEN 1 AND 157 AND t.latitude IS NOT NULL AND t.longitude IS NOT NULL AND NOT EXISTS (SELECT 1 FROM permits p2 WHERE p2.permit_num = t.permit_num AND p2.revision_num <> t.revision_num)",
+          "--order=t.permit_num",
+          "--backup-table=permits_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=permits",
+          "--key=permit_num",
+          "--column=neighbourhood_id",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.neighbourhood_id IS NOT NULL AND t.neighbourhood_id BETWEEN 1 AND 157 AND t.latitude IS NOT NULL AND t.longitude IS NOT NULL AND NOT EXISTS (SELECT 1 FROM permits p2 WHERE p2.permit_num = t.permit_num AND p2.revision_num <> t.revision_num)",
+          "--order=t.permit_num",
+          "--backup-table=permits_cohort_bak_{ts}",
+          "--step=scripts/link-neighbourhoods.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/link_neighbourhoods/post/sources.json",
+          "--capture-arg=--invariants=docs/reports/golden/link_neighbourhoods/invariants.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): 200 single-revision geocoded permits by permit_num (188,181 eligible; neighbourhood_id 1..157 so +1 stays a valid FK) get neighbourhood_id +1; the full-rescan UPDATE (scripts/lib/compute/link-neighbourhoods.js:156-166, IS DISTINCT FROM the containing polygon) heals all 200 (records_updated 200), then the bracket restores. Plan hash d394244d1f9f7f63212c8e384ac574ac. Replaces the data-dependent plain recipe."
+    }
+  }
+}

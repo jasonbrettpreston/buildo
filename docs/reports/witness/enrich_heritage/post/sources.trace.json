@@ -3,14 +3,14 @@
   "step": "scripts/enrich-heritage.js",
   "chain": "sources",
   "source_fingerprint": "832dc53a446bd70df5b578e09bbd571206e5c1deda793f60144ec834cddc3382",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
   "header": {
     "processes": 1,
     "calls": 54,
     "distinct": 38,
     "utility": 13,
-    "tracer_self_ms": 1.579,
-    "wall_ms": 2269
+    "tracer_self_ms": 1.608,
+    "wall_ms": 2127
   },
   "statements": [
     {
@@ -394,7 +394,7 @@
       "fingerprint": "98df2d71dc306fc7",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 200,
       "reads": {
         "heritage_districts": [
           "designated_date",
@@ -566,7 +566,7 @@
   ],
   "transactions": [
     {
-      "client": "32695:3",
+      "client": "46827:3",
       "write_fingerprints": [
         "98df2d71dc306fc7"
       ]

@@ -2,13 +2,13 @@
   "entries": {
     "existing_structure_onlot_share_low": {
       "value": 61571,
-      "cost_ms": 3138,
-      "at": "2026-10-17T20:17:43.733Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "cost_ms": 2170,
+      "at": "2026-10-17T22:19:08.807Z",
+      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
       "run_id": null,
       "chain": null,
       "event": "step_validate_write",
-      "sample_n": 21
+      "sample_n": 23
     }
   }
 }

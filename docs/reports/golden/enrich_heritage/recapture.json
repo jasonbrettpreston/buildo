@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=heritage_dataset_version_when_enriched",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.heritage_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=heritage_dataset_version_when_enriched",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.heritage_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/enrich-heritage.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/enrich_heritage/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): 200 parcels (496,535 eligible) get heritage_dataset_version_when_enriched suffixed \"-forced\"; the Layer-2 stale-only scope (scripts/lib/compute/enrich-heritage.js:91) re-selects them and the 4-column guard (:150-153) heals all 200 (records_updated 200), then the bracket restores. Plan hash c06fe6051ec56d933500678ce3ee6c90. Replaces the data-dependent plain recipe."
+    }
+  }
+}

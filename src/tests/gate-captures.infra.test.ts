@@ -494,21 +494,18 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     // :parcels are dated ledger rows again (tonight's sources POSTs wrote 0, no upstream change), and the
     // compute_parcel_cost_estimates:parcels, geocode_permits:permits and link_parcel_addresses:parcel_address_points
     // rows were deleted (R-BA: real nonzero captures exist now).
-    'compute_centroids:parcels',
-    'enrich_heritage:parcels',
-    'enrich_parcels:enrich_parcels_pass3_scope',
-    'enrich_parcels:parcels',
-    'enrich_ravines:parcels',
     // FLEET-2 §5 (2026-10-06): link_massing's two targets were ledgered pending_recapture (A31). CLOSED by WF2
     // link_massing nonzero-close: the healing cohort POST `post/cohort-heal.json` proves each table through its own
     // records_meta key (cohort.json count_path: parcel_buildings <- links_updated, parcels <- parcels_flagged_lost_link),
     // and the same commit deleted both ledger rows.
-    'link_neighbourhoods:permits',
-    'link_parcels:permit_parcels',
-    'link_parcels:permits',
+    // re-pinned 2026-10-17 (sources ledger-closing lane, Spec 124 R-CZ, McDonald's Airtight V3): 9 rows CLOSED by
+    // reproducible forced-cohort bracket captures recorded in each recapture.json (load_ravines, compute_centroids,
+    // enrich_ravines, enrich_heritage, link_neighbourhoods; link_parcels x2, enrich_parcels:parcels and
+    // link_wsib:wsib_registry via cohort.json count_path) and their ledger rows deleted. Two stay ledgered: no int emit
+    // counts enrich_parcels_pass3_scope writes, and the bracket instrument asserts only the step-level counters, which
+    // do not carry link_wsib's entities correction (is_wsib_registered_corrected).
+    'enrich_parcels:enrich_parcels_pass3_scope',
     'link_wsib:entities',
-    'link_wsib:wsib_registry',
-    'load_ravines:ravines',
   ];
 
   it('T4: live — every measured nonzero violation is now ledger-allowed (landed 2026-09-26), and zero orphans', () => {

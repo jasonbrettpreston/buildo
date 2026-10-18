@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=ravine_dataset_version_when_enriched",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.ravine_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=ravine_dataset_version_when_enriched",
+          "--op=append_text:-forced",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.ravine_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/enrich-ravines.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/enrich_ravines/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): 200 parcels (496,535 eligible) get ravine_dataset_version_when_enriched suffixed \"-forced\"; the stale-only scope (scripts/lib/compute/enrich-ravines.js:97) re-selects them and the triple guard (:121-123) heals all 200 (records_updated 200), then the bracket restores. Plan hash 875b06c830b8220e9626eb7196b53b62. Replaces the data-dependent plain recipe (0 rows at N6)."
+    }
+  }
+}

@@ -3,14 +3,14 @@
   "step": "scripts/load-ravines.js",
   "chain": "sources",
   "source_fingerprint": "52badbda4e1e6a850857eeb32bbe3baaed400fa39242bd9cea572e648a56aded",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
   "header": {
     "processes": 1,
     "calls": 28,
     "distinct": 21,
     "utility": 10,
-    "tracer_self_ms": 8.727,
-    "wall_ms": 5944
+    "tracer_self_ms": 11.016,
+    "wall_ms": 5183
   },
   "statements": [
     {
@@ -164,7 +164,7 @@
       "fingerprint": "90c7ddf48a145ae1",
       "kind": "write",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 200,
       "reads": {
         "ravines": [
           "geom",
@@ -303,7 +303,7 @@
   ],
   "transactions": [
     {
-      "client": "92615:2",
+      "client": "42127:2",
       "write_fingerprints": [
         "90c7ddf48a145ae1",
         "f50d1a3052763050"

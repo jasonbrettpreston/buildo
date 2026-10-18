@@ -3,16 +3,36 @@
   "step": "scripts/compute-centroids.js",
   "chain": "sources",
   "source_fingerprint": "790e442c4d3c00e5b0dc33bbc7fca6dce58a4eae1a191b16b02f2df983fb0517",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
   "header": {
     "processes": 1,
-    "calls": 29,
-    "distinct": 25,
+    "calls": 30,
+    "distinct": 26,
     "utility": 8,
-    "tracer_self_ms": 1.143,
-    "wall_ms": 1889
+    "tracer_self_ms": 1.233,
+    "wall_ms": 2347
   },
   "statements": [
+    {
+      "fingerprint": "01fa09578bfda130",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 200,
+      "reads": {
+        "parcels": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
     {
       "fingerprint": "107ed6b6df1704a1",
       "kind": "read",
@@ -58,7 +78,7 @@
       "fingerprint": "353af47fa19219a8",
       "kind": "read",
       "count": 1,
-      "rowCount": 0,
+      "rowCount": 200,
       "reads": {
         "parcels": [
           "centroid_lat",
@@ -358,7 +378,9 @@
     }
   ],
   "transactions": [],
-  "autocommit_writes": [],
+  "autocommit_writes": [
+    "01fa09578bfda130"
+  ],
   "touched": {
     "reads": {
       "parcels": [
@@ -369,7 +391,12 @@
         "id"
       ]
     },
-    "writes": {}
+    "writes": {
+      "parcels": [
+        "centroid_lat",
+        "centroid_lng"
+      ]
+    }
   },
   "errors": []
 }

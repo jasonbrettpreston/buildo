@@ -500,6 +500,10 @@
       "trade_name",
       "website"
     ],
+    "entities_cohort_bak_20261017t2136z": [
+      "id",
+      "is_wsib_registered"
+    ],
     "entitlements": [
       "created_at",
       "current_period_end",
@@ -1040,6 +1044,22 @@
       "id",
       "lot_size_sqm"
     ],
+    "parcels_cohort_bak_20261017t2126z": [
+      "centroid_lat",
+      "id"
+    ],
+    "parcels_cohort_bak_20261017t2127z": [
+      "id",
+      "ravine_dataset_version_when_enriched"
+    ],
+    "parcels_cohort_bak_20261017t2129z": [
+      "heritage_dataset_version_when_enriched",
+      "id"
+    ],
+    "parcels_cohort_bak_20261017t2138z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1067,6 +1087,10 @@
       "parcel_id",
       "permit_num",
       "revision_num"
+    ],
+    "permit_parcels_cohort_bak_20261017t2131z": [
+      "confidence",
+      "id"
     ],
     "permit_phase_transitions": [
       "from_phase",
@@ -1301,6 +1325,14 @@
       "latitude",
       "permit_num"
     ],
+    "permits_cohort_bak_20261017t2130z": [
+      "neighbourhood_id",
+      "permit_num"
+    ],
+    "permits_cohort_bak_20261017t2211z": [
+      "latitude",
+      "permit_num"
+    ],
     "phase_calibration": [
       "computed_at",
       "from_phase",
@@ -1367,6 +1399,10 @@
       "source_dataset_version",
       "source_id",
       "updated_at"
+    ],
+    "ravines_cohort_bak_20261017t2126z": [
+      "source_dataset_version",
+      "source_id"
     ],
     "schema_migrations": [
       "applied_at",
@@ -1704,6 +1740,14 @@
     "wsib_registry_cohort_bak_20261017t1804z": [
       "id",
       "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261017t2133z": [
+      "id",
+      "match_confidence"
+    ],
+    "wsib_registry_cohort_bak_20261017t2208z": [
+      "id",
+      "match_confidence"
     ],
     "zoning_building_setback_overlay": [
       "bylaw_section_link",

@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=permit_parcels",
+          "--key=id",
+          "--column=confidence",
+          "--op=add_number:-0.01",
+          "--count=200",
+          "--where=t.confidence >= 0.10",
+          "--order=t.id",
+          "--backup-table=permit_parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=permit_parcels",
+          "--key=id",
+          "--column=confidence",
+          "--op=add_number:-0.01",
+          "--count=200",
+          "--where=t.confidence >= 0.10",
+          "--order=t.id",
+          "--backup-table=permit_parcels_cohort_bak_{ts}",
+          "--step=scripts/link-parcels.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/link_parcels/post/sources.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 200 permit_parcels by id (245429 eligible, confidence >= 0.10) get confidence -0.01; link_parcels re-derives every permit's link and rewrites each changed one, so all 200 are rewritten and healed (db_upserted counts them) and their permits' parcel_linked_at is re-stamped (permits_watermarked_count); the run also re-linked 128 permits whose derived parcel had moved since the last capture (records_new 128, permit_parcels_deleted_count 128). Plan hash ad6a88b1123e4e2ec03abb042fe14dae. Replaces the data-dependent plain recipe."
+    }
+  }
+}

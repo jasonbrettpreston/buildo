@@ -1,0 +1,17 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "permit_parcels",
+      "capture": "sources.json",
+      "count_path": "db_upserted",
+      "why": "POST docs/reports/golden/link_parcels/post/sources.json (2026-10-17, Spec 124 R-CZ bracket in recapture.json): ingestor-forced-cohort.js lowered confidence by 0.01 on the first 200 permit_parcels by id; the re-derivation rewrote and healed all 200 and re-linked 128 moved permits (db_upserted 328, the upsert counter for writes[0] permit_parcels). Restore verified."
+    },
+    {
+      "table": "permits",
+      "capture": "sources.json",
+      "count_path": "permits_watermarked_count",
+      "why": "Same capture: every rewritten link re-stamps its permit's parcel_linked_at (writes[2] permits), permits_watermarked_count 328."
+    }
+  ]
+}

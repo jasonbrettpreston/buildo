@@ -1,0 +1,39 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/sources_run1.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=max_buildable_footprint_sqm",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.max_buildable_footprint_sqm IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=max_buildable_footprint_sqm",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.max_buildable_footprint_sqm IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/enrich-parcels.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/enrich_parcels/post/sources_run1.json",
+          "--capture-arg=--args=--full"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 200 parcels by id with max_buildable_footprint_sqm (449,675 eligible) get +1; the --full run's pass-2 max-build recompute (IS DISTINCT FROM guard) rewrites and heals them (max_build_enriched_count 201: the 200 cohort rows plus 1 parcel that drifted since N6), then the bracket restores. Plan hash 86ded04af24763055685c49e46c154f7."
+    }
+  }
+}

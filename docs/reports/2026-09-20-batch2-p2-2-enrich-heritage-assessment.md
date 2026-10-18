@@ -16,6 +16,8 @@ Source plan: `.cursor/batch2_p2_2_enrich_heritage_active_task.md` (PLAN AUTHORIZ
 
 ## PH-0 — Measurements (2026-09-20, HEAD at plan authorization `39b246c0`, local DB `127.0.0.1:54322/postgres`, `COUNT(*) FROM schema_migrations = 244`)
 
+**PH-0 boundary:** the Operating Boundaries section above (Target / Out-of-Scope / Cross-Spec files). **Governing specs:** Spec 61 and Spec 43 (owners); Specs 119, 121, 122/122a, 123 and 124 (method and policy). (Added 2026-10-17, ledger gate F.)
+
 ### Live parcel state
 
 | Fact | Value | Query |
@@ -64,6 +66,37 @@ Skip path: 25.4–38.9 s (7 historical rows). Full recompute: 59.0 s / 75.2 s (2
 **Downstream consumers of the four written columns** (grep of `scripts/ src/`, re-run for this conversion): `scripts/enrich-permits.js` (`assertHeritageEnriched` — HALTS the permits chain if no parcel carries a stamp; propagates the three value columns onto `permits`/`coa_applications`) · `scripts/lib/compute/enrich-parcels.js:460/587/593/597` (`COALESCE(is_heritage_designated,false)`, the ravine∧¬heritage envelope branch) · `scripts/lib/compute/assert-global-coverage.js` + `scripts/lib/assert-global-coverage-fields.js` (6 INFO rows on the propagated permits/CoA columns) · `scripts/load-parcels.js:356-358` (the invalidator, DEC-FENCE2) · `scripts/analysis/parcel-field-dump.js` (widened this commit, F-RC2 below) · `src/lib/admin/parcel-lookup.ts` · `src/lib/db/generated/schema.ts`. None of these files are edited — read-only consumers, unaffected by a value-equivalent conversion.
 
 **Spec-citation drift (EH-D3, filed not fixed):** the legacy cites `DEC-E`/`DEC-F`/`DEC-H`, none of which exist in Spec 61 (inherited from the Spec 59 ravines port); the `§3.10 SRID guard` comment cites Spec 61 `:370` ("Edge cases"), which has no SRID clause (the real clause is Spec 59 `:383`); `L14` is spec'd for the loader (`61:67`) while the enrich-side HALT is `L23` step 4 (`61:645`); `L24` (`61:77`) names `enrich-permits.js`, not this script. Recorded in `descriptor.limitations[]`; the spec-text correction rides commit 3 (Spec 123's rule: a spec-only fix does not belong in a behaviour-differential commit).
+
+## PH-3 — Intent ledger (closed-vocabulary dispositions of the §1 fences; added 2026-10-17, ledger gate F)
+
+`git log --follow -- scripts/enrich-heritage.js` before the conversion (`08f3dabd`): `e299d26e` (origin, §8d), `74653a8f` (Phase B B3 run-ledger gate), `11594fcc` (B3 fold C, skip-path guards) and `a81c6a7c` (B3 fold D, version signals). The behaviour and reasoning of each fence is in the §1 table; this table states each disposition in the closed vocabulary step-validate reads, against the current descriptor.
+
+| # | Fence | Disposition |
+|---|---|---|
+| F1 | §9 producer HALT (`readHeritageContract`) | encoded-as-descriptor-field — `execution.enrich_hooks.contract_read` |
+| F2 | L14 empty-source HALT | encoded-as-descriptor-field — the same `contract_read` hook |
+| F3 | PostGIS, `fuzzystrmatch`, `normalize_address()`, 3 GIST indexes, M-2 columns | encoded-as-descriptor-field — `guards.requires` rows |
+| F4 | SRID = 4326 | encoded-as-descriptor-field — `guards.requires {kind:"srid", name:"parcels.geom"}` since CP-S5 (Spec 124 R-CX) |
+| F5 | lineage-column guard | encoded-as-descriptor-field — `guards.requires[kind:"column"]` |
+| F6 | containment match SQL | preserved-in-compute — ported byte-for-byte into `scripts/lib/compute/enrich-heritage.js` except the one declared Layer-2 conjunct; its outputs are verified by the `checks[]` rows `parcels_heritage_designated_count`, `parcels_part_iv_count` and `parcels_part_v_hcd_count` |
+| F7 | shared result emit, coverage re-queried live | encoded-as-descriptor-field — `execution.enrich_hooks.post_phase` |
+| F8 | `parcels_invalid_geom_count` INFO | encoded-as-descriptor-field — the declared INFO check in `checks[]` |
+| F9 | #418 Layer-1 early return | encoded-as-deviation — `deviations[]` F9 / H-A1 (a); `override.force_full` kept |
+| F10 | `emitMeta` under-declares reads | encoded-as-descriptor-field — `inputs.reads` widened (EH-D1) |
+| F11 | `heritage_point_match_radius_m` left out | encoded-as-descriptor-field — `config.retired[]` |
+
+### Risk class (G4, Spec 121 §3 — `risk class` = `chance` × `impact`)
+
+**Risk class: A.** Chance is MODERATE-HIGH: fix density is 50% (2 of the 4 commits that touched the file before conversion, `11594fcc` and `a81c6a7c`, were fixes), and the file carries 11 fences. Impact is HIGH: it writes four `parcels` columns that `scripts/enrich-permits.js` propagates onto `permits`/`coa_applications`, and enrich-permits HALTS the permits chain when no parcel carries a stamp (§1 downstream consumers).
+
+## PH-5 — Seam map (legacy `git show 08f3dabd^:scripts/enrich-heritage.js`, 429 lines; added 2026-10-17, ledger gate F)
+
+| Seam | Legacy source | Call sites | Converted home |
+|---|---|---|---|
+| **DB seam** | the `pool` from `pipeline.run` `:412` / `withAdvisoryLock` `:360`; `client` from `withTransaction` `:396` | `pool.query` `:55` `:282` `:299` · `client.query` `:155`-`:179` `:265` | the runner's enrich phase executes the compute's SQL text; the checks at `:155`-`:179` became `guards.requires` |
+| **Clock seam** | `Date.now()` `:329` `:361` (duration only) | no DB clock, no `new Date(` | the runner's `duration_ms` emit; compute reads no clock |
+| **Network seam** | none | `fetch` 0 | none (DB-only step) |
+| **argv / env seam** | `process.env[FORCE_FULL_ENV]` `:388` (`ENRICH_HERITAGE_FORCE_FULL`) | `process.argv` 0 | `override.force_full: "ENRICH_HERITAGE_FORCE_FULL"` |
 
 ---
 
@@ -315,7 +348,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 > Generated by `node scripts/analysis/step-validate.mjs --step=enrich_heritage --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 10/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES (F(score-floor): orphan ledger row — enrich_heritage now scores 16/17, at/above the floor; delete the row in the remediation commit)**
 
 ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
 
@@ -329,12 +362,12 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
-| G0 | 0 | 1 | boundary-section=false spec-line=false |
-| G1 | 0 | 1 | PH-3 section found=false sha-count=0 |
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=7 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 0 | 2 | no PH-3/Intent Ledger section found |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
-| G5 | 0 | 1 | no PH-5/Seam map section found |
+| G3 | 1 | 2 | table rows=12 vocab-hit rows=11 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 4 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=0 it-count=30 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
@@ -370,8 +403,8 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 383 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (11 ledger-allowed, 4 outputs:"none" vacuous) |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 384 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 38 | (registry) | FAIL | CAPTURE-NONZERO (gate G): 0 write target(s) with no nonzero capture or no recapture recipe (R-CZ); 9 orphan ledger row(s) [load_ravines nonzero:ravines; link_wsib nonzero:wsib_registry; link_parcels nonzero:permit_parcels; link_parcels nonzero:permits; enrich_parcels nonzero:parcels; compute_centroids nonzero:parcels; enrich_ravines nonzero:parcels; enrich_heritage nonzero:parcels; link_neighbourhoods nonzero:permits] |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1) |
@@ -387,28 +420,15 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 205 · unexplained: 0
+- compare ran: true · diffs found: 208 · unexplained: 0
 
 ### Test suite (item iii)
-- 2373/2387 passed (suite success=false)
+- 2386/2387 passed (suite success=false)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing (14):
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > refresh_snapshot — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_global_coverage — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_data_bounds — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_parcel_sanity — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > KNOWN_GAPS is a retained ratchet: gate #44 (e) on the LDG-4 input reproduces exactly its rows (P1-C5)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (1):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
-  - src/tests/steps/refresh_snapshot/violations.test.ts > golden capture — PRE (commit 5, LANDED, testable today) + POST (commit 7) > LANDED (commit 7) — all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan's own declared non-determinism posture, since every invocation re-derives live-DB counts by construction
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -417,7 +437,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 10 declared, 3 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
-| 4 | Compute rule declared | enforced-green | G-2: no PH-3 section — vacuously nothing to check |
+| 4 | Compute rule declared | enforced-green | G-2: 1 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
@@ -427,7 +447,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=51222B notes=0B checks=11 rows records_meta=10835B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=51222B notes=0B checks=11 rows records_meta=10844B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

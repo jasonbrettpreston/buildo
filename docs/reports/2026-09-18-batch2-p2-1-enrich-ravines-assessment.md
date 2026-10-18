@@ -22,7 +22,7 @@ text (2026-09-15) predates I5 (`geocode_permits`, landed `7853342f`, 2026-09-16)
 ## PH-0 — Boundary freeze
 
 **Target files** (Spec 43 `### Target Files`, position 12 of 28 in `sources`, re-derived from
-`manifest.json:20`, never transcribed): `scripts/enrich-ravines.js`. **Owner spec:**
+`manifest.json:20`, never transcribed): `scripts/enrich-ravines.js`. **Governing spec (owner):**
 `docs/specs/01-pipeline/59_source_ravine_protection.md` §8d/§9/§11.1 (v1.2). **Archetype
 re-derived from the code, not assumed** (R-AO): one `pipeline.run` shape, one `withAdvisoryLock`,
 one `withTransaction` on the write path, ONE set-based write target, a producer-consumer contract
@@ -55,6 +55,10 @@ argv — this is ENRICHER (Spec 122 §1.10's own profile table), confirmed again
 | Required indexes present | `idx_parcels_geom_gist`, `idx_ravines_geom_gist`, `idx_ravines_geog_gist` — all three | |
 | Historical `sources:enrich_ravines` runs | 7 rows: 6 skip-path (3.2s–9.3s, `records_updated 0`), 1 full recompute (id 1061, 2026-06-10, **2,122,567 ms = 35.4 min**, `records_updated 486,530`) | |
 
+### Risk class (G4, Spec 121 §3 — `risk class` = `chance` × `impact`; added 2026-10-17, ledger gate F)
+
+**Risk class: B.** Chance is LOW-MODERATE: fix density is 0% (0 of the 2 commits that ever touched `scripts/enrich-ravines.js`, `00902695` feat and `92ee03b9` perf, were fixes), but the file carries 10 fences (PH-3) and a two-layer incremental/full split. Impact is HIGH: the step writes the three ravine columns of `parcels`, a legal-constraint surface read by nine consumers (PH-5), including `scripts/enrich-permits.js`, which HALTS the permits chain when no parcel carries a stamp.
+
 **Full form reason:** N/A — this row is COMPRESSED (ruling A1(b) above); the literal marker fast
 invariant #24 checks for is stated at the top of this document.
 
@@ -71,20 +75,29 @@ one-line summary; the disposition column below is the full reasoning):
 
 | # | Behaviour | Origin | Disposition |
 |---|---|---|---|
-| F1 | §9/L18 six-throw producer HALT, pre-transaction | `00902695` | PRESERVED — folded into `execution.enrich_hooks.contract_read` (`readRavineContract`), called by the runner above the phase loop, before any transaction. |
-| F2 | L14 empty-ravines HALT on BOTH paths (Gemini CRIT-1) | `92ee03b9` | PRESERVED — folded into the SAME `readRavineContract` hook (RV-L2): `guards.empty_source`/`inputs.expect_nonempty` are measured, unconsumed by the runner, so the genuinely-HALTing behaviour rides the one mechanism proven to run pre-transaction on every invocation. |
-| F3 | PostGIS + both GIST indexes + SRID=4326, DEC-F §3.10 | `00902695` | PRESERVED and STRENGTHENED (postgis/indexes → `guards.requires`, now armed on EVERY run per Class A(vii), not only the recompute path) + SRID assertion folded into the same contract_read hook (RV-L2 — `guards.srid` has zero runner consumers). |
-| F4 | DEC-E lineage-column guard | `92ee03b9` | PRESERVED — `guards.requires[kind:"column"]`, generic `assertRequirements`. |
-| F5 | Materialized-centroid LATERAL KNN (not the spec's slow inline form) | `00902695` | PRESERVED VERBATIM in `scripts/lib/compute/enrich-ravines.js`'s `ENRICH_SQL` — byte-identical SQL text to the legacy `ENRICH_SQL` constant. |
-| F6 | §8d no-op-write triple guard (L11) | `00902695` | PRESERVED — `write_discipline.guard_columns` explicit 3-column list, never `all_declared`. |
-| F7 | `emitResults` shared by both paths, coverage re-queried LIVE every call | `92ee03b9` | PRESERVED — `execution.enrich_hooks.post_phase` (`computePostPhase`), called unconditionally after the phase. |
-| F8 | `parcels_invalid_geom_count` root-cause signal | `92ee03b9` | PRESERVED — declared INFO check. |
-| F9 | #418 Layer-1 cheap-COUNT early return | `92ee03b9` | RETIRED KNOWINGLY (mechanism) — the ENRICHER runner has no gated-skip branch; OBSERVABLE preserved via `parcels_ravine_enrich_skipped` re-derived from `updated === 0`. Declared as `deviations[0]` in the descriptor, not silently dropped. |
-| F10 | `emitMeta` reads id+geom only, no `lead_id` | `00902695` | PRESERVED as intent, WIDENED honestly (RV-D1: the declared reads now include the guard/scope columns the SQL genuinely touches); the `lead_id` exclusion itself stays true. |
+| F1 | §9/L18 six-throw producer HALT, pre-transaction | `00902695` | encoded-as-descriptor-field — PRESERVED, folded into `execution.enrich_hooks.contract_read` (`readRavineContract`), called by the runner above the phase loop, before any transaction. |
+| F2 | L14 empty-ravines HALT on BOTH paths (Gemini CRIT-1) | `92ee03b9` | encoded-as-descriptor-field — PRESERVED, folded into the SAME `readRavineContract` hook (RV-L2): `guards.empty_source`/`inputs.expect_nonempty` are measured, unconsumed by the runner, so the genuinely-HALTing behaviour rides the one mechanism proven to run pre-transaction on every invocation. |
+| F3 | PostGIS + both GIST indexes + SRID=4326, DEC-F §3.10 | `00902695` | encoded-as-descriptor-field — PRESERVED and STRENGTHENED (postgis/indexes → `guards.requires`; since CP-S5 / Spec 124 R-CX the SRID assertion is also a `guards.requires {kind:"srid"}` row, now armed on EVERY run per Class A(vii), not only the recompute path) + SRID assertion folded into the same contract_read hook (RV-L2 — `guards.srid` has zero runner consumers). |
+| F4 | DEC-E lineage-column guard | `92ee03b9` | encoded-as-descriptor-field — PRESERVED, `guards.requires[kind:"column"]`, generic `assertRequirements`. |
+| F5 | Materialized-centroid LATERAL KNN (not the spec's slow inline form) | `00902695` | preserved-in-compute — PRESERVED VERBATIM in `scripts/lib/compute/enrich-ravines.js`'s `ENRICH_SQL` — byte-identical SQL text to the legacy `ENRICH_SQL` constant. Its outputs are verified by the `checks[]` rows `parcels_with_ravine_distance_pct` and `parcels_in_ravine_count`. |
+| F6 | §8d no-op-write triple guard (L11) | `00902695` | encoded-as-descriptor-field — PRESERVED, `write_discipline.guard_columns` explicit 3-column list, never `all_declared`. |
+| F7 | `emitResults` shared by both paths, coverage re-queried LIVE every call | `92ee03b9` | encoded-as-descriptor-field — PRESERVED, `execution.enrich_hooks.post_phase` (`computePostPhase`), called unconditionally after the phase. |
+| F8 | `parcels_invalid_geom_count` root-cause signal | `92ee03b9` | encoded-as-descriptor-field — PRESERVED, a declared INFO check in `checks[]` (`parcels_invalid_geom_count`). |
+| F9 | #418 Layer-1 cheap-COUNT early return | `92ee03b9` | encoded-as-deviation — RETIRED KNOWINGLY (mechanism) — the ENRICHER runner has no gated-skip branch; OBSERVABLE preserved via `parcels_ravine_enrich_skipped` re-derived from `updated === 0`. Declared as `deviations[0]` in the descriptor, not silently dropped. |
+| F10 | `emitMeta` reads id+geom only, no `lead_id` | `00902695` | encoded-as-descriptor-field — PRESERVED as intent, WIDENED honestly (RV-D1: the declared reads now include the guard/scope columns the SQL genuinely touches); the `lead_id` exclusion itself stays true. |
 
 ---
 
 ## PH-5 — Seam map
+
+**The four seams of the legacy script** (`git show c9b217bd^:scripts/enrich-ravines.js`, 310 lines; added 2026-10-17, ledger gate F):
+
+| Seam | Legacy source | Call sites | Converted home |
+|---|---|---|---|
+| **DB seam** | the `pool` from `pipeline.run` `:295` / `withAdvisoryLock` `:258`; `client` from `withTransaction` `:282` | `pool.query` `:32` `:202` · `client.query` `:108` `:112` `:123` `:186` | the runner's enrich phase executes the compute's SQL text; the checks at `:108`-`:123` became `guards.requires` |
+| **Clock seam** | `Date.now()` `:230` `:259` (duration only) | no DB clock, no `new Date(` | the runner's `duration_ms` emit; compute reads no clock |
+| **Network seam** | none | `fetch` 0 | none (DB-only step) |
+| **argv / env seam** | none | `process.env` 0 · `process.argv` 0 | `override` all `"none"` |
 
 Nine consumers of the three written columns, each triaged (grep, 2026-09-18, every hit read):
 `scripts/lib/compute/enrich-parcels.js` (`:459` flag read, `:538/:545/:548` setback, `:717`
@@ -534,7 +547,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 > Generated by `node scripts/analysis/step-validate.mjs --step=enrich_ravines --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 12/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+**Score: 16/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES (F(score-floor): orphan ledger row — enrich_ravines now scores 16/17, at/above the floor; delete the row in the remediation commit)**
 
 ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
 
@@ -548,12 +561,12 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
-| G0 | 0 | 1 | boundary-section=true spec-line=false |
+| G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=12 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 1 | 2 | table rows=11 vocab-hit rows=0 |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
-| G5 | 0 | 1 | db=false clock=false network=false argv/env=false |
+| G3 | 1 | 2 | table rows=11 vocab-hit rows=10 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 6 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=0 it-count=21 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
@@ -589,8 +602,8 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 32 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 383 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
-| 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (11 ledger-allowed, 4 outputs:"none" vacuous) |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 384 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 38 | (registry) | FAIL | CAPTURE-NONZERO (gate G): 0 write target(s) with no nonzero capture or no recapture recipe (R-CZ); 9 orphan ledger row(s) [load_ravines nonzero:ravines; link_wsib nonzero:wsib_registry; link_parcels nonzero:permit_parcels; link_parcels nonzero:permits; enrich_parcels nonzero:parcels; compute_centroids nonzero:parcels; enrich_ravines nonzero:parcels; enrich_heritage nonzero:parcels; link_neighbourhoods nonzero:permits] |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 83 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 27 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1) |
@@ -606,28 +619,15 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 133 · unexplained: 0
+- compare ran: true · diffs found: 136 · unexplained: 0
 
 ### Test suite (item iii)
-- 2373/2387 passed (suite success=false)
+- 2386/2387 passed (suite success=false)
 - harvested: 79 file(s) from 3 FLEET-WIDE targets (src/tests/step-conformance.infra.test.ts, src/tests/golden-fingerprint.infra.test.ts, src/tests/steps/) — one spawn per run, so every step's report carries this same number, by design
 - excluded (R-AG live-DB tier, owned by `npm run test:db`, derived from package.json `scripts.test`): 1 — **/*.db.test.ts
 - skipped (declared but not run): 0
-- failing (14):
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > refresh_snapshot — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_global_coverage — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_data_bounds — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > assert_parcel_sanity — declared inputs.reads.steps[] vs the ledger-derived converted-producer set
-  - src/tests/step-conformance.infra.test.ts > LDG-4 — descriptor <-> ledger cross-check (SUPERSET + EQUALITY, converted-producer-restricted) > KNOWN_GAPS is a retained ratchet: gate #44 (e) on the LDG-4 input reproduces exactly its rows (P1-C5)
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/refresh-snapshot.js (slug "refresh_snapshot") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
+- failing (1):
   - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/enrich-parcels.js (slug "enrich_parcels") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/geocode-permits.js (slug "geocode_permits") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/compute-parcel-cost-estimates.js (slug "compute_parcel_cost_estimates") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/step-conformance.infra.test.ts > R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections) > scripts/load-centreline.js (slug "load_centreline") > the committed block's vitest-independent sections equal a fresh `step:validate --fast` run
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > regenerating in memory against the REAL fields module byte-matches the committed descriptor.json (clean — no drift)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode itself reports clean against the current committed descriptor (exit 0)
-  - src/tests/steps/assert_parcel_sanity/violations.test.ts > assert_parcel_sanity — descriptor generator drift lock (both directions) > the CLI --check mode is itself not vacuous: fires (exit non-zero) against a deliberately corrupted TEMP COPY, never the real committed file
-  - src/tests/steps/refresh_snapshot/violations.test.ts > golden capture — PRE (commit 5, LANDED, testable today) + POST (commit 7) > LANDED (commit 7) — all 5 POST invocations exist; the differential against PRE is compared BY SHAPE (column presence/types, is_insert xor is_update), never by raw table-state hash — the plan's own declared non-determinism posture, since every invocation re-derives live-DB counts by construction
 
 ### Policy coverage matrix (item vi) — Spec 124 Rules 1-13
 
@@ -636,7 +636,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | enforced-green |  |
 | 3 | Tunables externalized | enforced-green | G-4: 9 declared, 1 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
-| 4 | Compute rule declared | enforced-green | G-2: 0 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 4 | Compute rule declared | enforced-green | G-2: 1 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
 | 7 | Archetype gates categories | enforced-green |  |
@@ -646,7 +646,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: prose-only (R-M/LG-17 describe not scoped to this step (no before-image target)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=45438B notes=0B checks=7 rows records_meta=7869B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=45438B notes=0B checks=7 rows records_meta=7880B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 0 · vacuous: 1
 

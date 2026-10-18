@@ -2,11 +2,38 @@
   "contract_version": 1,
   "captures": {
     "post/sources-full-forced-4.json": {
-      "via": "env",
-      "env": {
-        "LINK_WSIB_FORCE_FULL": "1"
-      },
-      "why": "the descriptor's force_full env (V3 fleet night 2026-10-16 night.log)."
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=match_confidence",
+          "--op=add_number:-0.01",
+          "--count=50",
+          "--where=t.linked_entity_id IS NOT NULL AND t.match_confidence >= 0.10",
+          "--order=t.id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=wsib_registry",
+          "--key=id",
+          "--column=match_confidence",
+          "--op=add_number:-0.01",
+          "--count=50",
+          "--where=t.linked_entity_id IS NOT NULL AND t.match_confidence >= 0.10",
+          "--order=t.id",
+          "--backup-table=wsib_registry_cohort_bak_{ts}",
+          "--step=scripts/link-wsib.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/link_wsib/post/sources-full-forced-4.json",
+          "--env=LINK_WSIB_FORCE_FULL=1"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 50 linked wsib_registry rows by id (872 linked) get match_confidence -0.01; under LINK_WSIB_FORCE_FULL=1 the full re-derivation's diff (scripts/lib/compute/link-wsib.js:302) rewrites and heals all 50 (run_matched 50). Cohort 50, not 200: 200 moves of 872 links = 23% trips the step's own pre_write mass-relink FAIL (link_wsib_mass_relink_max_pct, seeded 0.10), and 50 = 5.7% stays under it without the accept-anomaly override (the link_massing healing-cohort precedent, 50 links). Plan hash 020d20eba2112aed1d36d47f9186d3b6."
     }
   }
 }

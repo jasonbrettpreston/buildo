@@ -110,6 +110,10 @@
     {
       "key": "table_state[].row_count",
       "why": "input drift, not code: parcels holds 486,530 rows in the PRE capture and 496,536 in the 2026-10-16 POST (31ab81f8), measured in the captures' own table_state; the parcels source was reloaded by the converted parcels ingestor since."
+    },
+    {
+      "key": "summary.records_updated",
+      "why": "sources: the POST is the forced-cohort bracket capture (Spec 124 R-CZ, 2026-10-17: ingestor-forced-cohort.js, 200 parcels with ravine_dataset_version_when_enriched suffixed \"-forced\", re-selected by the stale-only scope scripts/lib/compute/enrich-ravines.js:97 and healed, then restored); the PRE wrote 0 (already converged)."
     }
   ]
 }

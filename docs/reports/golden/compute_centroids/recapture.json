@@ -2,11 +2,38 @@
   "contract_version": 1,
   "captures": {
     "post/sources-full-forced-1.json": {
-      "via": "env",
-      "env": {
-        "COMPUTE_CENTROIDS_FORCE_FULL": "1"
-      },
-      "why": "the descriptor's force_full env (V3 fleet night 2026-10-16 night.log)."
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=centroid_lat",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.centroid_lat IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=centroid_lat",
+          "--op=add_number:1",
+          "--count=200",
+          "--where=t.geom IS NOT NULL AND t.centroid_lat IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/compute-centroids.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/compute_centroids/post/sources-full-forced-1.json",
+          "--env=COMPUTE_CENTROIDS_FORCE_FULL=1"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): parcels ids in order (496,535 eligible) get centroid_lat +1; COMPUTE_CENTROIDS_FORCE_FULL=1 runs the full recompute whose guard (scripts/lib/compute/compute-centroids.js:141-142, centroid IS DISTINCT FROM ROUND(ST_Centroid)) heals all 200 (records_updated 200), then the bracket restores. Plan hash 1e67c1766707fe54d1160b51698d8779. Replaces the env-only recipe, which wrote 0."
     }
   }
 }
