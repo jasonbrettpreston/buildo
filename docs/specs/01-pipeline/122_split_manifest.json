@@ -518,6 +518,32 @@
       "content_sha256": "89dc0ae67ed0f411655316af79a7799907efb9585d257af7ac19d07085e27585",
       "moved_at": "2026-10-18",
       "commit": "58152c42"
+    },
+    {
+      "id": "M26",
+      "from_spec": "122",
+      "anchor": "**RE-FREEZE #12 — execution.on_row_error_why (2026-09-21, WF2 \"runner row-error policy\", R-AX):** one additive field, `execution.on_row_error_why` (`$ref` `#/definitions/why`, carrying `x-ruling`), required exactly when `on_row_error` is `skip`|`quarantine` — the same conditional shape its three siblings (`on_batch_error_why`/`on_check_error_why`/`on_degrade_why`) already use. `on_row_error_max_pct` gains `x-banned-for-new: true` (stays declarable — R-X: a banned value is a declaration, never a deletion — but the two literal instances that ever existed, load_ravines 0.05 and compute_parcel_cost_estimates 0, are deleted in the same commit as a Rule 3 second-source-of-truth violation, the bound already living once as a registered logic variable behind a declared FAIL check). **F-1, fixed in this same commit:** the pre-existing `on_row_error`/`on_row_error_max_pct` conditional (`step.schema.json:1490` pre-fix) used a `properties`-only `then` arm where its three siblings use `required` — AJV-proven live (2026-09-21) that a `skip`/`quarantine` descriptor with NO bound at all validated. The conditional is rewritten to `required: [\"on_row_error_why\"]`, closing the gap and matching its siblings' contract for the first time. No enum widened, no value pruned, no archetype profile touched, no `phase_runners` order re-derived. `schema_sha256` re-derived by `--refresh` in this commit; 4 descriptors truthed and recaptured in the same commit (load_ravines, compute_centroids, enrich_parcels, compute_parcel_cost_estimates — see Spec 124 §5 R-AX for the per-step table). Record: `122a` §A9.",
+      "to_spec": "122a",
+      "to_anchor": "## Appendix §A31 — RE-FREEZE #12–#20 register entries (moved from Spec 122 §8) — LIVE REGISTER, 2026-10-18",
+      "line_count": 17,
+      "classification": "REGISTER",
+      "evidence": "Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 122 had 7 B of arm (iv) byte headroom (215,726 of 215,733) and owes the RE-FREEZE #37 entry (template-freeze C4 needs the §8 text in the same commit). #12–#20 stay in force. New RE-FREEZE entries are still added to Spec 122 §8.",
+      "content_sha256": "5209d00544cbb85ec8103204bed7044ec509fb1db5c76247c7f8fad8a45cf397",
+      "moved_at": "2026-10-18",
+      "commit": "a0e3074e"
+    },
+    {
+      "id": "M27",
+      "from_spec": "124",
+      "anchor": "| R-BZ | **Compute purity is a closed answer (operator 2026-10-10; McDonald's Airtight V3, operator 2026-10-11).** Gate E (SCALABLE, fast invariant #32) widens from the literal ban to codes G0–G13 (122a §A26): `compute-purity.mjs` over compute and its `require` closure, plus ast-grep siblings in `compute-shape.yml`. Ledger keys `<rule>@<fp>#<n>` / `<rule>@<line text>#<n>`; `matchLedger` lets one row cover one violation (C2). Purity rows close on their seam's `programme-items.json` id (CP-S1…S5, CP-PLANA, CP-PERMITS) and are RED once that item is BUILT, SUPERSEDED or missing (C3). A function-scope tunable const is a bypass (Rule 3, Q5). `mPerDegLat = 111320` (load_parcels, metres per degree of latitude) is a `physical_constant`. R-BA's hard stop is narrowed for purity codes only, on a closed list: enrich_centreline, massing, load_heritage, load_centreline, neighbourhoods, load_zoning (Q6 A); every other post-2026-09-26 or future conversion needs ZERO findings. #44 compute-attributed FAILs turn hard at max(CP-S1, P1-C9). | Rules 2, 3; amends R-BA, R-BG | 122a §A26; 122 §5 |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18",
+      "line_count": 17,
+      "classification": "REGISTER",
+      "evidence": "Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 124 was at 371/380 lines and owes the runner-lane rows (R-DM and the drafts allocated from R-DX) beside the badges lane R-DW. Rows R-BZ…R-CP (the next contiguous block after M25) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.",
+      "content_sha256": "2ac4bbb09c1af85bff6cf95e7078619319d1d467f80feb604fc1194292eb6b8c",
+      "moved_at": "2026-10-18",
+      "commit": "a0e3074e"
     }
   ]
 }
