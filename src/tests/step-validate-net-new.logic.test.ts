@@ -7,6 +7,7 @@
 // row without the evidence, or with a PRE file (a copied POST), is RED by name.
 import { describe, it, expect, beforeAll } from 'vitest';
 import path from 'path';
+import os from 'os';
 import { pathToFileURL } from 'url';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
@@ -16,6 +17,7 @@ type NetNewModule = {
   NET_NEW_TAG: string;
   netNewDecision: (e: Record<string, unknown>) => NetNewVerdict;
   loadNetNew: (repoRoot: string) => Map<string, NetNewVerdict>;
+  isShallowRepo: (repoRoot: string) => boolean;
 };
 type PreFile = { file: string; exists: boolean; tracked: boolean; worktreeClean: boolean };
 type StepValidateModule = {
@@ -37,6 +39,7 @@ const GOOD = {
   slug: 'fx',
   legacy: 'none',
   hasLegacyCitation: false,
+  shallowRepo: false,
   scriptFirstCommitTs: 100,
   descriptorFirstCommitTs: 100,
   nonzeroRecipes: 1,
@@ -59,6 +62,9 @@ describe('Spec 124 R-DK — a net-new step has no PRE; its reference is its own 
     const gaps: Array<[string, Record<string, unknown>]> = [
       ['legacy history', { scriptFirstCommitTs: 50 }],
       ['legacy_citation', { hasLegacyCitation: true }],
+      // Spec 08 output panel round 1, 2026-10-18: a shallow clone (or an unknown answer) cannot prove no legacy history.
+      ['shallow repository', { shallowRepo: true }],
+      ['shallow answer unknown', { shallowRepo: undefined }],
       ['no recipe', { nonzeroRecipes: 0 }],
       ['no red evidence', { redEvidenceFiles: 0 }],
       ['rerun-zero missing', { postsWithRerunPass: 1 }],
@@ -69,6 +75,11 @@ describe('Spec 124 R-DK — a net-new step has no PRE; its reference is its own 
       expect(v.why, label).toMatch(/^legacy:"none" refused/);
     }
     expect(nn.netNewDecision({ ...GOOD, legacy: undefined }).netNew).toBe(false);
+  });
+
+  it('isShallowRepo fails closed: a directory git cannot answer for reads as shallow', () => {
+    // A missing cwd makes the git spawn itself fail (a hook's exported GIT_DIR cannot answer for it).
+    expect(nn.isShallowRepo(path.join(os.tmpdir(), `r-dk-no-such-dir-${process.pid}-${Date.now()}`))).toBe(true);
   });
 
   it('#22: an accepted net-new step with no pre/ passes and is named; any other slug with no PRE still FAILs', () => {

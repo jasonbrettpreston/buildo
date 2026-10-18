@@ -412,7 +412,8 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     // fold R2 (same day, same WF3): a THIRD recapture (R1's optional-reads bound changed
     // `read_timings[]`'s shape again) measured growth of exactly +1 more, same calendar day
     // family — the mechanism is genuinely "at most +1 per distinct calendar day a recapture
-    // is taken on", never more than one row per day. Bounded at <=5 (not unbounded, not the
+    // is taken on", never more than one row per day. (Superseded 2026-10-18: the literal ceiling is replaced by the exact
+    // per-capture invariant below.) Bounded at <=5 (not unbounded, not the
     // stale "<=1"): generous enough that a few more R-C-gated recaptures over the following
     // days don't need another bound-widening commit, tight enough that it still guards the
     // real regression this test exists to catch — a RECORDER that starts writing MORE THAN
@@ -422,19 +423,24 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     expect(preCount).toBe(30);
     const postCounts = new Set<number>();
     for (const inv of INVOCATIONS) {
-      const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string; table_state?: Array<{ row_count: number }> };
+      const doc = JSON.parse(fs.readFileSync(artifact(`${GOLDEN_DIR_REL}/post/${inv.name}.json`), 'utf8')) as { exit_code: number; verdict: string; table_state?: Array<{ row_count: number }>; invariants?: Array<{ name: string; value: string }> };
       expect(doc.exit_code).toBe(0);
       expect(doc.verdict).toBe('PASS');
-      postCounts.add(doc.table_state?.[0]?.row_count ?? -1);
+      const rowCount = doc.table_state?.[0]?.row_count ?? -1;
+      postCounts.add(rowCount);
+      // Exact, derived from the capture itself (Spec 08 output panel round 1, 2026-10-18 — replaces the
+      // hand-raised `<= 12` growth ceiling): invariants.json's duplicate_snapshot_date_count counts the
+      // snapshot_date values holding MORE THAN ONE row. At 0, post row_count EQUALS the distinct
+      // snapshot_date count — one row per day, however many recapture days have passed.
+      const inv0 = new Map((doc.invariants ?? []).map((i) => [i.name, i.value]));
+      expect(inv0.get('duplicate_snapshot_date_count'), `${inv.name}: duplicate snapshot_date values`).toBe('0');
+      expect(Number(inv0.get('data_quality_snapshots_row_count')), `${inv.name}: invariant row count ≡ table_state row_count`).toBe(rowCount);
     }
     expect(postCounts.size).toBe(1); // one row per day: 5 invocations, same day, same count
     const postCount = [...postCounts][0]!;
     expect(postCount - preCount!).toBeGreaterThanOrEqual(0);
-    // measured growth: +1, +1, then +6 at the FLEET-2 recapture (2026-10-06): 36 rows over 36 DISTINCT snapshot_date values
-    // (live SELECT), so one row per day still holds; the bound only absorbs recapture days. 2026-10-17 (N6): 41 rows over 41
-    // DISTINCT snapshot_date values (live SELECT) — the recapture days since FLEET-2; one row per day still holds.
-    // 2026-10-18 (step-0 follow-up fleet retake): 42 rows over 42 DISTINCT snapshot_date values (live SELECT); one row per day holds.
-    expect(postCount - preCount!).toBeLessThanOrEqual(12);
+    // Growth past PRE is bounded by the per-capture invariant above (row_count == distinct snapshot_date count),
+    // not by a literal: measured 2026-10-18, 42 rows over 42 distinct days.
   });
 });
 

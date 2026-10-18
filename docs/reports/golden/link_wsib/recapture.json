@@ -33,7 +33,7 @@
           "--env=LINK_WSIB_FORCE_FULL=1"
         ]
       ],
-      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 50 linked wsib_registry rows by id (872 linked) get match_confidence -0.01; under LINK_WSIB_FORCE_FULL=1 the full re-derivation's diff (scripts/lib/compute/link-wsib.js:302) rewrites and heals all 50 (run_matched 50). Cohort 50, not 200: 200 moves of 872 links = 23% trips the step's own pre_write mass-relink FAIL (link_wsib_mass_relink_max_pct, seeded 0.10), and 50 = 5.7% stays under it without the accept-anomaly override (the link_massing healing-cohort precedent, 50 links). Plan hash 020d20eba2112aed1d36d47f9186d3b6."
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-17): the first 50 linked wsib_registry rows by id (872 linked) get match_confidence -0.01; under LINK_WSIB_FORCE_FULL=1 the full re-derivation's diff (scripts/lib/compute/link-wsib.js:302) rewrites and heals all 50 (run_matched 50). Cohort 50, not 200: 200 moves of 872 links = 23% trips the step's own pre_write mass-relink FAIL (link_wsib_mass_relink_max_pct, seeded 0.10), and 50 = 5.7% stays under it without the accept-anomaly override (the link_massing healing-cohort precedent, 50 links). Plan hash 020d20eba2112aed1d36d47f9186d3b6. matched_at re-stamps on each bracket heal (R-DQ), so the plain and bracket wsib_registry hashes churn on every --replay-all; that churn is expected, not drift (Spec 08 output panel round 1, 2026-10-18)."
     },
     "post/sources-full-forced-5.json": {
       "via": "bracket",

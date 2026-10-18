@@ -255,8 +255,8 @@ export function withoutRunnerStatements(trace, runnerSet) {
  *   h:unverifiable:<producer>.<path>  — a pin with `equals` whose <path> NO producer POST golden carries (no vacuous
  *                                       pass, lens 13).
  * `producerSummaries`: { <producer>: [POST golden `summary` objects] }; absent → mismatch/unverifiable are not
- * evaluated. h:undeclared (a traced cross-step stamp read with no pin) needs its closure set ruled first (LDG-10
- * drafted ruling) and is not evaluated here.
+ * evaluated. h:undeclared is evaluated separately, declaration-driven and narrow (Spec 124 R-DI as amended
+ * 2026-10-17): see `undeclaredPinItems` below.
  */
 function valueAtPath(obj, dotted) {
   let cur = obj;
@@ -842,7 +842,8 @@ function declaredAnyTables(descriptor) {
  * fingerprint is in `runnerSet` is RUNNER-authored and stays excluded (R-BG). Any other statement that
  * carries `excluded[]` is COMPUTE-attributed: each excluded table must be a declared read/write table,
  * else `FAIL:WITNESS:<slug>:a:<table>.*`. `input` = structural REDs (a statement with no fingerprint);
- * `attributed` = the report-only FAILs (never merged into evaluateWitness `rows`).
+ * `attributed` = the compute-attributed FAILs, kept apart from evaluateWitness `rows` but HARD: step-validate
+ * stops on any of them for a blocking slug (Spec 124 R-DI (1), "compute-attributed FAILs hard too, R-BZ").
  */
 export function attributionRows(slug, descriptor, invocation, trace, runnerSet) {
   const input = [];

@@ -10,8 +10,9 @@
 //
 // The closed evidence set (each one already a hard gate elsewhere; R-DK only requires them
 // together before it lets the PRE half pass):
-//   1. no legacy history — the script's oldest commit is not older than its descriptor's
-//      (a renamed or pre-existing legacy script fails this);
+//   1. no legacy history — the script's oldest commit (`git log --follow`, so a rename is traced
+//      back) is not older than its descriptor's (a renamed or pre-existing legacy script fails
+//      this); a SHALLOW clone cannot prove it and is refused (Spec 08 output panel round 1, 2026-10-18);
 //   2. no `legacy_citation` on the row (that field cites a legacy script — the opposite claim);
 //   3. a nonzero recipe — `docs/reports/golden/<slug>/recapture.json` has >=1 entry with
 //      `via` "bracket" or "env" (Spec 124 R-CZ, #38);
@@ -27,7 +28,7 @@ const CENSUS_REL = 'scripts/steps/_schema/step-archetype-census.json';
 
 /**
  * PURE. Decide whether one census row is an accepted net-new step.
- * @param {{slug:string, legacy?:string, hasLegacyCitation:boolean, scriptFirstCommitTs:number|null,
+ * @param {{slug:string, legacy?:string, hasLegacyCitation:boolean, shallowRepo:boolean, scriptFirstCommitTs:number|null,
  *   descriptorFirstCommitTs:number|null, nonzeroRecipes:number, redEvidenceFiles:number,
  *   postCaptures:number, postsWithRerunPass:number}} e
  * @returns {{netNew:boolean, ok:boolean, why:string}}
@@ -36,6 +37,8 @@ export function netNewDecision(e) {
   if (e.legacy !== 'none') return { netNew: false, ok: false, why: 'not declared net-new' };
   const refuse = (why) => ({ netNew: true, ok: false, why: `legacy:"none" refused — ${why}` });
   if (e.hasLegacyCitation) return refuse('the row also carries legacy_citation (a legacy script is cited)');
+  // Fail closed: only an explicit `false` (git answered "not shallow") lets history be trusted.
+  if (e.shallowRepo !== false) return refuse('the repository is shallow (or git could not say) — truncated history cannot prove no legacy script');
   if (!Number.isFinite(e.scriptFirstCommitTs) || !Number.isFinite(e.descriptorFirstCommitTs)) {
     return refuse('the script or its descriptor has no git history to check');
   }
@@ -48,12 +51,18 @@ export function netNewDecision(e) {
   return { netNew: true, ok: true, why: NET_NEW_TAG };
 }
 
-/** Oldest commit timestamp touching `rel` (merges included), or null. */
+/** Oldest commit timestamp touching `rel`, following renames (`--follow`; `-m` so a file a merge introduced is seen), or null. */
 function firstCommitTs(repoRoot, rel) {
-  const res = spawnSync('git', ['log', '--format=%ct', '--', rel], { cwd: repoRoot, encoding: 'utf8' });
+  const res = spawnSync('git', ['log', '--follow', '-m', '--format=%ct', '--', rel], { cwd: repoRoot, encoding: 'utf8' });
   if (res.status !== 0) return null;
   const lines = res.stdout.trim().split('\n').filter(Boolean);
   return lines.length ? Number(lines[lines.length - 1]) : null;
+}
+
+/** `false` only when git answers "not shallow"; `true` for a shallow clone or any git failure. */
+export function isShallowRepo(repoRoot) {
+  const res = spawnSync('git', ['rev-parse', '--is-shallow-repository'], { cwd: repoRoot, encoding: 'utf8' });
+  return !(res.status === 0 && res.stdout.trim() === 'false');
 }
 
 function jsonFiles(dir) {
@@ -69,8 +78,10 @@ export function loadNetNew(repoRoot) {
   const censusPath = path.join(repoRoot, CENSUS_REL);
   if (!existsSync(censusPath)) return out;
   const census = JSON.parse(readFileSync(censusPath, 'utf8'));
+  let shallowRepo = null;
   for (const row of census.entries || []) {
     if (row.legacy !== 'none') continue;
+    if (shallowRepo === null) shallowRepo = isShallowRepo(repoRoot);
     const golden = path.join(repoRoot, 'docs/reports/golden', row.slug);
     let nonzeroRecipes = 0;
     const recipePath = path.join(golden, 'recapture.json');
@@ -94,6 +105,7 @@ export function loadNetNew(repoRoot) {
         slug: row.slug,
         legacy: row.legacy,
         hasLegacyCitation: Boolean(row.legacy_citation),
+        shallowRepo,
         scriptFirstCommitTs: firstCommitTs(repoRoot, row.file),
         descriptorFirstCommitTs: firstCommitTs(repoRoot, row.file.replace(/\.js$/, '.descriptor.json')),
         nonzeroRecipes,
@@ -119,13 +131,15 @@ export function headDoc(repoRoot, rel) {
 
 export function selfTest() {
   const good = {
-    slug: 's', legacy: 'none', hasLegacyCitation: false, scriptFirstCommitTs: 10, descriptorFirstCommitTs: 10,
+    slug: 's', legacy: 'none', hasLegacyCitation: false, shallowRepo: false, scriptFirstCommitTs: 10, descriptorFirstCommitTs: 10,
     nonzeroRecipes: 1, redEvidenceFiles: 1, postCaptures: 2, postsWithRerunPass: 2,
   };
   const cases = [
     [good, true],
     [{ ...good, legacy: undefined }, false],
     [{ ...good, hasLegacyCitation: true }, false],
+    [{ ...good, shallowRepo: true }, false],
+    [{ ...good, shallowRepo: undefined }, false],
     [{ ...good, scriptFirstCommitTs: 5 }, false],
     [{ ...good, scriptFirstCommitTs: null }, false],
     [{ ...good, nonzeroRecipes: 0 }, false],

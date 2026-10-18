@@ -1412,6 +1412,13 @@ const LINK_PARCELS_SHARED_RUNNER_VARS = new Set(['spatial_match_max_distance_m',
  * `runEnrichPhase`) all share one clean prefix; `link_parcels`' pair does not, so it is
  * named explicitly instead.
  */
+/**
+ * Spec 124 R-DR closed list (Spec 08 output panel round 1, 2026-10-18): the ONLY null-owner runner-wide
+ * names a config-"none" step may leave undeclared — opt-in ceilings the runner falls back from when absent.
+ * Any other null-owner runner-wide read counts as the step's own consumption (fail closed).
+ */
+const RUNNER_OPT_IN_CEILINGS = new Set(['step_post_check_concurrency', 'step_post_check_statement_timeout_minutes']);
+
 function sharedRunnerVarOwner(name: string): string | null {
   if (name.startsWith('enrich_parcels_')) return 'enrich_parcels';
   if (LINK_PARCELS_SHARED_RUNNER_VARS.has(name)) return 'link_parcels';
@@ -1425,7 +1432,7 @@ function sharedRunnerVarOwner(name: string): string | null {
  * exact same predicates with a var removed (the seed direction) or an unregistered
  * name added (the registry direction) without mutating a committed file.
  */
-function configFindings(relFile: string, slug: string, declared: string[]): string[] {
+function configFindings(relFile: string, slug: string, declared: string[], injectedRunnerWide: string[] = []): string[] {
   const findings: string[] = [];
 
   // The paired compute, by basename (§4.1 "three files, one slug").
@@ -1462,7 +1469,7 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   const fieldsFunctionConsumed = hasCompute
     ? fieldsFunctionCfgVars(relFile, fs.readFileSync(path.join(REPO_ROOT, computeRel), 'utf8'))
     : [];
-  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile), ...genericDispatchConsumed, ...fieldsFunctionConsumed])];
+  const consumed = [...new Set([...computeConsumed, ...runnerConsumed, ...sharedRunnerConsumedVars(), ...libraryConsumedVars(relFile), ...genericDispatchConsumed, ...fieldsFunctionConsumed, ...injectedRunnerWide])];
 
   for (const name of declared) {
     if (!REGISTRY_KEYS.has(name)) {
@@ -1535,13 +1542,20 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
   // in the posture the shared-runner and library paths already have above (LP-D-conformance-gap, EP-D17:
   // "unioned for the DEAD-DECLARATION check only"). A runner-wide read in scripts/lib/step/index.js
   // (ctx.config.<x> or configValues.<x>) is this step's only when sharedRunnerVarOwner names it, or when the
-  // step also reaches it through a path of its own. Every other one is another slug's (checked in the scoped
-  // loop above) or opt-in (the runner falls back when it is undeclared — the post-check ceilings), so it counts
-  // only for a step that declares it.
-  const runnerWide = new Set([...sharedRunnerConsumedVars(), ...sharedRunnerConfigValuesReads()]);
+  // step also reaches it through a path of its own. A name another slug owns is checked in the scoped loop
+  // above. A null-owner name is exempt only on the CLOSED opt-in list RUNNER_OPT_IN_CEILINGS (the runner falls
+  // back when it is undeclared — the post-check ceilings); any other null-owner runner-wide name counts as this
+  // step's own consumption (fail closed; Spec 08 output panel round 1, 2026-10-18). `injectedRunnerWide` lets
+  // the canary add a synthetic runner read without touching scripts/lib/step/index.js.
+  const runnerWide = new Set([...sharedRunnerConsumedVars(), ...sharedRunnerConfigValuesReads(), ...injectedRunnerWide]);
   const ownLibrary = libraryConsumedVars(relFile).filter((name) => !runnerWide.has(name)); // maintenance + distribution keys derive from this step's own descriptor/compute
   const ownPaths = new Set([...computeConsumed, ...runnerConsumed, ...ownLibrary, ...genericDispatchConsumed, ...fieldsFunctionConsumed]);
-  const ownConsumed = consumed.filter((name) => ownPaths.has(name) || (runnerWide.has(name) && sharedRunnerVarOwner(name) === slug));
+  const ownConsumed = consumed.filter((name) => {
+    if (ownPaths.has(name)) return true;
+    if (!runnerWide.has(name)) return false;
+    const owner = sharedRunnerVarOwner(name);
+    return owner === null ? !RUNNER_OPT_IN_CEILINGS.has(name) : owner === slug;
+  });
   if (declared.length === 0 && ownConsumed.length > 0) {
     findings.push(`config is "none" while ${ownConsumed.length} tunable(s) are consumed (${computeRel} ctx.config reads + descriptor *_from_config refs) — a hidden variable (§1.2a P4)`);
   }
@@ -1628,6 +1642,33 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
       expect(findings.some((f) => f.includes('a dead declaration')), findings.join('\n')).toBe(true);
     });
   }
+
+  // ── R-DR CLOSED LIST (Spec 08 output panel round 1, 2026-10-18) ────────────
+  // A null-owner runner-wide read is exempt for a config-"none" step only when it is on
+  // RUNNER_OPT_IN_CEILINGS; any other unowned name fails closed as the step's own consumption.
+  describe('R-DR — the runner opt-in exemption is a closed list (fail closed)', () => {
+    const RDR_STEP = 'scripts/load-bylaw-map-areas.js';
+    it('the closed list is exactly the two post-check ceilings', () => {
+      expect([...RUNNER_OPT_IN_CEILINGS].sort()).toEqual(['step_post_check_concurrency', 'step_post_check_statement_timeout_minutes']);
+    });
+    it(`GREEN — ${RDR_STEP} (config "none") passes with the real runner reads`, () => {
+      expect(CONVERTED).toContain(RDR_STEP);
+      const { slug, declared } = declaredConfigVars(RDR_STEP);
+      expect(declared).toEqual([]);
+      expect(configFindings(RDR_STEP, slug, [])).toEqual([]);
+    });
+    it('RED — a synthetic UNOWNED runner-wide name with config "none" is a hidden variable', () => {
+      const ghost = 'r_dr_synthetic_unowned_runner_var';
+      expect(sharedRunnerVarOwner(ghost)).toBeNull();
+      expect(RUNNER_OPT_IN_CEILINGS.has(ghost)).toBe(false);
+      const findings = configFindings(RDR_STEP, 'load_bylaw_map_areas', [], [ghost]);
+      expect(findings.some((f) => f.includes('a hidden variable (§1.2a P4)')), findings.join('\n')).toBe(true);
+    });
+    it('GREEN — an injected name on the closed list stays exempt; one owned by another slug is not this step\'s', () => {
+      expect(configFindings(RDR_STEP, 'load_bylaw_map_areas', [], ['step_post_check_concurrency'])).toEqual([]);
+      expect(configFindings(RDR_STEP, 'load_bylaw_map_areas', [], ['enrich_parcels_r_dr_synthetic'])).toEqual([]);
+    });
+  });
 
   // ── THE SECOND CONSUMPTION PATH (ruling A-4) ───────────────────────────────
   // A verdict bound is an operator knob AND the number rendered in the audit row's

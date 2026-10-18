@@ -435,10 +435,57 @@ function perturbationSetExpr(op, column) {
   throw new Error(`unknown op kind ${JSON.stringify(op.kind)}`);
 }
 
-/** R-DP: the pair-mode perturbation — DELETE every row the cohort keys hold. Pure. */
+/**
+ * R-DP: the pair-mode perturbation — DELETE every row the cohort keys hold, RETURNING the
+ * (key, column) pairs that went, so --run can prove the deleted pair set IS the before-image
+ * before it COMMITs (Spec 08 output panel round 1, 2026-10-18). Pure.
+ */
 function perturbationDeleteSql(o) {
-  if (!TABLE_NAME_RE.test(o.table) || !TABLE_NAME_RE.test(o.key)) throw new Error('perturbationDeleteSql: invalid identifier');
-  return `DELETE FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
+  if (!TABLE_NAME_RE.test(o.table) || !TABLE_NAME_RE.test(o.key) || !TABLE_NAME_RE.test(o.column)) throw new Error('perturbationDeleteSql: invalid identifier');
+  return `DELETE FROM ${o.table} t WHERE t."${o.key}" = ANY($1) RETURNING t."${o.key}", t."${o.column}"`;
+}
+
+/**
+ * R-DP safety (Spec 08 output panel round 1, 2026-10-18): the three catalog reads that decide
+ * whether a table may be bracketed by DELETE-and-reinsert. Each binds `$1` = the table name and
+ * returns `n` plus the offending names. Pure SQL builders.
+ *   - inbound foreign keys: a DELETE would cascade into, or be blocked by, another table;
+ *   - non-internal triggers firing on DELETE (tgtype bit 8, TRIGGER_TYPE_DELETE): the DELETE
+ *     would run side effects the restore cannot undo;
+ *   - generated or identity columns: an INSERT of the before-image cannot write them back as they were.
+ */
+const PAIR_SAFETY_SQL = Object.freeze({
+  inboundFks: "SELECT count(*)::int AS n, coalesce(string_agg(conname::text, ',' ORDER BY conname), '') AS names FROM pg_constraint WHERE contype = 'f' AND confrelid = $1::regclass",
+  deleteTriggers: "SELECT count(*)::int AS n, coalesce(string_agg(tgname::text, ',' ORDER BY tgname), '') AS names FROM pg_trigger WHERE tgrelid = $1::regclass AND NOT tgisinternal AND (tgtype::int & 8) <> 0",
+  generatedColumns: "SELECT count(*)::int AS n, coalesce(string_agg(attname::text, ',' ORDER BY attnum), '') AS names FROM pg_attribute WHERE attrelid = $1::regclass AND attnum > 0 AND NOT attisdropped AND (attgenerated <> '' OR attidentity <> '')",
+});
+function pairSafetySql(kind) {
+  if (!Object.prototype.hasOwnProperty.call(PAIR_SAFETY_SQL, kind)) throw new Error(`pairSafetySql: unknown kind ${JSON.stringify(kind)}`);
+  return PAIR_SAFETY_SQL[kind];
+}
+
+/**
+ * R-DP safety decision. PURE: the caller resolves each catalog read to `{n, names}` and this
+ * decides. Any inbound FK, DELETE-firing trigger, or generated/identity column refuses pair mode.
+ */
+function pairModeRefusal({ inboundFks, deleteTriggers, generatedColumns } = {}) {
+  const reasons = [];
+  const count = (r) => (r && Number.isInteger(Number(r.n)) ? Number(r.n) : NaN);
+  for (const [label, r] of [['inbound foreign key(s)', inboundFks], ['non-internal DELETE trigger(s)', deleteTriggers], ['generated/identity column(s)', generatedColumns]]) {
+    const n = count(r);
+    if (!Number.isFinite(n)) return { ok: false, reason: `pair-mode safety read for ${label} is missing — refusing` };
+    if (n > 0) reasons.push(`${n} ${label} (${r.names || '?'})`);
+  }
+  if (reasons.length > 0) return { ok: false, reason: `--op=delete_reinsert refuses this table: ${reasons.join('; ')} — a DELETE-and-reinsert bracket could not restore it exactly (Spec 124 R-DP)` };
+  return { ok: true };
+}
+
+/**
+ * R-DP: the restore's EXPLICIT column list, read from the before-image's own catalog (never
+ * `SELECT b.*`, which would silently depend on the two tables' physical column order). Pure.
+ */
+function backupColumnsSql() {
+  return 'SELECT attname::text AS c FROM pg_attribute WHERE attrelid = $1::regclass AND attnum > 0 AND NOT attisdropped ORDER BY attnum';
 }
 
 // ── SQL builders (pure, shared by every mode) ────────────────────────────────
@@ -458,9 +505,10 @@ function projection(key, column) {
  * restricted. Pure. The order is ALWAYS the key column: the hash must be stable across
  * hosts and must NOT depend on the table's physical order.
  */
-function hashSqlFor({ table, key, column, where }) {
+function hashSqlFor({ table, key, column, where, pair = false }) {
   const rowText = rowTextExpr(projection(key, column));
-  const orderBy = orderByClause({ orderColumns: [key], pkColumns: [], allColumns: [] });
+  // R-DP: a pair-mode key holds many rows, so the hash orders by (key, column) to be total.
+  const orderBy = orderByClause({ orderColumns: pair ? [key, column] : [key], pkColumns: [], allColumns: [] });
   const pred = where ? ` WHERE ${where}` : '';
   return `SELECT md5(string_agg(${rowText}, '|' ORDER BY ${orderBy})) AS h FROM ${table} t${pred}`;
 }
@@ -470,11 +518,12 @@ function hashSqlFor({ table, key, column, where }) {
  * which is why `hashOf` and `BACKUP_TABLE_RE` cannot disagree on case: Postgres folds
  * unquoted identifiers to lower case, so both must be lower-case.
  */
-function hashOf({ table, key, column }) {
+function hashOf(o) {
+  const { table, key, column } = o;
   if (typeof table !== 'string' || !TABLE_NAME_RE.test(table)) {
     throw new Error(`refusing to build a hash for table name ${JSON.stringify(table)}`);
   }
-  return hashSqlFor({ table, key, column, where: null });
+  return hashSqlFor({ table, key, column, where: null, pair: isPairMode(o) });
 }
 
 /** The cohort SELECT: the FIRST N eligible rows by --order, key + column. READ ONLY. Pure. */
@@ -535,12 +584,18 @@ function backupSelectSql(o) {
  * `IS DISTINCT FROM` guard means a no-op restore writes nothing (preserving every other
  * row's xmin) and only the column this bracket moved is ever touched.
  */
-function restoreSql(o) {
+function restoreSql(o, columns) {
   if (!TABLE_NAME_RE.test(o.backupTable)) throw new Error(`invalid before-image name ${JSON.stringify(o.backupTable)}`);
   // R-DP: re-insert ONLY the cohort pairs that are missing — a pair the step already put back
-  // is left as the step wrote it, and a no-op restore inserts nothing.
+  // is left as the step wrote it, and a no-op restore inserts nothing. The column list is
+  // EXPLICIT, read from the before-image (backupColumnsSql), never `SELECT b.*`.
   if (isPairMode(o)) {
-    return `INSERT INTO ${o.table} SELECT b.* FROM ${o.backupTable} b WHERE b."${o.key}" = ANY($1)`
+    if (!Array.isArray(columns) || columns.length === 0) throw new Error('restoreSql: pair mode needs the before-image column list');
+    for (const c of columns) if (!TABLE_NAME_RE.test(c)) throw new Error(`restoreSql: invalid column name ${JSON.stringify(c)}`);
+    if (!columns.includes(o.key) || !columns.includes(o.column)) throw new Error('restoreSql: the before-image column list lacks the key or the column');
+    const cols = columns.map((c) => `"${c}"`).join(', ');
+    const bcols = columns.map((c) => `b."${c}"`).join(', ');
+    return `INSERT INTO ${o.table} (${cols}) SELECT ${bcols} FROM ${o.backupTable} b WHERE b."${o.key}" = ANY($1)`
       + ` AND NOT EXISTS (SELECT 1 FROM ${o.table} t WHERE t."${o.key}" = b."${o.key}" AND t."${o.column}" = b."${o.column}")`;
   }
   return `UPDATE ${o.table} t SET "${o.column}" = b."${o.column}" FROM ${o.backupTable} b`
@@ -930,11 +985,15 @@ function firstSummary(stdout) {
 
 /**
  * The cohort rows as `[{key, value}]` from a `SELECT key, column` result. Pure.
- * R-DP: in pair mode each (key, column) PAIR is one entry (`"<key>|<column>"` → present), so
- * the same value-map comparison checks the pair SET — a key holds many rows there.
+ * R-DP: in pair mode each (key, column) PAIR is one entry (`JSON.stringify([key, column])` →
+ * present), so the same value-map comparison checks the pair SET — a key holds many rows there.
+ * JSON, not `"k|c"`: a value containing `|` cannot alias another pair (Spec 08 output panel round 1).
  */
+function pairId(k, c) {
+  return JSON.stringify([k === null || k === undefined ? null : String(k), c === null || c === undefined ? null : String(c)]);
+}
 function rowsToKeyValues(rows, key, column, pairMode = false) {
-  if (pairMode) return rows.map((r) => ({ key: `${String(r[key])}|${String(r[column])}`, value: 'present' }));
+  if (pairMode) return rows.map((r) => ({ key: pairId(r[key], r[column]), value: 'present' }));
   return rows.map((r) => ({ key: r[key], value: r[column] }));
 }
 
@@ -1097,11 +1156,27 @@ async function backupCohortValues(pool, o) {
 
 /**
  * The before-image's distinct cohort KEYS. Reads only. --restore needs the keys, not the
- * value entries: in pair mode an entry is a `"<key>|<column>"` pair, never a key.
+ * value entries: in pair mode an entry is a JSON `[key, column]` pair id, never a key.
  */
 async function backupCohortKeys(pool, o) {
   const rows = await readOnlyQuery(pool, `SELECT DISTINCT t."${o.key}" FROM ${o.backupTable} t`);
   return rows.map((r) => r[o.key]);
+}
+
+/**
+ * R-DP safety: run the three catalog reads and refuse pair mode by name. Reads only. Called at
+ * --backup and again at --run before the DELETE.
+ */
+async function assertPairModeSafe(pool, o) {
+  if (!isPairMode(o)) return;
+  const read = async (kind) => (await readOnlyQuery(pool, pairSafetySql(kind), [o.table]))[0];
+  const verdict = pairModeRefusal({ inboundFks: await read('inboundFks'), deleteTriggers: await read('deleteTriggers'), generatedColumns: await read('generatedColumns') });
+  if (!verdict.ok) throw new Error(verdict.reason);
+}
+
+/** R-DP: the before-image's columns, in attnum order. Reads only. */
+async function backupColumns(pool, o) {
+  return (await readOnlyQuery(pool, backupColumnsSql(), [o.backupTable])).map((r) => r.c);
 }
 
 /** Does `table` resolve on this connection? Reads only. */
@@ -1147,6 +1222,7 @@ async function backup(o) {
     if (await tableExists(pool, o.backupTable)) {
       throw new Error(`--backup-table ${o.backupTable} already exists — refusing to overwrite a before-image; pick a fresh <yyyymmddthhmmz> name`);
     }
+    await assertPairModeSafe(pool, o);
     const cohort = await resolveCohort(pool, o);
     reportSourceCheck('backup', cohort.sourceInfo, console.log);
     await pool.query(backupCreateSql(o), [cohort.keys]);
@@ -1174,7 +1250,7 @@ async function backup(o) {
  */
 async function restoreFromBackup(pool, o, keys) {
   assertRestoreKeys(keys);
-  const res = await pool.query(restoreSql(o), [keys]);
+  const res = await pool.query(restoreSql(o, isPairMode(o) ? await backupColumns(pool, o) : undefined), [keys]);
   return res.rowCount;
 }
 
@@ -1277,6 +1353,28 @@ function removeSignalHandlers() {
  * descriptor and the capture the harness just wrote. The descriptor sits beside the step
  * (`<step>.descriptor.json`, the fleet convention); a missing one refuses by name.
  */
+/**
+ * R-DN cross-check (Spec 08 output panel round 1, 2026-10-18): `--count-path` must be the
+ * `count_path` the slug's own `cohort.json` declares for `--table` — never a key chosen at the
+ * command line that gate G #38 would not read for that table. PURE over the parsed cohort.json
+ * (`null` when the file is absent); fails closed when no target names the table.
+ */
+function countPathCohortDecision(cohortDoc, { table, countPath }) {
+  if (countPath === null || countPath === undefined) return { ok: true };
+  const targets = cohortDoc && Array.isArray(cohortDoc.targets) ? cohortDoc.targets : null;
+  if (!targets) return { ok: false, reason: `--count-path=${countPath}: the slug has no cohort.json targets[] — declare the ${table} target (count_path) first (R-DN)` };
+  const hits = targets.filter((t) => t && t.table === table);
+  if (hits.length !== 1) return { ok: false, reason: `--count-path=${countPath}: cohort.json has ${hits.length} target(s) for table ${table}, expected exactly 1 (R-DN)` };
+  if (hits[0].count_path !== countPath) return { ok: false, reason: `--count-path=${countPath} != cohort.json's count_path ${JSON.stringify(hits[0].count_path)} for table ${table} (R-DN)` };
+  return { ok: true };
+}
+
+/** The slug's cohort.json beside `--out` (`docs/reports/golden/<slug>/cohort.json`), parsed, or null. */
+function readCohortDoc(outAbs) {
+  const p = path.join(path.dirname(path.dirname(outAbs)), 'cohort.json');
+  return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : null;
+}
+
 async function countPathFromCapture(o, outAbs) {
   const descAbs = path.resolve(REPO_ROOT, o.step.replace(/\.js$/, '.descriptor.json'));
   if (!fs.existsSync(descAbs)) return { ok: false, reason: `no descriptor beside ${o.step}` };
@@ -1301,6 +1399,8 @@ async function run(o) {
   // incident left a 199-row capture in docs/reports/golden/address_points/post/sources.json).
   // Captured BEFORE makePool so a refusal can never have written anything.
   const outAbs = resolveCaptureOut(o.out);
+  const cohortCheck = countPathCohortDecision(o.countPath ? readCohortDoc(outAbs) : null, { table: o.table, countPath: o.countPath });
+  if (!cohortCheck.ok) throw new Error(`refusing: ${cohortCheck.reason}`);
   const goldenBefore = readGoldenState(outAbs);
   let asserted = false;
   let restored = false;
@@ -1325,6 +1425,7 @@ async function run(o) {
       if (!(await tableExists(pool, o.backupTable))) {
         throw new Error(`--backup-table ${o.backupTable} does not exist — take --backup first; refusing to perturb without a before-image`);
       }
+      await assertPairModeSafe(pool, o);
       const cohort = await resolveCohort(pool, o);
       cohortKeys = cohort.keys;
       reportSourceCheck('run', cohort.sourceInfo, console.log);
@@ -1340,12 +1441,14 @@ async function run(o) {
       try {
         await client.query('BEGIN');
         if (isPairMode(o)) {
-          // R-DP: DELETE every row the cohort keys hold; it commits only if exactly the
-          // before-image's rows went (a concurrent writer would otherwise be deleted unimaged).
+          // R-DP: DELETE every row the cohort keys hold; it commits only if the RETURNING
+          // (key, column) pair set EQUALS the before-image's pair set (a concurrent writer
+          // would otherwise be deleted unimaged), else ROLLBACK.
           const del = await client.query(perturbationDeleteSql(o), [cohortKeys]);
           perturbedRows = del.rowCount;
-          if (perturbedRows !== backupRows.length) {
-            throw new Error(`perturbation deleted ${perturbedRows} row(s), expected ${backupRows.length} (the before-image) — ${o.table} changed under the bracket`);
+          const gone = sameValueMap(canonicalValueMap(backupRows), canonicalValueMap(rowsToKeyValues(del.rows, o.key, o.column, true)));
+          if (perturbedRows !== backupRows.length || !gone.ok) {
+            throw new Error(`perturbation deleted ${perturbedRows} row(s) whose pair set is not the before-image's ${backupRows.length} (${gone.ok ? 'duplicate pairs' : gone.reason}) — ${o.table} changed under the bracket; rolled back`);
           }
         } else {
           const bind = opBindValue(o.opRaw);
@@ -1588,22 +1691,46 @@ function selfTest() {
   throws(() => validateFlags(parseArgs(['--plan', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--count-path=run_matched'])), 'validateFlags accepted --count-path outside --run');
   throws(() => validateFlags(parseArgs(['--run', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/address_points/post/sources.json', '--count-path=meta.x'])), 'validateFlags accepted a dotted --count-path');
 
+  // R-DN cross-check: --count-path must be cohort.json's count_path for --table, both ways.
+  const cdoc = { targets: [{ table: 'entities', count_path: 'is_wsib_registered_corrected' }, { table: 'wsib_registry', count_path: 'run_matched' }] };
+  assert(countPathCohortDecision(cdoc, { table: 'entities', countPath: 'is_wsib_registered_corrected' }).ok === true, 'countPathCohortDecision refused the declared count_path');
+  assert(countPathCohortDecision(cdoc, { table: 'entities', countPath: 'run_matched' }).ok === false, 'countPathCohortDecision accepted another table\'s count_path');
+  assert(countPathCohortDecision(cdoc, { table: 'parcels', countPath: 'run_matched' }).ok === false, 'countPathCohortDecision accepted a table with no target');
+  assert(countPathCohortDecision(null, { table: 'entities', countPath: 'x' }).ok === false, 'countPathCohortDecision accepted a missing cohort.json');
+  assert(countPathCohortDecision(null, { table: 'entities', countPath: null }).ok === true, 'countPathCohortDecision refused a run without --count-path');
+
   // R-DP delete_reinsert: the INSERT-only pair form, both ways.
   const pairArgs = ['--plan', '--table=parcel_address_points', '--key=parcel_id', '--column=address_point_id', '--op=delete_reinsert', '--count=3', '--where=true', '--order=t.parcel_id', '--backup-table=parcel_address_points_cohort_bak_20261018t0100z'];
   const po = validateFlags(parseArgs(pairArgs));
   assert(parseOp('delete_reinsert').kind === 'delete_reinsert' && opBindValue('delete_reinsert') === null, 'parseOp/opBindValue mishandled delete_reinsert');
   assert(isPairMode(po) === true && isPairMode(o) === false, 'isPairMode misclassified an op');
   throws(() => perturbationSetExpr(parseOp('delete_reinsert'), 'c'), 'perturbationSetExpr accepted delete_reinsert');
-  assert(perturbationDeleteSql(po) === 'DELETE FROM parcel_address_points t WHERE t."parcel_id" = ANY($1)', `perturbationDeleteSql: ${perturbationDeleteSql(po)}`);
+  assert(perturbationDeleteSql(po) === 'DELETE FROM parcel_address_points t WHERE t."parcel_id" = ANY($1) RETURNING t."parcel_id", t."address_point_id"', `perturbationDeleteSql: ${perturbationDeleteSql(po)}`);
+  // R-DP safety (Spec 08 output panel round 1): the refusal decision, both ways.
+  const clean = { n: 0, names: '' };
+  assert(pairModeRefusal({ inboundFks: clean, deleteTriggers: clean, generatedColumns: clean }).ok === true, 'pairModeRefusal refused a clean table');
+  assert(pairModeRefusal({ inboundFks: { n: 1, names: 'fk_x' }, deleteTriggers: clean, generatedColumns: clean }).ok === false, 'pairModeRefusal accepted an inbound FK');
+  assert(pairModeRefusal({ inboundFks: clean, deleteTriggers: { n: 1, names: 'trg' }, generatedColumns: clean }).ok === false, 'pairModeRefusal accepted a DELETE trigger');
+  assert(pairModeRefusal({ inboundFks: clean, deleteTriggers: clean, generatedColumns: { n: 1, names: 'id' } }).ok === false, 'pairModeRefusal accepted a generated/identity column');
+  assert(pairModeRefusal({ inboundFks: clean, deleteTriggers: clean }).ok === false, 'pairModeRefusal accepted a missing safety read');
+  assert(pairSafetySql('inboundFks').includes("contype = 'f' AND confrelid = $1::regclass"), 'pairSafetySql inboundFks');
+  assert(pairSafetySql('deleteTriggers').includes('NOT tgisinternal') && pairSafetySql('deleteTriggers').includes('& 8'), 'pairSafetySql deleteTriggers');
+  assert(pairSafetySql('generatedColumns').includes("attgenerated <> '' OR attidentity <> ''"), 'pairSafetySql generatedColumns');
+  throws(() => pairSafetySql('other'), 'pairSafetySql accepted an unknown kind');
+  assert(hashOf(po).includes('ORDER BY "parcel_id", "address_point_id"') && /ORDER BY "[a-z_]+"\)\)/.test(hashOf(o)), `pair hashOf order: ${hashOf(po)}`);
   assert(eligibleCountSql(po).includes('count(DISTINCT t."parcel_id")'), `pair eligibleCountSql is not a distinct-key count: ${eligibleCountSql(po)}`);
   assert(orderedKeysSql(po, { bounded: true }).includes('GROUP BY t."parcel_id" ORDER BY t."parcel_id" LIMIT 3'), `pair orderedKeysSql: ${orderedKeysSql(po, { bounded: true })}`);
   assert(backupCreateSql(po).includes('SELECT t.* FROM parcel_address_points t WHERE t."parcel_id" = ANY($1)'), `pair backupCreateSql is not the full row: ${backupCreateSql(po)}`);
-  assert(restoreSql(po).startsWith('INSERT INTO parcel_address_points SELECT b.*') && restoreSql(po).includes('b."parcel_id" = ANY($1)') && restoreSql(po).includes('NOT EXISTS'), `pair restoreSql: ${restoreSql(po)}`);
+  const rcols = ['parcel_id', 'address_point_id', 'linked_at'];
+  assert(restoreSql(po, rcols).startsWith('INSERT INTO parcel_address_points ("parcel_id", "address_point_id", "linked_at") SELECT b."parcel_id", b."address_point_id", b."linked_at" FROM') && !restoreSql(po, rcols).includes('b.*') && restoreSql(po, rcols).includes('b."parcel_id" = ANY($1)') && restoreSql(po, rcols).includes('NOT EXISTS'), `pair restoreSql: ${restoreSql(po, rcols)}`);
+  throws(() => restoreSql(po), 'restoreSql accepted pair mode without a column list');
+  throws(() => restoreSql(po, ['parcel_id']), 'restoreSql accepted a column list lacking the column');
   assert(cohortRowsSql(po, false, [1]).includes('WHERE t."parcel_id" = ANY($1)'), `pair cohortRowsSql lost the key list: ${cohortRowsSql(po, false, [1])}`);
   throws(() => validateFlags(parseArgs(pairArgs.map((a) => (a.startsWith('--order=') ? '--order=t.address_point_id' : a)))), 'validateFlags accepted delete_reinsert ordered by a non-key');
   throws(() => validateFlags(parseArgs([...pairArgs, '--source-csv=package.json', '--source-key=id'])), 'validateFlags accepted delete_reinsert with --source-csv');
   const pairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 10 }, { parcel_id: 1, address_point_id: 11 }], 'parcel_id', 'address_point_id', true);
-  assert(pairs.length === 2 && pairs[0].key === '1|10' && pairs[1].key === '1|11', `pair rowsToKeyValues: ${JSON.stringify(pairs)}`);
+  assert(pairs.length === 2 && pairs[0].key === '["1","10"]' && pairs[1].key === '["1","11"]', `pair rowsToKeyValues: ${JSON.stringify(pairs)}`);
+  assert(pairId('a|b', 'c') !== pairId('a', 'b|c'), 'pairId aliased two pairs through a "|"');
   const healedPairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 11 }, { parcel_id: 1, address_point_id: 10 }], 'parcel_id', 'address_point_id', true);
   const shortPairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 10 }], 'parcel_id', 'address_point_id', true);
   assert(captureClaim({ recordsUpdated: 0, recordsNew: 2, liveValues: healedPairs, backupValues: pairs }).ok === true, 'captureClaim rejected a fully re-inserted pair set');
@@ -1825,6 +1952,11 @@ module.exports = {
   opBindValue,
   perturbationSetExpr,
   perturbationDeleteSql,
+  countPathCohortDecision,
+  pairSafetySql,
+  pairModeRefusal,
+  backupColumnsSql,
+  pairId,
   isPairMode,
   orderedKeysSql,
   cohortRowsSql,

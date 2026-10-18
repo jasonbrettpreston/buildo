@@ -21,12 +21,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { Writable } from 'node:stream';
+import { execFileSync } from 'node:child_process';
 
 import { main } from '../../scripts/analysis/step-registry.mjs';
 import * as reg from '../../scripts/analysis/gates/step-registry.mjs';
 import * as blocks from '../../scripts/analysis/gates/generated-blocks.mjs';
 
 const require = createRequire(import.meta.url);
+
+/**
+ * link_wsib's committed POST trace count, DERIVED from git's index of the witness directory
+ * (never a literal; Spec 08 output panel round 1, 2026-10-18). It was pinned at 4 (FLEET-2 §5);
+ * the real count is 6 since cdae212d (sources ledger nonzero) and b61efc2b (R-DN cohort-entities)
+ * added witnessed captures under R-CZ/R-DN. loadObserved reads the directory; this reads git.
+ */
+const LINK_WSIB_POST_TRACES = execFileSync('git', ['ls-files', '--', 'docs/reports/witness/link_wsib/post/*.trace.json'], { cwd: path.resolve(__dirname, '../..'), encoding: 'utf8' })
+  .split('\n').filter(Boolean).length;
 const golden = require('../../scripts/analysis/capture-step-golden.js');
 const ledger = require('../../scripts/lib/ledger.js');
 
@@ -254,8 +264,9 @@ describe('step-registry — grouped src/ consumers + declared vs observed (P1-C6
 
   it('RED: loadObserved unions committed POST traces and the fixture record', () => {
     const linkWsib = reg.loadObserved(REPO_ROOT, 'link_wsib');
-    // 2 → 4 at the FLEET-2 §5 recapture (A31/A32): sources + sources-full-forced-4 now carry witness traces too.
-    expect(linkWsib.traces).toBe(4);
+    // 2 → 4 at the FLEET-2 §5 recapture (A31/A32); 4 → 6 at cdae212d + b61efc2b (R-CZ/R-DN). Derived, not pinned.
+    expect(LINK_WSIB_POST_TRACES).toBeGreaterThan(0);
+    expect(linkWsib.traces).toBe(LINK_WSIB_POST_TRACES);
     expect(linkWsib.fixtureSuites).toBeGreaterThanOrEqual(0);
     expect(linkWsib.reads.wsib_registry).toContain('linked_entity_id');
     expect(linkWsib.writes.wsib_registry).toContain('linked_entity_id');
@@ -277,7 +288,7 @@ describe('step-registry — grouped src/ consumers + declared vs observed (P1-C6
 
   it('RED: renderDeclaredVsObserved renders the declared/observed table per slug', () => {
     const linkWsib = reg.renderDeclaredVsObserved('link_wsib', inputs, reg.loadObserved(REPO_ROOT, 'link_wsib'));
-    expect(linkWsib.startsWith('declared: descriptor (deriveMeta) · observed: 4 POST trace(s) + ')).toBe(true);
+    expect(linkWsib.startsWith(`declared: descriptor (deriveMeta) · observed: ${LINK_WSIB_POST_TRACES} POST trace(s) + `)).toBe(true);
     expect(linkWsib).toContain('\nreads:\n');
     expect(linkWsib).toContain('\nwrites:\n');
     expect(linkWsib.split('\n').some((line) => line.startsWith('  wsib_registry: both '))).toBe(true);
@@ -318,7 +329,7 @@ describe('step:registry CLI — ADVISORY readers grep retired, DECLARED vs OBSER
     expect(advisory).toBeGreaterThan(declared);
     expect(dvo).toBeGreaterThan(advisory);
 
-    expect(out).toContain('declared: descriptor (deriveMeta) · observed: 4 POST trace(s)');
+    expect(out).toContain(`declared: descriptor (deriveMeta) · observed: ${LINK_WSIB_POST_TRACES} POST trace(s)`);
     expect(out).toContain('tests naming the script or its tables');
     expect(out).not.toContain('undeclared readers');
     expect(out).not.toContain('git grep of the step');
