@@ -682,9 +682,23 @@ describe('STA-1 — outputs.publish:"pointer" applies_when condition (RS-D-STA f
 // ---------------------------------------------------------------------------
 describe('R-AQ.1 — EP-PIN-D17 gates the end-of-sources boundary, never a sources cutover', () => {
   const CENSUS_ENTRIES = (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8')) as {
-    entries: Array<{ slug: string; batch: string; status?: string }>;
+    entries: Array<{ slug: string; file: string; batch: string; status?: string }>;
   }).entries;
-  const c6 = CENSUS_ENTRIES.filter((e) => e.batch === 'C6').map((e) => e.slug).sort();
+  // A post-sources (C6) step stays gated while its conversion is in flight: phase-4 wave 1 commit ①
+  // (permits, 2026-10-17) flipped its census batch C6 -> "pending", the first post-sources row to do so.
+  // In flight = pending, outside the sources chain, and converting a LEGACY script (its frozen legacy
+  // oracle exists, Spec 123 §4.5); net-new steps (no legacy oracle) were never C6. Draft R-DU (draft, id at integration).
+  const SOURCES_CHAIN = new Set(
+    (JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8')) as { chains: { sources: string[] } }).chains.sources,
+  );
+  const inFlightPostSources = CENSUS_ENTRIES.filter(
+    (e) =>
+      e.batch === 'pending' &&
+      e.status !== 'converted' &&
+      !SOURCES_CHAIN.has(e.slug) &&
+      fs.existsSync(path.join(REPO_ROOT, 'src/tests/steps', e.slug, 'fixtures', `legacy-${path.basename(e.file)}.txt`)),
+  ).map((e) => e.slug);
+  const c6 = [...CENSUS_ENTRIES.filter((e) => e.batch === 'C6').map((e) => e.slug), ...inFlightPostSources].sort();
   const c5 = CENSUS_ENTRIES.filter((e) => e.batch === 'C5').map((e) => e.slug);
 
   it('EP-PIN-D17 stays PARTIAL and a cutover_prereq (deferred, never waived)', () => {

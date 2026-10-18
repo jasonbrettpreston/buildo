@@ -118,6 +118,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   load_wsib: 'legacy_oracle_excluded',
   load_zoning: 'legacy_oracle_excluded',
   neighbourhoods: 'legacy_oracle_excluded',
+  // permits joined as legacy_oracle_excluded while pending (phase-4 wave 1 commit ①, 2026-10-17; the load_zoning precedent).
+  permits: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',

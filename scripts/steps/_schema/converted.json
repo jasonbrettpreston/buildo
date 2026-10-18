@@ -74,6 +74,13 @@
       "reason": "WF1 load_coa_notices (INGESTOR, net-new, converted from day one; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Commit A landed the table, the pure parser library and the manifest tool; commit B lands RE-FREEZE #32 (pdf_document_set) + descriptor/compute/shell/notes/seeds with the fleet recapture (stage shape_clean). The first pin, the first captures (run 1 / forced run 2 / skip run 3) and the precision samples follow; it registers at cutover, per Spec 124 R-K. flips at: violations.test.ts C-12..C-14. — restores shape_clean at: Spec 129 §12 step 4 (run-1/2/3 captures commit).",
       "declared": "2026-10-07",
       "stage": "shape_clean_pending_recapture"
+    },
+    {
+      "file": "scripts/load-permits.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (phase-4 wave 1)",
+      "reason": "Phase-4 wave 1 (permits, INGESTOR multi-target: one CKAN DataStore resource -> permits (class-B data_hash-guarded upsert + last_seen_at touch) + the lifecycle_status_history append ledger (non-fatal secondary write, R-DM on_error warn_row); McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions, R-DL admin visibility; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md; operator y 2026-10-17 on D-P1 CP-PERMITS scope, R-DM, D-P2, D-P3). ① lands the assessment + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text, D1-D9 it.fails) + gate-K red evidence + PM-D1..PM-D9; ② the descriptor/compute/shell/notes + migration-seeded logic variables (R-CV form) + same-session PRE/POST goldens under the witness with a forced cohort bracket (fleet nights P0/P1); ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-17",
+      "stage": "red_suite"
     }
   ],
   "converted": [

@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pending)
+Remaining files: **35** (+ **2** pending) · remaining slugs: **37** (+ **2** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 1 | 1 |
-| C6 | 36 | 40 |
+| C5 | 2 | 2 |
+| C6 | 35 | 39 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -30,10 +30,12 @@ Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pe
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
+| INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); CHAIN-TOOLING (permits); EP-PIN-D17 (permits) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
 - `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
+- `scripts/load-permits.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning.
 
 </details>
 
@@ -60,7 +62,6 @@ Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pe
 | permits | `scripts/extract-builders.js` | builders | permits (1) |
 | permits | `scripts/link-coa.js` | link_coa | coa+permits (2) |
 | permits | `scripts/link-similar.js` | link_similar | permits (1) |
-| permits | `scripts/load-permits.js` | permits | permits (1) |
 | permits | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing | permits (1) |
 | permits | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution | coa+permits (2) |
 | permits | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
@@ -78,7 +79,7 @@ Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pe
 | orphan | `scripts/observe-chain.js` | observe_chain |  (0) |
 | orphan | `scripts/reclassify-all.js` | reclassify_all |  (0) |
 
-*C6 chain-bucket counts (files):* permits=23 · coa=6 · deep_scrapes=3 · entities_wsib=2 · orphan=2
+*C6 chain-bucket counts (files):* permits=22 · coa=6 · deep_scrapes=3 · entities_wsib=2 · orphan=2
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped
 
@@ -90,4 +91,4 @@ Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **2** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **37** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

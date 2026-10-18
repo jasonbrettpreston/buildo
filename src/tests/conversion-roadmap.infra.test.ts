@@ -313,8 +313,12 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 3 -> 1 at the R-DK cutover (Spec 124 R-K, R-DK, 2026-10-18): the load_bylaw_map_areas and
     // link_parcel_abutments rows are RETAINED with `status: "converted"` (R-AO), batch "pending" kept
     // verbatim. Measured: only load_coa_notices remains (still in converted.json pending[]).
-    expect(pendingBatch.size).toBe(1);
-    expect(c6.size).toBe(36);
+    // 1 -> 2 at phase-4 wave 1 commit ① (permits, 2026-10-17; integrated 2026-10-18): its census row flipped
+    // batch "C6" -> "pending" (archetype INGESTOR, the ARCH-CENSUS key-step row re-derived at PH-0, R-AO).
+    // Returns to 1 at permits ③.
+    expect(pendingBatch.size).toBe(2);
+    // 36 -> 35 at phase-4 wave 1 commit ① (permits): the same row left C6 (R-AO retention keeps it out).
+    expect(c6.size).toBe(35);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 

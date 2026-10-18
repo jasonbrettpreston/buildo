@@ -1,0 +1,736 @@
+#!/usr/bin/env node
+/**
+ * Load permits from Toronto Open Data (CKAN) into the database.
+ * Fetches live from the CKAN datastore API by default.
+ * Use --file <path> to load from a local JSON file instead.
+ *
+ * Observability:
+ *   - Structured logging via pipeline.log (§9.4)
+ *   - Network telemetry: latencies, api_errors, retry counts
+ *   - Schema drift detection: critical CKAN field presence check
+ *   - Full records_meta in PIPELINE_SUMMARY for downstream assertions
+ *
+ * Usage:
+ *   node scripts/load-permits.js              # fetch live from CKAN
+ *   node scripts/load-permits.js --file data.json  # load from local file
+ *
+ * SPEC LINK: docs/specs/01-pipeline/41_chain_permits.md
+ * SPEC LINK: docs/specs/01-pipeline/50_source_permits.md
+ */
+const pipeline = require('./lib/pipeline');
+const { normalizeStreetName } = require('./lib/address');
+const { safeParseIntOrNull } = require('./lib/safe-math');
+// C6: the ledger's lead_id MUST come from the shared deriver, not a hand-rolled
+// padStart — `padStart(2,'0')` leaves an over-width revision intact ('100' -> '100')
+// while PostgreSQL LPAD (and therefore permits.lead_id) truncates it ('100' -> '10').
+// Divergent keys silently break every lifecycle_status_history -> permits join.
+const { deriveLeadId } = require('./lib/leads/lead-id');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+// CKAN datastore endpoint for Active Building Permits
+const CKAN_BASE = 'https://ckan0.cf.opendata.inter.prod-toronto.ca';
+const RESOURCE_ID = '6d0229af-bc54-46de-9c2b-26759b01dd05';
+
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 2000;
+
+// WF3 Pass-2.5 Finding C Phase 2 — status → source date column mapping.
+// Maps the 7 permit statuses that have a CKAN-provided source date to the
+// corresponding `permits.*_date` column. All other statuses (46 of 53 per
+// Spec 84 §2.5.a — 53 enumerated minus 7 mapped) have no source date in
+// the CKAN feed and leave lifecycle_status_history.event_date = NULL
+// (Inspector falls back to transitioned_at with a 'detected' badge per
+// Spec 76 §3.5).
+//
+// Authoritative spec: docs/specs/01-pipeline/50_source_permits.md §3.
+//
+// Frozen to prevent accidental mutation at runtime (Spec 47 §4.1
+// structural-constants rule).
+const STATUS_TO_DATE_COLUMN = Object.freeze({
+  // Issued group
+  'Permit Issued':            'issued_date',
+  // Terminal/closed group
+  'Closed':                   'completed_date',
+  'File Closed':              'completed_date',
+  'Permit Issued/Close File': 'completed_date',
+  // Application/intake group
+  'Request Received':         'application_date',
+  'Application Received':     'application_date',
+  'Application Acceptable':   'application_date',
+});
+
+// Critical CKAN fields — if any are missing, schema has drifted
+const CRITICAL_FIELDS = [
+  'PERMIT_NUM',     // primary key part 1
+  'REVISION_NUM',   // primary key part 2
+  'STATUS',         // permit lifecycle status
+  'PERMIT_TYPE',    // classification input
+  'STREET_NUM',     // address component
+  'STREET_NAME',    // address component
+  'RESIDENTIAL',    // Spec 78: authoritative GFA — if Toronto drops the column, abort (don't silently lose it)
+];
+
+// CLI: --file <path> for local file fallback
+const fileArgIdx = process.argv.indexOf('--file');
+const localFilePath = fileArgIdx !== -1 ? process.argv[fileArgIdx + 1] : null;
+
+function trimToNull(v) {
+  if (!v) return null;
+  const t = String(v).trim();
+  return t === '' ? null : t;
+}
+
+function parseDate(v) {
+  if (!v || String(v).trim() === '') return null;
+  const s = String(v).trim();
+  // Extract YYYY-MM-DD only — avoids timezone-dependent Date.parse() which
+  // treats "2021-10-18" as UTC but "2021-10-18T00:00:00" as local time,
+  // producing different hashes for the same logical date.
+  const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (!m) return null;
+  return m[1];
+}
+
+function cleanCost(v) {
+  if (!v || String(v).trim() === '') return null;
+  const s = String(v);
+  if (s.includes('DO NOT UPDATE') || s.includes('DO NOT DELETE')) return null;
+  const parsed = parseFloat(s.replace(/[^0-9.\-]/g, ''));
+  if (isNaN(parsed)) return null;
+  return parsed;
+}
+
+/**
+ * Parse a CKAN occupancy floor-area cell (RESIDENTIAL, INTERIOR_ALTERATIONS, …) to m².
+ * Same junk-sentinel guard as cleanCost, but NEGATIVE areas are invalid → null (a
+ * negative GFA would poison the neighbourhood_build_norms percentiles — Spec 78 Phase 1).
+ * Zero is preserved as null (no work in that occupancy class), not 0, so the build-norm
+ * CASEs (which guard `residential_sqm > 0`) treat "no residential area" and "unmapped" alike.
+ */
+function cleanArea(v) {
+  const parsed = cleanCost(v);
+  if (parsed === null || parsed <= 0) return null;
+  return parsed;
+}
+
+/**
+ * Compute a stable SHA-256 hash from a mapped permit record.
+ * Hashes only the cleaned/mapped fields we store — NOT the raw CKAN object.
+ * This prevents upstream metadata changes (_id, rank, new CKAN fields) from
+ * triggering false hash mismatches and cascading unnecessary reclassification.
+ */
+function computeHash(mapped) {
+  const sorted = {};
+  for (const key of Object.keys(mapped).sort()) {
+    sorted[key] = mapped[key];
+  }
+  return crypto.createHash('sha256').update(JSON.stringify(sorted)).digest('hex');
+}
+
+function extractWard(raw) {
+  // WARD field may not exist; extract from WARD_GRID (e.g. "W0523" -> "05")
+  if (raw.WARD) return trimToNull(raw.WARD);
+  if (raw.WARD_GRID) {
+    const m = String(raw.WARD_GRID).match(/W(\d{2})/);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function mapRecord(raw) {
+  const mapped = {
+    permit_num: raw.PERMIT_NUM,
+    revision_num: raw.REVISION_NUM || '00',
+    permit_type: raw.PERMIT_TYPE || null,
+    structure_type: raw.STRUCTURE_TYPE || null,
+    work: raw.WORK || null,
+    street_num: raw.STREET_NUM || null,
+    street_name: raw.STREET_NAME || null,
+    street_name_normalized: normalizeStreetName(raw.STREET_NAME),
+    street_type: raw.STREET_TYPE || null,
+    street_direction: trimToNull(raw.STREET_DIRECTION),
+    city: raw.CITY || 'TORONTO',
+    postal: raw.POSTAL || null,
+    geo_id: raw.GEO_ID || null,
+    building_type: raw.BUILDING_TYPE || null,
+    category: raw.CATEGORY || null,
+    application_date: parseDate(raw.APPLICATION_DATE),
+    issued_date: parseDate(raw.ISSUED_DATE),
+    completed_date: parseDate(raw.COMPLETED_DATE),
+    status: raw.STATUS || null,
+    description: raw.DESCRIPTION || null,
+    est_const_cost: cleanCost(raw.EST_CONST_COST),
+    builder_name: raw.BUILDER_NAME || null,
+    owner: raw.OWNER || null,
+    dwelling_units_created: safeParseIntOrNull(raw.DWELLING_UNITS_CREATED) ?? 0,
+    dwelling_units_lost: safeParseIntOrNull(raw.DWELLING_UNITS_LOST) ?? 0,
+    ward: extractWard(raw),
+    council_district: raw.COUNCIL_DISTRICT || null,
+    current_use: raw.CURRENT_USE || null,
+    proposed_use: raw.PROPOSED_USE || null,
+    housing_units: safeParseIntOrNull(raw.HOUSING_UNITS) ?? 0,
+    storeys: safeParseIntOrNull(raw.STOREYS) ?? 0,
+    // Spec 78 Phase 1 — CKAN occupancy floor-area (m²). RESIDENTIAL = the authoritative GFA the
+    // neighbourhood_build_norms calibrate against (new-build total / addition delta); the rest are
+    // the use-class breakdown. cleanArea() drops junk/0/negative → null (see compute-build-norms guards).
+    residential_sqm: cleanArea(raw.RESIDENTIAL),
+    interior_alterations_sqm: cleanArea(raw.INTERIOR_ALTERATIONS),
+    assembly_sqm: cleanArea(raw.ASSEMBLY),
+    institutional_sqm: cleanArea(raw.INSTITUTIONAL),
+    mercantile_sqm: cleanArea(raw.MERCANTILE),
+    industrial_sqm: cleanArea(raw.INDUSTRIAL),
+    business_personal_services_sqm: cleanArea(raw.BUSINESS_AND_PERSONAL_SERVICES),
+  };
+  // Hash the mapped fields only — excludes raw_json, data_hash, and _ckan_id
+  mapped.data_hash = computeHash(mapped);
+  mapped.raw_json = JSON.stringify(raw);
+  // Preserve CKAN _id for cross-page deduplication tiebreaker
+  if (raw._id != null) mapped._ckan_id = raw._id;
+  return mapped;
+}
+
+/**
+ * Deduplicate mapped records by permit_num + revision_num.
+ * For duplicates, the record with the highest _ckan_id wins (deterministic
+ * tiebreaker that is stable across CKAN pagination order changes).
+ * This prevents the 488-update ping-pong caused by ~252 CKAN duplicate pairs.
+ */
+function deduplicateRecords(records) {
+  const seen = new Map();
+  for (const rec of records) {
+    const key = `${rec.permit_num}--${rec.revision_num}`;
+    const existing = seen.get(key);
+    if (!existing || (rec._ckan_id || 0) > (existing._ckan_id || 0)) {
+      seen.set(key, rec);
+    }
+  }
+  return Array.from(seen.values());
+}
+
+/**
+ * Async generator that yields pages of CKAN records.
+ * Keeps peak memory at O(page_size) instead of O(total_records) (§9.5).
+ * Includes retry with exponential backoff and latency tracking.
+ */
+async function* fetchFromCKAN(tel) {
+  const limit = 10000;
+  let offset = 0;
+  let totalFetched = 0;
+
+  pipeline.log.info('[load-permits]', 'Fetching permits from CKAN datastore API (streaming)...');
+
+  while (true) {
+    const url = `${CKAN_BASE}/api/3/action/datastore_search?resource_id=${RESOURCE_ID}&limit=${limit}&offset=${offset}`;
+    let lastErr = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const reqStart = Date.now();
+      try {
+        const res = await fetch(url);
+        tel.latencies.push(Date.now() - reqStart);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status} at offset ${offset}`);
+
+        const json = await res.json();
+        if (!json.success) throw new Error(`CKAN success=false at offset ${offset}`);
+
+        const batch = json.result.records || [];
+        totalFetched += batch.length;
+        pipeline.log.info('[load-permits]', `offset=${offset}, got ${batch.length} (total: ${totalFetched})`);
+
+        // Schema drift check on first batch
+        if (offset === 0 && batch.length > 0) {
+          const rawKeys = Object.keys(batch[0]);
+          const missing = CRITICAL_FIELDS.filter((f) => !rawKeys.includes(f));
+          if (missing.length > 0) {
+            tel.schema_drift = missing;
+            pipeline.log.error('[load-permits]', `Schema drift — missing CKAN fields: ${missing.join(', ')}. Aborting.`);
+            return; // Exit generator — caller checks tel.schema_drift
+          }
+        }
+
+        lastErr = null;
+        yield batch;
+
+        if (batch.length < limit) return;
+        offset += limit;
+        break; // success — exit retry loop, continue pagination
+
+      } catch (err) {
+        tel.latencies.push(Date.now() - reqStart);
+        lastErr = err;
+        if (attempt < MAX_RETRIES) {
+          const delay = RETRY_BASE_MS * Math.pow(2, attempt - 1);
+          pipeline.log.warn('[load-permits]', `Fetch failed (attempt ${attempt}/${MAX_RETRIES}): ${err.message}. Retrying in ${delay}ms...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
+
+    if (lastErr) {
+      tel.api_errors++;
+      pipeline.log.error('[load-permits]', lastErr, { offset });
+      throw lastErr;
+    }
+  }
+}
+
+async function insertBatch(client, batch, RUN_AT) {
+  if (batch.length === 0) return { rows: [], ledgerInserted: 0, ledgerErrors: 0 };
+
+  // Deduplicate within batch - last occurrence wins
+  const seen = new Map();
+  for (const row of batch) {
+    seen.set(`${row.permit_num}--${row.revision_num}`, row);
+  }
+  batch = Array.from(seen.values());
+
+  // Phase I.1: pre-UPSERT capture of status to detect status changes for the
+  // lifecycle_status_history ledger. Empty Map for new permits (Map.get → undefined
+  // → treated as NULL from_status). Uses JOIN UNNEST(...) pattern per Spec 47 §6.3
+  // (Gemini v2 HIGH 4 fold — NOT the invalid `WHERE (col, col) IN ($1, $2)` syntax).
+  const permitNums = batch.map((b) => b.permit_num);
+  const revisionNums = batch.map((b) => b.revision_num);
+  const prevRes = await client.query(
+    `SELECT p.permit_num, p.revision_num, p.status
+       FROM permits p
+       JOIN UNNEST($1::text[], $2::text[]) AS v(permit_num, revision_num)
+         ON p.permit_num = v.permit_num AND p.revision_num = v.revision_num`,
+    [permitNums, revisionNums],
+  );
+  const prevStatusByKey = new Map();
+  for (const row of prevRes.rows) {
+    prevStatusByKey.set(`${row.permit_num}--${row.revision_num}`, row.status);
+  }
+
+  const cols = [
+    'permit_num', 'revision_num', 'permit_type', 'structure_type', 'work',
+    'street_num', 'street_name', 'street_name_normalized', 'street_type', 'street_direction', 'city',
+    'postal', 'geo_id', 'building_type', 'category',
+    'application_date', 'issued_date', 'completed_date',
+    'status', 'description', 'est_const_cost',
+    'builder_name', 'owner', 'dwelling_units_created', 'dwelling_units_lost',
+    'ward', 'council_district', 'current_use', 'proposed_use',
+    'housing_units', 'storeys',
+    'residential_sqm', 'interior_alterations_sqm', 'assembly_sqm', 'institutional_sqm',
+    'mercantile_sqm', 'industrial_sqm', 'business_personal_services_sqm',
+    'data_hash', 'raw_json',
+  ];
+
+  const valuesPerRow = cols.length;
+  const placeholders = [];
+  const values = [];
+
+  for (let i = 0; i < batch.length; i++) {
+    const row = batch[i];
+    const rowPlaceholders = [];
+    for (let j = 0; j < cols.length; j++) {
+      const idx = i * valuesPerRow + j + 1;
+      rowPlaceholders.push(`$${idx}`);
+      values.push(row[cols[j]]);
+    }
+    placeholders.push(`(${rowPlaceholders.join(',')})`);
+  }
+
+  const sql = `
+    INSERT INTO permits (${cols.join(',')})
+    VALUES ${placeholders.join(',\n')}
+    ON CONFLICT (permit_num, revision_num) DO UPDATE SET
+      permit_type = EXCLUDED.permit_type,
+      structure_type = EXCLUDED.structure_type,
+      work = EXCLUDED.work,
+      street_num = EXCLUDED.street_num,
+      street_name = EXCLUDED.street_name,
+      street_name_normalized = EXCLUDED.street_name_normalized,
+      street_type = EXCLUDED.street_type,
+      street_direction = EXCLUDED.street_direction,
+      city = EXCLUDED.city,
+      postal = EXCLUDED.postal,
+      geo_id = EXCLUDED.geo_id,
+      building_type = EXCLUDED.building_type,
+      category = EXCLUDED.category,
+      application_date = EXCLUDED.application_date,
+      issued_date = EXCLUDED.issued_date,
+      completed_date = EXCLUDED.completed_date,
+      status = EXCLUDED.status,
+      -- C7 (Spec 44 §3): derived state is scoped by the row's own status. When the
+      -- incoming status moves a row off 'Inspection', its enriched_status basis is
+      -- gone — clear it in the same write. Staying-Inspection preserves byte-for-byte
+      -- (the classify-permit-phase.js:10 never-clobber fence, both halves deliberate).
+      -- IS DISTINCT FROM, never <>: incoming NULL status must also clear.
+      enriched_status = CASE WHEN EXCLUDED.status IS DISTINCT FROM 'Inspection' THEN NULL ELSE permits.enriched_status END,
+      description = EXCLUDED.description,
+      est_const_cost = EXCLUDED.est_const_cost,
+      builder_name = EXCLUDED.builder_name,
+      owner = EXCLUDED.owner,
+      dwelling_units_created = EXCLUDED.dwelling_units_created,
+      dwelling_units_lost = EXCLUDED.dwelling_units_lost,
+      ward = EXCLUDED.ward,
+      council_district = EXCLUDED.council_district,
+      current_use = EXCLUDED.current_use,
+      proposed_use = EXCLUDED.proposed_use,
+      housing_units = EXCLUDED.housing_units,
+      storeys = EXCLUDED.storeys,
+      residential_sqm = EXCLUDED.residential_sqm,
+      interior_alterations_sqm = EXCLUDED.interior_alterations_sqm,
+      assembly_sqm = EXCLUDED.assembly_sqm,
+      institutional_sqm = EXCLUDED.institutional_sqm,
+      mercantile_sqm = EXCLUDED.mercantile_sqm,
+      industrial_sqm = EXCLUDED.industrial_sqm,
+      business_personal_services_sqm = EXCLUDED.business_personal_services_sqm,
+      data_hash = EXCLUDED.data_hash,
+      last_seen_at = $${values.length + 1}::timestamptz,
+      raw_json = EXCLUDED.raw_json
+    WHERE permits.data_hash IS DISTINCT FROM EXCLUDED.data_hash
+    RETURNING (xmax = 0) AS is_insert
+  `;
+
+  const result = await client.query(sql, [...values, RUN_AT]);
+
+  // Always touch last_seen_at for every permit in the batch — even if data_hash
+  // didn't change. This is the "seen in feed" signal used by close-stale-permits.js
+  // to detect feed disappearance. The main upsert only updates last_seen_at when
+  // data_hash changes (IS DISTINCT FROM guard), so unchanged permits would go stale.
+  // Uses VALUES list with parameterized tuples for correct paired matching.
+  const touchParams = [];
+  const touchPlaceholders = [];
+  let tIdx = 1;
+  for (const r of batch) {
+    touchPlaceholders.push(`($${tIdx++}, $${tIdx++})`);
+    touchParams.push(r.permit_num, r.revision_num);
+  }
+  await client.query(
+    `UPDATE permits SET last_seen_at = $${touchParams.length + 1}::timestamptz
+     FROM (VALUES ${touchPlaceholders.join(',')}) AS v(pn, rn)
+     WHERE permits.permit_num = v.pn AND permits.revision_num = v.rn`,
+    [...touchParams, RUN_AT]
+  );
+
+  // Phase I.1: lifecycle_status_history ledger write — Tier 3 (audit) table per
+  // Spec 47 §R9 Tier framework. SAVEPOINT pattern preserves primary UPSERT on
+  // ledger failures (non-fatal WARN). Build ledgerRows from batch rows where
+  // status changed; NO JS dedup (ON CONFLICT DO UPDATE handles intra-batch retries —
+  // WF3 Pass-2.5 Finding C Phase 2 — see Spec 50 §3 for the event_date contract).
+  // lead_id constructed in JS via padStart (NOT SQL LPAD — would crash at runtime
+  // per v2.3 Gemini CRIT 1). Snapshot fields populated from current batch payload.
+  let ledgerInsertedCount = 0;
+  let ledgerErrorCount = 0;
+  const ledgerRows = [];
+  for (const b of batch) {
+    const key = `${b.permit_num}--${b.revision_num}`;
+    const prevStatus = prevStatusByKey.get(key);  // undefined for new permits → treat as NULL
+    if (prevStatus !== b.status) {
+      // WF3 Pass-2.5 Finding C Phase 2 — populate event_date from the CKAN
+      // source date column corresponding to this status, when available.
+      // Trim before lookup: Spec 84 §2.5.a row 8 documents 'Under Review'
+      // has a trailing space in source data; defensive against future
+      // CKAN whitespace anomalies on the mapped statuses.
+      const statusKey = (b.status ?? '').trim();
+      const dateColumn = STATUS_TO_DATE_COLUMN[statusKey];
+      const eventDate = dateColumn ? (b[dateColumn] ?? null) : null;
+      ledgerRows.push({
+        lead_id: deriveLeadId({ permit_num: b.permit_num, revision_num: b.revision_num }),
+        from_status: prevStatus ?? null,
+        to_status: b.status,
+        permit_type: b.permit_type ?? null,
+        event_date: eventDate,
+      });
+    }
+  }
+  if (ledgerRows.length > 0) {
+    // SAVEPOINT pattern with nested ROLLBACK try/catch (v2.3 Gemini HIGH 1 fold).
+    // If ledger INSERT throws: ROLLBACK TO SAVEPOINT lets primary UPSERT survive.
+    // If ROLLBACK itself throws: swallow — re-throwing would undo primary UPSERT.
+    try {
+      await client.query('SAVEPOINT ledger_write');
+      // WF3 Pass-2.5 Finding C Phase 2 — added event_date column (7th column,
+      // $7::date[]). ON CONFLICT switched from DO NOTHING to DO UPDATE so
+      // intra-batch retries (rare — same lead_id + to_status + same UTC second)
+      // can capture a non-null event_date from a later attempt that had source
+      // data the earlier attempt lacked. WHERE clause guards: only UPDATE if
+      // the incoming event_date is BOTH non-null AND different from existing
+      // — preserves WAL discipline + never overwrites existing non-null with
+      // NULL. Note: does NOT propagate CKAN date corrections to existing rows
+      // where status is unchanged (the loop above only emits on status change);
+      // tracked as future hardening in review_followups.md.
+      const ledgerRes = await client.query(
+        `INSERT INTO lifecycle_status_history
+           (lead_id, from_status, to_status, transitioned_at, detected_by, permit_type, event_date)
+         SELECT * FROM UNNEST(
+           $1::text[], $2::varchar[], $3::varchar[],
+           $4::timestamptz[], $5::varchar[], $6::varchar[], $7::date[]
+         )
+         ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC'))
+         DO UPDATE SET event_date = EXCLUDED.event_date
+         WHERE EXCLUDED.event_date IS DISTINCT FROM lifecycle_status_history.event_date
+           AND EXCLUDED.event_date IS NOT NULL`,
+        [
+          ledgerRows.map((r) => r.lead_id),
+          ledgerRows.map((r) => r.from_status),
+          ledgerRows.map((r) => r.to_status),
+          ledgerRows.map(() => RUN_AT),
+          ledgerRows.map(() => 'load-permits.js'),
+          ledgerRows.map((r) => r.permit_type),
+          ledgerRows.map((r) => r.event_date),
+        ],
+      );
+      await client.query('RELEASE SAVEPOINT ledger_write');
+      ledgerInsertedCount = ledgerRes.rowCount || 0;
+    } catch (ledgerErr) {
+      try {
+        await client.query('ROLLBACK TO SAVEPOINT ledger_write');
+      } catch (rollbackErr) {
+        pipeline.log.error('[load-permits]',
+          'ROLLBACK TO SAVEPOINT failed; transaction state may be unstable',
+          { primaryError: ledgerErr.message, rollbackError: rollbackErr.message });
+        // Do NOT re-throw — preserve primary UPSERT commit.
+      }
+      pipeline.log.warn('[load-permits]', 'ledger write failed; primary UPSERT preserved',
+        { error: ledgerErr.message });
+      ledgerErrorCount = 1;
+    }
+  }
+
+  return { rows: result.rows, ledgerInserted: ledgerInsertedCount, ledgerErrors: ledgerErrorCount };
+}
+
+/**
+ * Map raw CKAN records, filtering out invalid ones.
+ * Returns mapped records (with _ckan_id for dedup tiebreaker).
+ */
+function mapRawRecords(records, counters) {
+  const mapped = [];
+  for (const record of records) {
+    try {
+      if (!record.PERMIT_NUM || !record.REVISION_NUM) {
+        counters.errors++;
+        continue;
+      }
+      mapped.push(mapRecord(record));
+    } catch (err) {
+      counters.errors++;
+      if (counters.errors <= 5) pipeline.log.error('[load-permits]', err, { record: counters.processed + counters.errors });
+    }
+  }
+  return mapped;
+}
+
+/**
+ * Upsert mapped records in batches.
+ * Strips _ckan_id (dedup-only field, not a DB column) before insertion.
+ */
+async function upsertRecords(pool, records, counters, startTime, RUN_AT) {
+  let batch = [];
+
+  for (const record of records) {
+    // Strip _ckan_id — it's a dedup tiebreaker, not a DB column
+    const { _ckan_id, ...dbRecord } = record;
+    batch.push(dbRecord);
+    if (batch.length >= pipeline.BATCH_SIZE) {
+      const batchResult = await pipeline.withTransaction(pool, async (client) => {
+        return insertBatch(client, batch, RUN_AT);
+      });
+      for (const r of batchResult.rows) {
+        if (r.is_insert) counters.newInserts++;
+        else counters.updated++;
+      }
+      counters.processed += batch.length;
+      counters.ledgerInserted += batchResult.ledgerInserted;
+      counters.ledgerErrors += batchResult.ledgerErrors;
+      batch = [];
+      if (counters.processed % 10000 === 0) {
+        pipeline.progress('load-permits', counters.processed, records.length, startTime);
+      }
+    }
+  }
+
+  // Flush remaining batch
+  if (batch.length > 0) {
+    const batchResult = await pipeline.withTransaction(pool, async (client) => {
+      return insertBatch(client, batch, RUN_AT);
+    });
+    for (const r of batchResult.rows) {
+      if (r.is_insert) counters.newInserts++;
+      else counters.updated++;
+    }
+    counters.processed += batch.length;
+    counters.ledgerInserted += batchResult.ledgerInserted;
+    counters.ledgerErrors += batchResult.ledgerErrors;
+  }
+}
+
+const ADVISORY_LOCK_ID = 2;
+
+// Only run when executed directly (not when required for testing)
+if (require.main === module) pipeline.run('load-permits', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const RUN_AT = await pipeline.getDbTimestamp(pool);
+
+  const counters = { newInserts: 0, updated: 0, processed: 0, errors: 0, ledgerInserted: 0, ledgerErrors: 0 };
+  const startTime = Date.now();
+
+  // Telemetry accumulator
+  const tel = {
+    api_errors: 0,
+    latencies: [],
+    schema_drift: [],
+  };
+
+  // Phase 1: Map all raw records (streamed page-by-page from CKAN or local file)
+  let allMapped = [];
+
+  if (localFilePath) {
+    // --file mode: read from local JSON file
+    pipeline.log.info('[load-permits]', `Loading from local file: ${localFilePath}`);
+    pipeline.log.info('[load-permits]', `File size: ${(fs.statSync(localFilePath).size / 1024 / 1024).toFixed(1)} MB`);
+    const raw = fs.readFileSync(localFilePath, 'utf-8');
+    pipeline.log.info('[load-permits]', 'Parsing JSON...');
+    let records;
+    try {
+      records = JSON.parse(raw);
+    } catch (err) {
+      throw new Error(`Failed to parse local permits file ${localFilePath}: ${err.message}`);
+    }
+    pipeline.log.info('[load-permits]', `Parsed ${records.length} records`);
+    allMapped = mapRawRecords(records, counters);
+  } else {
+    // Default: stream from CKAN API page by page (§9.5)
+    for await (const page of fetchFromCKAN(tel)) {
+      const pageMapped = mapRawRecords(page, counters);
+      allMapped.push(...pageMapped);
+    }
+
+    // Schema drift abort — check after generator completes
+    if (tel.schema_drift.length > 0) {
+      const durationMs = Date.now() - startTime;
+      pipeline.emitSummary({
+        records_total: 0, records_new: 0, records_updated: 0,
+        records_meta: {
+          duration_ms: durationMs,
+          api_health: { api_errors: tel.api_errors },
+          data_health: {
+            records_fetched: 0, records_mapped: 0, records_skipped: 0,
+            schema_mismatch_count: tel.schema_drift.length,
+            schema_drift: tel.schema_drift,
+          },
+        },
+      });
+      throw new Error(`Schema drift detected: ${tel.schema_drift.join(', ')}`);
+    }
+  }
+
+  // Phase 2: Deduplicate across all pages — highest _ckan_id wins.
+  const beforeDedup = allMapped.length;
+  allMapped = deduplicateRecords(allMapped);
+  const dupsRemoved = beforeDedup - allMapped.length;
+  if (dupsRemoved > 0) {
+    pipeline.log.info('[load-permits]', `Deduplicated: removed ${dupsRemoved} cross-page duplicate(s)`);
+  }
+
+  // Phase 3: Upsert deduplicated records in batches
+  await upsertRecords(pool, allMapped, counters, startTime, RUN_AT);
+
+  const { newInserts, updated, processed, errors } = counters;
+  const unchanged = processed - newInserts - updated;
+  const durationMs = Date.now() - startTime;
+
+  // Latency stats
+  const sortedLat = [...tel.latencies].sort((a, b) => a - b);
+  const avgLatency = sortedLat.length > 0
+    ? Math.round(sortedLat.reduce((a, b) => a + b, 0) / sortedLat.length) : 0;
+  const maxLatency = sortedLat.length > 0 ? sortedLat[sortedLat.length - 1] : 0;
+
+  pipeline.log.info('[load-permits]', 'Load complete', {
+    processed, newInserts, updated, unchanged, errors,
+    dups_removed: dupsRemoved,
+    duration: `${(durationMs / 1000).toFixed(1)}s`,
+    avg_latency: `${avgLatency}ms`,
+  });
+
+  // Build audit_table for permit ingestion observability
+  const auditRows = [
+    { metric: 'records_fetched', value: processed + errors, threshold: '>= 200000', status: (processed + errors) < 200000 ? 'FAIL' : 'PASS' },
+    { metric: 'records_mapped', value: processed, threshold: null, status: 'INFO' },
+    { metric: 'records_errors', value: errors, threshold: '== 0', status: errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'records_deduplicated', value: dupsRemoved, threshold: null, status: 'INFO' },
+    { metric: 'records_inserted', value: newInserts, threshold: null, status: 'INFO' },
+    { metric: 'records_updated', value: updated, threshold: null, status: 'INFO' },
+    { metric: 'records_unchanged', value: unchanged, threshold: null, status: 'INFO' },
+    { metric: 'api_errors', value: tel.api_errors, threshold: '== 0', status: tel.api_errors > 0 ? 'FAIL' : 'PASS' },
+    { metric: 'avg_latency_ms', value: avgLatency, threshold: null, status: 'INFO' },
+    { metric: 'schema_drift', value: tel.schema_drift.length, threshold: '== 0', status: tel.schema_drift.length > 0 ? 'FAIL' : 'PASS' },
+    // Phase I.1: lifecycle_status_history ledger counters (Spec 47 §11.2 Overflow Rule —
+    // secondary writes to Tier 3 audit table; counted in audit_table.rows only,
+    // NEVER summed into records_total / records_new / records_updated).
+    // Unconditional push (Observability v2.1 HIGH 3 fold) — value=0 INFO row preserved
+    // in steady state for trend visibility. WARN-grade error gate (NOT FAIL) preserves
+    // primary UPSERT verdict on ledger failures.
+    { metric: 'lifecycle_status_history_inserted', value: counters.ledgerInserted, threshold: null, status: 'INFO' },
+    { metric: 'lifecycle_status_history_errors', value: counters.ledgerErrors, threshold: '== 0', status: counters.ledgerErrors > 0 ? 'WARN' : 'PASS' },
+  ];
+  // Verdict derivation cascade (Observability v2.1 CRIT 1 + v2.3 Observability HIGH 1
+  // fold — Spec 47 §R10 mandates verdict derived from row statuses, not a hardcoded
+  // boolean. The original verdict used a hardcoded `permitAuditHasFails` flag which omitted WARN
+  // entirely, making the new lifecycle_status_history_errors WARN-grade row INVISIBLE
+  // to observe-chain.js's step-verdict display).
+  const verdict =
+    auditRows.some((r) => r.status === 'FAIL') ? 'FAIL' :
+    auditRows.some((r) => r.status === 'WARN') ? 'WARN' :
+    'PASS';
+
+  pipeline.emitSummary({
+    records_total: newInserts + updated,
+    records_new: newInserts,
+    records_updated: updated,
+    records_meta: {
+      duration_ms: durationMs,
+      api_health: {
+        api_errors: tel.api_errors,
+        avg_req_latency_ms: avgLatency,
+        max_req_latency_ms: maxLatency,
+      },
+      data_health: {
+        records_fetched: processed + errors,
+        records_mapped: processed,
+        records_skipped: errors,
+        schema_mismatch_count: tel.schema_drift.length,
+        dups_removed: dupsRemoved,
+      },
+      audit_table: {
+        phase: 2,
+        name: 'Permit Ingestion',
+        verdict,
+        rows: auditRows,
+      },
+    },
+  });
+  pipeline.emitMeta(
+    {
+      "CKAN API": ["PERMIT_NUM", "REVISION_NUM", "PERMIT_TYPE", "STRUCTURE_TYPE", "WORK", "STREET_NUM", "STREET_NAME", "STREET_TYPE", "STREET_DIRECTION", "CITY", "POSTAL", "GEO_ID", "BUILDING_TYPE", "CATEGORY", "APPLICATION_DATE", "ISSUED_DATE", "COMPLETED_DATE", "STATUS", "DESCRIPTION", "EST_CONST_COST", "BUILDER", "OWNER", "DWELLING_UNITS_CREATED", "DWELLING_UNITS_LOST", "WARD", "COUNCIL_DISTRICT", "CURRENT_USE", "PROPOSED_USE", "HOUSING_UNITS", "STOREYS", "RESIDENTIAL", "INTERIOR_ALTERATIONS", "ASSEMBLY", "INSTITUTIONAL", "MERCANTILE", "INDUSTRIAL", "BUSINESS_AND_PERSONAL_SERVICES"],
+      // Phase I.1: pre-UPSERT capture of permits.status for ledger from_status detection.
+      "permits": ["permit_num", "revision_num", "status"],
+    },
+    {
+      "permits": ["permit_num", "revision_num", "permit_type", "structure_type", "work", "street_num", "street_name", "street_name_normalized", "street_type", "street_direction", "city", "postal", "geo_id", "building_type", "category", "application_date", "issued_date", "completed_date", "status", "description", "est_const_cost", "builder_name", "owner", "dwelling_units_created", "dwelling_units_lost", "ward", "council_district", "current_use", "proposed_use", "housing_units", "storeys", "residential_sqm", "interior_alterations_sqm", "assembly_sqm", "institutional_sqm", "mercantile_sqm", "industrial_sqm", "business_personal_services_sqm", "data_hash", "raw_json", "enriched_status"],
+      // Phase I.1: lifecycle_status_history ledger writes (Tier 3 per Spec 47 §R9).
+      "lifecycle_status_history": ["lead_id", "from_status", "to_status", "transitioned_at", "detected_by", "permit_type", "event_date"],
+    }
+  );
+
+  // Log sync run (duration parameterized to prevent SQL injection — §4.2)
+  const durationSeconds = durationMs / 1000;
+  await pool.query(
+    `INSERT INTO sync_runs (started_at, completed_at, status, records_total, records_new, records_updated, records_unchanged, records_errors, duration_ms)
+     VALUES (NOW() - make_interval(secs => $7), NOW(), 'completed', $1, $2, $3, $4, $5, $6)`,
+    [processed, newInserts, updated, unchanged, errors, durationMs, durationSeconds]
+  );
+  pipeline.log.info('[load-permits]', 'Sync run logged');
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
+});
+
+// Export for testing (used by sync.logic.test.ts + load-permits-occupancy.logic.test.ts)
+module.exports = { deduplicateRecords, mapRecord, cleanArea, CRITICAL_FIELDS };

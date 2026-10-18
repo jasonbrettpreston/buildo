@@ -419,10 +419,14 @@
     },
     {
       "slug": "permits",
+      "owner_specs": [
+        "docs/specs/01-pipeline/50_source_permits.md",
+        "docs/specs/01-pipeline/41_chain_permits.md"
+      ],
       "file": "scripts/load-permits.js",
       "archetype": "INGESTOR",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Acquires an external source and writes its own tables: CKAN DataStore pull (scripts/load-permits.js:33 CKAN_BASE), upsert into permits (:338 INSERT … ON CONFLICT), status-change history rows into lifecycle_status_history (:459), legacy run row into sync_runs (:725; retires to pipeline_runs at cutover, CP-PERMITS). Multi-target INGESTOR, precedent load_zoning."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning."
     },
     {
       "slug": "load_wsib",
