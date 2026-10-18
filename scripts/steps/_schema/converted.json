@@ -74,20 +74,6 @@
       "reason": "WF1 load_coa_notices (INGESTOR, net-new, converted from day one; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Commit A landed the table, the pure parser library and the manifest tool; commit B lands RE-FREEZE #32 (pdf_document_set) + descriptor/compute/shell/notes/seeds with the fleet recapture (stage shape_clean). The first pin, the first captures (run 1 / forced run 2 / skip run 3) and the precision samples follow; it registers at cutover, per Spec 124 R-K. flips at: violations.test.ts C-12..C-14. — restores shape_clean at: Spec 129 §12 step 4 (run-1/2/3 captures commit).",
       "declared": "2026-10-07",
       "stage": "shape_clean_pending_recapture"
-    },
-    {
-      "file": "scripts/load-bylaw-map-areas.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (H6 runbook step 3)",
-      "reason": "WF1 McBylaw Phase 2 inputs A3 (INGESTOR, net-new, converted from day one; plan .cursor/wf1_mcbylaw_phase2_inputs_active_task.md, built 2026-10-07, ported to H6 2026-10-14, rebased onto 51bad989 as wf1/h6-p2-inputs-c 2026-10-15). Loads the By-law 569-2013 sixplex map areas (600.60) into bylaw_map_areas from the adopted seed. Registered by the orchestrator per H6 runbook R0 (registry_reserved); registers at cutover, per Spec 124 R-K, after its POST captures; restores shape_clean at: H6 runbook step 3 (POST captures commit). Stays pending until the net-new PRE-capture question is ruled (QA, 2026-10-16; load_coa_notices precedent).",
-      "declared": "2026-10-15",
-      "stage": "shape_clean_pending_recapture"
-    },
-    {
-      "file": "scripts/link-parcel-abutments.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1 (H6 runbook step 5)",
-      "reason": "WF1 McBylaw Phase 2 inputs B2 (LINK, net-new, converted from day one; Spec 130; plan .cursor/wf1_mcbylaw_phase2_inputs_active_task.md, built 2026-10-07, ported to H6 2026-10-14, rebased onto 51bad989 as wf1/h6-p2-inputs-c 2026-10-15). Links each parcel to its abutting parcels in parcel_abutments (full rescan, Q-B3 adjudicated 2026-10-14). Registered by the orchestrator per H6 runbook R0 (registry_reserved); registers at cutover, per Spec 124 R-K, after its POST captures; restores shape_clean at: H6 runbook step 5 (POST captures commit).",
-      "declared": "2026-10-15",
-      "stage": "shape_clean_pending_recapture"
     }
   ],
   "converted": [
@@ -117,6 +103,8 @@
     "scripts/load-wsib.js",
     "scripts/load-heritage.js",
     "scripts/enrich-centreline.js",
-    "scripts/load-zoning.js"
+    "scripts/load-zoning.js",
+    "scripts/load-bylaw-map-areas.js",
+    "scripts/link-parcel-abutments.js"
   ]
 }

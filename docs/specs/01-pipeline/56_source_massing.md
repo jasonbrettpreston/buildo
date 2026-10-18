@@ -101,7 +101,7 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `src/tests/steps/massing/witness-fixture.logic.test.ts`
   - data (descriptor): `building_footprints` writes (migrations/023_building_footprints.sql)
   - upstream: none
-  - downstream: assert_data_bounds · assert_global_coverage · enrich_parcels · link_massing
+  - downstream: assert_data_bounds · assert_global_coverage · enrich_parcels · link_massing · link_parcel_abutments
   - consumers: massing (records_meta massing_load) · src/app/api/permits/[id]/route.ts (table building_footprints: 4 columns) · src/components/FreshnessTimeline.tsx (records_meta audit_table) · src/lib/leads/lead-inspect-query.ts (table building_footprints: 3 columns)
 - `link_massing` — LINK · converted · owner specs: 56
   - `scripts/link-massing.js`
@@ -116,7 +116,7 @@ The `--full` chain_arg (added `0031f37` for the one-time b16c036 ghost-link clea
   - `src/tests/steps/link_massing/written-by-target.logic.test.ts`
   - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_buildings` reads+writes (migrations/024_parcel_buildings.sql); `parcels` reads+writes (migrations/011_parcels.sql)
   - upstream: compute_centroids · enrich_parcels · massing · parcels
-  - downstream: assert_global_coverage · assert_parcel_sanity · enrich_parcels · refresh_snapshot
+  - downstream: assert_global_coverage · assert_parcel_sanity · enrich_parcels · link_parcel_abutments · refresh_snapshot
   - consumers: link_massing (records_meta building_footprints_count) · link_massing (records_meta code_version) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_deleted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_inserted) · scripts/analysis/link-massing-healing-cohort.js (records_meta links_updated) · scripts/analysis/link-massing-healing-cohort.js (records_meta parcels_flagged_lost_link) · scripts/analysis/link-massing-healing-cohort.js (records_meta primary_cleared) · src/app/api/admin/stats/route.ts (table parcel_buildings: 1 column) · src/app/api/permits/[id]/route.ts (table parcel_buildings: 4 columns) · src/components/FreshnessTimeline.tsx (audit_metric link_rate) · src/lib/leads/lead-inspect-query.ts (table parcel_buildings: 4 columns) · src/lib/quality/metrics.ts (table parcel_buildings: 1 column)
 <!-- /generated:target-files -->
 - `scripts/seeds/logic_variables.json` — the six massing keys: `massing_skip_rate_max_pct`, `massing_batch_error_rate_max_pct`, `massing_story_height_m`, `massing_download_timeout_ms`, `building_footprints_dead_tuple_ratio_warn_max`, `building_footprints_maintenance_timeout_minutes` (`sources_building_footprints_floor` is shared with assert_data_bounds).

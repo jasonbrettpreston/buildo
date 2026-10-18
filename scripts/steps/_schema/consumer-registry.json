@@ -169,6 +169,70 @@
       "source": "trigger"
     },
     {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "building_footprints_count",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "building_footprints_count",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "centreline_count",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "centreline_count",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "code_version",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "parcels_count",
+      "value": "any",
+      "source": "emits"
+    },
+    {
+      "consumer": "link_parcel_abutments",
+      "producer": "link_parcel_abutments",
+      "kind": "records_meta",
+      "key": "parcels_count",
+      "value": "any",
+      "source": "trigger"
+    },
+    {
       "consumer": "link_parcels",
       "producer": "link_parcels",
       "kind": "records_meta",

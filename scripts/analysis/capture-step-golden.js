@@ -1284,9 +1284,25 @@ function parseReplayTs(raw) {
 }
 
 /**
+ * Spec 124 R-DQ (McDonald's Airtight V3, operator y 2026-10-18): the order one step's POST
+ * captures are retaken in. Every plain/env capture comes first, then every bracket capture,
+ * each group by filename. A bracket's heal is a real step write, and its restore puts back
+ * only the column it perturbed (the R-AS instrument's cohort-scoped restore). So a column
+ * the step writes while healing (link_wsib matched_at, 2026-10-18) keeps the new value.
+ * Plain captures taken on both sides of a bracket would then see two table states. Pure.
+ * A PRE is not reordered here; it rides immediately before its same-named POST.
+ */
+function replayOrder(names, entries) {
+  const isBracket = (name) => Boolean(entries && entries[`post/${name}`] && entries[`post/${name}`].via === 'bracket');
+  const sorted = [...names].sort();
+  return [...sorted.filter((n) => !isBracket(n)), ...sorted.filter((n) => isBracket(n))];
+}
+
+/**
  * Every capture's retake, in fleet order: converted.json then pending[] (the order the
- * fleet nights use); per step its post captures by filename, each PRE that has an entry
- * immediately before its same-named POST (back to back, as sameSessionDecision needs).
+ * fleet nights use); per step its post captures in replayOrder (plain/env by filename, then
+ * brackets by filename — Spec 124 R-DQ), each PRE that has an entry immediately before its
+ * same-named POST (back to back, as sameSessionDecision needs).
  * Returns {blocks: [{rel, via, lines}], errors: [{rel, reason}]}. Reads the repo only.
  */
 function replayAll(repoRoot, base) {
@@ -1314,7 +1330,7 @@ function replayAll(repoRoot, base) {
     if (v.length > 0) continue;
     const entries = (recapture && recapture.captures) || {};
     const posts = fs.existsSync(path.join(dir, 'post')) ? fs.readdirSync(path.join(dir, 'post')).filter((f) => f.endsWith('.json')).sort() : [];
-    for (const name of posts) {
+    for (const name of replayOrder(posts, entries)) {
       for (const sub of [`pre/${name}`, `post/${name}`]) {
         if (sub.startsWith('pre/') && !entries[sub]) continue;
         const rel = `${GOLDEN_REL}/${slug}/${sub}`;
@@ -1659,4 +1675,5 @@ module.exports = {
   replayMinute,
   parseReplayTs,
   replayAll,
+  replayOrder,
 };

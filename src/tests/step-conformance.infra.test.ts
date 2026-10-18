@@ -507,7 +507,10 @@ describe('prove-red — the shape rule fires on the unconverted corpus', () => {
     // (pending per Spec 124 R-CS, so pendingInScope removes it again); each landed pilot removes exactly one (Spec 122 §5.2 — the prove-red is
     // over files NOT in converted.json), and each declared-pending file is staged out ahead of its cutover.
     const pendingInScope = SOURCES_STEP_FILES.filter((f) => pendingSet.has(f) && !convertedSet.has(f)).length;
-    expect(conversionCorpus).toHaveLength(28 - convertedSet.size - pendingInScope);
+    // Spec 124 R-DS (operator y 2026-10-18): only converted files IN the sources chain leave this corpus — a
+    // converted step of another chain (load_bylaw_map_areas, bylaw_maps) was never in it.
+    const convertedInScope = SOURCES_STEP_FILES.filter((f) => convertedSet.has(f)).length;
+    expect(conversionCorpus).toHaveLength(28 - convertedInScope - pendingInScope);
     const byFile = new Map(report.report_only.map((f) => [f.file, f.violations]));
     for (const f of conversionCorpus) {
       const violations = byFile.get(f) ?? [];
@@ -1528,8 +1531,19 @@ function configFindings(relFile: string, slug: string, declared: string[]): stri
       findings.push(`seed "${name}" is annotated CONSUMED by ${slug} but the descriptor's config does not declare it`);
     }
   }
-  if (declared.length === 0 && consumed.length > 0) {
-    findings.push(`config is "none" while ${consumed.length} tunable(s) are consumed (${computeRel} ctx.config reads + descriptor *_from_config refs) — a hidden variable (§1.2a P4)`);
+  // Spec 124 R-DR (operator y 2026-10-18): the hidden-variable check counts only the step's OWN consumption,
+  // in the posture the shared-runner and library paths already have above (LP-D-conformance-gap, EP-D17:
+  // "unioned for the DEAD-DECLARATION check only"). A runner-wide read in scripts/lib/step/index.js
+  // (ctx.config.<x> or configValues.<x>) is this step's only when sharedRunnerVarOwner names it, or when the
+  // step also reaches it through a path of its own. Every other one is another slug's (checked in the scoped
+  // loop above) or opt-in (the runner falls back when it is undeclared — the post-check ceilings), so it counts
+  // only for a step that declares it.
+  const runnerWide = new Set([...sharedRunnerConsumedVars(), ...sharedRunnerConfigValuesReads()]);
+  const ownLibrary = libraryConsumedVars(relFile).filter((name) => !runnerWide.has(name)); // maintenance + distribution keys derive from this step's own descriptor/compute
+  const ownPaths = new Set([...computeConsumed, ...runnerConsumed, ...ownLibrary, ...genericDispatchConsumed, ...fieldsFunctionConsumed]);
+  const ownConsumed = consumed.filter((name) => ownPaths.has(name) || (runnerWide.has(name) && sharedRunnerVarOwner(name) === slug));
+  if (declared.length === 0 && ownConsumed.length > 0) {
+    findings.push(`config is "none" while ${ownConsumed.length} tunable(s) are consumed (${computeRel} ctx.config reads + descriptor *_from_config refs) — a hidden variable (§1.2a P4)`);
   }
   return findings;
 }

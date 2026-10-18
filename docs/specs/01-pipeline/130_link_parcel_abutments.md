@@ -60,6 +60,10 @@ Step files (all new, under `scripts/`): the shell step, the descriptor above, `s
 - **Guards (fail):** PostGIS, `idx_parcels_geom_gist`, `idx_toronto_centreline_geom_gist`, and the invalidation trigger. SRID 4326.
 - **Checks (all INFO/WARN, non-blocking):** `full_mode_gate` (PRE — records the gate: full / full_rescan); `parcels_processed`; `abutment_rows_written`; `asymmetric_pairs` (WARN — the pair set must be symmetric table-wide after every run); `est_status_counts`; `parcels_with_abutments_pct`. A WARN lands the `linked_with_warnings` terminal; every other path is `linked`, `no_eligible_parcels`, `failed_missing_precondition` or `lock_held_elsewhere`.
 
+### Cutover (as-built 2026-10-18, phase-4 step 0)
+
+`npm run cutover -- --step=link_parcel_abutments`: registered in `scripts/steps/_schema/converted.json` converted[], its `pending[]` entry deleted in the same commit; the census row RETAINED with `status: converted`, `converted_at: commit-3` (Spec 124 R-K, R-AO). Net-new: no legacy PRE (`legacy: "none"`, Spec 124 R-DK), so G8 compares each POST with the committed POST. Its 7 logic variables join `assert_schema`'s `declared_logic_variables_present` probe list (Spec 122 R-D), and assert_schema's four POSTs were retaken the same day. Admin surface registered (R-DL).
+
 ### Logic Variables
 
 `abut_touch_tolerance_m`, `abut_min_shared_len_m`, `abut_bbox_pad_deg`, `abut_street_search_deg`, `fya_est_min_m`, `fya_est_max_m`, and (read by McBylaw, not by this step) `fya_neighbour_max_dist_m` = 15.0 and `fya_oracle_tol_m` = 0.5. Variables are hoisted above the gate; validation is strict.
@@ -108,14 +112,17 @@ This step stores observations. The front-yard-averaging question — which neigh
 ### Target Files
 <!-- generated:target-files -->
 <!-- do not hand-edit: npm run target-files regenerates this block from the census owner_specs, the capture-step-golden derivation, the cross-step ledger and consumer-registry.json -->
-- `link_parcel_abutments` — LINK · pending · owner specs: 130
+- `link_parcel_abutments` — LINK · converted · owner specs: 130
   - `scripts/link-parcel-abutments.js`
   - `scripts/link-parcel-abutments.descriptor.json`
   - `scripts/link-parcel-abutments.notes.json`
   - `scripts/lib/compute/link-parcel-abutments.js`
   - `src/tests/steps/link_parcel_abutments/violations.test.ts`
   - `src/tests/steps/link_parcel_abutments/witness-adoption.logic.test.ts`
-  - edges: not in the cross-step ledger snapshot (declared files only)
+  - data (descriptor): `building_footprints` reads (migrations/023_building_footprints.sql); `parcel_abutments` writes (migrations/255_parcel_abutments.sql); `parcel_buildings` reads (migrations/024_parcel_buildings.sql); `parcels` reads (migrations/011_parcels.sql); `toronto_centreline` reads (migrations/173_create_toronto_centreline.sql)
+  - upstream: enrich_centreline · enrich_parcels · link_massing · load_centreline · massing · parcels
+  - downstream: none
+  - consumers: link_parcel_abutments (records_meta building_footprints_count) · link_parcel_abutments (records_meta centreline_count) · link_parcel_abutments (records_meta code_version) · link_parcel_abutments (records_meta parcels_count)
 <!-- /generated:target-files -->
 - `migrations/255_parcel_abutments.sql`
 

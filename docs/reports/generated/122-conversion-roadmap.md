@@ -7,12 +7,12 @@
 
 ## Counts
 
-Remaining files: **36** (+ **3** pending) · remaining slugs: **38** (+ **3** pending)
+Remaining files: **36** (+ **1** pending) · remaining slugs: **38** (+ **1** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 3 | 3 |
+| C5 | 1 | 1 |
 | C6 | 36 | 40 |
 
 ## C4 — archetype-grouped, risk-ascending
@@ -29,14 +29,10 @@ Remaining files: **36** (+ **3** pending) · remaining slugs: **38** (+ **3** pe
 
 | Archetype | File | Slug(s) | Chains (slots) | Quadrant | Write hints | Open cutover_prereq |
 |---|---|---|---|---|---|---|
-| INGESTOR | `scripts/load-bylaw-map-areas.js` | load_bylaw_map_areas [pending: shape_clean_pending_recapture] | bylaw_maps (1) | — | — | — |
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
-| LINK | `scripts/link-parcel-abutments.js` | link_parcel_abutments [pending: shape_clean_pending_recapture] | sources (1) | top-left | — | — |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
-- `scripts/link-parcel-abutments.js` (LINK): NET-NEW step, converted from day one (WF1 McBylaw Phase 2 inputs B2, Spec 130; .cursor/wf1_mcbylaw_phase2_inputs_active_task.md). Classified LINK from the plan: it relates existing parcels to each other (ordered abutment pairs) in parcel_abutments, reading no external source; there is no legacy script to classify. In converted.json pending[] until its cutover (H6 runbook step 5).
-- `scripts/load-bylaw-map-areas.js` (INGESTOR): NET-NEW step, converted from day one (WF1 McBylaw Phase 2 inputs A3; .cursor/wf1_mcbylaw_phase2_inputs_active_task.md). Classified INGESTOR from the plan: an external map-area set (the adopted 600.60 seed: GIS layer 80 + city wards) loaded into one table, bylaw_map_areas; there is no legacy script to classify. In converted.json pending[] until its cutover (H6 runbook step 3).
 - `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
 
 </details>
@@ -94,4 +90,4 @@ Remaining files: **36** (+ **3** pending) · remaining slugs: **38** (+ **3** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **27** converted + **3** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **1** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **38** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

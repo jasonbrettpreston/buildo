@@ -412,7 +412,7 @@ Every test file MUST include the SPEC LINK header.
   - downstream: enrich_parcels
   - consumers: enrich_parcels (records_meta base_layer_committed_after_overlays_failed) · enrich_parcels (records_meta zoning_layers_loaded) · enrich_parcels (records_meta zoning_partial_load) · enrich_parcels (records_meta zoning_rows_changed) · load_zoning (records_meta zoning_layer_versions)
 <!-- /generated:target-files -->
-- `load_bylaw_map_areas` — INGESTOR · pending (net-new, Spec 124 R-CS; the generated block lists converted steps only) · owner specs: 58 (§11.3)
+- `load_bylaw_map_areas` — INGESTOR · converted 2026-10-18 (net-new, Spec 124 R-CS/R-DK; the generated block lists sources-chain steps only) · owner specs: 58 (§11.3)
   - `scripts/load-bylaw-map-areas.js`
   - `scripts/load-bylaw-map-areas.descriptor.json`
   - `scripts/load-bylaw-map-areas.notes.json`
@@ -680,6 +680,8 @@ empty) and the census row is RETAINED with `status: converted`, `converted_at: c
   `violations` flag.
 
 ### 11.3 `load_bylaw_map_areas` — second INGESTOR (built 2026-10-08, McBylaw Phase 2 inputs A3; conformed 2026-10-16, H6; registers at cutover)
+
+`[as-built 2026-10-18, phase-4 step 0]` CUTOVER (`npm run cutover -- --step=load_bylaw_map_areas`): registered in `scripts/steps/_schema/converted.json` converted[], its `pending[]` entry deleted in the same commit; the census row RETAINED with `status: converted`, `converted_at: commit-3` (Spec 124 R-K, R-AO). As a net-new step it has no legacy PRE (`legacy: "none"`, Spec 124 R-DK): G8 compares each POST with the committed POST. It reads no tunables, so `config: "none"` is truthful (Spec 124 R-DR). Admin surface registered (R-DL).
 
 **Chain:** `bylaw_maps` (standalone, operator-triggered, local-only — the `coa_notices` / Spec 129 form).
 
