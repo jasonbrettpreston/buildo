@@ -124,6 +124,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   coa: 'legacy_oracle_excluded',
   // assert_coa_freshness joined as legacy_oracle_excluded while pending (phase-4 wave 4 commit ①, 2026-10-18; the coa / permits precedent).
   assert_coa_freshness: 'legacy_oracle_excluded',
+  // classify_coa_scope joined as legacy_oracle_excluded while pending (phase-4 wave 4 commit ①, 2026-10-18; the coa / permits precedent).
+  classify_coa_scope: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',

@@ -1,0 +1,177 @@
+# Phase 4 wave 4 — `classify_coa_scope` (scripts/classify-coa-scope.js) conversion assessment, commit ①
+
+**Target standard:** McDonald's Airtight V3 (Spec 124 R-DF), the whole six-part package (R-DT): zero purity findings with no ledger allowance (R-BZ), every gate hard from ① (R-BA), the seven admission questions including EXTERNALIZED, step-owned variable names (R-DE (v)), the RLS precondition on the write target (R-CT), and admin visibility (R-DL).
+**Archetype:** ENRICHER. A per-row JS classifier over its own input table's pending cursor, writing six derived columns back onto `coa_applications`.
+**Commit form: compressed (R-PACE-1)**. Commit ① is this report plus the red suite. Commit ② adds the descriptor, compute, notes, frozen shell, the seeds migration, the admin map entry and the manifest fix. Commit ③ is the cutover. ENRICHER has six converted members (enrich_parcels, enrich_ravines, enrich_heritage, enrich_centreline, geocode_permits, compute_parcel_cost_estimates), so compressed is the default (#24).
+**Frozen legacy oracle:** `src/tests/steps/classify_coa_scope/fixtures/legacy-classify-coa-scope.js.txt`, byte-identical to `scripts/classify-coa-scope.js` (sha256 `e4eefad797e5191f…`), last changed by `c53f60a8`. The classifier module `scripts/lib/coa-scope-classifier.js` (sha256 `361a03431c4627a1…`) is NOT frozen: it is the shipped domain logic the harness loads for real, and ② keeps it unchanged (it moves into the compute's require closure).
+**Owner spec:** 42 (`42_chain_coa.md` §6.5 step 5, §6.6.D, §6.8). The header also cites 47 (the script protocol, not an owner) and the classifier cites Spec 84 §7 (the JS/TS dual path, `src/lib/classification/coa-scope-classifier.ts`).
+**Target spec:** Spec 42 (`identity.spec` "42"). **Governing specs:** 122 (step library and conversion process), 124 (policy register: R-BA, R-BZ, R-CT, R-CU, R-DE, R-DF, R-DL, R-DT, R-DU, R-DV). **Governing plan:** `.cursor/v3-wave4-coa-and-dispatch-2026-10-18.md` §B.2.4 (all 15 recommendations operator-approved 2026-10-18).
+**Chain:** `coa`, position 6 of 16 (index 5, after enrich_coa_zoning; before classify_coa_trades, which reads `scope_tags`).
+
+---
+
+## 1. PH-0 — Boundary freeze (G0)
+
+### 1.1 Write class and transactions
+- **Source:** `streamQuery` over `SELECT id, description, status, decision FROM coa_applications WHERE description IS NOT NULL AND description <> '' AND (scope_classified_at IS NULL OR scope_classified_at < last_seen_at) ORDER BY id ASC`, no params (`:165-174`).
+- **Write:** one explicit-VALUES `UPDATE coa_applications ca SET coa_type_class, project_type, scope_tags, structure_type, scope_classified_at = RUN_AT, scope_source = 'description' FROM (VALUES …) WHERE ca.id = v.id` per batch, each in its own `pipeline.withTransaction` (`:121-146`). 5 params per row plus RUN_AT.
+- **Batch:** `Math.min(1000, Math.floor(65535 / 5))` = 1000 rows (`:49-50`); pinned L7.
+- **No change guard, by design** (`:123-131`): an IS DISTINCT FROM guard left all-NULL outputs forever pending (the cursor never advanced). So `scope_classified_at` is a run-clock column outside any guard, and `records_updated` = rows touched (pinned L8).
+- **Retraction:** none. A row whose description becomes empty leaves the cursor with its old classification.
+- **Run clock:** `pipeline.getDbTimestamp` (RUN_AT) and the config are read BEFORE the advisory lock (`:55-63`; pinned L1).
+
+### 1.2 Columns written
+`coa_type_class`, `project_type`, `scope_tags` (text[], NULL when no keyword fires), `structure_type` (Spec 83 §3.A vocabulary or NULL), `scope_classified_at`, `scope_source` ('description') — `emitMeta` `:267-270`.
+
+### 1.3 Audit rows, verdict and `records_meta`
+- **Audit table:** phase 42, "CoA Scope Classification", ten rows in this order (`:223-237`): coa_processed, scope_classified (INFO); unmapped_scope_count (`<= t%`, PASS else WARN); scope_classified_pct (`>= (100 − t)%`, the SAME decision, CCS-D6); no_class, coa_type_class_null_pct, no_project_type, structure_type_classified_pct, project_type_distribution, coa_type_class_distribution (INFO).
+- **Verdict:** the row cascade (`:241-242`).
+- **Summary:** `records_total = processed, records_new 0, records_updated = Σ rowCount`; `records_meta` keys pinned L12.
+- **Lock not acquired:** nothing streams, writes or emits (`:283`), but RUN_AT and the config were already read.
+
+### 1.4 Live facts (A.F-DB, read-only, 2026-10-18)
+- `coa_applications`: 33,949 rows; 33,288 with a non-empty description; `scope_classified_at` NULL on 1,227; **33,280 pending** (the H6 `--full` coa runs on 2026-10-16 touched `last_seen_at` on every row, and the last classify run was 2026-07-17); `scope_tags` NULL on 2,494; `structure_type` set on 17,718; `scope_source` = 'description' on 32,722, NULL on 1,227.
+- RLS: `relrowsecurity = true`, 0 policies (Spec 114 Class B) — trap 2 applies (R-CT).
+- Trigger `trg_coa_lead_id` fires only on INSERT or UPDATE OF application_number; this step updates neither.
+- `logic_variables.coa_scope_unmapped_threshold_pct` = 10 (seed default 10).
+- Latest runs (`coa:classify_coa_scope`): 2026-07-17 (2,527 / 2,527 updated, PASS), 07-10 (2,524), 07-07 (2,511) — the incremental Active feed size, consistent with the every-fed-key touch.
+
+### 1.5 Consumers (effective ledger)
+- `scope_tags`: classify_coa_trades (its cursor `trade_classified_at < scope_classified_at`, `classify-coa-trades.js:273`).
+- `structure_type`: assert_global_coverage (coverage pass/warn variables), compute_coa_cost_estimates.
+- `coa_type_class`, `project_type`: lead feed / admin (`src`).
+- Converting this step adds a converted producer edge on `coa_applications`; every converted reader's skip gate can only run more (plan §B.4).
+
+### 1.6 Admin visibility (R-DL)
+- Registered: `PIPELINE_REGISTRY` (`src/components/FreshnessTimeline.tsx:59`), `STEP_DESCRIPTIONS` (`src/lib/admin/funnel.ts:685`), manifest `telemetry_tables: ["coa_applications"]` + `telemetry_null_cols`.
+- **Gap:** `PIPELINE_TABLE_MAP` has no entry (CCS-D5). R-DV carves it out only while the descriptor is absent; ② adds `classify_coa_scope: 'coa_applications'`.
+
+---
+
+## 2. Behaviour ledger (what the conversion must reproduce)
+The red suite pins these as L1–L13 (§10). Each executes the frozen text with the real classifier.
+
+## 3. Registry target review
+- **(a) Files:** `scripts/classify-coa-scope.js` becomes the frozen shell. Added at ②: `scripts/classify-coa-scope.descriptor.json`, `scripts/classify-coa-scope.notes.json`, `scripts/lib/compute/classify-coa-scope.js`, `migrations/271_classify_coa_scope_logic_variables.sql`. Unchanged: `scripts/lib/coa-scope-classifier.js` and its TS twin.
+- **(b) Tables:** reads `coa_applications(id, description, status, decision, last_seen_at, scope_classified_at)`; writes the six columns of §1.2.
+- **(c) Consumers:** §1.5.
+- **(d) Tests:** `src/tests/steps/classify_coa_scope/violations.test.ts` (this commit). For the ② sweep: `src/tests/classify-coa-scope.infra.test.ts` (it pins the legacy shell text and the old variable name), `src/tests/coa-scope-classifier*.test.ts` (unchanged module), `src/tests/control-panel.logic.test.ts`.
+
+## 4. PH-3 — Intent ledger
+Each intent is traced to the commit that introduced it (`git log -- scripts/classify-coa-scope.js`).
+
+| Intent | Source (introducing commit) | Disposition at ② |
+|---|---|---|
+| Description-keyword classification (Spec 42 §6.6.D) | `:34, :177-181` (`147e699c`, WF1 R5.3) | preserved-in-compute (`classifyCoaScope` called per row, module unchanged; why in notes.json) |
+| JS/TS dual path (Spec 84 §7) | `:13-14` (`147e699c`) | preserved-in-compute: the same module; the TS twin is untouched (why in notes.json) |
+| Re-classify after a description change via `scope_classified_at < last_seen_at` | `:157-173` (`147e699c`; R8 spec-drift note) | preserved-in-compute (the source SQL predicate; why in notes.json, corrected: the touch is every fed key, R-DW — CCS-D1) |
+| No IS DISTINCT FROM guard (the infinite re-processing fix) | `:123-131` (`b3373342`, WF3 r5-3 BUG) | encoded-as-descriptor-field: `write_discipline.guard: "none"` with its why (all-NULL outputs must still advance the cursor) |
+| records_updated = Σ rowCount | `:122-145, :247` (`b3373342`, BUG-1) | preserved-in-runner (`ctx.flushBatch` rowCount, the compute_parcel_cost_estimates form) |
+| Batch-size formula vs the 65535 bind limit | `:44-50` (`b3373342`, BUG-4) | encoded-as-descriptor-field: `classify_coa_scope_batch_size` (1000); the bind ceiling is runner R-CU |
+| structure_type archetype (Spec 83 §3.A) | `:85, :200` (`b02e2366`) | preserved-in-compute (same module; why in notes.json) |
+| coa_type_class coverage row (P12-C3) | `:218-221, :229` (`c53f60a8`) | encoded-as-descriptor-field: an INFO context row |
+| Day-1 WARN threshold, not FAIL | `:20-21, :226-227` (`147e699c`) | encoded-as-descriptor-field: `checks[] unmapped_scope_pct` severity WARN, `limit_from_config classify_coa_scope_unmapped_max_pct` |
+
+## 5. PH-5 — Seam map
+| Seam | Legacy effect | `file:line` | V3 seam |
+|---|---|---|---|
+| clock seam | `getDbTimestamp` RUN_AT; `Date.now()` duration | `:55-56, :214` | runner `run_at` binds `scope_classified_at`; duration is runner telemetry |
+| db seam | advisory lock 4202 | `:37, :65` | `identity.lock` 4202 |
+| db seam | `loadMarketplaceConfigs` + Zod, hoisted above the lock | `:58-63` | `config.logic_variables[]`, `hoisted_above_gate: true` |
+| db seam | `streamQuery` source cursor | `:165-174` | `ctx.stream(buildSourceSql())` |
+| db seam | per-batch `withTransaction` UPDATE | `:121-146` | `ctx.flushBatch(sql, params)`, one `post_commit` phase (precedent compute_parcel_cost_estimates) |
+| network seam | none | — | — |
+| argv/env seam | none (`supports_full: true` is dead, CCS-D4) | manifest | `supports_full: false` |
+
+### 5.1 Risk class
+| Risk class | Chance | Impact | Mitigation |
+|---|---|---|---|
+| The first converted run re-classifies 33,280 rows | certain | low — the classifier is deterministic; same values, new `scope_classified_at` | the P4 POST bracket measures it; parity with legacy (the next legacy run would do the same) |
+| Variable rename breaks a run (CCS-D2) | low | medium — config refused | migration 271 copies the value; PRE at P3 on the ① tree BEFORE 271 is applied |
+| RLS silent zero-write (trap 2) | low | high — counters read 0, PASS | `guards.requires rls_bypass_or_policy coa_applications` (R-CT) |
+| R-DW changes the touch semantics | low | high — the cursor would stop re-classifying | runner lane keeps `last_seen_at` for every fed key (parity); notes name it as the invalidator |
+
+## 6. PH-6 — Classification and defect ledger (rows CCS-D1…CCS-D7 in `docs/reports/defect-ledger.md`; prefix CCS, unique — `defectPrefixFor` measured, no override)
+
+PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch artifact `docs/reports/generated/122-churn-complexity.md` covers only the sources chain and `classify_coa_scope` is outside its scope; no hand-plotted quadrant is substituted.
+
+- **CCS-D1** (`:157-164`): the stale "ONLY when data_hash changes" claim — ② notes (pinned D6).
+- **CCS-D2** (`:40-42`): `coa_scope_unmapped_threshold_pct` is outside R-DE (v) — ② migration 271 (pinned D3).
+- **CCS-D3** (`:49-50, :204`): batch cap, bind formula and log cadence literals — ② variable / runner (pinned L7, D5).
+- **CCS-D4** (manifest): `supports_full: true` is dead — ② (pinned D7).
+- **CCS-D5** (`funnel.ts`): no PIPELINE_TABLE_MAP entry — ② (pinned D7).
+- **CCS-D6** (`:226-227`): two rows, one decision, a derived copy of the bound — ② one declared check, the second row INFO (pinned L11, D4; declared deviation).
+- **CCS-D7** (`:55-56, :214`): the step reads its own clocks — ② runner clock (pinned L1).
+
+**Kept at parity (not defects, plan §B.2.4 notes 1–2):** the cursor re-classifies every fed key per run (the coa root touches `last_seen_at` for every fed key; R-DW keeps it), and the UPDATE is unguarded, so `records_updated` counts every touched row. Both are declared in notes.json at ②.
+
+## 7. PH-6 — Literal ledger (Rule 3, R-DF EXTERNALIZED)
+| Literal | `file:line` | Disposition |
+|---|---|---|
+| 10 (unmapped %) | seed `coa_scope_unmapped_threshold_pct` | `classify_coa_scope_unmapped_max_pct` 10 (migration 271, value copied) |
+| 1000 (batch cap) | `:50` | `classify_coa_scope_batch_size` 1000 (migration 271) |
+| 65535 / 5 (bind formula) | `:49-50` | runner `maxRowsPerInsert` (R-CU); 1000 × 5 + 1 = 5,001 binds |
+| 5000 (log cadence) | `:204` | runner `onProgress` |
+| 4202 | `:37` | `identity.lock` |
+| 'description' (scope_source) | `:140` | a declared constant column value (the provenance tag, not a tunable) |
+| phase 42, "CoA Scope Classification" | `:259-260` | `sharing.varies_by_chain.phase` / `identity.display_name` |
+
+## 8. Purity estimate (gate E codes G0–G13, 122a §A26)
+| Code | Legacy sites | Disposition at ② |
+|---|---|---|
+| G1 ledger SQL | config via `loadMarketplaceConfigs` `:58` | runner config |
+| G4 txn/lock | `withTransaction` `:121`, advisory lock `:65` | runner (`ctx.flushBatch`, `identity.lock`) |
+| G5 direct write | the UPDATE `:133-144` | built in compute, executed by `ctx.flushBatch` (the compute_parcel_cost_estimates form) |
+| G6 clock | `getDbTimestamp` `:55`, `Date.now()` `:56, :214` | runner `run_at` |
+| G7 compute decides | `unmappedPct <= t` `:226-227` | declared check (the library compares) |
+| G9 literal | `:49-50, :204` | §7 |
+- `scanPurity` over `scripts/lib/coa-scope-classifier.js` (explicit-file mode, 2026-10-18): 0 sites. Its unit-count cut-offs (`>= 5`, `>= 3`, `=== 2`) name the Spec 83 vocabulary ("Multiple Unit Building", "3+ Unit") and are measured again by the ast-grep half at ②.
+
+**Expected after ②:** 0 findings, no ledger allowance (R-BZ, R-DF).
+
+## 9. PRE goldens and forced-change proof — NOT YET CAPTURED
+- **PRE** on the legacy code at the ① tree, before any compute change (trap 7): `coa` chain plus standalone, at night P3, BEFORE migration 271 is applied.
+- **POST** at night P4: the pending set is 33,280 today; after one legacy PRE run it is ~0, so the POST needs a forced bracket: NULL `scope_classified_at` on a deterministic `coa:` cohort (plan §B.4), restored by the run itself. Cascade order: after enrich_coa_zoning, before classify_coa_trades.
+
+## 10. Red suite (PH-7) — `src/tests/steps/classify_coa_scope/violations.test.ts`
+- **Size:** 22 tests. L1–L13 GREEN today (the legacy oracle). D1–D9 are `it.fails`, RED as named missing artifacts.
+- **Red evidence:** `docs/reports/red-evidence/classify_coa_scope/pre2-artifacts-missing.json` (vitest JSON reporter output, D1–D9 run as plain it calls): 13 pass / 9 fail. D1–D5 fail as ENOENT on the named descriptor/compute; D6 fails on the stale "ONLY when" text still in the shell; D7 fails on the missing PIPELINE_TABLE_MAP entry; D8 because the report has no generated scorecard; D9 because converted[] does not hold the file. No TS or import error.
+- **Oracle harness:** `fixtures/legacy-harness.ts` fakes `./lib/pipeline`, `./lib/config-loader` and `Date.now`; `./lib/coa-scope-classifier` and `zod` are real.
+
+| Pins | Behaviour |
+|---|---|
+| L1–L4 | clock + config hoisted above the lock, the cursor SQL, config refusal, advisory lock 4202 |
+| L5–L9 | the unguarded VALUES UPDATE, real classifier values, the 1000-row batch, Σ rowCount, the empty pending set |
+| L10–L13 | audit rows and order, the shared decision (CCS-D6), records_meta and emitMeta, counters |
+| D1–D9 | descriptor and shell, write target + RLS guard, renamed variables, declared check, compute purity, notes, admin map + manifest, scorecard, registry (③) |
+
+## 11. Registry at ① (this commit) and what is owed later
+- **Landed:** `converted.json` `pending[]` at stage `red_suite`; census row ENRICHER / pending with owner spec 42 (plus the two census fixtures); CCS-D1…D7; ADOPTION `legacy_oracle_excluded`; roadmap regenerated. Under R-DU the pending row does not block (no descriptor file).
+- **Owed at ②:** descriptor, compute, notes, shell, migration 271, seeds, logic-variable groups, PIPELINE_TABLE_MAP, manifest `supports_full`, scorecard (D8).
+- **Owed at ③:** registration (blocked by EP-PIN-D17 under R-EA).
+
+## 12. Operator decisions
+- RULED 2026-10-18 (plan recommendations 7, 8, 12, 13, 15): wave 4 = the six coa steps; census ENRICHER; legacy defects kept as declared deviations; PREs ride P3, POSTs P4; the stale `last_seen_at` comment corrected in this step's own conversion.
+- **Draft rulings (id at integration):** W4A-R1 (rename into `<slug>_*` by migration, values carried, old names retired).
+
+## 13. Compliance table (seven questions, R-DF)
+| Planned change | Rule | Std | Obs | Rec | Scal | Acc | Simple | Ext |
+|---|---|---|---|---|---|---|---|---|
+| ENRICHER descriptor + frozen shell (D1) | Spec 122 §5.1; R-BA | compute_parcel_cost_estimates form | step-validate gates A–K | this report | archetype | red-first D1 | precedent | — |
+| RLS guard (D2) | R-CT | trap 2 | guards | R-CT | all RLS write targets | measured relrowsecurity | one guard | — |
+| Renamed + new variables (D3) | R-DE (v); Rule 3 | `<slug>_*`, migration 263 form | `r-de-vocabulary.logic`, gate A | W4A-R1 | every new step | measured | one migration | **yes** |
+| One declared check (D4) | R-BZ G7 | limit_from_config | verdict.js | CCS-D6 | all checks | L11 pinned | one check | bound from config |
+| Compute purity (D5) | R-BZ | G-codes | gate E #32 | R-BZ | fleet | red-first | seams only | batch variable |
+| Notes correction (D6) | Rule 1 | — | D6 lock | rec 15 | — | measured touch | text | — |
+| Admin map + manifest (D7) | R-DL | derived | `admin-step-registration.logic` | R-DL | every step | measured gap | data entries | — |
+
+## R. Reflection (G9)
+### LOW-CONFIDENCE
+- Whether the ENRICHER runner's `ctx.flushBatch` path accepts a guard-less UPDATE under `write_discipline.guard: "none"` without an `x-banned-for-new` refusal; checked at ② against `grandfathered.json` and `write-class-disposition.json` before any descriptor is written.
+### RECURRING / STANDARD-SHAPING
+- Two wave-4 steps (this one and assert_coa_freshness) carry pre-R-DE variable names. Every remaining unconverted step will too; a single ruling on rename-by-migration (W4A-R1) saves each lane re-deciding it.
+
+## A. Measurement log (2026-10-18)
+- **A.F-DB** (read-only, one `BEGIN READ ONLY` transaction): pending/NULL counts, scope_source distribution, column nullability, RLS flags and policies, triggers, `logic_variables`, `pipeline_runs` latest three.
+- **A.F-CODE:** `scripts/classify-coa-scope.js` @ `c53f60a8`, 284 lines; `scripts/lib/coa-scope-classifier.js` 379 lines.
+- **A.F-ORACLE:** `npx vitest run src/tests/steps/classify_coa_scope/`: 22 / 22.
