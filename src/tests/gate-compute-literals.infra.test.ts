@@ -248,9 +248,25 @@ describe('Airtight V3 (R-BZ, operator 2026-10-11)', () => {
     const rows = loadRows();
     // enrich-parcels left the frozen set when CP-S1 closed its purity rows (2026-10-16); load-zoning left it
     // when R-CY closed its G12 row (2026-10-17). refresh-snapshot is still frozen (its CP-PERMITS row).
-    expect(gateE.standardFor('refresh-snapshot', rows)).toBe('V2');
-    expect(gateE.standardFor('load-zoning', rows)).toBe('V3');
-    expect(gateE.standardFor('load-wsib', rows)).toBe('V3');
+    expect(gateE.standardFor('refresh-snapshot', rows, { slug: 'refresh_snapshot', hardStop: false })).toBe('V2');
+    expect(gateE.standardFor('load-zoning', rows, { slug: 'load_zoning', hardStop: false })).toBe('V3');
+    expect(gateE.standardFor('load-wsib', rows, { slug: 'load_wsib', hardStop: false })).toBe('V3');
+  });
+
+  // Spec 124 R-DT (McDonald's Airtight V3, operator y 2026-10-18): `standard: V3` means the whole package.
+  it('R-DT: a non-purity ledger row of any gate, or a hard stop, reads V2; only a clean step with no hard stop reads V3', () => {
+    const gateA = { gate: 'A', step: 'fixture_step', item: 'closed-bounds:x', disposition: 'pending_remediation', why: 'fixture', closing_brief: 'fixture', filed: '2026-10-18', adjudicated_by: 'operator' };
+    expect(gateE.isPurityRow(gateA)).toBe(false);
+    expect(gateE.standardFor('fixture-step', [], { slug: 'fixture_step', hardStop: false })).toBe('V3');
+    expect(gateE.standardFor('fixture-step', [gateA], { slug: 'fixture_step', hardStop: false })).toBe('V2');
+    const gateEOther = { ...gateA, gate: 'E', step: 'fixture-step', item: 'not-a-purity-rule@x#1' };
+    expect(gateE.isPurityRow(gateEOther)).toBe(false);
+    expect(gateE.standardFor('fixture-step', [gateEOther], { slug: 'fixture_step', hardStop: false })).toBe('V2');
+    expect(gateE.standardFor('fixture-step', [{ ...gateA, step: 'another_step' }], { slug: 'fixture_step', hardStop: false })).toBe('V3');
+    expect(gateE.standardFor('fixture-step', [], { slug: 'fixture_step', hardStop: true })).toBe('V2');
+    // fail closed: a caller that does not answer hardStop cannot claim V3
+    expect(gateE.standardFor('fixture-step', [], { slug: 'fixture_step' })).toBe('V2');
+    expect(gateE.standardFor('fixture-step', [])).toBe('V2');
   });
 
   it('V6: a frozen (rogue) purity row RED-fails checkComputeLiterals with frozen.length === 1', () => {

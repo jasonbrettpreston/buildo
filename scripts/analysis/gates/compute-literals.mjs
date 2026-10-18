@@ -100,13 +100,25 @@ export function purityRowFreeze(ledgerRows) {
 }
 
 /**
- * The standard a step speaks: `'V2'` if any purity row names that module (its
- * compute still carries a frozen 2026-10-11 purity finding), else `'V3'`.
+ * The standard a step speaks (Spec 124 R-DT, McDonald's Airtight V3, operator y 2026-10-18):
+ * `standard: V3` means the WHOLE V3 package, so it is `'V3'` only when ALL hold —
+ *   (1) no purity row names the step's compute module (R-BZ/R-CA; the frozen 2026-10-11 set);
+ *   (2) no ledger row of ANY gate names the step (its slug or its compute module base — gate E
+ *       rows key on the module, the other gates on the slug), so no ledger allowance (R-BC (b));
+ *   (3) no hard stop on the step (`hardStop === false`, the caller's scorecard + #44 answer).
+ * Otherwise `'V2'`. Fail closed: a caller that cannot say `hardStop: false` reads V2.
+ * @param {string} moduleBase
+ * @param {Array<object>} ledgerRows
+ * @param {{slug?: string|null, hardStop?: boolean}} [opts]
+ * @returns {'V2'|'V3'}
  */
-export function standardFor(moduleBase, ledgerRows) {
-  return (Array.isArray(ledgerRows) ? ledgerRows : []).some(
-    (row) => isPurityRow(row) && row.step === moduleBase,
-  ) ? 'V2' : 'V3';
+export function standardFor(moduleBase, ledgerRows, { slug = null, hardStop } = {}) {
+  const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
+  const names = new Set([moduleBase, slug].filter((n) => typeof n === 'string' && n.length > 0));
+  if (rows.some((row) => isPurityRow(row) && row.step === moduleBase)) return 'V2';
+  if (rows.some((row) => row && names.has(row.step))) return 'V2';
+  if (hardStop !== false) return 'V2';
+  return 'V3';
 }
 
 /** Proposed dispositions for the orchestrator's `--list` output. */

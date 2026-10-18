@@ -6089,7 +6089,7 @@ async function main() {
     // printed table from reading as a silent pass.
     const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults, fiveWord);
 
-    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows)}\n\`\`\`\n`);
+    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows, { slug: row.slug, hardStop: Boolean(sc.hardStop || (witness44 && (witness44.hardStop || (witness44.attributed || []).length > 0))) })}\n\`\`\`\n`);
     console.log(block);
 
     if (witness44) {
