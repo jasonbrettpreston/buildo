@@ -81,6 +81,13 @@
       "reason": "Phase-4 wave 1 (permits, INGESTOR multi-target: one CKAN DataStore resource -> permits (class-B data_hash-guarded upsert + last_seen_at touch) + the lifecycle_status_history append ledger (non-fatal secondary write, R-DM on_error warn_row); McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions, R-DL admin visibility; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md; operator y 2026-10-17 on D-P1 CP-PERMITS scope, R-DM, D-P2, D-P3). ① lands the assessment + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text, D1-D9 it.fails) + gate-K red evidence + PM-D1..PM-D9; ② the descriptor/compute/shell/notes + migration-seeded logic variables (R-CV form) + same-session PRE/POST goldens under the witness with a forced cohort bracket (fleet nights P0/P1); ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-17",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/load-coa.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 1 (coa, INGESTOR multi-target: two CKAN DataStore resources Active + Closed -> coa_applications upsert + lifecycle_status_history ledger rows; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md). ① lands the assessment docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md + red suite (L1-L24 legacy pins executing the frozen oracle, D1-D8 it.fails) + gate-K red evidence + COA-D1..COA-D10; ② the descriptor/compute/shell/notes/seeds (operator 2026-10-17: prefix COA, prior-status via the ingest lookup seam, portal rot from the newest hearing on/before the run date, stats query dropped, R-DM on_error warn_row for lifecycle_status_history) + PRE/POST goldens under the DB lock (R-CQ) with an R-CZ forced cohort; ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-17",
+      "stage": "red_suite"
     }
   ],
   "converted": [

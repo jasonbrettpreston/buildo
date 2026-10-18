@@ -80,7 +80,9 @@ describe('step-validate.mjs — defect-prefix overrides + collision check (G6, S
     // permits -> PM (phase-4 wave 1 commit ①, 2026-10-17): its initials P collide with parcels (P-D*).
     expect(defectPrefixFor('permits')).toBe('PM');
     expect(defectPrefixFor('parcels')).toBe('P');
-    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM' });
+    // coa -> COA (phase-4 wave 1, operator y 2026-10-17): the initials convention gives the single letter "C".
+    expect(defectPrefixFor('coa')).toBe('COA');
+    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA' });
   });
 
   it('RED direction — the live overrides were removed: load_wsib/link_wsib collide on LW, blocked, naming both slugs and the override fix', async () => {

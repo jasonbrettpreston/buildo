@@ -370,10 +370,11 @@
     },
     {
       "slug": "coa",
+      "owner_specs": ["docs/specs/01-pipeline/51_source_coa.md", "docs/specs/01-pipeline/42_chain_coa.md"],
       "file": "scripts/load-coa.js",
       "archetype": "INGESTOR",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). PROVISIONAL until PH-0 re-derives it from the code (Spec 124 R-AO); classified from the legacy script, never from a descriptor (none exists). Acquires an external source and writes its own tables: CKAN DataStore pull (scripts/load-coa.js:25 CKAN_BASE, :111 fetch), upsert into coa_applications (:293 INSERT … ON CONFLICT), status-change history rows into lifecycle_status_history (:390), departed-application marking UPDATE coa_applications (:576). Multi-target INGESTOR, precedent load_zoning."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3) declared INGESTOR provisionally; phase-4 wave-1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR multi-target (two CKAN DataStore resources -> coa_applications upsert + lifecycle_status_history ledger rows; scripts/load-coa.js:105, :293, :390)"
     },
     {
       "slug": "load_heritage",

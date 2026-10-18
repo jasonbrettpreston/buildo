@@ -316,9 +316,12 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 1 -> 2 at phase-4 wave 1 commit ① (permits, 2026-10-17; integrated 2026-10-18): its census row flipped
     // batch "C6" -> "pending" (archetype INGESTOR, the ARCH-CENSUS key-step row re-derived at PH-0, R-AO).
     // Returns to 1 at permits ③.
-    expect(pendingBatch.size).toBe(2);
-    // 36 -> 35 at phase-4 wave 1 commit ① (permits): the same row left C6 (R-AO retention keeps it out).
-    expect(c6.size).toBe(35);
+    // 2 -> 3 at phase-4 wave 1 coa commit ① (2026-10-17; integrated 2026-10-18): coa's census row flipped
+    // batch "C6" -> "pending" (archetype INGESTOR re-derived at PH-0, R-AO), the same move permits made.
+    // Returns to 2 at coa ③ (R-AO retention).
+    expect(pendingBatch.size).toBe(3);
+    // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
+    expect(c6.size).toBe(34);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 
