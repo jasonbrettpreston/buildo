@@ -2,11 +2,38 @@
   "contract_version": 1,
   "captures": {
     "post/sources.forced_full.json": {
-      "via": "env",
-      "env": {
-        "ENRICH_CENTRELINE_FORCE_FULL": "1"
-      },
-      "why": "#38 evidence: the descriptor's force_full env recomputes every valid-geom parcel (V3 fleet night 2026-10-16 night.log)."
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcels",
+          "--key=id",
+          "--column=is_corner_lot",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=t.is_corner_lot IS NOT NULL AND t.centreline_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcels",
+          "--key=id",
+          "--column=is_corner_lot",
+          "--op=negate_bool",
+          "--count=200",
+          "--where=t.is_corner_lot IS NOT NULL AND t.centreline_dataset_version_when_enriched IS NOT NULL",
+          "--order=t.id",
+          "--backup-table=parcels_cohort_bak_{ts}",
+          "--step=scripts/enrich-centreline.js",
+          "--chain=sources",
+          "--out=docs/reports/golden/enrich_centreline/post/sources.forced_full.json",
+          "--env=ENRICH_CENTRELINE_FORCE_FULL=1"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ, 2026-10-18): the env-only recipe wrote 0 on a settled DB (2026-10-18 night: records_updated 0), so it is a bracket now — is_corner_lot negated on the first 200 enriched parcels by id; the ENRICH_CENTRELINE_FORCE_FULL=1 full recompute (IS DISTINCT FROM) rewrote and healed all 200 (records_updated 200). Restore verified."
     }
   }
 }

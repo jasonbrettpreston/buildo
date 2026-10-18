@@ -433,7 +433,8 @@ describe('golden capture — PRE (commit 5, LANDED, testable today) + POST (comm
     // measured growth: +1, +1, then +6 at the FLEET-2 recapture (2026-10-06): 36 rows over 36 DISTINCT snapshot_date values
     // (live SELECT), so one row per day still holds; the bound only absorbs recapture days. 2026-10-17 (N6): 41 rows over 41
     // DISTINCT snapshot_date values (live SELECT) — the recapture days since FLEET-2; one row per day still holds.
-    expect(postCount - preCount!).toBeLessThanOrEqual(11);
+    // 2026-10-18 (step-0 follow-up fleet retake): 42 rows over 42 DISTINCT snapshot_date values (live SELECT); one row per day holds.
+    expect(postCount - preCount!).toBeLessThanOrEqual(12);
   });
 });
 

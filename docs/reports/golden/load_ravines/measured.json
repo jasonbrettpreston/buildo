@@ -3,56 +3,56 @@
     "ravines_distinct_source_dataset_version": {
       "value": 1,
       "cost_ms": 2,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     },
     "ravines_area_km2": {
       "value": 110.995,
-      "cost_ms": 143,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "cost_ms": 127,
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     },
     "parcels_sign_law_violations": {
       "value": 0,
-      "cost_ms": 472,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "cost_ms": 771,
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     },
     "permits_sign_law_violations": {
       "value": 0,
-      "cost_ms": 59,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "cost_ms": 49,
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     },
     "coa_sign_law_violations": {
       "value": 0,
-      "cost_ms": 321,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "cost_ms": 29,
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     },
     "parcels_lineage_mismatch": {
       "value": 1,
-      "cost_ms": 481,
-      "at": "2026-10-17T21:26:31.484Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 17
+      "cost_ms": 773,
+      "at": "2026-10-18T02:29:15.315Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3242",
+      "chain": null,
+      "sample_n": 20
     }
   }
 }

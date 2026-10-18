@@ -19739,19 +19739,19 @@
   "inputs": [
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json",
-      "sha256": "7229cd614be99f8f"
+      "sha256": "63468bb4b5be83d3"
     },
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json",
-      "sha256": "806d0788adef5609"
+      "sha256": "1d82f3b9f887ba6e"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
-      "sha256": "84eb6f346591a660"
+      "sha256": "f4226e60903c0a0b"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "042506ef51d99fec"
+      "sha256": "f8b5e5b92dc3824d"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",
@@ -19787,7 +19787,7 @@
     },
     {
       "path": "scripts/lib/compute/enrich-parcels.js",
-      "sha256": "41b6966237963bc9"
+      "sha256": "ca63e7b97692323a"
     },
     {
       "path": "scripts/lib/max-build.js",

@@ -2702,6 +2702,11 @@
       "consumers": []
     },
     {
+      "key": "pass3_scope_rows_spooled",
+      "type": "int",
+      "consumers": []
+    },
+    {
       "key": "opt_config_engine_errors",
       "type": "int",
       "consumers": []

@@ -3,14 +3,14 @@
   "step": "scripts/load-neighbourhoods.js",
   "chain": "sources",
   "source_fingerprint": "8f0b3943d307f3189d23d2a9d2b841f64d4d884f59100ba7dffedeb7bdef72d2",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 21,
     "distinct": 16,
     "utility": 9,
-    "tracer_self_ms": 3,
-    "wall_ms": 2506
+    "tracer_self_ms": 2.832,
+    "wall_ms": 2002
   },
   "statements": [
     {
@@ -54,11 +54,15 @@
       "kind": "read",
       "count": 1,
       "rowCount": 1,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_dead_tup",
+          "n_live_tup",
+          "relname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -247,7 +251,7 @@
   ],
   "transactions": [
     {
-      "client": "43174:2",
+      "client": "73017:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]
@@ -275,6 +279,11 @@
         "tenure_renter_pct",
         "university_degree_pct",
         "visible_minority_pct"
+      ],
+      "pg_stat_user_tables": [
+        "n_dead_tup",
+        "n_live_tup",
+        "relname"
       ]
     },
     "writes": {

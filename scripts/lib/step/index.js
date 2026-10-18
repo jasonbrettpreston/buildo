@@ -5169,7 +5169,9 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // ZERO audit rows"), so it is not widened here; but it is not closed here either, and a
   // hook author should know that a malformed return costs the run its audit table.
   const postPhase = postPhaseFn
-    ? await postPhaseFn(pool, { passRaw, specs, full, runAt, config, descriptor, staleOverlays })
+    // scopeHandoff (runner-measured, R-CY form): the rows the scope hand-off INSERT above wrote, so a
+    // declared int emit can carry them (gate G count_path) without compute re-counting a table it never wrote.
+    ? await postPhaseFn(pool, { passRaw, specs, full, runAt, config, descriptor, staleOverlays, scopeHandoff: { inserted: scopeInsertCount } })
     : {};
   if (postPhase === null || typeof postPhase !== 'object' || Array.isArray(postPhase)) {
     throw new Error(

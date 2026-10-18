@@ -294,6 +294,79 @@ export function pinItems(descriptor, runsTouched, producerSummaries) {
   return [...new Set(out)].sort();
 }
 
+/**
+ * #44 check (i) — invalidation resolves (Spec 124 R-DO; LDG-10 edge class 4; 122 §6.4a). PURE, declaration-driven
+ * (fires with no traces, like the full_rescan arm). `fleet` = { invalidated: Set<"table.column"> over every converted
+ * descriptor's outputs.invalidates[], pinReaders: { <step>: [<reader slugs with a staleness.pins row on it>] } };
+ * absent → not evaluated.
+ *   i:fill-once:<table>.<column>       — a write_once_backfill target fills the column once and NO converted descriptor
+ *                                        declares an invalidator for it (the §6.4a centroid gap class);
+ *   i:unresolved:pin:<table>.<column>  — this step's `by:"pin"` invalidator has no reader pinning this step;
+ *   i:unresolved:trigger:<table>.<column> — this step's `by:"trigger"` invalidator has no guards.requires trigger
+ *                                        on that table (the runner's precondition probe, cloud:pre declared_guards_present).
+ * Exact zero-tolerance; no allowlist.
+ */
+export function invalidationItems(slug, descriptor, fleet) {
+  if (!fleet || !(fleet.invalidated instanceof Set)) return [];
+  const out = [];
+  const outputs = descriptor && descriptor.outputs ? descriptor.outputs : {};
+  for (const w of Array.isArray(outputs.writes) ? outputs.writes : []) {
+    if (!w || !w.write_discipline || w.write_discipline.class !== 'write_once_backfill') continue;
+    for (const c of Array.isArray(w.columns) ? w.columns : []) {
+      const name = c && typeof c === 'object' ? c.name : c;
+      if (typeof name !== 'string' || (c && c.written === 'db_default')) continue;
+      if (!fleet.invalidated.has(`${w.table}.${name}`)) out.push(`i:fill-once:${w.table}.${name}`);
+    }
+  }
+  const triggers = (descriptor && descriptor.guards && Array.isArray(descriptor.guards.requires) ? descriptor.guards.requires : [])
+    .filter((g) => g && g.kind === 'trigger' && typeof g.name === 'string');
+  const readers = fleet.pinReaders && Array.isArray(fleet.pinReaders[slug]) ? fleet.pinReaders[slug] : [];
+  for (const row of Array.isArray(outputs.invalidates) ? outputs.invalidates : []) {
+    if (!row || typeof row.table !== 'string' || typeof row.column !== 'string') continue;
+    const label = `${row.table}.${row.column}`;
+    if (row.by === 'pin' && readers.length === 0) out.push(`i:unresolved:pin:${label}`);
+    if (row.by === 'trigger' && !triggers.some((g) => g.name.startsWith(`${row.table}.`))) out.push(`i:unresolved:trigger:${label}`);
+  }
+  return [...new Set(out)].sort();
+}
+
+/**
+ * #44 (h) h:undeclared, NARROW (Spec 124 R-DI as amended, operator y 2026-10-17; R-BJ). PURE, declaration-driven.
+ * `fleet.watermarks` = { "<table>.<column>": [<writer slugs declaring that column source:"run_at">] }.
+ *   h:undeclared:<writer>.<table>.<column> — a non-ASSERT/RECORDER step declares an ACQUISITION read
+ *     (inputs.reads) of another step's run_at watermark column and has no staleness.pins row on that writer.
+ * Excluded by rule: a column the reader writes itself (R-BL(v), the #44 G3 exclusion); an ASSERT's or RECORDER's
+ * coverage read (a measurement read, R-BJ). Exact zero-tolerance.
+ */
+export function undeclaredPinItems(slug, descriptor, fleet) {
+  if (!fleet || !fleet.watermarks || typeof fleet.watermarks !== 'object') return [];
+  const archetype = descriptor && descriptor.identity ? descriptor.identity.archetype : null;
+  if (archetype === 'ASSERT' || archetype === 'RECORDER') return [];
+  const outputs = descriptor && descriptor.outputs ? descriptor.outputs : {};
+  const selfWritten = new Set();
+  for (const w of Array.isArray(outputs.writes) ? outputs.writes : []) {
+    for (const c of Array.isArray(w && w.columns) ? w.columns : []) {
+      const name = c && typeof c === 'object' ? c.name : c;
+      if (typeof name === 'string') selfWritten.add(`${w.table}.${name}`);
+    }
+  }
+  const pinned = new Set((descriptor && descriptor.staleness && Array.isArray(descriptor.staleness.pins) ? descriptor.staleness.pins : [])
+    .map((pin) => pin && pin.step).filter((s) => typeof s === 'string'));
+  const tables = descriptor && descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.tables)
+    ? descriptor.inputs.reads.tables : [];
+  const out = [];
+  for (const r of tables) {
+    for (const col of Array.isArray(r && r.columns) ? r.columns : []) {
+      const key = `${r.table}.${col}`;
+      if (selfWritten.has(key)) continue;
+      for (const writer of Array.isArray(fleet.watermarks[key]) ? fleet.watermarks[key] : []) {
+        if (writer !== slug && !pinned.has(writer)) out.push(`h:undeclared:${writer}.${key}`);
+      }
+    }
+  }
+  return [...new Set(out)].sort();
+}
+
 /** (d) declared → observed compatibility, per the contract's table. */
 function txnScopeOk(declared, observed, descriptor = null) {
   if (observed === 'mixed' && declaresMixedScope(descriptor)) return true;
@@ -821,6 +894,9 @@ export function evaluateWitness({
   ownMeasurementFingerprints,
   // LDG-10 (R-DI) #44 (h): { <producer>: [POST golden summary objects] } for pin mismatch / unverifiable.
   producerSummaries,
+  // R-DO #44 (i) + R-DI h:undeclared: { invalidated: Set, pinReaders: {}, watermarks: {} } over the converted
+  // fleet; absent → neither is evaluated.
+  fleet,
 } = {}) {
   const ownFps = ownMeasurementFingerprints instanceof Set ? ownMeasurementFingerprints : null;
   const posts = postTraces && typeof postTraces === 'object' ? postTraces : {};
@@ -901,6 +977,9 @@ export function evaluateWitness({
     // (h) pins witnessed and verified (R-BL (v); LDG-10, Spec 124 R-DI).
     for (const item of pinItems(descriptor, tracesTouchRuns(freshTraces), producerSummaries)) rows.push(`FAIL:WITNESS:${slug}:${item}`);
   }
+
+  // R-DO #44 (i) — invalidation resolves (declaration-driven; Spec 124 R-DO).
+  for (const item of [...invalidationItems(slug, descriptor, fleet), ...undeclaredPinItems(slug, descriptor, fleet)]) rows.push(`FAIL:WITNESS:${slug}:${item}`);
 
   // O4 fold 14 — full_rescan EVIDENCE. Declaration-only for the arm half (so it fires with no
   // traces at all); the unwitnessed half uses the FRESH (non-stale) post traces only.
@@ -1019,9 +1098,18 @@ export function selfTest() {
   const g7ok = undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([]), own)).length === 0
     && undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([]), new Set())).includes('a:permits.*')
     && undeclaredItems(descriptor, withoutOwnMeasurementReads(ownTrace([{ fingerprint: 'c9', kind: 'read', reads: { permits: ['status'] }, writes: {}, error: null }]), own)).includes('a:permits.*');
+  // R-DO #44 (i): a write_once_backfill column with no fleet invalidator is RED; one the fleet invalidates is GREEN.
+  const onceDesc = { outputs: { writes: [{ table: 't', columns: [{ name: 'c' }], write_discipline: { class: 'write_once_backfill' } }], invalidates: [] } };
+  const hu = { identity: { archetype: 'LINK' }, inputs: { reads: { tables: [{ table: 'p', columns: ['stamp'] }] } }, outputs: { writes: [] } };
+  const huok = undeclaredPinItems('r', hu, { watermarks: { 'p.stamp': ['w'] } }).includes('h:undeclared:w.p.stamp')
+    && undeclaredPinItems('r', { ...hu, staleness: { pins: [{ step: 'w', stamp: 'records_meta.x' }] } }, { watermarks: { 'p.stamp': ['w'] } }).length === 0
+    && undeclaredPinItems('r', { ...hu, identity: { archetype: 'ASSERT' } }, { watermarks: { 'p.stamp': ['w'] } }).length === 0;
+  const iok = huok && invalidationItems('s', onceDesc, { invalidated: new Set(), pinReaders: {} }).includes('i:fill-once:t.c')
+    && invalidationItems('s', onceDesc, { invalidated: new Set(['t.c']), pinReaders: {} }).length === 0;
   const ok = green.rows.length === 0
     && g13ok
     && g7ok
+    && iok
     && green.answer === 'PASS'
     && green.hardStop === false
     && red.rows.includes('FAIL:WITNESS:fixture_step:a:parcels.lot_size_sqm')
@@ -1034,7 +1122,7 @@ export function selfTest() {
   return {
     ok,
     detail: ok
-      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row (pending and converted, P1-C9); (c) counts by_mode[mode] and refuses an unresolved mode; G13 invalidates set_null columns are declared writes; G7 own-measurement reads are accounted, others are not'
-      : `self-test FAILED: g13=${g13ok} g7=${g7ok} green=${JSON.stringify(green)} red=${JSON.stringify(red)}`,
+      ? 'self-test ok: declared trace PASSes; an undeclared read column is a hard-stop FAIL:WITNESS:a row (pending and converted, P1-C9); (c) counts by_mode[mode] and refuses an unresolved mode; G13 invalidates set_null columns are declared writes; G7 own-measurement reads are accounted, others are not; (i) fill-once without an invalidator is RED; h:undeclared narrow fires on an unpinned cross-step watermark acquisition read only'
+      : `self-test FAILED: g13=${g13ok} g7=${g7ok} i=${iok} green=${JSON.stringify(green)} red=${JSON.stringify(red)}`,
   };
 }

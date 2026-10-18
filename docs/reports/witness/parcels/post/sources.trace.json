@@ -3,14 +3,14 @@
   "step": "scripts/load-parcels.js",
   "chain": "sources",
   "source_fingerprint": "8ad160a20a58a759ac769e2ed63cf2a6ec04115d7fbe18607c05e1d831e19c5e",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 162,
     "distinct": 14,
     "utility": 8,
-    "tracer_self_ms": 1171.641,
-    "wall_ms": 62693
+    "tracer_self_ms": 1270.73,
+    "wall_ms": 63675
   },
   "statements": [
     {
@@ -227,7 +227,7 @@
   ],
   "transactions": [
     {
-      "client": "37217:3",
+      "client": "66820:3",
       "write_fingerprints": [
         "74861d67d045ac4d"
       ]

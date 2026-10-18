@@ -2,66 +2,66 @@
   "entries": {
     "ravine_sign_flag_agree_flagged_side": {
       "value": 0,
-      "cost_ms": 363,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 535,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_sign_flag_agree_unflagged_side": {
       "value": 0,
-      "cost_ms": 368,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 535,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_flag_true_distance_null_count": {
       "value": 0,
-      "cost_ms": 365,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 544,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_distance_m_min_magnitude_observed": {
       "value": 1470.30059243,
-      "cost_ms": 409,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 589,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_distance_m_max_observed": {
       "value": 2739.69388118,
-      "cost_ms": 404,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 576,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_dataset_version_distinct_count": {
       "value": 1,
-      "cost_ms": 444,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 600,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     },
     "ravine_distance_m_collapse_floor": {
       "value": 2739.69388118,
-      "cost_ms": 416,
-      "at": "2026-10-17T21:28:03.593Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 11
+      "cost_ms": 592,
+      "at": "2026-10-18T03:35:56.384Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3323",
+      "chain": null,
+      "sample_n": 13
     }
   }
 }

@@ -9,8 +9,8 @@
 //   class 1 table edges   — #44 (a)(b)(c)(d)(e) with no FAIL row on every converted sources slug (P1-C9:
 //                           #44 is hard for converted slugs), and every sources step converted or exempt;
 //   class 2 contracts     — gate D #31 PASS (its consumer set includes unconverted steps' observed reads);
-//   class 3 pins          — #44 (h) (inside class 1's rows);
-//   class 4 invalidation  — PENDING: #44 check (i) is not ruled (drafted ruling, LDG-10 report);
+//   class 3 pins          — #44 (h) incl. the narrow h:undeclared (inside class 1's rows; R-DI as amended);
+//   class 4 invalidation  — #44 check (i) (Spec 124 R-DO): no `:i:` FAIL row on any converted sources slug;
 //   class 5 ordering      — zero hard ORDER / ORDER-UNPLACED rows for the sources chain (L-A);
 //   cloud proof           — EP-PIN-D17, operator-run; PENDING until its programme item is BUILT.
 //
@@ -44,7 +44,7 @@ export function ldg10Status({ sourcesSlugs, convertedSlugs, exemptSlugs = [], wi
     '1 table edges + 3 pins (#44)': witnessFails.length === 0 ? 'PASS' : `FAIL (${witnessFails.length})`,
     '1 converted set (R-BC a)': notConverted.length === 0 ? 'PASS' : `PENDING (${notConverted.join(', ')})`,
     '2 contracts (gate D #31)': gateD && gateD.pass ? 'PASS' : 'FAIL',
-    '4 invalidation (#44 i)': 'PENDING (check (i) not ruled)',
+    '4 invalidation (#44 i)': witnessFails.some((r) => r.includes(':i:')) ? `FAIL (${witnessFails.filter((r) => r.includes(':i:')).length})` : 'PASS',
     '5 ordering (L-A)': (orderRows || []).length === 0 ? 'PASS' : `FAIL (${orderRows.length})`,
   };
   const extra = Array.isArray(pending) ? pending : [];
@@ -72,6 +72,8 @@ export function selfTest() {
   const red = ldg10Status({ ...base, witnessRowsBySlug: { a: ['FAIL:WITNESS:a:a:t.x'], b: [] } });
   const missing = ldg10Status({ ...base, witnessRowsBySlug: { a: [] } });
   const order = ldg10Status({ ...base, orderRows: ['ORDER:sources:b>a:t.x'] });
-  const ok = clean.answer === 'PARTIAL' && red.answer === 'FAIL' && missing.answer === 'FAIL' && order.answer === 'FAIL';
-  return { ok, detail: ok ? 'self-test ok: clean → PARTIAL (pending), a #44 FAIL / unevaluated slug / ORDER row → FAIL' : `self-test FAILED: ${JSON.stringify({ clean, red, missing, order })}` };
+  const inval = ldg10Status({ ...base, witnessRowsBySlug: { a: ['FAIL:WITNESS:a:i:fill-once:t.c'], b: [] } });
+  const ok = clean.answer === 'PARTIAL' && red.answer === 'FAIL' && missing.answer === 'FAIL' && order.answer === 'FAIL'
+    && inval.answer === 'FAIL' && inval.classes['4 invalidation (#44 i)'].startsWith('FAIL') && clean.classes['4 invalidation (#44 i)'] === 'PASS';
+  return { ok, detail: ok ? 'self-test ok: clean → PARTIAL (pending), a #44 FAIL / unevaluated slug / ORDER row / (i) row → FAIL' : `self-test FAILED: ${JSON.stringify({ clean, red, missing, order, inval })}` };
 }

@@ -2,48 +2,48 @@
   "entries": {
     "centreline_corner_or_through_has_frontage": {
       "value": 0,
-      "cost_ms": 296,
-      "at": "2026-10-17T19:33:38.252Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3164",
-      "chain": null,
-      "sample_n": 15
+      "cost_ms": 436,
+      "at": "2026-10-18T04:36:19.767Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 19
     },
     "centreline_corner_share_min_pct": {
       "value": 11.2582194608638,
-      "cost_ms": 406,
-      "at": "2026-10-17T19:33:38.252Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3164",
-      "chain": null,
-      "sample_n": 15
+      "cost_ms": 622,
+      "at": "2026-10-18T04:36:19.767Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 19
     },
     "centreline_corner_share_max_pct": {
       "value": 11.2582194608638,
-      "cost_ms": 404,
-      "at": "2026-10-17T19:33:38.252Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3164",
-      "chain": null,
-      "sample_n": 15
+      "cost_ms": 620,
+      "at": "2026-10-18T04:36:19.767Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 19
     },
     "centreline_through_share_min_pct": {
       "value": 1.00536719465899,
-      "cost_ms": 405,
-      "at": "2026-10-17T19:33:38.252Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3164",
-      "chain": null,
-      "sample_n": 15
+      "cost_ms": 624,
+      "at": "2026-10-18T04:36:19.767Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 19
     },
     "centreline_through_share_max_pct": {
       "value": 1.00536719465899,
-      "cost_ms": 390,
-      "at": "2026-10-17T19:33:38.252Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": "3164",
-      "chain": null,
-      "sample_n": 15
+      "cost_ms": 624,
+      "at": "2026-10-18T04:36:19.767Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": null,
+      "chain": "sources",
+      "sample_n": 19
     }
   }
 }

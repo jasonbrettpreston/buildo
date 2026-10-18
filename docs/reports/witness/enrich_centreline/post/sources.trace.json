@@ -3,14 +3,14 @@
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
   "source_fingerprint": "c390361b8ef41cd8fbc4226421798f176d684ba69024c237f49fa80ab05fde12",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
-    "calls": 52,
-    "distinct": 34,
+    "calls": 51,
+    "distinct": 33,
     "utility": 14,
-    "tracer_self_ms": 1.602,
-    "wall_ms": 91318
+    "tracer_self_ms": 1.588,
+    "wall_ms": 3092
   },
   "statements": [
     {
@@ -102,21 +102,6 @@
           1
         ]
       ]
-    },
-    {
-      "fingerprint": "1d68338a42630d9f",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "toronto_centreline": [
-          "from_intersection_id",
-          "to_intersection_id"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
     },
     {
       "fingerprint": "2001bd6cc9d4a455",
@@ -260,6 +245,21 @@
       "error": null
     },
     {
+      "fingerprint": "6fe0fdbe591bd156",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "centreline_dataset_version_when_enriched",
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
       "fingerprint": "76533998925a04c0",
       "kind": "read",
       "count": 2,
@@ -290,6 +290,39 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7e20c68440df3857",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "parcels": [
+          "address_number",
+          "centreline_dataset_version_when_enriched",
+          "geom",
+          "id",
+          "street_name_normalized"
+        ],
+        "toronto_centreline": [
+          "feature_code_desc",
+          "from_intersection_id",
+          "geom",
+          "hi_num_l",
+          "hi_num_r",
+          "id",
+          "linear_name",
+          "linear_name_full",
+          "lo_num_l",
+          "lo_num_r",
+          "parity_l",
+          "parity_r",
+          "to_intersection_id"
+        ]
+      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -354,38 +387,6 @@
       "error": null
     },
     {
-      "fingerprint": "ad05138ec9a364ad",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 480480,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "geom",
-          "id",
-          "street_name_normalized"
-        ],
-        "toronto_centreline": [
-          "feature_code_desc",
-          "from_intersection_id",
-          "geom",
-          "hi_num_l",
-          "hi_num_r",
-          "id",
-          "linear_name",
-          "linear_name_full",
-          "lo_num_l",
-          "lo_num_r",
-          "parity_l",
-          "parity_r",
-          "to_intersection_id"
-        ]
-      },
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "ae7bf354abe0d81b",
       "kind": "utility",
       "count": 1,
@@ -413,22 +414,6 @@
       "count": 2,
       "rowCount": 0,
       "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
-      "fingerprint": "b2d013e8bdf1613d",
-      "kind": "read",
-      "count": 1,
-      "rowCount": 1,
-      "reads": {
-        "parcels": [
-          "address_number",
-          "geom",
-          "street_name_normalized"
-        ]
-      },
       "writes": {},
       "excluded": [],
       "error": null
@@ -512,7 +497,7 @@
   ],
   "transactions": [
     {
-      "client": "48327:3",
+      "client": "78333:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

@@ -3,14 +3,41 @@
   "captures": {
     "post/sources.json": {
       "via": "plain",
-      "why": "#38 evidence: a plain sources run links the parcels new since the last run (3 rows on 2026-10-16); no bracket was ever used."
+      "why": "A plain sources run links only the parcels new since the last run. 3 rows on 2026-10-16 came from an upstream load; on a settled DB it writes 0 (2026-10-18 fleet retake), so the #38 evidence is post/standalone-forced.json (R-DP bracket)."
     },
     "post/standalone-forced.json": {
-      "via": "env",
-      "env": {
-        "LINK_PARCEL_ADDRESSES_FORCE_FULL": "1"
-      },
-      "why": "the descriptor force_full env bypasses the materialize gate (\"gate: RUN (bypassed)\" in the night-4 capture 2d7b0d84). The 2026-10-16 night retook it WITHOUT the env (gate reason upstream_activity), so the committed file is not a forced run until N6 retakes it."
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=parcel_address_points",
+          "--key=parcel_id",
+          "--column=address_point_id",
+          "--op=delete_reinsert",
+          "--count=200",
+          "--where=true",
+          "--order=t.parcel_id",
+          "--backup-table=parcel_address_points_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=parcel_address_points",
+          "--key=parcel_id",
+          "--column=address_point_id",
+          "--op=delete_reinsert",
+          "--count=200",
+          "--where=true",
+          "--order=t.parcel_id",
+          "--backup-table=parcel_address_points_cohort_bak_{ts}",
+          "--step=scripts/link-parcel-addresses.js",
+          "--chain=none",
+          "--out=docs/reports/golden/link_parcel_addresses/post/standalone-forced.json",
+          "--env=LINK_PARCEL_ADDRESSES_FORCE_FULL=1"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-DP, 2026-10-18). The step is INSERT-only (ON CONFLICT DO NOTHING, class D), so no column can be perturbed. The R-DP delete_reinsert bracket deletes every bridge row of the first 200 parcel_ids (260 rows); under the descriptor force env (recovery.force) the full re-scan re-inserts all 260 (records_new 260) and the pair set matches the before-image (restore re-inserted 0). The old env-only recipe wrote 0 on the settled DB: its earlier nonzero capture came from upstream drift."
     }
   }
 }

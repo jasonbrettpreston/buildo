@@ -3,14 +3,14 @@
   "step": "scripts/load-address-points.js",
   "chain": "none",
   "source_fingerprint": "372ae22da500a803e0b74108a70cf80d92a960eab252805c07d87416e7174565",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 168,
     "distinct": 19,
     "utility": 8,
-    "tracer_self_ms": 1075.516,
-    "wall_ms": 36107
+    "tracer_self_ms": 1047.34,
+    "wall_ms": 35714
   },
   "statements": [
     {
@@ -55,13 +55,13 @@
       "params": [
         [
           "completed",
-          35872,
+          35478,
           null,
-          3130,
+          3335,
           0,
           0,
           0,
-          "{\"address_points_load\":{\"duration_ms\":35866,\"rows_read\":525372,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525372,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_null_street_type_max_pct\":0.06,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_street_type_pct\",\"value\":{\"null_rows\":23010,\"attempted\":525372},\"threshold\":\"pct <= 0.06\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525372,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525372},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"header unchanged (38 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":35873,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"address_points_load\":{\"duration_ms\":35473,\"rows_read\":525372,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":525372,\"records_skipped\":0,\"errors\":0},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"sources_address_points_floor\":500000,\"address_points_skip_rate_max_pct\":5,\"address_points_null_address_number_max_pct\":0.1,\"address_points_null_street_type_max_pct\":0.06,\"address_points_download_timeout_ms\":60000,\"address_points_mass_retire_max_pct\":0.02},\"acquired\":{\"record_fields\":{\"ckan:address-points-4326\":[\"_id\",\"ADDRESS_POINT_ID\",\"ADDRESS_ID\",\"ADDRESS_STRING_ID\",\"LINEAR_NAME_ID\",\"CENTRELINE_ID\",\"MAINT_STAGE\",\"ADDRESS_NUMBER\",\"LINEAR_NAME_FULL\",\"LO_NUM\",\"LO_NUM_SUF\",\"HI_NUM\",\"HI_NUM_SUF\",\"LINEAR_NAME\",\"LINEAR_NAME_TYPE\",\"LINEAR_NAME_DIR\",\"LINEAR_NAME_DESC\",\"CENTRELINE_SIDE\",\"CENTRELINE_MEASURE\",\"CENTRELINE_OFFSET\",\"GENERAL_USE_CODE\",\"GENERAL_USE\",\"CLASS_FAMILY\",\"CLASS_FAMILY_DESC\",\"ADDRESS_CLASS\",\"ADDRESS_CLASS_DESC\",\"ADDRESS_POINT_ID_LINK\",\"ADDRESS_ID_LINK\",\"PLACE_NAME\",\"PLACE_NAME_ALL\",\"ADDRESS_STATUS\",\"OBJECTID\",\"MUNICIPALITY\",\"MUNICIPALITY_NAME\",\"WARD\",\"WARD_NAME\",\"ADDRESS_FULL\",\"geometry\"]}},\"terminal\":\"loaded\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"b61efc2b245d507a33c8db4f95e34f07b44389d7\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":3,\"name\":\"Toronto Address Points\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_street_type_pct\",\"value\":{\"null_rows\":23010,\"attempted\":525372},\"threshold\":\"pct <= 0.06\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_number_pct\",\"value\":\"0.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0,\"threshold\":\"pct <= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":525372,\"threshold\":\"value_min 500000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"address_points\",\"rows_acquired\":525372},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:address-points-4326\",\"value\":\"header unchanged (38 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"records_retired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_unretired\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":35478,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -322,7 +322,7 @@
   ],
   "transactions": [
     {
-      "client": "36473:3",
+      "client": "66056:3",
       "write_fingerprints": [
         "8b9dda5a2430e883",
         "9f8e7239f14db5a0",

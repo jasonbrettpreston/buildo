@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-schema.js",
   "chain": "sources",
   "source_fingerprint": "11eaf239c17981e21c3fedf0070134e1fb3a481612b3c8e2bd278f45ebb0051d",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 9,
     "distinct": 9,
     "utility": 4,
-    "tracer_self_ms": 0.76,
-    "wall_ms": 3272
+    "tracer_self_ms": 0.817,
+    "wall_ms": 3369
   },
   "statements": [
     {

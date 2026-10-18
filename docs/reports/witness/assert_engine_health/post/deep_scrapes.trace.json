@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "deep_scrapes",
   "source_fingerprint": "dff27c5f2967fc0b4564ca7994275f3980842a2408a224e10778006e2b343365",
-  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
-    "calls": 173,
+    "calls": 180,
     "distinct": 21,
     "utility": 5,
-    "tracer_self_ms": 3.01,
-    "wall_ms": 316
+    "tracer_self_ms": 3.055,
+    "wall_ms": 365
   },
   "statements": [
     {
@@ -59,7 +59,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 149,
+      "rowCount": 156,
       "reads": {
         "pg_stat_user_tables": [
           "relname",
@@ -74,7 +74,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 133,
+      "rowCount": 140,
       "reads": {
         "pg_stat_user_tables": [
           "n_tup_ins",
@@ -175,8 +175,8 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 152,
-      "rowCount": 10,
+      "count": 159,
+      "rowCount": 11,
       "reads": {
         "engine_health_snapshots": [
           "dead_ratio",
@@ -246,7 +246,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 149,
+      "rowCount": 156,
       "reads": {
         "pg_stat_user_tables": [
           "n_dead_tup",
@@ -298,7 +298,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 152,
+      "rowCount": 159,
       "reads": {
         "pg_stat_user_tables": [
           "idx_scan",

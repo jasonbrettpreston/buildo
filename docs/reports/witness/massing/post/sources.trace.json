@@ -3,14 +3,14 @@
   "step": "scripts/load-massing.js",
   "chain": "sources",
   "source_fingerprint": "ccc62fd2ecd3efdb338ce633ecd03219934b7b866a9338116a2fecd4752929ed",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 96,
     "distinct": 18,
     "utility": 10,
-    "tracer_self_ms": 708.687,
-    "wall_ms": 45197
+    "tracer_self_ms": 710.945,
+    "wall_ms": 44684
   },
   "statements": [
     {
@@ -91,11 +91,15 @@
       "kind": "read",
       "count": 1,
       "rowCount": 1,
-      "reads": {},
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_dead_tup",
+          "n_live_tup",
+          "relname"
+        ]
+      },
       "writes": {},
-      "excluded": [
-        "pg_stat_user_tables"
-      ],
+      "excluded": [],
       "error": null
     },
     {
@@ -261,7 +265,7 @@
   ],
   "transactions": [
     {
-      "client": "40960:3",
+      "client": "70739:3",
       "write_fingerprints": [
         "26ccff78d2c8f90e"
       ]
@@ -282,6 +286,11 @@
         "max_height_m",
         "min_height_m",
         "source_id"
+      ],
+      "pg_stat_user_tables": [
+        "n_dead_tup",
+        "n_live_tup",
+        "relname"
       ]
     },
     "writes": {

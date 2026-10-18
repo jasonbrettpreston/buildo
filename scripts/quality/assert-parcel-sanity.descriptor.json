@@ -1393,12 +1393,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "2 outliers (worst 2.00)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1425,12 +1425,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "811 outliers (worst 5.93)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1457,12 +1457,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "12 outliers (worst 1.05)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1489,12 +1489,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "129 outliers (worst 75.00)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1521,12 +1521,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "0 outliers",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1553,12 +1553,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "3197 outliers (worst 5137.98)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1585,12 +1585,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "211 outliers (worst 6.62)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1617,12 +1617,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "4381 outliers (worst 543499.59)",
-        "at": "2026-10-17T19:08:00.810Z",
-        "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "at": "2026-10-18T03:35:32.624Z",
+        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "cost_ms": 0,
-        "sample_n": 16,
+        "sample_n": 18,
         "source_run": {
-          "run_id": "3115",
+          "run_id": "3320",
           "chain": null,
           "event": "golden_capture"
         }

@@ -3,14 +3,14 @@
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
   "source_fingerprint": "c390361b8ef41cd8fbc4226421798f176d684ba69024c237f49fa80ab05fde12",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
-    "calls": 52,
-    "distinct": 34,
+    "calls": 53,
+    "distinct": 35,
     "utility": 14,
-    "tracer_self_ms": 1.819,
-    "wall_ms": 131312
+    "tracer_self_ms": 1.795,
+    "wall_ms": 93181
   },
   "statements": [
     {
@@ -161,7 +161,7 @@
       "fingerprint": "46c7e018cd87d93a",
       "kind": "write",
       "count": 1,
-      "rowCount": 480480,
+      "rowCount": 200,
       "reads": {
         "parcels": [
           "abuts_laneway",
@@ -257,6 +257,21 @@
       "excluded": [
         "pg_indexes"
       ],
+      "error": null
+    },
+    {
+      "fingerprint": "6fe0fdbe591bd156",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": [
+          "centreline_dataset_version_when_enriched",
+          "geom"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
       "error": null
     },
     {
@@ -512,7 +527,7 @@
   ],
   "transactions": [
     {
-      "client": "47589:3",
+      "client": "89297:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

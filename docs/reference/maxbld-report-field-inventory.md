@@ -2026,10 +2026,10 @@ none
 
 ## Inputs
 
-- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `7229cd614be99f8f`
-- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `806d0788adef5609`
-- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `84eb6f346591a660`
-- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `042506ef51d99fec`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `63468bb4b5be83d3`
+- `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `1d82f3b9f887ba6e`
+- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `f4226e60903c0a0b`
+- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `f8b5e5b92dc3824d`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
 - `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `efb91c277ebc0f32`
@@ -2038,7 +2038,7 @@ none
 - `mobile/src/lib/trackedLots.ts` sha256 `3e7974f73db4e058`
 - `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
 - `scripts/lib/compute/compute-parcel-cost-estimates.js` sha256 `5f3e3f2ffb53bf1a`
-- `scripts/lib/compute/enrich-parcels.js` sha256 `41b6966237963bc9`
+- `scripts/lib/compute/enrich-parcels.js` sha256 `ca63e7b97692323a`
 - `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`

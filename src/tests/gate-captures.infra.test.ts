@@ -489,7 +489,7 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
   // WF3 2026-09-28 (pct-flag): address_points:address_points and parcels:parcels CLOSED —
   // their POST goldens were recaptured with a forced-change cohort (records_updated 1000 / 954),
   // and the same commit deleted their two `nonzero:*` ledger rows.
-  const KNOWN_RED_FIRST = [
+  const KNOWN_RED_FIRST: string[] = [
     // re-pinned 2026-10-14 H5 recapture night 4 (operator "A"): compute_centroids/enrich_heritage/enrich_ravines
     // :parcels are dated ledger rows again (tonight's sources POSTs wrote 0, no upstream change), and the
     // compute_parcel_cost_estimates:parcels, geocode_permits:permits and link_parcel_addresses:parcel_address_points
@@ -506,7 +506,8 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
     // do not carry link_wsib's entities correction (is_wsib_registered_corrected).
     // re-pinned 2026-10-18 (Spec 124 R-DN): link_wsib:entities CLOSED — the R-DN --count-path bracket proves the 200
     // entity corrections through gate G's own count_path (is_wsib_registered_corrected); ledger row deleted.
-    'enrich_parcels:enrich_parcels_pass3_scope',
+    // re-pinned 2026-10-18 (operator y, R-CY form): enrich_parcels:enrich_parcels_pass3_scope CLOSED — the runner-measured
+    // pass3_scope_rows_spooled emit is its cohort.json count_path; ledger row deleted. No gate-G nonzero row remains.
   ];
 
   it('T4: live — every measured nonzero violation is now ledger-allowed (landed 2026-09-26), and zero orphans', () => {

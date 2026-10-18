@@ -2,39 +2,39 @@
   "entries": {
     "pp_unique_triple_violations": {
       "value": 0,
-      "cost_ms": 32,
-      "at": "2026-10-17T21:32:30.496Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 29
+      "cost_ms": 34,
+      "at": "2026-10-18T03:01:36.146Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3282",
+      "chain": null,
+      "sample_n": 33
     },
     "pp_duplicate_permit_pairs": {
       "value": 0,
       "cost_ms": 38,
-      "at": "2026-10-17T21:32:30.496Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 29
+      "at": "2026-10-18T03:01:36.146Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3282",
+      "chain": null,
+      "sample_n": 33
     },
     "pp_spatial_null_coordinate_count": {
       "value": 0,
-      "cost_ms": 17,
-      "at": "2026-10-17T21:32:30.496Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 29
+      "cost_ms": 16,
+      "at": "2026-10-18T03:01:36.146Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3282",
+      "chain": null,
+      "sample_n": 33
     },
     "spatial_fallback_distance_within_cap": {
       "value": 0,
-      "cost_ms": 31,
-      "at": "2026-10-17T21:32:30.496Z",
-      "commit": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 29
+      "cost_ms": 27,
+      "at": "2026-10-18T03:01:36.146Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3282",
+      "chain": null,
+      "sample_n": 33
     }
   }
 }

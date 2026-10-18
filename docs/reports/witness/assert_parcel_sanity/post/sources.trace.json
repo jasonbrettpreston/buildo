@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-parcel-sanity.js",
   "chain": "sources",
   "source_fingerprint": "249be6e28a6717f45db90c440d253d5adddebdbe77c150da68f4fa5917fd3b8b",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 26,
     "distinct": 18,
     "utility": 12,
-    "tracer_self_ms": 0.896,
-    "wall_ms": 7641
+    "tracer_self_ms": 1.2,
+    "wall_ms": 18840
   },
   "statements": [
     {

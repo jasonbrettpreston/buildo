@@ -2,30 +2,30 @@
   "entries": {
     "no_priced_null_lot_parcel": {
       "value": 0,
-      "cost_ms": 435,
-      "at": "2026-10-17T20:14:25.426Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 13
+      "cost_ms": 620,
+      "at": "2026-10-18T03:38:04.118Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3331",
+      "chain": null,
+      "sample_n": 15
     },
     "new_build_cost_not_gt_coa_cost": {
       "value": 0,
-      "cost_ms": 439,
-      "at": "2026-10-17T20:14:25.426Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 13
+      "cost_ms": 612,
+      "at": "2026-10-18T03:38:04.118Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3331",
+      "chain": null,
+      "sample_n": 15
     },
     "no_cost_outside_population": {
       "value": 0,
-      "cost_ms": 520,
-      "at": "2026-10-17T20:14:25.426Z",
-      "commit": "2a96590cafc0d583e36f4a244c550d98b844a93c",
-      "run_id": null,
-      "chain": "sources",
-      "sample_n": 13
+      "cost_ms": 680,
+      "at": "2026-10-18T03:38:04.118Z",
+      "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "run_id": "3331",
+      "chain": null,
+      "sample_n": 15
     }
   }
 }

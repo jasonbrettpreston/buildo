@@ -1899,7 +1899,7 @@ function computeAggregateRecordsUpdated({ zoningIds, maxBuildIds, existingIds, s
 // @returns {Promise<{matched: object, compute: object}>}
 // ===========================================================================
 
-async function computePostPhase(pool, { passRaw }) {
+async function computePostPhase(pool, { passRaw, scopeHandoff }) {
   // Stamp heal (lens I3) — the zoning_enriched_at NULL count rides the SAME geom-parcel scan; no extra query.
   const geomScan = await pool.query(
     'SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE zoning_enriched_at IS NULL)::int AS stamp_null FROM parcels WHERE geom IS NOT NULL',
@@ -1945,6 +1945,8 @@ async function computePostPhase(pool, { passRaw }) {
       sixplex_basis_counts: { all: sixplex.basisCounts || {}, residential: sixplex.basisCountsResidential || {} },
       sixplex_enriched_count: sixplex.updated || 0,
       optimal_config_enriched_count: optCfg.updated || 0,
+      // Runner-measured (R-CY form): the scope hand-off INSERT's own row count, handed in by the runner.
+      pass3_scope_rows_spooled: (scopeHandoff && scopeHandoff.inserted) || 0,
       opt_aor_envelope_capped_count: optCfg.envelope_capped || 0,
       opt_config_citywide_fallback_count: optCfg.citywide || 0,
       // EP-D14 (WF3 C1) — observability for the set-based/batched D4' recovery rewrite.
@@ -2519,6 +2521,8 @@ async function compute(ctx) {
       existing_structure_enriched_count: ctx.matched.existing_structure_enriched_count,
       comparable_builds_enriched_count: ctx.matched.comparable_builds_enriched_count,
       optimal_config_enriched_count: ctx.matched.optimal_config_enriched_count,
+      // Runner-measured scope hand-off rows (R-CY form) — gate G count_path for enrich_parcels_pass3_scope.
+      pass3_scope_rows_spooled: ctx.matched.pass3_scope_rows_spooled,
       opt_config_engine_errors: ctx.matched.opt_config_engine_errors,
       // EP-D19 — the run-chain.js CONTRACT key (parseDeferMarker), restored from the legacy script.
       // Emitted on EVERY run (null when not deferred) so emits[] equals every golden's key set.

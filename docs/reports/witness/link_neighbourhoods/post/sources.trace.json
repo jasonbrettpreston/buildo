@@ -3,14 +3,14 @@
   "step": "scripts/link-neighbourhoods.js",
   "chain": "sources",
   "source_fingerprint": "01f053a66b9622967f2d2cb6ac780c48067485eff36867f8503ce5cf330e45b3",
-  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 30,
     "distinct": 26,
     "utility": 7,
-    "tracer_self_ms": 1.924,
-    "wall_ms": 3281
+    "tracer_self_ms": 1.124,
+    "wall_ms": 2314
   },
   "statements": [
     {

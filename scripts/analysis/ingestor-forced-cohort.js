@@ -58,7 +58,8 @@
  *                          table names, used by hashOf() too — see TABLE_NAME_RE)
  *   --key=<pk col>         the primary-key column
  *   --column=<col>         the ONE column to perturb
- *   --op=<op>              add_number:<n> | append_text:<s> | negate_bool
+ *   --op=<op>              add_number:<n> | append_text:<s> | negate_bool | delete_reinsert
+ *                          (delete_reinsert, Spec 124 R-DP: the INSERT-only form — see isPairMode)
  *   --count=<N>            the cohort size
  *   --where=<SQL pred>     selects the ELIGIBLE rows (no semicolons)
  *   --order=<SQL expr>     the ORDER BY expression that picks the FIRST N
@@ -296,6 +297,17 @@ function validateFlags(args) {
   const count = Number(countRaw);
   if (!Number.isInteger(count) || count <= 0) throw new Error(`--count must be a positive integer (got ${JSON.stringify(countRaw)})`);
   const op = parseOp(opRaw);
+  // R-DP: the pair-mode cohort is the first N DISTINCT keys, so --order must BE the key (a
+  // GROUP BY cannot order by any other expression), and the source-checked draw (one row per
+  // key) does not apply to a key that holds many rows.
+  if (op.kind === 'delete_reinsert') {
+    if (![key, `t.${key}`, `"${key}"`, `t."${key}"`].includes(String(order).trim())) {
+      throw new Error(`--op=delete_reinsert orders by the cohort key: --order must be ${key} or t.${key} (got ${JSON.stringify(order)})`);
+    }
+    if ((args.sourceCsv !== null && args.sourceCsv !== undefined) || (args.sourceKey !== null && args.sourceKey !== undefined)) {
+      throw new Error('--op=delete_reinsert does not take --source-csv/--source-key');
+    }
+  }
   // The optional source pair (both or neither). Refused BEFORE any DB connect and BEFORE
   // the run-only block, so `--plan --source-csv=nope.csv` costs seconds and touches no
   // database. The path is resolved against the repo root and must EXIST: a typo'd path
@@ -370,8 +382,9 @@ function validateFlags(args) {
  * the INGESTOR recaptures need; anything else is refused rather than guessed.
  */
 function parseOp(raw) {
-  if (typeof raw !== 'string' || raw === '') throw new Error(`--op must be add_number:<n>|append_text:<s>|negate_bool (got ${JSON.stringify(raw)})`);
+  if (typeof raw !== 'string' || raw === '') throw new Error(`--op must be add_number:<n>|append_text:<s>|negate_bool|delete_reinsert (got ${JSON.stringify(raw)})`);
   if (raw === 'negate_bool') return { kind: 'negate_bool' };
+  if (raw === 'delete_reinsert') return { kind: 'delete_reinsert' };
   const i = raw.indexOf(':');
   if (i < 0) throw new Error(`--op must be add_number:<n>|append_text:<s>|negate_bool (got ${JSON.stringify(raw)})`);
   const head = raw.slice(0, i);
@@ -383,6 +396,19 @@ function parseOp(raw) {
   }
   if (head === 'append_text') return { kind: 'append_text' };
   throw new Error(`--op kind must be add_number|append_text|negate_bool (got ${JSON.stringify(head)})`);
+}
+
+/**
+ * R-DP (Spec 124, McDonald's Airtight V3): `delete_reinsert` is the INSERT-only form of the
+ * same bracket. An insert-only step (ON CONFLICT DO NOTHING, no column to move) cannot be
+ * perturbed by an UPDATE, so the cohort is the first N DISTINCT `--key` values and the
+ * perturbation DELETEs every row they hold; the step must re-insert exactly the deleted
+ * (key, column) pairs. The before-image holds the FULL rows, the heal and restore checks
+ * compare the (key, column) PAIR SET, and the restore re-inserts only the missing pairs.
+ * Pure.
+ */
+function isPairMode(o) {
+  return Boolean(o && o.op && o.op.kind === 'delete_reinsert');
 }
 
 /** The `$2` bind value for an op, or `null` when the op takes none. Pure. */
@@ -402,10 +428,17 @@ function opBindValue(opRaw) {
  */
 function perturbationSetExpr(op, column) {
   if (!TABLE_NAME_RE.test(column)) throw new Error(`invalid column name ${JSON.stringify(column)}`);
+  if (op.kind === 'delete_reinsert') throw new Error('delete_reinsert has no SET expression — its perturbation is perturbationDeleteSql');
   if (op.kind === 'negate_bool') return `"${column}" = NOT "${column}"`;
   if (op.kind === 'add_number') return `"${column}" = "${column}" + $2`;
   if (op.kind === 'append_text') return `"${column}" = "${column}" || $2`;
   throw new Error(`unknown op kind ${JSON.stringify(op.kind)}`);
+}
+
+/** R-DP: the pair-mode perturbation — DELETE every row the cohort keys hold. Pure. */
+function perturbationDeleteSql(o) {
+  if (!TABLE_NAME_RE.test(o.table) || !TABLE_NAME_RE.test(o.key)) throw new Error('perturbationDeleteSql: invalid identifier');
+  return `DELETE FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
 }
 
 // ── SQL builders (pure, shared by every mode) ────────────────────────────────
@@ -452,6 +485,7 @@ function cohortSelect(o) {
 
 /** The eligibility COUNT: how many rows --where selects. Pure. */
 function eligibleCountSql(o) {
+  if (isPairMode(o)) return `SELECT count(DISTINCT t."${o.key}")::int AS n FROM ${o.table} t WHERE ${o.where}`;
   return `SELECT count(*)::int AS n FROM ${o.table} t WHERE ${o.where}`;
 }
 
@@ -468,6 +502,8 @@ function eligibleCountSql(o) {
 function orderedKeysSql(o, { bounded }) {
   if (!Number.isInteger(o.count) || o.count <= 0) throw new Error(`invalid cohort count ${JSON.stringify(o.count)}`);
   const limit = bounded ? ` LIMIT ${o.count}` : '';
+  // R-DP: the pair-mode cohort is N DISTINCT keys (validateFlags pins --order to the key).
+  if (isPairMode(o)) return `SELECT t."${o.key}" FROM ${o.table} t WHERE ${o.where} GROUP BY t."${o.key}" ORDER BY t."${o.key}"${limit}`;
   return `SELECT t."${o.key}" FROM ${o.table} t WHERE ${o.where} ORDER BY ${o.order}${limit}`;
 }
 
@@ -477,6 +513,8 @@ function orderedKeysSql(o, { bounded }) {
  */
 function backupCreateSql(o) {
   if (!TABLE_NAME_RE.test(o.backupTable)) throw new Error(`invalid before-image name ${JSON.stringify(o.backupTable)}`);
+  // R-DP: a deleted row must come back whole, so the pair-mode before-image is the FULL row.
+  if (isPairMode(o)) return `CREATE TABLE ${o.backupTable} AS SELECT t.* FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
   return `CREATE TABLE ${o.backupTable} AS SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
 }
 
@@ -499,6 +537,12 @@ function backupSelectSql(o) {
  */
 function restoreSql(o) {
   if (!TABLE_NAME_RE.test(o.backupTable)) throw new Error(`invalid before-image name ${JSON.stringify(o.backupTable)}`);
+  // R-DP: re-insert ONLY the cohort pairs that are missing — a pair the step already put back
+  // is left as the step wrote it, and a no-op restore inserts nothing.
+  if (isPairMode(o)) {
+    return `INSERT INTO ${o.table} SELECT b.* FROM ${o.backupTable} b WHERE b."${o.key}" = ANY($1)`
+      + ` AND NOT EXISTS (SELECT 1 FROM ${o.table} t WHERE t."${o.key}" = b."${o.key}" AND t."${o.column}" = b."${o.column}")`;
+  }
   return `UPDATE ${o.table} t SET "${o.column}" = b."${o.column}" FROM ${o.backupTable} b`
     + ` WHERE b."${o.key}" = t."${o.key}" AND t."${o.key}" = ANY($1)`
     + ` AND t."${o.column}" IS DISTINCT FROM b."${o.column}"`;
@@ -796,6 +840,11 @@ function sourceCheckLines(mode, { checked, sourcePath, cohort, unreachable }) {
  * unchanged ordering/limit path.
  */
 function cohortRowsSql(o, checked, cohortKeys) {
+  // R-DP: pair mode reads EVERY row the cohort keys hold (a key holds many rows).
+  if (isPairMode(o)) {
+    if (!Array.isArray(cohortKeys) || cohortKeys.length === 0) throw new Error('cohortRowsSql: the pair-mode cohort must be a non-empty key list');
+    return `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
+  }
   if (!checked) return cohortSelect(o);
   if (!Array.isArray(cohortKeys) || cohortKeys.length === 0) throw new Error('cohortRowsSql: the source-checked cohort must be a non-empty key list');
   return `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE ${o.where} AND t."${o.key}" = ANY($1) ORDER BY ${o.order}`;
@@ -879,8 +928,13 @@ function firstSummary(stdout) {
   }
 }
 
-/** The cohort rows as `[{key, value}]` from a `SELECT key, column` result. Pure. */
-function rowsToKeyValues(rows, key, column) {
+/**
+ * The cohort rows as `[{key, value}]` from a `SELECT key, column` result. Pure.
+ * R-DP: in pair mode each (key, column) PAIR is one entry (`"<key>|<column>"` → present), so
+ * the same value-map comparison checks the pair SET — a key holds many rows there.
+ */
+function rowsToKeyValues(rows, key, column, pairMode = false) {
+  if (pairMode) return rows.map((r) => ({ key: `${String(r[key])}|${String(r[column])}`, value: 'present' }));
   return rows.map((r) => ({ key: r[key], value: r[column] }));
 }
 
@@ -995,11 +1049,14 @@ async function resolveCohort(pool, o) {
   const sourceInfo = await sourceCheckedFor(pool, o);
   const keys = sourceInfo.cohort;
   assertRestoreKeys(keys);
-  const rows = await readOnlyQuery(pool, cohortRowsSql(o, sourceInfo.checked, keys), sourceInfo.checked ? [keys] : undefined);
-  if (rows.length !== keys.length) {
-    throw new Error(`refusing: the cohort SELECT returned ${rows.length} row(s), expected ${keys.length} — --order is not deterministic over --where`);
+  const pair = isPairMode(o);
+  const rows = await readOnlyQuery(pool, cohortRowsSql(o, sourceInfo.checked, keys), sourceInfo.checked || pair ? [keys] : undefined);
+  // R-DP: a pair-mode key holds >= 1 row, so the one-row-per-key determinism check becomes
+  // "every cohort key still holds a row".
+  if (pair ? rows.length < keys.length : rows.length !== keys.length) {
+    throw new Error(`refusing: the cohort SELECT returned ${rows.length} row(s), expected ${pair ? `>= ${keys.length}` : keys.length} — --order is not deterministic over --where`);
   }
-  return { eligible, keys, rows: rowsToKeyValues(rows, o.key, o.column), sourceInfo };
+  return { eligible, keys, rows: rowsToKeyValues(rows, o.key, o.column, pair), sourceInfo };
 }
 
 /**
@@ -1030,12 +1087,21 @@ function reportSourceCheck(mode, sourceInfo, log) {
 /** The cohort's CURRENT values, read back by key. Reads only. */
 async function liveCohortValues(pool, o, keys) {
   const rows = await readOnlyQuery(pool, `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`, [keys]);
-  return rowsToKeyValues(rows, o.key, o.column);
+  return rowsToKeyValues(rows, o.key, o.column, isPairMode(o));
 }
 
 /** The before-image's rows, read back by key. Reads only. */
 async function backupCohortValues(pool, o) {
-  return rowsToKeyValues(await readOnlyQuery(pool, backupSelectSql(o)), o.key, o.column);
+  return rowsToKeyValues(await readOnlyQuery(pool, backupSelectSql(o)), o.key, o.column, isPairMode(o));
+}
+
+/**
+ * The before-image's distinct cohort KEYS. Reads only. --restore needs the keys, not the
+ * value entries: in pair mode an entry is a `"<key>|<column>"` pair, never a key.
+ */
+async function backupCohortKeys(pool, o) {
+  const rows = await readOnlyQuery(pool, `SELECT DISTINCT t."${o.key}" FROM ${o.backupTable} t`);
+  return rows.map((r) => r[o.key]);
 }
 
 /** Does `table` resolve on this connection? Reads only. */
@@ -1084,7 +1150,10 @@ async function backup(o) {
     const cohort = await resolveCohort(pool, o);
     reportSourceCheck('backup', cohort.sourceInfo, console.log);
     await pool.query(backupCreateSql(o), [cohort.keys]);
-    await pool.query(`ALTER TABLE ${o.backupTable} ADD PRIMARY KEY ("${o.key}")`);
+    // R-DP: a pair-mode key holds many rows; the pair is the before-image's identity.
+    await pool.query(isPairMode(o)
+      ? `ALTER TABLE ${o.backupTable} ADD PRIMARY KEY ("${o.key}", "${o.column}")`
+      : `ALTER TABLE ${o.backupTable} ADD PRIMARY KEY ("${o.key}")`);
     const copied = await backupCohortValues(pool, o);
     const ok = backupPrecondition({ exists: true, liveValues: cohort.rows, backupValues: copied });
     if (!ok.ok) {
@@ -1128,7 +1197,7 @@ async function restore(o) {
       throw new Error(`--backup-table ${o.backupTable} does not exist — nothing to restore from`);
     }
     const backupRows = await backupCohortValues(pool, o);
-    const keys = backupRows.map((r) => r.key);
+    const keys = isPairMode(o) ? await backupCohortKeys(pool, o) : backupRows.map((r) => r.key);
     assertRestoreKeys(keys);
     if (o.sourceCsv !== null && o.sourceCsv !== undefined) {
       const sourceCsvText = fs.readFileSync(path.resolve(REPO_ROOT, o.sourceCsv), 'utf8');
@@ -1270,14 +1339,24 @@ async function run(o) {
       let perturbedRows = 0;
       try {
         await client.query('BEGIN');
-        const bind = opBindValue(o.opRaw);
-        const setExpr = perturbationSetExpr(o.op, o.column);
-        const upd = bind === null
-          ? await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys])
-          : await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys, bind]);
-        perturbedRows = upd.rowCount;
-        if (perturbedRows !== cohortKeys.length) {
-          throw new Error(`perturbation wrote ${perturbedRows} row(s), expected ${cohortKeys.length} — a cohort row is missing from ${o.table}`);
+        if (isPairMode(o)) {
+          // R-DP: DELETE every row the cohort keys hold; it commits only if exactly the
+          // before-image's rows went (a concurrent writer would otherwise be deleted unimaged).
+          const del = await client.query(perturbationDeleteSql(o), [cohortKeys]);
+          perturbedRows = del.rowCount;
+          if (perturbedRows !== backupRows.length) {
+            throw new Error(`perturbation deleted ${perturbedRows} row(s), expected ${backupRows.length} (the before-image) — ${o.table} changed under the bracket`);
+          }
+        } else {
+          const bind = opBindValue(o.opRaw);
+          const setExpr = perturbationSetExpr(o.op, o.column);
+          const upd = bind === null
+            ? await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys])
+            : await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys, bind]);
+          perturbedRows = upd.rowCount;
+          if (perturbedRows !== cohortKeys.length) {
+            throw new Error(`perturbation wrote ${perturbedRows} row(s), expected ${cohortKeys.length} — a cohort row is missing from ${o.table}`);
+          }
         }
         // Print the STANDALONE recovery command immediately BEFORE the COMMIT — the exact
         // instant the perturbation becomes durable. Everything that could be lost is lost
@@ -1509,6 +1588,28 @@ function selfTest() {
   throws(() => validateFlags(parseArgs(['--plan', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--count-path=run_matched'])), 'validateFlags accepted --count-path outside --run');
   throws(() => validateFlags(parseArgs(['--run', '--table=address_points', '--key=id', '--column=class_family_desc', '--op=append_text: f', '--count=20', '--where=class_family_desc IS NOT NULL', '--order=id', '--backup-table=address_points_cohort_bak_20261002t1848z', '--step=scripts/load-address-points.js', '--chain=sources', '--out=docs/reports/golden/address_points/post/sources.json', '--count-path=meta.x'])), 'validateFlags accepted a dotted --count-path');
 
+  // R-DP delete_reinsert: the INSERT-only pair form, both ways.
+  const pairArgs = ['--plan', '--table=parcel_address_points', '--key=parcel_id', '--column=address_point_id', '--op=delete_reinsert', '--count=3', '--where=true', '--order=t.parcel_id', '--backup-table=parcel_address_points_cohort_bak_20261018t0100z'];
+  const po = validateFlags(parseArgs(pairArgs));
+  assert(parseOp('delete_reinsert').kind === 'delete_reinsert' && opBindValue('delete_reinsert') === null, 'parseOp/opBindValue mishandled delete_reinsert');
+  assert(isPairMode(po) === true && isPairMode(o) === false, 'isPairMode misclassified an op');
+  throws(() => perturbationSetExpr(parseOp('delete_reinsert'), 'c'), 'perturbationSetExpr accepted delete_reinsert');
+  assert(perturbationDeleteSql(po) === 'DELETE FROM parcel_address_points t WHERE t."parcel_id" = ANY($1)', `perturbationDeleteSql: ${perturbationDeleteSql(po)}`);
+  assert(eligibleCountSql(po).includes('count(DISTINCT t."parcel_id")'), `pair eligibleCountSql is not a distinct-key count: ${eligibleCountSql(po)}`);
+  assert(orderedKeysSql(po, { bounded: true }).includes('GROUP BY t."parcel_id" ORDER BY t."parcel_id" LIMIT 3'), `pair orderedKeysSql: ${orderedKeysSql(po, { bounded: true })}`);
+  assert(backupCreateSql(po).includes('SELECT t.* FROM parcel_address_points t WHERE t."parcel_id" = ANY($1)'), `pair backupCreateSql is not the full row: ${backupCreateSql(po)}`);
+  assert(restoreSql(po).startsWith('INSERT INTO parcel_address_points SELECT b.*') && restoreSql(po).includes('b."parcel_id" = ANY($1)') && restoreSql(po).includes('NOT EXISTS'), `pair restoreSql: ${restoreSql(po)}`);
+  assert(cohortRowsSql(po, false, [1]).includes('WHERE t."parcel_id" = ANY($1)'), `pair cohortRowsSql lost the key list: ${cohortRowsSql(po, false, [1])}`);
+  throws(() => validateFlags(parseArgs(pairArgs.map((a) => (a.startsWith('--order=') ? '--order=t.address_point_id' : a)))), 'validateFlags accepted delete_reinsert ordered by a non-key');
+  throws(() => validateFlags(parseArgs([...pairArgs, '--source-csv=package.json', '--source-key=id'])), 'validateFlags accepted delete_reinsert with --source-csv');
+  const pairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 10 }, { parcel_id: 1, address_point_id: 11 }], 'parcel_id', 'address_point_id', true);
+  assert(pairs.length === 2 && pairs[0].key === '1|10' && pairs[1].key === '1|11', `pair rowsToKeyValues: ${JSON.stringify(pairs)}`);
+  const healedPairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 11 }, { parcel_id: 1, address_point_id: 10 }], 'parcel_id', 'address_point_id', true);
+  const shortPairs = rowsToKeyValues([{ parcel_id: 1, address_point_id: 10 }], 'parcel_id', 'address_point_id', true);
+  assert(captureClaim({ recordsUpdated: 0, recordsNew: 2, liveValues: healedPairs, backupValues: pairs }).ok === true, 'captureClaim rejected a fully re-inserted pair set');
+  assert(captureClaim({ recordsUpdated: 0, recordsNew: 1, liveValues: shortPairs, backupValues: pairs }).ok === false, 'captureClaim accepted a pair set missing a deleted pair');
+  assert(backupPrecondition({ exists: true, liveValues: shortPairs, backupValues: pairs }).ok === false, 'backupPrecondition accepted a pair set that drifted from the before-image');
+
   // canonicalValueMap: a bigint/number round-trip compares equal (the driver types differ).
   assert(canonicalValueMap([{ key: 1, value: 5 }]).get('1') === '5', 'canonicalValueMap did not stringify the value');
   assert(canonicalValueMap([{ key: 1n, value: null }]).get('1') === null, 'canonicalValueMap did not normalise a bigint key / null value');
@@ -1638,13 +1739,18 @@ Shared flags (plan/backup/run/restore):
   --table=<t>            the table under test
   --key=<pk col>         the primary-key column
   --column=<col>         the ONE column to perturb
-  --op=<op>              add_number:<n> | append_text:<s> | negate_bool
+  --op=<op>              add_number:<n> | append_text:<s> | negate_bool | delete_reinsert
   --count=<N>            the cohort size
   --where=<SQL pred>     selects the ELIGIBLE rows (no semicolons)
   --order=<SQL expr>     the ORDER BY expression that picks the FIRST N
   --backup-table=<t>_cohort_bak_<yyyymmddthhmmz>  the before-image (lower-case)
 
-  --plan      SELECT-only (READ ONLY txn). Prints the cohort, the whole-table projected
+  --op=delete_reinsert (Spec 124 R-DP) is the INSERT-only form: the cohort is the first N
+              DISTINCT --key values (--order must be the key), the before-image holds their
+              FULL rows, --run DELETEs them and the step must re-insert exactly the deleted
+              (--key, --column) pairs; the restore re-inserts only the pairs still missing.
+
+  --plan     SELECT-only (READ ONLY txn). Prints the cohort, the whole-table projected
               hash and the column's current values; refuses if fewer than N eligible.
   --backup    Freeze the cohort's (key, column) into the before-image; refuses if it exists.
   --run       Perturb the cohort, spawn the real step through ${HARNESS}, assert
@@ -1718,6 +1824,10 @@ module.exports = {
   parseOp,
   opBindValue,
   perturbationSetExpr,
+  perturbationDeleteSql,
+  isPairMode,
+  orderedKeysSql,
+  cohortRowsSql,
   projection,
   hashSqlFor,
   hashOf,

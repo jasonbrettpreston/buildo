@@ -2542,7 +2542,9 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
 
     // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped — plus the three keys the stamp-heal and zoning-change-scope WF3s added (2026-10-06).
     // + 5 sixplex_* keys (McBylaw Phase 2 inputs A4) — a declared addition.
+    // + pass3_scope_rows_spooled (step-0 follow-up 2026-10-18, operator y "runner-stamped emit", R-CY) — a declared int emit.
     expect(Object.keys(res.matched).sort()).toEqual([
+      'pass3_scope_rows_spooled',
       'comp_candidate_pool', 'comp_zero_comps_count', 'comparable_builds_enriched_count',
       'existing_mislinked_footprint_count', 'existing_structure_enriched_count',
       'heritage_mislink_footprint_count', 'massing_zero_link_ghost',
@@ -2560,6 +2562,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
 
     // (2) Every value comes from the pass field it always came from.
     expect(res.matched).toEqual({
+      pass3_scope_rows_spooled: 0, // the runner's scopeHandoff.inserted; no hand-off in this ctx, so 0 (R-CY: compute only carries it)
       zone_class_pct: 96.6, // round(1000 * 966 / 1000) / 10 — the SECOND count over the FIRST
       opt_config_engine_errors: 41,
       opt_aor_without_max_gfa: 7, // the THIRD count, straight through

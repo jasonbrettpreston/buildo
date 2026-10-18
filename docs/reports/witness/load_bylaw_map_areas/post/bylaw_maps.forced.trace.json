@@ -3,14 +3,14 @@
   "step": "scripts/load-bylaw-map-areas.js",
   "chain": "bylaw_maps",
   "source_fingerprint": "93925e9841d6516877ca5957f2a4d9bcfcd8723e1b2aa161186221152289014b",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 16,
     "distinct": 12,
     "utility": 7,
-    "tracer_self_ms": 1.635,
-    "wall_ms": 1180
+    "tracer_self_ms": 1.566,
+    "wall_ms": 1165
   },
   "statements": [
     {
@@ -186,7 +186,7 @@
   ],
   "transactions": [
     {
-      "client": "53511:2",
+      "client": "83753:2",
       "write_fingerprints": [
         "a8a5f1c4b30fd405",
         "bf75ce78566ca96d"

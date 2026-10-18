@@ -3,14 +3,14 @@
   "step": "scripts/geocode-permits.js",
   "chain": "permits",
   "source_fingerprint": "52fcd0b33f66a9d95df937d198f79395e8cb5de39becf769a8be0a9b015bb8cf",
-  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 31,
     "distinct": 25,
     "utility": 11,
-    "tracer_self_ms": 1.162,
-    "wall_ms": 735
+    "tracer_self_ms": 1.323,
+    "wall_ms": 791
   },
   "statements": [
     {
@@ -382,7 +382,7 @@
   ],
   "transactions": [
     {
-      "client": "94235:3",
+      "client": "56931:3",
       "write_fingerprints": [
         "760860da79f13d44",
         "ed126eabe5106b3c"

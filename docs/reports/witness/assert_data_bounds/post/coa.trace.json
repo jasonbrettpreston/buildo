@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-data-bounds.js",
   "chain": "coa",
   "source_fingerprint": "f954164cd3eeea8ae57cbfb40f6ef7227de581ad78f54ef02539c5ce0dacac7d",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 20,
     "distinct": 19,
     "utility": 5,
-    "tracer_self_ms": 0.927,
-    "wall_ms": 344
+    "tracer_self_ms": 0.963,
+    "wall_ms": 341
   },
   "statements": [
     {

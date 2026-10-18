@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-wsib.js",
   "chain": "sources",
-  "git_head": "32d414716b9ff803c3139a9e58185752459a2509",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 40159,
+      "duration_ms": 40463,
       "unlinked_start": 120244,
       "run_matched": 0,
       "matches_tier_1_trade": 0,
@@ -43,7 +43,7 @@
       "terminal": "linked_incremental",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "32d414716b9ff803c3139a9e58185752459a2509",
+      "code_sha": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -316,19 +316,19 @@
           },
           {
             "metric": "sys_wsib_entity_fanin_p99_duration_ms",
-            "value": 4,
+            "value": 6,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_magnet_entities_fanin_ge_10_duration_ms",
-            "value": 5,
+            "value": 6,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_orphan_linked_entity_id_duration_ms",
-            "value": 4,
+            "value": 6,
             "threshold": null,
             "status": "INFO"
           },
@@ -340,37 +340,37 @@
           },
           {
             "metric": "sys_entities_wsib_registered_count_duration_ms",
-            "value": 3,
+            "value": 2,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_registered_entities_without_exact_tier_link_duration_ms",
-            "value": 4,
+            "value": 3,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_tier_confidence_split_duration_ms",
-            "value": 8,
+            "value": 6,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_wsib_cumulative_link_rate_pct_duration_ms",
-            "value": 4,
+            "value": 5,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 2992.11,
+            "value": 2969.79,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 40187,
+            "value": 40489,
             "threshold": null,
             "status": "INFO"
           }
@@ -421,10 +421,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=260 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":40159,\"unlinked_start\":120244,\"run_matched\":0,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":0,\"no_match_count\":120244,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"tier1_confidence_updated_at\":\"2026-08-28T18:24:11.177Z\",\"tier2_confidence_updated_at\":\"2026-08-28T18:24:11.182Z\",\"tier3_confidence_updated_at\":\"2026-08-28T18:24:11.186Z\",\"is_wsib_registered_corrected\":200,\"wsib_registry_count\":\"121116\",\"gate\":{\"reason\":\"full_rescan\",\"gated_skip\":false},\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50,\"link_wsib_mass_relink_max_pct\":0.1,\"link_wsib_exact_name_min_length\":3,\"link_wsib_fuzzy_name_min_length\":5},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"32d414716b9ff803c3139a9e58185752459a2509\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":20,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_wsib_mass_relink_pct\",\"value\":{\"set\":0,\"move\":0,\"vanish\":0,\"linked_start\":872},\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"60:stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays\",\"guarantee\":\"link_wsib must abort BEFORE any link write whenever the moved + vanished links exceed the configured fraction of the links held at run start, unless LINK_WSIB_ACCEPT_MASS_RELINK accepts it.\"},\"observed\":\"before_write\"},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":200,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier3_current_predicate_pass_rate_pct\",\"value\":100,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_entity_fanin_p99\",\"value\":10,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_magnet_entities_fanin_ge_10\",\"value\":7,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registry_total_rows\",\"value\":121116,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"entities_wsib_registered_count\",\"value\":301,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registered_entities_without_exact_tier_link\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier_confidence_split\",\"value\":\"unevaluable: check reported no numeric value for value_min\",\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_cumulative_link_rate_pct\",\"value\":0.72,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"entities\":3948},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:wsib_registry.match_confidence\",\"value\":\"within declared values (3 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier3_current_predicate_pass_rate_pct_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_entity_fanin_p99_duration_ms\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_magnet_entities_fanin_ge_10_duration_ms\",\"value\":5,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_orphan_linked_entity_id_duration_ms\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registry_total_rows_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_entities_wsib_registered_count_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registered_entities_without_exact_tier_link_duration_ms\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier_confidence_split_duration_ms\",\"value\":8,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_cumulative_link_rate_pct_duration_ms\",\"value\":4,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":2992.11,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":40187,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 40.2s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"[link_wsib] target: link_wsib (descriptor.database) → database=postgres user=postgres migrations=260 (floor 240)\"}\n{\"level\":\"INFO\",\"tag\":\"[link_wsib]\",\"msg\":\"cascade mode gate: FULL (full_rescan)\"}\nPIPELINE_SUMMARY:{\"records_total\":120244,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":40463,\"unlinked_start\":120244,\"run_matched\":0,\"matches_tier_1_trade\":0,\"matches_tier_2_legal\":0,\"matches_tier_3_fuzzy\":0,\"no_match_count\":120244,\"threshold_updated_at\":\"2026-06-10T14:01:54.545Z\",\"tier1_confidence_updated_at\":\"2026-08-28T18:24:11.177Z\",\"tier2_confidence_updated_at\":\"2026-08-28T18:24:11.182Z\",\"tier3_confidence_updated_at\":\"2026-08-28T18:24:11.186Z\",\"is_wsib_registered_corrected\":200,\"wsib_registry_count\":\"121116\",\"gate\":{\"reason\":\"full_rescan\",\"gated_skip\":false},\"config\":{\"wsib_fuzzy_match_threshold\":0.6,\"link_wsib_link_rate_warn_pct\":5,\"link_wsib_tier1_confidence\":0.95,\"link_wsib_tier2_confidence\":0.9,\"link_wsib_tier3_confidence\":0.6,\"link_wsib_entity_fanin_warn\":20,\"link_wsib_tier3_token_overlap_fail_pct\":50,\"link_wsib_mass_relink_max_pct\":0.1,\"link_wsib_exact_name_min_length\":3,\"link_wsib_fuzzy_name_min_length\":5},\"terminal\":\"linked_incremental\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"b61efc2b245d507a33c8db4f95e34f07b44389d7\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":20,\"name\":\"WSIB Registry Matching\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"gate_decision\",\"value\":{\"mode\":\"full\",\"reason\":\"full_rescan\",\"gated_skip\":false},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"override_force_full_present\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_wsib_mass_relink_pct\",\"value\":{\"set\":0,\"move\":0,\"vanish\":0,\"linked_start\":872},\"threshold\":\"pct <= 0.1\",\"status\":\"PASS\",\"source\":\"check\",\"order_guarantee\":{\"anchor\":\"60:stops the write; `LINK_WSIB_ACCEPT_MASS_RELINK=1` lets it through and the FAIL row stays\",\"guarantee\":\"link_wsib must abort BEFORE any link write whenever the moved + vanished links exceed the configured fraction of the links held at run start, unless LINK_WSIB_ACCEPT_MASS_RELINK accepts it.\"},\"observed\":\"before_write\"},{\"metric\":\"unlinked_start\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_1_trade_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_2_legal_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier_3_fuzzy_matches\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"no_match\",\"value\":120244,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"link_rate_warn\",\"value\":{\"link_rate_pct\":7.6241,\"unlinked_pct\":92.3759,\"linked\":301,\"total\":3948},\"threshold\":\"pct >= 5\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"entity_fanin_warn\",\"value\":{\"entity_fanin_max\":16,\"magnets_fanin_ge_10\":7},\"threshold\":\"viol <= 20\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"tier3_token_overlap\",\"value\":{\"tier3_token_overlap_pass_pct\":100},\"threshold\":\"pct >= 50\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"confidence_outside_closed_set\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"dead_bucket_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"registered_entities_with_zero_links\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"is_wsib_registered_corrected\",\"value\":200,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"contacts_cleared_on_retraction\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"write_privilege\",\"value\":\"bypassrls=true policies=0\",\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier3_current_predicate_pass_rate_pct\",\"value\":100,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_entity_fanin_p99\",\"value\":10,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_magnet_entities_fanin_ge_10\",\"value\":7,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_orphan_linked_entity_id\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registry_total_rows\",\"value\":121116,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"entities_wsib_registered_count\",\"value\":301,\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_registered_entities_without_exact_tier_link\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_tier_confidence_split\",\"value\":\"unevaluable: check reported no numeric value for value_min\",\"threshold\":\"value_min 0\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"wsib_cumulative_link_rate_pct\",\"value\":0.72,\"threshold\":\"value_max 100\",\"status\":\"INFO\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"entities\":3948},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"vocabulary:wsib_registry.match_confidence\",\"value\":\"within declared values (3 distinct)\",\"threshold\":\"every stored value is a declared vocabulary value (on_unknown: fail)\",\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier3_current_predicate_pass_rate_pct_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_entity_fanin_p99_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_magnet_entities_fanin_ge_10_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_orphan_linked_entity_id_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registry_total_rows_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_entities_wsib_registered_count_duration_ms\",\"value\":2,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_registered_entities_without_exact_tier_link_duration_ms\",\"value\":3,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_tier_confidence_split_duration_ms\",\"value\":6,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_wsib_cumulative_link_rate_pct_duration_ms\",\"value\":5,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":2969.79,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":40489,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"wsib_registry\":[\"id\",\"trade_name_normalized\",\"legal_name_normalized\",\"linked_entity_id\",\"match_confidence\",\"matched_at\",\"primary_phone\",\"primary_email\",\"website\"],\"entities\":[\"id\",\"name_normalized\",\"permit_count\",\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]},\"writes\":{\"wsib_registry\":[\"linked_entity_id\",\"match_confidence\",\"matched_at\"],\"entities\":[\"is_wsib_registered\",\"primary_phone\",\"primary_email\",\"website\"]}}\n\n[link_wsib] completed in 40.5s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3229,
+  "pipeline_runs_max_id_before": 3257,
   "table_state": [
     {
       "table": "entities",
@@ -446,7 +446,7 @@
       "table": "wsib_registry",
       "row_count": 121116,
       "ceiling_bypassed": "projected",
-      "content_hash": "d01e923025257825ae58d72f2c03e3f2",
+      "content_hash": "614333715e09f4b21f8018e1e4584e98",
       "order_by": "explicit",
       "order_columns": [
         "id"
@@ -933,7 +933,7 @@
           "match_confidence",
           "matched_at"
         ],
-        "content_hash": "d01e923025257825ae58d72f2c03e3f2",
+        "content_hash": "614333715e09f4b21f8018e1e4584e98",
         "order_by": "explicit",
         "order_columns": [
           "id"
@@ -1000,7 +1000,7 @@
       }
     ],
     "reason": "zero writes on 2 table(s) [entities,wsib_registry]",
-    "txid_before_run2": 205547,
+    "txid_before_run2": 211182,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -1009,11 +1009,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3230,
+      "id": 3258,
       "recorded_by": "harness"
     },
     {
-      "id": 3231,
+      "id": 3259,
       "recorded_by": "harness"
     }
   ],
@@ -1024,5 +1024,5 @@
     "scripts/link-wsib.js",
     "scripts/link-wsib.notes.json"
   ],
-  "lib_fingerprint": "ab47898e9b8c3efe6279350ffe65efd6018d6c6469f66f2eda8757288e61283a"
+  "lib_fingerprint": "1d3ae5ed01bac548124a5b5a4ca0d9334bfe62a394abdc164abc2a97e38d149c"
 }

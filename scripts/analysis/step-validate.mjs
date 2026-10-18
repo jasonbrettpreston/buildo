@@ -282,6 +282,32 @@ import { loadNetNew, headDoc, NET_NEW_TAG, selfTest as netNewSelfTest } from './
 import { evaluateWitness, ownMeasurementSql, selfTest as witnessSelfTest } from './gates/witness.mjs';
 import { ldg10Status, selfTest as ldg10SelfTest } from './gates/ldg10.mjs';
 import { buildRunnerFingerprints, sqlFingerprinter } from './gates/witness-runner-set.mjs';
+
+// R-DO #44 (i) + R-DI h:undeclared: the converted fleet's declared invalidators, pin readers and run_at watermark
+// writers, computed once per process (file-only).
+let WITNESS_FLEET = null;
+function witnessFleet() {
+  if (WITNESS_FLEET) return WITNESS_FLEET;
+  const invalidated = new Set();
+  const pinReaders = {};
+  const watermarks = {};
+  for (const d of loadConvertedDescriptors(REPO_ROOT)) {
+    const slug = d && d.identity && d.identity.name;
+    for (const r of d && d.outputs && Array.isArray(d.outputs.invalidates) ? d.outputs.invalidates : []) {
+      if (r && typeof r.table === 'string' && typeof r.column === 'string') invalidated.add(`${r.table}.${r.column}`);
+    }
+    for (const pin of d && d.staleness && Array.isArray(d.staleness.pins) ? d.staleness.pins : []) {
+      if (pin && typeof pin.step === 'string' && slug) (pinReaders[pin.step] = pinReaders[pin.step] || []).push(slug);
+    }
+    for (const w of d && d.outputs && Array.isArray(d.outputs.writes) ? d.outputs.writes : []) {
+      for (const c of Array.isArray(w && w.columns) ? w.columns : []) {
+        if (c && c.source === 'run_at' && typeof c.name === 'string' && slug) (watermarks[`${w.table}.${c.name}`] = watermarks[`${w.table}.${c.name}`] || []).push(slug);
+      }
+    }
+  }
+  WITNESS_FLEET = { invalidated, pinReaders, watermarks };
+  return WITNESS_FLEET;
+}
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
 // R-T addendum (Spec 124 §2 Rule 13, commit 3) — the SAME invariants[]/plausibility[]
 // executor the run-end hook uses (scripts/lib/step/index.js:1834). `--write`'s cutover/
@@ -5949,6 +5975,7 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints, finger
     derivedReadsSteps,
     ownMeasurementFingerprints,
     producerSummaries,
+    fleet: witnessFleet(),
     slug: row.slug,
     descriptor: descriptorInfo.descriptor,
     status: row.stage === 'pending' ? 'pending' : 'converted',
@@ -6132,7 +6159,6 @@ async function main() {
     const epPin = programmeItemsAll.find((it) => it && it.id === 'EP-PIN-D17');
     const pending = [];
     if (!epPin || epPin.status !== 'BUILT') pending.push(`EP-PIN-D17 cloud proof (${epPin ? epPin.status : 'missing'}; operator-run)`);
-    pending.push('#44 (h) h:undeclared closure set not ruled');
     const status50 = ldg10Status({ sourcesSlugs, convertedSlugs: convertedSet, exemptSlugs, witnessRowsBySlug, gateD, orderRows: order50.rows, pending });
     console.log(`[step-validate] #50 ${status50.detail}`);
   }

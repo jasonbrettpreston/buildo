@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/load-parcels.js",
   "chain": "none",
-  "git_head": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -12,7 +12,7 @@
     "records_updated": 0,
     "records_meta": {
       "parcels_load": {
-        "duration_ms": 73581,
+        "duration_ms": 64465,
         "rows_read": 498477,
         "records_inserted": 0,
         "records_updated": 0,
@@ -112,7 +112,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 73597,
+            "value": 64481,
             "threshold": null,
             "status": "INFO"
           }
@@ -148,7 +148,7 @@
       "terminal": "loaded_with_warnings",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+      "code_sha": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
       "pool_errors": 0,
       "checks_failed": 0,
       "checks_warned": 1,
@@ -199,16 +199,16 @@
   "ledger_status": [
     "completed_with_warnings"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[parcels]\",\"msg\":\"[parcels] target: parcels (descriptor.database) → database=postgres user=postgres migrations=260 (floor 11)\"}\n{\"level\":\"INFO\",\"tag\":\"[parcels]\",\"msg\":\"acquired 498477 feature(s) (224739743 bytes, md5 b18583b0…)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"parcels_load\":{\"duration_ms\":73581,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":73597,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000,\"parcels_geom_change_tolerance_deg\":1e-7,\"parcels_metres_per_degree_lat\":111320,\"parcels_sqm_to_sqft\":10.7639,\"parcels_m_to_ft\":3.28084},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"2a96590cafc0d583e36f4a244c550d98b844a93c\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"parcels\":[\"parcel_id\",\"feature_type\",\"address_number\",\"linear_name_full\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"stated_area_raw\",\"lot_size_sqm\",\"lot_size_sqft\",\"lot_size_source\",\"frontage_m\",\"frontage_ft\",\"depth_m\",\"depth_ft\",\"geometry\",\"date_effective\",\"is_irregular\",\"geom\",\"id\",\"ravine_dataset_version_when_enriched\",\"heritage_dataset_version_when_enriched\",\"centreline_dataset_version_when_enriched\"]},\"external\":[\"ckan:property-boundaries-4326\"]}\n\n[parcels] completed in 73.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[parcels]\",\"msg\":\"[parcels] target: parcels (descriptor.database) → database=postgres user=postgres migrations=260 (floor 11)\"}\n{\"level\":\"INFO\",\"tag\":\"[parcels]\",\"msg\":\"acquired 498477 feature(s) (224739743 bytes, md5 b18583b0…)\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"parcels_load\":{\"duration_ms\":64465,\"rows_read\":498477,\"records_inserted\":0,\"records_updated\":0,\"records_unchanged\":495494,\"records_skipped\":2983,\"errors\":0},\"audit_table\":{\"phase\":5,\"name\":\"Toronto Property Parcels\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"csv_header_drift\",\"value\":null,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"null_address_pct\",\"value\":\"100.0%\",\"threshold\":\"pct <= 0.1\",\"status\":\"WARN\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"skip_rate_pct\",\"value\":0.598,\"threshold\":\"pct <= 10\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"rows_read_floor\",\"value\":498477,\"threshold\":\"value_min 460000\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"records_errors\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"geom_parse_failures\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"shaped_skipped\",\"value\":2983,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"stated_area_unparsed\",\"value\":1662,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"empty_source_guard\",\"value\":{\"table\":\"parcels\",\"rows_acquired\":495494},\"threshold\":\"guards.empty_source: an INGESTOR never writes from an empty source\",\"status\":\"INFO\"},{\"metric\":\"schema_drift:ckan:property-boundaries-4326\",\"value\":\"header unchanged (6 fields)\",\"threshold\":\"guards.schema_drift: the acquired header equals the prior completed run's recorded header\",\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":64481,\"threshold\":null,\"status\":\"INFO\"}]},\"gate\":{\"reason\":\"loaded\",\"gated_skip\":false},\"config\":{\"parcels_irregularity_threshold\":0.95,\"parcels_null_address_pct_max\":0.1,\"sources_parcels_floor\":460000,\"parcels_skip_rate_max_pct\":10,\"parcels_download_timeout_ms\":60000,\"parcels_geom_change_tolerance_deg\":1e-7,\"parcels_metres_per_degree_lat\":111320,\"parcels_sqm_to_sqft\":10.7639,\"parcels_m_to_ft\":3.28084},\"acquired\":{\"record_fields\":{\"ckan:property-boundaries-4326\":[\"_id\",\"PARCELID\",\"FEATURE_TYPE\",\"STATEDAREA\",\"OBJECTID\",\"geometry\"]}},\"terminal\":\"loaded_with_warnings\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"b61efc2b245d507a33c8db4f95e34f07b44389d7\",\"pool_errors\":0,\"checks_failed\":0,\"checks_warned\":1,\"errors\":[],\"warnings\":[\"null_address_pct: 100.0%\"]}}\nPIPELINE_META:{\"reads\":{},\"writes\":{\"parcels\":[\"parcel_id\",\"feature_type\",\"address_number\",\"linear_name_full\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"stated_area_raw\",\"lot_size_sqm\",\"lot_size_sqft\",\"lot_size_source\",\"frontage_m\",\"frontage_ft\",\"depth_m\",\"depth_ft\",\"geometry\",\"date_effective\",\"is_irregular\",\"geom\",\"id\",\"ravine_dataset_version_when_enriched\",\"heritage_dataset_version_when_enriched\",\"centreline_dataset_version_when_enriched\"]},\"external\":[\"ckan:property-boundaries-4326\"]}\n\n[parcels] completed in 64.5s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3134,
+      "id": 3339,
       "pipeline": "parcels",
       "status": "completed_with_warnings",
-      "started_at": "2026-10-17T19:15:08.355Z",
-      "completed_at": "2026-10-17T19:16:21.945Z",
-      "duration_ms": 73598,
+      "started_at": "2026-10-18T03:43:29.243Z",
+      "completed_at": "2026-10-18T03:44:33.717Z",
+      "duration_ms": 64481,
       "records_total": 0,
       "records_new": 0,
       "records_updated": 0,
@@ -241,7 +241,7 @@
             ]
           }
         },
-        "code_sha": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+        "code_sha": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
         "terminal": "loaded_with_warnings",
         "warnings": [
           "null_address_pct: 100.0%"
@@ -336,7 +336,7 @@
               "threshold": null
             },
             {
-              "value": 73597,
+              "value": 64481,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -350,7 +350,7 @@
         "parcels_load": {
           "errors": 0,
           "rows_read": 498477,
-          "duration_ms": 73581,
+          "duration_ms": 64465,
           "records_skipped": 2983,
           "records_updated": 0,
           "records_inserted": 0,
@@ -362,7 +362,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3133,
+  "pipeline_runs_max_id_before": 3338,
   "table_state": [
     {
       "table": "parcels",
@@ -399,7 +399,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 7606
+    "parcels": 9786
   },
   "table_specs": {
     "parcels": {
@@ -823,7 +823,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 175750,
+    "txid_before_run2": 216788,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -832,11 +832,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3134,
+      "id": 3339,
       "recorded_by": "step"
     },
     {
-      "id": 3135,
+      "id": 3340,
       "recorded_by": "step"
     }
   ],
@@ -847,5 +847,5 @@
     "scripts/load-parcels.js",
     "scripts/load-parcels.notes.json"
   ],
-  "lib_fingerprint": "ab47898e9b8c3efe6279350ffe65efd6018d6c6469f66f2eda8757288e61283a"
+  "lib_fingerprint": "1d3ae5ed01bac548124a5b5a4ca0d9334bfe62a394abdc164abc2a97e38d149c"
 }

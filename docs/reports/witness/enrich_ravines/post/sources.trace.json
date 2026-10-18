@@ -3,14 +3,14 @@
   "step": "scripts/enrich-ravines.js",
   "chain": "sources",
   "source_fingerprint": "24050666ad107e7991f9c12c3b70d3f6de939b1fce1194708dd6e16dc2745cd2",
-  "git_head": "da976b8f4dfa7a0f4a3a1ddbf63962f572911631",
+  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
   "header": {
     "processes": 1,
     "calls": 44,
     "distinct": 32,
     "utility": 13,
-    "tracer_self_ms": 1.394,
-    "wall_ms": 2065
+    "tracer_self_ms": 1.797,
+    "wall_ms": 2774
   },
   "statements": [
     {
@@ -460,7 +460,7 @@
   ],
   "transactions": [
     {
-      "client": "45037:3",
+      "client": "60706:3",
       "write_fingerprints": [
         "15a0517fc5bfeebb"
       ]
