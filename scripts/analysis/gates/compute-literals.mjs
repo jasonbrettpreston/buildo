@@ -105,19 +105,24 @@ export function purityRowFreeze(ledgerRows) {
  *   (1) no purity row names the step's compute module (R-BZ/R-CA; the frozen 2026-10-11 set);
  *   (2) no ledger row of ANY gate names the step (its slug or its compute module base — gate E
  *       rows key on the module, the other gates on the slug), so no ledger allowance (R-BC (b));
- *   (3) no hard stop on the step (`hardStop === false`, the caller's scorecard + #44 answer).
+ *   (3) no hard stop on the step (`hardStop === false`, the caller's scorecard + #44 answer);
+ *   (4) no stage-gated red (`stageGated` falsy): a pending stage that EXCLUDES a gate from the
+ *       hard stop (STAGE_HARDSTOP_EXCLUSIONS) while that gate is actually red — e.g. a
+ *       `shape_clean_pending_recapture` step whose G8 / #38 captures are not current — is not
+ *       the whole package, so it reads V2 though `hardStop` is false (R-DT, output panel round 2 N1).
  * Otherwise `'V2'`. Fail closed: a caller that cannot say `hardStop: false` reads V2.
  * @param {string} moduleBase
  * @param {Array<object>} ledgerRows
- * @param {{slug?: string|null, hardStop?: boolean}} [opts]
+ * @param {{slug?: string|null, hardStop?: boolean, stageGated?: boolean}} [opts]
  * @returns {'V2'|'V3'}
  */
-export function standardFor(moduleBase, ledgerRows, { slug = null, hardStop } = {}) {
+export function standardFor(moduleBase, ledgerRows, { slug = null, hardStop, stageGated = false } = {}) {
   const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
   const names = new Set([moduleBase, slug].filter((n) => typeof n === 'string' && n.length > 0));
   if (rows.some((row) => isPurityRow(row) && row.step === moduleBase)) return 'V2';
   if (rows.some((row) => row && names.has(row.step))) return 'V2';
   if (hardStop !== false) return 'V2';
+  if (stageGated) return 'V2';
   return 'V3';
 }
 

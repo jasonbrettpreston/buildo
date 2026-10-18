@@ -3138,6 +3138,46 @@ export function stageExcludesRegistry(id, stage) {
   return Object.entries(CAPTURE_DERIVED_REGISTRY_IDS).some(([gate, ids]) => excl.gates.has(gate) && ids.includes(id));
 }
 
+/**
+ * R-DT (Spec 124, output panel round 2 N1, McDonald's Airtight V3) — the gates a declared pending
+ * stage EXCLUDED from the hard stop that are nonetheless ACTUALLY red on this run. Excluded is not
+ * enough (a `shape_clean_pending_recapture` step whose G8 is 3/3 hides nothing); excluded AND not
+ * passing is: G7/G8 below their max, G9 failing, an excluded Rule row unpinned enforced-red, or a
+ * capture-derived registry gate (#30/#31/#38-#40/#41) failing for this slug. Non-empty ⇒ the step
+ * is not the whole V3 package, so `standardFor` reads V2. Pure; converted steps return [].
+ * @param {{g: Record<string,{score:number,max:number}>, g9: {pass:boolean}, matrix?: Array<object>,
+ *   excl: {gates:Set<string>, rules:Set<number>}, registryFails?: number[], stage?: string}} input
+ * @returns {string[]}
+ */
+export function stageGatedReds({ g, g9, matrix = [], excl, registryFails = [], stage }) {
+  const out = [];
+  for (const gate of ['G7', 'G8']) {
+    if (excl.gates.has(gate) && g[gate] && g[gate].score < g[gate].max) out.push(gate);
+  }
+  if (excl.gates.has('G9') && g9 && !g9.pass) out.push('G9');
+  for (const r of matrix || []) {
+    if (r.status === 'enforced-red' && !r.pinned && excl.rules.has(Number(r.rule))) out.push(`Rule ${r.rule}`);
+  }
+  for (const id of registryFails) {
+    if (stageExcludesRegistry(id, stage)) out.push(`#${id}`);
+  }
+  return [...new Set(out)];
+}
+
+/**
+ * The call-site decision for `standardFor` (R-DT): the scorecard's hard stop OR a #44 hard stop /
+ * compute-attributed FAIL ⇒ `hardStop`; a non-empty `sc.stageGated` ⇒ `stageGated`. Pure, so the
+ * printed `standard=` label is locked at the call site, not only inside `standardFor`.
+ * @param {{hardStop:boolean, stageGated?: string[]}} sc @param {{hardStop?:boolean, attributed?: string[]}|null} witness44
+ * @returns {{hardStop: boolean, stageGated: boolean}}
+ */
+export function standardSignals(sc, witness44) {
+  return {
+    hardStop: Boolean(sc.hardStop || (witness44 && (witness44.hardStop || (witness44.attributed || []).length > 0))),
+    stageGated: Array.isArray(sc.stageGated) && sc.stageGated.length > 0,
+  };
+}
+
 function registryFailureBlocks(result, slug) {
   if (Array.isArray(result.blockedSlugs)) return result.blockedSlugs.includes(slug);
   return true;
@@ -3183,6 +3223,14 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   const matrixHardStop = computeMatrixHardStop(matrix, excl.rules);
   const agg = aggregateHardStop(g, g9raw, invariantsFail, matrixHardStop, excl, row.pendingStage);
   const annotatedMatrix = annotateStageGatedMatrix(matrix, excl.rules, row.pendingStage);
+  const stageGated = stageGatedReds({
+    g,
+    g9: g9raw,
+    matrix,
+    excl,
+    registryFails: invariantResults.filter((r) => !r.pass && r.slug === '(registry)' && registryFailureBlocks(r, row.slug)).map((r) => r.id),
+    stage: row.pendingStage,
+  });
   // Gate F1 (Spec 124 §5 R-BA, Spec 123 §6, WF2 "standardized gates",
   // 2026-09-26) — a scorecard below SCORE_FLOOR (14/17) is a HARD STOP unless
   // a `{gate:'F', step, item:'score'}` ledger row allows it; a row for a step
@@ -3210,6 +3258,7 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
     gshape,
     hardStop: agg.hardStop,
     hardStopReasons: agg.hardStopReasons,
+    stageGated,
     descriptorOk: descriptorInfo.ok,
     matrix: annotatedMatrix,
   };
@@ -5862,9 +5911,19 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
 // an early ① pending step); otherwise a `{ answer, rows, hardStop }` from
 // evaluateWitness. Fixture records (`docs/reports/witness/<slug>.fixture.json`,
 // P1-C4a) feed FAIL:FIXTURE rows and the declared ⊆ witnessed half of (a).
-// `converted` status is REPORT-ONLY (never hard-stops until P1-C8/C9), so
-// `hardStop` is only ever true for a `pending` slug.
+// `hardStop` is true for a `pending` OR `converted` slug (P1-C9 folded into LDG-10,
+// Spec 124 R-DI) — the FAIL:INPUT early returns below included (witnessInputFailHard).
 // ---------------------------------------------------------------------------
+/**
+ * #44 FAIL:INPUT (a fingerprint or derived-reads-steps derivation that threw) is HARD for a pending
+ * OR a converted slug — the same rule `evaluateWitness` applies to every other #44 FAIL
+ * (gates/witness.mjs, P1-C9 folded into LDG-10, Spec 124 R-DI). Output panel round 2 N2.
+ * @param {string} stage @returns {boolean}
+ */
+export function witnessInputFailHard(stage) {
+  return stage === 'pending' || stage === 'converted';
+}
+
 function readFixtureRecords(slug) {
   const abs = path.join(REPO_ROOT, 'docs', 'reports', 'witness', `${slug}.fixture.json`);
   if (!existsSync(abs)) return {};
@@ -5929,7 +5988,7 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints, finger
       computePath,
     }).source_fingerprint;
   } catch {
-    return { answer: `FAIL:INPUT:${row.slug}:fingerprint`, rows: [`FAIL:INPUT:${row.slug}:fingerprint`], hardStop: row.stage === 'pending' };
+    return { answer: `FAIL:INPUT:${row.slug}:fingerprint`, rows: [`FAIL:INPUT:${row.slug}:fingerprint`], hardStop: witnessInputFailHard(row.stage) };
   }
 
   // (e) — derived from the effective ledger; a derivation error is a FAIL:INPUT, never a skip.
@@ -5940,7 +5999,7 @@ function witnessFor(row, descriptorInfo, computePath, runnerFingerprints, finger
     try {
       derivedReadsSteps = crossStepLedger.derivedReadsSteps(row.slug, descriptorInfo.descriptor, { ledger: effectiveCrossStepLedger() });
     } catch {
-      return { answer: `FAIL:INPUT:${row.slug}:derived-reads-steps`, rows: [`FAIL:INPUT:${row.slug}:derived-reads-steps`], hardStop: row.stage === 'pending' };
+      return { answer: `FAIL:INPUT:${row.slug}:derived-reads-steps`, rows: [`FAIL:INPUT:${row.slug}:derived-reads-steps`], hardStop: witnessInputFailHard(row.stage) };
     }
   }
 
@@ -6089,7 +6148,7 @@ async function main() {
     // printed table from reading as a silent pass.
     const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults, fiveWord);
 
-    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows, { slug: row.slug, hardStop: Boolean(sc.hardStop || (witness44 && (witness44.hardStop || (witness44.attributed || []).length > 0))) })}\n\`\`\`\n`);
+    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows, { slug: row.slug, ...standardSignals(sc, witness44) })}${sc.stageGated.length ? ` (stage-gated red: ${sc.stageGated.join(', ')})` : ''}\n\`\`\`\n`);
     console.log(block);
 
     if (witness44) {
