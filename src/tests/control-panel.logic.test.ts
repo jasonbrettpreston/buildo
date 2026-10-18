@@ -657,6 +657,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'vocab_coverage_statement_timeout_minutes',
   // S1-P (Spec 124 Rule 3) — the ravines producer invalid-geometry bound (was the 0.05 compute literal).
   'enrich_ravines_producer_invalid_geom_max_pct',
+  // Spec 124 R-EB (b) / R-EC (migration 267) — pinned gate/tooling variables, admin.hidden "internal".
+  'gate_f_score_floor', 'gate_notes_cap', 'gate_why_min_chars', 'gate_na_reason_min_chars', 'gate_red_evidence_min_name_chars',
+  'tooling_spawn_max_buffer_mb', 'tooling_precommit_budget_docs_only_s', 'tooling_precommit_budget_registry_s',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {
