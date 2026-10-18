@@ -15,6 +15,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import * as budget from '../../scripts/analysis/precommit-budget.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const PRE_COMMIT_PATH = path.join(REPO_ROOT, '.husky/pre-commit');
@@ -351,6 +352,44 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
   it('RED — a tampered pre-commit that preloads the DB env is caught (R-DJ)', () => {
     const tampered = PRE_COMMIT.replace('node scripts/generate-ingest-batch.js --check', 'node -r dotenv/config scripts/generate-ingest-batch.js --check');
     expect(preCommitTouchesDbOrNetwork(tampered)).toBe(true);
+  });
+});
+
+// Spec 124 R-EC (McDonald's Airtight V3, operator y 2026-10-18): the R-DJ (2) budget is registered and
+// observed. Two pinned tooling variables; committed per-stage evidence keyed to the hook's sha256; checked
+// file-only by fast invariant #52. Timing never runs at commit, so machine load cannot flake it.
+describe('pre-commit budget (R-EC) — registered, observed, keyed to the hook text', () => {
+  const evidence = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, budget.EVIDENCE_REL_PATH), 'utf8'));
+  const budgets = { docs_only_s: 25.3, registry_s: 27.5 };
+
+  it('GREEN — live: the committed evidence matches the live hook and is inside both pinned budgets', () => {
+    const r = budget.checkPrecommitBudget(REPO_ROOT);
+    expect(r.problems).toEqual([]);
+    expect(r.pass).toBe(true);
+  });
+
+  it('the evidence times every file-only hook stage, one command at a time, and none of the staged-dependent tail', () => {
+    const stages = budget.hookStages(PRE_COMMIT);
+    expect(evidence.stages.map((x: { command: string }) => x.command)).toEqual(stages);
+    expect(stages.some((c: string) => /lint-staged|vitest related/.test(c))).toBe(false);
+    expect(stages).toContain('node scripts/analysis/step-validate.mjs --staged --fast');
+  });
+
+  it('RED — a hook edited after the measurement (hook_sha256 mismatch) owes a re-measure', () => {
+    const tampered = PRE_COMMIT.replace('npm run lint', 'npm run lint -- --max-warnings 0');
+    expect(budget.budgetDecision({ evidence, hookText: tampered, budgets }).pass).toBe(false);
+    expect(budget.budgetDecision({ evidence, hookText: PRE_COMMIT, budgets }).pass).toBe(true);
+  });
+
+  it('RED — missing evidence, an over-budget total, or an unpinned variable', () => {
+    expect(budget.budgetDecision({ evidence: null, hookText: PRE_COMMIT, budgets }).pass).toBe(false);
+    expect(budget.budgetDecision({ evidence: { ...evidence, docs_only_s: 26 }, hookText: PRE_COMMIT, budgets }).pass).toBe(false);
+    expect(budget.budgetDecision({ evidence, hookText: PRE_COMMIT, budgets: { ...budgets, registry_s: new Error('unpinned') } }).pass).toBe(false);
+  });
+
+  it('the budget tool itself stays file-only at --check (no DB URL, dotenv preload, psql or curl)', () => {
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/precommit-budget.mjs'), 'utf8');
+    expect(/DATABASE_URL|dotenv|\bpsql\b|\bcurl\b/.test(src)).toBe(false);
   });
 });
 

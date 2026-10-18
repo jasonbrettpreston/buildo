@@ -12,6 +12,9 @@
 --   gate_na_reason_min_chars          20  (was NA_REASON_MIN, owner-spec-diff.mjs)
 --   gate_red_evidence_min_name_chars   3  (was MIN_NAME_LEN, red-evidence.mjs)
 --   tooling_spawn_max_buffer_mb      256  (was four spawn maxBuffer literals 256/32/64/32 MiB; one value)
+-- R-EC (EXT-1 part c, the R-DJ (2) pre-commit budget, registered and observed by fast invariant #52):
+--   tooling_precommit_budget_docs_only_s  25.3  (R-DJ (2): 23.0 s x 1.10)
+--   tooling_precommit_budget_registry_s   27.5  (R-DJ (2): 25.0 s x 1.10)
 -- The cloud:pre seed_rows_present check (R-DJ (4)) finds every seed key in the DB once this is applied.
 --
 -- Idempotent: ON CONFLICT (variable_key) DO NOTHING preserves any operator-set value.
@@ -31,8 +34,12 @@ INSERT INTO logic_variables (variable_key, variable_value, description) VALUES
   ('gate_red_evidence_min_name_chars', 3,
    'McDonald''s Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): gate K: the minimum length of a backticked test name cited beside a red-evidence artifact. Formerly the MIN_NAME_LEN = 3 literal. Pinned min = max = 3 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/red-evidence.mjs.'),
   ('tooling_spawn_max_buffer_mb', 256,
-   'McDonald''s Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the stdout buffer (MiB) a gate allows a spawned git / ast-grep child before it fails. One value for every caller (the largest former literal, so no limit shrinks): formerly 256 (net-new), 32 (score-floor), 64 (owner-spec-diff) and 32 (compute-literals). Pinned min = max = 256 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/net-new.mjs, score-floor.mjs, owner-spec-diff.mjs, compute-literals.mjs.')
+   'McDonald''s Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the stdout buffer (MiB) a gate allows a spawned git / ast-grep child before it fails. One value for every caller (the largest former literal, so no limit shrinks): formerly 256 (net-new), 32 (score-floor), 64 (owner-spec-diff) and 32 (compute-literals). Pinned min = max = 256 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/net-new.mjs, score-floor.mjs, owner-spec-diff.mjs, compute-literals.mjs.'),
+  ('tooling_precommit_budget_docs_only_s', 25.3,
+   'McDonald''s Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2)): the time budget (seconds) for the file-only stages of .husky/pre-commit on a docs-only commit, measured per stage on the Mac mini (23.0 s x 1.10). Fast invariant #52 compares docs/reports/generated/precommit-budget.json against it. Pinned min = max = 25.3 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/precommit-budget.mjs.'),
+  ('tooling_precommit_budget_registry_s', 27.5,
+   'McDonald''s Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2)): the time budget (seconds) for the file-only stages of .husky/pre-commit on a registry-input commit (step-validate selects the whole registry), measured per stage on the Mac mini (25.0 s x 1.10). Fast invariant #52 compares docs/reports/generated/precommit-budget.json against it. Pinned min = max = 27.5 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/precommit-budget.mjs.')
 ON CONFLICT (variable_key) DO NOTHING;
 
 -- DOWN — manual rollback only, intentionally not transactional (matches mig 159).
--- DELETE FROM logic_variables WHERE variable_key IN ('gate_f_score_floor', 'gate_notes_cap', 'gate_why_min_chars', 'gate_na_reason_min_chars', 'gate_red_evidence_min_name_chars', 'tooling_spawn_max_buffer_mb');
+-- DELETE FROM logic_variables WHERE variable_key IN ('gate_f_score_floor', 'gate_notes_cap', 'gate_why_min_chars', 'gate_na_reason_min_chars', 'gate_red_evidence_min_name_chars', 'tooling_spawn_max_buffer_mb', 'tooling_precommit_budget_docs_only_s', 'tooling_precommit_budget_registry_s');

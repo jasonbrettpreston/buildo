@@ -268,6 +268,7 @@ import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistr
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
 import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
+import { checkPrecommitBudget, selfTest as precommitBudgetSelfTest } from './precommit-budget.mjs';
 import { scanPurity } from './gates/compute-purity.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, explainedChannelDecision, LIB_FINGERPRINT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
@@ -2520,6 +2521,15 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
   {
     const homes46 = homesReport(loadConvertedFleetDescriptors(REPO_ROOT));
     results.push({ id: 46, slug: '(registry)', pass: homes46.pass, blockedSlugs: [], detail: homes46.detail });
+  }
+
+  // 52. PRECOMMIT-BUDGET (Spec 124 R-EC, the R-DJ (2) budget registered and observed) — file-only: the
+  // committed per-stage evidence must be keyed to the live .husky/pre-commit sha256 and inside the two
+  // pinned tooling_precommit_budget_*_s variables. Timing never runs here (precommit-budget.mjs --measure
+  // does, one stage at a time on the Mac mini), so a loaded machine cannot flake a commit.
+  {
+    const budget52 = checkPrecommitBudget(REPO_ROOT);
+    results.push({ id: 52, slug: '(registry)', pass: budget52.pass, blockedSlugs: budget52.pass ? [] : ['(registry)'], detail: budget52.detail });
   }
 
   // 47. MODE-EMITS-TYPE (registry-truth plan P2-C5 — fold 8 item 8, fold 11 item 5,
@@ -5362,6 +5372,8 @@ function selfTest() {
   // Spec 124 R-EB: the gate E estate arm and the one gate/tooling variable reader.
   estateLiteralsSelfTest();
   gateVariablesSelfTest();
+  // Spec 124 R-EC: the pre-commit budget (fast invariant #52).
+  precommitBudgetSelfTest();
   // SCORE-FLOOR + LF-ONLY (fast invariant #37, Spec 124 §5 R-BA gate F, Spec
   // 123 §6, WF2 "standardized gates", 2026-09-26) — the 14/17 hard-stop
   // decision, the LF-only answer set, and both orphan directions live entirely

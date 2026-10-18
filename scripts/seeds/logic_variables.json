@@ -7399,5 +7399,25 @@
     "admin": {
       "hidden": "internal"
     }
+  },
+  "tooling_precommit_budget_docs_only_s": {
+    "default": 25.3,
+    "type": "number",
+    "min": 25.3,
+    "max": 25.3,
+    "description": "McDonald's Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2)): the time budget (seconds) for the file-only stages of .husky/pre-commit on a docs-only commit, measured per stage on the Mac mini (23.0 s x 1.10). Fast invariant #52 compares docs/reports/generated/precommit-budget.json against it. Pinned min = max = 25.3 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/precommit-budget.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "tooling_precommit_budget_registry_s": {
+    "default": 27.5,
+    "type": "number",
+    "min": 27.5,
+    "max": 27.5,
+    "description": "McDonald's Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2)): the time budget (seconds) for the file-only stages of .husky/pre-commit on a registry-input commit (step-validate selects the whole registry), measured per stage on the Mac mini (25.0 s x 1.10). Fast invariant #52 compares docs/reports/generated/precommit-budget.json against it. Pinned min = max = 27.5 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/precommit-budget.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
   }
 }
