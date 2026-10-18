@@ -505,6 +505,19 @@
       "content_sha256": "e6d68f14cd66ac36696cf59e1c766e97648eda00a98c0998535dbea81783ab0e",
       "moved_at": "2026-10-17",
       "commit": "0f487b51"
+    },
+    {
+      "id": "M25",
+      "from_spec": "124",
+      "anchor": "| R-BJ | **Check SQL reads have their own declared home: `checks[].reads` (`{table, columns?}`), outside `inputs.reads` (operator 2026-10-03, plan fold 9 C7-1).** A check's measurement read is not an acquisition edge: it never enters `stepUpstreams` / `derivedReadsSteps`, ordering or gating. A traced read is accounted for only when it is in `inputs.reads` ∪ `checks[].reads`; the check half is witnessed by SCHEMA-HOMES (`checkReadsCoverage`). There is no check-runner exemption in the gate; that would be a Rule 10 BYPASS. Rows that do not resolve print as `R:check-reads:<slug>:<table>.<col>`, with no exception list. load_ravines / link_neighbourhoods check reads are never hand-declared into `inputs.reads` (it would create a cycle). | Amends: R-BG (#44 (a) answer set); Spec 122 §8 RE-FREEZE (field addition) | `scripts/analysis/gates/schema-homes.mjs` (fast invariant SCHEMA-HOMES); `src/tests/gate-schema-homes.infra.test.ts` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B11 — Register rows R-BJ…R-BY (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18",
+      "line_count": 16,
+      "classification": "REGISTER",
+      "evidence": "V3 package (operator directive 2026-10-18; Spec 08 output panel round 1): Spec 124 was at 380/380 lines after R-DQ…R-DS and owes R-DT and the six-part V3 row. Rows R-BJ…R-BY (the next contiguous block after M24) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.",
+      "content_sha256": "89dc0ae67ed0f411655316af79a7799907efb9585d257af7ac19d07085e27585",
+      "moved_at": "2026-10-18",
+      "commit": "58152c42"
     }
   ]
 }
