@@ -116,7 +116,7 @@ SPEC LINK header on each.
 <constraints>
 ## 5. Operating Boundaries
 ### Target Files
-`scripts/enrich-permits.js`, `scripts/one-time/backfill-permits-coa-zoning-index.js`, `migrations/166_permits_coa_zoning_columns.sql`, `scripts/manifest.json` (2 entries + 2 chain inserts), `src/components/FreshnessTimeline.tsx` (registry ×2 + permits/coa chains), `src/lib/admin/funnel.ts`, `src/tests/pipeline-advisory-lock.infra.test.ts` (lock 66), `src/tests/chain.logic.test.ts` (permits 30 / coa 16), `src/tests/quality.logic.test.ts` (registry 56 / link 19 / permits 30 / coa 16), `src/tests/contracts.infra.test.ts` (F-H12 consumer rules), `docs/specs/_contracts.json`, `docs/specs/01-pipeline/41_chain_permits.md` + `42_chain_coa.md` (step docs), `src/tests/factories.ts`, 3 test files.
+`scripts/enrich-permits.js`, `scripts/enrich-coa-zoning.js` (the enrich_coa_zoning identity-split shell, phase-4 wave 4 ①, 2026-10-18), `scripts/one-time/backfill-permits-coa-zoning-index.js`, `migrations/166_permits_coa_zoning_columns.sql`, `scripts/manifest.json` (2 entries + 2 chain inserts), `src/components/FreshnessTimeline.tsx` (registry ×2 + permits/coa chains), `src/lib/admin/funnel.ts`, `src/tests/pipeline-advisory-lock.infra.test.ts` (lock 66), `src/tests/chain.logic.test.ts` (permits 30 / coa 16), `src/tests/quality.logic.test.ts` (registry 56 / link 19 / permits 30 / coa 16), `src/tests/contracts.infra.test.ts` (F-H12 consumer rules), `docs/specs/_contracts.json`, `docs/specs/01-pipeline/41_chain_permits.md` + `42_chain_coa.md` (step docs), `src/tests/factories.ts`, 3 test files.
 
 ### Out-of-Scope Files
 - `parcels` / zoning tables — owned by Specs 65 / 58 (WF3 only reads them).

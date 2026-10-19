@@ -198,7 +198,9 @@ describe('measured counts — independently re-derived, not transcribed from the
     const doneFiles = Object.keys(fileToSlugs).filter((f) => convertedSet.has(f) || pendingSet.has(f));
     // 63 -> 64 / 65 -> 66 at WF1 load_coa_notices commit B (2026-10-07): a NET-NEW pending step (Spec 129).
     // 64 -> 66 / 66 -> 68 at H6 (2026-10-16): two NET-NEW pending steps (load_bylaw_map_areas, link_parcel_abutments; R-CS).
-    expect(remaining.length + doneFiles.length).toBe(66);
+    // 66 -> 67 files at phase-4 wave 4 enrich pair ① (2026-10-18): the enrich_coa_zoning identity split gave the
+    // slug its own file (scripts/enrich-coa-zoning.js); the slug total is unchanged (68).
+    expect(remaining.length + doneFiles.length).toBe(67);
     expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(68);
   });
 
@@ -323,10 +325,11 @@ describe('measured counts — independently re-derived, not transcribed from the
     // "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 3 at its ③.
     // 4 -> 5 at wave-4 classify_coa_scope ① (2026-10-18): the same flip (archetype ENRICHER). Returns to 4 at its ③.
     // 5 -> 6 at wave-4 link_coa_to_parcels ① (2026-10-18): the same flip (archetype LINK). Returns to 5 at its ③.
-    expect(pendingBatch.size).toBe(6);
+    // 6 -> 8 at wave-4 enrich_permits + enrich_coa_zoning ① (2026-10-18): both census rows flipped (archetype ENRICHER, one shared module). Return to 6 at their ③.
+    expect(pendingBatch.size).toBe(8);
     // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
-    // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①.
-    expect(c6.size).toBe(31);
+    // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
+    expect(c6.size).toBe(30);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 

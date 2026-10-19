@@ -109,6 +109,20 @@
       "reason": "Phase 4 wave 4 (link_coa_to_parcels, LINK: address-tier cascade coa_applications -> parcels writing lead_parcels (guarded upsert + coa-scoped retraction) and the coa_applications lat/lng/neighbourhood_id/parcel_linked_at back-fill; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator-approved 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md + red suite (L1-L18 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + LCTP-D1..LCTP-D10; ② the descriptor/compute/notes/seeds with the three ruled behaviour changes (re-check every run per link_parcels O4 row 7 with the back-fill fired only on a link change, set-based fail_fast in place of per-row SAVEPOINTs, Turf fallback retired per R-W with guards.requires postgis) + PRE/POST goldens under the DB lock (R-CQ, night P3/P4); ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/enrich-permits.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 4 (enrich_permits, ENRICHER: the dominant linked parcel's zoning / ravine / heritage / centreline / max-build / existing-structure / scenario / optimal-config / cost feed onto permits through permit_parcels; converted in the same series as enrich_coa_zoning, operator-approved 2026-10-18, wave-4 plan question 9: two thin step shells over ONE shared compute module scripts/lib/compute/enrich-lead-zoning.js; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md). ① lands the assessment docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md + red suite (L1-L16 legacy pins over the shared frozen oracle, D1-D8 it.fails) + gate-K red evidence + EPM-D1..EPM-D9 (prefix EPM: EP collides with enrich_parcels); ② the descriptor/compute/notes/seeds keeping enrich_parcels' max-build propagation exactly (the Spec 78 O-11 consumers) + PRE/POST goldens under the DB lock (R-CQ); ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-18",
+      "stage": "red_suite"
+    },
+    {
+      "file": "scripts/enrich-coa-zoning.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 4 (enrich_coa_zoning, ENRICHER: the coa target of the shared enrich module — the dominant linked parcel's feed onto coa_applications through lead_parcels on the stored lead_id; identity split at ① into its own legacy pass-through shell scripts/enrich-coa-zoning.js, operator-approved 2026-10-18, wave-4 plan question 9; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL). ① lands the split shell + manifest repoint, the assessment docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md + red suite (L1-L10 coa-target pins over the shared frozen oracle, D1-D7 it.fails) + gate-K red evidence + ECZ-D1..ECZ-D5; ② the descriptor over the one shared compute module scripts/lib/compute/enrich-lead-zoning.js (the ENRICH_TARGET env retires) + PRE/POST goldens under the DB lock (R-CQ); ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-18",
+      "stage": "red_suite"
     }
   ],
   "converted": [

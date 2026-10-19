@@ -831,4 +831,6 @@ module.exports = {
   assertHeritageColumns, assertCentrelineColumns, assertCentrelineEnriched, assertLinkTable, assertMaxBuildColumns, assertExistingStructureColumns, assertScenarioColumns, assertOptConfigColumns, assertCostColumns,
   buildEnrichmentSql, buildUpdateSql, buildNullifyOrphansSql, enrichLeads,
   coverageGate, verdictCascade,
+  // main: exported for the enrich_coa_zoning identity-split shell (scripts/enrich-coa-zoning.js, phase-4 wave 4 ①).
+  main,
 };

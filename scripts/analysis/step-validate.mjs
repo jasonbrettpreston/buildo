@@ -916,8 +916,10 @@ export function checkCutoverPrereqs(convertedSlugs, items, descriptorsBySlug = {
  * (`P-D1..`); the permits rows are `PM-D*`.
  * coa -> COA (phase-4 wave 1 commit ①, operator y 2026-10-17): the initials convention gives the single
  * letter `C`; the coa rows are `COA-D*`.
+ * enrich_permits -> EPM (phase-4 wave 4 commit ①, 2026-10-18): its initials `EP` collide with the converted
+ * `enrich_parcels` (`EP-D*`); the enrich_permits rows are `EPM-D*`.
  */
-export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA' });
+export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM' });
 
 /** The estate's initials convention (AS/LR/LM/LW/LPA) — one letter per underscore-separated word, uppercased. */
 export function defectPrefixFor(slug, overrides = DEFECT_PREFIX_OVERRIDES) {
