@@ -265,3 +265,25 @@ describe('G-EVAL evaluates with the evaluator\'s displacement links (operator y 
     expect(ctx.evalResult.violations.filter((v: string) => v.includes('V25'))).toEqual([]);
   }, 300_000);
 });
+
+describe('Spec 68 §6 ruling 2026-10-19 — "N percent of the requirements cited in (X)" displaces (X) (text-grounded, as "despite"); M-181(3)', () => {
+  const targetsOf = (id: string): string[] => XR.displacesOf(index, id, I.vocab, null).targets.map((t: Json) => t.id);
+  for (const [zone, z] of [['RS', '40'], ['RM', '80']] as [string, string][]) {
+    it(`${zone}: 10.${z}.30.20(1)(C) "50 percent of the requirements cited in (A) and (B) above" derives the link to (A) and (B)`, () => {
+      expect(targetsOf(`10.${z}.30.20(1)#(1)(C)`)).toEqual([`10.${z}.30.20(1)#(1)(A)`, `10.${z}.30.20(1)#(1)(B)`]);
+    });
+    it(`${zone}: semi-detached houseplex frontage is 50 % from (C) — 6.0 m of f 12, 7.5 m with no f; a semi-detached house keeps the full value`, () => {
+      const withF = eff(lot(zone, 'semi_detached_houseplex'), 'required_lot_frontage_m');
+      expect([withF.status, withF.value, withF.winner]).toEqual(['value', 6, `10.${z}.30.20(1)#(1)(C)`]);
+      const noF = lot(zone, 'semi_detached_houseplex'); noF.label = { d: 0.6 };
+      const r = eff(noF, 'required_lot_frontage_m');
+      expect([r.status, r.value, r.winner]).toEqual(['value', 7.5, `10.${z}.30.20(1)#(1)(C)`]);
+      expect(eff(lot(zone, 'semi_detached_house'), 'required_lot_frontage_m').value).toBe(12);
+      expect(unitOf(`10.${z}.30.20(1)#(1)(C)`).application.building_types).toEqual(['semi_detached_houseplex']);
+      expect(unitOf(`10.${z}.30.20(1)#(1)(C)`).disclosure).toMatch(/^If the semi-detached house is divided onto two lots/);
+    });
+  }
+  it('narrow: a soft-landscaping share ("75 percent of the front yard landscaping required in (A), (B), and (C)") is not a displacement', () => {
+    expect(targetsOf('10.5.50.10(1)#(1)(D)')).toEqual([]);
+  });
+});

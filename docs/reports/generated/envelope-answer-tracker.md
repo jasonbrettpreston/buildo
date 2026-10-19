@@ -6,7 +6,7 @@
 
 ## Counts
 
-- Answers: **511** — INCORPORATED **472**, UNFIXED **39**, OPEN **0**.
+- Answers: **511** — INCORPORATED **473**, UNFIXED **38**, OPEN **0**.
 - By verdict: disclose 90 · matches 125 · no_application 163 · null 12 · unsure 28 · wrong 93.
 - By disposition: disclosed_by 90 · excluded 163 · fixed_by 77 · matches 125 · resolved_by 42 · verified_by_lock 14.
 - Answers whose provision feeds a P5.10 lineage field: 173.
@@ -14,7 +14,7 @@
 | Chapter | Answers | Incorporated | Unfixed | Open |
 |---|---|---|---|---|
 | 10.20 | 61 | 61 | 0 | 0 |
-| 10.40 | 87 | 86 | 1 | 0 |
+| 10.40 | 87 | 87 | 0 | 0 |
 | 10.5 | 10 | 10 | 0 | 0 |
 | 10.60 | 66 | 66 | 0 | 0 |
 | 10.80 | 77 | 77 | 0 | 0 |
@@ -31,11 +31,10 @@
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
 
-## UNFIXED (39)
+## UNFIXED (38)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
-| `10.40.30.20(1)#(1)(C)` | wrong | fixed_by | M-181, `semi_house_two_lots` | Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact. | ruled; keyed correction not applied yet | — | for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseple |
 | `150.10.1(1)#whole` | wrong | fixed_by | M-177 | A scope sentence ("Section 150.10 applies to secondary suites") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199. | ruled; keyed correction not applied yet | — | Stating this section applies to secondary suites |
 | `150.10.20.1(1)#(1)(A)` | wrong | fixed_by | M-177 | A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures a) detached house |
 | `150.10.20.1(1)#(1)(B)` | wrong | fixed_by | M-177 | A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures b semi detached house. |
@@ -75,7 +74,7 @@
 | `150.8.60.50(3)#whole` | wrong | fixed_by | M-177 | The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead. | ruled; keyed correction not applied yet | — | This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway s |
 | `150.8.60.70(1)#(1)(A)` | wrong | fixed_by | M-177 | The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap. | ruled; keyed correction not applied yet | `suite_coverage_option` | This is critical the lot coverage calculation does not include the laneway suite |
 
-## INCORPORATED (472)
+## INCORPORATED (473)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -153,6 +152,7 @@
 | `10.40.30.10(2)#whole` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
 | `10.40.30.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
 | `10.40.30.20(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
+| `10.40.30.20(1)#(1)(C)` | wrong | fixed_by | M-181, `semi_house_two_lots` | Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact. | every cited ruling applied (keyed correction or named lock) | — | for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseple |
 | `10.40.30.20(1)#(1)(D)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed. | every cited ruling applied (keyed correction or named lock) | — | townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway |
 | `10.40.30.20(1)#(1)(E)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.40.30.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `main_footprint_sqm` |  |

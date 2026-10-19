@@ -75741,6 +75741,256 @@
         "RT": "the RT zone",
         "non_residential_building": "a place of worship"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.30.20(1)#(1)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(C)/archetype",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.30.20(1)#(1)(C)/target~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(C)/target",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": "required_lot_frontage_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.30.20(1)#(1)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(C)/bound",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.30.20(1)#(1)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": [
+        "required_lot_frontage_m = 50 pct × if(labelled(f); label(f); 15.0 m) @(1)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.30.20(1)#(1)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(C)/literals_not_expressed~s1",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": [
+        {
+          "clause": "(1)(C)",
+          "literal": "two",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.40.30.20(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": [
+        "semi_detached_houseplex"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.30.20(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": {
+        "RS": "the RS zone",
+        "semi_detached_houseplex": "a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.30.20(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": {
+        "description": "For a semi-detached house on two lots, and for a semi-detached houseplex, the required minimum lot frontage for each lot is 50% of the requirement in (A) or (B).",
+        "gaps": "M-181(3): binds the semi-detached houseplex at 50 % of the (A) / (B) requirement (label f, or the no-f 15.0 m); the link that sets (A) and (B) aside for it is derived from the clause text (Spec 68 §6, \"percent of the requirements cited in\"). A semi-detached house (RM: or apartment building) on two lots is a site fact, disclosed (M-174(1)).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.30.20(1)#(1)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(C)/disclosure",
+      "unit": "10.40.30.20(1)#(1)(C)",
+      "value": "If the semi-detached house is divided onto two lots: each lot's minimum lot frontage is 50 % of the requirement."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.30.20(1)#(1)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(C)/archetype",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.30.20(1)#(1)(C)/target~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(C)/target",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": "required_lot_frontage_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.30.20(1)#(1)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(C)/bound",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.30.20(1)#(1)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": [
+        "required_lot_frontage_m = 50 pct × if(labelled(f); label(f); 15.0 m) @(1)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.30.20(1)#(1)(C)/literals_not_expressed~s2",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(C)/literals_not_expressed~s1",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": [
+        {
+          "clause": "(1)(C)",
+          "literal": "two",
+          "reason": "count_or_ordinal_not_a_limit"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.80.30.20(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": [
+        "semi_detached_houseplex"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.30.20(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": {
+        "RM": "the RM zone",
+        "semi_detached_houseplex": "a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.30.20(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": {
+        "description": "For a semi-detached house or apartment building on two lots, and for a semi-detached houseplex, the required minimum lot frontage for each lot is 50% of the requirement in (A) or (B).",
+        "gaps": "M-181(3): binds the semi-detached houseplex at 50 % of the (A) / (B) requirement (label f, or the no-f 15.0 m); the link that sets (A) and (B) aside for it is derived from the clause text (Spec 68 §6, \"percent of the requirements cited in\"). A semi-detached house (RM: or apartment building) on two lots is a site fact, disclosed (M-174(1)).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.30.20(1)#(1)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19: M-181(3) (b) — the semi-detached houseplex 50 % is keyed on clause (C), where \"50 percent\" is written; the displacement of (A) and (B) for the houseplex is the generated link the Spec 68 §6 ruling derives from \"50 percent of the requirements cited in (A) and (B) above\". The statement cites (1) so its literals bind where they are written: 50 % in (C), the no-f 15.0 m in (B) (RM (B)(ii), \"an entire semi-detached house\", M-187 Q10: 7.5 m). A semi-detached house (RM: or apartment building) on two lots stays a disclosed site fact (M-174(1)).",
+      "rule": "Spec 69a M-181(3) (amended 2026-10-19, ruling (b)), M-187 Q10, M-174(1); Spec 68 §6 displaces[] (\"percent of the requirements cited in\", operator y 2026-10-19); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(C)/disclosure",
+      "unit": "10.80.30.20(1)#(1)(C)",
+      "value": "If the semi-detached house is divided onto two lots: each lot's minimum lot frontage is 50 % of the requirement."
     }
   ]
 }

@@ -10,8 +10,8 @@
  "counts": {
   "answers": 511,
   "by_state": {
-   "INCORPORATED": 472,
-   "UNFIXED": 39
+   "INCORPORATED": 473,
+   "UNFIXED": 38
   },
   "by_verdict": {
    "disclose": 90,
@@ -38,8 +38,8 @@
    },
    "10.40": {
     "total": 87,
-    "INCORPORATED": 86,
-    "UNFIXED": 1,
+    "INCORPORATED": 87,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.5": {
@@ -106,29 +106,6 @@
   "feeding_a_lineage_field": 173
  },
  "rows": [
-  {
-   "unit_id": "10.40.30.20(1)#(1)(C)",
-   "regulation_id": "10.40.30.20(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseplex.",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-181"
-   ],
-   "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
-   "disclosure_code": "semi_house_two_lots",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
   {
    "unit_id": "150.10.1(1)#whole",
    "regulation_id": "150.10.1(1)",
@@ -2771,6 +2748,29 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(C)",
+   "regulation_id": "10.40.30.20(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseplex.",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
+   "disclosure_code": "semi_house_two_lots",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.30.20(1)#(1)(C)/archetype~s1, COR-10.40.30.20(1)#(1)(C)/target~s1, COR-10.40.30.20(1)#(1)(C)/bound~s1, COR-10.40.30.20(1)#(1)(C)/numeric_expression, COR-10.40.30.20(1)#(1)(C)/literals_not_expressed~s2, COR-10.40.30.20(1)#(1)(C)/application.building_types, COR-10.40.30.20(1)#(1)(C)/application.evidence, COR-10.40.30.20(1)#(1)(C)/calculation_handling, COR-10.40.30.20(1)#(1)(C)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.30.20(1)#(1)(D)",
