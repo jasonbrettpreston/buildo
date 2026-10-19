@@ -19739,19 +19739,19 @@
   "inputs": [
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json",
-      "sha256": "63468bb4b5be83d3"
+      "sha256": "1844a47e9b8a7862"
     },
     {
       "path": "docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json",
-      "sha256": "1d82f3b9f887ba6e"
+      "sha256": "823da11eb9ba7e00"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
-      "sha256": "f4226e60903c0a0b"
+      "sha256": "0df1db1710e1a619"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "f8b5e5b92dc3824d"
+      "sha256": "26c474567dd718e4"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",
@@ -19815,7 +19815,7 @@
     },
     {
       "path": "scripts/seeds/logic_variables.json",
-      "sha256": "0feee9b8275ecd08"
+      "sha256": "fdf57bb5ac4b8ee6"
     },
     {
       "path": "scripts/surfaces/_schema/report-fields.decl.json",

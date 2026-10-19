@@ -40,7 +40,7 @@ const clear = { table: 'permits', column: 'enriched_status', when: 'status leave
 const desc = (invalidates: unknown[]) => ({ identity: { name: 'x', archetype: 'INGESTOR' }, outputs: { writes: [permitsSpec()], invalidates }, guards: { srid: 'none' } });
 
 describe('R-EA — invalidates[].by "set_null_unless"', () => {
-  it.fails('renders legacy load-permits.js:363 byte-equivalent and adds no guard term (flips at RE-FREEZE #37)', () => {
+  it('renders legacy load-permits.js:363 byte-equivalent and adds no guard term (flips at RE-FREEZE #37)', () => {
     const legacy = fs.readFileSync(join(process.cwd(), 'scripts/load-permits.js'), 'utf8').split('\n')[362]!.trim().replace(/,$/, '');
     const plan = writeLib.buildWritePlan(permitsSpec(), desc([clear]));
     expect(plan.upsert_sql).toContain(legacy);
@@ -50,21 +50,21 @@ describe('R-EA — invalidates[].by "set_null_unless"', () => {
     expect(plan.invalidated_unless).toEqual([{ column: 'enriched_status', unless: { column: 'status', equals: 'Inspection' } }]);
   });
 
-  it.fails('the comparison is null-safe (a NULL incoming status clears, staying "Inspection" preserves) and the constant is escaped (flips at RE-FREEZE #37)', () => {
+  it('the comparison is null-safe (a NULL incoming status clears, staying "Inspection" preserves) and the constant is escaped (flips at RE-FREEZE #37)', () => {
     const plan = writeLib.buildWritePlan(permitsSpec(), desc([{ ...clear, set_null_unless: { column: 'status', equals: "O'Brien" } }]));
     expect(plan.upsert_sql).toContain("enriched_status = CASE WHEN EXCLUDED.status IS DISTINCT FROM 'O''Brien' THEN NULL ELSE permits.enriched_status END");
     expect(writeLib.sqlLiteral('Inspection', { allowString: true })).toBe("'Inspection'");
     expect(() => writeLib.sqlLiteral('Inspection')).toThrow(/set_value/);
   });
 
-  it.fails('deriveMeta and #44 G13 count the cleared column as this step\'s write of the target (flips at RE-FREEZE #37)', () => {
+  it('deriveMeta and #44 G13 count the cleared column as this step\'s write of the target (flips at RE-FREEZE #37)', () => {
     const d = desc([{ table: 'permits', column: 'cleared_col', when: 'w', by: 'set_null_unless', set_null_unless: { column: 'status', equals: 'Inspection' } }]);
     expect(stepLib.deriveMeta(d).writes.permits).toContain('cleared_col');
     const permits = declaredWrites(d).find((e: { table: string }) => e.table === 'permits') as { cols: string[] };
     expect(permits.cols).toContain('cleared_col');
   });
 
-  it.fails('validate: the schema admits by "set_null_unless" with its object; a watched column that is not written "step" on the target is refused (flips at RE-FREEZE #37)', () => {
+  it('validate: the schema admits by "set_null_unless" with its object; a watched column that is not written "step" on the target is refused (flips at RE-FREEZE #37)', () => {
     const d = clone(LOAD_WSIB) as Record<string, any>;
     d.outputs.invalidates = [{ table: 'wsib_registry', column: 'website', when: 'class leaves G', by: 'set_null_unless', set_null_unless: { column: 'predominant_class', equals: 'G' } }];
     expect(() => validateLib.validateDescriptor(d)).not.toThrow();

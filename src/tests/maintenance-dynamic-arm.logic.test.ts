@@ -15,6 +15,7 @@
 // FAILED — never a silently-swallowed maintenance no-op.
 
 import { describe, expect, it, vi } from 'vitest';
+import { runnerValues } from './helpers/runner-variables';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { deadTupleRatio, runMaintenance } = require('../../scripts/lib/step/plausibility.js') as {
@@ -23,7 +24,7 @@ const { deadTupleRatio, runMaintenance } = require('../../scripts/lib/step/plaus
     pool: unknown,
     maintenance: unknown,
     config: Record<string, unknown>,
-    opts?: { log?: { warn: (tag: string, msg: string) => void; info?: (tag: string, msg: string) => void }; tag?: string },
+    opts?: { log?: { warn: (tag: string, msg: string) => void; info?: (tag: string, msg: string) => void }; tag?: string; defaultTimeoutMinutes?: number },
   ) => Promise<Array<{ metric: string; value: unknown; threshold: unknown; status: string; note: string }>>;
 };
 
@@ -87,7 +88,7 @@ describe('runMaintenance — the DYNAMIC arm (select:"dead_tuple_ratio", R-CG)',
     const { pool, client } = fakePool(STAT_ROWS);
     const log = fakeLog();
 
-    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG });
+    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! });
 
     // ONE selection row + ONE statement row for the single selected table.
     expect(rows.length).toBe(2);
@@ -118,7 +119,7 @@ describe('runMaintenance — the DYNAMIC arm (select:"dead_tuple_ratio", R-CG)',
     const { pool } = fakePool(STAT_ROWS);
     const log = fakeLog();
 
-    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.5 }, { log, tag: TAG });
+    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.5 }, { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! });
 
     expect(rows.length).toBe(1);
     expect(rows[0]).toMatchObject({
@@ -135,7 +136,7 @@ describe('runMaintenance — the DYNAMIC arm (select:"dead_tuple_ratio", R-CG)',
     pool.query.mockRejectedValueOnce(new Error('catalog read blew up'));
     const log = fakeLog();
 
-    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG });
+    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! });
 
     expect(rows.length).toBe(1);
     expect(rows[0]).toMatchObject({ value: null, status: 'WARN' });
@@ -146,7 +147,7 @@ describe('runMaintenance — the DYNAMIC arm (select:"dead_tuple_ratio", R-CG)',
     const { pool } = fakePool([{ relname: 'b', live: '80', dead: '20' }]);
     const log = fakeLog();
 
-    const rows = await runMaintenance(pool, [ENTRY], {}, { log, tag: TAG });
+    const rows = await runMaintenance(pool, [ENTRY], {}, { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! });
 
     expect(rows.length).toBe(1);
     expect(rows[0]).toMatchObject({ threshold: null, status: 'WARN' });
@@ -158,7 +159,7 @@ describe('runMaintenance — the DYNAMIC arm (select:"dead_tuple_ratio", R-CG)',
     const { pool } = fakePool(STAT_ROWS, { vacuumRejects: true });
     const log = fakeLog();
 
-    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG });
+    const rows = await runMaintenance(pool, [ENTRY], { x_max: 0.1 }, { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! });
 
     expect(rows.length).toBe(2);
     expect(rows[0]!.status).toBe('INFO'); // the selection itself still measured fine
@@ -178,7 +179,7 @@ describe('runMaintenance — the STATIC arm still works (one measurement, two co
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: {} }],
       { parcels_dead_tuple_ratio_warn_max: 0.3 },
-      { log, tag: TAG },
+      { log, tag: TAG, defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes! },
     );
 
     expect(rows.length).toBe(1);

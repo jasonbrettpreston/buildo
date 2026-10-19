@@ -52,7 +52,7 @@
       "executor": {
         "branch": "two live paths: set_source:\"compute\" -> the GUARDED_UPSERT_COMPUTE_CLASS descriptive plan (write.js:514); otherwise -> the DEFAULT (unnamed) codegen path (write.js:555-620)",
         "executor_fn": ["executeRecorderUpsert", "executeUpsertBatch"],
-        "runners": ["runRecorderPhase", "executeOrderedWrites", "runLinkKeyedPhase"]
+        "runners": ["runRecorderPhase", "executeOrderedWrites", "runLinkKeyedPhase", "runMaterializePhase"]
       },
       "declared_by": [
         { "step": "refresh_snapshot", "target": "data_quality_snapshots", "note": "compute path (set_source:\"compute\"), via runRecorderPhase" },
@@ -132,9 +132,9 @@
       "letter": "F",
       "disposition": "implemented",
       "executor": {
-        "branch": "LINK_FULL_RETRACTION_CLASS descriptive plan (write.js:486)",
-        "executor_fn": ["executeGuardedDeleteByKey"],
-        "runners": ["runLinkKeyedPhase"]
+        "branch": "LINK_FULL_RETRACTION_CLASS descriptive plan (write.js:486); RE-FREEZE #37 (Spec 124 R-EH): under materialize_form rows, retract replace_keys is the generated keyed DELETE (write.js buildReplaceKeysSql) run by runMaterializePhase",
+        "executor_fn": ["executeGuardedDeleteByKey", "buildReplaceKeysSql"],
+        "runners": ["runLinkKeyedPhase", "runMaterializePhase"]
       },
       "declared_by": [
         { "step": "link_parcels", "target": "permit_parcels" }
@@ -148,8 +148,8 @@
       "disposition": "implemented",
       "executor": {
         "branch": "in SET_BASED_CLASSES (write.js:63); codegen clear_sql (write.js:383) for the scoped-clear shape, OR set_source:\"compute\" descriptive plan (write.js:365) for the compute-guarded-update shape",
-        "executor_fn": ["executeSetBasedClear", "executeGuardedUpdate"],
-        "runners": ["runLinkPhase", "runCascadePhase", "runLinkKeyedPhase", "runBackfillPhase", "executeOrderedWrites"]
+        "executor_fn": ["executeSetBasedClear", "executeGuardedUpdate", "buildKeyedUpdateFromRowsSql"],
+        "runners": ["runLinkPhase", "runCascadePhase", "runLinkKeyedPhase", "runBackfillPhase", "executeOrderedWrites", "runMaterializePhase"]
       },
       "declared_by": [
         { "step": "compute_centroids", "target": "parcels" },

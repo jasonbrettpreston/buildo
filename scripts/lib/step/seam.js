@@ -194,7 +194,12 @@ function evaluateOrder({ metric, threshold, up, down, join, joinValue }) {
  * consumable the same way an invariant/plausibility row is (verdict.js's
  * `row()` shape, commit 3).
  */
-async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
+async function checkSeam(pool, { upstream, downstream, chainId = 'sources', scanLimit }) {
+  // Spec 124 R-EB (a) (census rows 15-16): the chain-run scan window is the runner-owned
+  // step_seam_chain_run_scan_limit (seed 40), bound as a query parameter — never a literal.
+  if (!Number.isInteger(scanLimit) || scanLimit <= 0) {
+    throw new Error(`checkSeam: scanLimit must be the resolved step_seam_chain_run_scan_limit, a positive integer (got ${String(scanLimit)})`);
+  }
   const upstreamPipeline = scopedPipeline(chainId, upstream);
   const downstreamPipeline = scopedPipeline(chainId, downstream);
   const metric = `seam_${upstream}_before_${downstream}`;
@@ -217,8 +222,8 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
         AND records_meta ? 'chain_run_id'
         AND records_meta->>'chain_run_id' IS NOT NULL
       ORDER BY started_at DESC, id DESC
-      LIMIT 40`,
-    [upstreamPipeline, downstreamPipeline],
+      LIMIT $3`,
+    [upstreamPipeline, downstreamPipeline, scanLimit],
   );
   const byChainRun = new Map();
   for (const row of primaryRes.rows) {
@@ -253,8 +258,8 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
         AND status IN ('completed', 'completed_with_errors', 'completed_with_warnings')
         AND ${WARN_SKIP_PREDICATE_SQL}
       ORDER BY started_at DESC, id DESC
-      LIMIT 40`,
-    [upstreamPipeline, downstreamPipeline],
+      LIMIT $3`,
+    [upstreamPipeline, downstreamPipeline, scanLimit],
   );
   const up = fallbackRes.rows.find((r) => r.pipeline === upstreamPipeline);
   const down = fallbackRes.rows.find((r) => r.pipeline === downstreamPipeline);
@@ -278,13 +283,13 @@ async function checkSeam(pool, { upstream, downstream, chainId = 'sources' }) {
  * `manifest.chains[chainId]` is not evaluated on that chain (an unknown
  * chain id throws, see `deriveSeamPairsScoped`).
  */
-async function runSeamChecks(pool, { chainId = 'sources', descriptorsByName } = {}) {
+async function runSeamChecks(pool, { chainId = 'sources', descriptorsByName, scanLimit } = {}) {
   const { pairs } = deriveSeamPairsScoped(descriptorsByName, chainId);
   const rows = [];
   // Sequential by design: the pair list is tiny (1 today) and each check is
   // its own query, no batching contract to preserve.
   for (const pair of pairs) {
-    rows.push(await checkSeam(pool, { ...pair, chainId }));
+    rows.push(await checkSeam(pool, { ...pair, chainId, scanLimit }));
   }
   return rows;
 }

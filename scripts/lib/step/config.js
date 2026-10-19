@@ -89,6 +89,88 @@ function invalidReason(raw, min, max, allowed) {
 }
 
 /**
+ * Spec 124 R-EB (a) (McDonald's Airtight V3 EXT-1, operator y 2026-10-18): the RUNNER-OWNED variables.
+ * The numbers the library itself decides with (post-check concurrency, maintenance and phase-deadline
+ * cadence, the persisted audit-value cap, the PDF pace floor and redirect cap, the seam scan window) are
+ * registered `step_*` logic variables, never literals. This closed list is resolved for EVERY step, in
+ * the same logic_variables statement as its declared config (R-CM), with the seed's min/max as bounds.
+ * A missing row or an out-of-bounds value refuses the run (failed_config_out_of_bounds). Compute never
+ * sees them: they travel beside `ctx.config`, never inside it.
+ */
+const RUNNER_VARIABLES = Object.freeze([
+  'step_post_check_concurrency',
+  'step_post_check_statement_timeout_minutes',
+  'step_maintenance_default_timeout_minutes',
+  'step_audit_value_max_chars',
+  'step_acquire_pdf_pace_ms',
+  'step_acquire_max_redirects',
+  'step_phase_recancel_max_ms',
+  'step_phase_recancel_min_ms',
+  'step_phase_recancel_divisor',
+  'step_stall_ticker_multiplier',
+  'step_seam_chain_run_scan_limit',
+]);
+
+/** The presence read, widened to declared ∪ retired ∪ probe ∪ RUNNER_VARIABLES (one statement). */
+const PRESENCE_SQL = 'SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)';
+/**
+ * A config:"none" step has no loader read, so its runner values come from ONE statement of their own
+ * (presence and value together). A declaring step takes them from the loader's value+stamp statement
+ * (R-CM: the same snapshot as its declared config) and their presence from PRESENCE_SQL.
+ */
+const RUNNER_VALUES_SQL = 'SELECT variable_key, variable_value FROM logic_variables WHERE variable_key = ANY($1)';
+
+/** The seed registry: the bounds a runner variable is checked against. */
+// eslint-disable-next-line global-require
+const SEED_REGISTRY = require('../../seeds/logic_variables.json');
+
+/**
+ * The resolved runner values. Throws (the run fails) on a missing row, a missing seed bound, or an
+ * out-of-bounds value — the R-EB (a) refusal `failed_config_out_of_bounds`.
+ * @param {string} slug
+ * @param {Set<string>} present - runner names that have a live logic_variables row
+ * @param {(name: string) => unknown} valueOf - the row value for a present name
+ * @returns {Readonly<Record<string, number>>}
+ */
+function runnerValuesFrom(slug, present, valueOf) {
+  const refuse = (msg) => {
+    const err = new Error(`[${slug}] failed_config_out_of_bounds: ${msg} (Spec 124 R-EB (a): runner-owned variables are resolved for every step).`);
+    err.status = 'failed_config_out_of_bounds';
+    return err;
+  };
+  const out = Object.create(null);
+  for (const name of RUNNER_VARIABLES) {
+    const seed = SEED_REGISTRY[name];
+    if (!seed || typeof seed.min !== 'number' || typeof seed.max !== 'number') {
+      throw refuse(`runner variable "${name}" has no bounded seed entry in scripts/seeds/logic_variables.json`);
+    }
+    if (!present.has(name)) {
+      throw refuse(`runner variable "${name}" has no logic_variables row — apply its migration (a seed is bootstrap only)`);
+    }
+    const raw = valueOf(name);
+    const value = typeof raw === 'number' ? raw : Number.parseFloat(String(raw));
+    const reason = invalidReason(value, seed.min, seed.max);
+    if (reason !== null) {
+      throw refuse(`runner variable "${name}" = ${JSON.stringify(raw)} is ${reason} for bounds [${seed.min}, ${seed.max}]`);
+    }
+    out[name] = value;
+  }
+  return Object.freeze(out);
+}
+
+/**
+ * The runner values alone, for library tooling that runs outside `pipeline.step()` (the chain-end seam
+ * synthesis). Same statement, same bounds, same refusal.
+ * @param {import('pg').Pool} pool
+ * @param {string} [label]
+ */
+async function resolveRunnerVariables(pool, label = 'runner') {
+  const { rows } = await pool.query(RUNNER_VALUES_SQL, [[...RUNNER_VARIABLES]]);
+  const byKey = new Map(rows.map((r) => [r.variable_key, r.variable_value]));
+  return runnerValuesFrom(label, new Set(byKey.keys()), (name) => byKey.get(name));
+}
+
+/**
  * Resolve `descriptor.config` against the live logic-variable registry.
  *
  * @param {import('pg').Pool} pool
@@ -102,12 +184,15 @@ function invalidReason(raw, min, max, allowed) {
  *   `probeStatus` (R-D) is every `cfg.probe_presence[]` name annotated the same way —
  *   a FLEET-WIDE presence probe, never a value this step consumes; always `[]` for a
  *   `config: "none"` step or one that declares no `probe_presence` entries.
+ *   `runner` (R-EB (a)) is the resolved RUNNER_VARIABLES — for every step, `config: "none"` included;
+ *   the runner's own, never `ctx.config`.
  */
 async function resolveConfig(pool, descriptor) {
   const slug = descriptor.identity.name;
   const cfg = descriptor.config;
   if (!cfg || cfg === NONE) {
-    return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [], probeStatus: [] };
+    const runner = await resolveRunnerVariables(pool, slug);
+    return { values: Object.freeze(Object.create(null)), stamp: null, retiredStatus: [], probeStatus: [], runner };
   }
 
   const { logicVars, logicVarMeta } = await loadMarketplaceConfigs(pool, slug, { quiet: true });
@@ -135,15 +220,11 @@ async function resolveConfig(pool, descriptor) {
   const retired = Array.isArray(cfg.retired) ? cfg.retired : [];
   const retiredNames = retired.map((r) => r.name);
   const probeNames = Array.isArray(cfg.probe_presence) ? cfg.probe_presence : [];
-  const allNames = [...new Set([...declaredNames, ...retiredNames, ...probeNames])];
-  let presentInDb = new Set();
-  if (allNames.length > 0) {
-    const { rows: presenceRows } = await pool.query(
-      'SELECT variable_key FROM logic_variables WHERE variable_key = ANY($1)',
-      [allNames],
-    );
-    presentInDb = new Set(presenceRows.map((r) => r.variable_key));
-  }
+  // R-EB (a): the runner-owned names join the SAME statement (R-CM), so every step reads them once.
+  const allNames = [...new Set([...declaredNames, ...retiredNames, ...probeNames, ...RUNNER_VARIABLES])];
+  const { rows: presenceRows } = await pool.query(PRESENCE_SQL, [allNames]);
+  const presentInDb = new Set(presenceRows.map((r) => r.variable_key));
+  const runner = runnerValuesFrom(slug, presentInDb, (name) => logicVars[name]);
   // EVERY retired entry gets an audit signal, not only the present ones — an
   // absent row is the AFFIRMATIVE evidence the retirement is complete, not
   // silence. `retiredStatus` carries the presence bit for the runner to render
@@ -252,7 +333,7 @@ async function resolveConfig(pool, descriptor) {
   // the presence throw is considered — and before the freeze.
   attachMeta(values, cfg, logicVarMeta);
 
-  return { values: Object.freeze(values), stamp, retiredStatus, probeStatus };
+  return { values: Object.freeze(values), stamp, retiredStatus, probeStatus, runner };
 }
 
 /**
@@ -298,4 +379,4 @@ function retiredVarRow(entry) {
   };
 }
 
-module.exports = { resolveConfig, retiredVarRow, invalidReason };
+module.exports = { resolveConfig, resolveRunnerVariables, runnerValuesFrom, retiredVarRow, invalidReason, RUNNER_VARIABLES };

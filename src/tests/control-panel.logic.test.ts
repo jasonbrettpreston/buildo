@@ -672,6 +672,16 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Spec 124 R-EB (b) / R-EC (migration 267) — pinned gate/tooling variables, admin.hidden "internal".
   'gate_f_score_floor', 'gate_notes_cap', 'gate_why_min_chars', 'gate_na_reason_min_chars', 'gate_red_evidence_min_name_chars',
   'tooling_spawn_max_buffer_mb', 'tooling_precommit_budget_docs_only_s', 'tooling_precommit_budget_registry_s',
+  // Spec 124 R-EB (a) (migration 268) — runner-owned step_* variables, admin group "Pipeline Runner".
+  'step_maintenance_default_timeout_minutes',
+  'step_audit_value_max_chars',
+  'step_acquire_pdf_pace_ms',
+  'step_acquire_max_redirects',
+  'step_phase_recancel_max_ms',
+  'step_phase_recancel_min_ms',
+  'step_phase_recancel_divisor',
+  'step_stall_ticker_multiplier',
+  'step_seam_chain_run_scan_limit',
 ];
 
 describe('LOGIC_VAR_DEFAULTS — complete key set', () => {

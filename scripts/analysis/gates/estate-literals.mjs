@@ -5,9 +5,10 @@
 // (compute-literals.mjs) bans a tunable literal in scripts/lib/compute/**. This arm extends the
 // same EXTERNALIZED rule to the code that runs and judges every step:
 //
-//   ESTATE_SCOPES      — scripts/analysis/gates/** (and scripts/lib/step/** once RE-FREEZE #37
-//                        lands its runner rows): a finding is RED. It can NEVER be ledgered —
-//                        the fix is a registered variable or a deleted fallback (R-EB).
+//   ESTATE_SCOPES      — scripts/analysis/gates/** and scripts/lib/step/** (joined at RE-FREEZE #37,
+//                        with census rows 1-16 fixed: runner-owned step_* variables, config.js
+//                        RUNNER_VARIABLES, or deleted fallbacks): a finding is RED. It can NEVER be
+//                        ledgered — the fix is a registered variable or a deleted fallback (R-EB).
 //   TOOLING_RATCHET    — the decision-bearing tooling outside scope (PIN EXT-2): each file's
 //                        finding count may only fall. The marks live in
 //                        scripts/steps/_schema/estate-literal-high-water-mark.json (the
@@ -40,7 +41,7 @@ export const RULE_ID = 'estate-no-numeric-literal';
 export const SQL_RULE_ID = 'estate-no-sql-numeric-literal';
 
 /** Scopes where a finding is RED and can never be ledgered (R-EB). */
-export const ESTATE_SCOPES = Object.freeze(['scripts/analysis/gates']);
+export const ESTATE_SCOPES = Object.freeze(['scripts/analysis/gates', 'scripts/lib/step']);
 
 /** PIN EXT-2: decision-bearing tooling outside scope, ratcheted per file to zero. */
 export const TOOLING_RATCHET_FILES = Object.freeze([

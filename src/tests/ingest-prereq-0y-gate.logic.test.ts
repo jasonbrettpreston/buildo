@@ -50,6 +50,7 @@
 // T15 is the half that PASSES today and must keep passing after the implementation.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
+import { runnerValues } from './helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
 const stepLib = require(join(process.cwd(), 'scripts/lib/step'));
@@ -96,7 +97,7 @@ function fakePool(opts: {
   const answer = (text: string) => {
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(seedConfig()).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...seedConfig() }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };
@@ -767,22 +768,20 @@ describe('INGESTOR prerequisite 0y — refusals (0y Y1–Y5) and the relaxed B6'
     return d;
   }
 
-  it('0y-T14 — Y4 (a ckan_datastore external with no target) is refused by runIngestPhase before any I/O', async () => {
+  // RE-FREEZE #37 (Spec 124 R-DX (ii)) DELETED Y4 (and Y-I1's `target` clause): one targetless CKAN
+  // primary is a first-class single-primary INGESTOR. The construction checks no longer refuse it by Y4.
+  it('0y-T14 — Y4 is deleted (R-DX (ii)): a ckan_datastore external with no target is not refused by Y4', async () => {
     const d = singlePrimary();
     delete d.inputs.reads.externals[0].target;
     const f = fakeFetch();
     const pool = fakePool();
     restored = stubs(null);
 
-    await expect(
-      stepLib.runIngestPhase({
-        descriptor: d, pool, compute: ravineCompute, config: ckanConfig(), fetchImpl: f.fetchImpl,
-        chainId: null, log: noopLog, tag: '[0y]', clockNow: NOW, preWriteGate: null,
-      }),
-      'Y4 is the runtime twin of Y-I1\'s `target` clause (I-A7)',
-    ).rejects.toThrow(/0y Y4/);
-    expect(f.fetchImpl, 'Y4 fires before :1143, so no fetch happens').toHaveBeenCalledTimes(0);
-    expect(pool.calls, 'Y4 fires before :1143, so no pool query happens').toHaveLength(0);
+    const outcome = await stepLib.runIngestPhase({
+      descriptor: d, pool, compute: ravineCompute, config: ckanConfig(), fetchImpl: f.fetchImpl,
+      chainId: null, log: noopLog, tag: '[0y]', clockNow: NOW, preWriteGate: null,
+    }).then(() => null, (e: Error) => e);
+    expect(String(outcome && outcome.message), 'no 0y Y4 refusal').not.toMatch(/0y Y4/);
   });
 
   it('0y-T14 — Y5 (a non-default trigger style reaching runIngestPhase) is refused before any I/O', async () => {

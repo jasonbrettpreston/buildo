@@ -3,14 +3,14 @@
   "step": "scripts/load-bylaw-map-areas.js",
   "chain": "none",
   "source_fingerprint": "93925e9841d6516877ca5957f2a4d9bcfcd8723e1b2aa161186221152289014b",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
-    "calls": 14,
-    "distinct": 12,
+    "calls": 15,
+    "distinct": 13,
     "utility": 5,
-    "tracer_self_ms": 0.821,
-    "wall_ms": 234
+    "tracer_self_ms": 0.872,
+    "wall_ms": 235
   },
   "statements": [
     {
@@ -55,13 +55,13 @@
       "params": [
         [
           "completed",
-          34,
+          32,
           null,
-          3385,
+          3565,
           null,
           null,
           null,
-          "{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":0,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":\"unchanged_content_hash\",\"spec_version\":\"2.3\"},\"gate\":{\"reason\":\"unchanged_content_hash\",\"gated_skip\":true},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"skipped_content_hash\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"b61efc2b245d507a33c8db4f95e34f07b44389d7\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":34,\"threshold\":null,\"status\":\"INFO\"}]}}"
+          "{\"bylaw_map_load\":{\"map_code\":\"600.60\",\"seed_sha256\":\"b24cfb16f2d7723eaf9bc7d7abbd2ba844e3134790ceebd79e866f7ed4b4866c\",\"content_hash\":\"e28c4d8acb8e858d28a9ff1ba6409700\",\"feature_count\":27,\"areas_inserted\":0,\"areas_updated\":0,\"areas_deleted\":0,\"delete_skipped_empty_guard\":false,\"skipped_reason\":\"unchanged_content_hash\",\"spec_version\":\"2.3\"},\"gate\":{\"reason\":\"unchanged_content_hash\",\"gated_skip\":true},\"acquired\":{\"record_fields\":{\"seed:bylaw-maps-600_60\":[\"area_key\",\"area_name\",\"area_type\",\"map_code\",\"source\",\"source_feature_id\"]}},\"terminal\":\"skipped_content_hash\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"15d79445291f7e4a61961d08a152c0c80d345751\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"By-law Map Areas (600.60 Sixplex Overlay)\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"dataset_source_license\",\"value\":{\"sources\":{\"city_gis_layer80\":{\"ruling\":\"not stated — City of Toronto GIS, unverified\",\"publish_scope\":\"local_only\"},\"ckan_wards_2018\":{\"ruling\":\"n/a\",\"publish_scope\":null}}},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":32,\"threshold\":null,\"status\":\"INFO\"}]}}"
         ]
       ]
     },
@@ -148,6 +148,18 @@
       "reads": {},
       "writes": {},
       "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b5a1b0d462a3ba3c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 11,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
       "error": null
     },
     {

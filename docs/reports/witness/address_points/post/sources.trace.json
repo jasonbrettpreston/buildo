@@ -3,14 +3,14 @@
   "step": "scripts/load-address-points.js",
   "chain": "sources",
   "source_fingerprint": "372ae22da500a803e0b74108a70cf80d92a960eab252805c07d87416e7174565",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
     "calls": 166,
     "distinct": 17,
     "utility": 8,
-    "tracer_self_ms": 1228.685,
-    "wall_ms": 36745
+    "tracer_self_ms": 1073.511,
+    "wall_ms": 34759
   },
   "statements": [
     {
@@ -44,7 +44,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 788,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -127,7 +127,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 6,
+      "rowCount": 17,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -158,7 +158,7 @@
       "fingerprint": "9184be8b14cc7f3c",
       "kind": "read",
       "count": 1,
-      "rowCount": 525372,
+      "rowCount": 525371,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -278,7 +278,7 @@
   ],
   "transactions": [
     {
-      "client": "65299:3",
+      "client": "45644:3",
       "write_fingerprints": [
         "8b9dda5a2430e883",
         "9f8e7239f14db5a0",

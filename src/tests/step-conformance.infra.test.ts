@@ -1413,11 +1413,15 @@ const LINK_PARCELS_SHARED_RUNNER_VARS = new Set(['spatial_match_max_distance_m',
  * named explicitly instead.
  */
 /**
- * Spec 124 R-DR closed list (Spec 08 output panel round 1, 2026-10-18): the ONLY null-owner runner-wide
- * names a config-"none" step may leave undeclared — opt-in ceilings the runner falls back from when absent.
- * Any other null-owner runner-wide read counts as the step's own consumption (fail closed).
+ * Spec 124 R-DR closed list (Spec 08 output panel round 1, 2026-10-18), amended by R-EB (a) at RE-FREEZE
+ * #37: the ONLY null-owner runner-wide names a config-"none" step may leave undeclared are the library's
+ * own closed RUNNER_VARIABLES export (scripts/lib/step/config.js) — runner-owned, resolved for every step,
+ * never the step's consumption. This test imports the list; it keeps no copy. Any other null-owner
+ * runner-wide read counts as the step's own consumption (fail closed).
  */
-const RUNNER_OPT_IN_CEILINGS = new Set(['step_post_check_concurrency', 'step_post_check_statement_timeout_minutes']);
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- the CJS library's closed export
+const { RUNNER_VARIABLES } = require(path.join(REPO_ROOT, 'scripts/lib/step/config.js')) as { RUNNER_VARIABLES: readonly string[] };
+const RUNNER_OWNED_VARIABLES = new Set<string>(RUNNER_VARIABLES);
 
 function sharedRunnerVarOwner(name: string): string | null {
   if (name.startsWith('enrich_parcels_')) return 'enrich_parcels';
@@ -1543,7 +1547,7 @@ function configFindings(relFile: string, slug: string, declared: string[], injec
   // "unioned for the DEAD-DECLARATION check only"). A runner-wide read in scripts/lib/step/index.js
   // (ctx.config.<x> or configValues.<x>) is this step's only when sharedRunnerVarOwner names it, or when the
   // step also reaches it through a path of its own. A name another slug owns is checked in the scoped loop
-  // above. A null-owner name is exempt only on the CLOSED opt-in list RUNNER_OPT_IN_CEILINGS (the runner falls
+  // above. A null-owner name is exempt only on the CLOSED list RUNNER_VARIABLES (config.js, R-EB (a): runner-owned, resolved for every step; formerly the runner fell
   // back when it is undeclared — the post-check ceilings); any other null-owner runner-wide name counts as this
   // step's own consumption (fail closed; Spec 08 output panel round 1, 2026-10-18). `injectedRunnerWide` lets
   // the canary add a synthetic runner read without touching scripts/lib/step/index.js.
@@ -1554,7 +1558,7 @@ function configFindings(relFile: string, slug: string, declared: string[], injec
     if (ownPaths.has(name)) return true;
     if (!runnerWide.has(name)) return false;
     const owner = sharedRunnerVarOwner(name);
-    return owner === null ? !RUNNER_OPT_IN_CEILINGS.has(name) : owner === slug;
+    return owner === null ? !RUNNER_OWNED_VARIABLES.has(name) : owner === slug;
   });
   if (declared.length === 0 && ownConsumed.length > 0) {
     findings.push(`config is "none" while ${ownConsumed.length} tunable(s) are consumed (${computeRel} ctx.config reads + descriptor *_from_config refs) — a hidden variable (§1.2a P4)`);
@@ -1645,11 +1649,14 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
 
   // ── R-DR CLOSED LIST (Spec 08 output panel round 1, 2026-10-18) ────────────
   // A null-owner runner-wide read is exempt for a config-"none" step only when it is on
-  // RUNNER_OPT_IN_CEILINGS; any other unowned name fails closed as the step's own consumption.
+  // the library's RUNNER_VARIABLES (R-EB (a)); any other unowned name fails closed as the step's own consumption.
   describe('R-DR — the runner opt-in exemption is a closed list (fail closed)', () => {
     const RDR_STEP = 'scripts/load-bylaw-map-areas.js';
-    it('the closed list is exactly the two post-check ceilings', () => {
-      expect([...RUNNER_OPT_IN_CEILINGS].sort()).toEqual(['step_post_check_concurrency', 'step_post_check_statement_timeout_minutes']);
+    it('the closed list is the library RUNNER_VARIABLES export (R-EB (a)), frozen, carrying both post-check ceilings', () => {
+      expect(Object.isFrozen(RUNNER_VARIABLES)).toBe(true);
+      expect([...RUNNER_OWNED_VARIABLES].sort()).toEqual([...RUNNER_VARIABLES].sort());
+      expect(RUNNER_VARIABLES).toEqual(expect.arrayContaining(['step_post_check_concurrency', 'step_post_check_statement_timeout_minutes']));
+      expect(RUNNER_VARIABLES.every((n) => n.startsWith('step_'))).toBe(true);
     });
     it(`GREEN — ${RDR_STEP} (config "none") passes with the real runner reads`, () => {
       expect(CONVERTED).toContain(RDR_STEP);
@@ -1660,7 +1667,7 @@ describe('§1.2a P4 — every tunable is externalized (declared ≡ registry ≡
     it('RED — a synthetic UNOWNED runner-wide name with config "none" is a hidden variable', () => {
       const ghost = 'r_dr_synthetic_unowned_runner_var';
       expect(sharedRunnerVarOwner(ghost)).toBeNull();
-      expect(RUNNER_OPT_IN_CEILINGS.has(ghost)).toBe(false);
+      expect(RUNNER_OWNED_VARIABLES.has(ghost)).toBe(false);
       const findings = configFindings(RDR_STEP, 'load_bylaw_map_areas', [], [ghost]);
       expect(findings.some((f) => f.includes('a hidden variable (§1.2a P4)')), findings.join('\n')).toBe(true);
     });
@@ -1878,10 +1885,13 @@ describe('pilot 6 peel 8c — compute_centroids T1/T2/T3: declared ⊆ registry,
 // read RED as dead declarations the moment enrich_parcels joined CONVERTED. Both directions
 // of the widening (`libraryConsumedVars`) are locked here, Spec 121 §12b.6.
 const EP_STEP = 'scripts/enrich-parcels.js';
-const EP_LIBRARY_VARS = ['step_post_check_statement_timeout_minutes', 'step_post_check_concurrency', 'parcels_maintenance_timeout_minutes'];
+// Spec 124 R-EB (a) (RE-FREEZE #37): step_post_check_concurrency is RUNNER-OWNED (config.js RUNNER_VARIABLES,
+// resolved for every step, never ctx.config), so enrich_parcels no longer declares it; the two that remain are
+// the opt-in post-check ceiling (a configValues.<x> read) and the descriptor-derived maintenance key.
+const EP_LIBRARY_VARS = ['step_post_check_statement_timeout_minutes', 'parcels_maintenance_timeout_minutes'];
 
 describe('pilot 9 commit 9 — library-consumed tunables (EP-D17: configValues.<x> reads + the descriptor-derived maintenance key)', () => {
-  it('the fixture is non-vacuous — all three are declared by enrich_parcels, NONE is read as ctx.config in compute, NONE is *_from_config-reachable, NONE is a ctx.config read in the shared runner (the three pre-existing paths genuinely miss them)', () => {
+  it('the fixture is non-vacuous — both are declared by enrich_parcels, NONE is read as ctx.config in compute, NONE is *_from_config-reachable, NONE is a ctx.config read in the shared runner (the three pre-existing paths genuinely miss them)', () => {
     const { declared } = declaredConfigVars(EP_STEP);
     for (const v of EP_LIBRARY_VARS) expect(declared, `${v} is no longer declared — the fixture premise is stale`).toContain(v);
     const computeReads = configReadsIn(path.join(REPO_ROOT, `${COMPUTE_DIR}/enrich-parcels.js`));
@@ -1894,10 +1904,13 @@ describe('pilot 9 commit 9 — library-consumed tunables (EP-D17: configValues.<
     }
   });
 
-  it('GREEN — the widening credits exactly the three: (a) the two configValues.<x> reads in scripts/lib/step/index.js, (b) parcels_maintenance_timeout_minutes derived from the declared execution.maintenance[] entry', () => {
+  it('GREEN — the widening credits exactly the two: (a) the configValues.<x> read in scripts/lib/step/index.js, (b) parcels_maintenance_timeout_minutes derived from the declared execution.maintenance[] entry', () => {
     const lib = libraryConsumedVars(EP_STEP);
     for (const v of EP_LIBRARY_VARS) expect(lib, `libraryConsumedVars misses ${v}`).toContain(v);
-    expect(sharedRunnerConfigValuesReads()).toEqual(expect.arrayContaining(['step_post_check_statement_timeout_minutes', 'step_post_check_concurrency']));
+    expect(sharedRunnerConfigValuesReads()).toEqual(expect.arrayContaining(['step_post_check_statement_timeout_minutes']));
+    // R-EB (a): the concurrency is read from the runner's own values, never configValues / ctx.config.
+    expect(sharedRunnerConfigValuesReads()).not.toContain('step_post_check_concurrency');
+    expect(declaredConfigVars(EP_STEP).declared).not.toContain('step_post_check_concurrency');
     const { slug, declared } = declaredConfigVars(EP_STEP);
     const findings = configFindings(EP_STEP, slug, declared);
     expect(findings, findings.join('\n')).toEqual([]);

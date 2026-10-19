@@ -95,6 +95,12 @@ const WRITTEN_BY_STEP = 'step';
  * `IS DISTINCT FROM` guard (the guard compares only what the update can change).
  */
 const WRITTEN_INSERT_ONLY = 'insert_only';
+/**
+ * RE-FREEZE #37 (Spec 124 R-DZ) — the fourth `columns[].written` value. A "seen" column is bound to the
+ * runner clock (`run_at`), inserted, set on conflict, EXCLUDED from the guard, and touched for every fed
+ * key whose row the guard skipped (`touch_sql`, run per slice by executeWrite after the upsert).
+ */
+const WRITTEN_SEEN = 'seen';
 
 /** Default SQL type for the departure DELETE's key array cast. */
 const DEFAULT_KEY_SQL_TYPE = 'BIGINT';
@@ -662,9 +668,12 @@ function keyColumns(writeSpec) {
  * target writes a flag or a zero. Anything else throws at plan time rather than
  * producing a statement whose meaning depends on quoting.
  */
-function sqlLiteral(value) {
+function sqlLiteral(value, opts) {
   if (value === true || value === false || value === null) return String(value);
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  // RE-FREEZE #37 (Spec 124 R-EA): the ESCAPED string arm, opt-in. Only the set_null_unless codegen asks for
+  // it (a vocabulary constant, e.g. 'Inspection'); every set_value caller keeps the closed refusal below.
+  if (opts && opts.allowString === true && typeof value === 'string') return `'${value.replace(/'/g, "''")}'`;
   throw new Error('[write_discipline] columns[].set_value must be a boolean, a finite number or null for a '
     + `set-based mechanic (got ${JSON.stringify(value)}). A string constant is an injection surface and has `
     + 'no measured use; declare the value the generator can render safely.');
@@ -699,9 +708,12 @@ function retractionFires(plan, mode) {
  * @param {object} writeSpec - one `outputs.writes[]` entry
  * @param {object} descriptor
  */
-function buildWritePlan(writeSpec, descriptor) {
+function buildWritePlan(writeSpec, descriptor, opts = {}) {
   const table = writeSpec.table;
   const keys = keyColumns(writeSpec);
+  // RE-FREEZE #37 (Spec 124 R-DY (c)): the conflict target probed from a declared conflict_index
+  // (probeConflictIndex's pg_get_indexdef expressions). Absent = the key columns, byte-identical.
+  const conflictTarget = Array.isArray(opts.conflictTarget) && opts.conflictTarget.length > 0 ? opts.conflictTarget : keys;
   const retract = writeSpec.retract || 'none';
   // `retract_when` is the LINK pilot's C3 pre-pull: the `retract` enum is x-frozen, so
   // the qualifier is a sibling. Absent = "always", which is byte-for-byte the class-B
@@ -719,10 +731,17 @@ function buildWritePlan(writeSpec, descriptor) {
   // the `DO UPDATE SET` clause, the guard and any plan-shape summary are built from.
   const stepColumns = writeSpec.columns.filter(
     (c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_BY_STEP
-      || (c.written || WRITTEN_BY_STEP) === WRITTEN_INSERT_ONLY,
+      || (c.written || WRITTEN_BY_STEP) === WRITTEN_INSERT_ONLY
+      || c.written === WRITTEN_SEEN,
   );
   const defaulted = writeSpec.columns.filter((c) => (c.written || WRITTEN_BY_STEP) !== WRITTEN_BY_STEP
-    && (c.written || WRITTEN_BY_STEP) !== WRITTEN_INSERT_ONLY);
+    && (c.written || WRITTEN_BY_STEP) !== WRITTEN_INSERT_ONLY && c.written !== WRITTEN_SEEN);
+  // R-DZ: the (at most one) runner-clock seen column — bound and SET like a step column, never guarded.
+  const seenColumns = writeSpec.columns.filter((c) => c.written === WRITTEN_SEEN).map((c) => c.name);
+  if (seenColumns.length > 1) {
+    throw new Error(`[write_discipline] ${table}: ${seenColumns.length} columns declare written "seen" (${seenColumns.join(', ')}); at most one per target (Spec 124 R-DZ).`);
+  }
+  const seenColumn = seenColumns[0] || null;
   // Declared `insert_only` — seeded on INSERT, excluded from the SET/guard below.
   const insertOnly = writeSpec.columns.filter(
     (c) => (c.written || WRITTEN_BY_STEP) === WRITTEN_INSERT_ONLY,
@@ -734,7 +753,7 @@ function buildWritePlan(writeSpec, descriptor) {
   // D-5-shaped trap (a guard over a column the step does not own) becomes structurally
   // unreachable rather than a validator finding.
   const changeableStepColumnNames = stepColumnNames.filter((c) => !insertOnlySet.has(c));
-  const guardColumns = resolveGuardColumns(writeSpec, changeableStepColumnNames);
+  const guardColumns = resolveGuardColumns(writeSpec, changeableStepColumnNames.filter((c) => c !== seenColumn));
   const updateColumns = changeableStepColumnNames.filter((c) => !keys.includes(c));
   const keyType = writeSpec.key_sql_type || DEFAULT_KEY_SQL_TYPE;
   const scope = writeSpec.write_discipline.scope !== 'none' ? writeSpec.write_discipline.scope : null;
@@ -844,7 +863,16 @@ function buildWritePlan(writeSpec, descriptor) {
   // `parcel_buildings`'s real conflict target `(parcel_id, building_id)` be declared at
   // all. Widening it silently would be the failure the original throw guarded against:
   // a scoped DELETE that retracts by half a key.
-  if (keys.length > 1 && (retract === 'departed' || retract === 'departed_mark')) {
+  // RE-FREEZE #37 (Spec 124 R-EG (5)): on a LINK (execution.shape "link") `retract: "departed"` is the vanished-lead
+  // sweep, which retracts by the LEADING key on purpose (a lead none of whose links was derived this run), so the
+  // half-a-key refusal below does not apply to it. Its statement is `link_departed_sql`, never `delete_sql`.
+  const linkDeparted = retract === 'departed' && !!(descriptor.execution && descriptor.execution.shape === 'link');
+  if (linkDeparted && (!writeSpec.write_discipline || !writeSpec.write_discipline.scope || writeSpec.write_discipline.scope === 'none')) {
+    throw new Error(`[write_discipline] ${table}: retract "departed" on a LINK target needs a write_discipline.scope (Spec 124 R-EG (5)): `
+      + 'the sweep deletes rows of the scope whose leading key no row of this run derived; unscoped it would delete every '
+      + 'other family\'s rows of a shared table.');
+  }
+  if (!linkDeparted && keys.length > 1 && (retract === 'departed' || retract === 'departed_mark')) {
     throw new Error(`[write_discipline] ${table}: retract "${retract}" is not supported on a composite key `
       + `(declared key: ${keys.join(', ')}). The departure DELETE casts a SINGLE key array `
       + `(<key> <> ALL($1::${keyType}[])), which cannot express a tuple — it would retract by half a key. `
@@ -918,7 +946,9 @@ function buildWritePlan(writeSpec, descriptor) {
   // existing constant-SET target and only opts a target OUT of codegen when the
   // descriptor says so explicitly — the compute authors the real UPDATE text
   // (`buildFullRecomputeSql`) and the runner executes it via `executeGuardedUpdate`.
-  if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class) && writeSpec.write_discipline.set_source === 'compute') {
+  // RE-FREEZE #37 (Spec 124 R-EH): a set_based_scoped target with rows "compute" is the ROWS arm's G write — its
+  // keyed UPDATE is generated per batch by buildKeyedUpdateFromRowsSql (catalog types), so the plan is descriptive here.
+  if (SET_BASED_CLASSES.has(writeSpec.write_discipline.class) && (writeSpec.write_discipline.set_source === 'compute' || writeSpec.write_discipline.rows === 'compute')) {
     return {
       table,
       keys,
@@ -1242,6 +1272,15 @@ function buildWritePlan(writeSpec, descriptor) {
   const invalidatesSetArms = invalidatesHere.map(
     (e) => `${e.column} = CASE WHEN ${changeOfComparison(e.set_null_on_change_of)} THEN NULL ELSE ${table}.${e.column} END`,
   );
+  // RE-FREEZE #37 (Spec 124 R-EA) — by "set_null_unless": clear the column unless the INCOMING value of a
+  // step-written column equals a declared vocabulary constant. NO guard term: the arm fires only on rows
+  // the guard updates (legacy load-permits.js:363). The constant is an escaped literal (sqlLiteral opt-in).
+  const invalidatesUnless = (descriptor.outputs && Array.isArray(descriptor.outputs.invalidates)
+    ? descriptor.outputs.invalidates : [])
+    .filter((e) => e.table === table && e.by === 'set_null_unless' && e.set_null_unless);
+  const unlessSetArms = invalidatesUnless.map(
+    (e) => `${e.column} = CASE WHEN EXCLUDED.${e.set_null_unless.column} IS DISTINCT FROM ${sqlLiteral(e.set_null_unless.equals, { allowString: true })} THEN NULL ELSE ${table}.${e.column} END`,
+  );
   // A watched column must be LIVE in the change-detection guard for its own CASE arm to
   // ever run on a conflict — folded in here, deduplicated against the declared
   // `guard_columns` (never double-clause a column declared both ways), placed FIRST
@@ -1251,9 +1290,13 @@ function buildWritePlan(writeSpec, descriptor) {
     .filter((w) => !guardColumns.includes(w));
 
   const head = `INSERT INTO ${table} (${stepColumnNames.join(', ')})\nVALUES `;
-  const tail = `\nON CONFLICT (${keys.join(', ')}) DO UPDATE SET `
-    + `${[...updateColumns.map(columnSetExpr), ...invalidatesSetArms].join(', ')}\n`
-    + `  WHERE ${[...changeOfGuardColumns.map(changeOfComparison), ...guardColumns.filter((c) => !carried.has(c)).map(columnGuardExpr)].join('\n     OR ')}\n`
+  const tail = `\nON CONFLICT (${conflictTarget.join(', ')}) DO UPDATE SET `
+    + `${[...updateColumns.map(columnSetExpr), ...invalidatesSetArms, ...unlessSetArms].join(', ')}\n`
+    // RE-FREEZE #37 (Spec 124 R-EH): guard "none" (declared, why'd, grandfathered) renders DO UPDATE with no WHERE —
+    // the generated form of an unguarded upsert. Every guarded target renders the WHERE exactly as before.
+    + (writeSpec.write_discipline.guard === 'none' && changeOfGuardColumns.length === 0
+      ? ''
+      : `  WHERE ${[...changeOfGuardColumns.map(changeOfComparison), ...guardColumns.filter((c) => !carried.has(c)).map(columnGuardExpr)].join('\n     OR ')}\n`)
     + (defaulted.length > 0
       ? `-- declared but never written by this step (DB default): ${defaulted.map((c) => c.name).join(', ')}\n`
       : '')
@@ -1293,6 +1336,16 @@ function buildWritePlan(writeSpec, descriptor) {
     // a plan-shape summary (write_inventory) can list which stamps this UPDATE may null
     // and which column change fires each one, without re-deriving it from the SQL text.
     invalidated_on_change: invalidatesHere.map((e) => ({ column: e.column, watched: e.set_null_on_change_of })),
+    // R-EA: the executed set_null_unless clears — present only when declared, so every other plan is unchanged.
+    ...(invalidatesUnless.length ? { invalidated_unless: invalidatesUnless.map((e) => ({ column: e.column, unless: { column: e.set_null_unless.column, equals: e.set_null_unless.equals } })) } : {}),
+    // R-DZ: the seen column and its per-slice touch (typed full-key UNNEST arrays; key types from the
+    // catalog when the runner passes them, else the declared key_sql_type). Present only when declared.
+    ...(seenColumn ? {
+      seen_column: seenColumn,
+      touch_sql: `UPDATE ${table} AS t SET ${seenColumn} = $1 FROM UNNEST(${keys.map((k, i) => `$${i + 2}::${(Array.isArray(opts.keyTypes) && opts.keyTypes[i]) || keyType}[]`).join(', ')}) AS v(${keys.join(', ')}) `
+        + `WHERE ${keys.map((k) => `t.${k} = v.${k}`).join(' AND ')} AND t.${seenColumn} IS DISTINCT FROM $1;`,
+    } : {}),
+    ...(conflictTarget !== keys ? { conflict_target: conflictTarget } : {}),
     // The columns bound as WKB. The validation phase writes its output under THESE
     // names, so the row objects it produces are already keyed the way `bindRow`
     // reads them — the alternative is a hand-maintained rename between two phases,
@@ -1336,7 +1389,10 @@ function buildWritePlan(writeSpec, descriptor) {
     // rebuild, bounded by `write_discipline.scope`, and fired only when `retract_when`
     // says so (`full_only` ⇒ only in full mode). `none` generates no statement at all,
     // rather than a statement the runner remembers not to call.
-    delete_sql: retract === 'departed'
+    // R-EG (5): the LINK vanished-lead sweep — scoped, and disjoint by construction from every leading key this run
+    // derived ($1), so it can never delete a row the run re-asserts (legal under full_rescan, unlike retract "all").
+    ...(linkDeparted ? { link_departed_sql: `DELETE FROM ${table} WHERE (${scope}) AND ${keys[0]} <> ALL($1::${keyType}[]);` } : {}),
+    delete_sql: retract === 'departed' && !linkDeparted
       ? `DELETE FROM ${table} WHERE ${keys[0]} <> ALL($1::${keyType}[]);`
       : (retract === 'all'
         // The ONE `retract:"all"` + no-scope shape that reaches here is class C, whose
@@ -1530,9 +1586,71 @@ async function validateGeometries(pool, plan, features, classify, { log, tag }) 
  * @returns {Promise<object>} the `ctx.written` block — the counters every
  *   write-discipline check reads, including `rows_scanned` / `rows_changed`.
  */
+/**
+ * RE-FREEZE #37 (Spec 124 R-DY (a)(1)) — the runner-owned prior-state read of ONE slice's keys from the
+ * primary table, issued inside the write transaction BEFORE the primary upsert. Typed full-key UNNEST
+ * arrays (key types from the catalog, R-CX (ii)), prior_columns declared in inputs.reads.tables (R-DY (b)).
+ * @param {{from: string, keys: string[], keyTypes: string[], priorColumns: string[]}} spec
+ * @returns {{sql: string, keys: string[], keyTypes: string[], priorColumns: string[]}}
+ */
+function buildPriorReadSql({ from, keys, keyTypes, priorColumns }) {
+  if (!Array.isArray(keys) || keys.length === 0 || !Array.isArray(keyTypes) || keyTypes.length !== keys.length) {
+    throw new Error(`[derive] ${from}: the prior read needs one resolved SQL type per key column (keys ${JSON.stringify(keys)}, types ${JSON.stringify(keyTypes)})`);
+  }
+  const cols = [...new Set([...keys, ...(priorColumns || [])])];
+  const sql = `SELECT ${cols.map((c) => `f.${c}`).join(', ')} FROM ${from} AS f JOIN UNNEST(${keys.map((k, i) => `$${i + 1}::${keyTypes[i]}[]`).join(', ')}) AS v(${keys.join(', ')}) ON ${keys.map((k) => `f.${k} = v.${k}`).join(' AND ')};`;
+  return { sql, keys: [...keys], keyTypes: [...keyTypes], priorColumns: [...(priorColumns || [])] };
+}
+
+/** A declared conflict_index that the catalog cannot back (Spec 124 R-DY (c)); the run fails, status failed_missing_precondition. */
+class ConflictIndexError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ConflictIndexError';
+    this.status = 'failed_missing_precondition';
+  }
+}
+
+const CONFLICT_INDEX_PROBE_SQL = `SELECT i.indisunique AS is_unique, (i.indpred IS NOT NULL) AS is_partial, t.relname AS table_name,
+       ARRAY(SELECT pg_get_indexdef(i.indexrelid, k, true) FROM generate_series(1, i.indnkeyatts) AS k ORDER BY k) AS exprs
+  FROM pg_index i
+  JOIN pg_class ic ON ic.oid = i.indexrelid
+  JOIN pg_class t ON t.oid = i.indrelid
+  JOIN pg_namespace n ON n.oid = ic.relnamespace
+ WHERE ic.relname = $1 AND n.nspname = 'public';`;
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-DY (c)) — the conflict_index catalog probe, run BEFORE any hook. The index must
+ * exist, sit on `table`, be UNIQUE and not partial; its key expressions (pg_get_indexdef per key column,
+ * pretty) become the ON CONFLICT target. The index is the one truth: no SQL expression lives in the
+ * descriptor. Any other answer throws ConflictIndexError (failed_missing_precondition).
+ * @returns {Promise<{name: string, expressions: string[]}>}
+ */
+async function probeConflictIndex(pool, table, indexName) {
+  const { rows } = await pool.query(CONFLICT_INDEX_PROBE_SQL, [indexName]);
+  const row = rows && rows[0];
+  const where = `[write_discipline] ${table}: write_discipline.conflict_index "${indexName}"`;
+  if (!row) throw new ConflictIndexError(`${where} was not found in pg_index (schema public) — create the unique index first (Spec 124 R-DY (c)).`);
+  if (row.table_name !== table) throw new ConflictIndexError(`${where} is an index on "${row.table_name}", not on "${table}".`);
+  if (row.is_unique !== true) throw new ConflictIndexError(`${where} is not unique; ON CONFLICT needs a unique arbiter.`);
+  if (row.is_partial === true) throw new ConflictIndexError(`${where} is a partial index; ON CONFLICT cannot infer it without its predicate.`);
+  const expressions = Array.isArray(row.exprs) ? row.exprs.map(String) : [];
+  if (expressions.length === 0) throw new ConflictIndexError(`${where} reported no key columns.`);
+  return { name: indexName, expressions };
+}
+
 async function executeWrite(pool, {
-  plan, writeSpec, carried, columnValues, shouldSkipDelete, retireMaxPct, log, tag,
+  plan, writeSpec, carried, columnValues, shouldSkipDelete, retireMaxPct, log, tag, runAt, derived,
 }) {
+  // R-DZ: a seen column is stamped with the runner clock, never a fallback.
+  if (plan.touch_sql && !(runAt instanceof Date)) {
+    throw new Error(`[write_discipline] ${plan.table}: written "seen" column "${plan.seen_column}" needs the runner clock (runAt) — Spec 124 R-DZ.`);
+  }
+  let touched = 0;
+  // R-DY / R-DM: counters per derived target, written.e<i>.{inserted, updated, errors}.
+  const derivedCounters = derived
+    ? Object.fromEntries(derived.targets.map((t) => [`e${t.index}`, { inserted: 0, updated: 0, errors: 0 }]))
+    : null;
   const keyColumn = plan.keys[0];
   const loadedKeys = carried.map((r) => r[keyColumn]);
   let inserted = 0;
@@ -1554,12 +1672,54 @@ async function executeWrite(pool, {
   await pipeline.withTransaction(pool, async (client) => {
     for (let i = 0; i < carried.length; i += batchSize) {
       const slice = carried.slice(i, i + batchSize);
+      // R-DY (a)(1): the slice's prior state, read BEFORE the upsert overwrites it (same transaction).
+      let priorByKey = null;
+      if (derived) {
+        const pr = await client.query(derived.prior.sql, derived.prior.keys.map((k) => slice.map((r) => r[k])));
+        priorByKey = new Map((pr.rows || []).map((r) => [derived.keyOf(r), r]));
+      }
       const values = [];
       for (const row of slice) values.push(...plan.bindRow(columnValues(row)));
       const result = await client.query(plan.upsertSqlFor(slice.length), values);
       const ins = result.rows.filter((r) => r.is_insert).length;
       inserted += ins;
       updated += result.rows.length - ins;
+      // R-DZ: touch every fed key the guard skipped (rows already at run_at are excluded by the statement).
+      if (plan.touch_sql) {
+        const tr = await client.query(plan.touch_sql, [runAt, ...plan.keys.map((k) => slice.map((r) => r[k]))]);
+        touched += tr.rowCount || 0;
+      }
+      // R-DY (a)(4)-(5): the pure deriveRows, then each derived target's generated plan; R-DM savepoint.
+      if (derived) {
+        for (const t of derived.targets) {
+          const rows = derived.deriveRows(t.plan.table, slice, priorByKey);
+          if (!Array.isArray(rows)) throw new Error(`[derive] ${t.plan.table}: deriveRows must return an array of rows (got ${typeof rows}).`);
+          if (rows.length === 0) continue;
+          const c = derivedCounters[`e${t.index}`];
+          if (t.onError === 'warn_row') {
+            const sp = `sp_e${t.index}`;
+            await client.query(`SAVEPOINT ${sp}`);
+            let r = null;
+            try {
+              r = await executeUpsertBatch(client, t.plan, rows);
+            } catch (err) {
+              // A failed ROLLBACK TO SAVEPOINT rethrows by itself (the transaction is already aborted).
+              await client.query(`ROLLBACK TO SAVEPOINT ${sp}`);
+              c.errors += 1;
+              log.warn(tag, `derived write e${t.index} (${t.plan.table}) failed and was rolled back to its savepoint under on_error "warn_row" (written.e${t.index}.errors): ${err.message}`);
+            }
+            if (r) {
+              await client.query(`RELEASE SAVEPOINT ${sp}`);
+              c.inserted += r.inserted;
+              c.updated += r.updated;
+            }
+          } else {
+            const r = await executeUpsertBatch(client, t.plan, rows);
+            c.inserted += r.inserted;
+            c.updated += r.updated;
+          }
+        }
+      }
     }
     // Three-way gate. ARM 1 — class A (`retract: "none"`): the plan carries NO
     // `delete_sql`, so there is nothing to retract: no statement, no warn, and
@@ -1650,6 +1810,9 @@ async function executeWrite(pool, {
     // is the axis's own switch), so every other plan's `ctx.written` block is byte-identical
     // to the pre-fold one (SR12 pins the absence of `retired` on the retract-none target).
     ...(plan.mark_sql ? { retired, unretired, retire_candidates: retireCandidates, retire_pct: retirePct, retire_suppressed_mass_guard: retireSuppressedMassGuard, retire_skipped_empty_guard: retireSkippedEmptyGuard, retire_max_pct: retireMaxPct } : {}),
+    // RE-FREEZE #37 — present only when declared, so every other plan's ctx.written is byte-identical.
+    ...(plan.touch_sql ? { touched } : {}),
+    ...(derivedCounters || {}),
   };
 }
 
@@ -1683,6 +1846,70 @@ function buildBeforeImageSelectSql(plan) {
   if (!plan.scope) return null;
   const columns = [...new Set([...(plan.keys || []), ...(plan.step_columns || [])])];
   return { sql: `SELECT ${columns.join(', ')} FROM ${plan.table} WHERE ${plan.scope}`, columns };
+}
+
+/** A catalog data_type the ROWS-arm UNNEST / ANY casts can render; anything else is refused (R-CX (ii), the R-DY key-type form). */
+function castableType(type, where) {
+  if (typeof type !== 'string' || type === '' || type === 'USER-DEFINED' || type === 'ARRAY') {
+    throw new Error(`[write_discipline] ${where}: the catalog returned ${JSON.stringify(type)}, which the generated statement cannot cast as a typed array (Spec 124 R-EH; R-CX (ii)).`);
+  }
+  return type;
+}
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-EH) — the ROWS arm's F write: the generated keyed replace of a link_full_retraction target
+ * with retract "replace_keys". `$1` = the keys the compute names (replace_keys.e<i>), `$2` = the key_prefix when
+ * declared. Returns the DELETE and its before-image SELECT (the same predicate, the same binds).
+ * @param {object} writeSpec @param {string} keyType - the catalog data_type of key[0]
+ */
+function buildReplaceKeysSql(writeSpec, keyType) {
+  const table = writeSpec.table;
+  const keys = Array.isArray(writeSpec.key) ? writeSpec.key : [writeSpec.key];
+  const kp = writeSpec.write_discipline && writeSpec.write_discipline.key_prefix;
+  const where = `${keys[0]} = ANY($1::${castableType(keyType, `${table}.${keys[0]}`)}[])${kp ? ` AND starts_with(${kp.column}, $2)` : ''}`;
+  const columns = [...new Set([...keys, ...(writeSpec.columns || []).filter((c) => (c.written || 'step') === 'step').map((c) => c.name)])];
+  return {
+    delete_sql: `DELETE FROM ${table} WHERE ${where};`,
+    before_image_sql: `SELECT ${columns.join(', ')} FROM ${table} WHERE ${where}`,
+    binds: (replaceKeys) => (kp ? [replaceKeys, kp.prefix] : [replaceKeys]),
+  };
+}
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-EH) — the ROWS arm's G write: a generated keyed UPDATE from compute rows of a
+ * set_based_scoped target with rows "compute". One typed array per column (catalog types), key column(s) first.
+ * guard "is_distinct_from" adds `AND (t.<c> IS DISTINCT FROM v.<c> OR …)` over the declared guard_columns.
+ * @param {object} writeSpec @param {Record<string,string>} types - column -> catalog data_type
+ * @returns {{sql: string, columns: string[]}}
+ */
+function buildKeyedUpdateFromRowsSql(writeSpec, types) {
+  const table = writeSpec.table;
+  const keys = Array.isArray(writeSpec.key) ? writeSpec.key : [writeSpec.key];
+  const cols = (writeSpec.columns || []).filter((c) => (c.written || 'step') === 'step').map((c) => c.name);
+  const setCols = cols.filter((c) => !keys.includes(c));
+  const columns = [...keys, ...setCols];
+  const arrays = columns.map((c, i) => `$${i + 1}::${castableType(types[c], `${table}.${c}`)}[]`);
+  const wd = writeSpec.write_discipline || {};
+  // guard_columns "all_declared" expands to the set columns that are not runner-clock columns (a clock column is never
+  // guarded — LG-9); an explicit list is used as declared (panel round 1: never silently unguarded).
+  const clock = new Set((writeSpec.columns || []).filter((c) => c.source === 'run_at').map((c) => c.name));
+  const guardCols = wd.guard !== 'is_distinct_from' ? []
+    : (Array.isArray(wd.guard_columns) ? wd.guard_columns : setCols.filter((c) => !clock.has(c)));
+  const guard = guardCols.length ? ` AND (${guardCols.map((c) => `t.${c} IS DISTINCT FROM v.${c}`).join(' OR ')})` : '';
+  const sql = `UPDATE ${table} AS t SET ${setCols.map((c) => `${c} = v.${c}`).join(', ')} `
+    + `FROM UNNEST(${arrays.join(', ')}) AS v(${columns.join(', ')}) `
+    + `WHERE ${keys.map((k) => `t.${k} = v.${k}`).join(' AND ')}${guard};`;
+  return { sql, columns };
+}
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-EG (5)) — the before-image SELECT of the LINK vanished-lead sweep: the SAME predicate as
+ * `plan.link_departed_sql`, bound with the same `$1` (every leading key this run derived). null when not declared.
+ */
+function linkDepartedBeforeImageSql(plan) {
+  if (!plan || !plan.link_departed_sql) return null;
+  const columns = [...new Set([...(plan.keys || []), ...(plan.step_columns || [])])];
+  return plan.link_departed_sql.replace(/^DELETE FROM /, `SELECT ${columns.join(', ')} FROM `).replace(/;$/, '');
 }
 
 /**
@@ -2250,6 +2477,9 @@ module.exports = {
   retractionFires,
   buildBeforeImageSelectSql,
   writeBeforeImage,
+  linkDepartedBeforeImageSql,
+  buildReplaceKeysSql,
+  buildKeyedUpdateFromRowsSql,
   persistBeforeImageRows,
   executeSetBasedClear,
   executeUpsertBatch,
@@ -2302,4 +2532,10 @@ module.exports = {
   assertWritePrivileges,
   validateGeometries,
   executeWrite,
+  // RE-FREEZE #37 (Spec 124 R-DY, R-DZ)
+  WRITTEN_SEEN,
+  buildPriorReadSql,
+  probeConflictIndex,
+  ConflictIndexError,
+  CONFLICT_INDEX_PROBE_SQL,
 };

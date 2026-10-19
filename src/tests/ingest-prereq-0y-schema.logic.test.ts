@@ -489,18 +489,20 @@ describe('INGESTOR prerequisite 0y — ckan_datastore + ckan + trigger style + s
     ).toBe(true);
   });
 
-  it('0y-T2(10) — Y-I1 (I-A7): `ckan_datastore` requires `target`', () => {
+  // RE-FREEZE #37 (Spec 124 R-DX (ii)) deleted Y-I1's `target` clause with its runtime twin Y4: one
+  // targetless CKAN primary is a first-class single-primary INGESTOR, so the schema no longer requires it.
+  it('0y-T2(10) — Y-I1 (I-A7, amended by RE-FREEZE #37 R-DX (ii)): `ckan_datastore` no longer requires `target`', () => {
     const d = withExternals((externals) => {
       const base = externals[0];
       expect(base, 'the T1 fixture must carry a first (base) external to reshape').toBeDefined();
       if (!base) throw new Error('Z3() must expose a first external to mutate');
       delete base.target;
     });
-    expect(validate(d), 'the arm exists for the multi-primary binding; an untargeted primary has no write target').toBe(false);
+    validate(d);
     expect(
       errAt(validate.errors, { keyword: 'required', instancePath: PATHS.base, params: { missingProperty: 'target' } }),
-      `expected the Y-I1 required/target error at ${PATHS.base}: ${errText(validate.errors)}`,
-    ).toBe(true);
+      `no Y-I1 required/target error at ${PATHS.base}: ${errText(validate.errors)}`,
+    ).toBe(false);
   });
 
   it('0y-T2(11) — GR-2 ABSENT CASES: no `on_head_error`, and `skip_scope` with no `ckan_metadata` trigger, are both VALID', () => {

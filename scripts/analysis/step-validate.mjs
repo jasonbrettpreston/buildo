@@ -5903,10 +5903,13 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
   if (!hasInvariants && !hasPlausibility) return null;
   const { runInvariants, runPlausibility } = require(path.join(REPO_ROOT, 'scripts/lib/step/plausibility.js'));
   const pool = getDataValidatorPool();
+  // Spec 124 R-EB (a): the batch width is the runner-owned step_post_check_concurrency (no `: 4` fallback).
+  const { resolveRunnerVariables } = require(path.join(REPO_ROOT, 'scripts/lib/step/config.js'));
+  const { step_post_check_concurrency: concurrency } = await resolveRunnerVariables(pool, 'step-validate --write');
   const results = [];
   for (const frequency of ['every_run', 'validate_only']) {
-    const invRun = hasInvariants ? await runInvariants(pool, d, { frequency, when: null }) : { checks: [], observations: {} };
-    const plRun = hasPlausibility ? await runPlausibility(pool, d, { frequency, when: null }) : { checks: [], observations: {} };
+    const invRun = hasInvariants ? await runInvariants(pool, d, { frequency, when: null, concurrency }) : { checks: [], observations: {} };
+    const plRun = hasPlausibility ? await runPlausibility(pool, d, { frequency, when: null, concurrency }) : { checks: [], observations: {} };
     for (const check of [...invRun.checks, ...plRun.checks]) {
       const obs = invRun.observations[check.id] ?? plRun.observations[check.id];
       const verdict = obs && obs.error

@@ -438,6 +438,121 @@ function assertMaterialityDeclared(descriptor, findings) {
 }
 
 /**
+ * RE-FREEZE #37 (Spec 124 R-DY, R-DM, R-DZ, R-EA) — the cross-field rules of the four library forms
+ * that AJV cannot express. Every refusal names the field and the index, before any I/O (R-BA).
+ *   derive        (R-DY): only on an INGESTOR, only at outputs.writes[i >= 1], from === writes[0].table,
+ *                 prior_columns ⊆ inputs.reads.tables[<from>].columns (a declared self-read).
+ *   on_error      (R-DM): "warn_row" only on a derived target; on_error_why.liveness cites a declared
+ *                 check {kind:"check", ref} of severity WARN bounded at exact zero ("viol == 0").
+ *   written "seen" (R-DZ): at most one per target, never a key, never an explicit guard column.
+ *   set_null_unless (R-EA): the entry's table is a declared write target and set_null_unless.column is a
+ *                 written:"step" column of it.
+ */
+function assertRefreeze37Forms(descriptor, findings) {
+  const outputs = descriptor.outputs;
+  if (!outputs || outputs === 'none' || !Array.isArray(outputs.writes)) return;
+  const writes = outputs.writes;
+  const archetype = descriptor.identity && descriptor.identity.archetype;
+  const reads = descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.tables)
+    ? descriptor.inputs.reads.tables : [];
+  const checks = Array.isArray(descriptor.checks) ? descriptor.checks : [];
+  writes.forEach((w, i) => {
+    const at = `  /outputs/writes/${i}`;
+    if (w.derive) {
+      if (i === 0) findings.push(`${at}: derive is not legal on the primary write (writes[0]); a derived target follows it (R-DY)`);
+      if (archetype !== 'INGESTOR') findings.push(`${at}: derive is legal only on an INGESTOR (identity.archetype is ${JSON.stringify(archetype)}) (R-DY)`);
+      if (i > 0 && w.derive.from !== writes[0].table) {
+        findings.push(`${at}: derive.from "${w.derive.from}" must equal outputs.writes[0].table "${writes[0].table}" — the prior state is the primary's (R-DY)`);
+      }
+      const declared = reads.filter((r) => r && r.table === w.derive.from).flatMap((r) => (Array.isArray(r.columns) ? r.columns : []));
+      const missing = (w.derive.prior_columns || []).filter((c) => !declared.includes(c));
+      if (missing.length) {
+        findings.push(`${at}: derive.prior_columns [${missing.join(', ')}] are not declared in inputs.reads.tables["${w.derive.from}"].columns — the prior read is a declared self-read (R-DY (b))`);
+      }
+    }
+    if (w.on_error === 'warn_row') {
+      if (!w.derive) findings.push(`${at}: on_error "warn_row" is legal only on a derived target (derive declared); a primary failure stays fatal (R-DM)`);
+      const live = w.on_error_why && w.on_error_why.liveness;
+      if (!live || live === 'none' || live.kind !== 'check') {
+        findings.push(`${at}: on_error "warn_row" needs on_error_why.liveness {kind:"check", ref} naming the WARN check that reads written.e${i}.errors (R-DM)`);
+      } else {
+        const c = checks.find((x) => x && x.id === live.ref);
+        if (!c) findings.push(`${at}: on_error_why cites check "${live.ref}", which is not a declared checks[].id (R-DM)`);
+        else if (c.severity !== 'WARN' || String(c.limit).replace(/\s+/g, ' ').trim() !== 'viol == 0') {
+          findings.push(`${at}: on_error_why cites check "${live.ref}" (severity ${c.severity}, limit ${JSON.stringify(c.limit)}); it must be a WARN check bounded at exact zero "viol == 0" (R-DM)`);
+        }
+      }
+    }
+    const seen = (w.columns || []).filter((c) => c.written === 'seen').map((c) => c.name);
+    if (seen.length > 1) findings.push(`${at}: ${seen.length} columns declare written "seen" (${seen.join(', ')}); at most one per target (R-DZ)`);
+    const keys = Array.isArray(w.key) ? w.key : [w.key];
+    const guard = w.write_discipline && Array.isArray(w.write_discipline.guard_columns) ? w.write_discipline.guard_columns : [];
+    for (const name of seen) {
+      if (keys.includes(name)) findings.push(`${at}: the written "seen" column "${name}" is a key column (R-DZ)`);
+      if (guard.includes(name)) findings.push(`${at}: the written "seen" column "${name}" is listed in guard_columns; a seen column is never guarded (R-DZ)`);
+    }
+  });
+  const invalidates = Array.isArray(outputs.invalidates) ? outputs.invalidates : [];
+  invalidates.forEach((e, i) => {
+    if (!e || e.by !== 'set_null_unless' || !e.set_null_unless) return;
+    const target = writes.find((w) => w.table === e.table);
+    const col = target && (target.columns || []).find((c) => c.name === e.set_null_unless.column);
+    if (!target || !col || (col.written || 'step') !== 'step') {
+      findings.push(`  /outputs/invalidates/${i}: set_null_unless.column "${e.set_null_unless.column}" must be a written:"step" column of the write target "${e.table}" (R-EA)`);
+    }
+  });
+}
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-EH, wave-4 Q-MZ) — the cross-target rules of the MATERIALIZER ROWS arm that AJV cannot
+ * express. Returns the findings (each names the field and the index), so a test can read them without AJV.
+ *   materialize_form "rows": materialize_source declared, its table one of inputs.reads.tables and never a lookup;
+ *   retract "replace_keys": class link_full_retraction, under "rows", immediately followed by a guarded_upsert on the
+ *                 same table;
+ *   write_discipline.rows "compute": class set_based_scoped, under "rows";
+ *   key_prefix: under "rows", on a key column of its target.
+ */
+function materializeRowsFindings(descriptor) {
+  const findings = [];
+  const e = descriptor.execution && typeof descriptor.execution === 'object' ? descriptor.execution : {};
+  const rowsForm = e.materialize_form === 'rows';
+  const reads = descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.tables)
+    ? descriptor.inputs.reads.tables : [];
+  if (rowsForm) {
+    const src = e.materialize_source;
+    if (!src) findings.push('  /execution: materialize_form "rows" requires execution.materialize_source (R-EH)');
+    else {
+      const read = reads.find((r) => r && r.table === src.table);
+      if (!read) findings.push(`  /execution/materialize_source: table "${src.table}" is not one of inputs.reads.tables (R-EH)`);
+      else if (read.role === 'lookup') findings.push(`  /execution/materialize_source: table "${src.table}" is declared role "lookup"; the source is paged, a lookup is read once (R-EH)`);
+    }
+  }
+  const writes = descriptor.outputs && descriptor.outputs !== 'none' && Array.isArray(descriptor.outputs.writes) ? descriptor.outputs.writes : [];
+  writes.forEach((w, i) => {
+    const at = `  /outputs/writes/${i}`;
+    const wd = w.write_discipline || {};
+    if (w.retract === 'replace_keys') {
+      if (!rowsForm) findings.push(`${at}: retract "replace_keys" is legal only under execution.materialize_form "rows" (R-EH)`);
+      if (wd.class !== 'link_full_retraction') findings.push(`${at}: retract "replace_keys" is legal only on class link_full_retraction (got ${JSON.stringify(wd.class)}) (R-EH)`);
+      const next = writes[i + 1];
+      if (!next || next.table !== w.table || !next.write_discipline || next.write_discipline.class !== 'guarded_upsert') {
+        findings.push(`${at}: retract "replace_keys" must be immediately followed by a guarded_upsert on "${w.table}" (the replace is a delete-then-insert pair) (R-EH)`);
+      }
+    }
+    if (wd.rows === 'compute') {
+      if (!rowsForm) findings.push(`${at}: write_discipline.rows "compute" is legal only under execution.materialize_form "rows" (R-EH)`);
+      if (wd.class !== 'set_based_scoped') findings.push(`${at}: write_discipline.rows "compute" is legal only on class set_based_scoped (got ${JSON.stringify(wd.class)}) (R-EH)`);
+    }
+    if (wd.key_prefix) {
+      if (!rowsForm) findings.push(`${at}: write_discipline.key_prefix is legal only under execution.materialize_form "rows" (R-EH)`);
+      const keys = Array.isArray(w.key) ? w.key : [w.key];
+      if (!keys.includes(wd.key_prefix.column)) findings.push(`${at}: write_discipline.key_prefix.column "${wd.key_prefix.column}" is not a key column of "${w.table}" (R-EH)`);
+    }
+  });
+  return findings;
+}
+
+/**
  * The SEMANTIC rules — everything true of a descriptor that JSON Schema cannot say
  * because it needs a cross-reference between two fields, or a shorthand expanded first.
  * Run AFTER AJV, so a structurally broken descriptor reports its shape errors rather
@@ -451,6 +566,8 @@ function semanticFindings(descriptor) {
   assertBannedScalarFields(descriptor, findings);
   assertInvalidatesTargetMatchesWrite(descriptor, findings);
   assertMaterialityDeclared(descriptor, findings);
+  assertRefreeze37Forms(descriptor, findings);
+  findings.push(...materializeRowsFindings(descriptor));
   return findings;
 }
 
@@ -500,6 +617,8 @@ module.exports = {
   assertGrandfathered,
   assertInvalidatesTargetMatchesWrite,
   assertMaterialityDeclared,
+  assertRefreeze37Forms,
+  materializeRowsFindings,
   semanticFindings,
   validateDescriptor,
   GRANDFATHERED_VALUE_PATHS,

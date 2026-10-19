@@ -3,14 +3,14 @@
   "step": "scripts/quality/assert-engine-health.js",
   "chain": "sources",
   "source_fingerprint": "dff27c5f2967fc0b4564ca7994275f3980842a2408a224e10778006e2b343365",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
-    "calls": 179,
+    "calls": 198,
     "distinct": 20,
     "utility": 5,
-    "tracer_self_ms": 2.838,
-    "wall_ms": 364
+    "tracer_self_ms": 3.558,
+    "wall_ms": 568
   },
   "statements": [
     {
@@ -59,7 +59,7 @@
       "fingerprint": "3878721184ec49c9",
       "kind": "read",
       "count": 1,
-      "rowCount": 156,
+      "rowCount": 175,
       "reads": {
         "pg_stat_user_tables": [
           "relname",
@@ -74,7 +74,7 @@
       "fingerprint": "3dbf2e2b1ad7c545",
       "kind": "read",
       "count": 1,
-      "rowCount": 140,
+      "rowCount": 159,
       "reads": {
         "pg_stat_user_tables": [
           "n_tup_ins",
@@ -103,7 +103,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 788,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -147,7 +147,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 8,
+      "rowCount": 19,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -158,7 +158,7 @@
     {
       "fingerprint": "a12d5c67e93c52db",
       "kind": "write",
-      "count": 159,
+      "count": 178,
       "rowCount": 10,
       "reads": {
         "engine_health_snapshots": [
@@ -229,7 +229,7 @@
       "fingerprint": "b4a0a2b732f322fc",
       "kind": "read",
       "count": 1,
-      "rowCount": 156,
+      "rowCount": 175,
       "reads": {
         "pg_stat_user_tables": [
           "n_dead_tup",
@@ -281,7 +281,7 @@
       "fingerprint": "e923f9ba2635da6b",
       "kind": "read",
       "count": 1,
-      "rowCount": 159,
+      "rowCount": 178,
       "reads": {
         "pg_stat_user_tables": [
           "idx_scan",

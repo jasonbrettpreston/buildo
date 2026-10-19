@@ -3,14 +3,14 @@
   "step": "scripts/enrich-centreline.js",
   "chain": "sources",
   "source_fingerprint": "c390361b8ef41cd8fbc4226421798f176d684ba69024c237f49fa80ab05fde12",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
     "calls": 51,
     "distinct": 33,
     "utility": 14,
-    "tracer_self_ms": 1.588,
-    "wall_ms": 3092
+    "tracer_self_ms": 1.74,
+    "wall_ms": 12750
   },
   "statements": [
     {
@@ -173,7 +173,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 788,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -356,7 +356,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 19,
+      "rowCount": 30,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -497,7 +497,7 @@
   ],
   "transactions": [
     {
-      "client": "78333:3",
+      "client": "57557:3",
       "write_fingerprints": [
         "46c7e018cd87d93a"
       ]

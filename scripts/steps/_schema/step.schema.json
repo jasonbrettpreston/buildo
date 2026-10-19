@@ -793,9 +793,90 @@
             "compute"
           ],
           "x-frozen": true
+        },
+        "conflict_index": {
+          "description": "RE-FREEZE #37 (Spec 124 R-DY (c), 2026-10-18). OPTIONAL, class guarded_upsert only. The name of the UNIQUE, non-partial index on this write target whose key the ON CONFLICT clause must infer. Before any hook the runner probes pg_index (write.js probeConflictIndex: unique, on this table, not partial) and renders ON CONFLICT (<pg_get_indexdef(indexrelid, k, true) for each key>) — so an expression index (lifecycle_status_history's date_trunc('second', transitioned_at AT TIME ZONE 'UTC')) is a legal conflict target. The index is the one truth: the descriptor never carries a SQL expression. A missing, non-unique or partial index is refused by name, status failed_missing_precondition (the R-CX catalog-probe form). Absent = ON CONFLICT (<key>), byte-identical.",
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "x-ruling": {
+            "rungs_tried": [
+              "declare the conflict expression as descriptor text (a second, drifting copy of the index and an injection surface)",
+              "key columns only (cannot name an expression index; Postgres refuses ON CONFLICT without a matching arbiter)",
+              "set_source \"compute\" (puts the whole upsert in compute for one clause)"
+            ],
+            "why": "the catalog already holds the expression; a probed name is the R-CX form (Spec 124 R-DY (c))"
+          }
+        },
+        "rows": {
+          "description": "RE-FREEZE #37 (Spec 124 R-EH). OPTIONAL; class set_based_scoped under materialize_form \"rows\" only. \"compute\" = the runner generates a keyed UPDATE from the compute's rows: UPDATE <t> AS t SET <cols> = v.<cols> FROM UNNEST(<typed arrays, catalog types>) AS v(<key>, <cols>) WHERE t.<key> = v.<key>, plus the IS DISTINCT FROM guard over guard_columns when guard is \"is_distinct_from\". run_at columns are stamped by the runner. Distinct from set_source \"compute\" (a compute-authored statement): here the compute supplies VALUES, never SQL.",
+          "enum": [
+            "compute"
+          ],
+          "x-frozen": true
+        },
+        "key_prefix": {
+          "description": "RE-FREEZE #37 (Spec 124 R-EH). OPTIONAL; under materialize_form \"rows\". The family prefix every row (and every replace key) this target writes must carry in `column` (a key column), e.g. {column:\"lead_id\", prefix:\"coa:\"} on a table shared with a trigger co-writer's \"permit:\" rows. The runner refuses an out-of-family row by name before the batch transaction, and the replace_keys DELETE carries starts_with(<column>, $2).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "column",
+            "prefix"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/columnName"
+            },
+            "prefix": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*:$"
+            }
+          },
+          "x-ruling": {
+            "rungs_tried": [
+              "a scope string (descriptive prose, never executed)",
+              "a declared check (reports the breach after the write)"
+            ],
+            "why": "operator y 2026-10-18 (wave-4 Q-MZ; Spec 124 R-EH): a MATERIALIZER whose rows are computed in JavaScript gets a runner-owned write; the compute stays pure (R-BZ)"
+          }
         }
       },
       "allOf": [
+        {
+          "x-rule": "R-EH: rows \"compute\" only on class set_based_scoped",
+          "if": {
+            "required": [
+              "rows"
+            ]
+          },
+          "then": {
+            "properties": {
+              "class": {
+                "const": "set_based_scoped"
+              }
+            },
+            "required": [
+              "class"
+            ]
+          }
+        },
+        {
+          "x-rule": "R-DY (c): conflict_index only on class guarded_upsert",
+          "if": {
+            "required": [
+              "conflict_index"
+            ]
+          },
+          "then": {
+            "properties": {
+              "class": {
+                "const": "guarded_upsert"
+              }
+            },
+            "required": [
+              "class"
+            ]
+          }
+        },
         {
           "if": {
             "properties": {
@@ -930,11 +1011,12 @@
               },
               "written": {
                 "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
-                "description": "ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. THREE values since prerequisite 0j (2026-09-24): `step` (the default — inserted AND updated), `insert_only` (inserted and bound, NEVER rewritten by the conflict UPDATE SET or its guard — the column a DB-side pass recomputes after load), and `db_default` (neither — a DDL default the step never writes).",
+                "description": "RE-FREEZE #37 (Spec 124 R-DZ, 2026-10-18) adds a FOURTH value, \"seen\": the column is bound to the runner clock (run_at, never compute), inserted, set on conflict, EXCLUDED from the guard, and TOUCHED for every fed key whose row the guard skipped (write.js touch_sql, per slice, after the upsert, in the same transaction; counter written.touched; conservation touched <= carried - inserted - updated). At most one seen column per target; a compute-bound value for it is refused. ADDED AT THE INGESTOR PILOT (2026-08-25). Does the STEP supply this column's value, or does the DATABASE? `PIPELINE_META.writes` has always listed every column of the target — including `created_at`, which the step never writes and the DDL defaults — so the declaration and the generated INSERT column list are NOT the same list. Stating it is what lets the generator emit the right INSERT while `deriveMeta` keeps emitting the full declared set, instead of one of the two being quietly wrong. THREE values since prerequisite 0j (2026-09-24): `step` (the default — inserted AND updated), `insert_only` (inserted and bound, NEVER rewritten by the conflict UPDATE SET or its guard — the column a DB-side pass recomputes after load), and `db_default` (neither — a DDL default the step never writes).",
                 "enum": [
                   "step",
                   "insert_only",
-                  "db_default"
+                  "db_default",
+                  "seen"
                 ],
                 "x-frozen": true,
                 "x-ruling": {
@@ -1113,12 +1195,13 @@
           "$ref": "#/definitions/writeDiscipline"
         },
         "retract": {
-          "description": "WHAT happens to a key the acquired source no longer carries. none = nothing; departed = scoped departure DELETE; all = scoped mass retraction (with retract_when); departed_mark (registry-truth fold 10, operator ruling 2026-10-03) = SOFT-RETIRE: the key is MARKED retired_at = now() (first stamp kept) and UNMARKED when it reappears, never deleted, inside the same transaction as the guarded upsert (write.js executeWrite ARM 0), behind the library empty-set guard and a mass-retire guard bounded by retire_max_pct_from_config.",
+          "description": "WHAT happens to a key the acquired source no longer carries. none = nothing; departed = scoped departure DELETE; all = scoped mass retraction (with retract_when); replace_keys (RE-FREEZE #37, Spec 124 R-EH) = under materialize_form \"rows\" only, on class link_full_retraction only, immediately followed by a guarded_upsert on the same table: the runner deletes every key the compute names in replace_keys.e<i> (DELETE ... WHERE <key[0]> = ANY($1::<catalog type>[]), plus a key_prefix guard), before-imaged per batch, so a key whose new rows dropped to zero is cleared (validate.js, by name); departed_mark (registry-truth fold 10, operator ruling 2026-10-03) = SOFT-RETIRE: the key is MARKED retired_at = now() (first stamp kept) and UNMARKED when it reappears, never deleted, inside the same transaction as the guarded upsert (write.js executeWrite ARM 0), behind the library empty-set guard and a mass-retire guard bounded by retire_max_pct_from_config.",
           "enum": [
             "none",
             "departed",
             "all",
-            "departed_mark"
+            "departed_mark",
+            "replace_keys"
           ],
           "x-frozen": true,
           "x-ruling": {
@@ -1176,9 +1259,106 @@
             ],
             "why": "runtime derivation silently widens load_ravines' guard (a stray Point would become accepted instead of skipped_unsupported_type — a behaviour change on a converted step with a golden); the catalog read hides the contract in the DB. A per-target declaration keeps Rule 8's per-write-target discipline and makes the accept list reviewable. line added 2026-09-24 for the LineString INGESTORs: toronto_centreline's consumer enrich-centreline.js requires a true LineString."
           }
+        },
+        "derive": {
+          "description": "RE-FREEZE #37 (Spec 124 R-DY, 2026-10-18). Marks this write as a DERIVED secondary target of an INGESTOR: legal only at outputs.writes[i >= 1], only on identity.archetype INGESTOR, and `from` must equal outputs.writes[0].table (validate.js, by name). Per R-CU slice, inside the ONE primary transaction, the runner reads prior state (`SELECT <writes[0].key>, <prior_columns> FROM <from> JOIN UNNEST(<typed key arrays>)`, key types from the catalog, R-CX (ii)), runs the primary upsert and the R-DZ touch, calls the pure compute export deriveRows(table, sliceRows, priorByKey, {config, run_at, descriptor, keyOf}) and writes the returned rows through THIS target's generated plan. prior_columns must be declared in inputs.reads.tables[<from>].columns — a self-read, so it derives no producer edge (R-BL (v)). A derived target is never a primary: the one-write refusal and B4 count only non-derived writes; row conservation stays over the primary; its counters are written.e<i>.{inserted, updated, errors}. Its failure is fatal unless it declares on_error \"warn_row\" (R-DM).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from",
+            "prior_columns",
+            "why"
+          ],
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/tableName"
+            },
+            "prior_columns": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/columnName"
+              }
+            },
+            "why": {
+              "$ref": "#/definitions/why"
+            }
+          },
+          "x-ruling": {
+            "rungs_tried": [
+              "a compute SELECT of prior status + a compute INSERT of the ledger row (the legacy shape; banned by R-BZ G2/G5)",
+              "a second INGESTOR step for the ledger (no prior state: the primary upsert has already overwritten it)",
+              "snapshot_append (class M, disposition retire; class A covers the ledger shape)"
+            ],
+            "why": "operator y 2026-10-18 (runner-lane rulings 3, 4, 16): the prior-state read and the derived write are runner-owned statements inside the primary transaction; compute stays pure"
+          }
+        },
+        "on_error": {
+          "description": "RE-FREEZE #37 (Spec 124 R-DM, operator y 2026-10-17, row text 2026-10-18). \"fail_step\" (default; absent = today) or \"warn_row\". \"warn_row\" is legal only on a DERIVED target (derive declared) and requires on_error_why whose liveness cites a declared check {kind:\"check\", ref} of severity WARN and limit \"viol == 0\" that reads written.e<i>.errors (validate.js, by name). The runner wraps each slice's derived statement in SAVEPOINT sp_e<i>; on error it runs ROLLBACK TO SAVEPOINT, adds 1 to written.e<i>.errors, keeps the primary and continues; a failed ROLLBACK TO SAVEPOINT rethrows. The WARN row is the declared check's, never an ad-hoc runner row (Rule 10).",
+          "enum": [
+            "fail_step",
+            "warn_row"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "a catch in compute (transaction control is banned in compute, R-BZ G4/G13)",
+              "an ad-hoc runner WARN row (a second verdict path; R-CD form is a declared check)",
+              "reuse externals[].on_head_error (a different failure, HEAD-only)"
+            ],
+            "why": "operator y 2026-10-17: an audit-tier secondary must not fail the primary load, and the failure must be counted and reported by a declared check"
+          }
+        },
+        "on_error_why": {
+          "description": "RE-FREEZE #37 (Spec 124 R-DM). Required exactly when on_error is \"warn_row\". The R-AX sibling form: liveness {kind:\"check\", ref:<checks[].id>} names the WARN-severity, exact-zero (viol == 0) check that reads this target's written.e<i>.errors counter.",
+          "$ref": "#/definitions/why",
+          "x-ruling": {
+            "rungs_tried": [
+              "a bare check id (a second spelling of the why/liveness form)",
+              "no citation (a tolerance that cannot be traced to its bound)"
+            ],
+            "why": "the on_row_error_why precedent (R-AX): a tolerant posture cites the check that bounds it"
+          }
         }
       },
       "allOf": [
+        {
+          "x-rule": "R-DM: on_error \"warn_row\" => on_error_why",
+          "if": {
+            "required": [
+              "on_error"
+            ],
+            "properties": {
+              "on_error": {
+                "const": "warn_row"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "on_error_why"
+            ]
+          }
+        },
+        {
+          "x-rule": "R-DM: on_error_why only with on_error \"warn_row\"",
+          "if": {
+            "required": [
+              "on_error_why"
+            ]
+          },
+          "then": {
+            "required": [
+              "on_error"
+            ],
+            "properties": {
+              "on_error": {
+                "const": "warn_row"
+              }
+            }
+          }
+        },
         {
           "x-rule": "V7 ban no_retraction, evaluated over the mechanic AND the retraction axis (which are siblings here, not inside write_discipline). An insert-only mechanic that DOES retract is no longer mislabelled as a W3 breach; one that does not must say why.",
           "if": {
@@ -2078,8 +2258,71 @@
                     "items": {
                       "$ref": "#/definitions/columnName"
                     }
+                  },
+                  "role": {
+                    "x-trust": "executed:scripts/lib/step/index.js#runMaterializePhase",
+                    "description": "RE-FREEZE #37 (Spec 124 R-EH). OPTIONAL. \"lookup\" = a read the step does not page (the same meaning as externals[].role \"lookup\"): under materialize_form \"rows\" the runner reads it ONCE, `SELECT <columns> FROM <table>`, before the batch loop and hands the rows to the compute as lookups[<table>]. Requires unique_on and on_empty.",
+                    "enum": [
+                      "lookup"
+                    ],
+                    "x-frozen": true
+                  },
+                  "unique_on": {
+                    "description": "RE-FREEZE #37 (Spec 124 R-EH). role \"lookup\" only: the columns that identify a lookup row; a duplicate ends the run failed_missing_precondition before any write.",
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/definitions/columnName"
+                    }
+                  },
+                  "on_empty": {
+                    "description": "RE-FREEZE #37 (Spec 124 R-EH). role \"lookup\" only: an empty lookup ends the run failed_missing_precondition before any write (\"fail\"), or is named in matched.lookups_empty and the run continues (\"warn\").",
+                    "enum": [
+                      "fail",
+                      "warn"
+                    ],
+                    "x-frozen": true
                   }
-                }
+                },
+                "allOf": [
+                  {
+                    "x-rule": "R-EH: a lookup read declares unique_on and on_empty",
+                    "if": {
+                      "required": [
+                        "role"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "unique_on",
+                        "on_empty"
+                      ]
+                    }
+                  },
+                  {
+                    "x-rule": "R-EH: unique_on / on_empty only on a lookup read",
+                    "if": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "unique_on"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "on_empty"
+                          ]
+                        }
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "role"
+                      ]
+                    }
+                  }
+                ]
               }
             },
             "externals": {
@@ -2316,6 +2559,27 @@
                       "why": "only a declaration can decide whether the library rethrows; the row is library-owned (Rule 10)"
                     }
                   },
+                  "modes": {
+                    "description": "RE-FREEZE #37 (Spec 124 R-DX (iv), 2026-10-18). OPTIONAL. The run modes in which this PRIMARY is acquired: a closed subset of the WRITE_INVENTORY_MODES vocabulary [\"full\", \"incremental\"]; absent = every mode. The run mode is resolved by ONE helper shared with runEnrichPhase (index.js resolveRunMode: --full, override.force_full or an interrupted retraction means \"full\", else \"incremental\"). A member outside the mode is not acquired and reports acquired.primaries[<id>] = {selected:false, reason:\"mode\"}; when any primary declares modes the runner stamps records_meta.run_mode (closing R-DB's capture-mode PIN for INGESTORs). A union group (two or more primaries naming the same target) with zero selected members is refused by name (0x U2).",
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "full",
+                        "incremental"
+                      ]
+                    },
+                    "x-frozen": true,
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "two steps (one per mode) writing one table (two ledger rows, two staleness lifecycles for one source)",
+                        "a compute filter on the acquired records (acquires what is then discarded; the selection is invisible)",
+                        "a per-step mode flag (cannot say which primary)"
+                      ],
+                      "why": "coa's Closed resource is a full-rebuild source only (operator y 2026-10-18, runner-lane ruling 2); the mode vocabulary already exists (schema-homes WRITE_INVENTORY_MODES)"
+                    }
+                  },
                   "ckan": {
                     "description": "ADDED AT INGESTOR PREREQUISITE 0y (RE-FREEZE #30, 2026-10-02). Required iff `format` is \"ckan_datastore\" (item rule Y-I1, brief 7): the CKAN coordinates of ONE primary acquired through paginated `datastore_search`. The external's `url` is the BARE endpoint; the arm builds `${url}?resource_id=${ckan.resource_id}&limit=${page}&offset=${o}`. `package_url` is the full `package_show?id=…` URL used for the resource's version and its 730-day F-M4 force-reload. `page_size_from_config` names a registered config variable holding a positive integer. The resource id is declared ONCE here, never parsed out of the URL.",
                     "type": "object",
@@ -2489,7 +2753,7 @@
                     }
                   },
                   {
-                    "x-rule": "0y (RE-FREEZE #30, Y-I1): `format` \"ckan_datastore\" ⇔ `ckan`; it requires `kind` \"http_api\", a BARE `url` (no ?/# — the arm appends resource_id/limit/offset), and `target` (Y4 is the runtime twin); it FORBIDS `on_head_error` \"warn_row\" (inert with no version, R-AJ). `on_head_error` ABSENT is valid; `ckan` on any other `format` is refused here too.",
+                    "x-rule": "0y (RE-FREEZE #30, Y-I1): `format` \"ckan_datastore\" ⇔ `ckan`; it requires `kind` \"http_api\", a BARE `url` (no ?/# — the arm appends resource_id/limit/offset), and (until RE-FREEZE #37) `target` — RE-FREEZE #37 (Spec 124 R-DX (ii)) deleted that clause with its runtime twin Y4: one targetless CKAN primary is a first-class single-primary INGESTOR (0x B7 still refuses a lone TARGETED one); it FORBIDS `on_head_error` \"warn_row\" (inert with no version, R-AJ). `on_head_error` ABSENT is valid; `ckan` on any other `format` is refused here too.",
                     "if": {
                       "anyOf": [
                         { "required": ["format"], "properties": { "format": { "const": "ckan_datastore" } } },
@@ -2498,7 +2762,7 @@
                     },
                     "then": {
                       "allOf": [
-                        { "required": ["ckan", "kind", "url", "target"] },
+                        { "required": ["ckan", "kind", "url"] },
                         {
                           "properties": {
                             "format": { "const": "ckan_datastore" },
@@ -2681,7 +2945,8 @@
                       "set_null_on_change_of",
                       "step",
                       "pin",
-                      "full_rescan"
+                      "full_rescan",
+                      "set_null_unless"
                     ],
                     "x-frozen": true,
                     "x-trust": "witnessed:#44",
@@ -2713,9 +2978,72 @@
                       ],
                       "why": "operator ruling 2026-09-24 (standardized/observable/scalable/simple): the lineage-stamp-invalidation-on-geometry-change pattern (parcels' three ravine/heritage/centreline stamps, DEC-FENCE2 #418, a Day-1 critical-safety fix) is common enough to be a DECLARED, codegen-executed axis rather than a per-step escape hatch."
                     }
+                  },
+                  "set_null_unless": {
+                    "x-trust": "executed:scripts/lib/step/write.js#buildWritePlan",
+                    "description": "RE-FREEZE #37 (Spec 124 R-EA, 2026-10-18; amends R-BL (ii)). by \"set_null_unless\" only. EXECUTED: the codegen appends `<column> = CASE WHEN EXCLUDED.<set_null_unless.column> IS DISTINCT FROM <equals> THEN NULL ELSE <table>.<column> END` to the write target's DO UPDATE SET, with NO guard term — the clear fires only on rows the guard updates (legacy load-permits.js:363). `column` must be a written:\"step\" column of the same target (validate.js); `equals` is a scalar vocabulary constant (Spec 44 §3), rendered as an escaped SQL literal (sqlLiteral's opt-in string arm). deriveMeta and #44 G13 count the cleared column as this step's write; #44 (i) treats it as self-resolved.",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "column",
+                      "equals"
+                    ],
+                    "properties": {
+                      "column": {
+                        "$ref": "#/definitions/columnName"
+                      },
+                      "equals": {
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean"
+                        ]
+                      }
+                    },
+                    "x-ruling": {
+                      "rungs_tried": [
+                        "set_null_on_change_of (tests a CHANGE of the watched column, not an incoming value)",
+                        "set_source \"compute\" for one CASE arm (moves the whole upsert into compute)",
+                        "a separate UPDATE statement after the upsert (a second write the guard cannot see)"
+                      ],
+                      "why": "operator y 2026-10-18 (runner-lane ruling 6): the permits C7 clear is a declared, codegen-executed fence"
+                    }
                   }
                 },
                 "allOf": [
+                  {
+                    "x-rule": "R-EA direction: by set_null_unless => set_null_unless declared",
+                    "if": {
+                      "required": [
+                        "by"
+                      ],
+                      "properties": {
+                        "by": {
+                          "const": "set_null_unless"
+                        }
+                      }
+                    },
+                    "then": {
+                      "required": [
+                        "set_null_unless"
+                      ]
+                    }
+                  },
+                  {
+                    "x-rule": "R-EA direction: a set_null_unless field only with by set_null_unless",
+                    "if": {
+                      "required": [
+                        "set_null_unless"
+                      ]
+                    },
+                    "then": {
+                      "properties": {
+                        "by": {
+                          "const": "set_null_unless"
+                        }
+                      }
+                    }
+                  },
                   {
                     "x-rule": "LDG-10 direction: by trigger => trigger named",
                     "if": { "required": ["by"], "properties": { "by": { "const": "trigger" } } },
@@ -4000,6 +4328,74 @@
           "minLength": 1,
           "description": "OPTIONAL, MATERIALIZER pilot (2026-08-29, LW-D10 class). `execution.batch` (above) is frozen to a literal integer or \"none\" — it cannot express a config-driven batch size. Present ONLY on a step whose keyset-paginated batch loop reads its per-batch row count from `config.logic_variables[].name` rather than a hardcoded literal: names that logic variable, with the *_from_config suffix (§1.2a P4) so the generic conformance battery's fromConfigRefs scan counts this as a genuine consumption path — mirroring `tiers[].confidence_from_config`/`max_iterations_from_config`'s own precedent for the identical blind spot (a runner-resolved value the compute never spells `ctx.config.<name>` for)."
         },
+        "materialize_form": {
+          "x-trust": "executed:scripts/lib/step/index.js#runMaterializePhase",
+          "description": "RE-FREEZE #37 (Spec 124 R-EH, 2026-10-18). OPTIONAL, MATERIALIZER only. ABSENT = \"insert_select\", today's LG-18 arm (compute.buildMaterializeSql, executeInsertSelectNoRetract), byte-identical. \"rows\" = runMaterializePhase's ROWS arm: the runner pages execution.materialize_source with the compute's buildSourceSql, reads every role:\"lookup\" table once, calls the pure compute export materializeRows(sourceRows, {config, run_at, descriptor, lookups}) and writes every outputs.writes[] target through runner-generated SQL, in declared order, in ONE transaction per batch: class guarded_upsert (generated upsert; guard \"none\" renders no WHERE), class link_full_retraction with retract \"replace_keys\" (generated keyed DELETE, before-imaged, immediately followed by a guarded_upsert on the same table), class set_based_scoped with write_discipline.rows \"compute\" (generated keyed UPDATE from compute rows). An optional compute buildPostSql runs once after the loop; an optional finalizeMatched derives run-level ratios.",
+          "enum": [
+            "insert_select",
+            "rows"
+          ],
+          "x-frozen": true,
+          "x-ruling": {
+            "rungs_tried": [
+              "the ENRICHER JS pass (ctx.exec): compute-authored DML, and its outputs are columns of the rows it reads (Rule 1: wrong label for lead_trades / cost_estimates writers)",
+              "runLinkPhase executeOrderedWrites: LINK archetype and match vocabulary; no keyed replace or keyed update from rows",
+              "one compute-authored INSERT ... SELECT per target: the rows are computed in JavaScript, not SQL"
+            ],
+            "why": "operator y 2026-10-18 (wave-4 Q-MZ; Spec 124 R-EH): a MATERIALIZER whose rows are computed in JavaScript gets a runner-owned write; the compute stays pure (R-BZ)"
+          }
+        },
+        "materialize_source": {
+          "x-trust": "executed:scripts/lib/step/index.js#runMaterializePhase",
+          "description": "RE-FREEZE #37 (Spec 124 R-EH). Required iff materialize_form is \"rows\". The driving table (one of inputs.reads.tables, never a role:\"lookup\" table) and its single integer keyset key. The compute returns buildSourceSql(descriptor, config, {mode}) -> {count_sql, count_binds, batch_sql, batch_binds}; the runner binds exactly the named runner values, in order (a subset of last_key, batch_size, run_at). `pending` is descriptive and OBSERVABLE: the predicate the compute's batch_sql selects by, and the column whose change re-queues a row.",
+          "x-ruling": {
+            "rungs_tried": [
+              "the compute pages its own source (a compute query: R-BZ G2)",
+              "a runner-generated SELECT from the declared predicate (descriptor-authored SQL text, a second copy of the compute's selection)"
+            ],
+            "why": "operator y 2026-10-18 (wave-4 Q-MZ; Spec 124 R-EH): the runner owns the paging and the binds; the compute supplies the SELECT text over declared relations (the R-BZ G5 *_sql seam)"
+          },
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "table",
+            "key",
+            "pending",
+            "why"
+          ],
+          "properties": {
+            "table": {
+              "$ref": "#/definitions/tableName"
+            },
+            "key": {
+              "$ref": "#/definitions/columnName"
+            },
+            "pending": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "predicate",
+                "invalidated_by"
+              ],
+              "properties": {
+                "table": {
+                  "$ref": "#/definitions/tableName"
+                },
+                "predicate": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "invalidated_by": {
+                  "type": "string",
+                  "pattern": "^[a-z_][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+                }
+              }
+            },
+            "why": {
+              "$ref": "#/definitions/why"
+            }
+          }
+        },
         "on_row_error": {
           "x-trust": "enforced:#50",
           "enum": [
@@ -5138,6 +5534,43 @@
     }
   },
   "allOf": [
+    {
+      "x-profile": "R-EH (RE-FREEZE #37): execution.materialize_form \"rows\" requires execution.materialize_source and execution.batch_size_from_config (R-DE (i)), and only a MATERIALIZER declares it (the cross-target rules — replace_keys followed by a guarded_upsert on the same table, a lookup never the source — are validate.js materializeRowsFindings, by name).",
+      "if": {
+        "properties": {
+          "execution": {
+            "properties": {
+              "materialize_form": {
+                "const": "rows"
+              }
+            },
+            "required": [
+              "materialize_form"
+            ]
+          }
+        },
+        "required": [
+          "execution"
+        ]
+      },
+      "then": {
+        "properties": {
+          "identity": {
+            "properties": {
+              "archetype": {
+                "const": "MATERIALIZER"
+              }
+            }
+          },
+          "execution": {
+            "required": [
+              "materialize_source",
+              "batch_size_from_config"
+            ]
+          }
+        }
+      }
+    },
     {
       "x-profile": "ASSERT — 3 categories collapse to \"none\" (§1.10). counters is normative here, not descriptive: 0 of 5 ASSERTs comply today.",
       "if": {

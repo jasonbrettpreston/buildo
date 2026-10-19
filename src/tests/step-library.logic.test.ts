@@ -28,6 +28,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'child_process';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { runnerValues, runnerVariableRows, RUNNER_VARIABLES } from './helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
 const stepLib = require(join(process.cwd(), 'scripts/lib/step'));
@@ -434,12 +435,13 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     it('OBSERVABILITY FOLD — every runner that can abort feeds the row, and index.js actually consumes it', () => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports -- matching this file's existing source-read idiom
       const src = require('fs').readFileSync(join(process.cwd(), 'scripts/lib/step/index.js'), 'utf8') as string;
-      // 9 runners produce `failedPreWrite` on their abort path (was 8 — `runLinkColumnPhase`
+      // 10 abort sites produce `failedPreWrite` (was 9; 8 before `runLinkColumnPhase`
       // joined at I4, 2026-09-16). This count is the R-B/LW-D20 "a fold applied to N runners
       // needs a test that iterates ALL N" lock, and it fired correctly on that conversion:
       // adding the 9th runner reddened BOTH halves until the new runner was wired into the
       // consumer list too, which is exactly the silent-gap this assertion exists to prevent.
-      expect((src.match(/failedPreWrite: decision\.failed|failedPreWrite: gateDecision\.failed/g) || []).length).toBe(9);
+      // RE-FREEZE #37 (Spec 124 R-EH): the MATERIALIZER ROWS arm is the 10th site; it returns through runMaterializePhase, so its consumer is the existing `materialize` entry below.
+      expect((src.match(/failedPreWrite: decision\.failed|failedPreWrite: gateDecision\.failed/g) || []).length).toBe(10);
       // …and the assembled extraRows is the ONE consumer (before this fold: zero).
       expect(src, 'failedPreWrite must not be write-only').toContain('...preWriteAbortRows([ingest, link, linkKeyed, linkColumn, cascade, materialize, backfill, recorder, enrich])');
     });
@@ -508,13 +510,17 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
       .toBe('c0: bypassrls=true policies=0');
   });
 
-  it('LM-D16 — a large rendered value is capped, so warnings[] stays bounded', () => {
+  it('LM-D16 — a large rendered value is capped at the runner-owned step_audit_value_max_chars, so warnings[] stays bounded (Spec 124 R-EB (a))', () => {
     const d = withChecks([{ severity: 'WARN' }]);
     const bigDetail = { items: Array.from({ length: 100 }, (_, i) => `item-${i}`) };
-    const built = build(d, { c0: { violations: 1, detail: bigDetail } });
+    const cap = runnerValues().step_audit_value_max_chars!;
+    const built = verdictLib.buildAuditTable(d, null, { c0: { violations: 1, detail: bigDetail } }, [], null, null, null, null, cap);
     const rendered = built.warnings[0].slice('c0: '.length);
-    expect(rendered.length).toBeLessThanOrEqual(301);
+    expect(rendered.length).toBeLessThanOrEqual(cap + 1);
     expect(rendered.endsWith('…')).toBe(true);
+    // the cap is applied where the strings are persisted; a non-persisting caller (no cap passed) renders in full
+    expect(build(d, { c0: { violations: 1, detail: bigDetail } }).warnings[0].endsWith('…')).toBe(false);
+    expect(() => verdictLib.buildAuditTable(d, null, { c0: { violations: 1, detail: bigDetail } }, [], null, null, null, null, 0)).toThrow(/step_audit_value_max_chars/);
   });
 
   // LPA-D6 (WF3-C) — the FAIL side of the split, proving errors[] is genuinely
@@ -750,6 +756,8 @@ type FakePoolOpts = {
   database?: string;
   /** logic_variables rows this DB "has". Absent ⇒ zero rows ⇒ the loader's seed fallbacks. */
   logicVars?: Record<string, unknown>;
+  /** Spec 124 R-EB (a): the runner-owned step_* rows every step resolves. Present by default; false omits them. */
+  runnerVars?: false;
   /** R-T addendum, commit 3 — SQL-text-matched answers for invariants[]/plausibility[]
    * entries' own queries (checked BEFORE the fixed switch below, additive/backward
    * compatible — no existing caller passes this). */
@@ -767,11 +775,14 @@ function fakePool(opts: FakePoolOpts = {}) {
     }
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(opts.logicVars ?? {}).map(([variable_key, variable_value]) => ({
-          variable_key,
-          variable_value,
-          variable_value_json: null,
-        })),
+        rows: [
+          ...(opts.runnerVars === false ? [] : runnerVariableRows()),
+          ...Object.entries(opts.logicVars ?? {}).map(([variable_key, variable_value]) => ({
+            variable_key,
+            variable_value,
+            variable_value_json: null,
+          })),
+        ],
       };
     }
     if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: opts.migrations ?? 999 }] };
@@ -1102,7 +1113,10 @@ describe('run(ctx) — the lifecycle, against a fake pool', () => {
       expect(seen).toEqual({});
       expect(Object.isFrozen(seen)).toBe(true);
       expect('config' in cap.summary().records_meta, 'a config:"none" step must pay ZERO records_meta bytes (§1.2a P3)').toBe(false);
-      expect(pool.sql.some((s) => s.includes('FROM logic_variables')), 'no config query for a step that declares none').toBe(false);
+      // Spec 124 R-EB (a): a config:"none" step reads NO declared config — only the runner-owned step_* values, in ONE statement.
+      const lv = pool.sql.filter((s) => s.includes('FROM logic_variables'));
+      expect(lv, 'exactly one logic_variables read — the runner-owned variables').toHaveLength(1);
+      expect(paramsOf(pool, (s) => s.includes('FROM logic_variables'))[0]).toEqual([...RUNNER_VARIABLES]);
     } finally {
       cap.restore();
     }
@@ -1368,7 +1382,7 @@ describe('EP-D17 (WF3, 2026-09-10) — executeEntry ceiling default + duration_m
     };
     const { observations } = await plausibilityLib.runValidatorEntries(
       pool, [epD17TestEntry({ id: 'a' }), epD17TestEntry({ id: 'b' })],
-      { frequency: 'every_run', when: null, defaultTimeoutMs: 5000 },
+      { frequency: 'every_run', when: null, defaultTimeoutMs: 5000, concurrency: runnerValues().step_post_check_concurrency },
     );
     expect(typeof observations.a.duration_ms).toBe('number');
     expect(typeof observations.b.duration_ms).toBe('number');
@@ -1398,7 +1412,7 @@ describe('EP-D17 (WF3, 2026-09-10) — executeEntry ceiling default + duration_m
       query: async () => { throw new Error('unused — every entry declares/derives a ceiling'); },
     };
     const entries = [epD17TestEntry({ id: 'e0' }), epD17TestEntry({ id: 'e1' })];
-    const runPromise = plausibilityLib.runValidatorEntries(pool, entries, { frequency: 'every_run', when: null, defaultTimeoutMs: 5000 });
+    const runPromise = plausibilityLib.runValidatorEntries(pool, entries, { frequency: 'every_run', when: null, defaultTimeoutMs: 5000, concurrency: runnerValues().step_post_check_concurrency });
     await new Promise((r) => setTimeout(r, 0));
     expect(order.filter((o) => o.startsWith('connect:')), 'both clients must be requested before either query resolves — proves Promise.all, not the old for-await serial loop').toHaveLength(2);
     openGate!();
@@ -1436,6 +1450,7 @@ describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.mainten
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
       { parcels_dead_tuple_ratio_warn_max: 0.3 },
+      { defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes },
     );
     expect(rows).toHaveLength(1);
     expect(rows[0].metric).toBe('sys_maintenance_parcels_vacuum_analyze');
@@ -1450,6 +1465,7 @@ describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.mainten
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
       { parcels_dead_tuple_ratio_warn_max: 0.3 },
+      { defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes },
     );
     expect(pool.calls).toContain('VACUUM (ANALYZE) "parcels"');
     // F5 — the default 15-minute ceiling, applied on the SAME dedicated client, BEFORE the statement.
@@ -1469,6 +1485,7 @@ describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.mainten
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
       { parcels_dead_tuple_ratio_warn_max: 0.3, parcels_maintenance_timeout_minutes: 30 },
+      { defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes },
     );
     expect(pool.calls).toContain('SET statement_timeout = 1800000');
     expect(pool.calls).not.toContain('SET statement_timeout = 900000');
@@ -1491,7 +1508,7 @@ describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.mainten
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
       { parcels_dead_tuple_ratio_warn_max: 0.3 },
-      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]' },
+      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]', defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes },
     );
     expect(rows[0].status).toBe('WARN');
     expect(rows[0].value).toBeNull();
@@ -1517,7 +1534,7 @@ describe('EP-D17 (WF3, 2026-09-10, C4) — runMaintenance: the execution.mainten
       pool,
       [{ operation: 'vacuum_analyze', table: 'parcels', owned_by: 'self', why: { text: 'fixture, EP-D17 test', liveness: 'none' } }],
       { parcels_dead_tuple_ratio_warn_max: 0.3 },
-      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]' },
+      { log: { warn: (tag: string, msg: string) => { warnings.push([tag, msg]); } }, tag: '[test-step]', defaultTimeoutMinutes: runnerValues().step_maintenance_default_timeout_minutes },
     );
     expect(rows[0].status).toBe('WARN');
     expect(warnings).toHaveLength(1);
@@ -3228,7 +3245,7 @@ describe('R-B (LW-D20 / LG-19) — interrupted-retraction reader, fake-pool lock
         if (text.includes('current_database()')) return { rows: [{ database: 'postgres', db_user: 'postgres', has_tracking: true }] };
         if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: 999 }] };
         if (text.includes('FROM logic_variables')) {
-          return { rows: Object.entries(LOGIC_VAR_DEFAULTS).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null })) };
+          return { rows: [...runnerVariableRows(), ...Object.entries(LOGIC_VAR_DEFAULTS).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null }))] };
         }
         if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };
         if (text.startsWith('INSERT INTO pipeline_runs')) return { rows: [{ id: 9003 }] };
@@ -3699,7 +3716,7 @@ describe('recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fa
       vi.useFakeTimers();
       try {
         const pool = fakePool();
-        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555);
+        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555, runnerValues().step_stall_ticker_multiplier);
         await vi.advanceTimersByTimeAsync(210); // one 2x-interval tick (200ms) elapses
         await vi.advanceTimersByTimeAsync(210); // a second tick would fire at 400ms if not latched
         stop();
@@ -3714,7 +3731,7 @@ describe('recordHeartbeat / captureStallDiagnostic / startStallTicker (LG-28, fa
       vi.useFakeTimers();
       try {
         const pool = fakePool();
-        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555);
+        const stop = stepLib.startStallTicker(pool, 4242, 100, () => 555, runnerValues().step_stall_ticker_multiplier);
         await vi.advanceTimersByTimeAsync(50);
         stop();
         await vi.advanceTimersByTimeAsync(500); // stopped — no further ticks should fire
@@ -3860,6 +3877,7 @@ describe('runEnrichPhase — the GENERIC ENRICHER runner (batch-2 Phase 0.10)', 
     compute: FakeCompute,
     configOverrides: Record<string, unknown> = {},
   ) => ({
+    runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
     descriptor,
     pool,
     compute,
@@ -4290,6 +4308,7 @@ describe('runEnrichPhase — per-target counters come from execution.phases[].wr
   });
 
   const args2 = (descriptor: Record<string, unknown>, pool: ReturnType<typeof pool2>, compute: unknown) => ({
+    runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
     descriptor,
     pool,
     compute,
@@ -4442,6 +4461,7 @@ describe('runEnrichPhase — the POST-PHASE seam (batch-2 Phase 0.10b)', () => {
   });
 
   const argsP = (descriptor: Record<string, unknown>, pool: ReturnType<typeof poolP>, compute: unknown, extraConfig: Record<string, unknown> = {}) => ({
+    runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
     descriptor,
     pool,
     compute,
@@ -4803,6 +4823,7 @@ describe('runEnrichPhase — override.dry_run seam (batch-2 row 2.6, Spec 124 R-
   });
 
   const argsP = (descriptor: Record<string, unknown>, pool: ReturnType<typeof poolP>, compute: unknown, extraConfig: Record<string, unknown> = {}) => ({
+    runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
     descriptor,
     pool,
     compute,

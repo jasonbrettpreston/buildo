@@ -56,9 +56,15 @@ function statusFor(check, viol, pop) {
 // `ctx.config` by `runDistributionEntries` below — the ONLY way a registered threshold
 // may be consumed (never a literal baked at descriptor-generation time).
 function buildDistributionQuery(resScope, zoneExpr, field, opts = {}) {
-  const percentile = Number.isFinite(opts.percentile) ? opts.percentile : 0.99;
-  const medianMultiplier = Number.isFinite(opts.medianMultiplier) ? opts.medianMultiplier : 3;
-  const medianFloor = Number.isFinite(opts.medianFloor) ? opts.medianFloor : 0.0001;
+  // Spec 124 R-EB (a) (census rows 3-5): no literal fallbacks — every caller passes the three
+  // registered parcel_sanity_distribution_* values (assert_parcel_sanity threads them from ctx.config;
+  // the one-time measurement script reads the seed). A missing value is a named throw, never a default.
+  for (const k of ['percentile', 'medianMultiplier', 'medianFloor']) {
+    if (!Number.isFinite(opts[k])) {
+      throw new Error(`buildDistributionQuery: opts.${k} must be a finite number from its registered parcel_sanity_distribution_* variable (got ${String(opts[k])})`);
+    }
+  }
+  const { percentile, medianMultiplier, medianFloor } = opts;
   return `
     WITH base AS (SELECT id, (${zoneExpr}) AS zc, (${field.expr})::float8 AS f FROM parcels WHERE ${resScope} AND (${field.expr}) IS NOT NULL),
     stats AS (SELECT zc, percentile_cont(0.5) WITHIN GROUP (ORDER BY f) AS med,
@@ -247,7 +253,7 @@ async function runDistributionEntries(pool, entries, { resScope, zoneExpr, field
  * selected-check loop (Fold A-2).
  *
  * EP-D17 (WF3, 2026-09-10, C2b) — selected entries are issued CONCURRENTLY in
- * BATCHES of `concurrency` (default 4, `step_post_check_concurrency`), one
+ * BATCHES of `concurrency` (the runner-owned `step_post_check_concurrency`, R-EB (a)), one
  * `executeEntry` call per entry, each of which already opens its OWN
  * `pool.connect()` client when a ceiling applies (every entry has one as of
  * C1 — declared or defaulted, never "none" reaching an unbound connection).
@@ -308,10 +314,13 @@ async function runValidatorEntries(pool, entries, { frequency, when, defaultTime
     blocking: entry.blocking,
     source: entry.source,
   }));
-  // F7 — batch width caps simultaneous clients at `concurrency` (default 4, matching
-  // step_post_check_concurrency's own seed default); a non-positive/non-finite value
-  // degrades to fully serial (batch width 1), never to unbounded.
-  const batchSize = Number.isFinite(concurrency) && concurrency > 0 ? Math.floor(concurrency) : 4;
+  // F7 — batch width caps simultaneous clients at `concurrency`, the runner-owned
+  // step_post_check_concurrency (Spec 124 R-EB (a)); the `: 4` fallback is deleted — a missing or
+  // non-positive value is a named throw (the runner always passes the resolved value).
+  if (!Number.isFinite(concurrency) || concurrency <= 0) {
+    throw new Error(`runValidatorEntries: concurrency must be the resolved step_post_check_concurrency, a positive number (got ${String(concurrency)})`);
+  }
+  const batchSize = Math.floor(concurrency);
   const results = [];
   for (let i = 0; i < boundEntries.length; i += batchSize) {
     const batch = boundEntries.slice(i, i + batchSize);
@@ -366,7 +375,8 @@ const MAINTENANCE_SQL = {
 // tuples that motivated this WF3 (scripts/one-time/wf3-vacuum-analyze-parcels.js's own
 // header), so 15 min carries real margin without inheriting an unrelated step's own
 // declared execution.statement_timeout (which prices a different SQL shape entirely).
-const MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000;
+// Spec 124 R-EB (a) (census row 6): the default is the runner-owned
+// step_maintenance_default_timeout_minutes (seed 15), handed in by the caller (opts.defaultTimeoutMinutes).
 
 // The ONE dead-tuple measurement (S2 F3-3 / Spec 124 R-CG) — shared with the AEH compute via its own pure module.
 const { deadTupleRatio } = require('../dead-tuple-ratio');
@@ -381,11 +391,14 @@ const { deadTupleRatio } = require('../dead-tuple-ratio');
  *
  * @returns {Promise<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>}
  */
-async function runMaintenanceStatement(pool, operation, table, metric, deadRatio, threshold, config, log, tag) {
+async function runMaintenanceStatement(pool, operation, table, metric, deadRatio, threshold, config, log, tag, defaultTimeoutMinutes) {
   const timeoutCfgKey = `${table}_maintenance_timeout_minutes`;
+  if (typeof (config || {})[timeoutCfgKey] !== 'number' && !(Number.isFinite(defaultTimeoutMinutes) && defaultTimeoutMinutes > 0)) {
+    throw new Error(`runMaintenance: ${timeoutCfgKey} is not declared and the runner-owned step_maintenance_default_timeout_minutes was not handed in (got ${String(defaultTimeoutMinutes)})`);
+  }
   const timeoutMs = typeof (config || {})[timeoutCfgKey] === 'number'
     ? config[timeoutCfgKey] * 60000
-    : MAINTENANCE_DEFAULT_TIMEOUT_MS;
+    : defaultTimeoutMinutes * 60000;
   const startedAt = Date.now();
   try {
     // F5 — quoteMaintenanceIdent() moved INSIDE the try: a malformed table name
@@ -430,7 +443,7 @@ async function runMaintenanceStatement(pool, operation, table, metric, deadRatio
  *
  * @returns {Promise<Array<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>>}
  */
-async function runDynamicArm(pool, entry, config, log, tag) {
+async function runDynamicArm(pool, entry, config, log, tag, defaultTimeoutMinutes) {
   const out = [];
   const metric = `sys_maintenance_selected_${entry.operation}`;
   const threshold = typeof (config || {})[entry.limit_from_config] === 'number'
@@ -470,7 +483,7 @@ async function runDynamicArm(pool, entry, config, log, tag) {
     out.push(await runMaintenanceStatement(
       pool, entry.operation, t.relname,
       `sys_maintenance_${t.relname}_${entry.operation}`,
-      deadTupleRatio(t.live, t.dead), threshold, config, log, tag,
+      deadTupleRatio(t.live, t.dead), threshold, config, log, tag, defaultTimeoutMinutes,
     ));
   }
   return out;
@@ -541,7 +554,7 @@ async function runDynamicArm(pool, entry, config, log, tag) {
  * @param {Array<{operation:string, table:string, owned_by:string, why:object}|{operation:string, select:'dead_tuple_ratio', limit_from_config:string, why:object}>|'none'|undefined} maintenance
  *   — a STATIC item names a fixed `table`; a DYNAMIC item (R-CG, `select:"dead_tuple_ratio"`) names a `limit_from_config` logic variable and selects its targets at run time.
  * @param {Readonly<Record<string, number>>} config - `ctx.config` (resolveConfig's `values`)
- * @param {{log?: {warn: (tag:string, msg:string) => void, info?: (tag:string, msg:string) => void}, tag?: string}} [opts]
+ * @param {{log?: {warn: (tag:string, msg:string) => void, info?: (tag:string, msg:string) => void}, tag?: string, defaultTimeoutMinutes?: number}} [opts] - defaultTimeoutMinutes: the runner-owned step_maintenance_default_timeout_minutes (Spec 124 R-EB (a))
  * @returns {Promise<Array<{metric:string, value:unknown, threshold:unknown, status:string, note:string}>>}
  */
 async function runMaintenance(pool, maintenance, config, opts = {}) {
@@ -551,7 +564,7 @@ async function runMaintenance(pool, maintenance, config, opts = {}) {
   const rows = [];
   for (const entry of entries) {
     if (entry.select === 'dead_tuple_ratio') {
-      rows.push(...await runDynamicArm(pool, entry, config, log, tag));
+      rows.push(...await runDynamicArm(pool, entry, config, log, tag, opts.defaultTimeoutMinutes));
       continue;
     }
     const metric = `sys_maintenance_${entry.table}_${entry.operation}`;
@@ -587,7 +600,7 @@ async function runMaintenance(pool, maintenance, config, opts = {}) {
       continue;
     }
     rows.push(await runMaintenanceStatement(
-      pool, entry.operation, entry.table, metric, deadRatio, threshold, config, log, tag,
+      pool, entry.operation, entry.table, metric, deadRatio, threshold, config, log, tag, opts.defaultTimeoutMinutes,
     ));
   }
   return rows;

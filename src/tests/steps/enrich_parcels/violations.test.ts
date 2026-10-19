@@ -70,6 +70,7 @@ import { execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { witnessGuard } from '../_witness-guard';
+import { runnerValues } from '../../helpers/runner-variables';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../../');
 
@@ -1013,6 +1014,7 @@ describe('runEnrichPhase (LG-28) — logic tests against a fake pool', () => {
   }
 
   const baseArgs = (descriptor: Record<string, unknown>, pool: ReturnType<typeof fakePool>, compute: FakeCompute) => ({
+    runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
     descriptor,
     pool,
     compute,
@@ -2492,6 +2494,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       descriptor,
       pool,
       compute,
+      runner: runnerValues(), // Spec 124 R-EB (a): the runner-owned step_* values
       config: {
         enrich_parcels_pass_statement_timeout_minutes: 5,
         enrich_parcels_heartbeat_minutes: 60,

@@ -1359,10 +1359,10 @@
       "retighten_when": "zero rows — closes when slice 1's on-lot apportionment (enrich_parcels cur_floor_gfa_sqm = ST_Intersection area, not the whole polygon) makes on-lot share genuinely 1.0 for every non-shared structure; RD/attached remain two different legitimate floors even after slice 1 (attached party-wall sharing is real, not a defect).",
       "last_measured": {
         "value": 61571,
-        "at": "2026-10-18T12:51:18.837Z",
-        "commit": "3f60462bf5219a547d7fc9ddddbf1e1ebf719f22",
-        "cost_ms": 3972,
-        "sample_n": 26,
+        "at": "2026-10-19T15:22:55.087Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
+        "cost_ms": 3603,
+        "sample_n": 27,
         "source_run": {
           "run_id": null,
           "chain": null,
@@ -1393,12 +1393,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "2 outliers (worst 2.00)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1425,12 +1425,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "811 outliers (worst 5.93)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1457,12 +1457,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "12 outliers (worst 1.05)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1489,12 +1489,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "129 outliers (worst 75.00)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1521,12 +1521,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "0 outliers",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1553,12 +1553,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "3197 outliers (worst 5137.98)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1584,13 +1584,13 @@
       "zone_by": "zoning_class",
       "kind": "distribution",
       "last_measured": {
-        "value": "211 outliers (worst 6.62)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "value": "262 outliers (worst 6.59)",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }
@@ -1617,12 +1617,12 @@
       "kind": "distribution",
       "last_measured": {
         "value": "4381 outliers (worst 543499.59)",
-        "at": "2026-10-18T03:35:32.624Z",
-        "commit": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "at": "2026-10-19T13:15:01.159Z",
+        "commit": "15d79445291f7e4a61961d08a152c0c80d345751",
         "cost_ms": 0,
-        "sample_n": 18,
+        "sample_n": 20,
         "source_run": {
-          "run_id": "3320",
+          "run_id": "3508",
           "chain": null,
           "event": "golden_capture"
         }

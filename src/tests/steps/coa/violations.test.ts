@@ -378,7 +378,11 @@ describe('coa ① — converted claims (RED at ①; flip to `it` at ② / ③)',
     expect(readText(COMPUTE_REL)).not.toMatch(/timestamptz\[\]\)\s*,?\s*--?\s*(hearing|decision)|unnest\(\$\d+::timestamptz\[\]\)/);
   });
 
-  it.fails('D7 — the assessment report carries the generated validation scorecard (flips at ②)', () => {
+  // FLIPPED at RE-FREEZE #37 / replay night N1 (operator y 2026-10-19): step-validate --all --write writes the generated
+  // scorecard into the assessment report of EVERY registry step — converted[] and pending[] alike, red_suite included —
+  // as designed by Spec 124 R-R / Rule 13 (step-validate.mjs is the ONE command that generates the Spec 123 §6
+  // scorecard, over the registry derived from converted.json + pending). The block now exists before ②.
+  it('D7 — the assessment report carries the generated validation scorecard (written by step-validate --all --write at N1, R-R / Rule 13)', () => {
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 

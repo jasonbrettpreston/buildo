@@ -159,6 +159,9 @@ const STEP_CTX_KEYS = Object.freeze([
   'pool', 'chainId', 'runId', 'descriptor', 'checks', 'log', 'fetch', 'clock', 'config',
   'probePresence', 'acquired', 'written', 'prior', 'overrides', 'gate', 'matched',
   'cumulative', 'elapsed_ms', 'report', 'readSnapshot', 'producer', 'catalog', 'withinLimit',
+  // W4A-R5 (wave 4, operator y 2026-10-18): batch2 P1.1's stepCtx.contextRow() was assigned but never listed;
+  // src/tests/step-ctx-keys.logic.test.ts now derives the literal's key set and requires equality.
+  'contextRow',
 ]);
 
 /**
@@ -206,6 +209,7 @@ const RUNNER_META_KEYS = Object.freeze([
   'warnings',
   'audit_table',
   'acquired', // #33 (fold 19 MQ-A2 (a)) — records_meta.acquired.record_fields: the recorded header, the next run's schema_drift baseline.
+  'run_mode', // RE-FREEZE #37 (Spec 124 R-DX (iv)) — stamped when any primary declares externals[].modes (closes R-DB's capture-mode PIN for INGESTORs).
 ]);
 
 /**
@@ -274,8 +278,10 @@ function deriveMeta(descriptor) {
     // set_null_on_change_of is EXECUTED by codegen (write.js appends `<column> = CASE … THEN NULL`
     // to that write's DO UPDATE SET), so its column IS written by this step — declared == observed.
     // A trigger/step/pin/full_rescan row is NOT this step's write (someone else NULLs or re-derives it).
+    // RE-FREEZE #37 (Spec 124 R-EA): a by "set_null_unless" row is executed by the same codegen
+    // (`<column> = CASE WHEN EXCLUDED.<c> IS DISTINCT FROM <equals> THEN NULL …`), so it is this step's write too.
     for (const inv of descriptor.outputs.invalidates || []) {
-      if (!inv || typeof inv.set_null_on_change_of !== 'string') continue;
+      if (!inv || (typeof inv.set_null_on_change_of !== 'string' && !(inv.by === 'set_null_unless' && inv.set_null_unless))) continue;
       const seen = writes[inv.table] || [];
       if (!seen.includes(inv.column)) seen.push(inv.column);
       writes[inv.table] = seen;
@@ -827,6 +833,23 @@ function partitionFailedRows(rows, accepted) {
   return { failedIds, unaccepted };
 }
 
+/**
+ * RE-FREEZE #37 (Spec 124 R-DX (iv)) — THE run-mode resolver, shared by runEnrichPhase and the
+ * mode-selected INGESTOR primaries: `--full`, a standing override.force_full or an interrupted
+ * retraction means "full", else "incremental" (the WRITE_INVENTORY_MODES vocabulary). PURE.
+ * @param {{overrides?: {force_full?: boolean}, interrupted?: boolean, argv?: string[]}} args
+ * @returns {'full'|'incremental'}
+ */
+function resolveRunMode({ overrides, interrupted, argv } = {}) {
+  const args = Array.isArray(argv) ? argv : process.argv;
+  return args.includes('--full') || (overrides && overrides.force_full === true) || interrupted === true ? 'full' : 'incremental';
+}
+
+/** R-DX (iv): is this primary acquired in this run mode? (`modes` absent = every mode.) PURE. */
+function primarySelected(external, runMode) {
+  return !Array.isArray(external.modes) || external.modes.includes(runMode);
+}
+
 function ledgerPipelineName(descriptor, chainId) {
   const inv = descriptor.execution.invocation;
   const declared = inv && inv !== 'none' ? Object.keys(inv)[0] : null;
@@ -858,14 +881,27 @@ function multiPrimaryBinding(descriptor, tag) {
     if (e.role === 'lookup') refuse('B5', `the external "${e.id}" is role "lookup"; a multi-primary step declares primaries only.`);
   }
   if (externals.length < 2) refuse('B7', `"${externals.map((e) => e.id).join('", "')}" declares target but a multi-primary step needs two or more primaries; a single primary declares no target.`);
-  const tables = writes.map((w) => w.table);
+  // RE-FREEZE #37 (Spec 124 R-DY (e)): a DERIVED target (writes[i].derive) is never a primary's target.
+  const tables = writes.filter((w) => !w.derive).map((w) => w.table);
   const byTarget = new Map();
   const pairs = [];
   for (const e of externals) {
     if (typeof e.target !== 'string' || e.target.length === 0) refuse('B1', `the primary "${e.id}" declares no target; every primary of a multi-primary step names its outputs.writes[].table.`);
     if (!tables.includes(e.target)) refuse('B2', `the primary "${e.id}" targets "${e.target}", which is not a declared outputs.writes[].table (${tables.join(', ')}).`);
-    if (byTarget.has(e.target)) refuse('B3', `the primaries "${byTarget.get(e.target)}" and "${e.id}" both target "${e.target}".`);
-    byTarget.set(e.target, e.id);
+    // RE-FREEZE #37 (Spec 124 R-DX (iii)): two or more primaries naming the SAME target are one UNION group
+    // (acquired, concatenated, deduplicated once, written once). B3 is no longer a refusal; the members must
+    // agree on format, key property and failure posture (U1), and a union refuses skip_scope all_primaries.
+    if (byTarget.has(e.target)) {
+      const first = externals.find((x) => x.id === byTarget.get(e.target));
+      if (first.format !== e.format || first.key_property !== e.key_property || (first.on_failure || 'abort_step') !== (e.on_failure || 'abort_step')) {
+        refuse('U1', `the union group on "${e.target}" mixes "${first.id}" (format ${first.format}, key_property ${first.key_property}, on_failure ${first.on_failure || 'abort_step'}) and "${e.id}" (format ${e.format}, key_property ${e.key_property}, on_failure ${e.on_failure || 'abort_step'}); members must share format, key property and failure posture.`);
+      }
+      if (descriptor.staleness && descriptor.staleness.skip_scope === 'all_primaries') {
+        refuse('U1', `skip_scope "all_primaries" with the union group on "${e.target}" ("${first.id}", "${e.id}") has no consumer (SIMPLE); declare per-member triggers or no skip scope.`);
+      }
+    } else {
+      byTarget.set(e.target, e.id);
+    }
     const hasUrl = typeof e.url === 'string' && e.url.length > 0;
     if (!hasUrl || Object.prototype.hasOwnProperty.call(e, 'path') || e.format === 'xlsx') {
       refuse('B9', `the primary "${e.id}" must be url-bearing, carry no path and not be xlsx (filesystem and lookup arms have no multi-primary consumer; lifting this returns the 0fs A3/G3 refusals to the never-caught set).`);
@@ -897,12 +933,19 @@ function multiPrimaryBinding(descriptor, tag) {
       const ts3 = (descriptor.staleness && Array.isArray(descriptor.staleness.trigger)) ? descriptor.staleness.trigger : [];
       for (const t of ts3) if (t && t.position === 'post_acquisition' && (t.external === undefined || t.external === null || t.external === e.id)) refuse('0y Y3', `a post_acquisition trigger (style "${t.style === undefined ? '(absent)' : t.style}") reaches the ckan_datastore primary "${e.id}"; 0y's CKAN arm has no content hash, so tier-2 can never fire.`);
     }
-    pairs.push({ external: e, writeSpec: writes.find((w) => w.table === e.target), onFailure: e.on_failure || 'abort_step' });
+    pairs.push({ external: e, writeSpec: writes.find((w) => !w.derive && w.table === e.target), onFailure: e.on_failure || 'abort_step' });
   }
   for (const w of writes) {
-    if (!byTarget.has(w.table)) refuse('B4', `the write target "${w.table}" is targeted by no primary; it would be declared and left empty.`);
+    if (!w.derive && !byTarget.has(w.table)) refuse('B4', `the write target "${w.table}" is targeted by no primary; it would be declared and left empty.`);
   }
-  return pairs;
+  // One group per target, in first-member order: a single-member group is the 0x pair, unchanged.
+  const groups = [];
+  for (const p of pairs) {
+    const g = groups.find((x) => x.target === p.writeSpec.table);
+    if (g) g.members.push(p.external);
+    else groups.push({ target: p.writeSpec.table, members: [p.external], external: p.external, writeSpec: p.writeSpec, onFailure: p.onFailure });
+  }
+  return groups;
 }
 
 // ── ingestPrimaries (0x) ─────────────────────────────────────────────────────
@@ -922,12 +965,28 @@ function multiPrimaryBinding(descriptor, tag) {
 async function ingestPrimaries(args) {
   const { descriptor, pool, compute, log, tag, preWriteGate } = args;
   const pairs = multiPrimaryBinding(descriptor, tag);
-  for (const { external, writeSpec } of pairs) {
-    if (external.format === 'csv' && typeof compute.shapeRecord !== 'function') {
-      throw new Error(`${tag} the primary "${external.id}" declares format "csv", so this INGESTOR must export shapeRecord(record) (0x pre-loop check: refused before any primary is acquired).`);
+  for (const { members, writeSpec } of pairs) {
+    for (const external of members) {
+      if (external.format === 'csv' && typeof compute.shapeRecord !== 'function') {
+        throw new Error(`${tag} the primary "${external.id}" declares format "csv", so this INGESTOR must export shapeRecord(record) (0x pre-loop check: refused before any primary is acquired).`);
+      }
     }
     if (writeSpec.write_discipline && writeSpec.write_discipline.set_source === 'compute' && typeof compute.buildWriteSql !== 'function') {
       throw new Error(`${tag} the write target "${writeSpec.table}" declares write_discipline.set_source "compute", so this INGESTOR must export buildWriteSql (0x pre-loop check).`);
+    }
+  }
+  // RE-FREEZE #37 (Spec 124 R-DX (iv)): mode-selected primaries. The run mode is resolved ONCE (the helper
+  // runEnrichPhase shares) only when some primary declares externals[].modes; an unselected member is not
+  // acquired, and a union group with zero selected members is refused by name (U2) before any acquisition.
+  const declaresModes = pairs.some((g) => g.members.some((m) => Array.isArray(m.modes)));
+  let runMode = null;
+  if (declaresModes) {
+    const interrupted = (await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId: args.ownRunId })).interrupted === true;
+    runMode = resolveRunMode({ overrides: staleness.resolveOverrides(descriptor), interrupted, argv: process.argv });
+    for (const g of pairs) {
+      if (!g.members.some((m) => primarySelected(m, runMode))) {
+        throw new Error(`${tag} multi-primary INGESTOR (0x U2): no primary of the group on "${g.target}" (${g.members.map((m) => m.id).join(', ')}) is selected in run mode "${runMode}"; the target would be declared and never written.`);
+      }
     }
   }
   await write.assertWritePrivileges(pool, descriptor, { log, tag });
@@ -972,19 +1031,28 @@ async function ingestPrimaries(args) {
   const triggers = descriptor.staleness ? descriptor.staleness.trigger : undefined;
   const results = [];
   let stopped = false;
-  for (const { external, writeSpec, onFailure } of pairs) {
+  for (const { members, writeSpec, onFailure } of pairs) {
+    // R-DX (iv): only the members this run mode selects are acquired; the rest are reported, never silent.
+    const selected = runMode ? members.filter((m) => primarySelected(m, runMode)) : members;
+    const unselected = members.filter((m) => !selected.includes(m)).map((m) => m.id);
+    const union = selected.length > 1;
+    const external = selected[0];
     const id = external.id;
-    const base = { id, target: writeSpec.table, onFailure };
+    const ids = selected.map((m) => m.id);
+    const base = { id, ...(union || unselected.length ? { ids, unselected } : {}), target: writeSpec.table, onFailure };
     if (stopped) { results.push(base); continue; }
+    // R-DY: the derived targets fed by THIS primary target travel with it (derive.from === its table).
+    const derivedHere = descriptor.outputs.writes.filter((w) => w.derive && w.derive.from === writeSpec.table);
     const narrowed = {
       ...descriptor,
-      inputs: { ...descriptor.inputs, reads: { ...descriptor.inputs.reads, externals: [external] } },
-      outputs: { ...descriptor.outputs, writes: [writeSpec] },
+      inputs: { ...descriptor.inputs, reads: { ...descriptor.inputs.reads, externals: selected } },
+      outputs: { ...descriptor.outputs, writes: [writeSpec, ...derivedHere] },
       emits: allPrimaries
         ? (emit ? [{ ...emit, ...(emit.skeleton && typeof emit.skeleton === 'object' ? { skeleton: emit.skeleton[id] } : {}) }] : descriptor.emits)
-        : [{ ...emit, skeleton: emit.skeleton[id] }],
+        // R-DX (iii): a union group keeps one prior sub-block PER MEMBER, under the member ids.
+        : [{ ...emit, skeleton: union ? Object.fromEntries(ids.map((x) => [x, emit.skeleton[x]])) : emit.skeleton[id] }],
       staleness: Array.isArray(triggers)
-        ? { ...descriptor.staleness, trigger: triggers.filter((t) => (t.external === undefined || t.external === null || t.external === id) && !(allPrimaries && t.position === 'pre_acquisition')) }
+        ? { ...descriptor.staleness, trigger: triggers.filter((t) => (t.external === undefined || t.external === null || ids.includes(t.external)) && !(allPrimaries && t.position === 'pre_acquisition')) }
         : descriptor.staleness,
     };
     try {
@@ -992,8 +1060,8 @@ async function ingestPrimaries(args) {
         ...args,
         validatorCache,
         descriptor: narrowed,
-        subKey: id,
-        preWriteGate: preWriteGate ? (s) => preWriteGate({ ...s, primary: id }) : null,
+        subKey: union ? undefined : id,
+        preWriteGate: preWriteGate ? (s) => preWriteGate({ ...s, primary: union ? ids.join('+') : id }) : null,
       });
       results.push({ ...base, out });
       if (onFailure === 'abort_step' && out.writeSkipped && Array.isArray(out.failedPreWrite)) stopped = true;
@@ -1003,7 +1071,9 @@ async function ingestPrimaries(args) {
       results.push({ ...base, error: err.message });
     }
   }
-  return aggregatePrimaries(results, { emitKey: emit ? emit.key : null, overrides: staleness.resolveOverrides(descriptor), allPrimaries, priorMeta, priorError, stepGate });
+  const agg = aggregatePrimaries(results, { emitKey: emit ? emit.key : null, overrides: staleness.resolveOverrides(descriptor), allPrimaries, priorMeta, priorError, stepGate });
+  // R-DX (iv): the run mode is stamped when any primary declares modes (records_meta.run_mode).
+  return runMode ? { ...agg, run_mode: runMode } : agg;
 }
 
 // ── aggregatePrimaries (0x) ──────────────────────────────────────────────────
@@ -1025,17 +1095,25 @@ function aggregatePrimaries(results, base) {
   let overrides;
   for (const r of results) {
     const o = r.out;
+    // RE-FREEZE #37 (Spec 124 R-DX (iii)/(iv)): a union group's members share ONE entry shape (the group's
+    // outcome) under each member id; a member the run mode did not select is {selected:false, reason:"mode"}.
+    const memberIds = Array.isArray(r.ids) ? r.ids : [r.id];
+    for (const u of Array.isArray(r.unselected) ? r.unselected : []) primaries[u] = { selected: false, reason: 'mode', target: r.target };
     if (!o) {
-      primaries[r.id] = r.error !== undefined
-        ? { outcome: 'failed', error: r.error, target: r.target, on_failure: r.onFailure }
-        : { outcome: 'not_reached', target: r.target, on_failure: r.onFailure };
+      for (const mid of memberIds) {
+        primaries[mid] = r.error !== undefined
+          ? { outcome: 'failed', error: r.error, target: r.target, on_failure: r.onFailure }
+          : { outcome: 'not_reached', target: r.target, on_failure: r.onFailure };
+      }
       continue;
     }
     if (overrides === undefined) overrides = o.overrides;
-    if (o.schemaDrift) schemaDrifts.push(o.schemaDrift);
-    prior[r.id] = o.prior;
+    if (o.schemaDrift) schemaDrifts.push(...(Array.isArray(o.schemaDrift) ? o.schemaDrift : [o.schemaDrift]));
+    if (memberIds.length > 1) for (const mid of memberIds) prior[mid] = o.prior && typeof o.prior === 'object' ? o.prior[mid] ?? null : null;
+    else prior[r.id] = o.prior;
     if (!priorError && o.priorError) priorError = o.priorError;
-    const acq = o.acquired || {};
+    // R-DX (iii): a union member's entry carries its OWN acquired block (version, header, counters), never the group's.
+    const { members: memberBlocks, ...acq } = o.acquired || {};
     if (acq.head_error) headErrors.push(`${r.id}: ${acq.head_error}`);
     const entry = { ...acq, reason: o.reason, target: r.target, on_failure: r.onFailure };
     if (o.skipped) {
@@ -1056,7 +1134,13 @@ function aggregatePrimaries(results, base) {
       entry.outcome = 'loaded';
       for (const k of Object.keys(sums)) sums[k] += Number(o.written && o.written[k]) || 0;
     }
-    primaries[r.id] = entry;
+    if (memberIds.length > 1) {
+      for (const mid of memberIds) {
+        primaries[mid] = { ...entry, ...(memberBlocks && memberBlocks[mid] ? memberBlocks[mid] : {}), union: memberIds, ...(entry.outcome === 'skipped' && o.emitBlock && typeof o.emitBlock === 'object' ? { emitBlock: o.emitBlock[mid] } : {}) };
+      }
+    } else {
+      primaries[r.id] = entry;
+    }
     if (o.written) byTarget[r.target] = o.written;
   }
   return {
@@ -1184,7 +1268,57 @@ function multiPrimarySkipEmit(ingest, computeResult) {
  *
  * @returns {Promise<object>} `{skipped, reason, terminal, acquired, written, prior, overrides, emitBlock}`
  */
-async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey, validatorCache, schemaDriftBaseline }) {
+/** RE-FREEZE #37 (Spec 124 R-DX (iii)): the per-row member tag a union record carries to the write (never bound: bindRow reads declared columns only). */
+const UNION_MEMBER_KEY = '__external_id';
+
+/**
+ * RE-FREEZE #37 (Spec 124 R-DX (iii)) — folds a UNION group's per-member acquisitions into the ONE result
+ * shape runIngestPhase reads. Every member was gated; when EVERY gate skipped, the group skips with the first
+ * member's gate and an emit block per member id (re-emitted per member by aggregatePrimaries). Otherwise the
+ * records are concatenated, each tagged with its member id, and the counters are summed so row conservation
+ * holds over the union (rows_read = Σ rows_parsed). The members' own blocks ride under acquired.members, and the
+ * union carries NO group-level dataset version or header (null, like content_hash): each member keeps its own, the
+ * 0x per-primary form (acquired.primaries[id]) and #33's per-external-id header. Each written row keeps its own
+ * member's version. PURE.
+ * @param {Array<{m: object, r: object}>} members
+ */
+function unionResult(members) {
+  const gateOf = (r) => (r.tier1.skip ? r.tier1 : r.tier2);
+  const sum = (k) => members.reduce((n, { r }) => n + (Number(r.acquired && r.acquired[k]) || 0), 0);
+  const headErrors = members.filter(({ r }) => r.acquired && r.acquired.head_error).map(({ m, r }) => `${m.id}: ${r.acquired.head_error}`);
+  const acquired = {
+    union: members.map(({ m }) => m.id),
+    members: Object.fromEntries(members.map(({ m, r }) => [m.id, r.acquired])),
+    content_hash: null,
+    source_dataset_version: null,
+    bytes_downloaded: sum('bytes_downloaded'),
+    rows_parsed: sum('rows_parsed'),
+    feature_count: sum('feature_count'),
+    bad_key_count: sum('bad_key_count'),
+    null_geometry_count: sum('null_geometry_count'),
+    record_fields: null,
+    head_error: headErrors.length ? headErrors.join('; ') : null,
+  };
+  if (members.every(({ r }) => gateOf(r).skip)) {
+    const first = members[0].r;
+    return {
+      tier1: first.tier1.skip ? first.tier1 : { skip: false, reason: 'not_reached' },
+      tier2: first.tier1.skip ? { skip: false, reason: 'not_reached' } : first.tier2,
+      acquired,
+      features: [],
+      emitBlock: Object.fromEntries(members.map(({ m, r }) => [m.id, r.emitBlock])),
+    };
+  }
+  return {
+    tier1: { skip: false, reason: 'union_loaded' },
+    tier2: { skip: false, reason: 'union_loaded' },
+    acquired,
+    features: members.flatMap(({ m, r }) => (r.features || []).map((f) => ({ ...f, [UNION_MEMBER_KEY]: m.id }))),
+    emitBlock: null,
+  };
+}
+
+async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, chainId, log, tag, clockNow, preWriteGate, ownRunId, subKey, validatorCache, schemaDriftBaseline, runner }) {
   // ⚠️ ONE WRITE TARGET, REFUSED BY NAME AT PLAN TIME. Every line below indexes
   // `writes[0]`: the write plan, the key column, the geometry validation and the scoped
   // departure DELETE. A second declared target would be acquired for, gated over and then
@@ -1197,20 +1331,20 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // calls this function once per primary with `writes: [its target]` — several txns, each
   // call's own plan scoping its own departure DELETE — so this throw now fences only an
   // untargeted descriptor (the step-library "Fold D" lock pins it).
+  // RE-FREEZE #37 (Spec 124 R-DY (e)): the count is over NON-DERIVED writes. A derived target
+  // (writes[i].derive) is written inside the primary's transaction from the primary's slices, never fed by an
+  // external, so it is not a second primary target.
   const writes = descriptor.outputs.writes;
-  if (writes.length !== 1) {
+  const primaryWrites = writes.filter((w) => !w.derive);
+  if (primaryWrites.length !== 1) {
     throw new Error(`${tag} the INGESTOR archetype drives exactly ONE write target, and this descriptor declares `
-      + `${writes.length} (${writes.map((w) => w.table).join(', ') || 'none'}). Only outputs.writes[0] would be `
+      + `${primaryWrites.length} (${primaryWrites.map((w) => w.table).join(', ') || 'none'}). Only outputs.writes[0] would be `
       + 'written; the rest would be declared, gated over and left empty under a green verdict.');
   }
-  // 0y Y4/Y5 (I-A7): named refusals, BEFORE any I/O (no `await` runs between here and
-  // `staleness.detectInterruptedRetraction` at :1143, so a refusal costs no pool query).
-  const ckanNoTarget = (descriptor.inputs.reads.externals || [])
-    .filter((e) => e && e.format === 'ckan_datastore' && (typeof e.target !== 'string' || e.target.length === 0));
-  if (ckanNoTarget.length) {
-    throw new Error(`${tag} 0y Y4: the "ckan_datastore" external "${ckanNoTarget[0].id}" declares no "target"; `
-      + 'the CKAN DataStore arm exists for the multi-primary binding, and a targetless primary has no write plan.');
-  }
+  const derivedWrites = writes.map((w, index) => ({ w, index })).filter((x) => x.w.derive);
+  // 0y Y5 (I-A7): a named refusal, BEFORE any I/O. (0y Y4 — "a targetless ckan_datastore primary has no
+  // write plan" — is DELETED by RE-FREEZE #37, Spec 124 R-DX (ii): one targetless CKAN primary is a
+  // first-class single-primary INGESTOR. B7 still refuses a lone TARGETED primary.)
   // ⚠️ `staleness.trigger` IS LEGALLY THE STRING `"none"` — an ungated step, stated rather
   // than implied (staleness.js:81; `triggersAt` reads it as `[]`). FIVE of the seven converted
   // INGESTORs declare exactly that (load-address-points, load-parcels, load-wsib, load-massing,
@@ -1280,7 +1414,10 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   const urled = descriptor.inputs.reads.externals.filter((e) => hasUrl(e) || hasPath(e) || hasManifest(e));
   const primaries = urled.filter((e) => e.role === undefined || e.role === 'primary');
   const lookups = urled.filter((e) => e.role === 'lookup');
-  if (primaries.length !== 1) {
+  // RE-FREEZE #37 (Spec 124 R-DX (iii)): a UNION group — two or more primaries naming the SAME target, as
+  // ingestPrimaries narrows them — is acquired member by member below and written ONCE.
+  const union = primaries.length > 1 && primaries.every((e) => typeof e.target === 'string' && e.target === primaries[0].target);
+  if (!union && primaries.length !== 1) {
     throw new Error(`${tag} this INGESTOR declares ${primaries.length} url-bearing primary external(s) `
       + `(${primaries.map((e) => e.id).join(', ') || 'none'}), and the runner acquires exactly ONE `
       + `(inputs.reads.externals[].role absent or "primary"). ${
@@ -1349,6 +1486,18 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     throw new Error(`${tag} the external "${external.id}" declares format "pdf_document_set", so this INGESTOR must export `
       + '`shapeDocument(doc, { config })` and `reconcileDocuments(docResults, { config })` (RE-FREEZE #32). '
       + `compute.shapeDocument is ${typeof compute.shapeDocument}, compute.reconcileDocuments is ${typeof compute.reconcileDocuments}.`);
+  }
+  // RE-FREEZE #37 (Spec 124 R-DY): a derived target owes the pure compute export deriveRows, refused here,
+  // above the HEAD, like shapeRecord; a staging_full_replace primary has no per-slice executor to carry it.
+  if (derivedWrites.length > 0) {
+    if (typeof compute.deriveRows !== 'function') {
+      throw new Error(`${tag} outputs.writes declares derived target(s) (${derivedWrites.map((x) => x.w.table).join(', ')}), so this INGESTOR must export `
+        + '`deriveRows(table, sliceRows, priorByKey, { config, run_at, descriptor, keyOf })` returning the derived rows (Spec 124 R-DY). '
+        + `compute.deriveRows is ${typeof compute.deriveRows}.`);
+    }
+    if (writeSpec.write_discipline.class === write.STAGING_FULL_REPLACE_CLASS) {
+      throw new Error(`${tag} a derived target needs the per-slice primary transaction; class "${write.STAGING_FULL_REPLACE_CLASS}" has none (Spec 124 R-DY (d)).`);
+    }
   }
   // ── THE LOOKUP CONSTRUCTION REFUSALS (0w part C2, 2026-09-28) ────────────────
   // ⚠️ ALL FOUR FIRE HERE, ABOVE THE `acquireExternal` CALL AND THE `assertWritePrivileges`
@@ -1433,13 +1582,47 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // must force a genuine acquisition rather than let the tier-1/tier-2 staleness
   // gate skip on a stale-or-absent baseline — mirrors `forced` from
   // `override.force_run`, which already bypasses the same gate the same way.
+  // RE-FREEZE #37 (Spec 124 R-DY (c)): every declared conflict_index is probed BEFORE any hook (the first
+  // I/O of the run); a missing, non-unique or partial index refuses by name (failed_missing_precondition).
+  const conflictTargets = new Map();
+  for (const w of [writeSpec, ...derivedWrites.map((x) => x.w)]) {
+    const idx = w.write_discipline && w.write_discipline.conflict_index;
+    if (idx) conflictTargets.set(w.table, (await write.probeConflictIndex(pool, w.table, idx)).expressions);
+  }
+  // R-DZ / R-DY: the full-key SQL types for the touch and prior-read UNNEST arrays come from the catalog
+  // (R-CX (ii)); a key column the catalog cannot type refuses rather than casting to a guess.
+  const needsKeyTypes = derivedWrites.length > 0 || writeSpec.columns.some((c) => c.written === 'seen');
+  let keyTypes;
+  if (needsKeyTypes) {
+    const catalog = makeCatalog({ pool, declaredTables: catalogDeclaredTables(descriptor), tag });
+    keyTypes = [];
+    for (const k of write.keyColumns(writeSpec)) {
+      const t = await catalog.columnType(writeSpec.table, k);
+      if (!t || t === 'USER-DEFINED' || t === 'ARRAY') {
+        throw new Error(`${tag} ${writeSpec.table}.${k}: the catalog returned ${JSON.stringify(t)} for a key column the touch / prior read binds as a typed array (Spec 124 R-CX (ii)).`);
+      }
+      keyTypes.push(t);
+    }
+  }
   const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
   const forced = overrides.force_run === true || interruptedRetraction.interrupted === true;
+  // RE-FREEZE #37 (Spec 124 R-DX (iv)) on a SINGLE targetless primary that declares modes: the run mode is
+  // resolved (interrupted retraction included) and stamped; a run mode outside the declared set would leave the
+  // target never written, so it refuses (0x U2). A union member's mode is resolved by ingestPrimaries.
+  const singleRunMode = !union && typeof external.target !== 'string' && Array.isArray(external.modes)
+    ? resolveRunMode({ overrides, interrupted: interruptedRetraction.interrupted === true, argv: process.argv })
+    : null;
+  if (singleRunMode && !primarySelected(external, singleRunMode)) {
+    throw new Error(`${tag} 0x U2: the only primary "${external.id}" declares modes ${JSON.stringify(external.modes)} and the run mode is "${singleRunMode}"; the target would never be written.`);
+  }
   if (interruptedRetraction.interrupted) {
     log.warn(tag, `interrupted prior run detected (id ${interruptedRetraction.row.id}, status `
       + `${interruptedRetraction.row.status}) — forcing a full acquisition rather than trusting the staleness gate`);
   }
-  const plan = write.buildWritePlan(writeSpec, descriptor);
+  const plan = write.buildWritePlan(writeSpec, descriptor, {
+    ...(conflictTargets.has(writeSpec.table) ? { conflictTarget: conflictTargets.get(writeSpec.table) } : {}),
+    ...(keyTypes ? { keyTypes } : {}),
+  });
   const keyColumn = plan.keys[0];
 
   // ── THE COMPUTE-AUTHORED UPSERT (batch-2 Phase 3 prerequisite 0k, 2026-09-24) ─────
@@ -1521,7 +1704,47 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // than discovering after a 7 MB download that every write would affect 0 rows.
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
 
-  const result = await acquire.acquireExternal({
+  const acquireOne = (ext, extPrior, extForced) => acquire.acquireExternal({
+    ctxFetch: fetchImpl,
+    log,
+    tag,
+    slug: descriptor.identity.name,
+    external: ext,
+    descriptor,
+    config,
+    prior: extPrior,
+    timeoutMs,
+    keyProperty: ext.key_property,
+    keyColumn,
+    coerceKey: compute.coerceKey,
+    forced: extForced,
+    emitSkeleton: union ? (skeleton[ext.id] && typeof skeleton[ext.id] === 'object' ? { ...skeleton[ext.id] } : {}) : skeleton,
+    validatorCache,
+    shapeDocument: ext.format === 'pdf_document_set' ? compute.shapeDocument : undefined,
+    runner,
+    preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
+      descriptor,
+      validators: { lastModified: head.lastModified, etag: head.etag },
+      prior: extPrior,
+      forced: extForced,
+    }),
+    targetEmpty: () => staleness.targetIsEmpty(pool, descriptor),
+  });
+  // RE-FREEZE #37 (Spec 124 R-DX (iii)): a UNION group acquires every selected member, each gated against its
+  // OWN prior sub-block. The group skips only when EVERY member's gate skips (R-DD's target probe runs inside
+  // each member's gate); otherwise a skipped member is re-acquired forced, so the one write carries the whole
+  // union. Records are concatenated, each tagged with its member id.
+  let unionMembers = null;
+  if (union) {
+    const memberPrior = (id) => (prior && typeof prior[id] === 'object' ? prior[id] : null);
+    const gateOf = (r) => (r.tier1.skip ? r.tier1 : r.tier2);
+    unionMembers = [];
+    for (const m of primaries) unionMembers.push({ m, r: await acquireOne(m, memberPrior(m.id), forced) });
+    if (!unionMembers.every((x) => gateOf(x.r).skip)) {
+      for (const x of unionMembers) if (gateOf(x.r).skip) x.r = await acquireOne(x.m, memberPrior(x.m.id), true);
+    }
+  }
+  const result = union ? unionResult(unionMembers) : await acquire.acquireExternal({
     ctxFetch: fetchImpl,
     log,
     tag,
@@ -1542,6 +1765,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     validatorCache,
     // RE-FREEZE #32: only the pdf_document_set arm reads it (undefined → unread for every other format).
     shapeDocument: external.format === 'pdf_document_set' ? compute.shapeDocument : undefined,
+    // Spec 124 R-EB (a): the runner-owned values (only the pdf_document_set arm reads its pace floor / redirect cap).
+    runner,
     preAcquisitionGate: (head) => staleness.preAcquisitionDecision({
       descriptor,
       validators: { lastModified: head.lastModified, etag: head.etag },
@@ -1565,6 +1790,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     }
     const signal = noSourceFile ? 'no_source_file' : (result.tier1.skip ? 'source_validator' : 'content_hash');
     return {
+      ...(singleRunMode ? { run_mode: singleRunMode } : {}),
       skipped: true,
       reason: gate.reason,
       signal,
@@ -1693,6 +1919,8 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
       // declare no lookup — the T-pin every converted INGESTOR still passes byte-identically.
       const record = shapeRecord(f.record, {
         geojson: f.geojson, config, run_at: runAt, tag: tagRecord, descriptor, ...(lookups.length ? { lookups: lookupMaps } : {}),
+        // R-DX (iii): a union member's record carries its member id (ABSENT on every other path, the T-pin).
+        ...(union ? { external_id: f[UNION_MEMBER_KEY] } : {}),
       });
       if (record == null || typeof record === 'string') {
         const r = typeof record === 'string' && record ? record : 'unspecified';
@@ -1700,7 +1928,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
         shapedSkipped++;
         continue;
       }
-      shaped.push({ [keyColumn]: f[keyColumn], ...record });
+      shaped.push({ [keyColumn]: f[keyColumn], ...record, ...(union ? { [UNION_MEMBER_KEY]: f[UNION_MEMBER_KEY] } : {}) });
     }
     features = shaped;
   }
@@ -1710,6 +1938,13 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // (post-dedupe, below) and from `rows_read` (pre-shapeRecord, raw): three different
   // denominators, three different questions, none of them collapsed into one number.
   const rowsShaped = features.length;
+  // RE-FREEZE #37 (Spec 124 R-DZ): a written "seen" column is the runner clock's, never compute's.
+  if (plan.seen_column) {
+    const bound = features.find((f) => f && Object.prototype.hasOwnProperty.call(f, plan.seen_column));
+    if (bound) {
+      throw new Error(`${tag} compute bound a value for "${plan.seen_column}", a written "seen" column of ${plan.table}; its value is the runner clock (run_at), stamped by the runner and touched for unchanged keys (Spec 124 R-DZ).`);
+    }
+  }
 
   // Dedupe BEFORE the upsert: `ON CONFLICT` cannot affect the same row twice in one
   // statement, so a duplicated source key is a hard error, not a warning, unguarded.
@@ -1794,6 +2029,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   if (emptySource && emptySource.refused) {
     log.error(tag, `guards.empty_source: 0 rows to write — the write is REFUSED, ${plan.table} is untouched`);
     return {
+      ...(singleRunMode ? { run_mode: singleRunMode } : {}),
       skipped: false,
       writeSkipped: true,
       reason: 'empty_source_refused',
@@ -1820,10 +2056,15 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // recorded one. A "pause" drift refuses the write exactly like the empty-source refusal
   // above: no transaction, the target is untouched, an errored FAIL row (§schemaDriftRows).
   // A standing override.force_run (overrides, NOT forced) releases a "pause" drift as a WARN (MQ-A7).
-  const schemaDrift = schemaDriftDecision(descriptor, external.id, acquired.record_fields, schemaDriftBaseline, overrides);
-  if (schemaDrift && schemaDrift.refused) {
-    log.error(tag, `guards.schema_drift: the header of "${external.id}" drifted under "pause" — the write is REFUSED, ${plan.table} is untouched (${schemaDrift.row.value})`);
+  // RE-FREEZE #37 (Spec 124 R-DX (iii)): a union checks EACH member's header against that member's own baseline.
+  const schemaDrift = union
+    ? (unionMembers.map((x) => schemaDriftDecision(descriptor, x.m.id, x.r.acquired && x.r.acquired.record_fields, schemaDriftBaseline, overrides)).filter(Boolean))
+    : schemaDriftDecision(descriptor, external.id, acquired.record_fields, schemaDriftBaseline, overrides);
+  const refusedDrift = (Array.isArray(schemaDrift) ? schemaDrift : [schemaDrift]).find((x) => x && x.refused);
+  if (refusedDrift) {
+    log.error(tag, `guards.schema_drift: the header of "${refusedDrift.external}" drifted under "pause" — the write is REFUSED, ${plan.table} is untouched (${refusedDrift.row.value})`);
     return {
+      ...(singleRunMode ? { run_mode: singleRunMode } : {}),
       skipped: false,
       writeSkipped: true,
       reason: 'schema_drift_refused',
@@ -1859,6 +2100,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     log.error(tag, `pre_write check(s) FAILED with no standing override, the write is SKIPPED — `
       + `${plan.table} is untouched: ${gateDecision.failed.join(', ')}`);
     return {
+      ...(singleRunMode ? { run_mode: singleRunMode } : {}),
       skipped: false,
       writeSkipped: true,
       reason: 'pre_write_check_failed',
@@ -1899,6 +2141,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
     log.warn(tag, `pre_write WARN on a check declaring on_warn "skip_write" — the write is SKIPPED, `
       + `${plan.table} is untouched and the run completes: ${skipWriteChecks.join(', ') || 'floor not met'}`);
     return {
+      ...(singleRunMode ? { run_mode: singleRunMode } : {}),
       skipped: false,
       writeSkipped: true,
       reason: 'pre_write_warn_skip_write',
@@ -1928,18 +2171,41 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   // ── THE WRITE DISPATCH (Fold A F6). Class C is a REPLACE, not an upsert: it has no
   // `ON CONFLICT` and no per-row insert-vs-update question, so it gets its own executor.
   // Everything else — A, B, and the compute-authored A — stays on `executeWrite` unchanged.
+  // R-DX (iii): a union row keeps its own member's dataset version; R-DZ: the seen column is run_at.
+  const memberVersions = union ? Object.fromEntries(unionMembers.map((x) => [x.m.id, x.r.acquired.source_dataset_version])) : null;
   const writeArgs = {
     plan,
     writeSpec,
     carried: validated.carried,
     columnValues: (row) => ({
       ...row,
-      source_dataset_version: result.acquired.source_dataset_version,
+      source_dataset_version: union && row[UNION_MEMBER_KEY] && memberVersions[row[UNION_MEMBER_KEY]] !== undefined
+        ? memberVersions[row[UNION_MEMBER_KEY]]
+        : result.acquired.source_dataset_version,
       updated_at: runAt,
+      ...(plan.seen_column ? { [plan.seen_column]: runAt } : {}),
     }),
     log,
     tag,
+    ...(plan.seen_column ? { runAt } : {}),
   };
+  // RE-FREEZE #37 (Spec 124 R-DY (a)): the derived targets, their generated plans and the per-slice
+  // prior read; deriveRows is the compute's pure export, handed {config, run_at, descriptor, keyOf}.
+  if (derivedWrites.length > 0) {
+    const keyOf = (row) => JSON.stringify(plan.keys.map((k) => (row[k] == null ? null : String(row[k]))));
+    const priorColumns = [...new Set(derivedWrites.flatMap((x) => x.w.derive.prior_columns))];
+    writeArgs.runAt = runAt;
+    writeArgs.derived = {
+      prior: write.buildPriorReadSql({ from: writeSpec.table, keys: plan.keys, keyTypes, priorColumns }),
+      keyOf,
+      deriveRows: (table, sliceRows, priorByKey) => compute.deriveRows(table, sliceRows, priorByKey, { config, run_at: runAt, descriptor, keyOf }),
+      targets: derivedWrites.map((x) => ({
+        index: x.index,
+        onError: x.w.on_error || 'fail_step',
+        plan: write.buildWritePlan(x.w, descriptor, conflictTargets.has(x.w.table) ? { conflictTarget: conflictTargets.get(x.w.table) } : {}),
+      })),
+    };
+  }
   // fold 10 — the bound comes from the DECLARED logic variable; write.js fails closed when a
   // departed_mark plan gets a non-finite value.
   const written = writeSpec.write_discipline.class === write.STAGING_FULL_REPLACE_CLASS
@@ -1956,6 +2222,7 @@ async function runIngestPhase({ descriptor, pool, compute, config, fetchImpl, ch
   rowConservation(acquired, written);
 
   return {
+    ...(singleRunMode ? { run_mode: singleRunMode } : {}),
     skipped: false,
     writeSkipped: false,
     reason: 'loaded',
@@ -2048,6 +2315,9 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   const match = compute.buildMatchSql(descriptor, config, gate.mode);
   // O4 row 5 — null for every step whose compute supplies no keyed stale-link delete.
   const keyedTargets = resolveKeyedLinkTargets(specs, match, tag);
+  // R-EG (5): at most one vanished-lead sweep target (retract "departed" on a LINK); its leading keys derived this run.
+  const departedAt = plans.findIndex((pl) => !!pl.link_departed_sql);
+  const derivedLeading = new Set();
   const eligible = await pool.query(match.eligible_count_sql);
   // ⚠️ THE RUNNER NAMES NOTHING THE STEP DID NOT DECLARE (Gate 0 / claim #149). The four
   // counters below are the LINK vocabulary itself — rows walked, rows linked, rows that
@@ -2056,11 +2326,15 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
   // compute's own match plan, the gate signals from the descriptor's trigger `emit_key`.
   // Hard-coding either here would put a domain word in a generic runner, which is the
   // "one step gets a special case, then there are 27" failure this gate exists to stop.
+  // RE-FREEZE #37 (Spec 124 R-EG (1)): the four LINK counters and the two cumulative scalars take the names the
+  // compute's match plan declares (`match.counters`), exactly as the two pass counters already do; absent keeps the
+  // parcel names, byte-identical for every existing LINK step.
+  const names = linkCounterNames(match, tag);
   const matched = {
-    parcels_eligible: Number(eligible.rows[0].total),
-    parcels_processed: 0,
-    parcels_linked: 0,
-    no_match: 0,
+    [names.eligible]: Number(eligible.rows[0].total),
+    [names.processed]: 0,
+    [names.linked]: 0,
+    [names.no_match]: 0,
     [match.primary_counter]: 0,
     [match.fallback_counter]: 0,
   };
@@ -2122,7 +2396,8 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     lastId = batch.rows[batch.rows.length - 1].id;
     const ids = batch.rows.map((r) => r.id);
 
-    const primary = await pool.query(match.primary_match_sql, [ids]);
+    // R-EG (2): compute-built bind arrays (a pure export over the batch rows), else the batch ids.
+    const primary = await pool.query(match.primary_match_sql, primaryMatchBinds(compute, batch.rows, ids, { config, descriptor }, tag));
     const classified = compute.classifyMatches(primary.rows, config);
     const linkedIds = new Set(classified.rows.map((r) => r[plans[0].keys[0]]));
 
@@ -2150,11 +2425,32 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
       await executeOrderedWrites(pool, plans, rows, clockNow, written, specs);
     }
 
-    matched.parcels_processed += batch.rows.length;
-    matched.parcels_linked += classified.parcels + fallback.parcels;
+    matched[names.processed] += batch.rows.length;
+    matched[names.linked] += classified.parcels + fallback.parcels;
     matched[match.primary_counter] += classified.matches;
     matched[match.fallback_counter] += fallback.rows.length;
-    matched.no_match += ids.filter((id) => !linkedIds.has(id)).length;
+    matched[names.no_match] += ids.filter((id) => !linkedIds.has(id)).length;
+    if (departedAt >= 0) for (const r of rows) derivedLeading.add(r[plans[departedAt].keys[0]]);
+  }
+
+  // ── R-EG (5) — the vanished-lead sweep (retract "departed" on a LINK target), ONCE, after the loop ──────────
+  // Only when every eligible row was walked (full mode) and something was derived (the empty-set guard); a dry run
+  // issues nothing. Before-imaged on the same client, in one transaction; never touches a key derived this run.
+  if (departedAt >= 0 && !dryRun && gate.mode === 'full' && derivedLeading.size > 0) {
+    const dplan = plans[departedAt];
+    const removed = await pipeline.withTransaction(pool, async (client) => {
+      const { rows: gone } = await client.query(write.linkDepartedBeforeImageSql(dplan), [[...derivedLeading]]);
+      if (gone.length > 0) {
+        const bi = write.persistBeforeImageRows(gone, dplan.table, descriptor.identity.name, clockNow);
+        if (bi && bi.written) beforeImage.push({ ...bi, table: dplan.table });
+      }
+      const res = await client.query(dplan.link_departed_sql, [[...derivedLeading]]);
+      return res.rowCount || 0;
+    });
+    written[write.targetKey(departedAt)].retracted += removed;
+    written[write.targetKey(departedAt)].deleted += removed;
+    written[write.targetKey(departedAt)].rows_changed += removed;
+    log.info(tag, `${dplan.table}: vanished-lead sweep retracted ${removed.toLocaleString()} row(s) (retract "departed", scope ${dplan.scope})`);
   }
 
   // ONE post-write query for the cumulative rate AND the table invariants the checks
@@ -2176,8 +2472,8 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     gate,
     matched,
     cumulative: {
-      linked_parcels: Number(row.linked),
-      parcels_with_centroid: Number(row.total),
+      [names.cumulative_linked]: Number(row.linked),
+      [names.cumulative_total]: Number(row.total),
     },
     written,
     prior,
@@ -2185,6 +2481,40 @@ async function runLinkPhase({ descriptor, pool, compute, config, chainId, log, t
     writeSkipped: false,
     beforeImage,
   };
+}
+
+/** R-EG (1): the LINK counter vocabulary — the parcel names unless the compute's match plan names its own (all six, no partial override). */
+const LINK_COUNTER_DEFAULTS = Object.freeze({
+  eligible: 'parcels_eligible', processed: 'parcels_processed', linked: 'parcels_linked', no_match: 'no_match',
+  cumulative_linked: 'linked_parcels', cumulative_total: 'parcels_with_centroid',
+});
+function linkCounterNames(match, tag) {
+  if (match.counters === undefined) return LINK_COUNTER_DEFAULTS;
+  const c = match.counters;
+  const keys = Object.keys(LINK_COUNTER_DEFAULTS);
+  const bad = !c || typeof c !== 'object' || Object.keys(c).sort().join() !== [...keys].sort().join()
+    || keys.some((k) => typeof c[k] !== 'string' || !/^[a-z][a-z0-9_]*$/.test(c[k]));
+  if (bad) throw new Error(`${tag} match.counters must name exactly ${keys.join(', ')} as snake_case strings (Spec 124 R-EG (1)).`);
+  return c;
+}
+
+/** R-EG (2): the primary-match binds — the compute's pure export over the batch rows, else `[ids]` (byte-identical). */
+function primaryMatchBinds(compute, batchRows, ids, seam, tag) {
+  if (typeof compute.primaryMatchBinds !== 'function') return [ids];
+  const binds = compute.primaryMatchBinds(batchRows, seam);
+  if (!Array.isArray(binds)) throw new Error(`${tag} compute.primaryMatchBinds must return an array of bind values (Spec 124 R-EG (2)).`);
+  return binds;
+}
+
+/** R-EG (4): the closed runner values the link-change statement (lost_link_flag_sql) may bind, in declared order. */
+const LINK_FLAG_BIND_NAMES = Object.freeze(['lost_keys', 'batch_keys', 'run_at']);
+function linkFlagBindNames(match, tag) {
+  if (match.lost_link_flag_binds === undefined) return ['lost_keys'];
+  const b = match.lost_link_flag_binds;
+  if (!Array.isArray(b) || b.length === 0 || new Set(b).size !== b.length || b.some((n) => !LINK_FLAG_BIND_NAMES.includes(n))) {
+    throw new Error(`${tag} match.lost_link_flag_binds must be a non-empty ordered subset of ${LINK_FLAG_BIND_NAMES.join(', ')} (Spec 124 R-EG (4)); got ${JSON.stringify(b)}.`);
+  }
+  return b;
 }
 
 /**
@@ -2879,6 +3209,11 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   log.info(tag, `materialize gate: RUN (${gatedSkip.reason})`);
 
+  // RE-FREEZE #37 (Spec 124 R-EH): the ROWS arm — JavaScript-computed rows, runner-owned reads, writes and transactions.
+  if (descriptor.execution && descriptor.execution.materialize_form === 'rows') {
+    return materializeRowsArm({ descriptor, pool, compute, config, log, tag, clockNow, preWriteGate, overrides, gatedSkip, prior, privilege, requirements });
+  }
+
   const specs = descriptor.outputs.writes;
   const spec = specs[0];
   const plan = write.buildWritePlan(spec, descriptor);
@@ -2974,6 +3309,198 @@ async function runMaterializePhase({ descriptor, pool, compute, config, chainId,
     writeSkipped: false,
     gatedSkip,
   };
+}
+
+/** R-EH: the runner values a ROWS-arm statement may bind, by name, in declared order. */
+const MATERIALIZE_BIND_NAMES = Object.freeze(['last_key', 'batch_size', 'run_at']);
+function namedBinds(names, values, what, tag) {
+  const list = names === undefined ? [] : names;
+  if (!Array.isArray(list) || list.some((n) => !MATERIALIZE_BIND_NAMES.includes(n)) || new Set(list).size !== list.length) {
+    throw new Error(`${tag} ${what} must be an ordered subset of ${MATERIALIZE_BIND_NAMES.join(', ')} (Spec 124 R-EH); got ${JSON.stringify(names)}.`);
+  }
+  return list.map((n) => values[n]);
+}
+
+/** R-EH (c): sum one batch's additive `matched` into the run total — numbers add, objects add per key, arrays concatenate. */
+function addMatched(sum, part, tag) {
+  for (const [k, v] of Object.entries(part || {})) {
+    if (typeof v === 'number') sum[k] = (sum[k] || 0) + v;
+    else if (Array.isArray(v)) sum[k] = [...(sum[k] || []), ...v];
+    else if (v && typeof v === 'object') {
+      const into = sum[k] || {};
+      for (const [kk, vv] of Object.entries(v)) {
+        if (typeof vv !== 'number') throw new Error(`${tag} materializeRows matched.${k}.${kk} must be a number (an additive tally, Spec 124 R-EH (c)).`);
+        into[kk] = (into[kk] || 0) + vv;
+      }
+      sum[k] = into;
+    } else {
+      throw new Error(`${tag} materializeRows matched.${k} must be a number, an object of numbers or an array (Spec 124 R-EH (c)).`);
+    }
+  }
+  return sum;
+}
+
+/**
+ * THE MATERIALIZER ROWS ARM (RE-FREEZE #37, Spec 124 R-EH; wave-4 Q-MZ, operator y 2026-10-18). Reached from
+ * runMaterializePhase after its guards, gated skip and RLS preflight, so the phase order is the insert-select arm's own:
+ * compute exports checked by name → write targets planned (catalog types, before any write) → role:"lookup" reads,
+ * ONCE → the pre_write gate → the source count → the keyset loop (source batch → the pure materializeRows → key_prefix
+ * refusal → writes[] in order inside ONE transaction: A generated upsert, F generated keyed replace, G generated keyed
+ * update) → the optional post read → finalizeMatched. A write failure is fatal (the batch rolls back whole). dry_run
+ * reads and computes, and issues no DML and no post read.
+ */
+async function materializeRowsArm({ descriptor, pool, compute, config, log, tag, clockNow, preWriteGate, overrides, gatedSkip, prior, privilege, requirements }) {
+  for (const fn of ['buildSourceSql', 'materializeRows']) {
+    if (typeof compute[fn] !== 'function') throw new Error(`${tag} materialize_form "rows" needs the pure compute export ${fn} (Spec 124 R-EH).`);
+  }
+  if (typeof compute.buildMaterializeSql === 'function') {
+    throw new Error(`${tag} materialize_form "rows" refuses compute.buildMaterializeSql — that is the insert-select arm (Spec 124 R-EH).`);
+  }
+  const dryRun = overrides.dry_run === true;
+  const mode = overrides.force_full === true ? 'full' : 'incremental';
+  const source = descriptor.execution.materialize_source;
+  const specs = descriptor.outputs.writes;
+  const catalog = makeCatalog({ pool, declaredTables: catalogDeclaredTables(descriptor), tag });
+
+  // ── the targets, planned before any write: A / F / G, nothing else ────────────────────────────────────
+  const targets = [];
+  for (let i = 0; i < specs.length; i++) {
+    const w = specs[i];
+    const wd = w.write_discipline || {};
+    const clock = (w.columns || []).filter((c) => c.source === 'run_at').map((c) => c.name);
+    if (wd.class === 'guarded_upsert') {
+      targets.push({ kind: 'A', w, clock, plan: write.buildWritePlan(w, descriptor) });
+    } else if (wd.class === 'link_full_retraction' && w.retract === 'replace_keys') {
+      const keys = Array.isArray(w.key) ? w.key : [w.key];
+      targets.push({ kind: 'F', w, clock, sql: write.buildReplaceKeysSql(w, await catalog.columnType(w.table, keys[0])) });
+    } else if (wd.class === 'set_based_scoped' && wd.rows === 'compute') {
+      const types = {};
+      for (const c of (w.columns || []).filter((x) => (x.written || 'step') === 'step')) types[c.name] = await catalog.columnType(w.table, c.name);
+      targets.push({ kind: 'G', w, clock, sql: write.buildKeyedUpdateFromRowsSql(w, types) });
+    } else {
+      throw new Error(`${tag} outputs.writes[${i}] (${w.table}, class ${wd.class}) is not a ROWS-arm target: a guarded_upsert, a link_full_retraction with retract "replace_keys", or a set_based_scoped with rows "compute" (Spec 124 R-EH).`);
+    }
+  }
+  const written = { privilege: privilege[specs[specs.length - 1].table] || null, requirements };
+  specs.forEach((_, i) => { written[write.targetKey(i)] = { scanned: 0, inserted: 0, updated: 0, deleted: 0, retracted: 0, rows_changed: 0 }; });
+  const beforeImage = [];
+
+  // ── role:"lookup" reads, ONCE, before the loop ─────────────────────────────────────────────────────────
+  const lookups = {};
+  const lookupsEmpty = [];
+  const reads = descriptor.inputs && descriptor.inputs.reads && Array.isArray(descriptor.inputs.reads.tables) ? descriptor.inputs.reads.tables : [];
+  const precondition = (msg) => Object.assign(new Error(`${tag} failed_missing_precondition: ${msg} (Spec 124 R-EH (b)).`), { status: 'failed_missing_precondition' });
+  for (const r of reads.filter((x) => x && x.role === 'lookup')) {
+    const { rows } = await pool.query(`SELECT ${r.columns.join(', ')} FROM ${r.table}`);
+    const seen = new Set();
+    for (const row of rows) {
+      const k = JSON.stringify(r.unique_on.map((c) => row[c]));
+      if (seen.has(k)) throw precondition(`lookup ${r.table} carries a duplicate unique_on (${r.unique_on.join(', ')}) key ${k}`);
+      seen.add(k);
+    }
+    if (rows.length === 0 && r.on_empty === 'fail') throw precondition(`lookup ${r.table} is empty and declares on_empty "fail"`);
+    if (rows.length === 0) { lookupsEmpty.push(r.table); log.warn(tag, `lookup ${r.table} is empty (on_empty "warn")`); }
+    lookups[r.table] = rows;
+  }
+
+  // ── THE PRE-WRITE GATE ──────────────────────────────────────────────────────────────────────────────────
+  const gate = { mode, reason: gatedSkip.reason, skipped: false };
+  const decision = preWriteGate ? await preWriteGate({ matched: null, gate, prior, overrides, written: null }) : { abort: false, failed: [] };
+  if (decision.abort) {
+    log.error(tag, `pre_write check(s) FAILED with no standing override — no write was issued: ${decision.failed.join(', ')}`);
+    return { mode, gate, matched: null, written: { ...written, write_skipped_pre_write_fail: true }, prior, overrides, writeSkipped: true, failedPreWrite: decision.failed, gatedSkip, beforeImage };
+  }
+
+  // ── the keyset loop ─────────────────────────────────────────────────────────────────────────────────────
+  const plan = compute.buildSourceSql(descriptor, config, { mode });
+  const batchSize = configBatchSize(descriptor, config, descriptor.execution.batch_size_from_config);
+  const countRow = (await pool.query(plan.count_sql, namedBinds(plan.count_binds, { last_key: -1, batch_size: batchSize, run_at: clockNow }, 'count_binds', tag))).rows[0] || {};
+  const sum = {};
+  let lastKey = -1;
+  let batches = 0;
+  let sourceRows = 0;
+  for (;;) {
+    const { rows: batch } = await pool.query(plan.batch_sql, namedBinds(plan.batch_binds, { last_key: lastKey, batch_size: batchSize, run_at: clockNow }, 'batch_binds', tag));
+    if (batch.length === 0) break;
+    const nextKey = batch[batch.length - 1][source.key];
+    // panel round 1: the keyset must advance, or the loop would re-read the same batch forever
+    if (!(Number(nextKey) > Number(lastKey))) {
+      throw new Error(`${tag} materialize_source keyset did not advance (last ${JSON.stringify(lastKey)}, next ${JSON.stringify(nextKey)}): buildSourceSql's batch_sql must select ${source.key} > last_key ORDER BY ${source.key} (Spec 124 R-EH (a)).`);
+    }
+    lastKey = nextKey;
+    batches += 1;
+    sourceRows += batch.length;
+    const out = compute.materializeRows(batch, { config, run_at: clockNow, descriptor, lookups });
+    const rowsBy = (out && out.rows) || {};
+    const replaceBy = (out && out.replace_keys) || {};
+    addMatched(sum, out && out.matched, tag);
+    // key_prefix: every row and replace key of a prefixed target carries the family prefix — refused before the txn
+    targets.forEach((t, i) => {
+      const kp = t.w.write_discipline.key_prefix;
+      const ek = write.targetKey(i);
+      if (t.kind === 'F' && rowsBy[ek] && rowsBy[ek].length) throw new Error(`${tag} materializeRows returned rows.${ek} for a replace_keys target; it takes replace_keys.${ek} only (Spec 124 R-EH).`);
+      if (t.kind !== 'F' && replaceBy[ek] && replaceBy[ek].length) throw new Error(`${tag} materializeRows returned replace_keys.${ek} for a target that is not retract "replace_keys" (Spec 124 R-EH).`);
+      if (!kp) return;
+      const values = t.kind === 'F' ? (replaceBy[ek] || []) : (rowsBy[ek] || []).map((r) => r[kp.column]);
+      const bad = values.find((v) => typeof v !== 'string' || !v.startsWith(kp.prefix));
+      if (bad !== undefined) throw new Error(`${tag} write_discipline.key_prefix: ${t.w.table}.${kp.column} ${JSON.stringify(bad)} is outside the "${kp.prefix}" family; the batch is refused before its transaction (Spec 124 R-EH).`);
+    });
+    if (dryRun) continue;
+    await pipeline.withTransaction(pool, async (client) => {
+      for (let i = 0; i < targets.length; i++) {
+        const t = targets[i];
+        const ek = write.targetKey(i);
+        const stamp = (rs) => (t.clock.length ? rs.map((r) => Object.assign({}, r, Object.fromEntries(t.clock.map((c) => [c, clockNow])))) : rs);
+        if (t.kind === 'A') {
+          const rs = stamp(rowsBy[ek] || []);
+          const res = await write.executeUpsertBatch(client, t.plan, rs);
+          written[ek].scanned += rs.length;
+          written[ek].inserted += res.inserted;
+          written[ek].updated += res.updated;
+          written[ek].rows_changed += res.inserted + res.updated;
+        } else if (t.kind === 'F') {
+          const keys = replaceBy[ek] || [];
+          if (keys.length === 0) continue;
+          const binds = t.sql.binds(keys);
+          const { rows: gone } = await client.query(t.sql.before_image_sql, binds);
+          if (gone.length > 0) {
+            const bi = write.persistBeforeImageRows(gone, t.w.table, descriptor.identity.name, clockNow);
+            if (bi && bi.written) beforeImage.push({ ...bi, table: t.w.table });
+          }
+          const res = await client.query(t.sql.delete_sql, binds);
+          written[ek].scanned += keys.length;
+          written[ek].deleted += res.rowCount || 0;
+          written[ek].retracted += res.rowCount || 0;
+          written[ek].rows_changed += res.rowCount || 0;
+        } else {
+          const rs = stamp(rowsBy[ek] || []);
+          if (rs.length === 0) continue;
+          for (let k = 0; k < rs.length; k += pipeline.maxRowsPerInsert(t.sql.columns.length)) {
+            const slice = rs.slice(k, k + pipeline.maxRowsPerInsert(t.sql.columns.length));
+            const res = await client.query(t.sql.sql, t.sql.columns.map((c) => slice.map((r) => (r[c] === undefined ? null : r[c]))));
+            written[ek].updated += res.rowCount || 0;
+            written[ek].rows_changed += res.rowCount || 0;
+          }
+          written[ek].scanned += rs.length;
+        }
+      }
+    });
+  }
+
+  // ── the post read, once; finalizeMatched ────────────────────────────────────────────────────────────────
+  let post = null;
+  if (!dryRun && typeof compute.buildPostSql === 'function') {
+    const ps = compute.buildPostSql(descriptor, config);
+    const values = [...namedBinds(ps.post_binds, { last_key: lastKey, batch_size: batchSize, run_at: clockNow }, 'post_binds', tag), ...(ps.post_params || [])];
+    post = (await pool.query(ps.post_sql, values)).rows[0] || {};
+  }
+  const matched = typeof compute.finalizeMatched === 'function'
+    ? compute.finalizeMatched(sum, { config, descriptor, post, count: countRow })
+    : { ...sum };
+  matched.batches_processed = batches;
+  matched.source_rows = sourceRows;
+  if (lookupsEmpty.length) matched.lookups_empty = lookupsEmpty;
+  return { mode, gate, matched, written, prior, overrides, writeSkipped: false, gatedSkip, beforeImage };
 }
 
 /**
@@ -3505,7 +4032,9 @@ async function connectPair(pool) {
   }
 }
 
-async function runRecorderPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate, clockNow }) {
+async function runRecorderPhase({ descriptor, pool, compute, config, chainId, log, tag, preWriteGate, clockNow, runner }) {
+  // R-EB (a): the phase-deadline re-cancel cadence is runner-owned (config.js RUNNER_VARIABLES).
+  const recancel = recancelOf(runner);
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
@@ -3548,7 +4077,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
   try {
     const pidRow = await snapClient.query('SELECT pg_backend_pid() AS pid');
     const pid = pidRow.rows[0] ? Number(pidRow.rows[0].pid) : null;
-    deadline = startPhaseDeadline(cancelClient, pid, phaseDeadlineMs, { phase: 'reads', tag, log });
+    deadline = startPhaseDeadline(cancelClient, pid, phaseDeadlineMs, { phase: 'reads', tag, log, recancel });
     try {
       await snapClient.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
       if (statementTimeoutMs > 0) await snapClient.query(`SET LOCAL statement_timeout = ${statementTimeoutMs}`);
@@ -3659,7 +4188,7 @@ async function runRecorderPhase({ descriptor, pool, compute, config, chainId, lo
       // deadline (phaseDeadlineMs 0/"none") keeps remainingPhaseDeadlineMs at 0, which
       // `startPhaseDeadline`'s own `!timeoutMs` guard already treats as inert, so
       // "disabled stays disabled for both blocks" falls out of the same arithmetic.
-      const optionalDeadline = startPhaseDeadline(optionalCancelClient, optionalPid, remainingPhaseDeadlineMs, { phase: 'optional_reads', tag, log });
+      const optionalDeadline = startPhaseDeadline(optionalCancelClient, optionalPid, remainingPhaseDeadlineMs, { phase: 'optional_reads', tag, log, recancel });
       // CP-S5 (R-CX) — an optional entry may declare a CATALOG op ({key, catalog: {op, tables}})
       // instead of SQL text; it runs on THIS client (same statement bound, same deadline) through
       // the runner-owned reader and lands in the same rows shape.
@@ -3879,15 +4408,28 @@ async function captureStallDiagnostic(writer, runId, pid) {
  * @param {() => number|null} getPid
  * @returns {() => void}
  */
-/**
- * EP-PHASE-DEADLINE (Guardian fold, 2026-09-15) — the CEILING on the phase deadline's
- * cancel-retry cadence. See `startPhaseDeadline` for why a retry exists at all and why
- * this is a derived constant rather than an admin logic variable.
- */
-const PHASE_DEADLINE_RECANCEL_MS = 5000;
+// EP-PHASE-DEADLINE (Guardian fold, 2026-09-15) — the cancel-retry cadence's ceiling, floor and
+// divisor, and the stall ticker's multiplier, are runner-owned logic variables (Spec 124 R-EB (a):
+// step_phase_recancel_max_ms / _min_ms / _divisor, step_stall_ticker_multiplier), resolved for every
+// step by config.js RUNNER_VARIABLES and handed in by the caller — never literals here.
 
-function startStallTicker(writer, runId, intervalMs, getPid) {
+/** A runner-owned value a guard needs: a finite positive number, or a named throw. */
+function requirePositive(value, name) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new Error(`[step] ${name} must be a resolved positive runner variable (Spec 124 R-EB (a)); got ${JSON.stringify(value)}`);
+  }
+  return value;
+}
+
+/** The phase-deadline re-cancel cadence from the resolved runner values (undefined fields throw when armed). */
+function recancelOf(runner) {
+  const r = runner || {};
+  return { maxMs: r.step_phase_recancel_max_ms, minMs: r.step_phase_recancel_min_ms, divisor: r.step_phase_recancel_divisor };
+}
+
+function startStallTicker(writer, runId, intervalMs, getPid, multiplier) {
   if (!intervalMs || intervalMs <= 0) return () => {};
+  const factor = requirePositive(multiplier, 'step_stall_ticker_multiplier');
   let fired = false;
   const timer = setInterval(() => {
     if (fired) return;
@@ -3895,7 +4437,7 @@ function startStallTicker(writer, runId, intervalMs, getPid) {
     captureStallDiagnostic(writer, runId, getPid()).catch((err) => {
       pipeline.log.warn('[step/enrich]', `stall ticker diagnostic dispatch failed: ${err.message}`);
     });
-  }, intervalMs * 2);
+  }, intervalMs * factor);
   if (typeof timer.unref === 'function') timer.unref();
   return () => clearInterval(timer);
 }
@@ -3979,7 +4521,11 @@ function startPhaseDeadline(cancelClient, pid, timeoutMs, meta) {
   // externalization is for values that change what the step does or decides. Deriving it
   // from the bound also keeps it honest under a tiny test bound instead of hard-coding a
   // production-scale constant a unit lock would have to wait out.
-  const recancelMs = Math.min(PHASE_DEADLINE_RECANCEL_MS, Math.max(50, Math.round(timeoutMs / 4)));
+  const recancel = meta.recancel || {};
+  const recancelMs = Math.min(
+    requirePositive(recancel.maxMs, 'step_phase_recancel_max_ms'),
+    Math.max(requirePositive(recancel.minMs, 'step_phase_recancel_min_ms'), Math.round(timeoutMs / requirePositive(recancel.divisor, 'step_phase_recancel_divisor'))),
+  );
   armTimer = setTimeout(() => {
     if (stopped) return;
     fired = true;
@@ -4084,7 +4630,8 @@ function startHeartbeatTicker(writer, runId, getPhaseName, intervalMs, getRowsPr
  */
 async function* streamOverClient(client, sql, params = [], options = {}) {
   const QueryStream = require('pg-query-stream');
-  const qs = new QueryStream(sql, params, { batchSize: options.batchSize || 100 });
+  // Spec 124 R-EB (a): no `|| 100` fallback — every caller passes its declared batch size.
+  const qs = new QueryStream(sql, params, { batchSize: requirePositive(options.batchSize, 'streamOverClient batchSize') });
   const stream = client.query(qs);
   try {
     for await (const row of stream) yield row;
@@ -4252,7 +4799,10 @@ function resolveEnrichAggregate(postPhase, written, phases, specs, tag) {
  *
  * @returns {Promise<object>} `{deferred, matched, written, prior, overrides, writeSkipped, skipped}`
  */
-async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId }) {
+async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log, tag, clockNow, preWriteGate, ownRunId, runner }) {
+  // R-EB (a): the stall-ticker multiplier and the phase-deadline re-cancel cadence are runner-owned.
+  const recancel = recancelOf(runner);
+  const stallMultiplier = runner ? runner.step_stall_ticker_multiplier : undefined;
   const t0 = Date.now();
   const requirements = await assertRequirements(pool, descriptor, { log, tag });
   const overrides = staleness.resolveOverrides(descriptor);
@@ -4267,7 +4817,8 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // branch, step-validate.mjs), so an interrupted prior run forces this one to treat
   // itself as full, mirroring runCascadePhase's own `bypassed` fold verbatim.
   const interruptedRetraction = await staleness.detectInterruptedRetraction(pool, descriptor, { ownRunId });
-  const full = process.argv.includes('--full') || overrides.force_full === true || interruptedRetraction.interrupted;
+  // RE-FREEZE #37 (Spec 124 R-DX (iv)): ONE run-mode resolver, shared with the mode-selected INGESTOR primaries.
+  const full = resolveRunMode({ overrides, interrupted: interruptedRetraction.interrupted, argv: process.argv }) === 'full';
   const privilege = await write.assertWritePrivileges(pool, descriptor, { log, tag });
   const prior = await staleness.readPriorEmit(pool, ledgerPipelineName(descriptor, chainId), null, { chains: staleness.declaredChains(descriptor) });
 
@@ -4441,7 +4992,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
   // FAIL LOUD, above the lock: a non-finite resolution throws here, before the
   // heartbeat client is opened and before any transaction. `Number.isFinite`, never
   // `!x` — an explicitly declared 0 stays a deliberate disable.
-  const resolveInterval = (field, scale) => {
+  const resolveInterval = (field, toMs) => {
     const varName = descriptor.execution && descriptor.execution[field];
     // The literal "none" is the DECLARED disable, the same escape
     // `execution.phases[].timeout_minutes_from_config` already carries — a step
@@ -4450,7 +5001,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     // only the declaration disables.
     if (varName === 'none') return 0;
     const raw = varName ? config[varName] : undefined;
-    const value = Math.round(Number(raw) * scale);
+    const value = Math.round(toMs(Number(raw)));
     if (!Number.isFinite(value)) {
       throw new Error(
         `${tag} execution.${field} ${varName ? `names "${varName}", which resolved to ${JSON.stringify(raw)}` : 'is not declared'}. `
@@ -4460,8 +5011,8 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
     }
     return value;
   };
-  const heartbeatMs = resolveInterval('heartbeat_minutes_from_config', 60000);
-  const lockTimeoutMs = resolveInterval('lock_timeout_ms_from_config', 1);
+  const heartbeatMs = resolveInterval('heartbeat_minutes_from_config', (minutes) => minutes * 60000);
+  const lockTimeoutMs = resolveInterval('lock_timeout_ms_from_config', (ms) => ms);
 
   // ── WF3 2026-09-17 (review_followups.md:3788) — the PER-PHASE bound joins them ────
   //
@@ -4790,12 +5341,12 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       const phaseStartMs = Date.now();
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
-      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
+      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid, stallMultiplier);
       // EP-PHASE-DEADLINE — the phase bound the declaration always claimed to be. Armed
       // from the SAME `timeout_minutes_from_config` value the `SET LOCAL` above uses (one
       // declared number, two scopes: per statement AND per phase), on the heartbeat client
       // (a connection distinct from `client`, which is the one that will be cancelled).
-      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log });
+      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log, recancel });
       try {
         // WF3 stall commit 1 — a SET LOCAL-triggered abort dies LOUD with the
         // phase's OWN name (Spec 115 §2.2 fail-safe-loud), never a bare
@@ -5040,7 +5591,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       const phaseStartMs = Date.now();
       currentPhaseName = phase.name;
       await recordHeartbeat(heartbeatClient, ownRunId, phase.name, rowsProcessed);
-      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid);
+      const stopTicker = startStallTicker(heartbeatClient, ownRunId, heartbeatMs, () => pid, stallMultiplier);
       // EP-PHASE-DEADLINE (Observability fold, 2026-09-15) — the post_commit phase gets the
       // SAME wall-clock deadline (and the same re-arm) as the shared-txn phases. It is the
       // phase cloud run 4911 actually died in: `optimal_config` survived >1,900 s past its
@@ -5051,7 +5602,7 @@ async function runEnrichPhase({ descriptor, pool, compute, config, chainId, log,
       // Guardian fence 5) are untouched. A cancel that lands mid-`flushBatch` aborts that
       // batch, which ROLLBACKs and rethrows through the same wrapper; batches already
       // COMMITted stay committed, exactly as any other pass-5 failure.
-      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log });
+      const deadline = startPhaseDeadline(heartbeatClient, pid, timeoutMs, { phase: phase.name, tag, log, recancel });
       try {
         passRaw[phase.name] = await (async () => {
           try {
@@ -5456,7 +6007,7 @@ function resolveKeyedLinkTargets(specs, match, tag) {
   const flag = specs.findIndex((w) => table !== null && w.table !== table);
   const missing = [];
   if (upsert < 0) missing.push('a guarded_upsert target');
-  if (clear < 0) missing.push('a set_based_scoped clear on the upsert table');
+  // R-EG (3): the E1 clear is optional — required only by its own declaration (its $2/$3 guard is checked below).
   if (del < 0) missing.push('a link_full_retraction keyed-delete target on the upsert table');
   if (flag < 0) missing.push('the lost-link flag target (a target on another table)');
   // E1 stays GENERATED: its declared scope must carry the derived-key guard ($2/$3), or an unchanged
@@ -5471,6 +6022,7 @@ function resolveKeyedLinkTargets(specs, match, tag) {
     throw new Error(`${tag} the compute supplies a keyed stale-link delete, but the step does not declare `
       + `${missing.join('; ')} — an undeclared write is refused.`);
   }
+  linkFlagBindNames(match, tag);
   return { upsert, clear, del, flag };
 }
 
@@ -5488,8 +6040,8 @@ function resolveKeyedLinkTargets(specs, match, tag) {
 async function executeKeyedLinkWrites({ pool, plans, specs, targets, match, batchIds, rows, runAt, written, slug, beforeImage }) {
   const keys = plans[targets.upsert].keys;
   const keyArrays = (rs) => keys.map((k) => rs.map((r) => r[k]));
-  const clearCol = specs[targets.clear].columns[0];
-  const kept = rows.filter((r) => r[clearCol.name] !== clearCol.set_value);
+  const clearCol = targets.clear >= 0 ? specs[targets.clear].columns[0] : null;
+  const kept = clearCol ? rows.filter((r) => r[clearCol.name] !== clearCol.set_value) : rows;
   const clockColumns = (specs[targets.upsert].columns || []).filter((c) => c.source === 'run_at').map((c) => c.name);
   const stamped = clockColumns.length === 0
     ? rows
@@ -5498,10 +6050,12 @@ async function executeKeyedLinkWrites({ pool, plans, specs, targets, match, batc
   const ek = (i) => write.targetKey(i);
   await pipeline.withTransaction(pool, async (client) => {
     // E1's GENERATED clear (write.js, from the declared scope); $2/$3 = the derived rows that re-assert it.
-    const cleared = await write.executeSetBasedClear(client, plans[targets.clear], [batchIds, ...keyArrays(kept)]);
-    written[ek(targets.clear)].scanned += batchIds.length;
-    written[ek(targets.clear)].updated += cleared;
-    written[ek(targets.clear)].rows_changed += cleared;
+    if (targets.clear >= 0) {
+      const cleared = await write.executeSetBasedClear(client, plans[targets.clear], [batchIds, ...keyArrays(kept)]);
+      written[ek(targets.clear)].scanned += batchIds.length;
+      written[ek(targets.clear)].updated += cleared;
+      written[ek(targets.clear)].rows_changed += cleared;
+    }
 
     if (stamped.length > 0) {
       const result = await write.executeUpsertBatch(client, plans[targets.upsert], stamped);
@@ -5517,7 +6071,9 @@ async function executeKeyedLinkWrites({ pool, plans, specs, targets, match, batc
       if (bi && bi.written) beforeImage.push({ ...bi, table: plans[targets.del].table });
     }
     const lost = [...new Set(stale.rows.map((r) => r[keys[0]]))];
-    const flagged = await write.executeGuardedUpdate(client, match.lost_link_flag_sql, [lost]);
+    // R-EG (4): the link-change statement binds the declared runner values, in order (default [lost_keys]).
+    const flagValues = { lost_keys: lost, batch_keys: batchIds, run_at: runAt };
+    const flagged = await write.executeGuardedUpdate(client, match.lost_link_flag_sql, linkFlagBindNames(match, '[keyed-link]').map((n) => flagValues[n]));
     written[ek(targets.flag)].scanned += lost.length;
     written[ek(targets.flag)].updated += flagged.length;
     written[ek(targets.flag)].rows_changed += flagged.length;
@@ -6392,6 +6948,9 @@ async function runWithPool(runnable, pool, ctx) {
   const hoisted = declaresConfig && descriptor.config.hoisted_above_gate === true;
   let configValues = EMPTY_CONFIG;
   let configStamp = null;
+  // Spec 124 R-EB (a): the runner-owned step_* variables, resolved for EVERY step in the same
+  // logic_variables statement as declared config (config.js RUNNER_VARIABLES). Never ctx.config.
+  let runnerValues = null;
   // R-A (2026-08-28) — every `config.retired[]` entry, annotated with whether its
   // `logic_variables` row still exists. Carried alongside `configStamp` so the
   // `retired_var_row_present` audit row can be built once compute has run, exactly
@@ -6421,15 +6980,16 @@ async function runWithPool(runnable, pool, ctx) {
     await assertDatabaseTarget(pool, descriptor);
     if (owns) runId = await openLedgerRow(pool, slug);
     else runId = parseStepRunIdEnv();
-    if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
+    if (hoisted) ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus, runner: runnerValues } = await resolveConfig(pool, descriptor));
 
     // §4.1 ② — txn-scoped advisory lock on identity.lock. `skipEmit: false`
     // because the SKIP summary is the library's to emit: the SDK's built-in one
     // carries no audit_table, which is what makes a contention skip land as
     // verdict UNKNOWN today instead of a row-derived verdict.
     const lockResult = await pipeline.withAdvisoryLock(pool, descriptor.identity.lock, async () => {
-      if (declaresConfig && !hoisted) {
-        ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus } = await resolveConfig(pool, descriptor));
+      // R-EB (a): every step resolves here (config "none" included — its runner values), unless hoisted above.
+      if (!hoisted) {
+        ({ values: configValues, stamp: configStamp, retiredStatus: configRetiredStatus, probeStatus: configProbeStatus, runner: runnerValues } = await resolveConfig(pool, descriptor));
       }
       const observations = Object.create(null);
       // #52 — the pre_write gate's own observations (makePreWriteGate sink).
@@ -6557,7 +7117,7 @@ async function runWithPool(runnable, pool, ctx) {
         stepCtx.checks = [];
       } else if (isLinkStep(descriptor)) {
         link = await runLinkPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6578,7 +7138,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isLinkKeyedStep(descriptor)) {
         linkKeyed = await runLinkKeyedPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6597,7 +7157,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isLinkColumnStep(descriptor)) {
         linkColumn = await runLinkColumnPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6621,6 +7181,7 @@ async function runWithPool(runnable, pool, ctx) {
         // 0x (RE-FREEZE #29): a descriptor with a targeted external is multi-primary.
         schemaDriftBaseline = await readSchemaDriftBaseline(pool, descriptor, chainId);
         ingest = await (isMultiPrimary(descriptor) ? ingestPrimaries : runIngestPhase)({
+          runner: runnerValues,
           descriptor, pool, compute: runnable.compute, config: configValues,
           fetchImpl: stepCtx.fetch, chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
@@ -6649,7 +7210,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isCascadeStep(descriptor)) {
         cascade = await runCascadePhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6671,7 +7232,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isMaterializeStep(descriptor)) {
         materialize = await runMaterializePhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6691,7 +7252,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isBackfillStep(descriptor)) {
         backfill = await runBackfillPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6713,7 +7274,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isRecorderStep(descriptor)) {
         recorder = await runRecorderPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6734,7 +7295,7 @@ async function runWithPool(runnable, pool, ctx) {
         }
       } else if (isEnrichStep(descriptor)) {
         enrich = await runEnrichPhase({
-          descriptor, pool, compute: runnable.compute, config: configValues,
+          descriptor, pool, compute: runnable.compute, config: configValues, runner: runnerValues,
           chainId, log: pipeline.log, tag: `[${slug}]`, clockNow, ownRunId: runId,
           preWriteGate: makePreWriteGate({ descriptor, chainId, stepCtx, compute: runnable.compute, config: configValues, sink: preWriteObserved }),
         });
@@ -6824,9 +7385,8 @@ async function runWithPool(runnable, pool, ctx) {
       // OUTPUT-PANEL FIX F7 (MED, 2026-09-10) — caps simultaneous post-check clients;
       // see plausibility.js's runValidatorEntries docblock for the corrected pool-
       // headroom reasoning (link_wsib alone declares 9 entries).
-      const postCheckConcurrency = typeof configValues.step_post_check_concurrency === 'number'
-        ? configValues.step_post_check_concurrency
-        : 4;
+      // Spec 124 R-EB (a): runner-owned, resolved for every step — the `: 4` fallback is deleted.
+      const postCheckConcurrency = runnerValues.step_post_check_concurrency;
 
       // OUTPUT-PANEL FIX F2 (HIGH, 2026-09-10) — execution.maintenance now runs
       // BEFORE the run-end invariants[]/plausibility[] checks, not after. The
@@ -6871,7 +7431,7 @@ async function runWithPool(runnable, pool, ctx) {
         // an empty array — zero cost, zero rows, for every other converted step.
         maintenanceRows = await runMaintenance(
           pool, descriptor.execution.maintenance, configValues,
-          { log: pipeline.log, tag: `[${slug}]` },
+          { log: pipeline.log, tag: `[${slug}]`, defaultTimeoutMinutes: runnerValues.step_maintenance_default_timeout_minutes },
         );
       } finally {
         stopMaintenanceHeartbeat();
@@ -6889,8 +7449,8 @@ async function runWithPool(runnable, pool, ctx) {
       // logic variables this step's own descriptor declares — resolved here from
       // `configValues` (never a literal baked at descriptor-generation time) and
       // passed as plain numbers; a step that declares none of the three (or no
-      // DISTRIBUTION_SCOPE at all) gets `undefined`, and runDistributionScan's own
-      // defaults (0.99/3/0.0001, the legacy literals) apply unchanged.
+      // DISTRIBUTION_SCOPE at all) gets `undefined`; buildDistributionQuery has no literal
+      // defaults (Spec 124 R-EB (a)), so a distribution entry without its three variables refuses by name.
       const distributionScope = (runnable.compute && runnable.compute.DISTRIBUTION_SCOPE) || null;
       const distributionNumericOpts = distributionScope ? {
         percentile: typeof configValues[distributionScope.percentileVar] === 'number' ? configValues[distributionScope.percentileVar] : undefined,
@@ -6971,7 +7531,7 @@ async function runWithPool(runnable, pool, ctx) {
         // Empty for every step that never calls it.
         ...contextRows,
       ];
-      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic, observedFor);
+      const built = buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic, observedFor, runnerValues.step_audit_value_max_chars);
       // Observability fold — the deadline abort no longer THROWS (that is what cost the run
       // its audit table), so the ledger's `error_message` must be set here instead. Same
       // text the throw carried, so a reader of `pipeline_runs` sees no change in what the
@@ -7085,6 +7645,9 @@ async function runWithPool(runnable, pool, ctx) {
         // `ingestPrimaries`. `audit_table` and the runner-owned keys are written by THIS
         // assembly, below. Absent on every per-primary and single-primary run ⇒ {} .
         ...(ingest && ingest.skipEmitMeta ? ingest.skipEmitMeta : {}),
+        // RE-FREEZE #37 (Spec 124 R-DX (iv)): the resolved run mode, stamped when any primary declares
+        // externals[].modes (a RUNNER_META_KEYS member; absent on every other run, byte-identical).
+        ...(ingest && ingest.run_mode ? { run_mode: ingest.run_mode } : {}),
         // LG-15 / G-13 — a gated skip re-stamps the SAME self-consumed producer field
         // (`threshold_updated_at`-shaped: whatever the config_version trigger's emit_key
         // names) from the prior run's own block, so the NEXT run's config_version diff
@@ -7344,6 +7907,10 @@ module.exports = {
   isMultiPrimary,
   multiPrimaryBinding,
   ingestPrimaries,
+  // RE-FREEZE #37 (Spec 124 R-DX (iv)) — the one run-mode resolver (runEnrichPhase shares it).
+  resolveRunMode,
+  primarySelected,
+  unionResult,
   aggregatePrimaries,
   primaryFailureRows,
   phaseDeadlineRows,

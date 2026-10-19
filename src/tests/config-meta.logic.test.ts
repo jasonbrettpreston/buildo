@@ -15,6 +15,7 @@
 //       `values` are byte-identical to the pre-R-CM behaviour.
 
 import { describe, expect, it, vi } from 'vitest';
+import { runnerVariableRows } from './helpers/runner-variables';
 
 const { resolveConfig } = await import('../../scripts/lib/step/config.js');
 
@@ -35,9 +36,14 @@ function fakePool() {
   const pool = {
     query: vi.fn(async (text: string, _params?: unknown[]) => {
       sql.push(text);
+      if (text.includes('FROM logic_variables') && text.includes('WHERE') && text.includes('variable_value')) {
+        // Spec 124 R-EB (a): a config:"none" step's one runner-owned read (presence + value).
+        return { rows: runnerVariableRows() };
+      }
       if (text.includes('FROM logic_variables') && text.includes('WHERE')) {
         // The presence query (R-A/R-D) — answer it for the one declared name.
-        return { rows: [{ variable_key: 'a' }] };
+        // Spec 124 R-EB (a): the presence read also answers for the runner-owned step_* names.
+        return { rows: [{ variable_key: 'a' }, ...runnerVariableRows().map((r) => ({ variable_key: r.variable_key }))] };
       }
       if (text.includes('variable_value_json')) {
         // THE logic-variables value statement — value AND stamp, one row.
@@ -49,6 +55,7 @@ function fakePool() {
               variable_value_json: null,
               updated_at: ROW_UPDATED_AT,
             },
+            ...runnerVariableRows(),
           ],
         };
       }
@@ -125,6 +132,8 @@ describe('ctx.config.$meta (R-CM)', () => {
     expect(Object.keys(values)).toEqual([]);
     expect((values as any).$meta).toBeUndefined();
     expect(stamp).toBeNull();
-    expect(sql).toHaveLength(0);
+    // Spec 124 R-EB (a): no declared config is read; only the runner-owned step_* values, in ONE statement.
+    expect(sql).toHaveLength(1);
+    expect(sql[0]).toContain('FROM logic_variables');
   });
 });

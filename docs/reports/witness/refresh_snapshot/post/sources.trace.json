@@ -3,14 +3,14 @@
   "step": "scripts/refresh-snapshot.js",
   "chain": "sources",
   "source_fingerprint": "f64043f4dcf2fe3175ca1bbadc4a9c481ebd45e5cbeb790342ef8801a7c94d5f",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
     "calls": 55,
     "distinct": 47,
     "utility": 15,
-    "tracer_self_ms": 1.754,
-    "wall_ms": 3285
+    "tracer_self_ms": 1.831,
+    "wall_ms": 3445
   },
   "statements": [
     {
@@ -261,7 +261,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 788,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -531,7 +531,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 10,
+      "rowCount": 21,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -801,7 +801,7 @@
   ],
   "transactions": [
     {
-      "client": "41029:2",
+      "client": "18201:2",
       "write_fingerprints": [
         "4889f94ceb7c3a50"
       ]

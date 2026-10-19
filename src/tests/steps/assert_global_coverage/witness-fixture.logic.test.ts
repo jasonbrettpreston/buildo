@@ -32,6 +32,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
 import { witnessGuard } from '../_witness-guard';
+import { runnerValues } from '../../helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS library + this step's real descriptor/compute */
 const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
@@ -78,7 +79,7 @@ function coveragePool(opts: { logicVars?: Record<string, unknown> } = {}) {
     // every declared name "present in the live table".
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(logicVars).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...logicVars }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };

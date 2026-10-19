@@ -25,6 +25,7 @@
 // PIN) is recorded in the 0x landing, not restated here.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
+import { runnerValues } from './helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
 const stepLib = require(join(process.cwd(), 'scripts/lib/step'));
@@ -55,7 +56,7 @@ function fakePool() {
   const answer = (text: string) => {
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(seedConfig()).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...seedConfig() }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };
@@ -212,8 +213,10 @@ describe('INGESTOR prerequisite 0x — runner multi-primary (part 1: binding + l
         mutate: (d) => { d.inputs.reads.externals[1].target = 'nope'; },
       },
       {
-        name: 'B3 — two primaries sharing one target', code: 'B3', id: 'b',
-        mutate: (d) => { d.inputs.reads.externals[1].target = 'ta'; },
+        // RE-FREEZE #37 (Spec 124 R-DX (iii)): two primaries on ONE target are a union group (B3 is no longer
+        // a refusal); members that disagree on key property, format or failure posture are refused as U1.
+        name: 'U1 (was B3) — a union group whose members disagree on key property', code: 'U1', id: 'b',
+        mutate: (d) => { d.inputs.reads.externals[1].target = 'ta'; d.inputs.reads.externals[1].key_property = 'OTHER_ID'; },
       },
       {
         name: 'B4 — a declared write target no primary fills', code: 'B4', id: 'tc',

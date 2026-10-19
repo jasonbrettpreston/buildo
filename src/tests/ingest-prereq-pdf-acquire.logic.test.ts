@@ -20,7 +20,6 @@ const REPO_ROOT = path.resolve(__dirname, '../../');
 const acquire = require(path.join(REPO_ROOT, 'scripts/lib/step/acquire.js')) as {
   acquirePdfDocumentSet: (args: Record<string, unknown>) => Promise<DocSetResult>;
   acquireExternal: (args: Record<string, unknown>) => Promise<DocSetResult>;
-  PDF_PACE_FLOOR_MS: number;
 };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const coa = require(path.join(REPO_ROOT, 'scripts/lib/compute/load-coa-notices.js')) as {
@@ -217,6 +216,8 @@ function baseArgs(over: Record<string, unknown> = {}): Record<string, unknown> {
     shapeDocument: coa.shapeDocument,
     sleep: async () => {},
     targetEmpty: async () => false, // R-DD: the target holds rows, so a skip is honoured
+    // Spec 124 R-EB (a): the runner-owned pace floor and redirect cap (seed defaults)
+    runner: { step_acquire_pdf_pace_ms: 2000, step_acquire_max_redirects: 5 },
     ...over,
   };
 }
@@ -636,6 +637,7 @@ describe('T-ACQ-14 acquireExternal dispatch', () => {
       external: makeExternal(),
       descriptor: makeDescriptor(),
       config: CONFIG,
+      runner: { step_acquire_pdf_pace_ms: 2000, step_acquire_max_redirects: 5 }, // Spec 124 R-EB (a)
       prior: null,
       forced: false,
       timeoutMs: 5000,
@@ -673,6 +675,7 @@ describe('T-ACQ-15 unknown format', () => {
       external: makeExternal({ format: 'pdf', url: `https://${HOST}/x.pdf` }),
       descriptor: makeDescriptor(),
       config: CONFIG,
+      runner: { step_acquire_pdf_pace_ms: 2000, step_acquire_max_redirects: 5 }, // Spec 124 R-EB (a)
       prior: null,
       forced: false,
       timeoutMs: 5000,

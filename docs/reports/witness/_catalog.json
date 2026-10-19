@@ -99,6 +99,10 @@
       "address_point_id",
       "latitude"
     ],
+    "address_points_cohort_bak_20261019t1215z": [
+      "address_point_id",
+      "latitude"
+    ],
     "address_points_retired_bak_20261003": [
       "addr_num_normalized",
       "address_class_desc",
@@ -516,6 +520,10 @@
       "id",
       "is_wsib_registered"
     ],
+    "entities_cohort_bak_20261019t1205z": [
+      "id",
+      "is_wsib_registered"
+    ],
     "entitlements": [
       "created_at",
       "current_period_end",
@@ -811,6 +819,11 @@
       "parcel_id"
     ],
     "parcel_address_points_cohort_bak_20261018t1204z": [
+      "address_point_id",
+      "computed_at",
+      "parcel_id"
+    ],
+    "parcel_address_points_cohort_bak_20261019t1206z": [
       "address_point_id",
       "computed_at",
       "parcel_id"
@@ -1113,6 +1126,34 @@
       "id",
       "max_buildable_footprint_sqm"
     ],
+    "parcels_cohort_bak_20261019t1207z": [
+      "centroid_lat",
+      "id"
+    ],
+    "parcels_cohort_bak_20261019t1209z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
+    "parcels_cohort_bak_20261019t1212z": [
+      "id",
+      "ravine_dataset_version_when_enriched"
+    ],
+    "parcels_cohort_bak_20261019t1213z": [
+      "heritage_dataset_version_when_enriched",
+      "id"
+    ],
+    "parcels_cohort_bak_20261019t1214z": [
+      "cost_fb_total",
+      "id"
+    ],
+    "parcels_cohort_bak_20261019t1216z": [
+      "id",
+      "lot_size_sqm"
+    ],
+    "parcels_cohort_bak_20261019t1219z": [
+      "id",
+      "is_corner_lot"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",
@@ -1146,6 +1187,10 @@
       "id"
     ],
     "permit_parcels_cohort_bak_20261018t0232z": [
+      "confidence",
+      "id"
+    ],
+    "permit_parcels_cohort_bak_20261019t1208z": [
       "confidence",
       "id"
     ],
@@ -1398,6 +1443,14 @@
       "latitude",
       "permit_num"
     ],
+    "permits_cohort_bak_20261019t1210z": [
+      "neighbourhood_id",
+      "permit_num"
+    ],
+    "permits_cohort_bak_20261019t1211z": [
+      "latitude",
+      "permit_num"
+    ],
     "pg_stat_user_tables": [
       "analyze_count",
       "autoanalyze_count",
@@ -1498,6 +1551,10 @@
       "source_id"
     ],
     "ravines_cohort_bak_20261018t0227z": [
+      "source_dataset_version",
+      "source_id"
+    ],
+    "ravines_cohort_bak_20261019t1202z": [
       "source_dataset_version",
       "source_id"
     ],
@@ -1855,6 +1912,18 @@
       "is_gta"
     ],
     "wsib_registry_cohort_bak_20261018t0242z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261019t1204z": [
+      "id",
+      "match_confidence"
+    ],
+    "wsib_registry_cohort_bak_20261019t1217z": [
+      "id",
+      "is_gta"
+    ],
+    "wsib_registry_cohort_bak_20261019t1218z": [
       "id",
       "is_gta"
     ],

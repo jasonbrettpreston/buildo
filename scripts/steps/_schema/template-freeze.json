@@ -13,9 +13,9 @@
     "preserved, live tier refreshed) or `--refresh` (frozen tier re-derived, frozen_at := HEAD)."
   ],
   "contract_version": 1,
-  "frozen_at": "2a96590cafc0d583e36f4a244c550d98b844a93c",
+  "frozen_at": "15d79445291f7e4a61961d08a152c0c80d345751",
   "frozen_after_pilot": 9,
-  "schema_sha256": "76275d5786455b87c4a66bf31ebaf355c8a794a8a3ab0f251b2efffba34e3810",
+  "schema_sha256": "af01d17ff6a4dbdba7201af4e840d6a85f87a3ea6336c09732b7a839275f2330",
   "categories": [
     "identity",
     "inputs",
@@ -135,6 +135,8 @@
       "phase_order": [
         "acquire.resolveTimeoutMs",
         "staleness.resolveOverrides",
+        "write.probeConflictIndex",
+        "write.keyColumns",
         "staleness.detectInterruptedRetraction",
         "write.buildWritePlan",
         "staleness.priorRunErrorPosture",
@@ -146,6 +148,7 @@
         "staleness.targetIsEmpty",
         "write.validateGeometries",
         "preWriteGate",
+        "write.buildPriorReadSql",
         "write.executeStagingReplace",
         "write.executeWrite"
       ]
@@ -164,7 +167,9 @@
         "write.retractionFires",
         "pipeline.withTransaction",
         "write.writeBeforeImage",
-        "write.executeRetraction"
+        "write.executeRetraction",
+        "write.linkDepartedBeforeImageSql",
+        "write.persistBeforeImageRows"
       ]
     },
     {

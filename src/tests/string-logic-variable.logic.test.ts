@@ -16,6 +16,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { runnerVariableRows } from './helpers/runner-variables';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const SEED_PATH = path.join(ROOT, 'scripts/seeds/logic_variables.json');
@@ -99,7 +100,8 @@ describe('resolveConfig — a string-typed variable resolves through the JSON br
       variable_value: v.sentinel ?? 0,
       variable_value_json: v.json ?? v.value ?? null,
     }));
-    return { query: async () => ({ rows }) };
+    // Spec 124 R-EB (a): every step also resolves the runner-owned step_* rows.
+    return { query: async () => ({ rows: [...runnerVariableRows(), ...rows] }) };
   }
 
   it('a valid enum member is projected into values/stamp as the STRING itself', async () => {

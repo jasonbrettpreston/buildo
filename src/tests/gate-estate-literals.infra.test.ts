@@ -141,12 +141,12 @@ describe('R-EB (b) — gate and tooling variables are pinned seeds, read by one 
 // with the one replay-all night (N1). RED on the pre-#37 tree (19 findings: census 16 + acquire.js:506,
 // index.js:4463, verdict.js:412); flips at RE-FREEZE #37.
 describe('R-EB (a) — the runner scope (RE-FREEZE #37)', () => {
-  it.fails('scripts/lib/step/** is in ESTATE_SCOPES and has 0 findings (flips at RE-FREEZE #37)', () => {
+  it('scripts/lib/step/** is in ESTATE_SCOPES and has 0 findings', () => {
     expect(estate.ESTATE_SCOPES).toContain('scripts/lib/step');
     expect(estate.scanFiles(estate.scopeFiles(['scripts/lib/step'], REPO_ROOT), REPO_ROOT)).toEqual([]);
   });
 
-  it.fails('RUNNER_VARIABLES is a closed config.js export of step_* names, each a bounded seed in the "Pipeline Runner" admin group (flips at RE-FREEZE #37)', () => {
+  it('RUNNER_VARIABLES is a closed config.js export of step_* names, each a bounded seed in the "Pipeline Runner" admin group', () => {
     const req = createRequire(import.meta.url);
     const { RUNNER_VARIABLES } = req(path.join(REPO_ROOT, 'scripts/lib/step/config.js')) as { RUNNER_VARIABLES?: readonly string[] };
     expect(Array.isArray(RUNNER_VARIABLES)).toBe(true);
