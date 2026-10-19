@@ -8,14 +8,15 @@
 //   matches         → the keyed unit is an agreed unit (agree.mjs)                         → INCORPORATED
 //   no_application  → excluded                                                            → INCORPORATED (excluded)
 //   disclose        → a Spec 78 P5.12 code; the agreed unit carries a disclosure          → INCORPORATED, else UNFIXED
-//   wrong           → fix ids (Spec 69 M-rows); EVERY fix id cited by a keyed correction in
-//                     adjudications.json for the unit (a partial fix stays red)            → INCORPORATED, else UNFIXED
-//   verified_by_lock → the answer was already right: a NAMED LOCK (test file + exact describe / it titles + assert
-//                     tokens) is found in the tree and asserts the unit; every fix id RATIFIED and named in the
-//                     test titles (verifyLock)                                             → INCORPORATED, else UNFIXED
-//                     A lock whose file is not in this tree stays UNFIXED with its `pin` (the branch@sha holding the
-//                     test); once the branches integrate the file is present, the lock is verified, and a lock that
-//                     no longer resolves is a DANGLING problem (--check exits 1).
+//   wrong           → fix ids (Spec 69 M-rows). Each fix id is SATISFIED by a keyed correction in adjudications.json
+//                     citing it, or by a verified NAMED LOCK (`locks[]`: test file + exact describe / it titles as
+//                     written + assert tokens + the fix ids it `satisfies`; verifyLock). Green only when every fix
+//                     id is satisfied (no partial green). `fixed_by` may mix corrections and locks; `verified_by_lock`
+//                     (the by-law answer is right without a correction) must lock every fix id. A lock whose file is
+//                     not in this tree stays unsatisfied with its `pin` (branch@sha) and is verified once that branch
+//                     integrates; a lock that does not resolve is a DANGLING problem (--check exits 1). `owed[]`
+//                     records a cited reading whose work is not a by-law-table fix (to P5.13 / Layer 2 step /
+//                     Layer 3): shown, never a fix id                                       → INCORPORATED, else UNFIXED
 //   unsure / null   → OPEN with the question, unless a RATIFIED ruling resolved it        → INCORPORATED
 // A disposition that rests only on rows not yet RATIFIED (FOLDED / PROPOSED / OWED) is OPEN (pending operator) or
 // UNFIXED (OWED defect), never incorporated.
@@ -53,20 +54,26 @@ const EXPECTED = {
 export class TrackerError extends Error {}
 
 /**
- * State of a "wrong" answer under fixed_by (LC-53: no partial green). `applied` = the unit's keyed corrections citing
- * any fix id ({ id, rule }); `statuses` = the register status word per fix id. Green only when EVERY fix id is cited.
+ * State of a "wrong" answer (Spec 131 LC-53: no partial green). A fix id is SATISFIED when a keyed correction for the
+ * unit cites it (`applied` = [{ id, rule }]) or a VERIFIED named lock lists it in `satisfies` (`locked` = Set of ids).
+ * Green only when every fix id is satisfied. `statuses` = the register status word per fix id.
  */
-export function fixedByState(fixIds, applied, statuses) {
+export function fixedByState(fixIds, applied, statuses, locked = new Set()) {
   const cites = (c, id) => new RegExp(`\\b${id}\\b`).test(c.rule);
-  const unsatisfied = fixIds.filter((id) => !applied.some((c) => cites(c, id)));
+  const unsatisfied = fixIds.filter((id) => !locked.has(id) && !applied.some((c) => cites(c, id)));
   const checks = [applied.length ? `correction ${applied.map((c) => c.id).join(', ')}` : 'no keyed correction cites the fix'];
-  if (applied.length && unsatisfied.length) checks.push(`no correction cites ${unsatisfied.join(', ')}`);
-  if (applied.length && !unsatisfied.length) return { state: 'INCORPORATED', reason: 'keyed correction applied for every cited ruling', checks };
-  if (applied.length) return { state: 'UNFIXED', reason: `partly applied: no keyed correction cites ${unsatisfied.join(', ')}`, checks };
+  if (locked.size) checks.push(`verified by named lock: ${[...locked].sort(cmp).join(', ')}`);
+  const any = applied.length || locked.size;
+  if (any && unsatisfied.length) checks.push(`unsatisfied: ${unsatisfied.join(', ')}`);
+  if (any && !unsatisfied.length) return { state: 'INCORPORATED', reason: locked.size && !applied.length ? 'verified by named lock' : 'every cited ruling applied (keyed correction or named lock)', checks };
+  if (any) return { state: 'UNFIXED', reason: `partly applied: ${unsatisfied.join(', ')} not yet applied`, checks };
   if (statuses.length && statuses.every((x) => x === 'OWED')) return { state: 'UNFIXED', reason: 'fix is an OWED defect row', checks };
   if (!statuses.some((x) => x === 'RATIFIED')) return { state: 'OPEN', reason: `fix rests on rows awaiting the operator (${fixIds.join(', ')})`, checks };
   return { state: 'UNFIXED', reason: 'ruled; keyed correction not applied yet', checks };
 }
+
+/** Owed-elsewhere destinations (LC-53): a cited reading whose work is not a by-law-table fix. */
+export const OWED_TO = new Set(['P5.13', 'Layer 2 step', 'Layer 3']);
 
 const chapterOf = (reg) => {
   const m = /^(\d+\.\d+)/.exec(reg);
@@ -108,7 +115,7 @@ export function build(root) {
       source: a.source || '', disposition: d ? d.disposition : null, fix_ids: (d && d.fix_ids) || [],
       corrected_value: (d && d.corrected_value) || '', disclosure_code: (d && d.disclosure_code) || '',
       question: (d && d.question) || '', fields: [...(fieldsByReg.get(baseReg(a.regulation_id)) || [])].sort(cmp),
-      lock: (d && d.lock) || null, checks: [], state: null, reason: '',
+      locks: (d && d.locks) || [], owed: (d && d.owed) || [], checks: [], state: null, reason: '',
     };
     const regWhy = resolveRegulation(prov, a.regulation_id);
     if (regWhy) problems.push(`${a.unit_id}: regulation ${a.regulation_id} — ${regWhy}`);
@@ -139,31 +146,41 @@ export function build(root) {
         if (keyedDisclosure || isRowAnswer) { row.state = 'INCORPORATED'; row.reason = isRowAnswer ? 'row answer; P5.12 code' : 'keyed disclosure + P5.12 code'; } else { row.state = 'UNFIXED'; row.reason = 'P5.12 code ruled; keyed unit has no disclosure yet'; }
         break;
       }
-      case 'fixed_by': {
+      case 'fixed_by':
+      case 'verified_by_lock': {
         if (!row.fix_ids.length) problems.push(`${a.unit_id}: "wrong" with no fix id`);
         if (!row.corrected_value) problems.push(`${a.unit_id}: "wrong" with no corrected value`);
-        const v = fixedByState(row.fix_ids, applied, statuses);
-        row.checks.push(...v.checks);
-        row.state = v.state; row.reason = v.reason;
-        break;
-      }
-      case 'verified_by_lock': {
-        const lk = d.lock;
-        if (!lk || !lk.file || !lk.describe || !lk.it) { problems.push(`${a.unit_id}: verified_by_lock without file / describe / it`); row.state = 'UNFIXED'; row.reason = 'lock incomplete'; break; }
-        if (!row.fix_ids.length) problems.push(`${a.unit_id}: verified_by_lock with no ruling id`);
-        const notRatified = row.fix_ids.filter((id) => rules.get(id) !== 'RATIFIED');
-        const lockPath = path.join(root, lk.file);
-        if (!fs.existsSync(lockPath)) {
-          if (!lk.pin) problems.push(`${a.unit_id}: lock file ${lk.file} not in the tree and no pin`);
-          row.checks.push(`lock file absent; pinned at ${lk.pin || '(none)'}`);
-          row.state = 'UNFIXED'; row.reason = `named lock pinned at ${lk.pin}; resolves when that branch integrates`;
-          break;
+        const locks = (d.locks || []);
+        if (d.disposition === 'verified_by_lock' && !locks.length) problems.push(`${a.unit_id}: verified_by_lock names no lock`);
+        const locked = new Set();
+        const pending = [];
+        for (const lk of locks) {
+          if (!lk.file || !lk.describe || !lk.it || !Array.isArray(lk.satisfies) || !lk.satisfies.length) { problems.push(`${a.unit_id}: lock without file / describe / it / satisfies`); continue; }
+          for (const id of lk.satisfies) if (!row.fix_ids.includes(id)) problems.push(`${a.unit_id}: lock satisfies ${id}, which the row does not cite`);
+          const lockPath = path.join(root, lk.file);
+          if (!fs.existsSync(lockPath)) {
+            if (!lk.pin) problems.push(`${a.unit_id}: lock file ${lk.file} not in the tree and no pin`);
+            pending.push(`${lk.satisfies.join(', ')} pinned at ${lk.pin || '(none)'}`);
+            continue;
+          }
+          const why = verifyLock(fs.readFileSync(lockPath, 'utf8'), lk, lk.satisfies);
+          if (why) { problems.push(`${a.unit_id}: lock ${lk.file} — ${why}`); row.checks.push(`lock NOT verified: ${why}`); continue; }
+          for (const id of lk.satisfies) locked.add(id);
         }
-        const why = verifyLock(fs.readFileSync(lockPath, 'utf8'), lk, row.fix_ids);
-        if (why) { problems.push(`${a.unit_id}: lock ${lk.file} — ${why}`); row.checks.push(`lock NOT verified: ${why}`); row.state = 'UNFIXED'; row.reason = 'named lock does not resolve'; break; }
-        row.checks.push(`lock verified: ${lk.file} › ${lk.describe} › ${lk.it}`);
-        if (notRatified.length) { row.state = 'OPEN'; row.reason = `lock verified; rests on rows awaiting the operator (${notRatified.join(', ')})`; break; }
-        row.state = 'INCORPORATED'; row.reason = 'verified by named lock';
+        if (d.disposition === 'verified_by_lock') {
+          const covered = new Set(locks.flatMap((lk) => lk.satisfies || []));
+          for (const id of row.fix_ids) if (!covered.has(id)) problems.push(`${a.unit_id}: verified_by_lock leaves ${id} without a lock`);
+        }
+        for (const o of row.owed) {
+          if (!rules.has(o.id)) problems.push(`${a.unit_id}: owed ${o.id} is not a Spec 69 M-row`);
+          if (!OWED_TO.has(o.to)) problems.push(`${a.unit_id}: owed ${o.id} to "${o.to}" is not one of ${[...OWED_TO].join(' / ')}`);
+          if (row.fix_ids.includes(o.id)) problems.push(`${a.unit_id}: ${o.id} is both a fix id and owed`);
+          if (!o.why) problems.push(`${a.unit_id}: owed ${o.id} without a why`);
+        }
+        const v = fixedByState(row.fix_ids, applied, statuses, locked);
+        row.checks.push(...v.checks, ...pending.map((x) => `lock file absent: ${x}`), ...row.owed.map((o) => `owed ${o.id} → ${o.to}`));
+        row.state = v.state;
+        row.reason = v.reason + (pending.length && v.state !== 'INCORPORATED' ? `; lock ${pending.join('; ')} resolves when that branch integrates` : '') + (row.owed.length ? `; owed elsewhere: ${row.owed.map((o) => `${o.id} → ${o.to}`).join(', ')}` : '');
         break;
       }
       case 'resolved_by':
@@ -236,7 +253,7 @@ export function renderMd(r) {
     L.push('|---|---|---|---|---|---|---|---|');
     for (const x of rs) {
       const ids = [...x.fix_ids, x.disclosure_code ? `\`${x.disclosure_code}\`` : ''].filter(Boolean).join(', ') || '—';
-      const what = (x.question ? `Q: ${x.question}` : x.corrected_value || '—') + (x.lock ? ` Lock: \`${x.lock.file}\` › ${x.lock.describe} › ${x.lock.it}` : '');
+      const what = (x.question ? `Q: ${x.question}` : x.corrected_value || '—') + x.locks.map((lk) => ` Lock (${lk.satisfies.join(', ')}): \`${lk.file}\` › ${lk.describe} › ${lk.it}`).join('') + x.owed.map((o) => ` Owed: ${o.id} → ${o.to} (${o.why})`).join('');
       L.push(`| \`${x.unit_id}\` | ${x.verdict === null ? 'null' : x.verdict} | ${x.disposition || '—'} | ${cell(ids)} | ${cell(what)} | ${cell(x.reason)} | ${cell(x.fields.map((f) => `\`${f}\``).join(', ') || '—')} | ${cell(x.note.slice(0, 160))} |`);
     }
     L.push('');

@@ -344,12 +344,27 @@
   {
    "unit_id": "10.20.40.10(3)#(3)(C)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183"
    ],
    "corrected_value": "Storeys not capped for a detached houseplex (not_applicable, no limit).",
-   "basis": "triage F14; MF-4 became M-183"
+   "basis": "triage F14; MF-4 became M-183; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.20.40.10(3)#(3)(D)",
@@ -362,11 +377,45 @@
    "disposition": "fixed_by",
    "fix_ids": [
     "M-217",
-    "M-218",
-    "M-184"
+    "M-218"
    ],
    "corrected_value": "No development map applies: for a flat or shallow roof (a design choice), all main walls ≤ max(7.2 m, H − 2.5 m) with the storey above set back 1.4 m ((4)(B)); the \"Development Standard Set 1\" gate is a Chapter 40 leak (M-217) and the roof-slope condition is unkeyed (M-218).",
-   "basis": "triage F13 PIN-5; M-218 roof-slope condition, M-184 roof forms"
+   "basis": "triage F13 PIN-5; M-218 roof-slope condition, M-184 roof forms; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot",
+     "it": "RD 10.20.40.10(4)(A) no longer carries the Chapter 40 \"Development Standard Set 1\" map gate",
+     "asserts": [
+      "main_wall_height_m",
+      "map_area_not_held"
+     ],
+     "satisfies": [
+      "M-217"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-217 strengthened — with the map polygons NOT held, no Chapter 40 unit gates RD main walls",
+     "it": "RD flat roof: main_wall_height_m is decided by RD units, never map_area_not_held",
+     "asserts": [
+      "main_wall_height_m",
+      "10.20.40.10(2)#(2)(A)"
+     ],
+     "satisfies": [
+      "M-217"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [
+    {
+     "id": "M-184",
+     "to": "Layer 3",
+     "why": "both roof forms are a Layer 3 computation (Spec 78 P5.2 item 5), not a by-law-table fix"
+    }
+   ]
   },
   {
    "unit_id": "10.20.40.10(4)#(4)(B)",
@@ -765,12 +814,27 @@
   {
    "unit_id": "10.40.40.10(3)#(3)(C)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183"
    ],
    "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
-   "basis": "triage F14; MF-4 became M-183"
+   "basis": "triage F14; MF-4 became M-183; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.40.40.10(3)#(3)(D)",
@@ -897,23 +961,66 @@
   {
    "unit_id": "10.40.40.40(1)#(1)(C)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183",
     "M-182"
    ],
    "corrected_value": "FSI does not apply to a houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
-   "basis": "triage F19; M-183 + M-182"
+   "basis": "triage F19; M-183 + M-182; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.40.40.40(1)#(1)(D)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183"
    ],
    "corrected_value": "FSI does not apply to a townhouse or apartment building with 60 dwelling units or fewer (not_applicable).",
-   "basis": "triage F19; MF-4 became M-183"
+   "basis": "triage F19; MF-4 became M-183; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+     "asserts": [
+      "'RS'",
+      "40.40(1)#(1)(D)"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.40.40.50(1)#(1)(A)",
@@ -962,16 +1069,21 @@
    ],
    "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
    "basis": "triage F21/F22; M-205 rear greater-of; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RS'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   }
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RS'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.40.40.70(2)#(2)(B)",
@@ -982,16 +1094,21 @@
    ],
    "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
    "basis": "triage F21; M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RS'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   }
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RS'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.40.40.70(3)#(3)(A)",
@@ -1316,16 +1433,21 @@
    ],
    "corrected_value": "The RT 'u' label caps dwelling units on the class (no 'u' means no cap); it is not a one-building-per-lot rule.",
    "basis": "triage F09; M-202 'u' cap, not a one-building rule; verified by named lock (operator 2026-10-19)",
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap",
-    "it": "with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
-    "asserts": [
-     "'10.60.40.1(2)#(2)(A)'",
-     "'RT'"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   }
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap",
+     "it": "with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
+     "asserts": [
+      "'10.60.40.1(2)#(2)(A)'",
+      "'RT'"
+     ],
+     "satisfies": [
+      "M-202"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.60.40.1(2)#(2)(B)",
@@ -1456,12 +1578,27 @@
   {
    "unit_id": "10.60.40.10(2)#(2)(C)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183"
    ],
    "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
-   "basis": "triage F14; MF-4 became M-183"
+   "basis": "triage F14; MF-4 became M-183; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.60.40.10(2)#(2)(D)",
@@ -1486,23 +1623,66 @@
   {
    "unit_id": "10.60.40.40(1)#(1)(C)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183",
     "M-182"
    ],
    "corrected_value": "FSI does not apply to a houseplex or a detached house with a secondary suite (not_applicable, no FSI cap).",
-   "basis": "triage F19; M-183 + M-182"
+   "basis": "triage F19; M-183 + M-182; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.60.40.40(1)#(1)(D)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-183"
    ],
    "corrected_value": "FSI does not apply to a townhouse with 60 dwelling units or fewer (not_applicable).",
-   "basis": "triage F19/Q6; M-183"
+   "basis": "triage F19/Q6; M-183; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+     "asserts": [
+      "'RT'",
+      "40.40(1)#(1)(D)"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.60.40.70(1)#whole",
@@ -2027,16 +2207,22 @@
    ],
    "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
    "basis": "findings A3 + triage F21; M-174(5), M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RM'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   }
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RM'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205",
+      "M-174"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.80.40.70(2)#(2)(B)",
@@ -2048,16 +2234,22 @@
    ],
    "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
    "basis": "findings A3 + triage F21; M-174(5), M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RM'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   }
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RM'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205",
+      "M-174"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "10.80.40.70(3)#(3)(A)",
@@ -2277,7 +2469,22 @@
     "M-219"
    ],
    "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the garden suite, excluding footings.",
-   "basis": "findings B1; M-198 suite setbacks, M-219 garden inherits principal setbacks"
+   "basis": "findings B1; M-198 suite setbacks, M-219 garden inherits principal setbacks; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings",
+     "it": "${zone} ${bt}: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+     "asserts": [
+      "'garden_suite'",
+      "touched(eff(lot(zone, bt), t))"
+     ],
+     "satisfies": [
+      "M-219"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ]
   },
   {
    "unit_id": "150.7.60.20(2)#(2)(A)",
@@ -2407,11 +2614,17 @@
    "verdict": "wrong",
    "disposition": "fixed_by",
    "fix_ids": [
-    "M-179",
-    "M-198"
+    "M-179"
    ],
    "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
-   "basis": "findings B1 operator Q; M-179(2) corner-lot arm"
+   "basis": "findings B1 operator Q; M-179(2) corner-lot arm; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "owed": [
+    {
+     "id": "M-198",
+     "to": "P5.13",
+     "why": "M-198(2) is Layer 3 and needs the principal building's side yard"
+    }
+   ]
   },
   {
    "unit_id": "150.7.60.21(1)#(1)(A)",

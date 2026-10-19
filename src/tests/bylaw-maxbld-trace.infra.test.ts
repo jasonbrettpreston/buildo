@@ -105,11 +105,16 @@ describe('verified by named lock; no partial green (Spec 131 LC-53)', () => {
     expect(TRK.fixedByState(['M-180', 'M-182'], one, ['RATIFIED', 'RATIFIED']).state).toBe('UNFIXED');
     expect(TRK.fixedByState(['M-182'], one, ['RATIFIED']).state).toBe('INCORPORATED');
   });
-  it('every verified_by_lock row is green only with its lock verified, or UNFIXED with a pin while its file is absent', () => {
-    for (const r of tracker.rows.filter((x: Json) => x.disposition === 'verified_by_lock')) {
-      expect(r.lock && r.lock.file && r.lock.describe && r.lock.it).toBeTruthy();
-      if (r.state === 'INCORPORATED') expect(r.checks.join(' ')).toMatch(/lock verified/);
-      else expect([r.state, r.lock.pin]).toEqual(['UNFIXED', expect.stringMatching(/@[0-9a-f]{7,}/)]);
+  it('a fix id is satisfied by a correction or a verified lock; owed readings are never fix ids', () => {
+    expect(TRK.fixedByState(['M-217', 'M-218'], [{ id: 'COR-1', rule: 'Spec 69a M-218' }], ['OWED', 'OWED'], new Set(['M-217'])).state).toBe('INCORPORATED');
+    expect(TRK.fixedByState(['M-217', 'M-218'], [], ['OWED', 'OWED'], new Set(['M-217'])).state).toBe('UNFIXED');
+    for (const r of tracker.rows) for (const o of r.owed) expect(r.fix_ids).not.toContain(o.id);
+  });
+  it('every lock row is green only with its locks verified, or unsatisfied with a pin while its file is absent', () => {
+    for (const r of tracker.rows.filter((x: Json) => x.locks.length)) {
+      for (const lk of r.locks) expect(lk.file && lk.describe && lk.it && lk.satisfies.length).toBeTruthy();
+      if (r.state === 'INCORPORATED') expect(r.checks.join(' ')).toMatch(/verified by named lock/);
+      else expect(r.locks.every((lk: Json) => /@[0-9a-f]{7,}$/.test(lk.pin))).toBe(true);
     }
   });
 });

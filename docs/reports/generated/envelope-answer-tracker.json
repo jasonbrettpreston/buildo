@@ -10,8 +10,8 @@
  "counts": {
   "answers": 511,
   "by_state": {
-   "INCORPORATED": 439,
-   "UNFIXED": 72
+   "INCORPORATED": 448,
+   "UNFIXED": 63
   },
   "by_verdict": {
    "disclose": 90,
@@ -24,22 +24,22 @@
   "by_disposition": {
    "disclosed_by": 90,
    "excluded": 163,
-   "fixed_by": 86,
+   "fixed_by": 79,
    "matches": 125,
    "resolved_by": 42,
-   "verified_by_lock": 5
+   "verified_by_lock": 12
   },
   "by_chapter": {
    "10.20": {
     "total": 61,
-    "INCORPORATED": 56,
-    "UNFIXED": 5,
+    "INCORPORATED": 58,
+    "UNFIXED": 3,
     "OPEN": 0
    },
    "10.40": {
     "total": 87,
-    "INCORPORATED": 78,
-    "UNFIXED": 9,
+    "INCORPORATED": 81,
+    "UNFIXED": 6,
     "OPEN": 0
    },
    "10.5": {
@@ -50,8 +50,8 @@
    },
    "10.60": {
     "total": 66,
-    "INCORPORATED": 59,
-    "UNFIXED": 7,
+    "INCORPORATED": 62,
+    "UNFIXED": 4,
     "OPEN": 0
    },
    "10.80": {
@@ -68,8 +68,8 @@
    },
    "150.7": {
     "total": 95,
-    "INCORPORATED": 72,
-    "UNFIXED": 23,
+    "INCORPORATED": 73,
+    "UNFIXED": 22,
     "OPEN": 0
    },
    "150.8": {
@@ -122,7 +122,8 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -145,66 +146,13 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
    "state": "UNFIXED",
    "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.20.40.10(3)#(3)(C)",
-   "regulation_id": "10.20.40.10(3)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "This is critical the maximum number of stories doesn't apply to a houseplex. for the RD zone.",
-   "source": "operator copy-paste 2026-10-18",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183"
-   ],
-   "corrected_value": "Storeys not capped for a detached houseplex (not_applicable, no limit).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "gain_reasons",
-    "main_storeys",
-    "storeys_status"
-   ],
-   "lock": null,
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.20.40.10(4)#(4)(A)",
-   "regulation_id": "10.20.40.10(4)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "…(the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map. The architect can design any wall. We create the optimal wall for the maximum height. You can get an answer here. RE-do!",
-   "source": "operator copy-paste 2026-10-18",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-217",
-    "M-218",
-    "M-184"
-   ],
-   "corrected_value": "No development map applies: for a flat or shallow roof (a design choice), all main walls ≤ max(7.2 m, H − 2.5 m) with the storey above set back 1.4 m ((4)(B)); the \"Development Standard Set 1\" gate is a Chapter 40 leak (M-217) and the roof-slope condition is unkeyed (M-218).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "gfa_flat_sqm",
-    "main_wall_limit_m"
-   ],
-   "lock": null,
-   "checks": [
-    "correction COR-10.20.40.10(4)#(4)(A)/condition, COR-10.20.40.10(4)#(4)(A)/application.lot_conditions, COR-10.20.40.10(4)#(4)(A)/application.evidence",
-    "no correction cites M-217, M-184"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: no keyed correction cites M-217, M-184"
   },
   {
    "unit_id": "10.20.40.10(7)#(7)(B)",
@@ -223,7 +171,8 @@
    "fields": [
     "gfa_pitched_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -245,7 +194,8 @@
    "disclosure_code": "semi_house_two_lots",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -268,7 +218,8 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -295,32 +246,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.10(3)#(3)(C)",
-   "regulation_id": "10.40.40.10(3)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "This is important because for build type detached houseplex and semi-detached houseplex there is no max stories.  This impacts the build size and envelop of these build types.",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183"
-   ],
-   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "main_storeys",
-    "storeys_status"
-   ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -344,59 +271,8 @@
    "fields": [
     "gfa_pitched_sqm"
    ],
-   "lock": null,
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.40(1)#(1)(C)",
-   "regulation_id": "10.40.40.40(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183",
-    "M-182"
-   ],
-   "corrected_value": "FSI does not apply to a houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "fsi_status",
-    "main_gfa_sqm"
-   ],
-   "lock": null,
-   "checks": [
-    "correction COR-10.40.40.40(1)#(1)(C)/application.building_types, COR-10.40.40.40(1)#(1)(C)/application.evidence",
-    "no correction cites M-183"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: no keyed correction cites M-183"
-  },
-  {
-   "unit_id": "10.40.40.40(1)#(1)(D)",
-   "regulation_id": "10.40.40.40(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "Important FSI doesn't apply to townhouse or apartment buildings with over 60 units",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183"
-   ],
-   "corrected_value": "FSI does not apply to a townhouse or apartment building with 60 dwelling units or fewer (not_applicable).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "fsi_status",
-    "main_gfa_sqm"
-   ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -418,7 +294,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -440,7 +317,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -462,84 +340,8 @@
    "disclosure_code": "semi_house_two_lots",
    "question": "",
    "fields": [],
-   "lock": null,
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.40.10(2)#(2)(C)",
-   "regulation_id": "10.60.40.10(2)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "Maximum Number of Storeys - the max stories does not apply to detached and semi-detached house plexes.  No limit for them I guess",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183"
-   ],
-   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "main_storeys",
-    "storeys_status"
-   ],
-   "lock": null,
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.40.40(1)#(1)(C)",
-   "regulation_id": "10.60.40.40(1)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "This is important in the RT zone the Max FSI does not apply to bove does not apply to a detached houseplex, semi-detached houseplex or a residential building with a secondary suite; - especially important is the detached house with a secondary suite",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183",
-    "M-182"
-   ],
-   "corrected_value": "FSI does not apply to a houseplex or a detached house with a secondary suite (not_applicable, no FSI cap).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "fsi_status",
-    "main_gfa_sqm"
-   ],
-   "lock": null,
-   "checks": [
-    "correction COR-10.60.40.40(1)#(1)(C)/application.building_types, COR-10.60.40.40(1)#(1)(C)/application.evidence",
-    "no correction cites M-183"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: no keyed correction cites M-183"
-  },
-  {
-   "unit_id": "10.60.40.40(1)#(1)(D)",
-   "regulation_id": "10.60.40.40(1)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "also doesn't apply to townhouse with over 60 units.  ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-183"
-   ],
-   "corrected_value": "FSI does not apply to a townhouse with 60 dwelling units or fewer (not_applicable).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "fsi_status",
-    "main_gfa_sqm"
-   ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -561,7 +363,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -583,7 +386,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -605,7 +409,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -628,7 +433,8 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -655,7 +461,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -682,7 +489,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -704,7 +512,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -726,7 +535,8 @@
    "disclosure_code": "buildings_on_same_lot",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -748,7 +558,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -770,7 +581,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -792,7 +604,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -814,7 +627,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -839,7 +653,8 @@
     "host_interior_sqm",
     "suite_interior_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -864,7 +679,8 @@
    "fields": [
     "suite_interior_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -888,7 +704,8 @@
    "fields": [
     "suite_type"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -911,12 +728,29 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings",
+     "it": "${zone} ${bt}: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+     "asserts": [
+      "'garden_suite'",
+      "touched(eff(lot(zone, bt), t))"
+     ],
+     "satisfies": [
+      "M-219"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "no keyed correction cites the fix"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-219",
+    "unsatisfied: M-198"
    ],
    "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
+   "reason": "partly applied: M-198 not yet applied"
   },
   {
    "unit_id": "150.7.60.20(2)#(2)(A)",
@@ -936,7 +770,8 @@
     "suite_openings_loss_sqm",
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -961,7 +796,8 @@
     "suite_openings_loss_sqm",
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -985,7 +821,8 @@
    "fields": [
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1009,7 +846,8 @@
    "fields": [
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1035,13 +873,14 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.60.20(5)#(5)(A)/condition, COR-150.7.60.20(5)#(5)(A)/application.lot_conditions, COR-150.7.60.20(5)#(5)(A)/application.evidence",
-    "no correction cites M-198"
+    "unsatisfied: M-198"
    ],
    "state": "UNFIXED",
-   "reason": "partly applied: no keyed correction cites M-198"
+   "reason": "partly applied: M-198 not yet applied"
   },
   {
    "unit_id": "150.7.60.20(5)#(5)(B)",
@@ -1061,7 +900,8 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1086,38 +926,13 @@
    "fields": [
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
    "state": "UNFIXED",
    "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(C)",
-   "regulation_id": "150.7.60.20(6)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite on Corner Lot - Side Yard Setback Minimum =1.5m . Critical - this is the default",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-179",
-    "M-198"
-   ],
-   "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_side_setbacks_m"
-   ],
-   "lock": null,
-   "checks": [
-    "correction COR-150.7.60.20(6)#(6)(C)/condition~s1, COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1, COR-150.7.60.20(6)#(6)(C)/application.evidence~s1",
-    "no correction cites M-198"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: no keyed correction cites M-198"
   },
   {
    "unit_id": "150.7.60.21(1)#(1)(A)",
@@ -1135,7 +950,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1158,7 +974,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1183,7 +1000,8 @@
    "fields": [
     "suite_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1208,7 +1026,8 @@
    "fields": [
     "suite_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1230,7 +1049,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1252,7 +1072,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1276,7 +1097,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1300,7 +1122,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1324,7 +1147,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1348,7 +1172,8 @@
    "fields": [
     "suite_coverage_option"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1373,7 +1198,8 @@
    "fields": [
     "suite_coverage_option"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1395,7 +1221,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1417,7 +1244,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1441,7 +1269,8 @@
    "fields": [
     "suite_type"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1463,7 +1292,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1489,7 +1319,8 @@
     "suite_openings_loss_sqm",
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1515,7 +1346,8 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1540,7 +1372,8 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1565,7 +1398,8 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1588,7 +1422,8 @@
    "disclosure_code": "existing_ancillary_setbacks",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1611,7 +1446,8 @@
    "disclosure_code": "existing_ancillary_setbacks",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1636,7 +1472,8 @@
    "fields": [
     "suite_separation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1661,7 +1498,8 @@
    "fields": [
     "suite_separation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1685,7 +1523,8 @@
    "fields": [
     "suite_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1709,7 +1548,8 @@
    "fields": [
     "suite_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1734,7 +1574,8 @@
    "fields": [
     "suite_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1756,7 +1597,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1780,7 +1622,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1802,7 +1645,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1826,7 +1670,8 @@
    "fields": [
     "suite_coverage_option"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "no keyed correction cites the fix"
    ],
@@ -1848,7 +1693,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -1868,7 +1714,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -1888,7 +1735,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -1906,7 +1754,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -1926,7 +1775,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -1947,7 +1797,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -1965,7 +1816,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -1985,7 +1837,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2005,7 +1858,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2025,7 +1879,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2045,7 +1900,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2065,7 +1921,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2089,7 +1946,8 @@
     "gain_reasons",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2113,7 +1971,8 @@
     "gain_reasons",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2137,7 +1996,8 @@
     "gain_reasons",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2164,12 +2024,13 @@
     "gain_reasons",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.20.30.40(1)#(1)(D)/application.building_types, COR-10.20.30.40(1)#(1)(D)/application.evidence"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.20.40.1(1)#whole",
@@ -2187,7 +2048,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2205,7 +2067,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2223,7 +2086,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2241,7 +2105,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2259,7 +2124,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2277,7 +2143,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2297,7 +2164,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2317,7 +2185,8 @@
    "disclosure_code": "major_street_forms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2335,7 +2204,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2353,7 +2223,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2371,7 +2242,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2389,7 +2261,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2414,7 +2287,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2434,7 +2308,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2454,7 +2329,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2474,7 +2350,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2494,7 +2371,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2514,7 +2392,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2534,7 +2413,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2552,7 +2432,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2570,7 +2451,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2588,7 +2470,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2610,7 +2493,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2634,7 +2518,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2658,7 +2543,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2682,7 +2568,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2706,7 +2593,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2734,7 +2622,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2759,7 +2648,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2781,7 +2671,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -2805,12 +2696,55 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.10(3)#(3)(C)",
+   "regulation_id": "10.20.40.10(3)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "This is critical the maximum number of stories doesn't apply to a houseplex. for the RD zone.",
+   "source": "operator copy-paste 2026-10-18",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached houseplex (not_applicable, no limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "gain_reasons",
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.20.40.10(3)#(3)(D)",
@@ -2829,12 +2763,75 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.10(4)#(4)(A)",
+   "regulation_id": "10.20.40.10(4)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "…(the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map. The architect can design any wall. We create the optimal wall for the maximum height. You can get an answer here. RE-do!",
+   "source": "operator copy-paste 2026-10-18",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-217",
+    "M-218"
+   ],
+   "corrected_value": "No development map applies: for a flat or shallow roof (a design choice), all main walls ≤ max(7.2 m, H − 2.5 m) with the storey above set back 1.4 m ((4)(B)); the \"Development Standard Set 1\" gate is a Chapter 40 leak (M-217) and the roof-slope condition is unkeyed (M-218).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "gfa_flat_sqm",
+    "main_wall_limit_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot",
+     "it": "RD 10.20.40.10(4)(A) no longer carries the Chapter 40 \"Development Standard Set 1\" map gate",
+     "asserts": [
+      "main_wall_height_m",
+      "map_area_not_held"
+     ],
+     "satisfies": [
+      "M-217"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-217 strengthened — with the map polygons NOT held, no Chapter 40 unit gates RD main walls",
+     "it": "RD flat roof: main_wall_height_m is decided by RD units, never map_area_not_held",
+     "asserts": [
+      "main_wall_height_m",
+      "10.20.40.10(2)#(2)(A)"
+     ],
+     "satisfies": [
+      "M-217"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [
+    {
+     "id": "M-184",
+     "to": "Layer 3",
+     "why": "both roof forms are a Layer 3 computation (Spec 78 P5.2 item 5), not a by-law-table fix"
+    }
+   ],
+   "checks": [
+    "correction COR-10.20.40.10(4)#(4)(A)/condition, COR-10.20.40.10(4)#(4)(A)/application.lot_conditions, COR-10.20.40.10(4)#(4)(A)/application.evidence",
+    "verified by named lock: M-217",
+    "owed M-184 → Layer 3"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock); owed elsewhere: M-184 → Layer 3"
   },
   {
    "unit_id": "10.20.40.10(4)#(4)(B)",
@@ -2852,7 +2849,8 @@
     "gfa_flat_sqm",
     "main_wall_limit_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2875,7 +2873,8 @@
     "gfa_flat_sqm",
     "main_wall_limit_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -2893,7 +2892,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -2915,12 +2915,13 @@
    "fields": [
     "first_floor_elevation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.20.40.10(6)#whole/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.20.40.10(7)#(7)(A)",
@@ -2939,7 +2940,8 @@
    "fields": [
     "gfa_pitched_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code dormers_at_max",
     "unit carries a disclosure"
@@ -2962,7 +2964,8 @@
    "disclosure_code": "attic_outside_gfa",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code attic_outside_gfa",
     "unit carries a disclosure"
@@ -2986,7 +2989,8 @@
    "disclosure_code": "existing_roof_alteration",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code existing_roof_alteration",
     "unit carries a disclosure"
@@ -3009,7 +3013,8 @@
    "fields": [
     "main_length_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3031,7 +3036,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -3051,7 +3057,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -3071,7 +3078,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -3089,7 +3097,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3107,7 +3116,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3127,7 +3137,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3150,12 +3161,13 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.40.30.1(2)#whole/application.building_types, COR-10.40.30.1(2)#whole/application.evidence, COR-10.40.30.1(2)#whole/ranks_layers, COR-10.40.30.1(2)#whole/application"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.30.10(1)#(1)(A)",
@@ -3170,7 +3182,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3190,7 +3203,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3210,7 +3224,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3230,7 +3245,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3250,7 +3266,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3270,7 +3287,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3290,7 +3308,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3313,7 +3332,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3336,7 +3356,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3359,7 +3380,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3385,12 +3407,13 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.40.30.40(1)#(1)(D)/application.building_types, COR-10.40.30.40(1)#(1)(D)/application.evidence"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.40.1(1)#whole",
@@ -3405,7 +3428,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3423,7 +3447,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3441,7 +3466,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3461,7 +3487,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3483,7 +3510,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3501,7 +3529,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3521,7 +3550,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3541,7 +3571,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3561,7 +3592,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3581,7 +3613,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3603,7 +3636,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code bedroom_cap",
     "unit carries a disclosure"
@@ -3626,7 +3660,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code bedroom_cap",
     "unit carries a disclosure"
@@ -3649,7 +3684,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code bedroom_cap",
     "unit carries a disclosure"
@@ -3670,7 +3706,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3688,7 +3725,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3706,7 +3744,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3727,7 +3766,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -3745,7 +3785,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3763,7 +3804,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3781,7 +3823,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3799,7 +3842,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -3820,7 +3864,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3843,7 +3888,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3866,7 +3912,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3889,7 +3936,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3913,7 +3961,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3937,7 +3986,8 @@
     "main_wall_pair",
     "main_wall_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3960,7 +4010,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -3983,12 +4034,54 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.40.40.10(3)#(3)(C)",
+   "regulation_id": "10.40.40.10(3)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "This is important because for build type detached houseplex and semi-detached houseplex there is no max stories.  This impacts the build size and envelop of these build types.",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.40.40.10(3)#(3)(D)",
@@ -4006,7 +4099,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4028,7 +4122,8 @@
    "fields": [
     "first_floor_elevation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -4050,7 +4145,8 @@
    "fields": [
     "gfa_pitched_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4073,7 +4169,8 @@
    "fields": [
     "gfa_flat_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4093,7 +4190,8 @@
    "fields": [
     "main_length_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4115,7 +4213,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4135,7 +4234,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4155,7 +4255,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4175,7 +4276,8 @@
    "fields": [
     "main_length_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4197,7 +4299,8 @@
    "fields": [
     "main_length_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4219,7 +4322,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4239,7 +4343,8 @@
    "fields": [
     "main_depth_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4261,7 +4366,8 @@
    "fields": [
     "main_depth_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4283,7 +4389,8 @@
    "fields": [
     "main_depth_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4306,12 +4413,109 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.40.40.40(1)#(1)(C)",
+   "regulation_id": "10.40.40.40(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.40.40(1)#(1)(C)/application.building_types, COR-10.40.40.40(1)#(1)(C)/application.evidence",
+    "verified by named lock: M-182, M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.40.40.40(1)#(1)(D)",
+   "regulation_id": "10.40.40.40(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "Important FSI doesn't apply to townhouse or apartment buildings with over 60 units",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "FSI does not apply to a townhouse or apartment building with 60 dwelling units or fewer (not_applicable).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+     "asserts": [
+      "'RS'",
+      "40.40(1)#(1)(D)"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.40.40.50(1)#(1)(A)",
@@ -4328,7 +4532,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -4351,7 +4556,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -4374,7 +4580,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -4397,7 +4604,8 @@
    "fields": [
     "main_front_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4421,18 +4629,25 @@
    "fields": [
     "main_rear_setback_m"
    ],
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RS'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   },
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RS'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "lock verified: src/tests/bylaw-evaluator-fixes.logic.test.ts › M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) › ${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-205"
    ],
    "state": "INCORPORATED",
    "reason": "verified by named lock"
@@ -4454,18 +4669,25 @@
    "fields": [
     "main_rear_setback_m"
    ],
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RS'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   },
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RS'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "lock verified: src/tests/bylaw-evaluator-fixes.logic.test.ts › M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) › ${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-205"
    ],
    "state": "INCORPORATED",
    "reason": "verified by named lock"
@@ -4485,7 +4707,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4507,7 +4730,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4529,7 +4753,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4551,7 +4776,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4571,7 +4797,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4591,7 +4818,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4611,7 +4839,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4631,7 +4860,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4651,7 +4881,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4671,7 +4902,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4691,7 +4923,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4711,7 +4944,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4731,7 +4965,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -4753,7 +4988,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4773,7 +5009,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4793,7 +5030,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4813,7 +5051,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4833,7 +5072,8 @@
    "fields": [
     "first_floor_elevation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -4853,7 +5093,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4873,7 +5114,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -4896,7 +5138,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4916,7 +5159,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4936,7 +5180,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4954,7 +5199,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -4974,7 +5220,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -4994,7 +5241,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -5015,12 +5263,13 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.60.30.1(2)#whole/application.building_types, COR-10.60.30.1(2)#whole/application.evidence, COR-10.60.30.1(2)#whole/ranks_layers, COR-10.60.30.1(2)#whole/application"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.60.30.10(1)#(1)(A)",
@@ -5035,7 +5284,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5055,7 +5305,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5075,7 +5326,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5095,7 +5347,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5115,7 +5368,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5138,7 +5392,8 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code townhouse_driveway_width",
     "unit carries a disclosure"
@@ -5159,7 +5414,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5179,7 +5435,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5202,7 +5459,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5225,7 +5483,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5250,7 +5509,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -5273,7 +5533,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -5291,7 +5552,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5313,18 +5575,25 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap",
-    "it": "with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
-    "asserts": [
-     "'10.60.40.1(2)#(2)(A)'",
-     "'RT'"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   },
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap",
+     "it": "with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
+     "asserts": [
+      "'10.60.40.1(2)#(2)(A)'",
+      "'RT'"
+     ],
+     "satisfies": [
+      "M-202"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "lock verified: src/tests/bylaw-evaluator-fixes.logic.test.ts › M-220 / M-202(3) — no 'u' in the label: no 'u' cap › with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-202"
    ],
    "state": "INCORPORATED",
    "reason": "verified by named lock"
@@ -5344,7 +5613,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5364,7 +5634,8 @@
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code townhouse_driveway_width",
     "unit carries a disclosure"
@@ -5385,7 +5656,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5405,7 +5677,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5423,7 +5696,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5443,12 +5717,13 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.60.40.1(5)#whole/ranks_layers, COR-10.60.40.1(5)#whole/application"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.60.40.1(6)#(6)(A)",
@@ -5465,7 +5740,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5485,7 +5761,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5505,7 +5782,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5523,7 +5801,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5541,7 +5820,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5559,7 +5839,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5577,7 +5858,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5595,7 +5877,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5613,7 +5896,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5631,7 +5915,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5649,7 +5934,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -5670,7 +5956,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5693,7 +5980,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5716,7 +6004,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5739,7 +6028,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5762,7 +6052,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5785,12 +6076,54 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.60.40.10(2)#(2)(C)",
+   "regulation_id": "10.60.40.10(2)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "Maximum Number of Storeys - the max stories does not apply to detached and semi-detached house plexes.  No limit for them I guess",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.60.40.10(2)#(2)(D)",
@@ -5808,7 +6141,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5828,7 +6162,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5851,7 +6186,8 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5874,12 +6210,109 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(C)",
+   "regulation_id": "10.60.40.40(1)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "This is important in the RT zone the Max FSI does not apply to bove does not apply to a detached houseplex, semi-detached houseplex or a residential building with a secondary suite; - especially important is the detached house with a secondary suite",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a houseplex or a detached house with a secondary suite (not_applicable, no FSI cap).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.40.40(1)#(1)(C)/application.building_types, COR-10.60.40.40(1)#(1)(C)/application.evidence",
+    "verified by named lock: M-182, M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(D)",
+   "regulation_id": "10.60.40.40(1)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "also doesn't apply to townhouse with over 60 units.  ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "FSI does not apply to a townhouse with 60 dwelling units or fewer (not_applicable).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+     "asserts": [
+      "'RT'",
+      "40.40(1)#(1)(D)"
+     ],
+     "satisfies": [
+      "M-183"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.60.40.70(1)#whole",
@@ -5896,7 +6329,8 @@
    "fields": [
     "main_front_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5918,7 +6352,8 @@
    "fields": [
     "main_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5940,7 +6375,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5962,7 +6398,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -5982,7 +6419,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6002,7 +6440,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6022,7 +6461,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6042,7 +6482,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6062,7 +6503,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6084,7 +6526,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -6108,7 +6551,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -6129,7 +6573,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6147,7 +6592,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6165,7 +6611,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6183,7 +6630,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6201,7 +6649,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6219,7 +6668,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6240,12 +6690,13 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.80.30.1(2)#whole/application.building_types, COR-10.80.30.1(2)#whole/application.evidence, COR-10.80.30.1(2)#whole/ranks_layers, COR-10.80.30.1(2)#whole/application"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.30.10(1)#(1)(A)",
@@ -6260,7 +6711,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6283,7 +6735,8 @@
    "disclosure_code": "semi_house_two_lots",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code semi_house_two_lots",
     "unit carries a disclosure"
@@ -6304,7 +6757,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6324,7 +6778,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6342,7 +6797,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6362,7 +6818,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6385,7 +6842,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -6406,7 +6864,8 @@
    "disclosure_code": "semi_house_two_lots",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code semi_house_two_lots",
     "unit carries a disclosure"
@@ -6427,7 +6886,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6450,7 +6910,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6473,7 +6934,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6496,7 +6958,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6519,7 +6982,8 @@
     "coverage_status",
     "main_footprint_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6539,7 +7003,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6559,7 +7024,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6579,7 +7045,8 @@
    "fields": [
     "dwelling_units"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6599,7 +7066,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -6617,7 +7085,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6637,7 +7106,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6655,7 +7125,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6675,12 +7146,13 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-10.80.40.1(5)#whole/ranks_layers, COR-10.80.40.1(5)#whole/application"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.40.1(6)#(6)(A)",
@@ -6697,7 +7169,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6717,7 +7190,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6737,7 +7211,8 @@
    "fields": [
     "max_bedrooms"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6755,7 +7230,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6773,7 +7249,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6791,7 +7268,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6809,7 +7287,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6827,7 +7306,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6845,7 +7325,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6863,7 +7344,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6881,7 +7363,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -6902,7 +7385,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6925,7 +7409,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6948,7 +7433,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6971,7 +7457,8 @@
     "height_status",
     "main_height_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -6994,7 +7481,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7017,7 +7505,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7040,7 +7529,8 @@
     "main_storeys",
     "storeys_status"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7065,7 +7555,8 @@
    "fields": [
     "first_floor_elevation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code main_entrance_height",
     "unit carries a disclosure"
@@ -7091,7 +7582,8 @@
    "fields": [
     "gfa_pitched_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code dormers_at_max",
     "unit carries a disclosure"
@@ -7114,7 +7606,8 @@
    "fields": [
     "gfa_flat_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7134,7 +7627,8 @@
    "fields": [
     "main_length_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7156,7 +7650,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code one_storey_extension",
     "unit carries a disclosure"
@@ -7179,7 +7674,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code one_storey_extension",
     "unit carries a disclosure"
@@ -7202,7 +7698,8 @@
    "disclosure_code": "one_storey_extension",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code one_storey_extension",
     "unit carries a disclosure"
@@ -7223,7 +7720,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7246,7 +7744,8 @@
     "gain_reasons",
     "main_depth_cap_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7269,7 +7768,8 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7292,7 +7792,8 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7315,7 +7816,8 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7336,7 +7838,8 @@
     "fsi_status",
     "main_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7354,7 +7857,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7372,7 +7876,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7392,7 +7897,8 @@
    "fields": [
     "main_front_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7417,18 +7923,26 @@
    "fields": [
     "main_rear_setback_m"
    ],
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RM'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   },
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RM'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205",
+      "M-174"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "lock verified: src/tests/bylaw-evaluator-fixes.logic.test.ts › M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) › ${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-174, M-205"
    ],
    "state": "INCORPORATED",
    "reason": "verified by named lock"
@@ -7451,18 +7965,26 @@
    "fields": [
     "main_rear_setback_m"
    ],
-   "lock": {
-    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
-    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
-    "asserts": [
-     "'RM'",
-     "rear_setback_m"
-    ],
-    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
-   },
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+     "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+     "asserts": [
+      "'RM'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-205",
+      "M-174"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [],
    "checks": [
-    "lock verified: src/tests/bylaw-evaluator-fixes.logic.test.ts › M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) › ${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m"
+    "no keyed correction cites the fix",
+    "verified by named lock: M-174, M-205"
    ],
    "state": "INCORPORATED",
    "reason": "verified by named lock"
@@ -7482,7 +8004,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7504,7 +8027,8 @@
    "fields": [
     "main_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7524,7 +8048,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7544,7 +8069,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7564,7 +8090,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7584,7 +8111,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "unit agreed"
    ],
@@ -7606,7 +8134,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -7630,7 +8159,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -7653,7 +8183,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -7674,7 +8205,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7692,7 +8224,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7710,7 +8243,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7728,7 +8262,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7746,7 +8281,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7764,7 +8300,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -7786,7 +8323,8 @@
    "fields": [
     "suite_soft_landscaping_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_soft_landscaping",
     "unit carries a disclosure"
@@ -7811,7 +8349,8 @@
    "fields": [
     "suite_soft_landscaping_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_soft_landscaping",
     "unit carries a disclosure"
@@ -7838,12 +8377,13 @@
     "suite_openings_loss_sqm",
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.60.20(2)#(2)(C)/calculation_handling, COR-150.7.60.20(2)#(2)(C)/disclosure, COR-150.7.60.20(2)#(2)(C)/condition, COR-150.7.60.20(2)#(2)(C)/application.lot_conditions, COR-150.7.60.20(2)#(2)(C)/application.evidence"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.60.20(4)#(4)(A)",
@@ -7861,7 +8401,8 @@
    "disclosure_code": "suite_parking_variants",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_parking_variants",
     "unit carries a disclosure"
@@ -7885,7 +8426,8 @@
    "disclosure_code": "suite_parking_variants",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_parking_variants",
     "unit carries a disclosure"
@@ -7911,12 +8453,45 @@
    "fields": [
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.60.20(6)#(6)(B)/condition, COR-150.7.60.20(6)#(6)(B)/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(C)",
+   "regulation_id": "150.7.60.20(6)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite on Corner Lot - Side Yard Setback Minimum =1.5m . Critical - this is the default",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-179"
+   ],
+   "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [
+    {
+     "id": "M-198",
+     "to": "P5.13",
+     "why": "M-198(2) is Layer 3 and needs the principal building's side yard"
+    }
+   ],
+   "checks": [
+    "correction COR-150.7.60.20(6)#(6)(C)/condition~s1, COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1, COR-150.7.60.20(6)#(6)(C)/application.evidence~s1",
+    "owed M-198 → P5.13"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock); owed elsewhere: M-198 → P5.13"
   },
   {
    "unit_id": "150.7.60.21(2)#(2)(A)",
@@ -7933,7 +8508,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -7956,7 +8532,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -7979,7 +8556,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8000,7 +8578,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8018,7 +8597,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8036,7 +8616,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8054,7 +8635,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8072,7 +8654,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8096,7 +8679,8 @@
     "suite_height_m",
     "suite_separation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_separation_arm",
     "unit carries a disclosure"
@@ -8123,7 +8707,8 @@
     "suite_height_m",
     "suite_separation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_separation_arm",
     "unit carries a disclosure"
@@ -8150,7 +8735,8 @@
     "suite_height_m",
     "suite_separation_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code coxwell_area",
     "unit carries a disclosure"
@@ -8171,7 +8757,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8189,7 +8776,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8207,7 +8795,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8227,7 +8816,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8248,7 +8838,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8266,7 +8857,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8284,7 +8876,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8302,7 +8895,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8320,7 +8914,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8338,7 +8933,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8358,7 +8954,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -8381,7 +8978,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -8404,7 +9002,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -8427,7 +9026,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -8450,7 +9050,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -8471,7 +9072,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8489,7 +9091,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8511,7 +9114,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -8531,7 +9135,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8554,7 +9159,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8577,7 +9183,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8600,7 +9207,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8623,7 +9231,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -8644,7 +9253,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8662,7 +9272,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8680,7 +9291,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -8700,7 +9312,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8723,7 +9336,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8746,7 +9360,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8769,7 +9384,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8792,7 +9408,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8815,7 +9432,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8838,7 +9456,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8861,7 +9480,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8884,7 +9504,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8907,7 +9528,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8930,7 +9552,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8953,7 +9576,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8976,7 +9600,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -8999,7 +9624,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -9022,7 +9648,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -9043,7 +9670,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9063,7 +9691,8 @@
    "disclosure_code": "forms_deferred",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code forms_deferred",
     "unit carries no disclosure"
@@ -9086,7 +9715,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9107,7 +9737,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9127,12 +9758,13 @@
    "disclosure_code": "suite_parking_bicycle",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.80.1(1)#(1)(A)/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.80.1(1)#(1)(B)",
@@ -9149,12 +9781,13 @@
    "disclosure_code": "suite_parking_bicycle",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.80.1(1)#(1)(B)/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.80.1(2)#whole",
@@ -9171,12 +9804,13 @@
    "disclosure_code": "suite_parking_bicycle",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.7.80.1(2)#whole/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.80.1(3)#whole",
@@ -9193,7 +9827,8 @@
    "disclosure_code": "suite_parking_variants",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_parking_variants",
     "unit carries a disclosure"
@@ -9214,7 +9849,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9232,7 +9868,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9250,7 +9887,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9268,7 +9906,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9286,7 +9925,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9304,7 +9944,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9327,12 +9968,13 @@
     "suite_lane_arm",
     "suite_type"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "correction COR-150.8.30.20(1)#whole/disclosure"
    ],
    "state": "INCORPORATED",
-   "reason": "keyed correction applied for every cited ruling"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.50.10(1)#(1)(B)",
@@ -9351,7 +9993,8 @@
    "fields": [
     "suite_soft_landscaping_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_soft_landscaping",
     "unit carries a disclosure"
@@ -9376,7 +10019,8 @@
    "fields": [
     "suite_soft_landscaping_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_soft_landscaping",
     "unit carries a disclosure"
@@ -9402,7 +10046,8 @@
     "suite_openings_loss_sqm",
     "suite_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -9425,7 +10070,8 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code laneway_upper_side_stepback",
     "unit carries a disclosure"
@@ -9446,7 +10092,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9464,7 +10111,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9482,7 +10130,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9502,7 +10151,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9525,7 +10175,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9548,7 +10199,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9571,7 +10223,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -9589,7 +10242,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9607,7 +10261,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9625,7 +10280,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9645,7 +10301,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
@@ -9663,7 +10320,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9683,7 +10341,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9706,7 +10365,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9729,7 +10389,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9752,7 +10413,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9775,7 +10437,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9798,7 +10461,8 @@
    "disclosure_code": "rooftop_elements_exempt",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code rooftop_elements_exempt",
     "unit carries a disclosure"
@@ -9819,7 +10483,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9841,7 +10506,8 @@
    "fields": [
     "suite_gfa_sqm"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_gfa_reductions",
     "unit carries a disclosure"
@@ -9864,7 +10530,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9887,7 +10554,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9910,7 +10578,8 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
@@ -9931,7 +10600,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9949,7 +10619,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9967,7 +10638,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -9985,7 +10657,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10003,7 +10676,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10021,7 +10695,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10039,7 +10714,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10057,7 +10733,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10075,7 +10752,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10093,7 +10771,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10111,7 +10790,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10129,7 +10809,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10147,7 +10828,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10165,7 +10847,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10183,7 +10866,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10201,7 +10885,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10219,7 +10904,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10239,7 +10925,8 @@
    "disclosure_code": "decks_platforms_not_modelled",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code decks_platforms_not_modelled",
     "unit carries a disclosure"
@@ -10260,7 +10947,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10283,7 +10971,8 @@
    "fields": [
     "suite_coverage_option"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code other_ancillary_buildings",
     "unit carries a disclosure"
@@ -10304,7 +10993,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10322,7 +11012,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10342,7 +11033,8 @@
    "disclosure_code": "suite_parking_bicycle",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_parking_bicycle",
     "unit carries a disclosure"
@@ -10365,7 +11057,8 @@
    "disclosure_code": "suite_parking_bicycle",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code suite_parking_bicycle",
     "unit carries a disclosure"
@@ -10390,7 +11083,8 @@
    "fields": [
     "gate_flags"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code shoreline_hazard",
     "unit carries a disclosure"
@@ -10416,7 +11110,8 @@
     "gate_flags",
     "main_rear_setback_m"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code triangular_lot",
     "unit carries a disclosure"
@@ -10440,7 +11135,8 @@
    "disclosure_code": "sixplex_height_conditions",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code sixplex_height_conditions",
     "unit carries a disclosure"
@@ -10461,7 +11157,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10479,7 +11176,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10497,7 +11195,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10515,7 +11214,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10533,7 +11233,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10551,7 +11252,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10569,7 +11271,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10587,7 +11290,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10605,7 +11309,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10623,7 +11328,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10641,7 +11347,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10659,7 +11366,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10677,7 +11385,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10695,7 +11404,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10713,7 +11423,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10731,7 +11442,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10749,7 +11461,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10767,7 +11480,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10785,7 +11499,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10803,7 +11518,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10821,7 +11537,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10839,7 +11556,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10857,7 +11575,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10875,7 +11594,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10897,7 +11617,8 @@
     "storeys_flat",
     "storeys_pitched"
    ],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10915,7 +11636,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
@@ -10935,7 +11657,8 @@
    "disclosure_code": "basement_excluded",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code basement_excluded",
     "unit carries a disclosure"
@@ -10958,7 +11681,8 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code gfa_deductions_not_applied",
     "unit carries a disclosure"
@@ -10981,7 +11705,8 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code gfa_deductions_not_applied",
     "unit carries a disclosure"
@@ -11004,7 +11729,8 @@
    "disclosure_code": "gfa_deductions_not_applied",
    "question": "",
    "fields": [],
-   "lock": null,
+   "locks": [],
+   "owed": [],
    "checks": [
     "P5.12 code gfa_deductions_not_applied",
     "unit carries a disclosure"
