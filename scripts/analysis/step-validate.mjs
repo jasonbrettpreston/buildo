@@ -266,6 +266,8 @@ import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfT
 import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
 import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistrationSelfTest } from './gates/admin-registration.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
+import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
 import { scanPurity } from './gates/compute-purity.mjs';
 import { floorDecision, checkEol, parseLsFilesEol, lsFilesEol, stepFileCandidates, loadConvertedSlugs as loadScoreFloorSlugs, selfTest as scoreFloorSelfTest } from './gates/score-floor.mjs';
 import { checkNonzero, loadCapturesFleet, fleetFreshness, computeLibFingerprint, loadExplained, explainedDecision, explainedChannelDecision, LIB_FINGERPRINT_ITEM, selfTest as capturesSelfTest } from './gates/captures.mjs';
@@ -2430,12 +2432,14 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
   // this same allowlist at commit time.
   {
     const literals = checkComputeLiterals(loadComputeFiles(REPO_ROOT), loadLedger(REPO_ROOT).rows, undefined, puritySites);
+    // Spec 124 R-EB: the estate arm (runner/gate literals, never ledgered) + the PIN EXT-2 tooling ratchet.
+    const estate = checkEstateLiterals(REPO_ROOT);
     results.push({
       id: 32,
       slug: '(registry)',
-      pass: literals.pass,
-      blockedSlugs: literals.blockedSlugs,
-      detail: literals.detail,
+      pass: literals.pass && estate.pass,
+      blockedSlugs: estate.pass ? literals.blockedSlugs : [...new Set([...(literals.blockedSlugs || []), '(registry)'])],
+      detail: `${literals.detail}; ${estate.detail}`,
     });
   }
 
@@ -5355,6 +5359,9 @@ function selfTest() {
   // scripts/analysis/gates/compute-literals.mjs (its own selfTest, run here so
   // this file's single `selfTest()` entry point covers it too).
   computeLiteralsSelfTest();
+  // Spec 124 R-EB: the gate E estate arm and the one gate/tooling variable reader.
+  estateLiteralsSelfTest();
+  gateVariablesSelfTest();
   // SCORE-FLOOR + LF-ONLY (fast invariant #37, Spec 124 §5 R-BA gate F, Spec
   // 123 §6, WF2 "standardized gates", 2026-09-26) — the 14/17 hard-stop
   // decision, the LF-only answer set, and both orphan directions live entirely

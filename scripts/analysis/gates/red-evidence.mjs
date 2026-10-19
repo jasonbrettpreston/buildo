@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { GATES } from './ledger.mjs';
+import { gateVariable } from './variables.mjs';
 
 // `ledger.mjs` owns the row shape + the match (GATES includes 'K'); this file
 // owns the closed answer set. Self-check: the shared allowlist must already
@@ -39,7 +40,7 @@ if (!GATES.includes('K')) {
 
 const CLAIM_MARKER = 'docs/reports/red-evidence/';
 const CITATION_RE = /docs\/reports\/red-evidence\/([A-Za-z0-9._-]+\/[A-Za-z0-9._-]+\.json)/g;
-const MIN_NAME_LEN = 3;
+const MIN_NAME_LEN = gateVariable('gate_red_evidence_min_name_chars');
 
 /** Backticked spans on `line`, minus the citation path, "test-name shaped". PURE. */
 function citedTestNames(line, relPath) {

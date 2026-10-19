@@ -25,6 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { matchLedger, loadLedger } from './ledger.mjs';
+import { gateVariable } from './variables.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -154,7 +155,7 @@ export function scanGateE(files, repoRoot = REPO_ROOT) {
   const res = spawnSync(
     astGrepBinary(),
     ['scan', '--rule', RULE_FILE, '--report-style=short', '--color=never', ...files],
-    { cwd: repoRoot, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+    { cwd: repoRoot, encoding: 'utf8', maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 },
   );
   if (res.error) throw res.error;
   const stdout = res.stdout || '';

@@ -66,6 +66,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { matchLedger, loadLedger, LEDGER_REL_PATH, GATES } from './ledger.mjs';
 import { loadConvertedDescriptors } from './closed-bounds.mjs';
+import { gateVariable } from './variables.mjs';
 import { createRequire } from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -344,7 +345,7 @@ export function normaliseDiffKey(key) {
   return String(key).replace(/\[\d+\]/g, '[]');
 }
 
-const MIN_WHY_LEN = 20;
+const MIN_WHY_LEN = gateVariable('gate_why_min_chars');
 
 /**
  * The gate-G EXPLAINED decision for ONE diff key. PURE.

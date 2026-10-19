@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { outsideMarkerChanged } from './generated-blocks.mjs';
+import { gateVariable } from './variables.mjs';
 
 /** Repo-relative path of the converted[] registry this invariant is scoped to. */
 export const CONVERTED_REL = 'scripts/steps/_schema/converted.json';
@@ -27,7 +28,7 @@ export const CONVERTED_REL = 'scripts/steps/_schema/converted.json';
 export const CENSUS_REL = 'scripts/steps/_schema/step-archetype-census.json';
 
 /** Minimum length of an `spec_diff_reason` for a census "N-A" to excuse an owner-spec touch. */
-export const NA_REASON_MIN = 20;
+export const NA_REASON_MIN = gateVariable('gate_na_reason_min_chars');
 
 /**
  * Normalize a parsed converted.json into forward-slash file paths (string or {file} entries).
@@ -287,5 +288,5 @@ export function readCommitChangeSet(root, git = defaultGit) {
 
 /** Spawn `git args` in `root`, capturing stdout/stderr as utf8. */
 function defaultGit(root, args) {
-  return spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  return spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
 }

@@ -139,11 +139,10 @@ export function emitsTypeResult(descriptor, goldenMetas) {
       if (!Object.prototype.hasOwnProperty.call(meta, key)) continue;
       checked++;
       if (!valueMatchesType(type, meta[key])) {
-        const shown = JSON.stringify(meta[key]).slice(0, 80);
         violations.push({
           step,
           item: `emits.${key}.type`,
-          detail: `${step}: emits.${key} declared ${type} but golden ${file} carries ${shown} (mistyped non-null value)`,
+          detail: `${step}: emits.${key} declared ${type} but golden ${file} carries ${JSON.stringify(meta[key]).slice(0, 80)} (mistyped non-null value)`,
         });
       }
     }

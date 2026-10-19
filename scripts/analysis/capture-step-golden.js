@@ -1115,7 +1115,8 @@ let pendingLedgerFlush = null;
 const RECAPTURE_REL = 'recapture.json';
 const RECAPTURE_VIAS = ['plain', 'env', 'bracket'];
 const REPLAY_TOKENS = ['{harness}', '{sql}', '{remove-capture}'];
-const RECAPTURE_MIN_WHY = 20;
+// Spec 124 R-EB row 19: the one why-length variable gate G (captures.mjs) also reads — never a copied number.
+const RECAPTURE_MIN_WHY = require('./gates/variables.cjs').gateVariable('gate_why_min_chars');
 const CAPTURE_SUB_RE = /^(pre|post)\/[^/]+\.json$/;
 const GOLDEN_REL = 'docs/reports/golden';
 

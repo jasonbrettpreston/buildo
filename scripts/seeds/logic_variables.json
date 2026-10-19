@@ -7339,5 +7339,65 @@
     "enum": ["UTC", "America/Toronto"],
     "description": "The IANA zone a step derives a calendar date in from ctx.clock (Spec 124 R-CE, S2 F3-2, operator 2026-10-13). UTC = the measured dev DB session zone, so today's snapshot_date values are unchanged; America/Toronto is the operator's alternative. String-typed (closed enum, on_invalid fail). CONSUMED by assert_engine_health (S2, H5).",
     "admin": { "group": "Pipeline Clock" }
+  },
+  "gate_f_score_floor": {
+    "default": 14,
+    "type": "number",
+    "min": 14,
+    "max": 14,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): gate F (fast invariant #37): the hard-stop score floor; a step scoring below it of 17 hard-stops. Formerly the SCORE_FLOOR = 14 literal. Pinned min = max = 14 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/score-floor.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "gate_notes_cap": {
+    "default": 12,
+    "type": "number",
+    "min": 12,
+    "max": 12,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the most prose entries a step notes file may carry across its prose blocks before the excess must be promoted to a check or deleted. Formerly the NOTES_CAP = 12 literal. Pinned min = max = 12 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/notes-cap.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "gate_why_min_chars": {
+    "default": 20,
+    "type": "number",
+    "min": 20,
+    "max": 20,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the minimum length of a written why: a gate G explained-diffs.json entry (R-DA) and a recapture.json entry. Formerly MIN_WHY_LEN = 20 in captures.mjs and the copied RECAPTURE_MIN_WHY = 20 in capture-step-golden.js; both now read this one variable. Pinned min = max = 20 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/captures.mjs, scripts/analysis/capture-step-golden.js.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "gate_na_reason_min_chars": {
+    "default": 20,
+    "type": "number",
+    "min": 20,
+    "max": 20,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the minimum length of a census spec_diff_reason when an owner-spec diff is declared N-A (fast invariant #43). Formerly the NA_REASON_MIN = 20 literal. Pinned min = max = 20 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/owner-spec-diff.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "gate_red_evidence_min_name_chars": {
+    "default": 3,
+    "type": "number",
+    "min": 3,
+    "max": 3,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): gate K: the minimum length of a backticked test name cited beside a red-evidence artifact. Formerly the MIN_NAME_LEN = 3 literal. Pinned min = max = 3 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/red-evidence.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
+  "tooling_spawn_max_buffer_mb": {
+    "default": 256,
+    "type": "number",
+    "min": 256,
+    "max": 256,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB): the stdout buffer (MiB) a gate allows a spawned git / ast-grep child before it fails. One value for every caller (the largest former literal, so no limit shrinks): formerly 256 (net-new), 32 (score-floor), 64 (owner-spec-diff) and 32 (compute-literals). Pinned min = max = 256 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/net-new.mjs, score-floor.mjs, owner-spec-diff.mjs, compute-literals.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
   }
 }

@@ -379,7 +379,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=261 |
+| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=262 |
 | 2 | enrich_heritage | PASS | 10 declared, missing from seeds: none |
 | 3 | enrich_heritage | PASS | retired=1 overlap-with-declared=none |
 | 7 | enrich_heritage | PASS | SPEC LINK header present=true |

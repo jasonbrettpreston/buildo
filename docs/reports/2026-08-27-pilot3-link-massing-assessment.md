@@ -542,7 +542,7 @@ Plan `.cursor/wf2_link_massing_nonzero_close_active_task.md` (operator-approved 
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_massing | PASS | min_migration=81 <= migrations count=261 |
+| 1 | link_massing | PASS | min_migration=81 <= migrations count=262 |
 | 2 | link_massing | PASS | 10 declared, missing from seeds: none |
 | 3 | link_massing | PASS | retired=1 overlap-with-declared=none |
 | 7 | link_massing | PASS | SPEC LINK header present=true |

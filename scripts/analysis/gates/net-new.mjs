@@ -22,6 +22,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { gateVariable } from './variables.mjs';
 
 export const NET_NEW_TAG = 'net-new (R-DK)';
 const CENSUS_REL = 'scripts/steps/_schema/step-archetype-census.json';
@@ -120,7 +121,7 @@ export function loadNetNew(repoRoot) {
 
 /** The committed (HEAD) version of a repo-relative file, parsed, or null when HEAD lacks it. */
 export function headDoc(repoRoot, rel) {
-  const res = spawnSync('git', ['show', `HEAD:${rel}`], { cwd: repoRoot, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  const res = spawnSync('git', ['show', `HEAD:${rel}`], { cwd: repoRoot, encoding: 'utf8', maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
   if (res.status !== 0) return null;
   try {
     return JSON.parse(res.stdout);

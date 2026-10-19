@@ -24,6 +24,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConvertedJson } from './converted-set.mjs';
+import { gateVariable } from './variables.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -34,7 +35,7 @@ export const NOTES_PROSE_BLOCKS = Object.freeze([
   'expected', 'known_normal', 'known_bad', 'do_not_reflag', 'how_to_investigate', 'limitations',
 ]);
 
-export const NOTES_CAP = 12;
+export const NOTES_CAP = gateVariable('gate_notes_cap');
 
 /**
  * Spec 124 R-DE (vii) (McDonald's Airtight V3): the notes top level is the prose blocks plus these keys,

@@ -1,0 +1,12 @@
+{
+  "$comment": "PIN EXT-2 (Spec 124 R-EB): per-file estate-literal finding counts for the decision-bearing tooling outside the gate E estate scope. Monotonic: --write only lowers a mark; a rise is RED in step-validate #32. Ratcheted to 0 by a dated follow-up (scripts/lib/pipeline.js first).",
+  "recorded_at": "2026-10-18",
+  "marks": {
+    "scripts/analysis/step-validate.mjs": 71,
+    "scripts/analysis/capture-step-golden.js": 6,
+    "scripts/analysis/ingestor-forced-cohort.js": 7,
+    "scripts/run-chain.js": 12,
+    "scripts/ai-env-check.mjs": 10,
+    "scripts/lib/pipeline.js": 22
+  }
+}

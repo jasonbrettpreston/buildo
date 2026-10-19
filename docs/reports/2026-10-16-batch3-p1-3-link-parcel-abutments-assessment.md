@@ -136,7 +136,7 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcel_abutments | PASS | min_migration=255 <= migrations count=261 |
+| 1 | link_parcel_abutments | PASS | min_migration=255 <= migrations count=262 |
 | 2 | link_parcel_abutments | PASS | 7 declared, missing from seeds: none |
 | 3 | link_parcel_abutments | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcel_abutments | PASS | SPEC LINK header present=true |

@@ -402,7 +402,7 @@ export function stripLeadingSqlComments(text) {
     if (out.startsWith('/*')) {
       const end = out.indexOf('*/');
       if (end === -1) return '';
-      out = out.slice(end + 2).replace(/^\s+/, '');
+      out = out.slice(end + '*/'.length).replace(/^\s+/, '');
       continue;
     }
     return out;

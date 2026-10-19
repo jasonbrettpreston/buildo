@@ -41,12 +41,13 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { matchLedger, loadLedger, LEDGER_REL_PATH, GATES } from './ledger.mjs';
 import { readConvertedJson } from './converted-set.mjs';
+import { gateVariable } from './variables.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 
 /** Spec 123 §6 / Spec 124 Rule 13 (R-BA) — policy constant, not a step tunable. */
-export const SCORE_FLOOR = 14;
+export const SCORE_FLOOR = gateVariable('gate_f_score_floor');
 
 /** The closed set of extensions whose CRLF/NUL-bound blob is a review defect. */
 export const TEXT_EXTENSIONS = ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.json'];
@@ -229,7 +230,7 @@ export function stepFileCandidates(repoRoot, descriptor) {
  */
 export function lsFilesEol(repoRoot = REPO_ROOT, paths = []) {
   const res = spawnSync('git', ['ls-files', '--eol', '--', ...paths], {
-    cwd: repoRoot, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024,
+    cwd: repoRoot, encoding: 'utf8', maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024,
   });
   if (res.error) throw new Error(`git ls-files --eol failed to spawn: ${res.error.message}`);
   if (res.status !== 0) throw new Error(`git ls-files --eol exited ${res.status}: ${(res.stderr || '').trim()}`);
