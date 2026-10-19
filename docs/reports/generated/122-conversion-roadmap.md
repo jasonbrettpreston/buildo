@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **28** (+ **10** pending) · remaining slugs: **29** (+ **10** pending)
+Remaining files: **26** (+ **10** pending) · remaining slugs: **27** (+ **10** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
 | C5 | 10 | 10 |
-| C6 | 28 | 31 |
+| C6 | 26 | 31 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -55,49 +55,49 @@ Remaining files: **28** (+ **10** pending) · remaining slugs: **29** (+ **10** 
 
 </details>
 
-## C6 — UNDECLARED (Ask A3: no archetype, no PH-2 risk data — ordered by chain, not risk)
+## C6 — archetype declared by ARCH-CENSUS C6, no PH-2 risk data yet (ordered by chain, not risk)
 
-| Chain bucket | File | Slug(s) | Chains (slots) |
-|---|---|---|---|
-| permits | `scripts/backfill-realtor-permit-trades.js` | backfill_realtor_permit_trades | permits (1) |
-| permits | `scripts/backup-db.js` | backup_db | permits (1) |
-| permits | `scripts/classify-lifecycle-phase.js` | classify_lifecycle_phase | coa+permits (2) |
-| permits | `scripts/classify-permit-phase.js` | classify_permit_phase | permits (1) |
-| permits | `scripts/classify-permits.js` | classify_permits | permits (1) |
-| permits | `scripts/classify-scope.js` | classify_scope | permits (1) |
-| permits | `scripts/close-stale-permits.js` | close_stale_permits | permits (1) |
-| permits | `scripts/compute-build-norms.js` | compute_build_norms | permits (1) |
-| permits | `scripts/compute-cost-estimates.js` | compute_cost_estimates | permits (1) |
-| permits | `scripts/compute-opportunity-scores.js` | compute_opportunity_scores | permits (1) |
-| permits | `scripts/compute-phase-calibration.js` | compute_phase_calibration | coa+permits (2) |
-| permits | `scripts/compute-storey-norms.js` | compute_storey_norms | permits (1) |
-| permits | `scripts/compute-timing-calibration-v2.js` | compute_timing_calibration_v2 | permits (1) |
-| permits | `scripts/compute-trade-forecasts.js` | compute_trade_forecasts | permits (1) |
-| permits | `scripts/dispatch-notifications.js` | dispatch_notifications | permits (1) |
-| permits | `scripts/extract-builders.js` | builders | permits (1) |
-| permits | `scripts/link-coa.js` | link_coa | coa+permits (2) |
-| permits | `scripts/link-similar.js` | link_similar | permits (1) |
-| permits | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing | permits (1) |
-| permits | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution | coa+permits (2) |
-| permits | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
-| deep_scrapes | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
-| deep_scrapes | `scripts/quality/assert-network-health.js` | assert_network_health | deep_scrapes (1) |
-| deep_scrapes | `scripts/quality/assert-staleness.js` | assert_staleness | deep_scrapes (1) |
-| entities_wsib | `scripts/enrich-web-search.js` | enrich_wsib_builders, enrich_named_builders | entities (2) |
-| entities_wsib | `scripts/enrich-wsib.js` | enrich_wsib_registry | wsib (1) |
-| orphan | `scripts/observe-chain.js` | observe_chain |  (0) |
-| orphan | `scripts/reclassify-all.js` | reclassify_all |  (0) |
+| Chain bucket | Archetype | File | Slug(s) | Chains (slots) |
+|---|---|---|---|---|
+| permits | BACKFILL | `scripts/backfill-realtor-permit-trades.js` | backfill_realtor_permit_trades | permits (1) |
+| permits | EFFECTOR | `scripts/backup-db.js` | backup_db | permits (1) |
+| permits | ENRICHER | `scripts/classify-lifecycle-phase.js` | classify_lifecycle_phase | coa+permits (2) |
+| permits | ENRICHER | `scripts/classify-permit-phase.js` | classify_permit_phase | permits (1) |
+| permits | MATERIALIZER | `scripts/classify-permits.js` | classify_permits | permits (1) |
+| permits | ENRICHER | `scripts/classify-scope.js` | classify_scope | permits (1) |
+| permits | ENRICHER | `scripts/close-stale-permits.js` | close_stale_permits | permits (1) |
+| permits | MATERIALIZER | `scripts/compute-build-norms.js` | compute_build_norms | permits (1) |
+| permits | MATERIALIZER | `scripts/compute-cost-estimates.js` | compute_cost_estimates | permits (1) |
+| permits | ENRICHER | `scripts/compute-opportunity-scores.js` | compute_opportunity_scores | permits (1) |
+| permits | MATERIALIZER | `scripts/compute-phase-calibration.js` | compute_phase_calibration | coa+permits (2) |
+| permits | MATERIALIZER | `scripts/compute-storey-norms.js` | compute_storey_norms | permits (1) |
+| permits | MATERIALIZER | `scripts/compute-timing-calibration-v2.js` | compute_timing_calibration_v2 | permits (1) |
+| permits | MATERIALIZER | `scripts/compute-trade-forecasts.js` | compute_trade_forecasts | permits (1) |
+| permits | EFFECTOR | `scripts/dispatch-notifications.js` | dispatch_notifications | permits (1) |
+| permits | MATERIALIZER | `scripts/extract-builders.js` | builders | permits (1) |
+| permits | LINK | `scripts/link-coa.js` | link_coa | coa+permits (2) |
+| permits | ENRICHER | `scripts/link-similar.js` | link_similar | permits (1) |
+| permits | ASSERT | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing | permits (1) |
+| permits | ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution | coa+permits (2) |
+| permits | ENRICHER | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
+| deep_scrapes | ENRICHER | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
+| deep_scrapes | ASSERT | `scripts/quality/assert-network-health.js` | assert_network_health | deep_scrapes (1) |
+| deep_scrapes | ASSERT | `scripts/quality/assert-staleness.js` | assert_staleness | deep_scrapes (1) |
+| entities_wsib | ENRICHER | `scripts/enrich-web-search.js` | enrich_wsib_builders, enrich_named_builders | entities (2) |
+| entities_wsib | ENRICHER | `scripts/enrich-wsib.js` | enrich_wsib_registry | wsib (1) |
 
-*C6 chain-bucket counts (files):* permits=21 · coa=0 · deep_scrapes=3 · entities_wsib=2 · orphan=2
+*C6 chain-bucket counts (files):* permits=21 · coa=0 · deep_scrapes=3 · entities_wsib=2 · orphan=0
 
-## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped
+## Declared exemptions (Ask A2 + Spec 124 R-AP, R-EK) — manifest slugs with NO JS file, RUNNER-owned concerns, and retired steps, excluded by ruling, never silently dropped
 
 | Slug | File | Reason | Ruling | Scope |
 |---|---|---|---|---|
 | coa_documents | `null` | no_file | n/a — no exemption WF was needed | manifest.scripts.coa_documents.coming_soon=true, file:null; nothing exists yet to convert |
 | inspections | `scripts/aic-orchestrator.py` | python_step_excluded | operator 2026-09-10 | out of the JS step standard; stays on its own runner — EXCLUDED from the conversion programme entirely, not deferred to the deep_scrapes batch or any future WF |
+| observe_chain | `scripts/observe-chain.js` | runner_owned | Spec 124 §5 R-EJ (operator y 2026-10-19), applying R-AP: post-chain observation is a RUNNER concern — scripts/run-chain.js:1353 spawns it after every chain; it is in no manifest chain and no step can opt out of it | Not converted and not counted in C6. Spawned detached by run-chain.js after the chain lock is released (scripts/run-chain.js:1353); reads pipeline_runs, calls DeepSeek (scripts/observe-chain.js:256-263) and appends docs/reports/pipeline-observability/{chain}-followup.md (:16, :308); header :4 "no business table mutations". Its standard is the runner's (Spec 48), not the step descriptor. |
+| reclassify_all | `scripts/reclassify-all.js` | retired | Spec 124 §5 R-EK (operator y 2026-10-19): retired, not converted | Not converted and not counted in C6. One-off maintenance (eslint.config.mjs:222; scripts/amnesty.json) in no manifest chain. It re-runs scope + trade + product classification for every permit (scripts/reclassify-all.js:134-181), which classify_scope and classify_permits already do with --full. The script stays in the tree until both covering steps are converted; deleting it is its own later step (PIN C6-RETIRE-1). |
 | reconcile | `scripts/reconcile-runs.js` | runner_owned | Spec 124 §5 R-AP (batch-2 Phase 0.8, 2026-09-15) — grounded in Spec 122 §4 (RUNNER owns reconcile), §7.3 concern row 4 ("Reconcile the previous run | RUNNER | nothing declared") and §7.4 A3 (a reconcile step at the head of manifest.chains.sources) | THIRD exemption class: the slug HAS a real JS file, but the concern it implements is RUNNER-owned — Spec 122 §4 says of RUNNER concerns "nothing is declared per step, and a step cannot opt out", so there is no per-step descriptor to write, no identity.archetype in step.schema.json's 8-value enum to pick, and no x-profile/required-field set. Excluded from the PH-2 population, the 8-archetype dispatch and the C5 conversion count (C5 = 13 conversions, not 14). NOT gate_exempt data (that is scripts/refresh-snapshot.descriptor.json's declared run-chain skip, 9a667a06) and NOT a no_file/python exemption — a distinct, named class. STD-4 tracks its manifest-position promise separately, not this census. |
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **10** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **29** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **10** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **27** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
