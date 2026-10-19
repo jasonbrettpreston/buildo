@@ -21,7 +21,7 @@ const ag = AG.checkAgree({ shards: AU.loadAuthored(process.cwd()), adjudications
 const index = AU.buildIndex(I.slice);
 const units: Json[] = [...AG.agreedUnits(ag).values()]
   .map((u: Json): Json => AU.withGeneratedFields(u))
-  .map((u: Json) => ({ ...u, displaces: XR.displacesOf(index, u.unit_id, I.vocab, null).targets.map((t: Json) => t.id) }));
+  .map((u: Json) => { const d = XR.displacesOf(index, u.unit_id, I.vocab, null); return { ...u, displaces: d.targets.map((t: Json) => t.id), displaces_optional: d.optional_variation }; });
 const C = E.makeContext(VO.evaluatorVocab(I.vocab), { absences: I.absences });
 const unitOf = (id: string): Json => {
   const r = ag.units.get(id);

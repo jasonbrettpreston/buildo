@@ -702,6 +702,13 @@ function staticSets(candidates, target) {
   const valueSet = new Set(valueUnits);
   return { valueSet, provTrace, procs, prevailing, consideredOrdered, ...displacementPairs(consideredOrdered, procs, valueSet) };
 }
+/**
+ * Spec 68 §7.5 rule 2 (operator 2026-10-19 Q1, validation defect D2): a "Despite …" clause that only PERMITS an optional
+ * variation — no value of its own (no target), a PERMIT or UNUSUAL, its trigger governing a permissive "may" sentence
+ * (xref.mjs optional_variation, generated from the wording) — never drops the limit it names: the base limit stays and the
+ * variation is disclosed. A DISAPPLY ("does not apply"), a PROHIBIT, a PREVAILING and every unit with a value still displace.
+ */
+const optionalVariation = (d) => d.displaces_optional === true && !hasTarget(d) && (d.archetype === 'PERMIT' || d.archetype === 'UNUSUAL');
 const tryRef = (ref, id) => { try { return { m: refMatch(ref, id) }; } catch (err) { return { err }; } };
 /**
  * resolveSet's rule-3 and rule-2 loops visit (unit, ref, unit) triples in a fixed order and keep those whose both units
@@ -721,6 +728,7 @@ function displacementPairs(consideredOrdered, procs, valueSet) {
     } catch (err) { r3.push({ u, p: null, err }); }
   }
   const r2 = []; // {d, ref, v, m} passing every A-independent test, or {d, v, err}
+  const ro = []; // {d, v}: an optional variation that names a value unit — the value unit stays (Q1)
   for (const d of consideredOrdered) {
     try {
       if (!(d.displaces || []).length) continue;
@@ -730,11 +738,12 @@ function displacementPairs(consideredOrdered, procs, valueSet) {
         if (t.err) { r2.push({ d, v, err: t.err }); continue; }
         if (!t.m) continue;
         if (hasTarget(d) && !unitTargets(d.target).some((x) => unitTargets(v.target).includes(x))) continue;
+        if (optionalVariation(d)) { ro.push({ d, v }); continue; }
         r2.push({ d, ref, v, m: t.m });
       }
     } catch (err) { r2.push({ d, v: null, err }); }
   }
-  return { r3, r2 };
+  return { r3, r2, ro };
 }
 /**
  * The target-independent part, one pass over a candidates array: value units per target (LIMIT / DEFINE with a parsed
@@ -773,7 +782,7 @@ function effCore(lot, target, candidates, C, env) {
   };
   const statics = infoOf(candidates).statics; // per (candidates array, target): lot-independent
   if (!statics.has(target)) statics.set(target, staticSets(candidates, target));
-  const { valueSet, provTrace, prevailing, consideredOrdered, r3, r2 } = statics.get(target);
+  const { valueSet, provTrace, prevailing, consideredOrdered, r3, r2, ro } = statics.get(target);
   trace.push(...provTrace);
 
   // applicability (rule 1's condition filter, run here because conditions read effective targets and the scenario type);
@@ -794,7 +803,7 @@ function effCore(lot, target, candidates, C, env) {
   }
   // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
   const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
-  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, morePermissive };
+  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro, morePermissive };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -846,7 +855,7 @@ function mpUnits(candidates) {
   return MP_UNITS.get(candidates);
 }
 const articleOf = (u) => String(u.regulation_id || splitRef(u.unit_id).reg).replace(/@.*$/, '').replace(/\(.*$/, '');
-function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, morePermissive = [] }, A, trace, disclosures) {
+function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, ro = [], morePermissive = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
@@ -882,6 +891,13 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
       e.by.push(d.unit_id);
       edits.set(v.unit_id, e);
     }
+  }
+  // Q1 (Spec 68 §7.5 rule 2): an optional variation keeps the limit it names; its own disclosure says what it permits
+  for (const { d, v } of ro) {
+    if (!A.has(d) || !A.has(v)) continue;
+    trace.push(`rule 2: ${d.unit_id} is an optional variation of ${v.unit_id} — the limit stays (operator 2026-10-19 Q1)`);
+    const note = d.disclosure && d.disclosure !== 'none' ? d.disclosure : `An optional variation under ${d.unit_id} may adjust this limit; not applied.`;
+    if (!disclosures.includes(note)) disclosures.push(note);
   }
 
   // candidates: applicable value units, not dropped, not consumed by a substitution; unit-of-measure check (rule 1).

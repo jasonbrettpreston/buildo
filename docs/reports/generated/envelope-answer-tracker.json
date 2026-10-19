@@ -1946,7 +1946,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.20.30.20(1)#(1)(C)/archetype~s1, COR-10.20.30.20(1)#(1)(C)/target~s1, COR-10.20.30.20(1)#(1)(C)/bound~s1, COR-10.20.30.20(1)#(1)(C)/numeric_expression~s1, COR-10.20.30.20(1)#(1)(C)/literals_not_expressed~s1, COR-10.20.30.20(1)#(1)(C)/condition, COR-10.20.30.20(1)#(1)(C)/application.lot_conditions, COR-10.20.30.20(1)#(1)(C)/application.evidence, COR-10.20.30.20(1)#(1)(C)/calculation_handling~s1, COR-10.20.30.20(1)#(1)(C)/disclosure~s1"
+    "correction COR-10.20.30.20(1)#(1)(C)/archetype~s1, COR-10.20.30.20(1)#(1)(C)/target~s1, COR-10.20.30.20(1)#(1)(C)/bound~s1, COR-10.20.30.20(1)#(1)(C)/numeric_expression~s1, COR-10.20.30.20(1)#(1)(C)/literals_not_expressed~s1, COR-10.20.30.20(1)#(1)(C)/condition, COR-10.20.30.20(1)#(1)(C)/application.lot_conditions, COR-10.20.30.20(1)#(1)(C)/application.evidence, COR-10.20.30.20(1)#(1)(C)/calculation_handling~s1, COR-10.20.30.20(1)#(1)(C)/disclosure~s1, COR-10.20.30.20(1)#(1)(C)/disclosure~s2"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -3920,7 +3920,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.40.30.20(1)#(1)(D)/archetype~s1, COR-10.40.30.20(1)#(1)(D)/target~s1, COR-10.40.30.20(1)#(1)(D)/bound~s1, COR-10.40.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.40.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.40.30.20(1)#(1)(D)/condition, COR-10.40.30.20(1)#(1)(D)/application.lot_conditions, COR-10.40.30.20(1)#(1)(D)/application.evidence, COR-10.40.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.40.30.20(1)#(1)(D)/disclosure~s1"
+    "correction COR-10.40.30.20(1)#(1)(D)/archetype~s1, COR-10.40.30.20(1)#(1)(D)/target~s1, COR-10.40.30.20(1)#(1)(D)/bound~s1, COR-10.40.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.40.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.40.30.20(1)#(1)(D)/condition, COR-10.40.30.20(1)#(1)(D)/application.lot_conditions, COR-10.40.30.20(1)#(1)(D)/application.evidence, COR-10.40.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.40.30.20(1)#(1)(D)/disclosure~s1, COR-10.40.30.20(1)#(1)(D)/disclosure~s2"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -7984,7 +7984,7 @@
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.80.30.20(1)#(1)(D)/archetype~s1, COR-10.80.30.20(1)#(1)(D)/target~s1, COR-10.80.30.20(1)#(1)(D)/bound~s1, COR-10.80.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.80.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.80.30.20(1)#(1)(D)/condition, COR-10.80.30.20(1)#(1)(D)/application.lot_conditions, COR-10.80.30.20(1)#(1)(D)/application.evidence, COR-10.80.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.80.30.20(1)#(1)(D)/disclosure~s1"
+    "correction COR-10.80.30.20(1)#(1)(D)/archetype~s1, COR-10.80.30.20(1)#(1)(D)/target~s1, COR-10.80.30.20(1)#(1)(D)/bound~s1, COR-10.80.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.80.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.80.30.20(1)#(1)(D)/condition, COR-10.80.30.20(1)#(1)(D)/application.lot_conditions, COR-10.80.30.20(1)#(1)(D)/application.evidence, COR-10.80.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.80.30.20(1)#(1)(D)/disclosure~s1, COR-10.80.30.20(1)#(1)(D)/disclosure~s2"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

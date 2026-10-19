@@ -1,0 +1,118 @@
+{
+ "suite": "src/tests/bylaw-validation-fixes.logic.test.ts",
+ "base": "a475e71e",
+ "run_on": "2026-10-19",
+ "note": "Validation-fixes lane (operator Q1/Q2 y 2026-10-19; D1 under M-218). Run in a detached a475e71e worktree with this test file. Red: the generated optional-variation flag and the 17-unit sweep lock, the base limits it keeps (RD side yard, RD/RS/RM 17.0 m length), the RD over-18 m side band and deep_side_setback_m, the four RD exception flat-roof caps. Pass both sides: G-AGREE, the \"is permitted\" / \"does not apply\" guard, the value-clause guard (900.2.10(735)(M)), the valued \"may have\" LIMIT guard.",
+ "counts": {
+  "red": 18,
+  "pass": 4
+ },
+ "cases": [
+  {
+   "name": "G-AGREE holds with every correction of the validation-fixes lane no violation",
+   "status": "pass"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) the optional-variation flag is generated from the wording: the RD side-yard shift and the one-storey extensions carry it",
+   "status": "red",
+   "why": "AssertionError: expected [ '10.20.40.70(4)#whole', false ] to deeply equal [ '10.20.40.70(4)#whole', true ]"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) the sweep of every chapter: exactly these 17 valueless PERMIT / UNUSUAL units are optional variations that keep a numeric base limit",
+   "status": "red",
+   "why": "AssertionError: expected [] to deeply equal [ '10.20.40.20(2)#(2)(A)', …(16) ]"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) a value clause with a later \"may\" is not an optional variation (900.2.10(735)(M): \"… is 2.6 metres …, except that … may …\")",
+   "status": "pass"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) \"is permitted\" (no modal \"may\") and \"does not apply\" are not optional variations",
+   "status": "pass"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RD, required frontage 12 m: side yard 1.2 m from 10.20.40.70(3) (was no_candidate), the 0.3 m shift disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 1.2 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RD, required frontage 15 m: side yard 1.5 m from 10.20.40.70(3) (was no_candidate), the 0.3 m shift disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 1.5 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RD, required frontage 17.9 m: side yard 1.5 m from 10.20.40.70(3) (was no_candidate), the 0.3 m shift disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 1.5 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RD, required frontage 15 m: building length 17.0 m (was no_candidate), the one-storey extension disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 17 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RS, required frontage 15 m: building length 17.0 m (was no_candidate), the one-storey extension disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 17 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RM, required frontage 15 m: building length 17.0 m (was no_candidate), the one-storey extension disclosed",
+   "status": "red",
+   "why": "AssertionError: expected 'not_evaluated:no_candidate' to be 17 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) RD, required frontage 20 m (outside the shift band): side yard unchanged from (3)(E) 1.8 m",
+   "status": "red",
+   "why": "AssertionError: expected 7.5 to be 1.8 // Object.is equality"
+  },
+  {
+   "name": "Q1 / D2 — an optional variation (\"Despite …, … may …\", no value of its own) keeps the base limit (Spec 68 §7.5 rule 2) a \"may have … of 19.0 m\" LIMIT keeps displacing (it has a value of its own): RD detached houseplex length rule unchanged",
+   "status": "pass"
+  },
+  {
+   "name": "Q2 / D3 — RD over 18 m: the side setback answers the (3) band; the 7.5 m deep-portion rule is its own measure (owed to P5.13) 10.20.40.70(5)(A)/(B) are keyed to deep_side_setback_m, not side_setback_m",
+   "status": "red",
+   "why": "AssertionError: expected [ '10.20.40.70(5)#(5)(A)', …(2) ] to deeply equal [ '10.20.40.70(5)#(5)(A)', …(2) ]"
+  },
+  {
+   "name": "Q2 / D3 — RD over 18 m: the side setback answers the (3) band; the 7.5 m deep-portion rule is its own measure (owed to P5.13) RD, required frontage 21 m: side yard 1.8 m from 10.20.40.70(3) (was 7.5 m), deep portion 7.5 m",
+   "status": "red",
+   "why": "AssertionError: expected 7.5 to be 1.8 // Object.is equality"
+  },
+  {
+   "name": "Q2 / D3 — RD over 18 m: the side setback answers the (3) band; the 7.5 m deep-portion rule is its own measure (owed to P5.13) RD, required frontage 24 m: side yard 2.4 m from 10.20.40.70(3) (was 7.5 m), deep portion 7.5 m",
+   "status": "red",
+   "why": "AssertionError: expected 7.5 to be 2.4 // Object.is equality"
+  },
+  {
+   "name": "Q2 / D3 — RD over 18 m: the side setback answers the (3) band; the 7.5 m deep-portion rule is its own measure (owed to P5.13) RD, required frontage 30 m: side yard 3 m from 10.20.40.70(3) (was 7.5 m), deep portion 7.5 m",
+   "status": "red",
+   "why": "AssertionError: expected 7.5 to be 3 // Object.is equality"
+  },
+  {
+   "name": "D1 — the RD exception \"detached house with a flat roof\" height caps bind only a flat or shallow roof (M-218) 900.3.10(18)#(18)[SSP](C) carries the flat_or_shallow_roof condition",
+   "status": "red",
+   "why": "AssertionError: expected 'none' to deeply equal { tokens: [ 'flat_or_shallow_roof' ] }"
+  },
+  {
+   "name": "D1 — the RD exception \"detached house with a flat roof\" height caps bind only a flat or shallow roof (M-218) 900.3.10(21)#(21)[SSP](A) carries the flat_or_shallow_roof condition",
+   "status": "red",
+   "why": "AssertionError: expected 'none' to deeply equal { tokens: [ 'flat_or_shallow_roof' ] }"
+  },
+  {
+   "name": "D1 — the RD exception \"detached house with a flat roof\" height caps bind only a flat or shallow roof (M-218) 900.3.10(28)#(28)[SSP](A) carries the flat_or_shallow_roof condition",
+   "status": "red",
+   "why": "AssertionError: expected 'none' to deeply equal { tokens: [ 'flat_or_shallow_roof' ] }"
+  },
+  {
+   "name": "D1 — the RD exception \"detached house with a flat roof\" height caps bind only a flat or shallow roof (M-218) 900.3.10(37)#(37)[SSP](A) carries the flat_or_shallow_roof condition",
+   "status": "red",
+   "why": "AssertionError: expected 'none' to deeply equal { tokens: [ 'flat_or_shallow_roof' ] }"
+  },
+  {
+   "name": "D1 — the RD exception \"detached house with a flat roof\" height caps bind only a flat or shallow roof (M-218) 900.3.10(28): a pitched roof is not capped at 6.5 m; a flat roof is",
+   "status": "red",
+   "why": "AssertionError: expected '900.3.10(28)#(28)[SSP](A)' not to be '900.3.10(28)#(28)[SSP](A)' // Object.is equality"
+  }
+ ]
+}

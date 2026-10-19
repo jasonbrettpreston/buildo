@@ -1,0 +1,42 @@
+{
+ "suite": "src/tests/bylaw-validation-fixes.logic.test.ts",
+ "base": "0879066a",
+ "run_on": "2026-10-19",
+ "note": "Q3 / D4 resolved (a) (operator 2026-10-19): M-176(1) stands. Run in a detached 0879066a worktree with this test file. Red: the three townhouse-on-a-major-street units lack the plain-words driveway disclosure. The 20 m answer and its winning unit already held at 0879066a (M-176(1) as keyed); each case is red on the disclosure it asserts.",
+ "counts": {
+  "red": 6,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed 10.20.30.20(1)#(1)(C) carries the plain-words driveway disclosure (≤ 45 words, LC-52)",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  },
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed RD: a 4-unit townhouse on a major street needs 20 m from 10.20.30.20(1)#(1)(C), which discloses the 24 m driveway case",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  },
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed 10.40.30.20(1)#(1)(D) carries the plain-words driveway disclosure (≤ 45 words, LC-52)",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  },
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed RS: a 4-unit townhouse on a major street needs 20 m from 10.40.30.20(1)#(1)(D), which discloses the 24 m driveway case",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  },
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed 10.80.30.20(1)#(1)(D) carries the plain-words driveway disclosure (≤ 45 words, LC-52)",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  },
+  {
+   "name": "Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed RM: a 4-unit townhouse on a major street needs 20 m from 10.80.30.20(1)#(1)(D), which discloses the 24 m driveway case",
+   "status": "red",
+   "why": "AssertionError: expected 'If each dwelling unit has an individu…' to be 'The frontage assumes no townhouse uni…' // Object.is equality"
+  }
+ ]
+}

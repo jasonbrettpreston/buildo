@@ -108,6 +108,12 @@
     "front_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum front yard setback", "patterns": ["front yard setback", "front yard or", "from a front lot line", "for a front lot line"] },
     "rear_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum rear yard setback", "patterns": ["rear yard setback", "or rear yard", "from a rear lot line"] },
     "side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum side yard setback (a side lot line not abutting a street)", "patterns": ["side yard setback", "from each side lot line", "from a side lot line"] },
+    "deep_side_setback_m": {
+      "unit": "m",
+      "aspect": "envelope",
+      "concept": "minimum side yard setback for the part of a building beyond a stated depth from the front (RD 10.20.40.70(5): beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard setback); never the whole-building side yard (Spec 69a M-205(2); operator 2026-10-19 Q2)",
+      "patterns": ["for any portion of a building that is farther from the front lot line"]
+    },
     "aggregate_side_setback_m": { "unit": "m", "aspect": "envelope", "concept": "minimum aggregate of the side yard setbacks of both side yards (Spec 69a M-130)", "patterns": ["aggregate side yard"] },
     "side_setback_street_m": {
       "unit": "m",
