@@ -326,10 +326,12 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 4 -> 5 at wave-4 classify_coa_scope ① (2026-10-18): the same flip (archetype ENRICHER). Returns to 4 at its ③.
     // 5 -> 6 at wave-4 link_coa_to_parcels ① (2026-10-18): the same flip (archetype LINK). Returns to 5 at its ③.
     // 6 -> 8 at wave-4 enrich_permits + enrich_coa_zoning ① (2026-10-18): both census rows flipped (archetype ENRICHER, one shared module). Return to 6 at their ③.
-    expect(pendingBatch.size).toBe(8);
+    // 8 -> 9 at wave-4 classify_coa_trades ① (2026-10-18): archetype UNDECLARED -> MATERIALIZER (the ARCH-CENSUS wave-4 row, operator y 2026-10-18). Returns to 8 at its ③.
+    expect(pendingBatch.size).toBe(9);
     // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
     // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
-    expect(c6.size).toBe(30);
+    // 30 -> 29 at wave-4 classify_coa_trades ①.
+    expect(c6.size).toBe(29);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 

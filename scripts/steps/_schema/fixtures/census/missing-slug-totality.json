@@ -89,9 +89,9 @@
     {
       "slug": "classify_coa_trades",
       "file": "scripts/classify-coa-trades.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "MATERIALIZER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS wave-4 row (operator y 2026-10-18, plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md Q8; McDonald's Airtight V3): MATERIALIZER. Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype derived from the legacy script at PH-0 (R-AO), never from a descriptor: derived per-lead rows from coa_applications(scope_tags) into lead_trades (INSERT … ON CONFLICT (lead_id, trade_id) DO UPDATE, scripts/classify-coa-trades.js:203-215) and lead_products (per-lead DELETE + INSERT, :228, :241), plus the trade_classified_at watermark (:252). Not an ENRICHER: its outputs are rows of other tables keyed by lead, not columns of the rows it reads (the watermark is the cursor). Twin of compute_trade_forecasts (census MATERIALIZER)."
     },
     {
       "slug": "classify_inspection_status",

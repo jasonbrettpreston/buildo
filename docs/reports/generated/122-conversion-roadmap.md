@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pending)
+Remaining files: **29** (+ **9** pending) · remaining slugs: **30** (+ **9** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 8 | 8 |
-| C6 | 30 | 33 |
+| C5 | 9 | 9 |
+| C6 | 29 | 32 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -37,10 +37,12 @@ Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pe
 | INGESTOR | `scripts/load-coa.js` | coa [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (coa); CHAIN-TOOLING (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); CHAIN-TOOLING (permits); EP-PIN-D17 (permits) |
 | LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (link_coa_to_parcels); CHAIN-TOOLING (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
+| MATERIALIZER | `scripts/classify-coa-trades.js` | classify_coa_trades [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (classify_coa_trades); CHAIN-TOOLING (classify_coa_trades); EP-PIN-D17 (classify_coa_trades) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
 - `scripts/classify-coa-scope.js` (ENRICHER): ARCH-CENSUS key-step scope (wave-4 plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 recommendation 8; McDonald's Airtight V3) declared ENRICHER; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: a per-row JS classifier (scripts/lib/coa-scope-classifier.js, scripts/classify-coa-scope.js:177) over its own input table's pending cursor (:165-173) writing six derived columns back onto coa_applications (:134-145). Precedent compute_parcel_cost_estimates (JS per-row compute, one post_commit phase).
+- `scripts/classify-coa-trades.js` (MATERIALIZER): ARCH-CENSUS wave-4 row (operator y 2026-10-18, plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md Q8; McDonald's Airtight V3): MATERIALIZER. Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype derived from the legacy script at PH-0 (R-AO), never from a descriptor: derived per-lead rows from coa_applications(scope_tags) into lead_trades (INSERT … ON CONFLICT (lead_id, trade_id) DO UPDATE, scripts/classify-coa-trades.js:203-215) and lead_products (per-lead DELETE + INSERT, :228, :241), plus the trade_classified_at watermark (:252). Not an ENRICHER: its outputs are rows of other tables keyed by lead, not columns of the rows it reads (the watermark is the cursor). Twin of compute_trade_forecasts (census MATERIALIZER).
 - `scripts/enrich-coa-zoning.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER. Identity split at commit ① (2026-10-18, operator-approved): this slug's file is now scripts/enrich-coa-zoning.js, a legacy pass-through shell over scripts/enrich-permits.js main() with ENRICH_TARGET=coa, so the slug has its own descriptor, converted.json entry and census row. Phase-4 wave-4 conversion IN FLIGHT — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: the coa target of the same materialize / guarded UPDATE / orphan nullify onto coa_applications through lead_parcels on the stored lead_id (scripts/enrich-permits.js CFG.coa :97-112). Precedent geocode_permits.
 - `scripts/enrich-permits.js` (ENRICHER): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan questions 8-9; McDonald's Airtight V3) declared ENRICHER; converts in the same series as its twin enrich_coa_zoning (one shared legacy module). Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: copies the dominant linked parcel's feed onto its own input table permits through permit_parcels — a temp-table materialize (scripts/enrich-permits.js:372, :488-489), a guarded set-based UPDATE (:470, :500) and an orphan nullify (:546, :506). Always full (:5-6). Precedent geocode_permits (set_based_join_update + set_based_null_retract).
 - `scripts/link-coa-to-parcels.js` (LINK): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan question 8; McDonald's Airtight V3) declared LINK; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed LINK: an address-tier cascade (address-points bridge, parcels exact, name-only; scripts/link-coa-to-parcels.js:366-470) that writes lead_parcels (guarded upsert ON CONFLICT (lead_id, parcel_id), :458) with retraction (the coa-scoped ghost DELETE, :587-595) and back-fills coa_applications lat/lng/neighbourhood_id/parcel_linked_at (:532, :551, pre-pass :322). Same shape as link_parcels (link_keyed + link_full_retraction + the parcel_linked_at marker); the bundled neighbourhood pass follows link_neighbourhoods.
@@ -76,7 +78,6 @@ Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pe
 | permits | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing | permits (1) |
 | permits | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution | coa+permits (2) |
 | permits | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
-| coa | `scripts/classify-coa-trades.js` | classify_coa_trades | coa (1) |
 | coa | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates | coa (1) |
 | deep_scrapes | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
 | deep_scrapes | `scripts/quality/assert-network-health.js` | assert_network_health | deep_scrapes (1) |
@@ -86,7 +87,7 @@ Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pe
 | orphan | `scripts/observe-chain.js` | observe_chain |  (0) |
 | orphan | `scripts/reclassify-all.js` | reclassify_all |  (0) |
 
-*C6 chain-bucket counts (files):* permits=21 · coa=2 · deep_scrapes=3 · entities_wsib=2 · orphan=2
+*C6 chain-bucket counts (files):* permits=21 · coa=1 · deep_scrapes=3 · entities_wsib=2 · orphan=2
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped
 
@@ -98,4 +99,4 @@ Remaining files: **30** (+ **8** pending) · remaining slugs: **31** (+ **8** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **8** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **31** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **9** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **30** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
