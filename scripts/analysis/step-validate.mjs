@@ -147,6 +147,11 @@
  *      G8 diff-explanation channel is `explained-diffs.json` only (R-DA) —
  *      `checkCaptures(`'s own diff loop applies the per-key decision live. `scripts/analysis/gates/captures.mjs` owns all
  *      three answer sets
+ *   53. VARIABLE-EFFECT (Spec 124 R-EO, operator Q6 y 2026-10-19): the admin
+ *      in-effect badge file (src/features/admin-controls/generated/
+ *      logic-variable-effect.json) equals the derivation in
+ *      `scripts/analysis/gates/variable-effect.mjs` — FAIL on a declared variable
+ *      the live step does not read with no badge, and on a stale badge
  *
  * SPEC LINK: docs/specs/01-pipeline/123_step_opt_assessment_validation.md SS6 (gates),
  *            SS5.2 (per-step checklist), SS4.4 (checker self-test doctrine, SS12b.6)
@@ -265,6 +270,7 @@ import { checkModeEmitsType, loadModeEmitsFleet, selfTest as modeEmitsTypeSelfTe
 import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfTest } from './gates/logic-version.mjs';
 import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
 import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistrationSelfTest } from './gates/admin-registration.mjs';
+import { checkVariableEffect, loadVariableEffect, EFFECT_REL } from './gates/variable-effect.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
 import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
 import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
@@ -2603,6 +2609,17 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
       blockedSlugs: admin51.blockedSlugs,
       detail: admin51.detail,
     });
+  }
+
+  // 53. VARIABLE-EFFECT (Spec 124 R-EO, operator Q6 y 2026-10-19) — a declared logic variable the live step does
+  // not read carries an admin badge: "Takes effect at cutover" (a pending step in its copy window declares it,
+  // the live legacy script reads <legacy name> or a built-in value) or "Not read — scheduled for retirement".
+  // Derived from the seeds, converted.json stages, descriptors, live code and the copy migrations, never a hand
+  // list (R-DL form); the committed badge file must equal that derivation. File-only (R-DJ (2)).
+  {
+    const committed53 = existsSync(path.join(REPO_ROOT, EFFECT_REL)) ? JSON.parse(readFileSync(path.join(REPO_ROOT, EFFECT_REL), 'utf8')) : { entries: {} };
+    const effect53 = checkVariableEffect(loadVariableEffect(REPO_ROOT), committed53);
+    results.push({ id: 53, slug: '(registry)', pass: effect53.pass, blockedSlugs: effect53.blockedSlugs, detail: effect53.detail });
   }
 
   return results;

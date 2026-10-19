@@ -12,13 +12,15 @@
  *
  * SPEC LINK: docs/specs/02-web-admin/86_control_panel.md §5 Phase 3
  * SPEC LINK: docs/specs/01-pipeline/84_lifecycle_phase_engine.md §3.4
- * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 3, "the admin intersection")
+ * SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md (Rule 3, "the admin intersection"; R-EO, the
+ *            in-effect badge from ../generated/logic-variable-effect.json via EffectBadge)
  */
 
 import type { LogicVariableRow } from '@/lib/admin/control-panel';
 import { LOGIC_VAR_ENUMS } from '@/lib/admin/control-panel';
 import { DeltaGuardInput } from './DeltaGuardInput';
 import { JsonTiersEditor } from './JsonTiersEditor';
+import { EffectBadge } from './EffectBadge';
 import { useAdminControlsStore } from '../store/useAdminControlsStore';
 import GENERATED_GROUPS from '../generated/logic-variable-groups.json';
 
@@ -148,6 +150,7 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
                     <div key={key} className="pt-5">
                       <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                         {key}
+                        <EffectBadge varKey={key} />
                         {row.description && (
                           <span className="ml-1 text-gray-400 normal-case font-normal">
                             — {row.description}
@@ -173,6 +176,7 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
                 if (JSON_KEYS.has(key)) {
                   return (
                     <div key={key} className="sm:col-span-2 lg:col-span-3">
+                      <EffectBadge varKey={key} />
                       <JsonTiersEditor
                         // JSON_KEYS are the JSON-OBJECT variables; the widened
                         // `jsonValue` union (S2 F3-2 also allows a string for
@@ -192,6 +196,7 @@ export function GlobalConfigCard({ variables }: GlobalConfigCardProps) {
                   <div key={key} className="pt-5">
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                       {key}
+                      <EffectBadge varKey={key} />
                       {row.description && (
                         <span className="ml-1 text-gray-400 normal-case font-normal">
                           — {row.description}

@@ -174,6 +174,7 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 169 terminal(s) unwitnessed (no capture) |
 | 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (10 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 12 take effect at cutover, 9 not read; admin badges current |
 
 ### Captures (item iv)
 - missing invocations (POST): none
