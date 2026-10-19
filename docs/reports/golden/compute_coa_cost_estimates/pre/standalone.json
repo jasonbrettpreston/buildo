@@ -1,0 +1,874 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/compute-coa-cost-estimates.js",
+  "chain": "none",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 71,
+      "coa_processed": 0,
+      "coa_with_cost": 0,
+      "coa_without_cost": 0,
+      "coa_with_fallback": 0,
+      "null_cost_reasons": {
+        "no_parcel": 0,
+        "no_scope_tags": 0,
+        "no_active_trades": 0,
+        "no_matching_rate": 0
+      },
+      "null_cost_reasons_additive": {
+        "no_parcel": 0,
+        "no_scope_tags": 0,
+        "no_active_trades": 0
+      },
+      "cost_distribution": {
+        "p25": null,
+        "p50": null,
+        "p75": null
+      },
+      "coa_applications_updated": 0,
+      "dry_run": false,
+      "row_limit": null,
+      "audit_table": {
+        "phase": 42,
+        "name": "CoA Cost Estimation",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "coa_eligible",
+            "value": 0,
+            "threshold": "> 0",
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_with_cost",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_without_cost",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "cost_estimate_coverage_pct",
+            "value": "N/A",
+            "threshold": ">= 65%",
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_corpus_cost_coverage_pct",
+            "value": "62.0%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_corpus_priced",
+            "value": 21035,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_corpus_total",
+            "value": 33949,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "null_reason_no_parcel",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "null_reason_no_scope_tags",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "null_reason_no_active_trades",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "null_reason_no_matching_rate",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "cost_with_fallback_pct",
+            "value": "N/A",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "cost_distribution_p25_p50_p75",
+            "value": "N/A",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_t1_declared_area",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_t2_parcel",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_t3_rate",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_additive_pairs",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_coverage_pct",
+            "value": "N/A",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "tier_none_count",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_fit_blocked",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_zero_total",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_tradeless_count",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_unpriceable_t4",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "t4_nonresidential_count",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "t4_processed",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "archetype_map_nofit_residential_pct",
+            "value": "N/A",
+            "threshold": "<= 25%",
+            "status": "INFO"
+          },
+          {
+            "metric": "phase_h_gap_active",
+            "value": true,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_new",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_skipped",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_applications_updated",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "total_cost_estimates_written",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 80,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "coa_applications": [
+          "id",
+          "lead_id",
+          "scope_tags",
+          "structure_type",
+          "neighbourhood_id",
+          "trade_classified_at",
+          "cost_classified_at",
+          "project_type",
+          "neighbourhood_cost_premium",
+          "cost_fb_total",
+          "cost_coa_total",
+          "cost_addition_total",
+          "cost_gut_total",
+          "cost_basement_underpin_per_sqm",
+          "cost_basement_per_sqm",
+          "cost_garage_total",
+          "cost_laneway_suite_total",
+          "cost_garden_suite_total",
+          "cost_kitchen_per_sqm",
+          "cost_bath_per_sqm",
+          "cost_solar_total",
+          "opt_aor_gfa_sqm",
+          "opt_coa_gfa_sqm",
+          "cur_floor_gfa_sqm",
+          "cur_pot_2story_gfa_sqm",
+          "max_garage_gfa_sqm",
+          "max_laneway_suite_gfa_sqm",
+          "max_garden_suite_gfa_sqm",
+          "cur_est_kitchen_gfa_sqm",
+          "cur_est_bath_gfa_sqm",
+          "max_buildable_footprint_sqm"
+        ],
+        "lead_parcels": [
+          "lead_id",
+          "parcel_id",
+          "confidence"
+        ],
+        "parcels": [
+          "id",
+          "lot_size_sqm",
+          "frontage_m"
+        ],
+        "parcel_buildings": [
+          "parcel_id",
+          "building_id",
+          "is_primary"
+        ],
+        "building_footprints": [
+          "id",
+          "footprint_area_sqm",
+          "estimated_stories"
+        ],
+        "neighbourhoods": [
+          "id",
+          "avg_household_income",
+          "tenure_renter_pct"
+        ],
+        "lead_trades": [
+          "lead_id",
+          "trade_id",
+          "is_active"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ],
+        "trade_sqft_rates": [
+          "trade_slug",
+          "base_rate_sqft",
+          "structure_complexity_factor"
+        ],
+        "scope_intensity_matrix": [
+          "permit_type",
+          "structure_type",
+          "gfa_allocation_percentage"
+        ],
+        "archetype_cost_rates": [
+          "archetype",
+          "cost_per_sqm",
+          "cost_adjustment_factor",
+          "escalation_index_base"
+        ]
+      },
+      "writes": {
+        "cost_estimates": [
+          "lead_id",
+          "permit_num",
+          "revision_num",
+          "estimated_cost",
+          "cost_source",
+          "cost_tier",
+          "cost_range_low",
+          "cost_range_high",
+          "premium_factor",
+          "complexity_score",
+          "model_version",
+          "is_geometric_override",
+          "modeled_gfa_sqm",
+          "effective_area_sqm",
+          "trade_contract_values",
+          "computed_at"
+        ],
+        "coa_applications": [
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "cost_source",
+          "cost_classified_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Loaded 32 trade rates + 32 scope matrix rows + 12 archetype rates\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":71,\"coa_processed\":0,\"coa_with_cost\":0,\"coa_without_cost\":0,\"coa_with_fallback\":0,\"null_cost_reasons\":{\"no_parcel\":0,\"no_scope_tags\":0,\"no_active_trades\":0,\"no_matching_rate\":0},\"null_cost_reasons_additive\":{\"no_parcel\":0,\"no_scope_tags\":0,\"no_active_trades\":0},\"cost_distribution\":{\"p25\":null,\"p50\":null,\"p75\":null},\"coa_applications_updated\":0,\"dry_run\":false,\"row_limit\":null,\"audit_table\":{\"phase\":42,\"name\":\"CoA Cost Estimation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":0,\"threshold\":\"> 0\",\"status\":\"INFO\"},{\"metric\":\"coa_with_cost\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_without_cost\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_estimate_coverage_pct\",\"value\":\"N/A\",\"threshold\":\">= 65%\",\"status\":\"INFO\"},{\"metric\":\"coa_corpus_cost_coverage_pct\",\"value\":\"62.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_priced\",\"value\":21035,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_total\",\"value\":33949,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_parcel\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_scope_tags\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_active_trades\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"null_reason_no_matching_rate\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_with_fallback_pct\",\"value\":\"N/A\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cost_distribution_p25_p50_p75\",\"value\":\"N/A\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t1_declared_area\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t2_parcel\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_t3_rate\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_additive_pairs\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_coverage_pct\",\"value\":\"N/A\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"tier_none_count\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_fit_blocked\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_zero_total\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_tradeless_count\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_unpriceable_t4\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_nonresidential_count\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"t4_processed\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"archetype_map_nofit_residential_pct\",\"value\":\"N/A\",\"threshold\":\"<= 25%\",\"status\":\"INFO\"},{\"metric\":\"phase_h_gap_active\",\"value\":true,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_new\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_skipped\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_applications_updated\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_cost_estimates_written\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":80,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"structure_type\",\"neighbourhood_id\",\"trade_classified_at\",\"cost_classified_at\",\"project_type\",\"neighbourhood_cost_premium\",\"cost_fb_total\",\"cost_coa_total\",\"cost_addition_total\",\"cost_gut_total\",\"cost_basement_underpin_per_sqm\",\"cost_basement_per_sqm\",\"cost_garage_total\",\"cost_laneway_suite_total\",\"cost_garden_suite_total\",\"cost_kitchen_per_sqm\",\"cost_bath_per_sqm\",\"cost_solar_total\",\"opt_aor_gfa_sqm\",\"opt_coa_gfa_sqm\",\"cur_floor_gfa_sqm\",\"cur_pot_2story_gfa_sqm\",\"max_garage_gfa_sqm\",\"max_laneway_suite_gfa_sqm\",\"max_garden_suite_gfa_sqm\",\"cur_est_kitchen_gfa_sqm\",\"cur_est_bath_gfa_sqm\",\"max_buildable_footprint_sqm\"],\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"confidence\"],\"parcels\":[\"id\",\"lot_size_sqm\",\"frontage_m\"],\"parcel_buildings\":[\"parcel_id\",\"building_id\",\"is_primary\"],\"building_footprints\":[\"id\",\"footprint_area_sqm\",\"estimated_stories\"],\"neighbourhoods\":[\"id\",\"avg_household_income\",\"tenure_renter_pct\"],\"lead_trades\":[\"lead_id\",\"trade_id\",\"is_active\"],\"trades\":[\"id\",\"slug\"],\"trade_sqft_rates\":[\"trade_slug\",\"base_rate_sqft\",\"structure_complexity_factor\"],\"scope_intensity_matrix\":[\"permit_type\",\"structure_type\",\"gfa_allocation_percentage\"],\"archetype_cost_rates\":[\"archetype\",\"cost_per_sqm\",\"cost_adjustment_factor\",\"escalation_index_base\"]},\"writes\":{\"cost_estimates\":[\"lead_id\",\"permit_num\",\"revision_num\",\"estimated_cost\",\"cost_source\",\"cost_tier\",\"cost_range_low\",\"cost_range_high\",\"premium_factor\",\"complexity_score\",\"model_version\",\"is_geometric_override\",\"modeled_gfa_sqm\",\"effective_area_sqm\",\"trade_contract_values\",\"computed_at\"],\"coa_applications\":[\"modeled_gfa_sqm\",\"estimated_cost\",\"cost_source\",\"cost_classified_at\"]}}\n{\"level\":\"INFO\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"Cost estimation complete\",\"context\":{\"processed\":0,\"coa_with_cost\":0,\"coa_without_cost\":0,\"records_new\":0,\"records_updated\":0,\"coa_applications_updated\":0,\"duration\":\"0.1s\"}}\n\n[compute-coa-cost-estimates] completed in 0.1s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[compute-coa-cost-estimates]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 3415,
+  "table_state": [
+    {
+      "table": "coa_applications",
+      "row_count": 33949,
+      "content_hash": "fcd5b9c31e38ff4b6134ffcaa026c085",
+      "order_by": "pk",
+      "columns": [
+        "id",
+        "modeled_gfa_sqm",
+        "estimated_cost",
+        "cost_source"
+      ]
+    },
+    {
+      "table": "cost_estimates",
+      "row_count": 274947,
+      "ceiling_bypassed": "projected",
+      "content_hash": "729deb9f7413533d1058d8a01dd5f5b1",
+      "order_by": "explicit",
+      "order_columns": [
+        "lead_id"
+      ],
+      "columns": [
+        "lead_id",
+        "estimated_cost",
+        "cost_source",
+        "cost_tier",
+        "cost_range_low",
+        "cost_range_high",
+        "premium_factor",
+        "complexity_score",
+        "model_version",
+        "is_geometric_override",
+        "modeled_gfa_sqm",
+        "effective_area_sqm",
+        "trade_contract_values"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "coa_applications": 23,
+    "cost_estimates": 434
+  },
+  "table_specs": {
+    "coa_applications": {
+      "columns": [
+        "id",
+        "modeled_gfa_sqm",
+        "estimated_cost",
+        "cost_source"
+      ],
+      "columns_source": "arg",
+      "order": null,
+      "order_source": "none"
+    },
+    "cost_estimates": {
+      "columns": [
+        "lead_id",
+        "estimated_cost",
+        "cost_source",
+        "cost_tier",
+        "cost_range_low",
+        "cost_range_high",
+        "premium_factor",
+        "complexity_score",
+        "model_version",
+        "is_geometric_override",
+        "modeled_gfa_sqm",
+        "effective_area_sqm",
+        "trade_contract_values"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "lead_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/compute-coa-cost-estimates.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Cost Estimation",
+          "phase": 42,
+          "rows": [
+            {
+              "metric": "coa_eligible",
+              "status": "INFO",
+              "threshold": "> 0",
+              "value": 0
+            },
+            {
+              "metric": "coa_with_cost",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_without_cost",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "cost_estimate_coverage_pct",
+              "status": "INFO",
+              "threshold": ">= 65%",
+              "value": "N/A"
+            },
+            {
+              "metric": "coa_corpus_cost_coverage_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "62.0%"
+            },
+            {
+              "metric": "coa_corpus_priced",
+              "status": "INFO",
+              "threshold": null,
+              "value": 21035
+            },
+            {
+              "metric": "coa_corpus_total",
+              "status": "INFO",
+              "threshold": null,
+              "value": 33949
+            },
+            {
+              "metric": "null_reason_no_parcel",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "null_reason_no_scope_tags",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "null_reason_no_active_trades",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "null_reason_no_matching_rate",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "cost_with_fallback_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "N/A"
+            },
+            {
+              "metric": "cost_distribution_p25_p50_p75",
+              "status": "INFO",
+              "threshold": null,
+              "value": "N/A"
+            },
+            {
+              "metric": "archetype_t1_declared_area",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_t2_parcel",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_t3_rate",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_additive_pairs",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_coverage_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "N/A"
+            },
+            {
+              "metric": "tier_none_count",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_fit_blocked",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_zero_total",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_tradeless_count",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_unpriceable_t4",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "t4_nonresidential_count",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "t4_processed",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "archetype_map_nofit_residential_pct",
+              "status": "INFO",
+              "threshold": "<= 25%",
+              "value": "N/A"
+            },
+            {
+              "metric": "phase_h_gap_active",
+              "status": "INFO",
+              "threshold": null,
+              "value": true
+            },
+            {
+              "metric": "records_new",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "records_skipped",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_applications_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "total_cost_estimates_written",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "coa_applications_updated": 0,
+        "coa_processed": 0,
+        "coa_with_cost": 0,
+        "coa_with_fallback": 0,
+        "coa_without_cost": 0,
+        "cost_distribution": {
+          "p25": null,
+          "p50": null,
+          "p75": null
+        },
+        "dry_run": false,
+        "null_cost_reasons": {
+          "no_active_trades": 0,
+          "no_matching_rate": 0,
+          "no_parcel": 0,
+          "no_scope_tags": 0
+        },
+        "null_cost_reasons_additive": {
+          "no_active_trades": 0,
+          "no_parcel": 0,
+          "no_scope_tags": 0
+        },
+        "row_limit": null
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "archetype_cost_rates": [
+            "archetype",
+            "cost_per_sqm",
+            "cost_adjustment_factor",
+            "escalation_index_base"
+          ],
+          "building_footprints": [
+            "id",
+            "footprint_area_sqm",
+            "estimated_stories"
+          ],
+          "coa_applications": [
+            "id",
+            "lead_id",
+            "scope_tags",
+            "structure_type",
+            "neighbourhood_id",
+            "trade_classified_at",
+            "cost_classified_at",
+            "project_type",
+            "neighbourhood_cost_premium",
+            "cost_fb_total",
+            "cost_coa_total",
+            "cost_addition_total",
+            "cost_gut_total",
+            "cost_basement_underpin_per_sqm",
+            "cost_basement_per_sqm",
+            "cost_garage_total",
+            "cost_laneway_suite_total",
+            "cost_garden_suite_total",
+            "cost_kitchen_per_sqm",
+            "cost_bath_per_sqm",
+            "cost_solar_total",
+            "opt_aor_gfa_sqm",
+            "opt_coa_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "max_garage_gfa_sqm",
+            "max_laneway_suite_gfa_sqm",
+            "max_garden_suite_gfa_sqm",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "max_buildable_footprint_sqm"
+          ],
+          "lead_parcels": [
+            "lead_id",
+            "parcel_id",
+            "confidence"
+          ],
+          "lead_trades": [
+            "lead_id",
+            "trade_id",
+            "is_active"
+          ],
+          "neighbourhoods": [
+            "id",
+            "avg_household_income",
+            "tenure_renter_pct"
+          ],
+          "parcel_buildings": [
+            "parcel_id",
+            "building_id",
+            "is_primary"
+          ],
+          "parcels": [
+            "id",
+            "lot_size_sqm",
+            "frontage_m"
+          ],
+          "scope_intensity_matrix": [
+            "permit_type",
+            "structure_type",
+            "gfa_allocation_percentage"
+          ],
+          "trade_sqft_rates": [
+            "trade_slug",
+            "base_rate_sqft",
+            "structure_complexity_factor"
+          ],
+          "trades": [
+            "id",
+            "slug"
+          ]
+        },
+        "writes": {
+          "coa_applications": [
+            "modeled_gfa_sqm",
+            "estimated_cost",
+            "cost_source",
+            "cost_classified_at"
+          ],
+          "cost_estimates": [
+            "lead_id",
+            "permit_num",
+            "revision_num",
+            "estimated_cost",
+            "cost_source",
+            "cost_tier",
+            "cost_range_low",
+            "cost_range_high",
+            "premium_factor",
+            "complexity_score",
+            "model_version",
+            "is_geometric_override",
+            "modeled_gfa_sqm",
+            "effective_area_sqm",
+            "trade_contract_values",
+            "computed_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 32 trade rates + 32 scope matrix rows + 12 archetype rates\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "{\"context\":{\"coa_applications_updated\":0,\"coa_with_cost\":0,\"coa_without_cost\":0,\"duration\":\"<DUR>\",\"processed\":0,\"records_new\":0,\"records_updated\":0},\"level\":\"INFO\",\"msg\":\"Cost estimation complete\",\"tag\":\"[compute-coa-cost-estimates]\"}",
+      "[compute-coa-cost-estimates] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "modeled_gfa_sqm",
+          "estimated_cost",
+          "cost_source"
+        ],
+        "content_hash": "fcd5b9c31e38ff4b6134ffcaa026c085",
+        "order_by": "pk",
+        "row_count": 33949,
+        "table": "coa_applications"
+      },
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "lead_id",
+          "estimated_cost",
+          "cost_source",
+          "cost_tier",
+          "cost_range_low",
+          "cost_range_high",
+          "premium_factor",
+          "complexity_score",
+          "model_version",
+          "is_geometric_override",
+          "modeled_gfa_sqm",
+          "effective_area_sqm",
+          "trade_contract_values"
+        ],
+        "content_hash": "729deb9f7413533d1058d8a01dd5f5b1",
+        "order_by": "explicit",
+        "order_columns": [
+          "lead_id"
+        ],
+        "row_count": 274947,
+        "table": "cost_estimates"
+      }
+    ],
+    "invariants": []
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 3416,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+}

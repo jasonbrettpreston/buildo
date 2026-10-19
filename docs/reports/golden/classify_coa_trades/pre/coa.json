@@ -1,0 +1,742 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/classify-coa-trades.js",
+  "chain": "coa",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 31983,
+    "records_new": 10792,
+    "records_updated": 555263,
+    "records_meta": {
+      "duration_ms": 24430,
+      "coa_processed": 31983,
+      "coa_with_trades": 30478,
+      "coa_zero_trades": 1505,
+      "residential_count": 25436,
+      "realtor_append_count": 25436,
+      "coa_trades_strong_signal": 424843,
+      "coa_trades_inference": 115776,
+      "slug_resolution_miss_count": 0,
+      "slug_resolution_misses": [],
+      "trade_slug_distribution": {
+        "drywall": 28995,
+        "electrical": 29092,
+        "flooring": 28638,
+        "framing": 28458,
+        "hvac": 28133,
+        "insulation": 27951,
+        "millwork-cabinetry": 19856,
+        "painting": 28746,
+        "plumbing": 28524,
+        "tiling": 20238,
+        "trim-work": 26009,
+        "waterproofing": 26961,
+        "realtor": 25436,
+        "concrete": 28336,
+        "eavestrough-siding": 26012,
+        "excavation": 28152,
+        "glazing": 27324,
+        "landscaping": 27031,
+        "masonry": 27988,
+        "roofing": 28146,
+        "stone-countertops": 19329,
+        "overhead-doors": 611,
+        "demolition": 2621,
+        "fire-protection": 2919,
+        "elevator": 549
+      },
+      "coa_trades_per_lead_histogram": {
+        "0": 1505,
+        "1": 1380,
+        "2": 6,
+        "5": 4,
+        "6": 188,
+        "7": 227,
+        "8": 265,
+        "9": 62,
+        "10": 306,
+        "11": 118,
+        "12": 118,
+        "13": 424,
+        "14": 114,
+        "15": 216,
+        "16": 1433,
+        "17": 369,
+        "18": 4834,
+        "19": 718,
+        "20": 3151,
+        "21": 14007,
+        "22": 2287,
+        "23": 234,
+        "24": 17
+      },
+      "audit_table": {
+        "phase": 42,
+        "name": "CoA Trade Classification",
+        "verdict": "WARN",
+        "rows": [
+          {
+            "metric": "coa_eligible",
+            "value": 31983,
+            "threshold": "> 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "coa_with_trades",
+            "value": 30478,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_zero_trades",
+            "value": 1505,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "unmapped_scope_pct",
+            "value": "4.7%",
+            "threshold": "<= 20%",
+            "status": "PASS"
+          },
+          {
+            "metric": "realtor_inclusion_pct",
+            "value": "100.0%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "avg_trades_per_lead",
+            "value": "18.57",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "avg_active_trades_per_lead",
+            "value": "18.57",
+            "threshold": "<= 18",
+            "status": "WARN"
+          },
+          {
+            "metric": "median_active_trades_per_lead_nonzero",
+            "value": 21,
+            "threshold": "denominator = CoAs with >=1 active trade only",
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_with_active_trades",
+            "value": 30478,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "avg_evidence_trades_per_lead",
+            "value": "14.61",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "median_evidence_trades_per_lead_nonzero",
+            "value": 15,
+            "threshold": "denominator = CoAs with >=1 evidence trade only",
+            "status": "INFO"
+          },
+          {
+            "metric": "inference_layer_enabled",
+            "value": 1,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_inference_rows_emitted",
+            "value": 115776,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "slug_resolution_miss_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "records_new",
+            "value": 10792,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "records_updated",
+            "value": 555263,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "total_lead_trades_written",
+            "value": 566055,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_trades_strong_signal",
+            "value": 424843,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_trades_inference",
+            "value": 115776,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_with_products",
+            "value": 29380,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "lead_products_written",
+            "value": 765369,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "product_slug_miss_count",
+            "value": 0,
+            "threshold": "== 0",
+            "status": "PASS"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 1265.45,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 25274,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "cov_trade_vocab",
+            "value": "35/35 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "cov_product_vocab",
+            "value": "27/27 (100%)",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "coa_applications": [
+          "id",
+          "lead_id",
+          "scope_tags",
+          "coa_type_class",
+          "project_type",
+          "structure_type",
+          "scope_classified_at",
+          "trade_classified_at"
+        ],
+        "trades": [
+          "id",
+          "slug"
+        ],
+        "product_groups": [
+          "id",
+          "slug"
+        ]
+      },
+      "writes": {
+        "lead_trades": [
+          "lead_id",
+          "trade_id",
+          "tier",
+          "confidence",
+          "is_active",
+          "phase",
+          "lead_score",
+          "attachment_basis",
+          "classified_at"
+        ],
+        "lead_products": [
+          "lead_id",
+          "product_id",
+          "confidence",
+          "classified_at"
+        ],
+        "coa_applications": [
+          "trade_classified_at"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "WARN",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":31983,\"records_new\":10792,\"records_updated\":555263,\"records_meta\":{\"duration_ms\":24430,\"coa_processed\":31983,\"coa_with_trades\":30478,\"coa_zero_trades\":1505,\"residential_count\":25436,\"realtor_append_count\":25436,\"coa_trades_strong_signal\":424843,\"coa_trades_inference\":115776,\"slug_resolution_miss_count\":0,\"slug_resolution_misses\":[],\"trade_slug_distribution\":{\"drywall\":28995,\"electrical\":29092,\"flooring\":28638,\"framing\":28458,\"hvac\":28133,\"insulation\":27951,\"millwork-cabinetry\":19856,\"painting\":28746,\"plumbing\":28524,\"tiling\":20238,\"trim-work\":26009,\"waterproofing\":26961,\"realtor\":25436,\"concrete\":28336,\"eavestrough-siding\":26012,\"excavation\":28152,\"glazing\":27324,\"landscaping\":27031,\"masonry\":27988,\"roofing\":28146,\"stone-countertops\":19329,\"overhead-doors\":611,\"demolition\":2621,\"fire-protection\":2919,\"elevator\":549},\"coa_trades_per_lead_histogram\":{\"0\":1505,\"1\":1380,\"2\":6,\"5\":4,\"6\":188,\"7\":227,\"8\":265,\"9\":62,\"10\":306,\"11\":118,\"12\":118,\"13\":424,\"14\":114,\"15\":216,\"16\":1433,\"17\":369,\"18\":4834,\"19\":718,\"20\":3151,\"21\":14007,\"22\":2287,\"23\":234,\"24\":17},\"audit_table\":{\"phase\":42,\"name\":\"CoA Trade Classification\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"coa_eligible\",\"value\":31983,\"threshold\":\"> 0\",\"status\":\"PASS\"},{\"metric\":\"coa_with_trades\",\"value\":30478,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_zero_trades\",\"value\":1505,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"unmapped_scope_pct\",\"value\":\"4.7%\",\"threshold\":\"<= 20%\",\"status\":\"PASS\"},{\"metric\":\"realtor_inclusion_pct\",\"value\":\"100.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"avg_trades_per_lead\",\"value\":\"18.57\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"avg_active_trades_per_lead\",\"value\":\"18.57\",\"threshold\":\"<= 18\",\"status\":\"WARN\"},{\"metric\":\"median_active_trades_per_lead_nonzero\",\"value\":21,\"threshold\":\"denominator = CoAs with >=1 active trade only\",\"status\":\"INFO\"},{\"metric\":\"coa_with_active_trades\",\"value\":30478,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"avg_evidence_trades_per_lead\",\"value\":\"14.61\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"median_evidence_trades_per_lead_nonzero\",\"value\":15,\"threshold\":\"denominator = CoAs with >=1 evidence trade only\",\"status\":\"INFO\"},{\"metric\":\"inference_layer_enabled\",\"value\":1,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_inference_rows_emitted\",\"value\":115776,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"slug_resolution_miss_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"records_new\",\"value\":10792,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"records_updated\",\"value\":555263,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"total_lead_trades_written\",\"value\":566055,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_trades_strong_signal\",\"value\":424843,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_trades_inference\",\"value\":115776,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_with_products\",\"value\":29380,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"lead_products_written\",\"value\":765369,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"product_slug_miss_count\",\"value\":0,\"threshold\":\"== 0\",\"status\":\"PASS\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":1265.45,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":25274,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"cov_trade_vocab\",\"value\":\"35/35 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"cov_product_vocab\",\"value\":\"27/27 (100%)\",\"threshold\":\">= 90%\",\"status\":\"PASS\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"scope_tags\",\"coa_type_class\",\"project_type\",\"structure_type\",\"scope_classified_at\",\"trade_classified_at\"],\"trades\":[\"id\",\"slug\"],\"product_groups\":[\"id\",\"slug\"]},\"writes\":{\"lead_trades\":[\"lead_id\",\"trade_id\",\"tier\",\"confidence\",\"is_active\",\"phase\",\"lead_score\",\"attachment_basis\",\"classified_at\"],\"lead_products\":[\"lead_id\",\"product_id\",\"confidence\",\"classified_at\"],\"coa_applications\":[\"trade_classified_at\"]}}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"Classification complete\",\"context\":{\"processed\":31983,\"coa_with_trades\":30478,\"coa_zero_trades\":1505,\"records_new\":10792,\"records_updated\":555263,\"slug_resolution_miss_count\":0,\"duration\":\"24.4s\"}}\n\n[classify-coa-trades] completed in 25.3s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-trades]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 3408,
+  "table_state": [
+    {
+      "table": "coa_applications",
+      "row_count": 33949,
+      "content_hash": "5b6129ccdef6e3124b8069b4aa10e7ac",
+      "order_by": "pk",
+      "columns": [
+        "id",
+        "trade_classified_at"
+      ]
+    },
+    {
+      "table": "lead_products",
+      "row_count": 765955,
+      "ceiling_bypassed": "projected",
+      "content_hash": "d707a4e8d85eeeac6a742409b2dbe257",
+      "order_by": "explicit",
+      "order_columns": [
+        "lead_id",
+        "product_id"
+      ],
+      "columns": [
+        "lead_id",
+        "product_id",
+        "confidence"
+      ]
+    },
+    {
+      "table": "lead_trades",
+      "row_count": 2735757,
+      "ceiling_bypassed": "projected",
+      "content_hash": "ccad617ba5b749450b17bd2cc9741828",
+      "order_by": "explicit",
+      "order_columns": [
+        "lead_id",
+        "trade_id"
+      ],
+      "columns": [
+        "lead_id",
+        "trade_id",
+        "tier",
+        "confidence",
+        "is_active",
+        "phase",
+        "lead_score"
+      ],
+      "hash_method": "row_hash_then_concat"
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "coa_applications": 22,
+    "lead_products": 305,
+    "lead_trades": 2791
+  },
+  "table_specs": {
+    "coa_applications": {
+      "columns": [
+        "id",
+        "trade_classified_at"
+      ],
+      "columns_source": "arg",
+      "order": null,
+      "order_source": "none"
+    },
+    "lead_products": {
+      "columns": [
+        "lead_id",
+        "product_id",
+        "confidence"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "lead_id",
+        "product_id"
+      ],
+      "order_source": "arg"
+    },
+    "lead_trades": {
+      "columns": [
+        "lead_id",
+        "trade_id",
+        "tier",
+        "confidence",
+        "is_active",
+        "phase",
+        "lead_score"
+      ],
+      "columns_source": "arg",
+      "order": [
+        "lead_id",
+        "trade_id"
+      ],
+      "order_source": "arg"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/classify-coa-trades.js",
+    "chain": "coa",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Trade Classification",
+          "phase": 42,
+          "rows": [
+            {
+              "metric": "coa_eligible",
+              "status": "PASS",
+              "threshold": "> 0",
+              "value": 31983
+            },
+            {
+              "metric": "coa_with_trades",
+              "status": "INFO",
+              "threshold": null,
+              "value": 30478
+            },
+            {
+              "metric": "coa_zero_trades",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1505
+            },
+            {
+              "metric": "unmapped_scope_pct",
+              "status": "PASS",
+              "threshold": "<= 20%",
+              "value": "4.7%"
+            },
+            {
+              "metric": "realtor_inclusion_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "100.0%"
+            },
+            {
+              "metric": "avg_trades_per_lead",
+              "status": "INFO",
+              "threshold": null,
+              "value": "18.57"
+            },
+            {
+              "metric": "avg_active_trades_per_lead",
+              "status": "WARN",
+              "threshold": "<= 18",
+              "value": "18.57"
+            },
+            {
+              "metric": "median_active_trades_per_lead_nonzero",
+              "status": "INFO",
+              "threshold": "denominator = CoAs with >=1 active trade only",
+              "value": 21
+            },
+            {
+              "metric": "coa_with_active_trades",
+              "status": "INFO",
+              "threshold": null,
+              "value": 30478
+            },
+            {
+              "metric": "avg_evidence_trades_per_lead",
+              "status": "INFO",
+              "threshold": null,
+              "value": "14.61"
+            },
+            {
+              "metric": "median_evidence_trades_per_lead_nonzero",
+              "status": "INFO",
+              "threshold": "denominator = CoAs with >=1 evidence trade only",
+              "value": 15
+            },
+            {
+              "metric": "inference_layer_enabled",
+              "status": "INFO",
+              "threshold": null,
+              "value": 1
+            },
+            {
+              "metric": "coa_inference_rows_emitted",
+              "status": "INFO",
+              "threshold": null,
+              "value": 115776
+            },
+            {
+              "metric": "slug_resolution_miss_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "records_new",
+              "status": "INFO",
+              "threshold": null,
+              "value": 10792
+            },
+            {
+              "metric": "records_updated",
+              "status": "INFO",
+              "threshold": null,
+              "value": 555263
+            },
+            {
+              "metric": "total_lead_trades_written",
+              "status": "INFO",
+              "threshold": null,
+              "value": 566055
+            },
+            {
+              "metric": "coa_trades_strong_signal",
+              "status": "INFO",
+              "threshold": null,
+              "value": 424843
+            },
+            {
+              "metric": "coa_trades_inference",
+              "status": "INFO",
+              "threshold": null,
+              "value": 115776
+            },
+            {
+              "metric": "coa_with_products",
+              "status": "INFO",
+              "threshold": null,
+              "value": 29380
+            },
+            {
+              "metric": "lead_products_written",
+              "status": "INFO",
+              "threshold": null,
+              "value": 765369
+            },
+            {
+              "metric": "product_slug_miss_count",
+              "status": "PASS",
+              "threshold": "== 0",
+              "value": 0
+            },
+            {
+              "metric": "cov_trade_vocab",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "35/35 (100%)"
+            },
+            {
+              "metric": "cov_product_vocab",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "27/27 (100%)"
+            }
+          ],
+          "verdict": "WARN"
+        },
+        "coa_processed": 31983,
+        "coa_trades_inference": 115776,
+        "coa_trades_per_lead_histogram": {
+          "0": 1505,
+          "1": 1380,
+          "2": 6,
+          "5": 4,
+          "6": 188,
+          "7": 227,
+          "8": 265,
+          "9": 62,
+          "10": 306,
+          "11": 118,
+          "12": 118,
+          "13": 424,
+          "14": 114,
+          "15": 216,
+          "16": 1433,
+          "17": 369,
+          "18": 4834,
+          "19": 718,
+          "20": 3151,
+          "21": 14007,
+          "22": 2287,
+          "23": 234,
+          "24": 17
+        },
+        "coa_trades_strong_signal": 424843,
+        "coa_with_trades": 30478,
+        "coa_zero_trades": 1505,
+        "realtor_append_count": 25436,
+        "residential_count": 25436,
+        "slug_resolution_miss_count": 0,
+        "slug_resolution_misses": [],
+        "trade_slug_distribution": {
+          "concrete": 28336,
+          "demolition": 2621,
+          "drywall": 28995,
+          "eavestrough-siding": 26012,
+          "electrical": 29092,
+          "elevator": 549,
+          "excavation": 28152,
+          "fire-protection": 2919,
+          "flooring": 28638,
+          "framing": 28458,
+          "glazing": 27324,
+          "hvac": 28133,
+          "insulation": 27951,
+          "landscaping": 27031,
+          "masonry": 27988,
+          "millwork-cabinetry": 19856,
+          "overhead-doors": 611,
+          "painting": 28746,
+          "plumbing": 28524,
+          "realtor": 25436,
+          "roofing": 28146,
+          "stone-countertops": 19329,
+          "tiling": 20238,
+          "trim-work": 26009,
+          "waterproofing": 26961
+        }
+      },
+      "records_new": 10792,
+      "records_total": 31983,
+      "records_updated": 555263
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "coa_applications": [
+            "id",
+            "lead_id",
+            "scope_tags",
+            "coa_type_class",
+            "project_type",
+            "structure_type",
+            "scope_classified_at",
+            "trade_classified_at"
+          ],
+          "product_groups": [
+            "id",
+            "slug"
+          ],
+          "trades": [
+            "id",
+            "slug"
+          ]
+        },
+        "writes": {
+          "coa_applications": [
+            "trade_classified_at"
+          ],
+          "lead_products": [
+            "lead_id",
+            "product_id",
+            "confidence",
+            "classified_at"
+          ],
+          "lead_trades": [
+            "lead_id",
+            "trade_id",
+            "tier",
+            "confidence",
+            "is_active",
+            "phase",
+            "lead_score",
+            "attachment_basis",
+            "classified_at"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[classify-coa-trades]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[classify-coa-trades]\"}",
+      "{\"context\":{\"coa_with_trades\":30478,\"coa_zero_trades\":1505,\"duration\":\"<DUR>\",\"processed\":31983,\"records_new\":10792,\"records_updated\":555263,\"slug_resolution_miss_count\":0},\"level\":\"INFO\",\"msg\":\"Classification complete\",\"tag\":\"[classify-coa-trades]\"}",
+      "[classify-coa-trades] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "trade_classified_at"
+        ],
+        "content_hash": "5b6129ccdef6e3124b8069b4aa10e7ac",
+        "order_by": "pk",
+        "row_count": 33949,
+        "table": "coa_applications"
+      },
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "lead_id",
+          "product_id",
+          "confidence"
+        ],
+        "content_hash": "d707a4e8d85eeeac6a742409b2dbe257",
+        "order_by": "explicit",
+        "order_columns": [
+          "lead_id",
+          "product_id"
+        ],
+        "row_count": 765955,
+        "table": "lead_products"
+      },
+      {
+        "ceiling_bypassed": "projected",
+        "columns": [
+          "lead_id",
+          "trade_id",
+          "tier",
+          "confidence",
+          "is_active",
+          "phase",
+          "lead_score"
+        ],
+        "content_hash": "ccad617ba5b749450b17bd2cc9741828",
+        "hash_method": "row_hash_then_concat",
+        "order_by": "explicit",
+        "order_columns": [
+          "lead_id",
+          "trade_id"
+        ],
+        "row_count": 2735757,
+        "table": "lead_trades"
+      }
+    ],
+    "invariants": []
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 3409,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+}

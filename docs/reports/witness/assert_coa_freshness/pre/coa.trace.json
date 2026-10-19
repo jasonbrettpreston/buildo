@@ -1,0 +1,110 @@
+{
+  "trace_version": 1,
+  "step": "scripts/quality/assert-coa-freshness.js",
+  "chain": "coa",
+  "source_fingerprint": null,
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "header": {
+    "processes": 1,
+    "calls": 8,
+    "distinct": 7,
+    "utility": 5,
+    "tracer_self_ms": 0.533,
+    "wall_ms": 282
+  },
+  "statements": [
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 760,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8f013116e8519887",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "decision_date",
+          "hearing_date",
+          "last_seen_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "decision_date",
+        "hearing_date",
+        "last_seen_at"
+      ]
+    },
+    "writes": {}
+  },
+  "errors": []
+}
