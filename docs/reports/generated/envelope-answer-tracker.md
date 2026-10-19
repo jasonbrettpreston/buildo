@@ -6,19 +6,19 @@
 
 ## Counts
 
-- Answers: **567** — INCORPORATED **529**, UNFIXED **38**, OPEN **0**.
-- By verdict: disclose 98 · matches 163 · no_application 166 · null 12 · unsure 30 · wrong 98.
-- By disposition: disclosed_by 98 · excluded 166 · fixed_by 79 · matches 163 · resolved_by 44 · verified_by_lock 17.
-- Answers whose provision feeds a P5.10 lineage field: 227.
+- Answers: **605** — INCORPORATED **565**, UNFIXED **38**, OPEN **2**.
+- By verdict: disclose 108 · matches 173 · no_application 171 · null 12 · unsure 35 · wrong 106.
+- By disposition: disclosed_by 108 · excluded 171 · fixed_by 85 · matches 173 · open 2 · resolved_by 47 · verified_by_lock 19.
+- Answers whose provision feeds a P5.10 lineage field: 245.
 
 | Chapter | Answers | Incorporated | Unfixed | Open |
 |---|---|---|---|---|
-| 10.10 | 25 | 25 | 0 | 0 |
-| 10.20 | 80 | 80 | 0 | 0 |
+| 10.10 | 36 | 36 | 0 | 0 |
+| 10.20 | 90 | 90 | 0 | 0 |
 | 10.40 | 88 | 88 | 0 | 0 |
-| 10.5 | 19 | 19 | 0 | 0 |
+| 10.5 | 35 | 33 | 0 | 2 |
 | 10.60 | 66 | 66 | 0 | 0 |
-| 10.80 | 79 | 79 | 0 | 0 |
+| 10.80 | 80 | 80 | 0 | 0 |
 | 150.10 | 7 | 1 | 6 | 0 |
 | 150.7 | 95 | 78 | 17 | 0 |
 | 150.8 | 75 | 60 | 15 | 0 |
@@ -27,10 +27,12 @@
 | 800.50 | 26 | 26 | 0 | 0 |
 | 970.10 | 4 | 4 | 0 | 0 |
 
-## OPEN (0)
+## OPEN (2)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
+| `10.5.30.20(2)#(2)(A)` | unsure | open | — | Q: Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated? | operator question open | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
+| `10.5.30.20(2)#(2)(B)` | unsure | open | — | Q: Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated? | operator question open | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
 
 ## UNFIXED (38)
 
@@ -75,7 +77,7 @@
 | `150.8.60.50(3)#whole` | wrong | fixed_by | M-177 | The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead. | ruled; keyed correction not applied yet | — | This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway s |
 | `150.8.60.70(1)#(1)(A)` | wrong | fixed_by | M-177 | The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap. | ruled; keyed correction not applied yet | `suite_coverage_option` | This is critical the lot coverage calculation does not include the laneway suite |
 
-## INCORPORATED (529)
+## INCORPORATED (565)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -83,27 +85,38 @@
 | `10.10.40.10(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(C)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(D)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
+| `10.10.40.10(11)#(11)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in  |
+| `10.10.40.10(12)#(12)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R |
 | `10.10.40.10(2)#(2)(A)` | matches | matches | — | — | keyed unit agreed | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` |  |
 | `10.10.40.10(2)#(2)(B)` | matches | matches | — | — | keyed unit agreed | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` |  |
 | `10.10.40.10(2)#(2)(C)` | unsure | resolved_by | M-190, M-214, `major_street_forms_not_modelled` | The main-wall limit does not apply to a townhouse on a major street (R names townhouses only, x.40.10(2)(C)); that form is not modelled and is disclosed. For every other R building the x.40.10(2) limit max(7.0 m; H − 2.5 m) is an envelope limit (M-176(2)). | resolved by a RATIFIED ruling | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` | Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height |
 | `10.10.40.10(3)#(3)(A)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
 | `10.10.40.10(3)#(3)(B)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
+| `10.10.40.10(3)#(3)(C)` | wrong | verified_by_lock | M-183 | Storeys not capped for a detached or semi-detached houseplex in R (not_applicable, no limit). Lock (M-183): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) › M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2 | verified by named lock | `main_storeys`, `storeys_status` | his is critical the maximum number of stories doesn't apply to a houseplex. for the R zone |
 | `10.10.40.10(3)#(3)(D)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
 | `10.10.40.10(5)#(5)(B)` | disclose | disclosed_by | M-185, `dormers_at_max` | Dormers within the 40 % width share are not main walls; the maximum design takes the 40 %. | keyed disclosure + P5.12 code | `gfa_pitched_sqm` |  |
 | `10.10.40.10(6)#whole` | wrong | fixed_by | M-215, `main_entrance_height` | Main pedestrian entrance height (1.2 m) is a disclosure only, not a building-envelope limit. | every cited ruling applied (keyed correction or named lock) | `first_floor_elevation_m` | This is just talking about the pedestrian entrance size.. disclosure if anything |
+| `10.10.40.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.10.40.30(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `gain_reasons`, `main_depth_cap_m` |  |
 | `10.10.40.30(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `gain_reasons`, `main_depth_cap_m` |  |
+| `10.10.40.30(1)#(1)(D)` | no_application | excluded | — | — | no application (excluded) | `gain_reasons`, `main_depth_cap_m` | Max building depth doesn't apply to townhouses and apartment buildings |
 | `10.10.40.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `fsi_status`, `main_gfa_sqm` |  |
 | `10.10.40.40(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `fsi_status`, `main_gfa_sqm` |  |
 | `10.10.40.40(1)#(1)(C)` | wrong | verified_by_lock | M-183, M-182 | FSI does not apply to a detached houseplex, a semi-detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap). Lock (M-183): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) › ${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C)) Lock (M-182): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-221 / M-182 — "a residential building with a secondary suite" is the suite class › ${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite Lock (M-183): `src/tests/bylaw-answers-batch-2.logic.test.ts` › M-183 — R names the semi-detached houseplex in its FSI exemption (10.10.40.40(1)(C)); RD names none › R: a semi-detached houseplex is FSI-exempt (not_applicable by 10.10.40.40(1)(C)); RD: it is not named, so a d of 0.6 applies | every cited ruling applied (keyed correction or named lock) | `fsi_status`, `main_gfa_sqm` | Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelo |
 | `10.10.40.40(1)#(1)(D)` | no_application | excluded | — | — | no application (excluded) | `fsi_status`, `main_gfa_sqm` |  |
+| `10.10.40.70(1)#whole` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.10.40.70(2)#whole` | matches | matches | — | — | keyed unit agreed | `main_rear_setback_m` |  |
 | `10.10.40.70(3)#(3)(A)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.10.40.70(3)#(3)(B)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.10.40.70(4)#(4)(A)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.10.40.70(4)#(4)(B)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.10.40.70(4)#(4)(C)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` | our default is no windows or doors |
+| `10.10.40.70(4)#(4)(D)` | wrong | fixed_by | M-205, `blank_side_wall` | 0.45 m side yard for a detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall). | every cited ruling applied (keyed correction or named lock) | `main_side_setbacks_m` | This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose |
+| `10.10.40.70(4)#(4)(E)` | wrong | fixed_by | M-205, `blank_side_wall` | 0.45 m side yard for a semi-detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall). | every cited ruling applied (keyed correction or named lock) | `main_side_setbacks_m` | This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose |
 | `10.10.40.70(5)#(5)(A)` | no_application | excluded | — | — | no application (excluded) | — | This is for an apartment building or a townhouse on a major street.  |
+| `10.10.40.70(5)#(5)(B)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.10.40.70(5)#(5)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.10.40.80(1)#(1)(C)` | no_application | excluded | — | — | no application (excluded) | — |  |
 | `10.20.20.100(12)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: the RD secondary suite must comply with Section 150.10 (an INCLUDE owned by M-177), not a separate envelope answer. | resolved by a RATIFIED ruling | — | Important - procedural |
 | `10.20.20.100(16)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RD laneway suite must comply with Section 150.8 (INCLUDE owned by M-177). | resolved by a RATIFIED ruling | — | Important - Procedural 16) Laneway Suite A laneway suite in the RD zone must comply with the specific use regulations in Section 150.8. [ By-law: 1210-2019 ] |
 | `10.20.20.100(17)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RD garden suite must comply with Section 150.7 (INCLUDE owned by M-177). | resolved by a RATIFIED ruling | — | Important - Procedural (17) Garden Suite A garden suite in the RD zone must comply with the specific use regulations in Section 150.7. [ By-law: 101-2022 ] |
@@ -165,9 +178,15 @@
 | `10.20.40.10(8)#whole` | disclose | disclosed_by | M-203, `attic_outside_gfa` | RD 10.20.40.10(8) excludes a mechanical attic of ≤ 20 m² from the storey count, not from floor area; a failing attic is reported outside the floor-area total (GFA) under 10.5.40.40(1) (M-203), disclosed. | keyed disclosure + P5.12 code | — |  Exclusion of Certain Floor Area Within an Attic Space - this is dependent upon the design - a design with attic space.  |
 | `10.20.40.11(1)#whole` | disclose | disclosed_by | M-192, M-196, `existing_roof_alteration` | Changing the roofline of an existing building is a renovation/extension reading, disclosed. | keyed disclosure + P5.12 code | — | Talks about changing the roof line of an existing building for a renovation. This could be a disclosure for renovations to existing footprint |
 | `10.20.40.20(1)#whole` | matches | matches | — | — | keyed unit agreed | `main_length_cap_m` |  |
+| `10.20.40.20(2)#(2)(A)` | disclose | disclosed_by | M-206, `one_storey_extension` | The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1). | keyed disclosure + P5.12 code | `main_footprint_sqm`, `main_length_cap_m` | this is not a concern for us - but should be disclosed. Renovation or expanding the envelope. |
+| `10.20.40.20(2)#(2)(B)` | disclose | disclosed_by | M-206, `one_storey_extension` | The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1). | keyed disclosure + P5.12 code | `main_footprint_sqm`, `main_length_cap_m` | his is not a concern for us - but should be disclosed. Renovation or expanding the envelope. |
+| `10.20.40.20(2)#(2)(C)` | unsure | resolved_by | M-206, `one_storey_extension` | Yes, a renovation calculation: in the renovation_addition scenario the back room may extend 2.0 m beyond the length cap if it is one storey, ≤ 5.0 m high, ≤ 50 % of the width and ≥ 3.0 m from each side lot line, from the user's existing-house inputs; the new build keeps the base length (LC-57 Q1). | resolved by a RATIFIED ruling | `main_footprint_sqm`, `main_length_cap_m` | This is critical calculation for the renovation of the existing building - the user will provide the inputs -on a lot with a required minimum lot frontage of mo |
 | `10.20.40.20(3)#(3)(A)` | matches | matches | — | — | keyed unit agreed | `main_length_cap_m` |  |
 | `10.20.40.20(3)#(3)(B)` | matches | matches | — | — | keyed unit agreed | `main_length_cap_m` |  |
+| `10.20.40.20(4)#(4)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.20.40.30(1)#whole` | matches | matches | — | — | keyed unit agreed | `main_depth_cap_m` |  |
+| `10.20.40.30(2)#(2)(A)` | matches | matches | — | — | keyed unit agreed | `main_depth_cap_m` |  |
+| `10.20.40.30(2)#(2)(B)` | matches | matches | — | — | keyed unit agreed | `main_depth_cap_m` |  |
 | `10.20.40.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `fsi_status`, `gain_reasons`, `main_gfa_sqm` |  |
 | `10.20.40.40(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `fsi_status`, `gain_reasons`, `main_gfa_sqm` |  |
 | `10.20.40.40(1)#(1)(C)` | wrong | verified_by_lock | M-183, M-182 | FSI does not apply to a detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap). RD names no semi-detached houseplex (RD permits none, 10.20.20.40(1)). Lock (M-183): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) › ${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C)) Lock (M-182): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-221 / M-182 — "a residential building with a secondary suite" is the suite class › ${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite | every cited ruling applied (keyed correction or named lock) | `fsi_status`, `gain_reasons`, `main_gfa_sqm` | Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelo |
@@ -182,8 +201,12 @@
 | `10.20.40.70(3)#(3)(F)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.20.40.70(3)#(3)(G)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.20.40.70(5)#(5)(A)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
+| `10.20.40.70(5)#(5)(B)` | unsure | resolved_by | M-205, `deep_side_setback` | RD lots needing more than 18.0 m of frontage: 7.5 m side yard for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard, keyed as its own measure deep_side_setback_m and disclosed (validation Q2). | resolved by a RATIFIED ruling | `main_side_setbacks_m` |  |
 | `10.20.40.70(6)#(6)(A)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
 | `10.20.40.70(6)#(6)(B)` | matches | matches | — | — | keyed unit agreed | `main_side_setbacks_m` |  |
+| `10.20.40.70(7)#(7)(B)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.20.40.70(7)#(7)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.20.40.80(1)#(1)(C)` | no_application | excluded | — | — | no application (excluded) | — |  |
 | `10.40.20.100(12)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RS secondary suite must comply with Section 150.10 (INCLUDE owned by M-177). | resolved by a RATIFIED ruling | — | 12) Secondary Suite A secondary suite in the RS zone must comply with the specific use regulations in Section 150.10. we have this |
 | `10.40.20.100(16)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RS laneway suite must comply with Section 150.8. | resolved by a RATIFIED ruling | — | 16) Laneway Suite A laneway suite in the RS zone must comply with the specific use regulations in Section 150.8. [ By-law: 1210-2019 ]. We have this already |
 | `10.40.20.100(17)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RS garden suite must comply with Section 150.7. | resolved by a RATIFIED ruling | — | We have this already in 150.7 section (17) Garden Suite A garden suite in the RS zone must comply with the specific use regulations in Section 150.7. [ By-law:  |
@@ -277,11 +300,21 @@
 | `10.5.1.10(3)#(3)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.5.1.10(3)#(3)(E)` | unsure | resolved_by | M-174 | The 'd' letter defines the permitted maximum FSI; the binding max is answered by x.40.40(1) and the label mask is released. | resolved by a RATIFIED ruling | — | This defines the Maximum permitted FSI not just the FSI |
 | `10.5.30.11(1)#whole` | null | resolved_by | M-158, `lawfully_existing_relief` | Required minimum lot area is answered; if the lot lawfully existed smaller on 9 May 2013 that lawful area is the minimum (caveat). | resolved by a RATIFIED ruling | — | This is confusing - but I think the required minimum lot area (as calculated) but with the note that if the existing is less it stands (check this) |
+| `10.5.30.21(3)#(3)(A)` | wrong | fixed_by | M-158, M-169, `vacant_existing_lot` | Applies only to a vacant lawfully existing lot, a site fact taken as not holding: never bound, disclosed (vacant_existing_lot). | every cited ruling applied (keyed correction or named lock) | `scenario_status` | This only applies to a vacant lot.  No every lot.  And it says that to build a house or a detached houseplex you need lot frontage of at least 6M. This doesn't  |
+| `10.5.30.21(3)#(3)(B)` | disclose | disclosed_by | M-158, M-169, `vacant_existing_lot` | Vacant lawfully existing lot: the house must meet the rest of the by-law or have a minor variance; disclosed. | keyed disclosure + P5.12 code | `scenario_status` | This just dels with a vacant lot - a structure can only be built if it complies with the bylaw. we Wouldn't know if the lot is vacant. very unimportant |
 | `10.5.30.40(1)#whole` | null | resolved_by | M-169 | Encroachment coverage exclusions are disclosed, never evaluated. | resolved by a RATIFIED ruling | — | This is looking at legal encroachments - that are excluded from the regular calculation of lot coverage, but since we cant identify the encroachments - this byl |
 | `10.5.30.41(1)#whole` | null | resolved_by | M-158, `lawfully_existing_relief` | Coverage is answered; if lawfully existing coverage is greater, that coverage stands (caveat disclosed). | resolved by a RATIFIED ruling | — | If the existing lot coverage is greater than that permitted by the bylaw - you get grandfathered in. We cant evaluate this without user input - this just needs  |
+| `10.5.30.50(1)#(1)(A)` | no_application | excluded | — | — | no application (excluded) | — |  |
+| `10.5.30.50(1)#(1)(B)` | no_application | excluded | — | — | no application (excluded) | — |  |
 | `10.5.40.10(1)#whole` | no_application | excluded | — | — | no application (excluded) | `first_floor_elevation_m` | This is just defining how to determine the height of a building - nothing applies here. |
 | `10.5.40.10(4)#(4)(B)` | null | resolved_by | M-169 | Equipment above the maximum height: the 20 % face-width limit is not modelled and is disclosed; the reading changed after this review. | resolved by a RATIFIED ruling | — | Here we are talking about exceeding the maximum permitted height of a residential building - these conditions apply to equipment/structures/parts that exceed th |
 | `10.5.40.11(1)#whole` | disclose | disclosed_by | M-158, `lawfully_existing_relief` | Permitted maximum height answered; a greater lawful height of an existing building stands (caveat). | keyed disclosure + P5.12 code | — | If the current building has a greater height than permitted build height - the current lawful height stands. We just need to provide the permitted build height  |
+| `10.5.40.11(4)#(4)(A)` | disclose | disclosed_by | M-192, `existing_walls_site_fact` | Lawfully existing main walls taller than the limit keep their height; disclosed, never applied. | keyed disclosure + P5.12 code | — | This is a disclosure - fi the max height of the existing walls for an existing structure - they get grandfathers in.  Disclosure.  |
+| `10.5.40.11(4)#(4)(B)` | disclose | disclosed_by | M-192, `existing_walls_site_fact` | Lawfully existing main walls taller than the limit keep their height; disclosed, never applied. | keyed disclosure + P5.12 code | — | 4) Height of Main Walls for Lawfully Existing Buildings In the Residential Zone category, if the lawful height of the exterior portion of the main walls of a la |
+| `10.5.40.20(1)#whole` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.5.40.20(2)#whole` | wrong | fixed_by | M-171 | Not a length rule: parts permitted to encroach into a setback (10.5.40.60) are excluded from the length measure; disclosed, the maximum length answered unchanged. | every cited ruling applied (keyed correction or named lock) | — | This does not define the building length - this is the exclusion from the building length in the residential zone.  ie. ny part of a building or structure permi |
+| `10.5.40.21(1)#whole` | disclose | disclosed_by | M-192, `lawfully_existing_relief` | A lawfully existing building longer than the limit keeps its length; renovation reading, disclosed. | keyed disclosure + P5.12 code | — | This is the permitted building length for a lawfully existing building - grandfathering in the length - its a disclosure - the person will input the data for th |
+| `10.5.40.21(2)#whole` | unsure | resolved_by | M-192, M-211, `lawfully_existing_relief` | Renovation scenario: an addition to a building that keeps its lawful length must meet every other rule (or a minor variance); disclosed with 10.5.40.21(1). | resolved by a RATIFIED ruling | `addition_up_gfa_sqm` | This speaks to renovations scenario - just says it must comply with other bylaws |
 | `10.5.40.40(1)#(1)(A)` | disclose | disclosed_by | M-203, `attic_outside_gfa` | An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed. | keyed disclosure + P5.12 code | `attic_outside_gfa_sqm`, `gfa_pitched_sqm`, `interior_attic_gfa_sqm`, `main_gfa_sqm` | This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a hom |
 | `10.5.40.40(1)#(1)(B)` | disclose | disclosed_by | M-203, `attic_outside_gfa` | An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed. | keyed disclosure + P5.12 code | `attic_outside_gfa_sqm`, `gfa_pitched_sqm`, `interior_attic_gfa_sqm`, `main_gfa_sqm` | This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a hom |
 | `10.5.40.40(3)#(3)(A)` | wrong | fixed_by | M-171, `basement_excluded` | Yes: GFA may exclude the basement floor area. The max build excludes the basement from GFA and shows it as livable area outside the GFA total (M-171 dated note 2026-10-18; Spec 78 P5.4). | every cited ruling applied (keyed correction or named lock) | `basement_livable_gain_sqm`, `basement_livable_sqm`, `main_gfa_sqm` | In the mx build scenarios - we create an envelope - we assume all max build's have a basement - we can calculate this and it will impact the GFA for the new bui |
@@ -291,6 +324,10 @@
 | `10.5.40.70(1)#(1)(A)` | disclose | disclosed_by | M-205, `front_yard_averaging` | Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging). | keyed disclosure + P5.12 code | `main_front_setback_basis`, `main_front_setback_m` | This is a disclosure because it says the front yard setback (if the lot is abutting has a building 15 m from your lot ) the required setback is the same set bac |
 | `10.5.40.70(1)#(1)(B)` | disclose | disclosed_by | M-205, `front_yard_averaging` | Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging). | keyed disclosure + P5.12 code | `main_front_setback_basis`, `main_front_setback_m` | 1) Front Yard Setback  - this is where we have two abutting lots within 15 m on either side - the set-back is the average between both of them.  Which makes sen |
 | `10.5.40.70(2)#whole` | matches | matches | — | — | keyed unit agreed | `main_lane_centreline_setback_m` |  |
+| `10.5.40.71(1)#(1)(B)` | disclose | disclosed_by | M-192, `existing_walls_site_fact` | A lawfully existing building closer to the rear lot line keeps that setback; disclosed. | keyed disclosure + P5.12 code | — | Lawfully existing - just grandfathering in the minimum rear yard setback  |
+| `10.5.40.71(1)#(1)(C)` | disclose | disclosed_by | M-192, `existing_walls_site_fact` | A lawfully existing building closer to a side lot line keeps that setback; disclosed. | keyed disclosure + P5.12 code | — | Lawfully existing - just grandfathering in the existing side lot line |
+| `10.5.40.71(4)#(4)(A)` | wrong | fixed_by | M-211, `lawfully_existing_relief` | Renovation rule for side or rear additions to a lawfully existing building (lot under 9.0 m): disclosed, not calculated (needs the existing side-wall position). | every cited ruling applied (keyed correction or named lock) | — | This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage is less than 9M =the |
+| `10.5.40.71(4)#(4)(B)` | wrong | fixed_by | M-211, `lawfully_existing_relief` | Renovation rule for side or rear additions to a lawfully existing building (lot 9.0–12.2 m): the larger of half the side yard or the existing one; disclosed, not calculated. | every cited ruling applied (keyed correction or named lock) | — | This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage ifrom 9Mto 12M is th |
 | `10.60.20.100(12)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RT secondary suite must comply with Section 150.10 (INCLUDE owned by M-177). | resolved by a RATIFIED ruling | — | This just states what we know from 150.10 - RT applies |
 | `10.60.20.100(16)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RT laneway suite must comply with Section 150.8. | resolved by a RATIFIED ruling | — | This just states what we know from 150.10 - RT applies |
 | `10.60.20.100(17)#whole` | unsure | resolved_by | M-187 | Suite pointer matches: an RT garden suite must comply with Section 150.7. | resolved by a RATIFIED ruling | — | This just states what we know from 150.10 - RT applies |
@@ -406,6 +443,7 @@
 | `10.80.40.10(2)#(2)(C)` | unsure | resolved_by | M-190, M-214, `major_street_forms_not_modelled` | The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed. For an RM detached or semi-detached house the x.40.10(2) limit is an envelope limit (M-176(2)). | resolved by a RATIFIED ruling | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` | Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height |
 | `10.80.40.10(3)#(3)(A)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
 | `10.80.40.10(3)#(3)(B)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
+| `10.80.40.10(3)#(3)(C)` | wrong | verified_by_lock | M-183 | Storeys not capped for a detached or semi-detached houseplex in RM (not_applicable, no limit). Lock (M-183): `src/tests/bylaw-evaluator-fixes.logic.test.ts` › M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) › M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2 | verified by named lock | `main_storeys`, `storeys_status` | his is critical the maximum number of stories doesn't apply to a houseplex. for the RM zone. |
 | `10.80.40.10(3)#(3)(D)` | matches | matches | — | — | keyed unit agreed | `main_storeys`, `storeys_status` |  |
 | `10.80.40.10(4)#whole` | disclose | disclosed_by | M-174, M-215, `main_entrance_height` | Main pedestrian entrance 1.2 m is disclosed, not an envelope condition. | keyed disclosure + P5.12 code | `first_floor_elevation_m` | This doesn't concern the overall height of the building - just the entrance - this is a disclosure note |
 | `10.80.40.10(5)#(5)(B)` | disclose | disclosed_by | M-174, M-185, `dormers_at_max` | Dormers within the 40 % width share are not main walls; the maximum design takes the 40 %. | keyed disclosure + P5.12 code | `gfa_pitched_sqm` | This is just talking about the whether the dormers walls are considered as main walls. This is about the shape of the building and is a disclosure note. |

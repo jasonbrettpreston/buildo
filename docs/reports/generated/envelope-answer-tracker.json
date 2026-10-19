@@ -8,37 +8,39 @@
   "docs/specs/01-pipeline/78_optimal_lot_configuration.md"
  ],
  "counts": {
-  "answers": 567,
+  "answers": 605,
   "by_state": {
-   "INCORPORATED": 529,
+   "INCORPORATED": 565,
+   "OPEN": 2,
    "UNFIXED": 38
   },
   "by_verdict": {
-   "disclose": 98,
-   "matches": 163,
-   "no_application": 166,
+   "disclose": 108,
+   "matches": 173,
+   "no_application": 171,
    "null": 12,
-   "unsure": 30,
-   "wrong": 98
+   "unsure": 35,
+   "wrong": 106
   },
   "by_disposition": {
-   "disclosed_by": 98,
-   "excluded": 166,
-   "fixed_by": 79,
-   "matches": 163,
-   "resolved_by": 44,
-   "verified_by_lock": 17
+   "disclosed_by": 108,
+   "excluded": 171,
+   "fixed_by": 85,
+   "matches": 173,
+   "open": 2,
+   "resolved_by": 47,
+   "verified_by_lock": 19
   },
   "by_chapter": {
    "10.10": {
-    "total": 25,
-    "INCORPORATED": 25,
+    "total": 36,
+    "INCORPORATED": 36,
     "UNFIXED": 0,
     "OPEN": 0
    },
    "10.20": {
-    "total": 80,
-    "INCORPORATED": 80,
+    "total": 90,
+    "INCORPORATED": 90,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -49,10 +51,10 @@
     "OPEN": 0
    },
    "10.5": {
-    "total": 19,
-    "INCORPORATED": 19,
+    "total": 35,
+    "INCORPORATED": 33,
     "UNFIXED": 0,
-    "OPEN": 0
+    "OPEN": 2
    },
    "10.60": {
     "total": 66,
@@ -61,8 +63,8 @@
     "OPEN": 0
    },
    "10.80": {
-    "total": 79,
-    "INCORPORATED": 79,
+    "total": 80,
+    "INCORPORATED": 80,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -109,9 +111,51 @@
     "OPEN": 0
    }
   },
-  "feeding_a_lineage_field": 227
+  "feeding_a_lineage_field": 245
  },
  "rows": [
+  {
+   "unit_id": "10.5.30.20(2)#(2)(A)",
+   "regulation_id": "10.5.30.20(2)",
+   "chapter": "10.5",
+   "verdict": "unsure",
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "open",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
+   "fields": [
+    "scenario_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "OPEN",
+   "reason": "operator question open"
+  },
+  {
+   "unit_id": "10.5.30.20(2)#(2)(B)",
+   "regulation_id": "10.5.30.20(2)",
+   "chapter": "10.5",
+   "verdict": "unsure",
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "open",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
+   "fields": [
+    "scenario_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "OPEN",
+   "reason": "operator question open"
+  },
   {
    "unit_id": "150.10.1(1)#whole",
    "regulation_id": "150.10.1(1)",
@@ -1159,6 +1203,60 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.10.40.10(11)#(11)(A)",
+   "regulation_id": "10.10.40.10(11)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R zone - doesn't apply to apartment buildings. So you can exceed the permitted max height if you meet this condition  the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.10.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.10.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.10.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.10.40.10(2. - this is just a disclosure ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-218"
+   ],
+   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "disclosure_code": "flat_roof_setback",
+   "question": "",
+   "fields": [
+    "gfa_flat_sqm",
+    "storeys_flat"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code flat_roof_setback",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.10.40.10(12)#(12)(A)",
+   "regulation_id": "10.10.40.10(12)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R zone - doesn't apply to apartment buildings. So you can exceed the permitted max height if you meet this condition  the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.10.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.10.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.10.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.10.40.10(2. - this is just a disclosure ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-218"
+   ],
+   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "disclosure_code": "flat_roof_setback",
+   "question": "",
+   "fields": [
+    "gfa_flat_sqm",
+    "storeys_flat"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code flat_roof_setback",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "10.10.40.10(2)#(2)(A)",
    "regulation_id": "10.10.40.10(2)",
    "chapter": "10.10",
@@ -1283,6 +1381,46 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.10.40.10(3)#(3)(C)",
+   "regulation_id": "10.10.40.10(3)",
+   "chapter": "10.10",
+   "verdict": "wrong",
+   "note": "his is critical the maximum number of stories doesn't apply to a houseplex. for the R zone",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex in R (not_applicable, no limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
    "unit_id": "10.10.40.10(3)#(3)(D)",
    "regulation_id": "10.10.40.10(3)",
    "chapter": "10.10",
@@ -1358,6 +1496,27 @@
    "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
+   "unit_id": "10.10.40.20(1)#(1)(A)",
+   "regulation_id": "10.10.40.20(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.10.40.30(1)#(1)(A)",
    "regulation_id": "10.10.40.30(1)",
    "chapter": "10.10",
@@ -1404,6 +1563,28 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(D)",
+   "regulation_id": "10.10.40.30(1)",
+   "chapter": "10.10",
+   "verdict": "no_application",
+   "note": "Max building depth doesn't apply to townhouses and apartment buildings",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "gain_reasons",
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
   },
   {
    "unit_id": "10.10.40.40(1)#(1)(A)",
@@ -1539,6 +1720,27 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.10.40.70(1)#whole",
+   "regulation_id": "10.10.40.70(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
   },
   {
    "unit_id": "10.10.40.70(2)#whole",
@@ -1679,12 +1881,123 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.10.40.70(4)#(4)(D)",
+   "regulation_id": "10.10.40.70(4)",
+   "chapter": "10.10",
+   "verdict": "wrong",
+   "note": "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "0.45 m side yard for a detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall).",
+   "disclosure_code": "blank_side_wall",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.10.40.70(4)#(4)(D)/disclosure, COR-10.10.40.70(4)#(4)(D)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(E)",
+   "regulation_id": "10.10.40.70(4)",
+   "chapter": "10.10",
+   "verdict": "wrong",
+   "note": "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this. You say above this applies with no condition which is wrong",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "0.45 m side yard for a semi-detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall).",
+   "disclosure_code": "blank_side_wall",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.10.40.70(4)#(4)(E)/disclosure, COR-10.10.40.70(4)#(4)(E)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.10.40.70(5)#(5)(A)",
    "regulation_id": "10.10.40.70(5)",
    "chapter": "10.10",
    "verdict": "no_application",
    "note": "This is for an apartment building or a townhouse on a major street. ",
    "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(B)",
+   "regulation_id": "10.10.40.70(5)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(C)",
+   "regulation_id": "10.10.40.70(5)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.80(1)#(1)(C)",
+   "regulation_id": "10.10.40.80(1)",
+   "chapter": "10.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
    "disposition": "excluded",
    "fix_ids": [],
    "corrected_value": "",
@@ -3117,6 +3430,84 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.20.40.20(2)#(2)(A)",
+   "regulation_id": "10.20.40.20(2)",
+   "chapter": "10.20",
+   "verdict": "disclose",
+   "note": "this is not a concern for us - but should be disclosed. Renovation or expanding the envelope.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "question": "",
+   "fields": [
+    "main_footprint_sqm",
+    "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code one_storey_extension",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.20.40.20(2)#(2)(B)",
+   "regulation_id": "10.20.40.20(2)",
+   "chapter": "10.20",
+   "verdict": "disclose",
+   "note": "his is not a concern for us - but should be disclosed. Renovation or expanding the envelope.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "question": "",
+   "fields": [
+    "main_footprint_sqm",
+    "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code one_storey_extension",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.20.40.20(2)#(2)(C)",
+   "regulation_id": "10.20.40.20(2)",
+   "chapter": "10.20",
+   "verdict": "unsure",
+   "note": "This is critical calculation for the renovation of the existing building - the user will provide the inputs -on a lot with a required minimum lot frontage of more than 12.0 metres to 18.0 metres, a detached house may extend beyond the permitted maximum building length by a maximum of 2.0 metres, if the extended part: (C) is at least 3.0 metres from each side lot line",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "Yes, a renovation calculation: in the renovation_addition scenario the back room may extend 2.0 m beyond the length cap if it is one storey, ≤ 5.0 m high, ≤ 50 % of the width and ≥ 3.0 m from each side lot line, from the user's existing-house inputs; the new build keeps the base length (LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "question": "",
+   "fields": [
+    "main_footprint_sqm",
+    "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
    "unit_id": "10.20.40.20(3)#(3)(A)",
    "regulation_id": "10.20.40.20(3)",
    "chapter": "10.20",
@@ -3163,12 +3554,79 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.20.40.20(4)#(4)(A)",
+   "regulation_id": "10.20.40.20(4)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.20.40.30(1)#whole",
    "regulation_id": "10.20.40.30(1)",
    "chapter": "10.20",
    "verdict": "matches",
    "note": "",
    "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.30(2)#(2)(A)",
+   "regulation_id": "10.20.40.30(2)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.30(2)#(2)(B)",
+   "regulation_id": "10.20.40.30(2)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
    "disposition": "matches",
    "fix_ids": [],
    "corrected_value": "",
@@ -3559,6 +4017,29 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.20.40.70(5)#(5)(B)",
+   "regulation_id": "10.20.40.70(5)",
+   "chapter": "10.20",
+   "verdict": "unsure",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "RD lots needing more than 18.0 m of frontage: 7.5 m side yard for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard, keyed as its own measure deep_side_setback_m and disclosed (validation Q2).",
+   "disclosure_code": "deep_side_setback",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
    "unit_id": "10.20.40.70(6)#(6)(A)",
    "regulation_id": "10.20.40.70(6)",
    "chapter": "10.20",
@@ -3603,6 +4084,67 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(7)#(7)(B)",
+   "regulation_id": "10.20.40.70(7)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(7)#(7)(C)",
+   "regulation_id": "10.20.40.70(7)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(C)",
+   "regulation_id": "10.20.40.80(1)",
+   "chapter": "10.20",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
   },
   {
    "unit_id": "10.40.20.100(12)#whole",
@@ -5770,6 +6312,59 @@
    "reason": "resolved by a RATIFIED ruling"
   },
   {
+   "unit_id": "10.5.30.21(3)#(3)(A)",
+   "regulation_id": "10.5.30.21(3)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "This only applies to a vacant lot.  No every lot.  And it says that to build a house or a detached houseplex you need lot frontage of at least 6M. This doesn't apply to a lot that is not vacant.  Disclosure",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "Applies only to a vacant lawfully existing lot, a site fact taken as not holding: never bound, disclosed (vacant_existing_lot).",
+   "disclosure_code": "vacant_existing_lot",
+   "question": "",
+   "fields": [
+    "scenario_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.30.21(3)#(3)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.30.21(3)#(3)(B)",
+   "regulation_id": "10.5.30.21(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This just dels with a vacant lot - a structure can only be built if it complies with the bylaw. we Wouldn't know if the lot is vacant. very unimportant",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "Vacant lawfully existing lot: the house must meet the rest of the by-law or have a minor variance; disclosed.",
+   "disclosure_code": "vacant_existing_lot",
+   "question": "",
+   "fields": [
+    "scenario_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code vacant_existing_lot",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "10.5.30.40(1)#whole",
    "regulation_id": "10.5.30.40(1)",
    "chapter": "10.5",
@@ -5810,6 +6405,44 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.50(1)#(1)(A)",
+   "regulation_id": "10.5.30.50(1)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.30.50(1)#(1)(B)",
+   "regulation_id": "10.5.30.50(1)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
   },
   {
    "unit_id": "10.5.40.10(1)#whole",
@@ -5876,6 +6509,146 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(4)#(4)(A)",
+   "regulation_id": "10.5.40.11(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is a disclosure - fi the max height of the existing walls for an existing structure - they get grandfathers in.  Disclosure. ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing main walls taller than the limit keep their height; disclosed, never applied.",
+   "disclosure_code": "existing_walls_site_fact",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code existing_walls_site_fact",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(4)#(4)(B)",
+   "regulation_id": "10.5.40.11(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "4) Height of Main Walls for Lawfully Existing Buildings In the Residential Zone category, if the lawful height of the exterior portion of the main walls of a lawfully existing building or structure is greater than the permitted maximum height for each respective pair of the following main walls, that lawful height is the maximum height for the exterior portion of the respective pair of main walls for that lawfully existing building or structure: (A) the front and rear main walls; o",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing main walls taller than the limit keep their height; disclosed, never applied.",
+   "disclosure_code": "existing_walls_site_fact",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code existing_walls_site_fact",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.20(1)#whole",
+   "regulation_id": "10.5.40.20(1)",
+   "chapter": "10.5",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.5.40.20(2)#whole",
+   "regulation_id": "10.5.40.20(2)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "This does not define the building length - this is the exclusion from the building length in the residential zone.  ie. ny part of a building or structure permitted to encroach into a required minimum building setback in Clause 10.5.40.60 is excluded from the calculation of building length.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Not a length rule: parts permitted to encroach into a setback (10.5.40.60) are excluded from the length measure; disclosed, the maximum length answered unchanged.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.20(2)#whole/calculation_handling, COR-10.5.40.20(2)#whole/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.40.21(1)#whole",
+   "regulation_id": "10.5.40.21(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is the permitted building length for a lawfully existing building - grandfathering in the length - its a disclosure - the person will input the data for the existing building",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building longer than the limit keeps its length; renovation reading, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.21(2)#whole",
+   "regulation_id": "10.5.40.21(2)",
+   "chapter": "10.5",
+   "verdict": "unsure",
+   "note": "This speaks to renovations scenario - just says it must comply with other bylaws",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "Renovation scenario: an addition to a building that keeps its lawful length must meet every other rule (or a minor variance); disclosed with 10.5.40.21(1).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [
+    "addition_up_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
   },
   {
    "unit_id": "10.5.40.40(1)#(1)(A)",
@@ -6122,6 +6895,100 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.5.40.71(1)#(1)(B)",
+   "regulation_id": "10.5.40.71(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Lawfully existing - just grandfathering in the minimum rear yard setback ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building closer to the rear lot line keeps that setback; disclosed.",
+   "disclosure_code": "existing_walls_site_fact",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code existing_walls_site_fact",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.71(1)#(1)(C)",
+   "regulation_id": "10.5.40.71(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Lawfully existing - just grandfathering in the existing side lot line",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building closer to a side lot line keeps that setback; disclosed.",
+   "disclosure_code": "existing_walls_site_fact",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code existing_walls_site_fact",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.71(4)#(4)(A)",
+   "regulation_id": "10.5.40.71(4)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage is less than 9M =the minimum sideboard setback permitted. This speaks to the renovations scenario",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211"
+   ],
+   "corrected_value": "Renovation rule for side or rear additions to a lawfully existing building (lot under 9.0 m): disclosed, not calculated (needs the existing side-wall position).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.71(4)#(4)(A)/disclosure, COR-10.5.40.71(4)#(4)(A)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.40.71(4)#(4)(B)",
+   "regulation_id": "10.5.40.71(4)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage ifrom 9Mto 12M is the greater of 50% of the min side yard setback or the minimum side yard setback permitted. Important for the renovations scenario",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211"
+   ],
+   "corrected_value": "Renovation rule for side or rear additions to a lawfully existing building (lot 9.0–12.2 m): the larger of half the side yard or the existing one; disclosed, not calculated.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.71(4)#(4)(B)/disclosure, COR-10.5.40.71(4)#(4)(B)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.60.20.100(12)#whole",
@@ -8710,6 +9577,46 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.80.40.10(3)#(3)(C)",
+   "regulation_id": "10.80.40.10(3)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "his is critical the maximum number of stories doesn't apply to a houseplex. for the RM zone.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex in RM (not_applicable, no limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "10.80.40.10(3)#(3)(D)",

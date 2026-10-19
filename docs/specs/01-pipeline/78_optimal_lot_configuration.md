@@ -1273,6 +1273,7 @@ Its commit ① lands after them. If a runner form it needs changes shape, the ch
 | `decks_platforms_not_modelled` | "Decks, porches, balconies and platforms are not modelled; they have their own size and setback rules." | x.40.50; 150.7.60.60; 150.8.60.60 |
 | `lawfully_existing_relief` | "If the existing building or suite is lawfully existing, {clause} lets it keep its {height / setback / separation / size}." | M-158, M-178, M-192 |
 | `existing_ancillary_setbacks` | "If the existing ancillary building is lawfully existing, a laneway suite in it may keep its setbacks." | 150.8.60.21; M-211(4) |
+| `vacant_existing_lot` | "If this is a vacant lot that existed before the current rules, a house or detached houseplex may be built on it only if the lot frontage is at least 6.0 m and it meets the rest of the by-law." | 10.5.30.21(3); M-158, M-169 (site fact taken as not holding); review answers batch 3, 2026-10-19 |
 | `semi_house_two_lots` | "If the semi-detached house is divided onto two lots, each lot's minimums are 50 %." | M-174(1), M-181 |
 | `main_entrance_height` | "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)." (where the clause applies) | M-174(2), M-215(2) |
 | `suite_soft_landscaping` | "Soft landscaping (grass or planting) of {X} m² is required {behind the house / between the house and the suite}; a suite of this size must still leave that area." | M-208 |

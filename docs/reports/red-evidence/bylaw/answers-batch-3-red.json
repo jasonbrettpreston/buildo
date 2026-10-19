@@ -1,0 +1,67 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-3.logic.test.ts",
+ "base": "0e94b069",
+ "run_on": "2026-10-19",
+ "note": "Review answers batch 3 (dump envdb9). Red: the blank_side_wall sentence on 10.10.40.70(4)(A)-(E), the 10.5.40.20(2) length exclusion, the vacant_existing_lot sentences, the 10.5.40.71(4) renovation sentences. Pass both sides: a plain RD lot never takes the vacant-lot 6.0 m.",
+ "counts": {
+  "red": 10,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E)) 10.10.40.70(4)#(4)(A) carries the closed blank_side_wall sentence and names the Layer 3 default",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The side setback can drop to 0.45 m o…' to be 'Side walls are taken without windows …' // Object.is equality"
+  },
+  {
+   "name": "M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E)) 10.10.40.70(4)#(4)(B) carries the closed blank_side_wall sentence and names the Layer 3 default",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The side setback can drop to 0.45 m o…' to be 'Side walls are taken without windows …' // Object.is equality"
+  },
+  {
+   "name": "M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E)) 10.10.40.70(4)#(4)(C) carries the closed blank_side_wall sentence and names the Layer 3 default",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The side setback can drop to 0.45 m o…' to be 'Side walls are taken without windows …' // Object.is equality"
+  },
+  {
+   "name": "M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E)) 10.10.40.70(4)#(4)(D) carries the closed blank_side_wall sentence and names the Layer 3 default",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The side setback can drop to 0.45 m o…' to be 'Side walls are taken without windows …' // Object.is equality"
+  },
+  {
+   "name": "M-205(2) — the R 0.45 m side yard is taken without windows or doors, and says so (10.10.40.70(4)(A)–(E)) 10.10.40.70(4)#(4)(E) carries the closed blank_side_wall sentence and names the Layer 3 default",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The side setback can drop to 0.45 m o…' to be 'Side walls are taken without windows …' // Object.is equality"
+  },
+  {
+   "name": "M-171 — 10.5.40.20(2) excludes encroaching parts from building length; it does not define length 10.5.40.20(2) is a disclosed measure exclusion",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Parts of the building allowed to proj…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-169 — the vacant lawfully existing lot (10.5.30.21(3)) is a site fact taken as not holding, disclosed 10.5.30.21(3)#(3)(A): never binds the default lot; carries vacant_existing_lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If this is a vacant lot that existed …' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-169 — the vacant lawfully existing lot (10.5.30.21(3)) is a site fact taken as not holding, disclosed 10.5.30.21(3)#(3)(B): never binds the default lot; carries vacant_existing_lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If this is a vacant lot that existed …' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-169 — the vacant lawfully existing lot (10.5.30.21(3)) is a site fact taken as not holding, disclosed a plain RD lot's frontage is never 6.0 m from 10.5.30.21(3)(A)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-211(5) / M-192 — 10.5.40.71(4) side yards for additions are a renovation rule, disclosed 10.5.40.71(4)#(4)(A) carries the renovation disclosure",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'On lots under 9.0 m wide, a rear or s…' to be 'For a side or rear addition to a lawf…' // Object.is equality"
+  },
+  {
+   "name": "M-211(5) / M-192 — 10.5.40.71(4) side yards for additions are a renovation rule, disclosed 10.5.40.71(4)#(4)(B) carries the renovation disclosure",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'On lots 9.0 m to 12.2 m wide, a rear …' to be 'For a side or rear addition to a lawf…' // Object.is equality"
+  }
+ ]
+}

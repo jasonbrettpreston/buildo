@@ -76273,6 +76273,266 @@
       "supersedes": "COR-10.80.30.20(1)#(1)(D)/disclosure~s1",
       "unit": "10.80.30.20(1)#(1)(D)",
       "value": "The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(A)",
+      "value": {
+        "description": "For a detached house, the side yard setback in 10.10.40.70(3) may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors (no vocab token). M-205(2): the max build takes that side without openings by default, so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with windows or doors the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(B)",
+      "value": {
+        "description": "For a semi-detached house, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors (no vocab token). M-205(2): the max build takes that side without openings by default, so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with windows or doors the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(C)",
+      "value": {
+        "description": "For a townhouse whose dwelling units all front directly on a street, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors (no vocab token). M-205(2): the max build takes that side without openings by default, so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with windows or doors the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(D)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(D)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(D)",
+      "value": {
+        "description": "For a detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors (no vocab token). M-205(2): the max build takes that side without openings by default, so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with windows or doors the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.70(4)#(4)(E)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": "Side walls are taken without windows or doors, so the side yard is 0.45 m; with windows or doors in that side the zone side yard applies."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.70(4)#(4)(E)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.10.40.70(4)(D)/(E) \"correct but you forgot the key condition — if there are no windows or doors in that side … which we assume … we need to disclose this\". M-205(2): the R 0.45 m blank-wall reduction is taken by default (the main-building analogue of LC-35 / M-197) and disclosed blank_side_wall; the old sentence said \"we do not know your wall design\", which contradicts the default. One form for (4)(A)–(E).",
+      "rule": "Spec 69a M-205(2); Spec 78 P5.12 blank_side_wall, main_side_setbacks_m; M-75",
+      "unit": "10.10.40.70(4)#(4)(E)",
+      "value": {
+        "description": "For a semi-detached houseplex, the side yard setback may be reduced to 0.45 metres on a side with no windows or doors.",
+        "gaps": "Applies only to a side of the building with no windows or doors (no vocab token). M-205(2): the max build takes that side without openings by default, so Spec 78 main_side_setbacks_m (Layer 3) answers 0.45 m in R for these types; with windows or doors the x.40.70(3) side yard applies (disclosed blank_side_wall).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.20(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.20(2) \"does not define the building length - this is the exclusion from the building length\". The clause excludes parts permitted to encroach into a setback (10.5.40.60) from the length measure; which parts exist is a design fact, so by M-171 the exclusion is disclosed and the permitted maximum length is answered unchanged.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed); M-75",
+      "unit": "10.5.40.20(2)#whole",
+      "value": {
+        "description": "Excludes from the building-length measure any part of a building or structure permitted to encroach into a required setback under 10.5.40.60; it sets no length of its own.",
+        "gaps": "M-171: a measure exclusion that needs design facts (which encroaching parts exist) is disclosed; the permitted maximum building length is answered unchanged.",
+        "not_modelled_reason": "none",
+        "status": "informational",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.20(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.20(2) \"does not define the building length - this is the exclusion from the building length\". The clause excludes parts permitted to encroach into a setback (10.5.40.60) from the length measure; which parts exist is a design fact, so by M-171 the exclusion is disclosed and the permitted maximum length is answered unchanged.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed); M-75",
+      "unit": "10.5.40.20(2)#whole",
+      "value": "Parts of the building allowed to project into a setback, such as eaves, steps or a porch, are not counted in its length."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.30.21(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.30.21(3) \"only applies to a vacant lot … not every lot … Disclosure\" / \"we wouldn't know if the lot is vacant. very unimportant\". M-158 / M-169: a vacant lawfully existing lot is a site fact taken as not holding (lawfully_existing false), so the unit never binds and its effect is disclosed with the new P5.12 code vacant_existing_lot.",
+      "rule": "Spec 69a M-158(1), M-169; Spec 78 P5.12 vacant_existing_lot (2026-10-19); M-75",
+      "unit": "10.5.30.21(3)#(3)(A)",
+      "value": "If this is a vacant lot that existed before the current rules, a house or detached houseplex may be built on it only if the lot frontage is at least 6.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.30.21(3)#(3)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.30.21(3) \"only applies to a vacant lot … not every lot … Disclosure\" / \"we wouldn't know if the lot is vacant. very unimportant\". M-158 / M-169: a vacant lawfully existing lot is a site fact taken as not holding (lawfully_existing false), so the unit never binds and its effect is disclosed with the new P5.12 code vacant_existing_lot.",
+      "rule": "Spec 69a M-158(1), M-169; Spec 78 P5.12 vacant_existing_lot (2026-10-19); M-75",
+      "unit": "10.5.30.21(3)#(3)(B)",
+      "value": "If this is a vacant lot that existed before the current rules, the house or detached houseplex must also meet the rest of the by-law or have a minor variance."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.71(4)#(4)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.71(4)(A)/(B) \"refers to additions to the rear or side of lawfully existing buildings … This speaks to the renovations scenario\". M-211(5): 10.5.40.71(4) stays disclosed (it needs the side-wall position); M-192: disclosed, never applied. The sentence now says it is a renovation rule.",
+      "rule": "Spec 69a M-211(5), M-192; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "unit": "10.5.40.71(4)#(4)(A)",
+      "value": "For a side or rear addition to a lawfully existing building on a lot under 9.0 m wide, the side yard may stay at the existing building's; this is a renovation rule and is not calculated."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.71(4)#(4)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.71(4)(A)/(B) \"refers to additions to the rear or side of lawfully existing buildings … This speaks to the renovations scenario\". M-211(5): 10.5.40.71(4) stays disclosed (it needs the side-wall position); M-192: disclosed, never applied. The sentence now says it is a renovation rule.",
+      "rule": "Spec 69a M-211(5), M-192; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "unit": "10.5.40.71(4)#(4)(A)",
+      "value": {
+        "description": "On a lot with frontage under 9.0 m, a rear or side addition to a lawfully existing building may use the existing lawful side yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. Zones left empty: the unit text names no zone. M-211(5) / M-192: a renovation rule for side or rear additions to a lawfully existing building; it needs the existing side-wall position, so it is disclosed, never applied.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.71(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.71(4)(A)/(B) \"refers to additions to the rear or side of lawfully existing buildings … This speaks to the renovations scenario\". M-211(5): 10.5.40.71(4) stays disclosed (it needs the side-wall position); M-192: disclosed, never applied. The sentence now says it is a renovation rule.",
+      "rule": "Spec 69a M-211(5), M-192; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "unit": "10.5.40.71(4)#(4)(B)",
+      "value": "For a side or rear addition to a lawfully existing building on a lot 9.0 m to 12.2 m wide, the side yard is the larger of half the normal side yard or the existing one; this is a renovation rule and is not calculated."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.71(4)#(4)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 3 (operator, live page DB 2026-10-19): 10.5.40.71(4)(A)/(B) \"refers to additions to the rear or side of lawfully existing buildings … This speaks to the renovations scenario\". M-211(5): 10.5.40.71(4) stays disclosed (it needs the side-wall position); M-192: disclosed, never applied. The sentence now says it is a renovation rule.",
+      "rule": "Spec 69a M-211(5), M-192; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "unit": "10.5.40.71(4)#(4)(B)",
+      "value": {
+        "description": "On a lot with frontage of 9.0 m to 12.2 m, the side setback for a rear or side addition to a lawfully existing building is the greater of 50% of the required minimum side yard setback or the existing lawful side setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. The 50% applies to the zone's required side yard setback (a cross-referenced value). Zones left empty: the unit text names no zone. M-211(5) / M-192: a renovation rule for side or rear additions to a lawfully existing building; it needs the existing side-wall position, so it is disclosed, never applied.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
     }
   ]
 }
