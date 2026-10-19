@@ -75,6 +75,24 @@ export function pendingNoDescriptorSlugs(
   return out;
 }
 
+/**
+ * Each pending slug's DECLARED stage (converted.json pending[].stage), by manifest slug: the input gate F T6 hands
+ * to step-validate's stageAwaitsCaptures (W4A-R6 amended, Spec 124 R-EF). A converted step has no entry.
+ */
+export function pendingStageBySlug(
+  converted: { pending?: Array<string | { file: string; stage?: string }> },
+  scripts: Record<string, { file?: string }>,
+): Map<string, string | undefined> {
+  const out = new Map<string, string | undefined>();
+  for (const p of converted.pending || []) {
+    const file = typeof p === 'string' ? p : p.file;
+    const slug = Object.entries(scripts).find(([, e]) => e.file === file)?.[0];
+    if (!slug) throw new Error(`no manifest.scripts entry points at ${file}`);
+    out.set(slug, typeof p === 'string' ? undefined : p.stage);
+  }
+  return out;
+}
+
 /** Split summary scores into the gated rows and the R-DU no-descriptor pending rows, by slug. */
 export function rduScoreScope<T extends { slug: string }>(scores: T[], noDescriptorSlugs: string[]): { gated: T[], skipped: string[] } {
   const skip = new Set(noDescriptorSlugs);

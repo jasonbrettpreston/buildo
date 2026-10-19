@@ -3204,6 +3204,17 @@ function aggregateHardStop(g, g9, invariantsFail, matrixHardStop, excl, stage) {
  * @param {number} id @param {string|undefined} stage
  */
 const CAPTURE_DERIVED_REGISTRY_IDS = Object.freeze({ G8: [30, 31, 38, 39, 40], G7: [41] });
+/**
+ * W4A-R6 (wave 4, operator y 2026-10-18; follows R-K/R-DT, no new rule): THE one predicate for "this pending step is
+ * awaiting its captures" — its declared stage excludes G8, so every capture-derived gate (G8, #30/#31/#38-#40) is
+ * undecidable-not-unmet. Keyed on the DECLARED stage only, never on whether a golden directory exists (an inferred
+ * second signal, Rule 1). Shaped as `(slug) => boolean` via stageBySlug so gate F's checkScoreFloor isStageGated can
+ * take it as-is; wired into gate F T6 by the W4A-R6 amendment (Spec 124 R-EF, operator y 2026-10-19). Pure.
+ * @param {string|undefined} stage @returns {boolean}
+ */
+export function stageAwaitsCaptures(stage) {
+  return stageExclusions(stage).gates.has('G8');
+}
 export function stageExcludesRegistry(id, stage) {
   const excl = stageExclusions(stage);
   return Object.entries(CAPTURE_DERIVED_REGISTRY_IDS).some(([gate, ids]) => excl.gates.has(gate) && ids.includes(id));

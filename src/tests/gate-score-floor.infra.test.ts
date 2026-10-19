@@ -24,8 +24,9 @@ import * as gateF from '../../scripts/analysis/gates/score-floor.mjs';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
 import { readConvertedJson } from '../../scripts/analysis/gates/converted-set.mjs';
 import {
-  notLookedReasons, parseNonBlockingSlugs, parseSummaryScores, pendingNoDescriptorSlugs, rduScoreScope,
+  notLookedReasons, parseNonBlockingSlugs, parseSummaryScores, pendingNoDescriptorSlugs, pendingStageBySlug, rduScoreScope,
 } from './helpers/step-validate-run';
+import { stageAwaitsCaptures } from '../../scripts/analysis/step-validate.mjs';
 
 const REPO_ROOT = process.cwd();
 
@@ -145,9 +146,27 @@ describe('gate F — score floor 14/17 hard stop + LF-only (fast invariant #37)'
     expect([...parseNonBlockingSlugs(`${run.stdout || ''}`)].sort()).toEqual([...noDescriptor].sort());
     const { gated } = rduScoreScope(scores, noDescriptor);
     const { rows } = ledger.loadLedger(REPO_ROOT);
-    const out = gateF.checkScoreFloor(gated, rows);
+    // W4A-R6 amended (Spec 124 R-EF, operator y 2026-10-19): a pending step whose DECLARED stage awaits its captures
+    // (stageAwaitsCaptures: the stage excludes G8) is undecidable-not-unmet, so checkScoreFloor's stage gate skips it.
+    const stageBySlug = pendingStageBySlug(convertedJson, scripts);
+    const out = gateF.checkScoreFloor(gated, rows, (slug: string) => stageBySlug.has(slug) && stageAwaitsCaptures(stageBySlug.get(slug)));
     expect(out.orphans).toEqual([]);
     expect(out.violations).toEqual([]);
+  });
+
+  // -------------------------------------------------------------------------
+  // T6-R6 — the W4A-R6 stage gate, fixtures only: a below-floor pending step whose declared stage awaits its
+  // captures leaves the walk; a below-floor converted step and a below-floor pending step at a capture-bearing
+  // stage are still violations (the gate never widens past the declared stage).
+  // -------------------------------------------------------------------------
+  it('T6-R6: only a pending step whose declared stage awaits captures leaves the score-floor walk', () => {
+    const conv = { converted: ['scripts/c.js'], pending: [{ file: 'scripts/cp.js', stage: 'compute_ported' }, { file: 'scripts/rw.js', stage: 'runner_wired' }] };
+    const scripts = { c: { file: 'scripts/c.js' }, cp: { file: 'scripts/cp.js' }, rw: { file: 'scripts/rw.js' } };
+    const stageBySlug = pendingStageBySlug(conv, scripts);
+    expect([...stageBySlug.entries()]).toEqual([['cp', 'compute_ported'], ['rw', 'runner_wired']]);
+    const scores = ['c', 'cp', 'rw'].map((slug) => ({ slug, total: 13, maxTotal: 17 }));
+    const out = gateF.checkScoreFloor(scores, [], (slug: string) => stageBySlug.has(slug) && stageAwaitsCaptures(stageBySlug.get(slug)));
+    expect(out.violations.map((v) => v.step)).toEqual(['c', 'rw']);
   });
 
   // -------------------------------------------------------------------------
