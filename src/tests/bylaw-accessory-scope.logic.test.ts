@@ -21,7 +21,9 @@ const C = E.makeContext(VO.evaluatorVocab(VOCAB));
 
 const lot = { zone: 'RM', label: {}, overlays: {}, vars: { lot_frontage_m: 12.19, lot_depth_m: 36.58, lot_area_m2: 445.91 }, flags: {}, building_type: 'detached_house' };
 const unit = (uses: unknown[]): Json => ({
-  unit_id: '10.5.60.20(8)#(8)(A)', regulation_id: '10.5.60.20(8)', layer: 'base', archetype: 'LIMIT', bound: 'min', target: 'rear_setback_m',
+  // an Article 10.80.40 id: Article 10.5.60 (the pool's real home) governs ancillary buildings only (10.5.60.1(1), M-219),
+  // so the use test is shown on a unit whose Article applies to the principal building
+  unit_id: '10.80.40.70(2)#(2)(A)', regulation_id: '10.80.40.70(2)', layer: 'base', archetype: 'LIMIT', bound: 'min', target: 'rear_setback_m',
   condition: 'none', applies_to: { part: 'whole' }, displaces: [],
   application: { zones: ['R', 'RD', 'RS', 'RT', 'RM'], building_types: ['any'], uses },
   numeric_expression: ['rear_setback_m = 25.0 m @(8)(A)(i)'],

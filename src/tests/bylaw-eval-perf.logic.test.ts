@@ -98,6 +98,10 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
       }
     }
     expect(lots.length).toBe(35);
-    expect(h.digest('hex')).toBe('9164d4161925dd2048238ab54b2ceabd6003f49e8388b0dca8571bf63d72f032');
+    // re-pinned 2026-10-18 (by-law evaluator-fix lane, Spec 69a M-217..M-222): the only result change over this corpus is
+    // dwelling_units_max no_candidate → unregulated on the 140 lot×variant cells with no 'u' label (M-220 / M-202(3));
+    // the other byte changes are inputs[] gaining building_type (the M-219 Article-scope read). Measured against
+    // ca3bcf0e by a full per-cell diff, nothing else moved.
+    expect(h.digest('hex')).toBe('256c21c2430d8a7175f3ab834f1415686c1f00323eeb67ef4d143498513828f1');
   }, 60_000);
 });
