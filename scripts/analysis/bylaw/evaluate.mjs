@@ -251,6 +251,8 @@ function variable(name, env) {
       if (r.status === 'value') { trace.push(`${name}=${r.value} (effective ${r.winner})`); return { value: r.value, unit }; }
       if (r.status === 'not_evaluated' && reasonCode(r.reason) !== 'no_candidate') return { ne: r.reason };
       if (r.status === 'conflict') return ne('referenced_target_conflict', name);
+      // M-183(2): "does not apply" is no cap, read as unregulated is (M-54: terminal, never a number in arithmetic)
+      if (r.status === 'not_applicable') return ne('unregulated_in_arithmetic', name);
     }
   }
   if (C.userInputs.has(name)) return ne('needs_user_input', name);
@@ -654,7 +656,7 @@ function effResolve(lot, target, cands, C, _env) {
   for (const t of C.residentialTypes) {
     const r = effCore({ ...lot, building_type: t }, target, cands, C, { ...(_env), depth, inScenario: true, sorted: true });
     results[t] = r; addAll(inputs, r.inputs);
-    per[t] = r.status === 'value' ? r.value : r.status === 'conflict' ? 'conflict' : `not_evaluated:${r.reason}`;
+    per[t] = r.status === 'value' ? r.value : r.status === 'conflict' ? 'conflict' : r.status === 'not_applicable' ? r.reason : `not_evaluated:${r.reason}`;
   }
   const distinct = [...new Set(C.residentialTypes.map((t) => resultKey(results[t])))]; // value, bounds, reason, evidence
   const trace = [...core.trace, `M-50 per-type: ${C.residentialTypes.map((t) => `${t}=${per[t]}`).join(', ')}`];
@@ -805,7 +807,7 @@ function effCore(lot, target, candidates, C, env) {
     return { ...w0, winner: winners.length === 1 ? w0.winner : null, undecided: unknown.map((x) => ({ unit_id: x.u.unit_id, reason: x.reason })),
       trace: [...w0.trace, `undecided: ${unknown.map((x) => x.u.unit_id).join(', ')} — all ${worlds.length} resolutions agree (M-60)`], inputs: ins() };
   }
-  return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
+  return NE_RESULT(reason, { trace: [...trace, `undecided: ${worlds.length} resolutions disagree (${[...new Set(worlds.map((w) => (w.status === 'value' ? String(w.value) : w.status === 'not_applicable' ? w.reason : `${w.status}:${w.reason}`)))].sort(cmpStr).join(' | ')})`], disclosures, inputs: ins() });
 }
 
 /** The lot's exception and its INCLUDE closure are authored for `target` (lot gate, ruling (d)); returns the first that is not, or null. */
@@ -848,11 +850,12 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // displacer naming an argument takes that argument's place, and the rewritten unit carries the higher of the two
   // layers (Spec 68 §7.5 rule 2, stated with the §7.4 worked example: HT 12.0 → 12.0 m; Spec 69 M-60)
   const dropped = new Set(); const consumed = new Set(); const edits = new Map(); // unit_id → {path: null|AST}
+  const disappliedBy = new Map(); // M-183: dropped value unit_id → the DISAPPLY that named it
   for (const { d, v, m, err } of r2) { // = for d of sortedA, ref of d.displaces, v of sortedA (the A-independent tests: displacementPairs)
     if (!A.has(d) || (v && !A.has(v))) continue;
     if (err) throw err;
     {
-      if (m === 'full') { dropped.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
+      if (m === 'full') { dropped.add(v.unit_id); if (d.archetype === 'DISAPPLY' && !disappliedBy.has(v.unit_id)) disappliedBy.set(v.unit_id, d.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
       if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
       const own = parsedFor(d, target);
@@ -877,6 +880,15 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   const prov = sortedA.filter((u) => valueSet.has(u) && u.layer === 'provincial').filter(unitOk);
   if (!T.length) {
     for (const p of prov) trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law unit for ${target} (a provincial unit is never additional)`);
+    // M-183 (dated note on M-154): every applicable value unit was dropped by an applicable DISAPPLY (a PERMIT's drop is not "does not apply") → "does not apply"
+    // (no cap, Layer 3 regulated() false), never rule 7's no_candidate. A DISAPPLY left undecided stays undecided (M-60).
+    const disapplied = sortedA.filter((u) => valueSet.has(u) && disappliedBy.has(u.unit_id));
+    if (disapplied.length && sortedA.filter((u) => valueSet.has(u) && u.layer !== 'provincial').every((u) => disappliedBy.has(u.unit_id))) {
+      const by = [...new Set(disapplied.map((u) => disappliedBy.get(u.unit_id)))];
+      return { status: 'not_applicable', value: null, reason: `not_applicable:${by[0]}`, unit: C.units.target[target] ?? null, bound: null, winner: null,
+        evidence: { kind: 'disapply', disapplied_by: by, disapplied: disapplied.map((u) => u.unit_id) }, bounds: {}, applied: [],
+        trace: [...trace, `rule 2 + M-183: ${by.join(', ')} disapplies every candidate for ${target} (${disapplied.map((u) => u.unit_id).join(', ')}) — does not apply`], disclosures, inputs: ins() };
+    }
     // M-220 / M-202(3): nothing applies, and the target's rule is a zone-label letter the lot does not carry → no cap
     const la = C.labelAbsence && C.labelAbsence[target];
     if (la && lot.label && typeof lot.label === 'object' && (lot.label[la.letter] === undefined || lot.label[la.letter] === null)) {

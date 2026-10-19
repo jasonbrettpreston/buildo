@@ -102,6 +102,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // dwelling_units_max no_candidate → unregulated on the 140 lot×variant cells with no 'u' label (M-220 / M-202(3));
     // the other byte changes are inputs[] gaining building_type (the M-219 Article-scope read). Measured against
     // ca3bcf0e by a full per-cell diff, nothing else moved.
-    expect(h.digest('hex')).toBe('256c21c2430d8a7175f3ab834f1415686c1f00323eeb67ef4d143498513828f1');
+    // re-pinned 2026-10-19 (M-183 + M-174(4) on (E)): no top-level status or value moved over this corpus; only the
+    // M-50 per_type label of the houseplex cells (not_evaluated:no_candidate → not_applicable:<x.40.40(1)(C) /
+    // x.40.10(3)(C) DISAPPLY>, 116 cells) and the M-60 "resolutions disagree" trace listings. Full per-cell diff vs c37dd492.
+    expect(h.digest('hex')).toBe('2ed7dfff34b5a85f5a6cb2677160bb11d2713b516992313f934a33cb4ad0d466');
   }, 60_000);
 });

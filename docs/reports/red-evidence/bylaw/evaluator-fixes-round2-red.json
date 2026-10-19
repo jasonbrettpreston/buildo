@@ -1,0 +1,422 @@
+{
+ "suite": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+ "base": "c37dd492",
+ "run_on": "2026-10-19",
+ "note": "Run on c37dd492 (detached worktree, this file copied in). The new round-2 cases are red for their stated reasons; the round-1 cases and the two round-2 guards (M-183(3) undecided, M-217 strengthened) pass both sides.",
+ "counts": {
+  "red": 12,
+  "pass": 70
+ },
+ "cases": [
+  {
+   "name": "G-AGREE holds with every correction of this lane (no orphan) no violation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot R: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RD: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RS: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RT: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RM: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot applies() names the zone category it was set aside for",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RD 10.20.40.10(4)(A) no longer carries the Chapter 40 \"Development Standard Set 1\" map gate",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise R: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise R: an undecided roof form is undecided, never a silent permit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RD: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RD: an undecided roof form is undecided, never a silent permit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RS: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RS: an undecided roof form is undecided, never a silent permit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RM: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RM: an undecided roof form is undecided, never a silent permit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise the six flat-roof units test flat_or_shallow_roof",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings R garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings R laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RD garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RD laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RS garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RS laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RM garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RM laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT / RM garden suite separation is the suite rule 150.7.60.30(1), not the 11.0 m of x.40.80",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings every article_application entry names exactly one of excluded / included building types, each a vocab type, with its citation (panel round 2)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings the 10.5.60.20(10)(A) device distance no longer decides the RT / RM principal front setback",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback R: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RD: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RS: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RT: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RM: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback with openings chosen, the with-openings arms bind (the disclosed trade-off)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback the vocab takes openings as absent (operator 2026-10-18)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held map not held: 7.5 m from (1)(B), with the unit's disclosure — never not_evaluated:map_area_not_held",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held inside a held polygon: 5.0 m from (1)(C)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held a suite ≤ 4.0 m answers 4.0 m and carries no Coxwell disclosure ((C) would not apply)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap R: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RD: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RS: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RT: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RM: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap 10.5.1.10(3)(D) applies only when the label carries u (the M-174(4) form, (D) only)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RD: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RS: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RT: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RM: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class R: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RD: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RS: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RT: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RM: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form 10.5.80.1(2)(D) is UNUSUAL like (2)(A): the outdoor parking area is not a building",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the M-223 → M-225 re-cite: every live 10.5.80.1(2)(A) correction cites M-225",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the R garage rule 10.10.60.20(1) and the device rule 10.5.60.20(10) carry their accessory structure",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the R ancillary 5 % (10.10.60.70(1)) is on ancillary_coverage_pct, never the principal coverage",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the garden-suite parking variant 150.7.60.20(4)(B) needs a rear-street vehicle entrance",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form guard: no live parking- or device-scoped unit decides a principal or suite envelope target on any zone",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) RS: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red) RM: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) the main-entrance height is disclosed in all four zone copies (M-215(2))",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) suite parking and bicycle rules are disclosed (M-216)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) laneway eligibility names all three arms (M-209)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) 10.5.1.10(3)(E) is a label definition: no target, no statement",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'DEFINE', 'fsi', …(1) ] to deeply equal [ 'DEFINE', 'none', 'none' ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) R: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 0.6, '10.5.1.10(3)#(3)(E)' ] to deeply equal [ 'value', 0.6, …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RD: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 0.6, '10.5.1.10(3)#(3)(E)' ] to deeply equal [ 'value', 0.6, …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RS: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 0.6, '10.5.1.10(3)#(3)(E)' ] to deeply equal [ 'value', 0.6, …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RT: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 0.6, '10.5.1.10(3)#(3)(E)' ] to deeply equal [ 'value', 0.6, …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RM: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 0.6, '10.5.1.10(3)#(3)(E)' ] to deeply equal [ 'value', 0.6, …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-215(1): R with no d — a house takes the 0.6 default of 10.10.40.40(1)(B); a houseplex is exempt",
+   "at_base": "red",
+   "reason": "AssertionError: expected null to be 0.6 // Object.is equality"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'not_evaluated' to be 'not_applicable' // Object.is equality"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RD', 'value', undefined ] to deeply equal [ 'RD', 'not_applicable', …(1) ]"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183(3): an undecided exemption stays undecided — x.40.40(1)(D) on an unknown dwelling count is never a silent not_applicable",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) a not_applicable target read inside arithmetic is unregulated_in_arithmetic (M-183(2): no cap, never a number)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-217 strengthened — with the map polygons NOT held, no Chapter 40 unit gates RD main walls RD flat roof: main_wall_height_m is decided by RD units, never map_area_not_held",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit 21 units carry a closed, placeholder-free disclosure",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '10.20.40.10(7)#(7)(A)', false ] to deeply equal [ '10.20.40.10(7)#(7)(A)', true ]"
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit a unit whose vocab already holds the closed sentence carries it verbatim",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude t…' // Object.is equality"
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit M-208: the laneway soft-landscaping area is shown and never shrinks the suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to match /does not shrink the suite/"
+  }
+ ]
+}

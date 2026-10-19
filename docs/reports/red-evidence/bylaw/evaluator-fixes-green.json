@@ -1,9 +1,9 @@
 {
  "suite": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
- "tree": "wf1/bylaw-evaluator-fixes (working tree before commit)",
- "run_on": "2026-10-18",
+ "tree": "wf1/bylaw-evaluator-fixes round 2 (before commit)",
+ "run_on": "2026-10-19",
  "counts": {
-  "passed": 67,
+  "passed": 82,
   "failed": 0
  },
  "cases": [
@@ -273,6 +273,66 @@
   },
   {
    "name": "disclosures the tracker owed (M-215(2), M-216, M-209) laneway eligibility names all three arms (M-209)",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) 10.5.1.10(3)(E) is a label definition: no target, no statement",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) R: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RD: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RS: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RT: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) RM: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-215(1): R with no d — a house takes the 0.6 default of 10.10.40.40(1)(B); a houseplex is exempt",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) M-183(3): an undecided exemption stays undecided — x.40.40(1)(D) on an unknown dwelling count is never a silent not_applicable",
+   "status": "passed"
+  },
+  {
+   "name": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19) a not_applicable target read inside arithmetic is unregulated_in_arithmetic (M-183(2): no cap, never a number)",
+   "status": "passed"
+  },
+  {
+   "name": "M-217 strengthened — with the map polygons NOT held, no Chapter 40 unit gates RD main walls RD flat roof: main_wall_height_m is decided by RD units, never map_area_not_held",
+   "status": "passed"
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit 21 units carry a closed, placeholder-free disclosure",
+   "status": "passed"
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit a unit whose vocab already holds the closed sentence carries it verbatim",
+   "status": "passed"
+  },
+  {
+   "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit M-208: the laneway soft-landscaping area is shown and never shrinks the suite",
    "status": "passed"
   }
  ]

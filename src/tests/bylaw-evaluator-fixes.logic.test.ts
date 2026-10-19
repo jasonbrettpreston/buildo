@@ -249,3 +249,77 @@ describe('disclosures the tracker owed (M-215(2), M-216, M-209)', () => {
     expect(unitOf('150.8.30.20(1)#whole').disclosure).toMatch(/rear lot line, along a side lot line, or along the side and rear lot lines combined/);
   });
 });
+
+describe('M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)', () => {
+  it('10.5.1.10(3)(E) is a label definition: no target, no statement', () => {
+    const u = unitOf('10.5.1.10(3)#(3)(E)');
+    expect([u.archetype, u.target, u.numeric_expression]).toEqual(['DEFINE', 'none', 'none']);
+  });
+  for (const zone of ZONES) {
+    const z = { R: '10', RD: '20', RS: '40', RT: '60', RM: '80' }[zone];
+    it(`${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))`, () => {
+      const house = eff(lot(zone, 'detached_house'), 'fsi');
+      expect([house.status, house.value, house.winner]).toEqual(['value', 0.6, `10.${z}.40.40(1)#(1)(A)`]);
+      for (const l of [lot(zone, 'detached_houseplex'), lot(zone, 'detached_house', { flags: { has_secondary_suite: true } })]) {
+        const r = eff(l, 'fsi');
+        expect([r.status, r.reason, r.evidence?.kind]).toEqual(['not_applicable', `not_applicable:10.${z}.40.40(1)#(1)(C)`, 'disapply']);
+      }
+    });
+  }
+  it('M-215(1): R with no d — a house takes the 0.6 default of 10.10.40.40(1)(B); a houseplex is exempt', () => {
+    const l = lot('R', 'detached_house'); l.label = { f: 12 };
+    expect(eff(l, 'fsi').value).toBe(0.6);
+    const p = lot('R', 'detached_houseplex'); p.label = { f: 12 };
+    expect(eff(p, 'fsi').status).toBe('not_applicable');
+  });
+  it('M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2', () => {
+    for (const zone of ZONES) {
+      expect(eff(lot(zone, 'detached_house', { overlays: { ST: 2 } }), 'height_storeys').value).toBe(2);
+      expect(eff(lot(zone, 'detached_houseplex', { overlays: { ST: 2 } }), 'height_storeys').status).toBe('not_applicable');
+    }
+  });
+  it('M-183: x.40.40(1)(D) — a townhouse on a major street with 60 dwelling units or fewer is exempt from FSI (RD, RS, RT)', () => {
+    for (const [zone, z] of [['RD', '20'], ['RS', '40'], ['RT', '60']] as const) {
+      const r = eff(lot(zone, 'townhouse', { flags: { major_street: true }, vars: { dwelling_units: 10 } }), 'fsi');
+      expect([zone, r.status, r.reason]).toEqual([zone, 'not_applicable', `not_applicable:10.${z}.40.40(1)#(1)(D)`]);
+    }
+  });
+  it('M-183(3): an undecided exemption stays undecided — x.40.40(1)(D) on an unknown dwelling count is never a silent not_applicable', () => {
+    const r = eff(lot('RD', 'townhouse', { flags: { major_street: true } }), 'fsi');
+    expect(r.status).toBe('not_evaluated');
+    expect(String(r.reason)).not.toMatch(/^not_applicable/);
+  });
+  it('a not_applicable target read inside arithmetic is unregulated_in_arithmetic (M-183(2): no cap, never a number)', () => {
+    expect(E.NOT_EVALUATED_CODES).toContain('unregulated_in_arithmetic');
+    expect(E.NOT_EVALUATED_CODES).not.toContain('not_applicable_in_arithmetic');
+  });
+});
+
+describe('M-217 strengthened — with the map polygons NOT held, no Chapter 40 unit gates RD main walls', () => {
+  it('RD flat roof: main_wall_height_m is decided by RD units, never map_area_not_held', () => {
+    const l = lot('RD', 'detached_house', { flags: { flat_or_shallow_roof: false } }); delete l.map_areas;
+    const r = eff(l, 'main_wall_height_m');
+    expect([r.status, r.value, r.winner]).toEqual(['value', 7.5, '10.20.40.10(2)#(2)(A)']);
+  });
+});
+
+describe('disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit', () => {
+  const ROUND2 = ['10.20.40.10(7)#(7)(A)', '10.20.40.10(8)#whole', '10.40.40.1(7)#(7)(A)', '10.40.40.1(7)#(7)(B)', '10.40.40.1(7)#(7)(C)', '10.60.40.1(3)#(3)(A)',
+    '10.80.30.10(1)#(1)(B)', '10.80.40.10(5)#(5)(B)', '150.7.60.30(1)#(1)(A)', '150.7.60.30(1)#(1)(B)', '150.7.60.51(2)#(2)(A)', '150.7.60.51(2)#(2)(B)',
+    '150.8.50.10(1)#(1)(B)', '150.8.60.50(4)#whole', '5.10.40.40(1)#whole', '5.10.40.70(5)#whole', '600.60.40(2)#(2)(A)',
+    '970.10.15.10(1)#(1)(A)', '970.10.15.10(1)#(1)(B)', '970.10.15.10(1)#(1)(C)', '970.10.15.10(1)#(1)(D)'];
+  it('21 units carry a closed, placeholder-free disclosure', () => {
+    for (const id of ROUND2) {
+      const d = unitOf(id).disclosure;
+      expect([id, typeof d === 'string' && d !== 'none' && !/[{}]/.test(d)]).toEqual([id, true]);
+    }
+  });
+  it('a unit whose vocab already holds the closed sentence carries it verbatim', () => {
+    const v = I.vocab;
+    for (const id of ['970.10.15.10(1)#(1)(A)', '970.10.15.10(1)#(1)(D)']) expect(unitOf(id).disclosure).toBe(v.measure_deduction_disclosure.sentences[id]);
+    expect(unitOf('10.80.40.10(5)#(5)(B)').disclosure).toBe(v.design_choice_disclosure.unit_sentences['10.80.40.10(5)#(5)(B)']);
+  });
+  it('M-208: the laneway soft-landscaping area is shown and never shrinks the suite', () => {
+    expect(unitOf('150.8.50.10(1)#(1)(B)').disclosure).toMatch(/does not shrink the suite/);
+  });
+});
