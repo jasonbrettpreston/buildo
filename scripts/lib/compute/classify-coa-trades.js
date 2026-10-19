@@ -264,8 +264,30 @@ function unmapped_scope_pct(ctx) {
 function avg_active_trades_per_lead(ctx) {
   const m = ctx.matched;
   // Legacy INFO with value N/A when no CoA has an active trade (`:450-452`): the population is empty.
-  if (!m.coa_with_active_trades) ctx.report('avg_active_trades_per_lead', { value: 0, inert: true, detail: 'N/A' });
-  else ctx.report('avg_active_trades_per_lead', { value: m.avg_active_trades_per_lead });
+  if (!m.coa_with_active_trades) { ctx.report('avg_active_trades_per_lead', { value: 0, inert: true, detail: 'N/A' }); return; }
+  // Spec 124 R-EP (operator y 2026-10-19): the two dynamic-keyed tallies (keys are slugs / per-lead counts, unknown at
+  // declaration) are not emits; they travel as this row's detail, capped by classify_coa_trades_max_detail_keys, with the
+  // measured mean beside them (the load_ravines LR-D1 form). The cap is applied by slice and truncation read from it (R-DC).
+  const cap = ctx.config.classify_coa_trades_max_detail_keys;
+  const slugs = cappedTally(m.trade_slug_distribution, cap, (a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+  const hist = cappedTally(m.coa_trades_per_lead_histogram, cap, (a, b) => Number(a[0]) - Number(b[0]));
+  ctx.report('avg_active_trades_per_lead', {
+    value: m.avg_active_trades_per_lead,
+    detail: {
+      avg_active_trades_per_lead: m.avg_active_trades_per_lead,
+      trade_slug_distribution: slugs.shown,
+      trade_slug_distribution_truncated: slugs.truncated,
+      coa_trades_per_lead_histogram: hist.shown,
+      coa_trades_per_lead_histogram_truncated: hist.truncated,
+    },
+  });
+}
+
+/** One `{key: count}` tally, sorted by `order` and sliced to `cap` keys (R-EP; display bound, compared against nothing). */
+function cappedTally(tally, cap, order) {
+  const entries = Object.entries(tally || {}).sort(order);
+  const shown = entries.slice(0, cap);
+  return { shown: Object.fromEntries(shown), truncated: shown.length < entries.length };
 }
 
 function slug_resolution_miss_count(ctx) {

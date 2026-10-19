@@ -506,7 +506,7 @@
       "id": "avg_active_trades_per_lead",
       "kind": "bound",
       "expect": {
-        "reports": "mean ALL-ACTIVE trades per CoA with ≥1 active row (L19)"
+        "reports": "mean ALL-ACTIVE trades per CoA with ≥1 active row (L19); detail carries trade_slug_distribution and coa_trades_per_lead_histogram, capped by classify_coa_trades_max_detail_keys (Spec 124 R-EP)"
       },
       "limit": "value_max 18",
       "severity": "WARN",
@@ -712,16 +712,6 @@
       "key": "slug_resolution_misses",
       "type": "array",
       "consumers": []
-    },
-    {
-      "key": "trade_slug_distribution",
-      "type": "object",
-      "consumers": []
-    },
-    {
-      "key": "coa_trades_per_lead_histogram",
-      "type": "object",
-      "consumers": []
     }
   ],
   "deviations": [
@@ -748,6 +738,18 @@
       },
       "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
       "date": "2026-10-18"
+    },
+    {
+      "from": "legacy records_meta trade_slug_distribution / coa_trades_per_lead_histogram objects (classify-coa-trades.js:590-591)",
+      "why": {
+        "text": "Spec 124 R-EP: dynamic-keyed telemetry is not an emit (R-DE (iv) flat emits); both tallies travel as the detail of the avg_active_trades_per_lead check row, capped by classify_coa_trades_max_detail_keys with a _truncated flag (R-EB (a) step_audit_value_max_chars still bounds the rendered row). No consumer reads either key (grep, Q-W4G-3).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/classify-coa-trades.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-19 (R-EP; .cursor/QUEUE.md integrate-8 PUSHED)",
+      "date": "2026-10-19"
     }
   ],
   "limitations": [

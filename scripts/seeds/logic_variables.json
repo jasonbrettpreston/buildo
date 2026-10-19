@@ -7693,7 +7693,7 @@
     "type": "number",
     "min": 1,
     "max": 1000,
-    "description": "McDonald's Airtight V3 (CCT-D4; migration 274): how many distinct unresolved trade slugs slug_resolution_misses lists (former SLUG_MISS_CAP). A DISPLAY bound; the count is exact.",
+    "description": "McDonald's Airtight V3 (CCT-D4; migration 274): how many distinct unresolved trade slugs slug_resolution_misses lists (former SLUG_MISS_CAP), and (Spec 124 R-EP, operator 2026-10-19) how many keys each of trade_slug_distribution / coa_trades_per_lead_histogram carries in the avg_active_trades_per_lead row detail. A DISPLAY bound; the counts are exact.",
     "admin": {
       "group": "CoA Scope & Trades"
     }

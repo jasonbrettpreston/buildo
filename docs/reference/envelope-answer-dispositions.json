@@ -30,8 +30,8 @@
    "fix_ids": [
     "M-218"
    ],
-   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60)",
-   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60); ruled Q-r-flat-roof-disclose y 2026-10-19 (LC-59 (1), M-218 note)",
+   "corrected_value": "The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure.",
    "disclosure_code": "flat_roof_setback"
   },
   {
@@ -41,8 +41,8 @@
    "fix_ids": [
     "M-218"
    ],
-   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60)",
-   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60); ruled Q-r-flat-roof-disclose y 2026-10-19 (LC-59 (1), M-218 note)",
+   "corrected_value": "The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure.",
    "disclosure_code": "flat_roof_setback"
   },
   {
@@ -1732,16 +1732,22 @@
   {
    "unit_id": "10.5.30.20(2)#(2)(A)",
    "verdict": "unsure",
-   "disposition": "open",
-   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
-   "basis": "review answers batch 3 (live page DB 2026-10-19)"
+   "disposition": "resolved_by",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); ruled Q-front-lot-line-3.5 y 2026-10-19 (LC-59 (2), M-207 note)",
+   "fix_ids": [
+    "M-207"
+   ],
+   "corrected_value": "Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn."
   },
   {
    "unit_id": "10.5.30.20(2)#(2)(B)",
    "verdict": "unsure",
-   "disposition": "open",
-   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
-   "basis": "review answers batch 3 (live page DB 2026-10-19)"
+   "disposition": "resolved_by",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); ruled Q-front-lot-line-3.5 y 2026-10-19 (LC-59 (2), M-207 note)",
+   "fix_ids": [
+    "M-207"
+   ],
+   "corrected_value": "Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn."
   },
   {
    "unit_id": "10.5.30.21(3)#(3)(A)",

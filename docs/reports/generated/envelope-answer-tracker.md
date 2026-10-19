@@ -6,9 +6,9 @@
 
 ## Counts
 
-- Answers: **605** — INCORPORATED **565**, UNFIXED **38**, OPEN **2**.
+- Answers: **605** — INCORPORATED **567**, UNFIXED **38**, OPEN **0**.
 - By verdict: disclose 108 · matches 173 · no_application 171 · null 12 · unsure 35 · wrong 106.
-- By disposition: disclosed_by 108 · excluded 171 · fixed_by 85 · matches 173 · open 2 · resolved_by 47 · verified_by_lock 19.
+- By disposition: disclosed_by 108 · excluded 171 · fixed_by 85 · matches 173 · resolved_by 49 · verified_by_lock 19.
 - Answers whose provision feeds a P5.10 lineage field: 245.
 
 | Chapter | Answers | Incorporated | Unfixed | Open |
@@ -16,7 +16,7 @@
 | 10.10 | 36 | 36 | 0 | 0 |
 | 10.20 | 90 | 90 | 0 | 0 |
 | 10.40 | 88 | 88 | 0 | 0 |
-| 10.5 | 35 | 33 | 0 | 2 |
+| 10.5 | 35 | 35 | 0 | 0 |
 | 10.60 | 66 | 66 | 0 | 0 |
 | 10.80 | 80 | 80 | 0 | 0 |
 | 150.10 | 7 | 1 | 6 | 0 |
@@ -27,12 +27,10 @@
 | 800.50 | 26 | 26 | 0 | 0 |
 | 970.10 | 4 | 4 | 0 | 0 |
 
-## OPEN (2)
+## OPEN (0)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
-| `10.5.30.20(2)#(2)(A)` | unsure | open | — | Q: Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated? | operator question open | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
-| `10.5.30.20(2)#(2)(B)` | unsure | open | — | Q: Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated? | operator question open | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
 
 ## UNFIXED (38)
 
@@ -77,7 +75,7 @@
 | `150.8.60.50(3)#whole` | wrong | fixed_by | M-177 | The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead. | ruled; keyed correction not applied yet | — | This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway s |
 | `150.8.60.70(1)#(1)(A)` | wrong | fixed_by | M-177 | The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap. | ruled; keyed correction not applied yet | `suite_coverage_option` | This is critical the lot coverage calculation does not include the laneway suite |
 
-## INCORPORATED (565)
+## INCORPORATED (567)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -85,8 +83,8 @@
 | `10.10.40.10(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(C)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
 | `10.10.40.10(1)#(1)(D)` | matches | matches | — | — | keyed unit agreed | `height_status`, `main_height_m` |  |
-| `10.10.40.10(11)#(11)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in  |
-| `10.10.40.10(12)#(12)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R |
+| `10.10.40.10(11)#(11)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in  |
+| `10.10.40.10(12)#(12)(A)` | disclose | disclosed_by | M-218, `flat_roof_setback` | The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure. | keyed disclosure + P5.12 code | `gfa_flat_sqm`, `storeys_flat` | aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R |
 | `10.10.40.10(2)#(2)(A)` | matches | matches | — | — | keyed unit agreed | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` |  |
 | `10.10.40.10(2)#(2)(B)` | matches | matches | — | — | keyed unit agreed | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` |  |
 | `10.10.40.10(2)#(2)(C)` | unsure | resolved_by | M-190, M-214, `major_street_forms_not_modelled` | The main-wall limit does not apply to a townhouse on a major street (R names townhouses only, x.40.10(2)(C)); that form is not modelled and is disclosed. For every other R building the x.40.10(2) limit max(7.0 m; H − 2.5 m) is an envelope limit (M-176(2)). | resolved by a RATIFIED ruling | `main_wall_limit_m`, `main_wall_pair`, `main_wall_status` | Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height |
@@ -300,6 +298,8 @@
 | `10.5.1.10(3)#(3)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.5.1.10(3)#(3)(E)` | unsure | resolved_by | M-174 | The 'd' letter defines the permitted maximum FSI; the binding max is answered by x.40.40(1) and the label mask is released. | resolved by a RATIFIED ruling | — | This defines the Maximum permitted FSI not just the FSI |
 | `10.5.30.11(1)#whole` | null | resolved_by | M-158, `lawfully_existing_relief` | Required minimum lot area is answered; if the lot lawfully existed smaller on 9 May 2013 that lawful area is the minimum (caveat). | resolved by a RATIFIED ruling | — | This is confusing - but I think the required minimum lot area (as calculated) but with the note that if the existing is less it stands (check this) |
+| `10.5.30.20(2)#(2)(A)` | unsure | resolved_by | M-207 | Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn. | resolved by a RATIFIED ruling | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
+| `10.5.30.20(2)#(2)(B)` | unsure | resolved_by | M-207 | Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn. | resolved by a RATIFIED ruling | `scenario_status` | Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything |
 | `10.5.30.21(3)#(3)(A)` | wrong | fixed_by | M-158, M-169, `vacant_existing_lot` | Applies only to a vacant lawfully existing lot, a site fact taken as not holding: never bound, disclosed (vacant_existing_lot). | every cited ruling applied (keyed correction or named lock) | `scenario_status` | This only applies to a vacant lot.  No every lot.  And it says that to build a house or a detached houseplex you need lot frontage of at least 6M. This doesn't  |
 | `10.5.30.21(3)#(3)(B)` | disclose | disclosed_by | M-158, M-169, `vacant_existing_lot` | Vacant lawfully existing lot: the house must meet the rest of the by-law or have a minor variance; disclosed. | keyed disclosure + P5.12 code | `scenario_status` | This just dels with a vacant lot - a structure can only be built if it complies with the bylaw. we Wouldn't know if the lot is vacant. very unimportant |
 | `10.5.30.40(1)#whole` | null | resolved_by | M-169 | Encroachment coverage exclusions are disclosed, never evaluated. | resolved by a RATIFIED ruling | — | This is looking at legal encroachments - that are excluded from the regular calculation of lot coverage, but since we cant identify the encroachments - this byl |

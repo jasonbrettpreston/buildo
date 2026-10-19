@@ -733,7 +733,7 @@ There is one row per `(parcel_id, scenario)`.
 
 **Gates (M-213, M-207).** Applied before any envelope, in this order, each a closed status or code:
 1. `zoning_holding` set → new-build rows `not_permitted:holding_zone` (LC-12); renovation rows computed and disclosed `holding_zone`.
-2. Lot viability: front lot line < 3.5 m → `not_buildable:10.5.30.20(2)` (the 6.0 m-lane exception is a site fact taken as not holding, disclosed); frontage < 6.0 m on a lawfully existing lot below the zone minimum → `not_permitted:10.5.30.21(3)` on the rows the clause names, a detached house or detached houseplex (D, 2, H; M-207). Within `lot_viability_margin_m` of either threshold the row is computed and disclosed `irregular_lot_approximation` (frontage is a rectangle approximation, P5.14 ML-6).
+2. Lot viability: ~~front lot line < 3.5 m → `not_buildable:10.5.30.20(2)` (the 6.0 m-lane exception is a site fact taken as not holding, disclosed);~~ **10.5.30.20(2) is disclosure-only, not evaluated (operator 2026-10-19, Q-front-lot-line-3.5; 69a M-207 dated note): its units stay UNUSUAL / `limit_not_modelled` (M-133), because lane widths are not held;** frontage < 6.0 m on a lawfully existing lot below the zone minimum → `not_permitted:10.5.30.21(3)` on the rows the clause names, a detached house or detached houseplex (D, 2, H; M-207). Within `lot_viability_margin_m` of either threshold the row is computed and disclosed `irregular_lot_approximation` (frontage is a rectangle approximation, P5.14 ML-6).
 3. Chapter 900 exception not authored → Layer 2's per-target `not_evaluated:exception_not_authored` propagates (M-180); disclosed `exception_not_authored`.
 4. Heritage designation, ravine protection → computed, disclosed `heritage_designated` / `ravine_protection` (+ `shoreline_hazard`, M-212(3)); the row's trust level is capped at `disclosed` (P5.14).
 
@@ -1448,7 +1448,7 @@ Reviews folded: the reality check (`.cursor/maxbld-review-rc-2026-10-18.md`: 70 
 | F-11 | RM unlabelled height 12.0 m for a houseplex | **fixed** | 69a M-201 |
 | F-12 | Attic test misapplied (failing attic = free floor area) | **fixed** (`attic_outside_gfa_sqm`) | 69a M-203 |
 | F-13 | Wall storeys ignore the first-floor elevation | **new logic variable** `first_floor_elevation_m` | P5.2 item 4; P5.9 |
-| F-14 | Lot viability (10.5.30.21(3), 10.5.30.20(2)) | **fixed** (gate) | 69a M-207 |
+| F-14 | Lot viability (10.5.30.21(3), 10.5.30.20(2)) | **fixed** (gate, 10.5.30.21(3)); 10.5.30.20(2) disclosure-only (operator 2026-10-19) | 69a M-207 (+ 2026-10-19 note) |
 | F-15 | Suite soft landscaping binds | **ruled: disclosed, not binding** (operator 2026-10-18) | 69a M-208; P5.5 |
 | F-16 | Laneway eligibility: three arms; the 20 m flag overstates ≈ 25 % | **fixed** (centreline-derived; derivation OWED) | 69a M-209; ML-1 |
 | F-17 | Suite GFA reductions 150.7.60.50(5) / 150.8.60.50(4) | **fixed** | 69a M-210 |

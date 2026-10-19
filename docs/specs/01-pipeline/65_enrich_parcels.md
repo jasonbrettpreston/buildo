@@ -76,7 +76,7 @@ Before any join, read `pipeline_runs.records_meta` for the **most-recent `load_z
 | `in_rooming_house_overlay` | BOOLEAN | `rooming_house_overlay` | ST_Intersects |
 | `in_parking_zone_overlay` | BOOLEAN | `parking_zone_overlay` | ST_Intersects |
 | `in_building_setback_overlay` | BOOLEAN | `building_setback_overlay` | ST_Intersects |
-| `on_priority_retail` | BOOLEAN | `priority_retail_overlay` (ST_DWithin) | within `road_overlay_distance_m` (5 m; unchanged — Q-MS-4 audit 2026-10-19: these lines are drawn on the lot frontage, p50 0.00 m from a parcel and ~10 m from the centreline, so a 5 m buffer fits them; see the audit appendix) |
+| `on_priority_retail` | BOOLEAN | `priority_retail_overlay` (ST_DWithin) | within `road_overlay_distance_m` (5 m; unchanged — Q-MS-4 audit 2026-10-19: these lines are drawn on the lot frontage, p50 0.00 m from a parcel and ~10 m from the centreline, so a 5 m buffer fits them; see the audit appendix). **Ruled 2026-10-19 (operator Q-PR-1 y; Spec 131 LC-59 (3)): 5 m stays for this layer.** A minimum along-frontage length (Q-PR-2 y) awaits its rule. |
 | `in_queenstw_eat_overlay` | BOOLEAN | `queenstw_eat_overlay` | ST_Intersects |
 | `zoning_overlays` | JSONB | all overlays + candidates | see shape below |
 | `zoning_base_source_id` | INTEGER | dominant `zoning_bylaw_areas.source_id` | provenance |

@@ -10,8 +10,7 @@
  "counts": {
   "answers": 605,
   "by_state": {
-   "INCORPORATED": 565,
-   "OPEN": 2,
+   "INCORPORATED": 567,
    "UNFIXED": 38
   },
   "by_verdict": {
@@ -27,8 +26,7 @@
    "excluded": 171,
    "fixed_by": 85,
    "matches": 173,
-   "open": 2,
-   "resolved_by": 47,
+   "resolved_by": 49,
    "verified_by_lock": 19
   },
   "by_chapter": {
@@ -52,9 +50,9 @@
    },
    "10.5": {
     "total": 35,
-    "INCORPORATED": 33,
+    "INCORPORATED": 35,
     "UNFIXED": 0,
-    "OPEN": 2
+    "OPEN": 0
    },
    "10.60": {
     "total": 66,
@@ -114,48 +112,6 @@
   "feeding_a_lineage_field": 245
  },
  "rows": [
-  {
-   "unit_id": "10.5.30.20(2)#(2)(A)",
-   "regulation_id": "10.5.30.20(2)",
-   "chapter": "10.5",
-   "verdict": "unsure",
-   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
-   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
-   "disposition": "open",
-   "fix_ids": [],
-   "corrected_value": "",
-   "disclosure_code": "",
-   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
-   "fields": [
-    "scenario_status"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [],
-   "state": "OPEN",
-   "reason": "operator question open"
-  },
-  {
-   "unit_id": "10.5.30.20(2)#(2)(B)",
-   "regulation_id": "10.5.30.20(2)",
-   "chapter": "10.5",
-   "verdict": "unsure",
-   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
-   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
-   "disposition": "open",
-   "fix_ids": [],
-   "corrected_value": "",
-   "disclosure_code": "",
-   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
-   "fields": [
-    "scenario_status"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [],
-   "state": "OPEN",
-   "reason": "operator question open"
-  },
   {
    "unit_id": "150.10.1(1)#whole",
    "regulation_id": "150.10.1(1)",
@@ -1213,7 +1169,7 @@
    "fix_ids": [
     "M-218"
    ],
-   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "corrected_value": "The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure.",
    "disclosure_code": "flat_roof_setback",
    "question": "",
    "fields": [
@@ -1240,7 +1196,7 @@
    "fix_ids": [
     "M-218"
    ],
-   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "corrected_value": "The R flat-roof step-back keeps both forms (operator Q-r-flat-roof-disclose y, 2026-10-19): the keyed upper_storey_setback_m min 1.4 m under flat_or_shallow_roof (applied only when the design picks a flat roof) and the flat_roof_setback disclosure.",
    "disclosure_code": "flat_roof_setback",
    "question": "",
    "fields": [
@@ -6305,6 +6261,52 @@
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.20(2)#(2)(A)",
+   "regulation_id": "10.5.30.20(2)",
+   "chapter": "10.5",
+   "verdict": "unsure",
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-207"
+   ],
+   "corrected_value": "Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "scenario_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.20(2)#(2)(B)",
+   "regulation_id": "10.5.30.20(2)",
+   "chapter": "10.5",
+   "verdict": "unsure",
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-207"
+   ],
+   "corrected_value": "Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "scenario_status"
+   ],
    "locks": [],
    "owed": [],
    "checks": [],
