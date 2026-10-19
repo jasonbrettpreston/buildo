@@ -53,7 +53,7 @@
  *   (v)   reader guard      — no declared move's `anchor` string appears inside any
  *         `reader_guards[].slices` entry (a program that slices spec prose by a
  *         heading string must not have that heading pulled out from under it).
- *   (vi)  totality           — every appendix (APPENDIX_SPECS: 122a, 124a, 69a) section headed
+ *   (vi)  totality           — every appendix (APPENDIX_SPECS: 122a, 124a, 69a, 68a) section headed
  *         `(moved from Spec N §x)` has a corresponding `moves[]` row. An undeclared
  *         move is itself RED — the manifest is the one place a move may be recorded.
  *
@@ -126,11 +126,16 @@ export const SPEC_FILES = {
   // Spec 69's §1 rulings register (move M19, 2026-10-07): a move DESTINATION like 124a, verified by arms (i)/(ii)/(vi).
   // Its M-rows are still cited as "Spec 69 M-n" — 69a is where Spec 69's register physically lives.
   '69a': '69a_mcbylaw_register.md',
+  // Spec 68's appendix (moves M28/M29, 2026-10-18, operator: a sanctioned split for the McBylaws Airtight section):
+  // a move DESTINATION like 69a, verified by arms (i)/(ii)/(vi).
+  '68a': '68a_mcbylaw_standard_appendix.md',
+  // Lot Configuration Policy (operator 2026-10-18): the policy half of Spec 78, budgeted like Spec 69 / Spec 124 (arm iv).
+  131: '131_lot_configuration_policy.md',
 };
 // The family that shares 122a as a citation-resolution fallback (arm iii).
 const APPENDIX_FAMILY = new Set(['122', '123', '124']);
 // Every appendix a move may land in — arm (vi) totality runs over each one.
-const APPENDIX_SPECS = ['122a', '124a', '69a'];
+const APPENDIX_SPECS = ['122a', '124a', '69a', '68a'];
 // Grep roots for citation census (arm iii) — matches the plan's own census scope.
 const CITATION_ROOTS = ['docs', 'src', 'scripts', 'tasks', '.cursor'];
 
@@ -732,7 +737,7 @@ function doCheck() {
     for (const p of checkSystemMapDependencies(specTexts)) problems.push(`arm(v) ${p}`);
   }
 
-  // (vi) totality — every appendix in APPENDIX_SPECS (122a, 124a, 69a).
+  // (vi) totality — every appendix in APPENDIX_SPECS (122a, 124a, 69a, 68a).
   for (const appendixId of APPENDIX_SPECS) {
     const { undeclared } = checkTotality(specTexts[appendixId], manifest.moves);
     for (const u of undeclared) problems.push(`arm(vi) UNDECLARED MOVE — ${appendixId} heading "${u.text}" has no moves[] row`);

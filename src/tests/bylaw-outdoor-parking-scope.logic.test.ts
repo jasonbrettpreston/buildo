@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §7.1, §7.3, §7.5 (archetype, UNUSUAL shape, applicability);
 //            docs/specs/01-pipeline/69a_mcbylaw_register.md M-75 (corrections), M-98 / M-102 (no licensed target → UNUSUAL),
-//            M-159 (a unit governs only its own subject), M-223 (10.5.80.1(2)(A) is the outdoor-parking-area rule)
+//            M-159 (a unit governs only its own subject), M-225 (10.5.80.1(2)(A) is the outdoor-parking-area rule)
 //
 // Coxwell review 2026-10-18 side finding: 10.5.80.1(2)(A) ("no portion of the ancillary outdoor area [for the parking
 // or storing of more than 3 vehicles] is closer to a residential building on the same lot than 6.0 metres") was agreed
@@ -40,7 +40,7 @@ const suiteLot = (zone: string, buildingType: string, vars: Json, mapAreas: stri
 });
 const sep = (lot: Json): Json => E.effective(lot, 'separation_m', E.loadCandidates(lot, units).candidates, C);
 
-describe('M-223 — 10.5.80.1(2)(A) is the outdoor-parking-area rule, not a building separation', () => {
+describe('M-225 — 10.5.80.1(2)(A) is the outdoor-parking-area rule, not a building separation', () => {
   it('G-AGREE holds with the corrections (no orphan)', () => {
     expect(ag.violations).toEqual([]);
   });

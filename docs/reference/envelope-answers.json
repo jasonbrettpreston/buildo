@@ -1,0 +1,4913 @@
+{
+ "schema": "envelope-answers-v1",
+ "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18",
+ "count": 511,
+ "answers": [
+  {
+   "note": "Important - procedural",
+   "reading_sha": "4dec8cbcdddd7d1f",
+   "regulation_id": "10.20.20.100(12)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.20.100(12)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "Important - Procedural 16) Laneway Suite A laneway suite in the RD zone must comply with the specific use regulations in Section 150.8. [ By-law: 1210-2019 ]",
+   "reading_sha": "0276b7e033e86637",
+   "regulation_id": "10.20.20.100(16)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.20.100(16)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "Important - Procedural (17) Garden Suite A garden suite in the RD zone must comply with the specific use regulations in Section 150.7. [ By-law: 101-2022 ]",
+   "reading_sha": "f85cd7d8b2b0e447",
+   "regulation_id": "10.20.20.100(17)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.20.100(17)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "87f215fd7d150513",
+   "regulation_id": "10.20.20.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.20.20(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "procedural 1) Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (A) a detached house, then a permitted detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for a detached house. [ By-law: 648-2025 ]",
+   "reading_sha": "b73519bcdf43e3bd",
+   "regulation_id": "10.20.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.1(1)#(1)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "Important - impacts envelope - ore Permissive Lot Coverage Requirements for a Detached Houseplex Despite - procedural ",
+   "reading_sha": "b4718aff53d41290",
+   "regulation_id": "10.20.30.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.1(2)#whole",
+   "verdict": null
+  },
+  {
+   "note": "",
+   "reading_sha": "0f8711ea02cddd74",
+   "regulation_id": "10.20.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Its just minimum not minimum required minimum ",
+   "reading_sha": "a1677ef3c1d802e7",
+   "regulation_id": "10.20.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Its just minimum not minimum required minimum ",
+   "reading_sha": "9f25299bcc593b36",
+   "regulation_id": "10.20.30.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.10(2)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "db1aa5619c55785f",
+   "regulation_id": "10.20.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.20(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "a22997f56038ba0b",
+   "regulation_id": "10.20.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.20(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway",
+   "reading_sha": "dcb50afbde09c97b",
+   "regulation_id": "10.20.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.20(1)#(1)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "20804debcc15f140",
+   "regulation_id": "10.20.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.20(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "11ad7aed69dd50f6",
+   "regulation_id": "10.20.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "48407b8fbcb7b19f",
+   "regulation_id": "10.20.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "b3313cbb8a86b639",
+   "regulation_id": "10.20.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.40(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Ensure this applies for secondary suite as well. detached houseplex or a residential building with a secondary suite,",
+   "reading_sha": "7664e9e7d8227676",
+   "regulation_id": "10.20.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.30.40(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "ffac2de54982636f",
+   "regulation_id": "10.20.40.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(1)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "36ef45b7189641c7",
+   "regulation_id": "10.20.40.1(10)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(10)#(10)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "9785a470faf23223",
+   "regulation_id": "10.20.40.1(10)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(10)#(10)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e0c9db49ae6c1413",
+   "regulation_id": "10.20.40.1(10)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(10)#(10)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "22af8041aa1ac213",
+   "regulation_id": "10.20.40.1(10)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(10)#(10)(D)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "78e48cbe616ddb4b",
+   "regulation_id": "10.20.40.1(10)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(10)#(10)(E)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "1 residential building per lot",
+   "reading_sha": "7bc386e1938ed8ea",
+   "regulation_id": "10.20.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(2)#(2)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "more than 1 residential building allowed when abutting major street",
+   "reading_sha": "872f1528b99b89c8",
+   "regulation_id": "10.20.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(2)#(2)(B)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "0c7dffd3652177e9",
+   "regulation_id": "10.20.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(3)#(3)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "13b3f7c3506a4c80",
+   "regulation_id": "10.20.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(3)#(3)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "49a97a7db973ce90",
+   "regulation_id": "10.20.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(3)#(3)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "applies with this condition. - f the dwelling unit does not have an individual private driveway leading directly to the front of it - we need a disclosure here",
+   "reading_sha": "00774a26898b38a2",
+   "regulation_id": "10.20.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(4)#(4)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "73ac1f1125a41343",
+   "regulation_id": "10.20.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(4)#(4)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Does this impact having a laneway or garden suite? Investigate",
+   "reading_sha": "d7075e651afb7644",
+   "regulation_id": "10.20.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(5)#(5)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "dad72d4b8cc387a2",
+   "regulation_id": "10.20.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(5)#(5)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "procedural - detached houseplex that is the only one on the lot. Chapter 900 Exceptions  Applicable Principal Building Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains principal building requirements for: (A) a detached house, then the permitted detached houseplex is subject to the applicable Chapter 900 Exception's building requirements for a detached house.",
+   "reading_sha": "ab19696120d5f574",
+   "regulation_id": "10.20.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(6)#(6)(A)",
+   "verdict": null
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "2bede20b78a82683",
+   "regulation_id": "10.20.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(7)#whole",
+   "verdict": null
+  },
+  {
+   "note": "",
+   "reading_sha": "0ea59426f5eda2de",
+   "regulation_id": "10.20.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(8)#(8)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "16f711141f2a45bc",
+   "regulation_id": "10.20.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(8)#(8)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "8d1c40e77e3b57aa",
+   "regulation_id": "10.20.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(8)#(8)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "d0bed0df584f3787",
+   "regulation_id": "10.20.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(9)#(9)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3bea0c8f07158974",
+   "regulation_id": "10.20.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(9)#(9)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "46ffc3da0d4120b6",
+   "regulation_id": "10.20.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.1(9)#(9)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "726fd2b131d54406",
+   "regulation_id": "10.20.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "fb6e89b76e5bcbf8",
+   "regulation_id": "10.20.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "4e8521c94459be34",
+   "regulation_id": "10.20.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "30173a0fdee710eb",
+   "regulation_id": "10.20.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "bbfa87c17b37d5e2",
+   "regulation_id": "10.20.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(2)#(2)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "u mentioned above that maximum height of specified pairs impact building envelope.  Investigate. ",
+   "reading_sha": "f9ed6d6afa1910e2",
+   "regulation_id": "10.20.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(2)#(2)(B)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "u mentioned above that maximum height of specified pairs impact building envelope.  Investigate. ",
+   "reading_sha": "6a90f01511a105d1",
+   "regulation_id": "10.20.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.20.40.10(2)#(2)(C)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is critical the maximum number of stories doesn't apply to a houseplex. for the RD zone.",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(3)#(3)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(3)#(3)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "…(the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map. The architect can design any wall. We create the optimal wall for the maximum height. You can get an answer here. RE-do!",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(4)#(4)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This just speaks to ",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(4)#(4)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is a disclosure for building shallow roofs - important only if the maximal design uses a flat roof.",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(4)#(4)(C)",
+   "verdict": null
+  },
+  {
+   "note": "Exemption for Parapet…",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(5)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This only impacts the Height of Main Pedestrian Entrance - not the building envelope. Just a disclosure if anything.",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(6)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(7)#(7)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(7)#(7)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Exclusion of Certain Floor Area Within an Attic Space - dependent upon the design",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.10(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.10(8)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "changing the roof line of an existing building for a renovation… disclosure for renovations to existing footprint",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.11(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.11(1)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": null,
+   "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
+   "regulation_id": "10.20.40.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-18",
+   "unit_id": "10.20.40.20(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "12) Secondary Suite A secondary suite in the RS zone must comply with the specific use regulations in Section 150.10. we have this",
+   "reading_sha": "34769d62136ae858",
+   "regulation_id": "10.40.20.100(12)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.20.100(12)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "16) Laneway Suite A laneway suite in the RS zone must comply with the specific use regulations in Section 150.8. [ By-law: 1210-2019 ]. We have this already",
+   "reading_sha": "15855e8191f255cd",
+   "regulation_id": "10.40.20.100(16)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.20.100(16)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "We have this already in 150.7 section (17) Garden Suite A garden suite in the RS zone must comply with the specific use regulations in Section 150.7. [ By-law: 101-2022 ]",
+   "reading_sha": "fe5843bb1b928370",
+   "regulation_id": "10.40.20.100(17)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.20.100(17)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "38a36c714da077f6",
+   "regulation_id": "10.40.20.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.20.20(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "5907c9c919fd920e",
+   "regulation_id": "10.40.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.1(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "64c2f75dd47865f5",
+   "regulation_id": "10.40.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.1(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Procedural oPermissive Lot Coverage Requirements for a Detached Houseplex or Semi-Detached Houseplex Despiteif the maximum lot coverage that would apply to a lot with a detached houseplex, semi-detached houseplex or a residential building with a secondary suite under clause 10.40.30.40 is more permissive than the maximum lot coverage that would apply to the lot under regulation 10.40.30.1(1), then the more permissive regulation prevails.",
+   "reading_sha": "faf8f301f6104ea7",
+   "regulation_id": "10.40.30.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.1(2)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "4c0925b551e82ea1",
+   "regulation_id": "10.40.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "69f466af3ee54663",
+   "regulation_id": "10.40.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "89662e635a69b1f1",
+   "regulation_id": "10.40.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "da40bab8bddcb7c3",
+   "regulation_id": "10.40.30.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.10(2)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "a95d7f530e80feff",
+   "regulation_id": "10.40.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.20(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "you call it the minimum minimum lot area - its just the minimum ",
+   "reading_sha": "b1cbbbdee766c2c1",
+   "regulation_id": "10.40.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.20(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseplex.",
+   "reading_sha": "a5c8e7f0ef0fb8ba",
+   "regulation_id": "10.40.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.20(1)#(1)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway",
+   "reading_sha": "bede76adb5c4cd74",
+   "regulation_id": "10.40.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.20(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "a5b8589de3e7e139",
+   "regulation_id": "10.40.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.20(1)#(1)(E)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "8e8044321a6deccf",
+   "regulation_id": "10.40.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "8aecd1b4891bf7f8",
+   "regulation_id": "10.40.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "79a5556bafdf619b",
+   "regulation_id": "10.40.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.40(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "you forgot the  a residential building with a secondary suite - we always need to include this building type. it is keyed uses secondary suite - which is great - its just not in the summary",
+   "reading_sha": "05cccf64ccb86938",
+   "regulation_id": "10.40.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.30.40(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "aeb11d265edc454d",
+   "regulation_id": "10.40.40.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This doesn't apply to garden suites or laneway suites",
+   "reading_sha": "1ea2330375d04f09",
+   "regulation_id": "10.40.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(2)#(2)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "1dc41605dd6a2c2c",
+   "regulation_id": "10.40.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(2)#(2)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "b1b676ea39bc84f8",
+   "regulation_id": "10.40.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "10cbf49f09348fcd",
+   "regulation_id": "10.40.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(3)#(3)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "only if the the dwelling unit does not have an individual private driveway leading directly to the front of it; and",
+   "reading_sha": "8db9943e68263896",
+   "regulation_id": "10.40.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(4)#(4)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "8aa164d7d65bb068",
+   "regulation_id": "10.40.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(4)#(4)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "7cb66ad73afc2460",
+   "regulation_id": "10.40.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(5)#(5)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "f1a9c5ca15758015",
+   "regulation_id": "10.40.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(5)#(5)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "procedural but important A) 5.0 metres if the dwelling unit does not have an individual private driveway leading directly to the front of it; and",
+   "reading_sha": "71cb421a335f79fe",
+   "regulation_id": "10.40.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(6)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5795624639c18339",
+   "regulation_id": "10.40.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(7)#(7)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "9084646e8b7d0c2c",
+   "regulation_id": "10.40.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(7)#(7)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "5ca047f72f87708b",
+   "regulation_id": "10.40.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(7)#(7)(C)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Not very relevant",
+   "reading_sha": "3b6f788abc856d9f",
+   "regulation_id": "10.40.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(8)#(8)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Not important",
+   "reading_sha": "cb746d50b1e744eb",
+   "regulation_id": "10.40.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(8)#(8)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "1bf870d90e814df8",
+   "regulation_id": "10.40.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(8)#(8)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "procedural",
+   "reading_sha": "3b7e0c57698f6af5",
+   "regulation_id": "10.40.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(9)#(9)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "d2cc29d2f384c25e",
+   "regulation_id": "10.40.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(9)#(9)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3eef283218ee5302",
+   "regulation_id": "10.40.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(9)#(9)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "a3884772a4e3b45b",
+   "regulation_id": "10.40.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(9)#(9)(D)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ad5f782be90f7f26",
+   "regulation_id": "10.40.40.1(9)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.1(9)#(9)(E)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "f05c58ff67454d65",
+   "regulation_id": "10.40.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "0e51e0f848298ad3",
+   "regulation_id": "10.40.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "3c61e2ad9b6e7289",
+   "regulation_id": "10.40.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "16555b0bb3eae1c4",
+   "regulation_id": "10.40.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "4484faae55b1ab53",
+   "regulation_id": "10.40.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(2)#(2)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "For maxbld we assume the optimal height for maximum building envelope",
+   "reading_sha": "df9c49a7b7a2eb4b",
+   "regulation_id": "10.40.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(2)#(2)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "this is linked to an envelope measure.  we don't care about apartment buildings but townhouses I believe are still important. key this one similar to the last but focused on townhouses",
+   "reading_sha": "448b22e3ff2c02c0",
+   "regulation_id": "10.40.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(2)#(2)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "a6792a265d777720",
+   "regulation_id": "10.40.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "f18eb9a9d9a4ae00",
+   "regulation_id": "10.40.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is important because for build type detached houseplex and semi-detached houseplex there is no max stories.  This impacts the build size and envelop of these build types.",
+   "reading_sha": "7965a4cfa860701e",
+   "regulation_id": "10.40.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(3)#(3)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "4a682731d9907466",
+   "regulation_id": "10.40.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(3)#(3)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "db1191e79c66d11c",
+   "regulation_id": "10.40.40.10(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(4)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "The could impact build envelop if dormers are or are not considered main walls or not.  investigate. ",
+   "reading_sha": "71001f6aa08ff59a",
+   "regulation_id": "10.40.40.10(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(5)#(5)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "We are specifically looking at dormers here - need to investigate if this impacts build envelope. I would imagine you don't want them to count as main walls. ) Width of Dormers in a Roof ",
+   "reading_sha": "98ac12711095a6d6",
+   "regulation_id": "10.40.40.10(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(5)#(5)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This only applies to build with a flat or shallow roof.  I don't think think will have an impact on the build envelop - except to say we would try to get the optimal design.  but really we are only providing the footprint height and stories. less important than . design disclosure ",
+   "reading_sha": "c64ab670610792cb",
+   "regulation_id": "10.40.40.10(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.10(6)#(6)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "64d435492a00934a",
+   "regulation_id": "10.40.40.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "This should be defined as renovation or extension not max build but still important for renovation section",
+   "reading_sha": "e0856c94ad255ad2",
+   "regulation_id": "10.40.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(2)#(2)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This should be defined as renovation or extension not max build but still important for renovation section",
+   "reading_sha": "854bd1a68fc47f33",
+   "regulation_id": "10.40.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(2)#(2)(B)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This should be defined as renovation or extension not max build but still important for renovation section",
+   "reading_sha": "f901147887a0d633",
+   "regulation_id": "10.40.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(2)#(2)(C)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "fb0b738c2ca5f798",
+   "regulation_id": "10.40.40.20(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "76b37452e11f0ed9",
+   "regulation_id": "10.40.40.20(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "for both apartment building and townhouse",
+   "reading_sha": "f53fd595f877ab77",
+   "regulation_id": "10.40.40.20(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.20(4)#(4)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "de40c94e0b2b5e7e",
+   "regulation_id": "10.40.40.30(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.30(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2af953d9d49e30ce",
+   "regulation_id": "10.40.40.30(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.30(2)#(2)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "3026b1e956aa0dd8",
+   "regulation_id": "10.40.40.30(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.30(2)#(2)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "f9b73f3db75e1b51",
+   "regulation_id": "10.40.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope. ",
+   "reading_sha": "f0b7ce697caee415",
+   "regulation_id": "10.40.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.40(1)#(1)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Important FSI doesn't apply to townhouse or apartment buildings with over 60 units",
+   "reading_sha": "8161092c5bb46287",
+   "regulation_id": "10.40.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.40(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Not important - Decks- platforms etc.",
+   "reading_sha": "523afb5ee151518a",
+   "regulation_id": "10.40.40.50(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.50(1)#(1)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Not important - Decks- platforms etc.",
+   "reading_sha": "e3cd9917aed98008",
+   "regulation_id": "10.40.40.50(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.50(2)#(2)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Not important - Decks- platforms etc.",
+   "reading_sha": "122e934d163df9e2",
+   "regulation_id": "10.40.40.50(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.50(3)#(3)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "529b2afc65ea1a57",
+   "regulation_id": "10.40.40.70(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "Minimum Rear Yard Setback is the greater of: (A) 7.5 metres; or(B) 25% of the lot depth.",
+   "reading_sha": "8afe95068ca7ba1b",
+   "regulation_id": "10.40.40.70(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Minimum Rear Yard Setback is the greater of: (A) 7.5 metres; or(B) 25% of the lot depth.",
+   "reading_sha": "64c0987b5c2c8a02",
+   "regulation_id": "10.40.40.70(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "1aafe838d589ef6e",
+   "regulation_id": "10.40.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "fe3884e110e1c4e4",
+   "regulation_id": "10.40.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "edf1f6b8bb7808a1",
+   "regulation_id": "10.40.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(3)#(3)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "a340b56c539130c7",
+   "regulation_id": "10.40.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(3)#(3)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "f4f1e6169e591539",
+   "regulation_id": "10.40.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(4)#(4)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "96d2b254a447fbb0",
+   "regulation_id": "10.40.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(4)#(4)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "dea6c190271040c5",
+   "regulation_id": "10.40.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.70(4)#(4)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "1c695b130df1277e",
+   "regulation_id": "10.40.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.80(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "335a81f6c12f5e73",
+   "regulation_id": "10.40.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.80(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "8f32ac7058c47818",
+   "regulation_id": "10.40.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.80(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This refers to buildings on the same lot ",
+   "reading_sha": "e366d767b6a07d31",
+   "regulation_id": "10.40.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.80(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This refers to buildings on the same lot ",
+   "reading_sha": "85d69d09d2ab1440",
+   "regulation_id": "10.40.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.40.40.80(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "9a3cdd11f77aa9d2",
+   "regulation_id": "10.5.1.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.5.1.10(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "134e32b5e4318abe",
+   "regulation_id": "10.5.1.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.5.1.10(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "3e41c3eb1a144b09",
+   "regulation_id": "10.5.1.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.5.1.10(3)#(3)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This defines the Maximum permitted FSI not just the FSI",
+   "reading_sha": "8f91ff187cafcbff",
+   "regulation_id": "10.5.1.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.5.1.10(3)#(3)(E)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This is confusing - but I think the required minimum lot area (as calculated) but with the note that if the existing is less it stands (check this)",
+   "reading_sha": "9b7cd0feb3f013ad",
+   "regulation_id": "10.5.30.11(1)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.30.11(1)#whole"
+  },
+  {
+   "note": "This is looking at legal encroachments - that are excluded from the regular calculation of lot coverage, but since we cant identify the encroachments - this bylaw doesnt apply - except as an exception they may need to look into.",
+   "reading_sha": "e857a01f9c5538b7",
+   "regulation_id": "10.5.30.40(1)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.30.40(1)#whole"
+  },
+  {
+   "note": "If the existing lot coverage is greater than that permitted by the bylaw - you get grandfathered in. We cant evaluate this without user input - this just needs to be disclosed.",
+   "reading_sha": "6ba8ae0930e4b8f3",
+   "regulation_id": "10.5.30.41(1)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.30.41(1)#whole"
+  },
+  {
+   "note": "This is just defining how to determine the height of a building - nothing applies here.",
+   "reading_sha": "ff2271c6d200006e",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": null,
+   "regulation_id": "10.5.40.10(1)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.40.10(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Here we are talking about exceeding the maximum permitted height of a residential building - these conditions apply to equipment/structures/parts that exceed the permitted maximum height in 10.5.40.10(3): within 6.0 m of a lot line abutting a street, total horizontal dimension parallel to the street may not exceed 20% of the width of the main walls facing that street.",
+   "reading_sha": "3956668e34108804",
+   "regulation_id": "10.5.40.10(4)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.40.10(4)#(4)(B)"
+  },
+  {
+   "note": "If the current building has a greater height than permitted build height - the current lawful height stands. We just need to provide the permitted build height and add this as a sidenote/disclosure.",
+   "reading_sha": "f28bad5e6700c2d8",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": null,
+   "regulation_id": "10.5.40.11(1)",
+   "set": "base",
+   "source": "recovered from operator paste 2026-10-15",
+   "unit_id": "10.5.40.11(1)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This just states what we know from 150.10 - RT applies",
+   "reading_sha": "a79f9b205ed03464",
+   "regulation_id": "10.60.20.100(12)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.20.100(12)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This just states what we know from 150.10 - RT applies",
+   "reading_sha": "75c35ada127b1ac8",
+   "regulation_id": "10.60.20.100(16)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.20.100(16)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This just states what we know from 150.10 - RT applies",
+   "reading_sha": "9ea0effc103f0539",
+   "regulation_id": "10.60.20.100(17)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.20.100(17)#whole",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "5dbc23d062e031ea",
+   "regulation_id": "10.60.20.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.20.20(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex procedural",
+   "reading_sha": "5907c9c919fd920e",
+   "regulation_id": "10.60.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.1(1)#(1)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": " Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex or semi-detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (B) a semi-detached house, then a permitted semi-detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for the portion of a semi-detached house that constitutes an individual dwelling unit",
+   "reading_sha": "64c2f75dd47865f5",
+   "regulation_id": "10.60.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.1(1)#(1)(B)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This means a detached houseplex, semi detached houseplex or residential building with a secondary suite - the more permissive regulation prevails - this is the benefit of additional housing units.  build bigger",
+   "reading_sha": "223ea15500f6245e",
+   "regulation_id": "10.60.30.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.1(2)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "7136d28929a8fba7",
+   "regulation_id": "10.60.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detached houseplex the formal works.  Do need to removed the semi detached build type here.",
+   "reading_sha": "1c6aef8a140ac499",
+   "regulation_id": "10.60.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.10(1)#(1)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "6e087a8737b272eb",
+   "regulation_id": "10.60.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "83db2f8a4c684118",
+   "regulation_id": "10.60.30.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.10(2)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "608ece9fe744917b",
+   "regulation_id": "10.60.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.20(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "34bf3d43d86be6ae",
+   "regulation_id": "10.60.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.20(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Min Lot frontage for townhouse in RT is -1m for every dwelling without an individual private driveway. ",
+   "reading_sha": "489eef43ba9652b5",
+   "regulation_id": "10.60.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.20(1)#(1)(C)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "5981d05f3a4f0a3b",
+   "regulation_id": "10.60.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.20(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "16a38188d9ca9410",
+   "regulation_id": "10.60.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.20(1)#(1)(E)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "af5c45295c02d94c",
+   "regulation_id": "10.60.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "f2391d9170c64ef5",
+   "regulation_id": "10.60.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This looks good but you forgot or a residential building with a secondary suite - it applies to this as well",
+   "reading_sha": "94a25c617ef52149",
+   "regulation_id": "10.60.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.40(1)#(1)(C)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "You forgot this as well - it applies  residential building with a secondary suite as well",
+   "reading_sha": "34adc8a9919b5a63",
+   "regulation_id": "10.60.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.30.40(1)#(1)(D)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "f7e9c4dd2f303ad2",
+   "regulation_id": "10.60.40.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "I'm not sure - but if the RT zone only allows 1 dwelling than that could affect lot configuration for maxBLD",
+   "reading_sha": "20b32f7d19b88436",
+   "regulation_id": "10.60.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "apartment building - not important",
+   "reading_sha": "c0a4095c13585585",
+   "regulation_id": "10.60.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(2)#(2)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is the condition which you didn't capture if the dwelling unit does not have an individual private driveway leading directly to the front of it- we don't know if they have a driveway, we need to disclose this. ",
+   "reading_sha": "5200d6eaba291d93",
+   "regulation_id": "10.60.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(3)#(3)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "20a873695d37f52f",
+   "regulation_id": "10.60.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "52be7d2d5aa87811",
+   "regulation_id": "10.60.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(4)#(4)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0b301a9c4e2944ab",
+   "regulation_id": "10.60.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(4)#(4)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Important more permissive building requirement for detached and semi detached house plexes",
+   "reading_sha": "8637647b53ecd19a",
+   "regulation_id": "10.60.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(5)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "0741f7578dcef1a7",
+   "regulation_id": "10.60.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(6)#(6)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "c1e4774b7a9da01c",
+   "regulation_id": "10.60.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(6)#(6)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ad8546161a206775",
+   "regulation_id": "10.60.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(6)#(6)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "534f4b3719d7b107",
+   "regulation_id": "10.60.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(7)#(7)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "2261a30d06ba778a",
+   "regulation_id": "10.60.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(7)#(7)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "9d7d3dc0ac4854f3",
+   "regulation_id": "10.60.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(7)#(7)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "fbbc32ef45dfaeac",
+   "regulation_id": "10.60.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(8)#(8)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "8c23892d39883049",
+   "regulation_id": "10.60.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(8)#(8)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e4b1a0c85a3e87fc",
+   "regulation_id": "10.60.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(8)#(8)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3cd988784679d28a",
+   "regulation_id": "10.60.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(8)#(8)(D)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "f46ef7141bc77652",
+   "regulation_id": "10.60.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.1(8)#(8)(E)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "5ffe8af70b8fb882",
+   "regulation_id": "10.60.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "dcb5e3261242ab77",
+   "regulation_id": "10.60.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "cf6b28b4102d296d",
+   "regulation_id": "10.60.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "c1e27e2fb817f5a1",
+   "regulation_id": "10.60.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2360069c8d6b0a79",
+   "regulation_id": "10.60.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(2)#(2)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "69b3e20412fba7cd",
+   "regulation_id": "10.60.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(2)#(2)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Maximum Number of Storeys - the max stories does not apply to detached and semi-detached house plexes.  No limit for them I guess",
+   "reading_sha": "bc8e785040526b8e",
+   "regulation_id": "10.60.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(2)#(2)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "8a0a53eb4e55fbb8",
+   "regulation_id": "10.60.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.10(2)#(2)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "82587a475273bb99",
+   "regulation_id": "10.60.40.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.20(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "fe915f30e4466b79",
+   "regulation_id": "10.60.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "25507c970194921e",
+   "regulation_id": "10.60.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is important in the RT zone the Max FSI does not apply to bove does not apply to a detached houseplex, semi-detached houseplex or a residential building with a secondary suite; - especially important is the detached house with a secondary suite",
+   "reading_sha": "81af05bacccf14ca",
+   "regulation_id": "10.60.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.40(1)#(1)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "also doesn't apply to townhouse with over 60 units.  ",
+   "reading_sha": "3fc66839352ec6b2",
+   "regulation_id": "10.60.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.40(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "1282d419054df704",
+   "regulation_id": "10.60.40.70(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "6d6939ccfd0123e9",
+   "regulation_id": "10.60.40.70(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(2)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "a64a3f7477026ea6",
+   "regulation_id": "10.60.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5c694bd439e8c295",
+   "regulation_id": "10.60.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "52fa5fa8c5947cdc",
+   "regulation_id": "10.60.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(4)#(4)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "aedc5ee9aa47e7f8",
+   "regulation_id": "10.60.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(4)#(4)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "a937468b4af42832",
+   "regulation_id": "10.60.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.70(4)#(4)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "bbefa237c7782a60",
+   "regulation_id": "10.60.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.80(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "de5cbba7c85b9d2d",
+   "regulation_id": "10.60.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.80(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "reading_sha": "0838354b0e73e035",
+   "regulation_id": "10.60.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.80(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "reading_sha": "f949d50957b4d6d9",
+   "regulation_id": "10.60.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.80(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "reading_sha": "5074f99743fb88cb",
+   "regulation_id": "10.60.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.80(2)#(2)(C)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Grandfathering existing structures in",
+   "reading_sha": "69d93401c1dbfaea",
+   "regulation_id": "10.60.40.81(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.81(1)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Seperation Exemptions - this maybe important for renovations. Disclosure for renovations section",
+   "reading_sha": "5e40c6cef528b3b8",
+   "regulation_id": "10.60.40.81(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.60.40.81(2)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "9675c93ce0032bcd",
+   "regulation_id": "10.80.20.100(15)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.20.100(15)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "1c4454b74ac26170",
+   "regulation_id": "10.80.20.100(19)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.20.100(19)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "bad0afbcd63da8d1",
+   "regulation_id": "10.80.20.100(20)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.20.100(20)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "4f55cd7056becc37",
+   "regulation_id": "10.80.20.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.20.20(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "5907c9c919fd920e",
+   "regulation_id": "10.80.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.1(1)#(1)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "64c2f75dd47865f5",
+   "regulation_id": "10.80.30.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.1(1)#(1)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is important the addition of the secondary suite entitles the owner to more permissive maximum lot coverage and this is the key for maxbld option with suite being larger than maxbld without secondary suite",
+   "reading_sha": "00ca003a6133f167",
+   "regulation_id": "10.80.30.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.1(2)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "de2e2c8e679cc24c",
+   "regulation_id": "10.80.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This only applies if there are two lots or more. This is something that is beyond our scope. Disclosure - if looking at multiple lots. - which we cannot calculate or deal with if a semi-detached house or an apartment building is on two lots in the RM zone. If its not on two lots and for a semi-detached houseplex, the required minimum lot area for each lot is 50 percent of the numerical value following the letter \"a\", in square metres; and [ By-law: 648-2025 ]",
+   "reading_sha": "78eb0c680008e6fd",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "10.80.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.10(1)#(1)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "e56814d6e2eeb687",
+   "regulation_id": "10.80.30.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "apartment Building related",
+   "reading_sha": "15cf6c47606557ee",
+   "regulation_id": "10.80.30.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.10(2)#row",
+   "verdict": "no_application"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "e045cf8f78c05484",
+   "regulation_id": "10.80.30.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.10(3)#whole",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "7de69b4a6dec815b",
+   "regulation_id": "10.80.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.20(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This only holds if there is no f on the map In the RM zone: (B) if the zone label does not include an \"f\" value on the Zoning By-law Map, the required minimum lot frontage is: (i) 12.0 metres for a lot with a detached house, and each detached houseplex on a lot; (ii) 15.0 metres for a lot with an entire semi-detached house; (iii) 24.0 metres: (a) for each apartment building on a lot which does not abut a major street; (b) for a lot with a non-residential building.",
+   "reading_sha": "0a9a69f6366c0a05",
+   "regulation_id": "10.80.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.20(1)#(1)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Minimum Lot Frontage : Zone RM - Condition two lots - we can never identify these situations ",
+   "reading_sha": "a13a1b4d09d4909d",
+   "regulation_id": "10.80.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.20(1)#(1)(C)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwelling unit fronting directly on a street: (a) is 6.0 metres for each dwelling unit; and (b) may be reduced by 1.0 metre for each dwelling unit that does not have an individual private driveway leading directly to the front of it; and [ By-l",
+   "reading_sha": "a8ba63f4dc20501d",
+   "regulation_id": "10.80.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.30.20(1)#(1)(D)",
+   "verdict": "wrong"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "006e06766a76f828",
+   "regulation_id": "10.80.30.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.20(1)#(1)(E)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "5330ccad4166f3af",
+   "regulation_id": "10.80.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "99047ea1964c60bb",
+   "regulation_id": "10.80.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "b20459a00a2083aa",
+   "regulation_id": "10.80.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.40(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "583141a8a93ae9e7",
+   "regulation_id": "10.80.30.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.30.40(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "d9ddd9306f3937ce",
+   "regulation_id": "10.80.40.1(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(1)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0aa8cb2687ce1bb0",
+   "regulation_id": "10.80.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(2)#(2)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Apartment related ",
+   "reading_sha": "f244c3dc566f3c2e",
+   "regulation_id": "10.80.40.1(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(2)#(2)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "We don't know if they have a private driveway - if they don't it's 5M",
+   "reading_sha": "00d2aba91719b9c0",
+   "regulation_id": "10.80.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.1(3)#(3)(A)",
+   "verdict": "unsure"
+  },
+  {
+   "note": "we wouldn't know if they have a driveway - we take the max size 6M and then include the driveway disclosure",
+   "reading_sha": "f5637a362dbe271f",
+   "regulation_id": "10.80.40.1(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.1(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "52be7d2d5aa87811",
+   "regulation_id": "10.80.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(4)#(4)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0b301a9c4e2944ab",
+   "regulation_id": "10.80.40.1(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(4)#(4)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is interesting ouseplex is more permissive than the regulation that would apply to the detached houseplex or semi-detached houseplex under regulation 10.80.40.1(4), then the more permissive regulation prevails. houseplec gets special treatment and potentially bigger building envelope",
+   "reading_sha": "9f4549e9fa799e2f",
+   "regulation_id": "10.80.40.1(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(5)#whole",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Effects the type of build but not the envelope",
+   "reading_sha": "91874ab4a970af5e",
+   "regulation_id": "10.80.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(6)#(6)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "bf15cb3aaf6d65fe",
+   "regulation_id": "10.80.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(6)#(6)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "cc299c312002f1c6",
+   "regulation_id": "10.80.40.1(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(6)#(6)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "60778abf950e4d41",
+   "regulation_id": "10.80.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(7)#(7)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ec9204334a96598e",
+   "regulation_id": "10.80.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(7)#(7)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "68c5686589169b0b",
+   "regulation_id": "10.80.40.1(7)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(7)#(7)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "aeda36128cd802d3",
+   "regulation_id": "10.80.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(8)#(8)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "75545897a2f70a0e",
+   "regulation_id": "10.80.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(8)#(8)(B)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0dd103e5132256ee",
+   "regulation_id": "10.80.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(8)#(8)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3520e9219f080784",
+   "regulation_id": "10.80.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(8)#(8)(D)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "51aa085191b2592a",
+   "regulation_id": "10.80.40.1(8)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.1(8)#(8)(E)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ae1b176cd1aba9fb",
+   "regulation_id": "10.80.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5f32fd6f71ddcfd9",
+   "regulation_id": "10.80.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "1a122ee345c80844",
+   "regulation_id": "10.80.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(1)#(1)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "241e5e3f5ab356f1",
+   "regulation_id": "10.80.40.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(1)#(1)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
+   "reading_sha": "64bd73c57f015420",
+   "regulation_id": "10.80.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
+   "reading_sha": "08704ec673cf065a",
+   "regulation_id": "10.80.40.10(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "58740993c9033553",
+   "regulation_id": "10.80.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "da7912d40735db9b",
+   "regulation_id": "10.80.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "c24c83fa2cfa4831",
+   "regulation_id": "10.80.40.10(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(3)#(3)(D)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This doesn't concern the overall height of the building - just the entrance - this is a disclosure note",
+   "reading_sha": "61afa4dac7a743fe",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "unsure",
+   "regulation_id": "10.80.40.10(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(4)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is just talking about the whether the dormers walls are considered as main walls. This is about the shape of the building and is a disclosure note.",
+   "reading_sha": "7d4cd7b5813ee440",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "10.80.40.10(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.10(5)#(5)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "bacc88ff76ab2d1b",
+   "regulation_id": "10.80.40.10(6)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.10(6)#(6)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "4c832183144d86e8",
+   "regulation_id": "10.80.40.20(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.20(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is not a concern for us - but should be disclosed. Renovation or expanding the envelope. ",
+   "reading_sha": "0d6f0b9eac0c19b6",
+   "regulation_id": "10.80.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.20(2)#(2)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is not a concern for us - but should be disclosed. Renovation or expanding the envelope. ",
+   "reading_sha": "2a175269e26d23bf",
+   "regulation_id": "10.80.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.20(2)#(2)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is not a concern for us - but should be disclosed. Renovation or expanding the envelope. ",
+   "reading_sha": "4befcd04dbf30e17",
+   "regulation_id": "10.80.40.20(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.20(2)#(2)(C)",
+   "verdict": "disclose"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "650c9b64413b7a6b",
+   "regulation_id": "10.80.40.20(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.20(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "b94ae3e521ff4f98",
+   "regulation_id": "10.80.40.30(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.30(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "2854a0e7e21a17e5",
+   "regulation_id": "10.80.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.40(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "800841785553ad6e",
+   "regulation_id": "10.80.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.40(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "4570e3e3068625f4",
+   "regulation_id": "10.80.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.40(1)#(1)(C)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "712325dc5bdb5d1b",
+   "regulation_id": "10.80.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.40(1)#(1)(D)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0911687a4bd6836b",
+   "regulation_id": "10.80.40.50(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.50(1)#(1)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "c8720118a3a20e14",
+   "regulation_id": "10.80.40.50(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.50(2)#(2)(A)",
+   "verdict": "no_application"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "60e893e3a63e612e",
+   "regulation_id": "10.80.40.70(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.70(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "The required minimum rear yard setback in the RM zone is the greater of: (A) 7.5 metres; or (B) 25% of the lot depth. This needs to calculate the greater of A or B",
+   "reading_sha": "024705f4367850d2",
+   "regulation_id": "10.80.40.70(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.70(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "The required minimum rear yard setback in the RM zone is the greater of: (A) 7.5 metres; or (B) 25% of the lot depth. This needs to calculate the greater of A or B",
+   "reading_sha": "f9ef74ffcc863a65",
+   "regulation_id": "10.80.40.70(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.70(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "4ee8f49fe9fd4d02",
+   "regulation_id": "10.80.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.70(3)#(3)(A)",
+   "verdict": "matches"
+  },
+  {
+   "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
+   "note": "",
+   "reading_sha": "7553f13c8f1577ba",
+   "regulation_id": "10.80.40.70(3)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "10.80.40.70(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "945bbeb12f2a3518",
+   "regulation_id": "10.80.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.70(4)#(4)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "eca45ea2878a8071",
+   "regulation_id": "10.80.40.70(4)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.70(4)#(4)(C)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "c76c9908de6c303b",
+   "regulation_id": "10.80.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.80(1)#(1)(A)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "b0572d28745ce2d7",
+   "regulation_id": "10.80.40.80(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.80(1)#(1)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
+   "reading_sha": "eb4935edd9411970",
+   "regulation_id": "10.80.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.80(2)#(2)(A)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
+   "reading_sha": "f6cd14cc460baf23",
+   "regulation_id": "10.80.40.80(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.80(2)#(2)(B)",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is a grandfathering clause for lawfully existing buildings",
+   "reading_sha": "ab4d179034ee3b68",
+   "regulation_id": "10.80.40.81(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.81(1)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is for additions and extensions.  Important not for maxbld but for extensions and renovations. ",
+   "reading_sha": "564cefeaced98284",
+   "regulation_id": "10.80.40.81(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-16",
+   "unit_id": "10.80.40.81(2)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Stating this section applies to secondary suites",
+   "reading_sha": "6ec420113bb50b44",
+   "regulation_id": "150.10.1(1)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.1(1)#whole",
+   "updated_at": "2026-10-15T21:05:45.223Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Secondary Suite permitted structures a) detached house",
+   "reading_sha": "0aecb26090c9cef6",
+   "regulation_id": "150.10.20.1(1)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.20.1(1)#(1)(A)",
+   "updated_at": "2026-10-15T21:06:27.816Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Secondary Suite permitted structures b semi detached house.",
+   "reading_sha": "78fadb43744f8373",
+   "regulation_id": "150.10.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.20.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Defines the maximum number of secondary suites allowed. Each dwelling can have 1. Applies to etached house, semi-detached house, or townhouse",
+   "reading_sha": "eed0e9abad1b2c6f",
+   "regulation_id": "150.10.20.1(2)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.20.1(2)#whole",
+   "updated_at": "2026-10-15T21:08:18.852Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "In zones RA, RAC, CL, CR, I, IH, IE, IS, and IPW zones where Detached House, Semi-Detached House, or Townhouse Are Not Permitted Building Types a secondary suite is permitted/allowed if the lot has a awfully existing detached house, a lawfully existing semi-detached house,. This would be a disclosure for us.  We wouldn't know if a house existed on the lot currently.  ",
+   "reading_sha": "069bef5d008ffc90",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "150.10.20.1(4)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.20.1(4)#whole",
+   "updated_at": "2026-10-15T21:11:21.614Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Defines the Secondary suite - Interior Floor Area ) Secondary Suite - Interior Floor Area The interior floor area must be no more than 45 percent of the interior floor area of the dwelling unit within which it is located. Makes sense - can't be bigger than the existing house etc.  We will need this information because we will create the max build for the main structure and this will inform the size of the secondary suite",
+   "reading_sha": "29e01fb1c7f808d1",
+   "regulation_id": "150.10.40.40(1)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.40.40(1)#whole",
+   "updated_at": "2026-10-15T21:13:44.458Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "The secondary suite - in a one storey house can occupy the entire basement.  Makes sense! ",
+   "reading_sha": "41123c5d48495ce2",
+   "regulation_id": "150.10.40.40(2)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "150.10.40.40(2)#whole",
+   "updated_at": "2026-10-15T21:15:25.496Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "86d96ca8e1dbab5c",
+   "regulation_id": "150.7.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.1(1)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3dc3e07548778b6c",
+   "regulation_id": "150.7.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "2dacf134d9f9dd82",
+   "regulation_id": "150.7.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3e4688c0c9969f80",
+   "regulation_id": "150.7.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(1)#(1)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "617c2c3fc7115503",
+   "regulation_id": "150.7.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(1)#(1)(D)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "8999f46dce4d239a",
+   "regulation_id": "150.7.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(1)#(1)(E)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Critical - every lot can have one garden suite or laneway suite arden Suite - Use Restriction A maximum of one ancillary building containing either a garden suite or a laneway suite is permitted on a lot. A lot may not contain both a garden suite and a laneway suite.",
+   "reading_sha": "a56a97d744608420",
+   "regulation_id": "150.7.20.1(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.20.1(2)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Landscaping 1) Landscaping Requirements for a Garden Suite Despite regulation 10.5.50.10(3), for a lot with a residential building and an ancillary building containing a garden suite: (A) with a lot frontage of greater than 6.0 metres, a minimum of 50 percent of the area: (i) between all rear main walls of the residential building on the lot and the rear lot line, and (ii) extending parallel to the rear lot line across the full width of the lot from the point where the rear main wall of the residential building meets the residential building's side main walls closest to the respective side lot lines, must be for soft landscaping;",
+   "reading_sha": "226157a8c0f37583",
+   "regulation_id": "150.7.50.10(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.50.10(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Not important - Landscaping Requirements ",
+   "reading_sha": "28e3d55bf00802e4",
+   "regulation_id": "150.7.50.10(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.50.10(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - Setbacks = the required minimum ancillary building setbacks apply to all parts of an ancillary building containing a garden suite above-ground and below-ground, excluding footings. [ By-law: 101-2022 ] Critical",
+   "reading_sha": "1b08e444141909aa",
+   "regulation_id": "150.7.60.20(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(1)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
+   "reading_sha": "fff0c1773a146ebd",
+   "regulation_id": "150.7.60.20(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(2)#(2)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
+   "reading_sha": "ca30743c68876658",
+   "regulation_id": "150.7.60.20(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(2)#(2)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite  Rear Yard Setback = if the garden suite has windows facing the rear main above 4m - need to increase the setback by 1.5m",
+   "reading_sha": "1429e0a36adac4a6",
+   "regulation_id": "150.7.60.20(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(2)#(2)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite on Through Lot - Rear Yard Setback - Exceptions -  if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot, the required minimum rear yard setback for the ancillary building containing a garden suite is equal to the required minimum front yard setback for the residential building on the adjacent lot; ",
+   "reading_sha": "711248d8fe2c75d9",
+   "regulation_id": "150.7.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(3)#(3)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite on Through Lot - Rear Yard Setback =1.5m ",
+   "reading_sha": "6757fecfc825049a",
+   "regulation_id": "150.7.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(3)#(3)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite containing a Parking Space on Through Lot -ear Yard Setback The required minimum rear yard setback for an ancillary building containing a garden suite and a parking space must comply with regulation 150.7.60.20(2), except if it is on a through lot and vehicle access is from the street abutting the rear lot line, the required minimum rear yard setback is greater of: (A) the rear yard setback required by regulation 150.7.60.20(3)(A); or [ By-law: 420-2023 ]",
+   "reading_sha": "939c2b74edf87838",
+   "regulation_id": "150.7.60.20(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(4)#(4)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "arden Suite containing a Parking Space on Through Lot - The required minimum rear yard setback for an ancillary building containing a garden suite and a parking space must comply with regulation 150.7.60.20(2), except if it is on a through lot and vehicle access is from the street abutting the rear lot line, the required minimum rear yard setback is greater of: (B) 6.0 metres; [ By-law: 101-2022 ]- we wouldn't know about the parking situation",
+   "reading_sha": "b77fdf5793cf9780",
+   "regulation_id": "150.7.60.20(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(4)#(4)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - Side Yard Setback - if it doesn't abut a street and you have doors and windows etc - setback is the greater of 1.5 meters of 10% of the lot frontage to a mx of 3M. This is really a design issue.  ",
+   "reading_sha": "4ad09e34009f24a8",
+   "regulation_id": "150.7.60.20(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(5)#(5)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite - Side Yard Setback is the greater of .6M or 10% of lot frontage to a mx of 3m",
+   "reading_sha": "9ba30f3854e5d371",
+   "regulation_id": "150.7.60.20(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(5)#(5)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite on Corner Lot - Side Yard Setback Minimum- can't be less than 1.5M but is average of the front yard setback of the residential building on the adjacent lot and the minimum required side yard setback of the principal residential building on the lot. We can identify the corner lots. \n",
+   "reading_sha": "497aa8369ad071a3",
+   "regulation_id": "150.7.60.20(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite on Corner Lot - Side Yard Setback Minimum= condition if the garden suite contains a parking spot - the required minimum side yard setback is the greater of 6.0 metres or the minimum required side yard setback required in ",
+   "reading_sha": "e044ff7c1b5b852b",
+   "regulation_id": "150.7.60.20(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(6)#(6)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite on Corner Lot - Side Yard Setback Minimum =1.5m . Critical - this is the default",
+   "reading_sha": "52f06cbb13217026",
+   "regulation_id": "150.7.60.20(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.20(6)#(6)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings \n",
+   "reading_sha": "e3aa9fc031c6f4fe",
+   "regulation_id": "150.7.60.21(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "reading_sha": "d10d5297ebc10abb",
+   "regulation_id": "150.7.60.21(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "reading_sha": "193a1edefc349c14",
+   "regulation_id": "150.7.60.21(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(2)#(2)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "reading_sha": "0fcaa91384994ca1",
+   "regulation_id": "150.7.60.21(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(2)#(2)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "reading_sha": "9cec202b095adecd",
+   "regulation_id": "150.7.60.21(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(2)#(2)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "reading_sha": "70c798af2c073cac",
+   "regulation_id": "150.7.60.21(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(3)#(3)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e0a4ed7f517dac5d",
+   "regulation_id": "150.7.60.21(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(3)#(3)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "365487b71b02f70a",
+   "regulation_id": "150.7.60.21(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(3)#(3)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "facc730b8b162e4f",
+   "regulation_id": "150.7.60.21(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(3)#(3)(D)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e05b29eed830df75",
+   "regulation_id": "150.7.60.21(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.21(3)#(3)(E)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Garden Suite - Minimum Separation - between a Residential Building- condition ) no less than 4.0 metres from the main wall of the residential building on the same lot if the height of the ancillary building is no greater than 4.0 metres;",
+   "reading_sha": "f274a494610d86c7",
+   "regulation_id": "150.7.60.30(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - Minimum Separation - between a Residential Building- condition ) nB) no less than 7.5 metres from the main wall of the residential building on the same lot if the height of the ancillary building is greater than 4.0 metres;",
+   "reading_sha": "7153d173132d0026",
+   "regulation_id": "150.7.60.30(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Minimum Separation between a Residential Building - if it meets this condition - than 5M - the zone boundary is difficult - on a lot in the area bounded by Coxwell Avenue, Coxwell Boulevard and Massey Creek to the west, the Don River and Sunrise Avenue to the north, Victoria Park Avenue and Nursewood Park to the east, and Lake Ontario to the south",
+   "reading_sha": "7491eed9e4aab09e",
+   "regulation_id": "150.7.60.30(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(1)#(1)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "e365e4fee38fc1d8",
+   "regulation_id": "150.7.60.30(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(2)#row",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "bdc5ea165047c1d8",
+   "regulation_id": "150.7.60.30(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(3)#row",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "7ed9ee45256d8511",
+   "regulation_id": "150.7.60.30(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.30(4)#row",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Garden Suite -inimum Separation Between a Lawfully Existing Residential Building and a Lawfully Existing Ancillary Building - Grandfathering in existing garden suites / ancillary buildings ",
+   "reading_sha": "313ac07e4e62cb9a",
+   "regulation_id": "150.7.60.31(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.31(1)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Maximum Height of a Garden Suite = 4M on condition  if the ancillary building containing a garden suite is located less than 7.5 metres from the residential building",
+   "reading_sha": "f3ba601675e1fd68",
+   "regulation_id": "150.7.60.40(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Maximum Height of a Garden Suite = 6.3M if if the ancillary building containing a garden suite is located 7.5 metres or more from the residential building on the lot, - Critical - needs separation from our max BLd of 7.5M to achieve 6.3 M height",
+   "reading_sha": "4d2bab0330b87232",
+   "regulation_id": "150.7.60.40(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "2) Maximum Storeys for Garden Suites = 2",
+   "reading_sha": "2f7359594e767453",
+   "regulation_id": "150.7.60.40(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(2)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "75c1e35b81d83177",
+   "regulation_id": "150.7.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(3)#(3)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "d0c70fa615ae36ee",
+   "regulation_id": "150.7.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(3)#(3)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "6f73555439d8ba8c",
+   "regulation_id": "150.7.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(3)#(3)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "0f68016fa19c4d45",
+   "regulation_id": "150.7.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(3)#(3)(D)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "00eef979e02a41af",
+   "regulation_id": "150.7.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(3)#(3)(E)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(3) Height of Specific Structures ",
+   "reading_sha": "700f0b7ca60a458d",
+   "regulation_id": "150.7.60.40(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(4)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "(5) Height of Elements for Functional Operation ",
+   "reading_sha": "40e99b96c10dc590",
+   "regulation_id": "150.7.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(5)#(5)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "(5) Height of Elements for Functional Operation ",
+   "reading_sha": "1f061cee2500a7d3",
+   "regulation_id": "150.7.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(5)#(5)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "(5) Height of Elements for Functional Operation ",
+   "reading_sha": "4093844ccdb09ea5",
+   "regulation_id": "150.7.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(5)#(5)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "(5) Height of Elements for Functional Operation ",
+   "reading_sha": "e63910e81c438254",
+   "regulation_id": "150.7.60.40(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(6)#(6)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "! cd ~/Buildo && git push origin wf2/deep-scrapes-restore-l0",
+   "reading_sha": "51b04d972c7cd010",
+   "regulation_id": "150.7.60.40(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(6)#(6)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "5a6f34e9f8a31fff",
+   "regulation_id": "150.7.60.40(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.40(7)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Garden Suite - FSI Exclusion - critical ",
+   "reading_sha": "1a52e2a70e5a2dba",
+   "regulation_id": "150.7.60.50(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(1)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite - GFA = needs to be smaller than the main residential structure he gross floor area of an ancillary building containing a garden suite must be less than the gross floor area of the residential building on a lot",
+   "reading_sha": "9e0fe118950c1757",
+   "regulation_id": "150.7.60.50(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(2)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "e98db6366697174c",
+   "regulation_id": "150.7.60.50(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(3)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
+   "reading_sha": "9b75039884147a7c",
+   "regulation_id": "150.7.60.50(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(4)#(4)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
+   "reading_sha": "489df0b8d12392ad",
+   "regulation_id": "150.7.60.50(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(4)#(4)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": " Garden Suite  Gross Floor Area Calculations - calculating can be reduced subject to regulations 10.5.40.40 (1), (2), and (3)(A) and (B). [ By-law: 849-2025 ]",
+   "reading_sha": "eae17e087612b59c",
+   "regulation_id": "150.7.60.50(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.50(5)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z"
+  },
+  {
+   "note": " Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "reading_sha": "04f0d54baa6ebbf6",
+   "regulation_id": "150.7.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "reading_sha": "b1abdb27aa3678e4",
+   "regulation_id": "150.7.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "reading_sha": "020615c3d880c0ce",
+   "regulation_id": "150.7.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(1)#(1)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "reading_sha": "06d49620006730f6",
+   "regulation_id": "150.7.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(2)#(2)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "reading_sha": "09744a3e3bc27d82",
+   "regulation_id": "150.7.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(2)#(2)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "41f7db3aca431595",
+   "regulation_id": "150.7.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(2)#(2)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "d69205d82747e182",
+   "regulation_id": "150.7.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(2)#(2)(D)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e422f6e913c6db0d",
+   "regulation_id": "150.7.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.51(2)#(2)(E)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "eck, porch, balcony or similar structure",
+   "reading_sha": "ebcf19694cad32f9",
+   "regulation_id": "150.7.60.60(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(1)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "7bae3d257cdd7a67",
+   "regulation_id": "150.7.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(2)#(2)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "beda5b9b9e0a4857",
+   "regulation_id": "150.7.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(2)#(2)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "ad3637752443e1d5",
+   "regulation_id": "150.7.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(2)#(2)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "5d18b8bccf6a2b2e",
+   "regulation_id": "150.7.60.60(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(3)#(3)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "c293c1afe5ac898c",
+   "regulation_id": "150.7.60.60(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(3)#(3)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "b0b65f8bd16267d7",
+   "regulation_id": "150.7.60.60(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(4)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "e00da8573473072e",
+   "regulation_id": "150.7.60.60(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(5)#(5)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "c4f633234ae2f516",
+   "regulation_id": "150.7.60.60(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(5)#(5)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "49e6293ce9e077fc",
+   "regulation_id": "150.7.60.60(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(5)#(5)(C)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "d9362e3bc235d9c3",
+   "regulation_id": "150.7.60.60(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(6)#(6)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "c82b3d4861df46ec",
+   "regulation_id": "150.7.60.60(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(6)#(6)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "17d5126e7841ed42",
+   "regulation_id": "150.7.60.60(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(7)#(7)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - deck, porch, balcony or similar structure attached ",
+   "reading_sha": "4e4abfcd1bc1ca7e",
+   "regulation_id": "150.7.60.60(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(7)#(7)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden Suite - Equipment - Not important at all ",
+   "reading_sha": "9d890bde437dfcc1",
+   "regulation_id": "150.7.60.60(7)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(7)@1075-2026#(7)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "dcb2932f031b0e0c",
+   "regulation_id": "150.7.60.60(7)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.60(7)@1075-2026#[instruction]",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Lot Coverage Requirement for a Lot with a Garden Suite = (A) the area of the lot covered by all buildings and structures must not exceed 45 percent. Important",
+   "reading_sha": "cba58d86c31a8744",
+   "regulation_id": "150.7.60.70(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.70(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "1) Lot Coverage Requirement for a Lot with a Garden Suite = Not included. However, total of all ancillary building is. Disclosure B) the ancillary building containing a garden suite is not included in the overall calculation of lot coverage, and the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a garden suite, may not exceed 20 percent of the lot area; and (i) if a lot is in an area with a numerical value on the Lot Coverage Overlay Map, that numerical value is the permitted maximum lot coverage for the residential building as a percentage of the lot area; or (ii) if a lot is not in an area with a numerical value on the Lot Coverage Overlay Map, no lot coverage applies to the residential building on the lot. ",
+   "reading_sha": "534e6817e4caaed2",
+   "regulation_id": "150.7.60.70(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.70(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Lot Coverage Requirement for a Lot with a Garden Suite - dealing with an apartment building on the lot - not likely situation for us.  ",
+   "reading_sha": "ca46e0a3e8ea322e",
+   "regulation_id": "150.7.60.70(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.60.70(2)#row",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Garden suite and solar - Important A) must comply with the required minimum building setbacks for an ancillary building containing a garden suite; and",
+   "reading_sha": "a0b17de5f7a28bf7",
+   "regulation_id": "150.7.75.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.75.1(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Garden Suite - solar permitted on the roof - but it can't be more than 1.2 m above the permitted maximum height. ",
+   "reading_sha": "3a9b2dc2722c5435",
+   "regulation_id": "150.7.75.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.75.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "8b693c41bc78ea79",
+   "regulation_id": "150.7.75.1(2)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.75.1(2)@1075-2026#(2)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "6df3268e10f8b76c",
+   "regulation_id": "150.7.75.1(2)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.75.1(2)@1075-2026#[instruction]",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "arking Space Requirement for a Lot with a Garden Suite = No parking required. Important",
+   "reading_sha": "ab89d7e7fd1791e6",
+   "regulation_id": "150.7.80.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.80.1(1)#(1)(A)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "arking Space Requirement for a Lot with a Garden Suite = No parking required. Important",
+   "reading_sha": "3aa36c5952a35c6c",
+   "regulation_id": "150.7.80.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.80.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Bicycle Parking Space Requirement for a Garden Suite = 2. requirement",
+   "reading_sha": "05ab1f5fad6b4565",
+   "regulation_id": "150.7.80.1(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.80.1(2)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "f0e2378390e8d167",
+   "regulation_id": "150.7.80.1(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "unit_id": "150.7.80.1(3)#whole",
+   "updated_at": "2026-10-16T15:40:37.467Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Section relates to laneway suites",
+   "reading_sha": "342a0845ea829c05",
+   "regulation_id": "150.8.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.1(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Defining what they can be used for .Despite earlier bylaw laneway suites can be used for living 1) Laneway Suite  Permitted Uses (A) Despite regulation 10.5.60.1(2), an ancillary building may be used for living accommodation in one laneway suite.",
+   "reading_sha": "ba76cfe087092e51",
+   "regulation_id": "150.8.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(1)#(1)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Defining what a laneway suite can be used for. 1) Laneway Suite  Permitted Uses (B) Despite regulation 10.5.60.1(3), an ancillary building may have both food preparation facilities and sanitary facilities in a laneway suite",
+   "reading_sha": "a95ad2d2b6c1feee",
+   "regulation_id": "150.8.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Defining uses of the laneway suite which are permitted. 1) Laneway Suite  Permitted Uses (C) Despite regulation 150.5.60.1(1) a home occupation is permitted in a laneway suite if the laneway suite is exclusively and separately occupied as a principal residence, applying the regulations of Section 150.5 as if it is a dwelling unit; and",
+   "reading_sha": "232c482a4a36d401",
+   "regulation_id": "150.8.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(1)#(1)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Airbnb is permitted in a laneway suite 1) Laneway Suite  Permitted Uses (C) Despite regulation 150.5.60.1(1) a home occupation is permitted in a laneway suite if the laneway suite is exclusively and separately occupied as a principal residence, applying the regulations of Section 150.5 as if it is a dwelling unit; and",
+   "reading_sha": "c4cbeffeee94a44d",
+   "regulation_id": "150.8.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(1)#(1)(D)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Laneway suite can be built before the main structure 1) Laneway Suite  Permitted Uses (C) Despite regulation 150.5.60.1(1) a home occupation is permitted in a laneway suite if the laneway suite is exclusively and separately occupied as a principal residence, applying the regulations of Section 150.5 as if it is a dwelling unit; and",
+   "reading_sha": "67ea73031efa4d77",
+   "regulation_id": "150.8.20.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(1)#(1)(E)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Only one laneway or garden suite is permitted on a lot. 1",
+   "reading_sha": "7e5f1ed13ebd58fd",
+   "regulation_id": "150.8.20.1(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.20.1(2)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Requirements to have a laneway suite. REAR LOT LINE: 2 possibilities: 1) Minimum Lot Line on a Lane A laneway suite must be on a lot with a rear lot line or side lot line abutting a lane for at least 3.5 metres; or on a lot with a cumulative total of at least 3.5 metres along a side lot line and rear lot line. [ By-law: 1107-2021 ]",
+   "reading_sha": "cf5860f4ee5bcbd8",
+   "regulation_id": "150.8.30.20(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.30.20(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "(1) Landscaping Requirements for a Laneway Suite - this is a disclosure for max builds with laneway suites ",
+   "reading_sha": "c44305c224e8d65a",
+   "regulation_id": "150.8.50.10(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.50.10(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "(1) Landscaping Requirements for a Laneway Suite for a lot with a residential building and an ancillary building containing a laneway suite: (C) the area between the ancillary building containing a laneway suite and the lot line abutting a lane, excluding a permitted driveway, and a pedestrian walkway which may have a maximum width of 1.5 metres, must be landscaping, of which a minimum of 75 percent must be soft landscaping. [ By-law: 1107-2021 ] - This is a disclosure - the importance of a walkway of 1.5 meters",
+   "reading_sha": "a68f88d0fa2c59a2",
+   "regulation_id": "150.8.50.10(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.50.10(1)#(1)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Setbacks for Laneway Suite Requirements: he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings.. We need to look at the ancillary building bylaws to understand what they are and they apply to the laneway suite - except for the footings. ",
+   "reading_sha": "92947dd326a249a8",
+   "regulation_id": "150.8.60.20(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Laneway Suite Setbacks: Rear Yard Setback is 0 if condition is met. he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings. And we know if the parcel abuts a laneway. ",
+   "reading_sha": "e99ccbe97b0d849d",
+   "regulation_id": "150.8.60.20(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(2)#(2)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "aneway Suite Setbacks: Rear Yard Setback is 1m if condition is met. h1), the required minimum rear yard setback for an ancillary building containing a laneway suite is: (B) in all other cases, 1.0 metres. [ By-law: 810-2018; 1107-2021 ]. And we know if the parcel abuts a laneway. ",
+   "reading_sha": "5cb96e125d966952",
+   "regulation_id": "150.8.60.20(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(2)#(2)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z"
+  },
+  {
+   "note": "Laneway Suite  Side Yard Setback is zero if this condition is met , the required minimum side yard setback for an ancillary building containing a laneway suite is: (A) if the side lot line does not abut a street or lane and there are no openings such as vehicle access, doors or windows in the side main wall of the ancillary building, 0.0 metres;",
+   "reading_sha": "cffc1357d94c13df",
+   "regulation_id": "150.8.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(3)#(3)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "aneway Suite  Side Yard Setback isminimum side yard setback for the residential building on the lot if ), the required minimum side yard setback for an ancillary building containing a laneway suite is: (B) if the side lot line abuts a street, ",
+   "reading_sha": "df7edb696d995a93",
+   "regulation_id": "150.8.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(3)#(3)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Laneway Suite  Side Yard Setback - Minimum setbacks - f the side lot line abuts a lot ind the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot; and. - applies to these zones - R, RD, RS, RT or RM Zone  - this is just is if there is a height difference you need a set back - this is a disclosure because we won't know the height ",
+   "reading_sha": "a2d8e1291784256e",
+   "regulation_id": "150.8.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(3)#(3)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": " Laneway Suite  Side Yard Setback is 1m espite regulations 10.5.60.20(3) and (6) and regulation 10.10.60.20(1), the required minimum side yard setback for an ancillary building containing a laneway suite is: (D) in all other cases, 1.0 metres.",
+   "reading_sha": "25a7ac6b9232f7c5",
+   "regulation_id": "150.8.60.20(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.20(3)#(3)(D)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Set back exemptions Ancillary buildings - exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is - if it meets this - than this A) the minimum rear yard setback for that lawfully existing ancillary building;",
+   "reading_sha": "c6a3aa3c128e47dd",
+   "regulation_id": "150.8.60.21(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.21(1)#(1)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Set back exemptions Ancillary buildings - Exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is: THAN B) the minimum side yard setback for that lawfully existing ancillary building. - you can use the footprint of the existing structure - you get grandfathered in.",
+   "reading_sha": "660d1b25f4b84f76",
+   "regulation_id": "150.8.60.21(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.21(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Minimum Separation between a Residential Building and the Ancillary Building is 4m if the height is less than 4m.  This is the separation between he main wall an ancillary building containing a laneway suite",
+   "reading_sha": "0f90c684fb8094f9",
+   "regulation_id": "150.8.60.30(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(1)#(1)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Minimum Separation between a Residential Building and the Ancillary Building no less than 7.5 metres from the main wall of the residential building on the same lot if the height of the ancillary building is greater than 4.0 metres; - fthe main wall an ancillary building containing a laneway suite",
+   "reading_sha": "f51bc01f957318f5",
+   "regulation_id": "150.8.60.30(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "59736cbcbf7b7286",
+   "regulation_id": "150.8.60.30(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(2)#row",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "72e1d852e507f0b4",
+   "regulation_id": "150.8.60.30(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(3)#row",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "424a90e254d83e60",
+   "regulation_id": "150.8.60.30(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(4)#row",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Maximum Length of a Laneway Suite is 10M",
+   "reading_sha": "9ae717edb913f552",
+   "regulation_id": "150.8.60.30(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(5)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Maximum Width of a Laneway Suite - 8M The permitted maximum building width of an ancillary building containing a laneway suite is 8.0 metres",
+   "reading_sha": "5e985aa37895ff17",
+   "regulation_id": "150.8.60.30(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.30(6)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Minimum Separation Between a Lawfully Existing Residential Building and a Lawfully Existing Ancillary Building - if f the separation between a lawfully existing ancillary building and a lawfully existing residential building on the same lot is less than the required minimum separation between an ancillary building containing a laneway suite and a residential building required by Clause 150.8.60.30, the required minimum separation between the lawfully existing residential building and the lawfully existing ancillary building is the separation that exists between the lawfully existing ancillary building and the lawfully existing residential building. - basically if two building currently exist that violate the min - they get grandfathered in at the current distance.  ",
+   "reading_sha": "ca08e03c3da2e94b",
+   "regulation_id": "150.8.60.31(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.31(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Laneway Suite Length - Exception - is the current ancillary buildings is greater length it gets grandfathered in as well. ",
+   "reading_sha": "d64d2272e17c8388",
+   "regulation_id": "150.8.60.31(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.31(2)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Laneway Suite Width - Excpetion - if the current width of a lawfully existing current ancillary building exceeds the max bylaw - it gets grandfathered in. disclosure ",
+   "reading_sha": "ced7e747c5f54314",
+   "regulation_id": "150.8.60.31(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.31(3)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Maximum Height of a Laneway Suite = 6.3 M if its located 7.5 meters from a residential building.",
+   "reading_sha": "40839dc4f340fb04",
+   "regulation_id": "150.8.60.40(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Maximum Storeys for Laneway Suites = 2",
+   "reading_sha": "b224b4d649ca74b0",
+   "regulation_id": "150.8.60.40(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(2)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z"
+  },
+  {
+   "note": "This is just the max height of things put on the laneway suite - Height of Specific Structures on a Laneway Suite The following structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (A) antennae;",
+   "reading_sha": "58926202a7a4b51d",
+   "regulation_id": "150.8.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(3)#(3)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": ") Height of Specific Structures on a Laneway Suite The following structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (B) flagpoles",
+   "reading_sha": "4cbc0e60e10dd295",
+   "regulation_id": "150.8.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(3)#(3)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "3) Height of Specific Structures on a Laneway Suite The following structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (C) parapets for a green roof, if they are no closer than 0.5 metres to the main walls of the ancillary building; [ By-law: 1107-2021 ]",
+   "reading_sha": "887961b1af96b824",
+   "regulation_id": "150.8.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(3)#(3)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "3) Height of Specific Structures on a Laneway Suite The following structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (D) satellite dishes; and",
+   "reading_sha": "a03f5c83459ad03d",
+   "regulation_id": "150.8.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(3)#(3)(D)",
+   "updated_at": "2026-10-16T14:19:36.399Z"
+  },
+  {
+   "note": "3) Height of Specific Structures on a Laneway Suite The following structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.0 metres: (E) weather vanes. [ By-law: 810-2018 ]",
+   "reading_sha": "cded9b44b52af423",
+   "regulation_id": "150.8.60.40(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(3)#(3)(E)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "4) Height of Skylights on a Laneway Suite Skylights on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 0.3 metres. This may affect the build - disclosure - but not very important for our purposes ",
+   "reading_sha": "4e84fcf4a5bde8a0",
+   "regulation_id": "150.8.60.40(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(4)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Just secondary things that can exceed the height requirements - disclosure 5) Height of Elements for Functional Operation of a Building The following equipment and structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.5 metres, subject to (6) below: (A) equipment used for the functional operation of the ancillary building containing a laneway suite, such as electrical, utility, mechanical and ventilation equipment;",
+   "reading_sha": "90f4a2dcfdc3ca9e",
+   "regulation_id": "150.8.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(5)#(5)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Just things that can exceed the heights requirements - 5) Height of Elements for Functional Operation of a Building The following equipment and structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.5 metres, subject to (6) below: (B) structures or parts of the ancillary building containing a laneway suite used for the functional operation of the building, such as enclosed stairwells, roof access, maintenance equipment storage, chimneys, vents, and water supply facilities; and",
+   "reading_sha": "56e4bd1343afe1ba",
+   "regulation_id": "150.8.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(5)#(5)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "5) Height of Elements for Functional Operation of a Building The following equipment and structures on the roof of an ancillary building containing a laneway suite may exceed the permitted maximum height for that building by 1.5 metres, subject to (6) below: (C) structures that enclose, screen or cover the elements listed in (A) and (B) above.",
+   "reading_sha": "157426f144958cf6",
+   "regulation_id": "150.8.60.40(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(5)#(5)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "These are secondary - items that can go on the roof of the laneway suite - 6) Height - Horizontal Limits on Elements for Functional Operation of a Building Equipment, structures or parts of a building permitted in (5) above must not: (A) cover more than 30 percent of the area of the roof, measured horizontally; and",
+   "reading_sha": "948b787874bff69d",
+   "regulation_id": "150.8.60.40(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(6)#(6)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Secondary items 6) Height - Horizontal Limits on Elements for Functional Operation of a Building Equipment, structures or parts of a building permitted in (5) above must not: (B) be located closer than 1.5 metres to the main walls of the ancillary building. [ By-law: 1107-2021 ]",
+   "reading_sha": "1d4d5b0fed5af908",
+   "regulation_id": "150.8.60.40(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(6)#(6)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Height of Laneway Suite Entrance Regulation - No important - talking about the entrance to the laneway suite. ",
+   "reading_sha": "77ace421cae468ba",
+   "regulation_id": "150.8.60.40(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.40(7)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is important the FSI calculation for the lot excludes the laneway suite. Critical!",
+   "reading_sha": "800cf62d3d5ebcf6",
+   "regulation_id": "150.8.60.50(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.50(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Laneway Suite Gross Floor Area - Important the laneway suite can't be bigger than the residential building. condition.",
+   "reading_sha": "84c573407fe57d0c",
+   "regulation_id": "150.8.60.50(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.50(2)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway suite",
+   "reading_sha": "736a5dd4e282f96d",
+   "regulation_id": "150.8.60.50(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.50(3)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": " Laneway Suite  Gross Floor Area Calculations - can be reduced by the areas within building listed in regulations 10.5.40.40 (1), (2), and (3) (A) and (B)",
+   "reading_sha": "43810ee9dc22d998",
+   "regulation_id": "150.8.60.50(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.50(4)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "exception - you can exceed the GFA for the suite if you have a lawfully existing laneway suite by 2025 July. ",
+   "reading_sha": "d5acdb8360d95a16",
+   "regulation_id": "150.8.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(1)#(1)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Transition  Gross Floor Area for a Laneway Suite A laneway suite may have the gross floor area exceed the requirements in regulations 150.8.60.50(2) and (4), if: (at contains no excess gross floor area other than identified in: (i) The plans approved with a zoning certificate issued for the project, for which the request for a zoning certificate was filed on or prior to July 24, 2025; (ii) An approved zoning by-law amendment, for which the complete application for a zoning by-law amendment was filed on or prior to July 24, 2025; (iii) A minor variance authorized under Section 45 of the Planning Act, for which the complete application for a minor variance was filed on or prior to July 24, 2025; or (iv) A site plan approval, for which the complete application for site plan approval was filed on or prior to July 24, 2025; and - just grandfathering in lawfully existing laneway suites here. ",
+   "reading_sha": "d2c89b86df9e3283",
+   "regulation_id": "150.8.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Just grandfathering in laneway suites with larger GFA  (1) Transition  Gross Floor Area for a Laneway Suite A laneway suite may have the gross floor area exceed the requirements in regulations 150.8.60.50(2) and (4), if: (C) For a building constructed pursuant to (B) above, no additions with excess gross floor area that would further increase the noncompliance may be added after the issuance of the building permit upon which the exemption is founded, if they would increase the noncompliance beyond that established by that building permit. [ By-law: 847-2025 ]",
+   "reading_sha": "7645b7aa23ceaafc",
+   "regulation_id": "150.8.60.51(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(1)#(1)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "d73bf8a10054e7c2",
+   "regulation_id": "150.8.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(2)#(2)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "cc12b4bad5fd4bf1",
+   "regulation_id": "150.8.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(2)#(2)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "a1feaca8ae5ddb9d",
+   "regulation_id": "150.8.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(2)#(2)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0db341c2f667487d",
+   "regulation_id": "150.8.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(2)#(2)(D)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0574ef167731e53b",
+   "regulation_id": "150.8.60.51(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.51(2)#(2)(E)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Laneway Suite Permitted Encroachments",
+   "reading_sha": "fc7bc42dc9f7efff",
+   "regulation_id": "150.8.60.60(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(1)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ff47260acd5470b5",
+   "regulation_id": "150.8.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(2)#(2)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "10c435f5b20b8c16",
+   "regulation_id": "150.8.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(2)#(2)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e08904a1054258f7",
+   "regulation_id": "150.8.60.60(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(2)#(2)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "abe71a6ef698ed00",
+   "regulation_id": "150.8.60.60(3)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(3)#(3)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e0b0c567927b12f7",
+   "regulation_id": "150.8.60.60(4)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(4)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "f15187892fead13e",
+   "regulation_id": "150.8.60.60(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(5)#(5)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0504db9b20a10347",
+   "regulation_id": "150.8.60.60(5)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(5)#(5)(C)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "06676ac9c4e4e5d8",
+   "regulation_id": "150.8.60.60(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(6)#(6)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "d187318e5bff45b7",
+   "regulation_id": "150.8.60.60(6)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(6)#(6)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "5efb3a4603ff5a78",
+   "regulation_id": "150.8.60.60(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(7)#(7)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "9538f82ae59b8a6f",
+   "regulation_id": "150.8.60.60(7)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(7)#(7)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "09c52b5d36a9ae39",
+   "regulation_id": "150.8.60.60(7)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(7)@1075-2026#(7)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "7668ffc5846622f1",
+   "regulation_id": "150.8.60.60(7)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.60(7)@1075-2026#[instruction]",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is critical the lot coverage calculation does not include the laneway suite",
+   "reading_sha": "c195d2df9ff07af3",
+   "regulation_id": "150.8.60.70(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.70(1)#(1)(A)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "There is one condition (B) the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a laneway suite, may not exceed 30 percent of the lot area. We wouldn't know the other buildings - for max bid we wouldn't include them ",
+   "reading_sha": "3fe456384bc0ad78",
+   "regulation_id": "150.8.60.70(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.60.70(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Heating Regulations for laneway suites",
+   "reading_sha": "17128301a54428b3",
+   "regulation_id": "150.8.75.1(1)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.75.1(1)@1075-2026#(1)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0ab5266da4cab686",
+   "regulation_id": "150.8.75.1(1)@1075-2026",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.75.1(1)@1075-2026#[instruction]",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Parking Space Requirement for a Lot with a Laneway Suite = none",
+   "reading_sha": "ff412694866813f6",
+   "regulation_id": "150.8.80.1(1)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.80.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Bicycle Parking Space Requirement for a Laneway Suite = 2 ",
+   "reading_sha": "0c245d93fdb978df",
+   "regulation_id": "150.8.80.1(2)",
+   "set": "base",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "unit_id": "150.8.80.1(2)#whole",
+   "updated_at": "2026-10-16T14:19:36.399Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is dependent on whether the lot is on a shoreline. We don't know the answer so we create the permitted floor area calculation and then add a disclosure with the details for this.",
+   "reading_sha": "f33233fa93e122f5",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "5.10.40.40(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "5.10.40.40(1)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This only applies to lots without a rear yard set back because their lot is triangular. We should be able to determine if this condition applies. If it does, then you apply the calculation - which will be too difficult. We just flag the lot as triangular and then disclose the calculation.",
+   "reading_sha": "6bfc4df81de89cb9",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "5.10.40.70(5)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "5.10.40.70(5)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "We can't know if these conditions have been applied. MaxBuild is theoretical - this is the max build height with a disclosure on how this is achieved.",
+   "reading_sha": "708d4eadc18149b8",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "unsure",
+   "regulation_id": "600.60.40(2)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "600.60.40(2)#(2)(A)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is just defining the meaning of building depth. How to measure it? Building Depth means the horizontal distance between the front yard setback required on a lot and the portion of the building's rear main wall furthest from the required front yard setback, measured along a line perpendicular to the front yard setback line.",
+   "reading_sha": "7cf3938701a3ce70",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(100)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "800.50(100)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "yes, just defining how to measure building length",
+   "reading_sha": "06109830307dcd66",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(105)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "800.50(105)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition Building Set back. No Application",
+   "reading_sha": "819c0c9f6eb617d8",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(110)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(110)#whole",
+   "updated_at": "2026-10-15T21:04:38.342Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition: Established grade. No application",
+   "reading_sha": "0f0e85451a8556b3",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(240)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(240)#whole",
+   "updated_at": "2026-10-15T21:04:20.221Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further definition of front yard. No application",
+   "reading_sha": "6c28bc98b924f3bf",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(285)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(285)#(285)(A)",
+   "updated_at": "2026-10-15T21:03:38.376Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further definition of front yard. No application",
+   "reading_sha": "b4c8640ae9df7556",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(285)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(285)#(285)(B)",
+   "updated_at": "2026-10-15T21:03:59.357Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition Front Yard Setback. No application",
+   "reading_sha": "43d02ecd7b57f74b",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(290)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(290)#whole",
+   "updated_at": "2026-10-15T21:03:12.699Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition Gross Floor Area. No application",
+   "reading_sha": "154b42821340f696",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(320)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(320)#whole",
+   "updated_at": "2026-10-15T21:02:36.131Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition - Interior Floor Area. No application",
+   "reading_sha": "5cff4e4132db200c",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(375)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(375)#(375)(A)",
+   "updated_at": "2026-10-15T21:01:49.356Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further definition. Interior. Floor Area. No application",
+   "reading_sha": "bb8701f21bcf781c",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(375)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(375)#(375)(B)",
+   "updated_at": "2026-10-15T21:01:47.503Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further Definition of interior floor area. no application",
+   "reading_sha": "1cce30446c3f9b71",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(375)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(375)#(375)(C)",
+   "updated_at": "2026-10-15T21:02:12.839Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of Lot Area. No application",
+   "reading_sha": "f61b3700dc9cb1de",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(425)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(425)#whole",
+   "updated_at": "2026-10-15T21:01:01.544Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Just defining lot coverage - not applying anything",
+   "reading_sha": "709c6466d077c3e9",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(435)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "800.50(435)#whole",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of Lot Depth. No Application",
+   "reading_sha": "d4b2051aa851573d",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(440)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(440)#whole",
+   "updated_at": "2026-10-15T21:00:44.831Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of Lot Frontage. No application",
+   "reading_sha": "72e54c1ee90a507f",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(445)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(445)#whole",
+   "updated_at": "2026-10-15T21:00:31.225Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition Angular Plane. No Application",
+   "reading_sha": "952f38eabf4e4851",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(45)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(45)#whole",
+   "updated_at": "2026-10-15T21:04:54.049Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition Main Wall. N/A",
+   "reading_sha": "8c4037d2eb7f481a",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(455)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(455)#whole",
+   "updated_at": "2026-10-15T21:00:10.052Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of public works.  N/A",
+   "reading_sha": "0cfa6cb4682884d4",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(635)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(635)#row",
+   "updated_at": "2026-10-15T20:59:56.637Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further definition of the rear yard.  No application",
+   "reading_sha": "17ba7515cd217035",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(650)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(650)#(650)(A)",
+   "updated_at": "2026-10-15T20:59:37.194Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Further definition of the rear yard. no application",
+   "reading_sha": "b4734a8bc3ed1b6a",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(650)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(650)#(650)(B)",
+   "updated_at": "2026-10-15T20:59:36.217Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of a rear yard setback. No application. ",
+   "reading_sha": "28423c1621bbdfb0",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(655)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(655)#whole",
+   "updated_at": "2026-10-15T20:58:24.710Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of a salvage yard.  No application",
+   "reading_sha": "b11d8ab6d56c61bd",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(730)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(730)#row",
+   "updated_at": "2026-10-15T20:57:56.873Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Definition of a side yard. No application",
+   "reading_sha": "ce6e25c406b2a1a1",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(770)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(770)#whole",
+   "updated_at": "2026-10-15T20:57:38.318Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is the definition of a side yard set back. No application",
+   "reading_sha": "704dd4235f48b2cb",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(775)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(775)#whole",
+   "updated_at": "2026-10-15T20:57:11.614Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is the definition of a storey. No application",
+   "reading_sha": "68395ca31e3294b0",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(820)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(820)#whole",
+   "updated_at": "2026-10-15T20:56:41.439Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "This is just the definition of a street yard - no application",
+   "reading_sha": "4f07ffe639cc604c",
+   "refiled": "2026-10-15 operator y: comment says no application",
+   "refiled_from": "wrong",
+   "regulation_id": "800.50(830)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "800.50(830)#whole",
+   "updated_at": "2026-10-15T20:56:15.552Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "I accidentally replaced the previous comment - this just speaks to how the GFA can be reduced by the floor area of the basement.  This is not data we have access to - so this is just a disclosure",
+   "reading_sha": "747e88dc1e9d155d",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "970.10.15.10(1)",
+   "set": "base",
+   "table_sha256": "d8c9d98db92334aa387daebdc91b259b046458bd7e075ff4a9628fe972061a5b",
+   "unit_id": "970.10.15.10(1)#(1)(A)",
+   "updated_at": "2026-10-15T20:55:25.547Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "May be reduced by (B) the area of a void with >4.5 m vertical clearance, to a max of 10% of permitted max GFA. We don't know this - this is just a disclosure.",
+   "reading_sha": "d88bc1b824bba11c",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "970.10.15.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "970.10.15.10(1)#(1)(B)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "May be reduced by (C) the area of required parking spaces in the building. We don't know this - this is just a disclosure.",
+   "reading_sha": "30f17bb1edddb7b9",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "970.10.15.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "970.10.15.10(1)#(1)(C)",
+   "verdict": "disclose"
+  },
+  {
+   "note": "May be reduced by (D) in addition to (C), one additional parking space in a detached house on a lot with frontage > 12.0 m [By-law 89-2022]. We don't know this - this is just a disclosure.",
+   "reading_sha": "3c249d7cef1bdc17",
+   "refiled": "2026-10-15 operator y: comment says disclosure",
+   "refiled_from": "wrong",
+   "regulation_id": "970.10.15.10(1)",
+   "set": "base",
+   "source": "operator copy-paste 2026-10-15",
+   "unit_id": "970.10.15.10(1)#(1)(D)",
+   "verdict": "disclose"
+  }
+ ]
+}
