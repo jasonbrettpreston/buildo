@@ -325,17 +325,24 @@ function loadDescriptor(): Descriptor {
 }
 
 describe('classify_coa_trades ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: archetype MATERIALIZER, lock 4203, spec "42", shape "materialize"; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+// Full-form row 7 lands at stage compute_ported (Spec 123 §7; W4A-R6 / Spec 124 R-EF; operator Q5 y 2026-10-19):
+// descriptor, compute, notes and the seeds migration only — the legacy shell stays the live step until the cutover, as
+// the enrich_coa_zoning ② (a9011b83) and the assert_coa_freshness ② (ffec8296). So every frozen-shell assertion is split
+// out as an it.fails that flips at the cutover (row 9 / ③), and the descriptor halves flip here.
+  it('D1 — identity: archetype MATERIALIZER, lock 4203, spec "42", shape "materialize"; notes exist (flipped at row 7)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'classify_coa_trades', archetype: 'MATERIALIZER', spec: '42', lock: LOCK_ID });
     expect(d.execution.shape).toBe('materialize');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at the cutover)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
   });
 
-  it.fails('D2 — three write targets, each with rls_bypass_or_policy (R-CT); lead_trades / lead_products writes are scoped lead_id LIKE \'coa:%\' (trigger co-writer) (flips at ②)', () => {
+  it('D2 — three write targets, each with rls_bypass_or_policy (R-CT); lead_trades / lead_products writes are scoped lead_id LIKE \'coa:%\' (trigger co-writer) (flipped at row 7)', () => {
     const d = loadDescriptor();
     expect([...new Set(d.outputs.writes.map((w) => w.table))].sort()).toEqual(['coa_applications', 'lead_products', 'lead_trades']);
     const req = (d.guards.requires ?? []).filter((r) => r.kind === 'rls_bypass_or_policy').map((r) => r.name).sort();
@@ -343,11 +350,11 @@ describe('classify_coa_trades ① — converted claims (RED at ①; flip to `it`
     for (const w of d.outputs.writes.filter((x) => x.table !== 'coa_applications')) expect(w.write_discipline.scope ?? '').toContain("lead_id LIKE 'coa:%'");
   });
 
-  it.fails('D3 — the live mirror trigger trg_mirror_permit_trades_to_lead_trades is declared as a co-writer of lead_trades (the ledger undercounts) (flips at ②)', () => {
+  it('D3 — the live mirror trigger trg_mirror_permit_trades_to_lead_trades is declared as a co-writer of lead_trades (the ledger undercounts) (flipped at row 7)', () => {
     expect(readText(DESCRIPTOR_REL) + readText(NOTES_REL)).toContain('trg_mirror_permit_trades_to_lead_trades');
   });
 
-  it.fails('D4 — every legacy literal is a registered logic variable (R-DF EXTERNALIZED): tier, realtor confidence, lead-score scale, batch size, slug-miss detail cap (flips at ②)', () => {
+  it('D4 — every legacy literal is a registered logic variable (R-DF EXTERNALIZED): tier, realtor confidence, lead-score scale, batch size, slug-miss detail cap (flipped at row 7)', () => {
     const d = loadDescriptor();
     const names = d.config.logic_variables.map((v) => v.name);
     for (const n of ['classify_coa_trades_tier', 'classify_coa_trades_realtor_confidence', 'classify_coa_trades_lead_score_scale', 'classify_coa_trades_batch_size', 'classify_coa_trades_max_detail_keys']) {
@@ -356,14 +363,14 @@ describe('classify_coa_trades ① — converted claims (RED at ①; flip to `it`
     expect(d.execution.batch_size_from_config).toBe('classify_coa_trades_batch_size');
   });
 
-  it.fails('D5 — compute is pure (R-BZ): no .query, no transaction, no Date.now, no manifest require, no literal 0.7 / tier 3 / ·100, no `?? 18` fallback (flips at ②)', () => {
+  it('D5 — compute is pure (R-BZ): no .query, no transaction, no Date.now, no manifest require, no literal 0.7 / tier 3 / ·100, no `?? 18` fallback (flipped at row 7)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).not.toMatch(/\.query\(|withTransaction|streamQuery|Date\.now\(/);
     expect(c).not.toMatch(/manifest\.json/);
     expect(c).not.toMatch(/0\.7\b|\?\?\s*18|\*\s*100\b/);
   });
 
-  it.fails('D6 — the verdict is row-derived from declared checks (G7): slug and product misses viol == 0 FAIL; unmapped and fan-out bounds limit_from_config; compute holds no PASS/WARN/FAIL decision (flips at ②)', () => {
+  it('D6 — the verdict is row-derived from declared checks (G7): slug and product misses viol == 0 FAIL; unmapped and fan-out bounds limit_from_config; compute holds no PASS/WARN/FAIL decision (flipped at row 7)', () => {
     const d = loadDescriptor();
     const byId = new Map(d.checks.map((c) => [c.id, c]));
     expect(byId.get('slug_resolution_miss_count')).toMatchObject({ limit: 'viol == 0', severity: 'FAIL' });
@@ -373,7 +380,7 @@ describe('classify_coa_trades ① — converted claims (RED at ①; flip to `it`
     expect(readText(COMPUTE_REL)).not.toMatch(/'(PASS|WARN|FAIL)'/);
   });
 
-  it.fails('D7 — the legacy parity defect CCT-D1 (stale lead_trades never retracted) is a declared deviation on the lead_trades write, not a silent gap (flips at ②)', () => {
+  it('D7 — the legacy parity defect CCT-D1 (stale lead_trades never retracted) is a declared deviation on the lead_trades write, not a silent gap (flipped at row 7)', () => {
     const lt = loadDescriptor().outputs.writes.find((w) => w.table === 'lead_trades');
     expect(lt?.retract).toBe('none');
     expect(lt?.write_discipline.why?.text ?? '').toContain('CCT-D1');

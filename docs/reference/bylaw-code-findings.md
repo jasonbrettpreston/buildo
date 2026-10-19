@@ -16,7 +16,7 @@
 - input `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - input `scripts/seeds/bylaw/external.json` sha256 `23ab08b99383271d`
 - input `scripts/seeds/bylaw/vocab.json` sha256 `5b37914ad0d233f4`
-- input `scripts/seeds/logic_variables.json` sha256 `12ff1e434af6e53a`
+- input `scripts/seeds/logic_variables.json` sha256 `dadcc1c9fa1d4938`
 - input `src/lib/db/generated/schema.ts` sha256 `e3130fe6c10936be`
 
 ## Summary

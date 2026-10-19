@@ -1,0 +1,1027 @@
+{
+  "identity": {
+    "name": "compute_coa_cost_estimates",
+    "display_name": "Compute CoA Cost Estimates",
+    "owner": "data",
+    "description": "Prices every CoA whose trades were (re)classified through the Spec 83 archetype ladder (T2 on CoA) with the legacy geometric T4 fallthrough, upserting one cost_estimates row per priced coa: lead and writing the coa_applications cost columns + cost_classified_at for every processed CoA. Reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 consumer).",
+    "lock": 4204,
+    "why_lock": {
+      "text": "Spec 42 §6.8 Phase D allocation (:78); kept textually.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "42",
+    "spec_version": "1.0",
+    "archetype": "MATERIALIZER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "classify_coa_scope"
+        },
+        {
+          "step": "classify_coa_trades"
+        },
+        {
+          "step": "enrich_coa_zoning"
+        },
+        {
+          "step": "link_coa_to_parcels"
+        }
+      ],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "id",
+            "lead_id",
+            "scope_tags",
+            "structure_type",
+            "project_type",
+            "neighbourhood_id",
+            "trade_classified_at",
+            "cost_classified_at",
+            "neighbourhood_cost_premium",
+            "cost_fb_total",
+            "cost_coa_total",
+            "cost_addition_total",
+            "cost_gut_total",
+            "cost_basement_underpin_per_sqm",
+            "cost_basement_per_sqm",
+            "cost_garage_total",
+            "cost_laneway_suite_total",
+            "cost_garden_suite_total",
+            "cost_kitchen_per_sqm",
+            "cost_bath_per_sqm",
+            "cost_solar_total",
+            "opt_aor_gfa_sqm",
+            "opt_coa_gfa_sqm",
+            "cur_floor_gfa_sqm",
+            "cur_pot_2story_gfa_sqm",
+            "max_garage_gfa_sqm",
+            "max_laneway_suite_gfa_sqm",
+            "max_garden_suite_gfa_sqm",
+            "cur_est_kitchen_gfa_sqm",
+            "cur_est_bath_gfa_sqm",
+            "max_buildable_footprint_sqm"
+          ]
+        },
+        {
+          "table": "lead_parcels",
+          "columns": [
+            "lead_id",
+            "parcel_id",
+            "confidence"
+          ]
+        },
+        {
+          "table": "parcels",
+          "columns": [
+            "id",
+            "lot_size_sqm",
+            "frontage_m"
+          ]
+        },
+        {
+          "table": "parcel_buildings",
+          "columns": [
+            "parcel_id",
+            "building_id",
+            "is_primary"
+          ]
+        },
+        {
+          "table": "building_footprints",
+          "columns": [
+            "id",
+            "footprint_area_sqm",
+            "estimated_stories"
+          ]
+        },
+        {
+          "table": "neighbourhoods",
+          "columns": [
+            "id",
+            "avg_household_income",
+            "tenure_renter_pct"
+          ]
+        },
+        {
+          "table": "lead_trades",
+          "columns": [
+            "lead_id",
+            "trade_id",
+            "is_active"
+          ]
+        },
+        {
+          "table": "trades",
+          "columns": [
+            "id",
+            "slug"
+          ]
+        },
+        {
+          "table": "trade_sqft_rates",
+          "columns": [
+            "trade_slug",
+            "base_rate_sqft",
+            "structure_complexity_factor"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "trade_slug"
+          ],
+          "on_empty": "fail"
+        },
+        {
+          "table": "scope_intensity_matrix",
+          "columns": [
+            "permit_type",
+            "structure_type",
+            "gfa_allocation_percentage"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "permit_type",
+            "structure_type"
+          ],
+          "on_empty": "warn"
+        },
+        {
+          "table": "archetype_cost_rates",
+          "columns": [
+            "archetype",
+            "cost_per_sqm",
+            "cost_adjustment_factor",
+            "escalation_index_base"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "archetype"
+          ],
+          "on_empty": "warn"
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "warn"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "cost_estimates",
+        "key": [
+          "lead_id"
+        ],
+        "columns": [
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "permit_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "revision_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "estimated_cost",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_source",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_tier",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_range_low",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_range_high",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "premium_factor",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "complexity_score",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "model_version",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_geometric_override",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "modeled_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "effective_area_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "trade_contract_values",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "computed_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "estimated_cost",
+            "cost_source",
+            "cost_tier",
+            "cost_range_low",
+            "cost_range_high",
+            "premium_factor",
+            "complexity_score",
+            "model_version",
+            "is_geometric_override",
+            "modeled_gfa_sqm",
+            "effective_area_sqm",
+            "trade_contract_values"
+          ],
+          "scope": "lead_id LIKE 'coa:%' — cost_estimates is shared with compute_cost_estimates (permit: keys)",
+          "key_prefix": {
+            "column": "lead_id",
+            "prefix": "coa:"
+          },
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "CCCE-D1 (declared deviation, operator y 2026-10-18 wave-4 Q12): a CoA whose estimate becomes NULL keeps its old row (legacy :590-615, pinned L11). retract \"none\" is truthful; the fix is a follow-up with its own capture.",
+            "liveness": {
+              "kind": "check",
+              "ref": "cost_estimate_coverage_pct"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "coa_applications",
+        "key": [
+          "id"
+        ],
+        "columns": [
+          {
+            "name": "id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "modeled_gfa_sqm",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "estimated_cost",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_source",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "cost_classified_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "rows": "compute",
+          "guard": "none",
+          "guard_why": {
+            "text": "Q-CE2 (operator y 2026-10-18): every processed CoA advances its cost columns and watermark unconditionally (legacy :407-430, pinned L12) or the cursor re-fetches.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/compute-coa-cost-estimates.js"
+            }
+          },
+          "scope": "id = ANY(<the batch source keys>)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Second target: the CoA cost columns + the cost_classified_at watermark.",
+            "liveness": {
+              "kind": "table",
+              "ref": "coa_applications"
+            }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_parcel_addresses / refresh_snapshot precedent): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause, and cost_classified_at (source run_at) is never a change guard on this target.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 2,
+      "why": {
+        "text": "Per batch, one transaction: e1 guarded upsert, e2 keyed UPDATE (runner-built); one post read after the last batch.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": "none",
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/coa-cost-model.js",
+      "src/features/leads/lib/cost-model-shared.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "run",
+    "pins": [
+      {
+        "step": "classify_coa_trades",
+        "stamp": "coa_applications.trade_classified_at",
+        "why": {
+          "text": "The pending cursor compares cost_classified_at with classify_coa_trades' run_at watermark trade_classified_at (scripts/lib/compute/compute-coa-cost-estimates.js:103, legacy :441-446): a bare watermark pin, the producer-edge declaration of Spec 124 R-BL (i), which #44 (h) requires for a run_at watermark read (R-DI as amended 2026-10-17).",
+          "liveness": {
+            "kind": "column",
+            "ref": "coa_applications.trade_classified_at"
+          }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "index",
+        "name": "cost_estimates_pkey",
+        "on_missing": "fail",
+        "why": {
+          "text": "CCCE-D4: migration 145 swapped the PK to lead_id; the legacy pg_constraint probe (:160-170) becomes a runner requirement.",
+          "liveness": {
+            "kind": "table",
+            "ref": "cost_estimates"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "cost_estimates",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on cost_estimates (wave-4 plan §B.2, read-only DB): under a role that does not bypass RLS the write affects 0 rows with no error (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "cost_estimates"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on coa_applications (wave-4 plan §B.2, read-only DB): under a role that does not bypass RLS the write affects 0 rows with no error (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_applications"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "materialize",
+    "materialize_form": "rows",
+    "materialize_source": {
+      "table": "coa_applications",
+      "key": "id",
+      "why": {
+        "text": "Legacy streams ORDER BY ca.id (:528); keyset over id is equivalent (sole writer of cost_classified_at; the run-clock future guard is bound as $3).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/compute-coa-cost-estimates.js"
+        }
+      },
+      "pending": {
+        "table": "coa_applications",
+        "predicate": "cost_classified_at IS NULL OR cost_classified_at < trade_classified_at",
+        "invalidated_by": "coa_applications.trade_classified_at"
+      }
+    },
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "60m",
+    "batch": 1000,
+    "batch_size_from_config": "compute_coa_cost_estimates_batch_size",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Checks read measured values; a throw is a defect.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/compute-coa-cost-estimates.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "cost_estimate_coverage_pct",
+      "kind": "bound",
+      "expect": {
+        "reports": "priced / processed (0 processed → INFO N/A); FAIL at or below the fail floor, WARN below the threshold (L16; CCCE-D7)"
+      },
+      "limit": "pct >= 65",
+      "warn_limit": "pct >= 5",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the legacy audit row (compute-coa-cost-estimates.js:738-746, pinned L16): PASS at or above the coverage threshold, WARN below it down to the fail floor, FAIL below the floor (Spec 124a R-AD, one row PASS/WARN/FAIL: limit = the PASS bound, warn_limit = the looser FAIL floor); an empty cursor is INFO N/A. Exactly at the floor reads WARN, where legacy read FAIL (the inclusive pct >= N grammar, Q-CE3 operator y 2026-10-18). The bounds are declared variables, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/compute_coa_cost_estimates/violations.test.ts"
+        }
+      },
+      "limit_from_config": "compute_coa_cost_estimates_coverage_threshold_pct",
+      "warn_limit_from_config": "compute_coa_cost_estimates_coverage_fail_pct"
+    },
+    {
+      "id": "archetype_map_nofit_residential_pct",
+      "kind": "bound",
+      "expect": {
+        "reports": "low-rise residential CoAs whose archetype mapper returned null / residential processed (L19)"
+      },
+      "limit": "pct <= 25",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "archetype_nofit_residential_warn_pct",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/compute_coa_cost_estimates/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/compute_coa_cost_estimates/violations.test.ts"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "COMPUTE_COA_COST_ESTIMATES_FORCE_FULL",
+    "force_run": "none",
+    "dry_run": "COMPUTE_COA_COST_ESTIMATES_DRY_RUN"
+  },
+  "emits": [
+    {
+      "key": "coa_with_cost",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_without_cost",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_with_fallback",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_no_parcel",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_no_scope_tags",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_no_active_trades",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_no_matching_rate",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_additive_no_parcel",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_additive_no_scope_tags",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "null_cost_reasons_additive_no_active_trades",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "cost_distribution_p25",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "cost_distribution_p50",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "cost_distribution_p75",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "cost_distribution_p25_p50_p75",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "coa_corpus_cost_coverage_pct",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_corpus_priced",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_corpus_total",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "cost_with_fallback_pct",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_t1",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_t2",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_t3",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_additive",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_coverage_pct",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "tier_none_count",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_fit_blocked",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_zero_total",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_tradeless",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "archetype_unpriceable_t4",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "t4_nonresidential",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "t4_processed",
+      "type": "number",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "legacy --limit=N (compute-coa-cost-estimates.js:131-132, :445)",
+      "why": {
+        "text": "Retired (R-BD; Q-CE1 operator y 2026-10-18): an operator debugging knob with no production caller (no manifest/chain invocation passes it).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/manifest.json"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "legacy ARCHETYPE_COST_DISABLED env kill switch (:241)",
+      "why": {
+        "text": "Becomes the shared logic variable archetype_cost_enabled (Q-CE1); runbooks/83_archetype_cost_rollback.md updated in the same commit.",
+        "liveness": {
+          "kind": "file",
+          "ref": "docs/specs/01-pipeline/runbooks/83_archetype_cost_rollback.md"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "legacy phase_h_gap_active: true constant row (:802)",
+      "why": {
+        "text": "Retired (CCCE-D10): a constant is not a measurement, and the gap it asserts is closed (compute_trade_forecasts reads coa: lead_trades; compute_opportunity_scores reads cost_estimates).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/compute-trade-forecasts.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "date": "2026-10-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "CCCE-D1: a stale cost_estimates row survives a NULL estimate (declared deviation, follow-up).",
+      "measured": "pinned L11",
+      "check_id": "cost_estimate_coverage_pct"
+    },
+    {
+      "what": "CCCE-D6: the cost distribution covers only rows written this run (computed_at = RUN_AT); guard-skipped unchanged rows are excluded (parity).",
+      "measured": "pinned L17",
+      "check_id": "cost_estimate_coverage_pct"
+    }
+  ],
+  "interpretation": {
+    "file": "compute-coa-cost-estimates.notes.json"
+  },
+  "recovery": {
+    "reset": "UPDATE coa_applications SET cost_classified_at = NULL WHERE lead_id LIKE 'coa:%' (or force_full) — the next run re-prices every trade-classified CoA; the guarded upsert writes only changed estimates.",
+    "resume": "none",
+    "force": "COMPUTE_COA_COST_ESTIMATES_FORCE_FULL",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No destructive target (no retraction); each batch commits atomically and later batches stay pending under the cursor.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "No destructive write: the guarded upsert overwrites only changed estimates and nothing is deleted (CCCE-D1 is the absent retraction, declared).",
+      "liveness": {
+        "kind": "table",
+        "ref": "cost_estimates"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 207,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.processed"
+    },
+    "records_new": {
+      "source": "written.e1.inserted"
+    },
+    "records_updated": {
+      "source": "written.e1.updated"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "compute_coa_cost_estimates_batch_size",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_distribution_p25",
+        "min": 0.25,
+        "max": 0.25,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_distribution_p50",
+        "min": 0.5,
+        "max": 0.5,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_distribution_p75",
+        "min": 0.75,
+        "max": 0.75,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_coverage_threshold_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_coverage_fail_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_cost_enabled",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "liar_gate_threshold",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_model_range_pct",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "compute_coa_cost_estimates_fallback_range_pct",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "urban_coverage_ratio",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "suburban_coverage_ratio",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_nofit_residential_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t1_fsi_min",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t1_fsi_max",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t1_total_cap",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t2_reno_line_cap",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t2_build_line_cap",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t2_build_line_min",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "archetype_t3_total_cap",
+        "min": 0,
+        "max": 1000000000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "cost_escalation_index",
+        "min": 0.001,
+        "max": 100000,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa": 8
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "materialized_incremental",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Normal completion.",
+        "liveness": {
+          "kind": "check",
+          "ref": "cost_estimate_coverage_pct"
+        }
+      }
+    },
+    {
+      "id": "materialized_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Coverage below threshold or the nofit share above its bound; nothing FAILED.",
+        "liveness": {
+          "kind": "check",
+          "ref": "archetype_map_nofit_residential_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "cost_estimates_pkey missing, trade_sqft_rates empty, or a duplicate lookup key (legacy :160-219 throws).",
+        "liveness": {
+          "kind": "table",
+          "ref": "trade_sqft_rates"
+        }
+      }
+    }
+  ]
+}
