@@ -439,9 +439,9 @@
     {
       "slug": "assert_network_health",
       "file": "scripts/quality/assert-network-health.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "ASSERT",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: one read-only SELECT of the latest inspections pipeline_runs row (scripts/quality/assert-network-health.js:54-58), five graded checks over its scraper_telemetry (:80-152), non-halting (:179-183), no write (emitMeta writes {} :174-177). Precedent assert_data_bounds."
     },
     {
       "slug": "assert_parcel_sanity",

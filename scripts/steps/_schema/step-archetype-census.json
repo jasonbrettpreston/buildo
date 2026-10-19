@@ -484,10 +484,11 @@
     },
     {
       "slug": "assert_network_health",
+      "owner_specs": ["docs/specs/01-pipeline/44_chain_deep_scrapes.md"],
       "file": "scripts/quality/assert-network-health.js",
       "archetype": "ASSERT",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script (R-AO). Reads the scraper's pipeline_runs.records_meta (scripts/quality/assert-network-health.js:55) and grades proxy error rate / session failures into audit rows (:99, :144-151); verdict from rows (:162); no write statement in the file. Non-halting per Spec 30 §5.4.1 (header :16-18). Precedent assert_engine_health's read side; ASSERT, not RECORDER: it publishes nothing."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: one read-only SELECT of the latest inspections pipeline_runs row (scripts/quality/assert-network-health.js:54-58), five graded checks over its scraper_telemetry (:80-152), non-halting (:179-183), no write (emitMeta writes {} :174-177). Precedent assert_data_bounds."
     },
     {
       "slug": "assert_parcel_sanity",

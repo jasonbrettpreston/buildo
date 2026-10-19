@@ -137,6 +137,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   compute_coa_cost_estimates: 'legacy_oracle_excluded',
   // assert_entity_tracing joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
   assert_entity_tracing: 'legacy_oracle_excluded',
+  // assert_network_health joined as legacy_oracle_excluded while pending (C6-1 commit ①, 2026-10-19; the assert_coa_freshness precedent).
+  assert_network_health: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',

@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **25** (+ **11** pending) · remaining slugs: **26** (+ **11** pending)
+Remaining files: **24** (+ **12** pending) · remaining slugs: **25** (+ **12** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 11 | 11 |
-| C6 | 25 | 30 |
+| C5 | 12 | 12 |
+| C6 | 24 | 29 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -31,6 +31,7 @@ Remaining files: **25** (+ **11** pending) · remaining slugs: **26** (+ **11** 
 |---|---|---|---|---|---|---|
 | ASSERT | `scripts/quality/assert-coa-freshness.js` | assert_coa_freshness [pending: red_suite] | coa (1) | — | — | LDG-10 (assert_coa_freshness); CHAIN-TOOLING (assert_coa_freshness); EP-PIN-D17 (assert_coa_freshness) |
 | ASSERT | `scripts/quality/assert-entity-tracing.js` | assert_entity_tracing [pending: red_suite] | permits (1) | — | — | LDG-10 (assert_entity_tracing); CHAIN-TOOLING (assert_entity_tracing); EP-PIN-D17 (assert_entity_tracing) |
+| ASSERT | `scripts/quality/assert-network-health.js` | assert_network_health [pending: red_suite] | deep_scrapes (1) | — | — | LDG-10 (assert_network_health); CHAIN-TOOLING (assert_network_health); EP-PIN-D17 (assert_network_health) |
 | ENRICHER | `scripts/classify-coa-scope.js` | classify_coa_scope [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (classify_coa_scope); CHAIN-TOOLING (classify_coa_scope); EP-PIN-D17 (classify_coa_scope) |
 | ENRICHER | `scripts/enrich-coa-zoning.js` | enrich_coa_zoning [pending: compute_ported] | coa (1) | — | — | LDG-10 (enrich_coa_zoning); CHAIN-TOOLING (enrich_coa_zoning); EP-PIN-D17 (enrich_coa_zoning) |
 | ENRICHER | `scripts/enrich-permits.js` | enrich_permits [pending: compute_ported] | permits (1) | — | — | LDG-10 (enrich_permits); CHAIN-TOOLING (enrich_permits); EP-PIN-D17 (enrich_permits) |
@@ -54,6 +55,7 @@ Remaining files: **25** (+ **11** pending) · remaining slugs: **26** (+ **11** 
 - `scripts/load-permits.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning.
 - `scripts/quality/assert-coa-freshness.js` (ASSERT): ARCH-CENSUS key-step scope (wave-4 plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 recommendation 8; McDonald's Airtight V3) declared ASSERT; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: read-only (scripts/quality/assert-coa-freshness.js:9), one aggregate SELECT over coa_applications (:53-60), a WARN/FAIL portal-rot verdict on two logic variables (:92-94), no write (emitMeta writes {} :133-136). Precedent assert_data_bounds.
 - `scripts/quality/assert-entity-tracing.js` (ASSERT): ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: seven read-only SELECTs over permits/permit_trades/cost_estimates/trade_forecasts (scripts/quality/assert-entity-tracing.js:71-208), a row-derived non-halting verdict (:264, :298), no write (emitMeta writes {} :288-296). Precedent assert_global_coverage.
+- `scripts/quality/assert-network-health.js` (ASSERT): ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: one read-only SELECT of the latest inspections pipeline_runs row (scripts/quality/assert-network-health.js:54-58), five graded checks over its scraper_telemetry (:80-152), non-halting (:179-183), no write (emitMeta writes {} :174-177). Precedent assert_data_bounds.
 
 </details>
 
@@ -82,12 +84,11 @@ Remaining files: **25** (+ **11** pending) · remaining slugs: **26** (+ **11** 
 | permits | ASSERT | `scripts/quality/assert-lifecycle-phase-distribution.js` | assert_lifecycle_phase_distribution | coa+permits (2) |
 | permits | ENRICHER | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
 | deep_scrapes | ENRICHER | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
-| deep_scrapes | ASSERT | `scripts/quality/assert-network-health.js` | assert_network_health | deep_scrapes (1) |
 | deep_scrapes | ASSERT | `scripts/quality/assert-staleness.js` | assert_staleness | deep_scrapes (1) |
 | entities_wsib | ENRICHER | `scripts/enrich-web-search.js` | enrich_wsib_builders, enrich_named_builders | entities (2) |
 | entities_wsib | ENRICHER | `scripts/enrich-wsib.js` | enrich_wsib_registry | wsib (1) |
 
-*C6 chain-bucket counts (files):* permits=20 · coa=0 · deep_scrapes=3 · entities_wsib=2 · orphan=0
+*C6 chain-bucket counts (files):* permits=20 · coa=0 · deep_scrapes=2 · entities_wsib=2 · orphan=0
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP, R-EK) — manifest slugs with NO JS file, RUNNER-owned concerns, and retired steps, excluded by ruling, never silently dropped
 
@@ -101,4 +102,4 @@ Remaining files: **25** (+ **11** pending) · remaining slugs: **26** (+ **11** 
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **11** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **26** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **12** pending + **5** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **25** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
