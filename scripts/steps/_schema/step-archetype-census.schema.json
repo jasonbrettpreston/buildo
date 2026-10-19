@@ -39,8 +39,20 @@
         },
         "reason": {
           "type": "string",
-          "enum": ["python_step_excluded", "no_file", "runner_owned"],
-          "description": "python_step_excluded = operator ruling 2026-09-10: the Python step (aic-orchestrator.py) is EXCLUDED from the conversion programme entirely — not deferred to any future batch, out of the JS step standard's scope by design, stays on its own runner. no_file = a coming_soon manifest entry with file:null — nothing exists yet to convert. runner_owned = Spec 124 §5 R-AP (2026-09-15): the slug HAS a real JS file, but the concern it implements is owned by THE RUNNER (Spec 122 §4 / §7.3 concern row 4 / §7.4 A3) — \"nothing is declared per step, and a step cannot opt out\" — so there is no per-step descriptor, no identity.archetype in step.schema.json's 8-value enum, and no x-profile. It is the ONLY reason that may name a real JS file, and the generator throws both directions (a real JS file under any other reason; a runner_owned row with no real JS file)."
+          "enum": ["python_step_excluded", "no_file", "runner_owned", "retired"],
+          "description": "python_step_excluded = operator ruling 2026-09-10: the Python step (aic-orchestrator.py) is EXCLUDED from the conversion programme entirely — not deferred to any future batch, out of the JS step standard's scope by design, stays on its own runner. no_file = a coming_soon manifest entry with file:null — nothing exists yet to convert. runner_owned = Spec 124 §5 R-AP (2026-09-15): the slug HAS a real JS file, but the concern it implements is owned by THE RUNNER (Spec 122 §4 / §7.3 concern row 4 / §7.4 A3) — \"nothing is declared per step, and a step cannot opt out\" — so there is no per-step descriptor, no identity.archetype in step.schema.json's 8-value enum, and no x-profile. retired = Spec 124 R-EK (operator y 2026-10-19): the slug HAS a real JS file that will never be converted because named steps already do its work; the generator checks the closed predicate (in no manifest chain; `covered_by` names >= 1 manifest.scripts slug and each declares supports_full; `evidence` non-empty). runner_owned and retired are the ONLY reasons that may name a real JS file, and the generator throws both directions (a real JS file under any other reason; a runner_owned or retired row with no real JS file)."
+        },
+        "covered_by": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "description": "Spec 124 R-EK: the manifest.scripts slugs that already do a retired slug's work, each run with --full. Required on (and only on) a `retired` row — the generator enforces both."
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Spec 124 R-EK: where the coverage claim is proven (a report or plan path with file:line cites). Required on (and only on) a `retired` row — the generator enforces both."
         },
         "ruling": {
           "type": "string",
@@ -78,8 +90,8 @@
         },
         "archetype": {
           "type": "string",
-          "enum": ["INGESTOR", "MATERIALIZER", "LINK", "MATCHER", "ENRICHER", "BACKFILL", "ASSERT", "RECORDER", "UNDECLARED"],
-          "description": "One of Spec 122 §1.10's 8 canonical archetypes, or the literal \"UNDECLARED\" — a real, explicit row stating the census does not (yet) know, never an absent row a reader could mistake for an oversight."
+          "enum": ["INGESTOR", "MATERIALIZER", "LINK", "MATCHER", "ENRICHER", "BACKFILL", "ASSERT", "RECORDER", "EFFECTOR", "UNDECLARED"],
+          "description": "One of Spec 122 §1.10's 8 canonical archetypes, EFFECTOR (Spec 124 R-EI, operator y 2026-10-19: a step whose output is an effect outside the database; census-only until its first conversion's RE-FREEZE adds it to step.schema.json, FREEZE-1 arm D), or the literal \"UNDECLARED\" — a real, explicit row stating the census does not (yet) know, never an absent row a reader could mistake for an oversight."
         },
         "batch": {
           "type": "string",

@@ -640,6 +640,17 @@ The schema derives each step's **required-field profile** from its archetype:
 >
 > ⚠️ **One live consequence:** `run-chain.js:544-550` dispatches ASSERT runtime behaviour **on name prefix** — so renaming a step changes its runtime behaviour `[READ]`. Declaring `archetype` retires that, and the retirement is a required S1 deliverable, not a side effect.
 
+**A ninth archetype, `EFFECTOR` (Spec 124 R-EI, operator y 2026-10-19; ARCH-CENSUS C6).** A step whose output is an effect outside the database: today `dispatch_notifications` (an Expo push to users) and `backup_db` (an off-site dump). None of the eight fits: RECORDER writes state into a table, and forcing either step into it would make its required fields wrong. Its profile has four gates:
+
+| Gate | What the step must declare or prove |
+|---|---|
+| **Switch** | One kill switch or injected transport, so the effect can be turned off without editing code: `notifications_dispatch_enabled` and the `transport` argument (`scripts/dispatch-notifications.js:128`, `:468`); the backup destination from its declared config. |
+| **Ledger** | An exactly-once ledger in the database, so a re-run sends nothing already sent: `notification_dispatches` `ON CONFLICT (user_id, lead_id, type, toronto_date) DO NOTHING` (`:253-255`); for the backup, the dated object key plus its manifest. |
+| **Captures** | G8 PRE and POST capture the ledger tables and the list of intended effects recorded by the injected transport. A capture or replay never reaches the real service (switch OFF or injected transport; a test destination for the backup). |
+| **Dry run** | `--dry-run` produces the same intended-effect list a live run would, with zero outside calls. |
+
+`EFFECTOR` is in the census enum now. It enters `step.schema.json`'s `identity.archetype` enum, with its required-field profile and `template-freeze.json` row, only in the RE-FREEZE of its first conversion (wave C6-7). FREEZE-1 arm D refuses an archetype profile that is not yet proven (`scripts/steps/_schema/generate-template-freeze.mjs:233`), so adding it earlier would fail the freeze.
+
 ---
 
 ## 2. What this is

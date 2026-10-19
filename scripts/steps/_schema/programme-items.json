@@ -375,9 +375,7 @@
           "link_coa",
           "link_coa_to_parcels",
           "link_similar",
-          "observe_chain",
           "permits",
-          "reclassify_all",
           "update_tracked_projects"
         ]
       },
@@ -431,9 +429,7 @@
           "link_coa",
           "link_coa_to_parcels",
           "link_similar",
-          "observe_chain",
           "permits",
-          "reclassify_all",
           "update_tracked_projects"
         ]
       },
@@ -1677,9 +1673,7 @@
           "link_coa",
           "link_coa_to_parcels",
           "link_similar",
-          "observe_chain",
           "permits",
-          "reclassify_all",
           "update_tracked_projects"
         ]
       },

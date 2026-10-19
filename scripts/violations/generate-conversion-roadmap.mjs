@@ -161,6 +161,31 @@ function chainsFor(manifest, slug) {
  * Build the full remaining-estate row set. Throws loudly on every "refuses
  * to emit" condition documented in the file header — never a silent skip.
  */
+// Spec 124 R-EK (operator y 2026-10-19) — a step is retired only under a
+// closed predicate: it has a real JS file, sits in no manifest chain, and
+// names the steps that already do its work (`covered_by`, each supporting
+// --full) plus the `evidence` that proves it. `covered_by`/`evidence` are
+// legal on a `retired` row only.
+function checkRetired(ex, entry, hasRealJsFile, manifest) {
+  const where = `step-archetype-census.json exemptions: slug "${ex.slug}"`;
+  if (ex.reason !== 'retired') {
+    if (ex.covered_by !== undefined || ex.evidence !== undefined) {
+      throw new Error(`${where} carries covered_by/evidence but is not a "retired" exemption — those fields belong to Spec 124 R-EK retirements only`);
+    }
+    return;
+  }
+  if (!hasRealJsFile) throw new Error(`${where} is "retired" (Spec 124 R-EK) but has no real JS file (${JSON.stringify(entry.file)}) — that is a "no_file"/python exemption`);
+  const chains = Object.entries(manifest.chains).filter(([, slugs]) => slugs.includes(ex.slug)).map(([c]) => c);
+  if (chains.length > 0) throw new Error(`${where} is "retired" (Spec 124 R-EK) but is still in manifest chain(s) ${chains.join(', ')} — remove it from every chain first`);
+  if (!Array.isArray(ex.covered_by) || ex.covered_by.length === 0) throw new Error(`${where} is "retired" (Spec 124 R-EK) but names no covered_by steps`);
+  for (const slug of ex.covered_by) {
+    const cover = manifest.scripts[slug];
+    if (!cover) throw new Error(`${where} is "retired" (Spec 124 R-EK) but covered_by slug "${slug}" has no manifest.scripts entry`);
+    if (cover.supports_full !== true) throw new Error(`${where} is "retired" (Spec 124 R-EK) but covered_by slug "${slug}" does not declare supports_full — it cannot redo the retired step's whole-table work`);
+  }
+  if (typeof ex.evidence !== 'string' || ex.evidence.trim() === '') throw new Error(`${where} is "retired" (Spec 124 R-EK) but has no evidence`);
+}
+
 export function buildRoadmap({ manifest, convertedInfo, census, exemptions, programmeItems, churn, archetypeProfiles = [] }) {
   const { converted, pending } = convertedInfo;
   const convertedSet = new Set(converted);
@@ -186,12 +211,13 @@ export function buildRoadmap({ manifest, convertedInfo, census, exemptions, prog
     // `runner_owned` exemption with NO JS file throws too, so the new class can
     // never become a silent catch-all for the no_file/python cases.
     const hasRealJsFile = Boolean(entry.file) && !entry.file.endsWith('.py');
-    if (hasRealJsFile && ex.reason !== 'no_file' && ex.reason !== 'runner_owned') {
+    if (hasRealJsFile && ex.reason !== 'no_file' && ex.reason !== 'runner_owned' && ex.reason !== 'retired') {
       throw new Error(`step-archetype-census.json exemptions: slug "${ex.slug}" has a real JS file (${entry.file}) — not eligible for a "${ex.reason}" exemption`);
     }
     if (ex.reason === 'runner_owned' && !hasRealJsFile) {
       throw new Error(`step-archetype-census.json exemptions: slug "${ex.slug}" declares the R-AP "runner_owned" exemption but has no real JS file (${JSON.stringify(entry.file)}) — that is a "no_file"/python exemption, not a RUNNER-owned concern`);
     }
+    checkRetired(ex, entry, hasRealJsFile, manifest);
     if (exemptedSlugs.has(ex.slug)) throw new Error(`step-archetype-census.json exemptions: duplicate slug "${ex.slug}"`);
     exemptedSlugs.add(ex.slug);
   }
@@ -432,24 +458,26 @@ export function render(rows, manifest, exemptions = [], convertedInfo = { conver
     parts.push('');
   }
 
-  parts.push('## C6 — UNDECLARED (Ask A3: no archetype, no PH-2 risk data — ordered by chain, not risk)');
+  // ARCH-CENSUS C6 (2026-10-19) declared every C6 archetype; PH-2 risk data is still
+  // absent, so C6 stays ordered by chain bucket, with the census archetype shown.
+  parts.push('## C6 — archetype declared by ARCH-CENSUS C6, no PH-2 risk data yet (ordered by chain, not risk)');
   parts.push('');
-  parts.push('| Chain bucket | File | Slug(s) | Chains (slots) |');
-  parts.push('|---|---|---|---|');
+  parts.push('| Chain bucket | Archetype | File | Slug(s) | Chains (slots) |');
+  parts.push('|---|---|---|---|---|');
   const c6Order = ['permits', 'coa', 'deep_scrapes', 'entities_wsib', 'orphan'];
   const byChainBucket = new Map(c6Order.map((c) => [c, []]));
   for (const r of byBatch.C6) byChainBucket.get(c6SubBucket(r, manifest)).push(r);
   for (const bucket of c6Order) {
     const group = byChainBucket.get(bucket).slice().sort((a, c) => a.file.localeCompare(c.file));
     for (const r of group) {
-      parts.push(`| ${bucket} | \`${r.file}\` | ${fmtSlugs(r)} | ${r.chains.join('+')} (${r.slots}) |`);
+      parts.push(`| ${bucket} | ${r.archetype} | \`${r.file}\` | ${fmtSlugs(r)} | ${r.chains.join('+')} (${r.slots}) |`);
     }
   }
   parts.push('');
   parts.push('*C6 chain-bucket counts (files):* ' + c6Order.map((c) => `${c}=${byChainBucket.get(c).length}`).join(' · '));
   parts.push('');
 
-  parts.push('## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped');
+  parts.push('## Declared exemptions (Ask A2 + Spec 124 R-AP, R-EK) — manifest slugs with NO JS file, RUNNER-owned concerns, and retired steps, excluded by ruling, never silently dropped');
   parts.push('');
   parts.push('| Slug | File | Reason | Ruling | Scope |');
   parts.push('|---|---|---|---|---|');
