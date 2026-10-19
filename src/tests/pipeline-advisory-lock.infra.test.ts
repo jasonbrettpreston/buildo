@@ -233,6 +233,18 @@ function extractLockId(source: string): number | null {
   return m ? parseInt(m[1]!, 10) : null;
 }
 
+// A script with no §R2 source-text constant may declare its lock in its sibling descriptor's
+// `identity.lock` (Spec 122 §5.4, the step declaration home): the enrich_coa_zoning identity-split shell
+// is a byte-frozen legacy pass-through (its ① oracle) whose delegate acquires the shared lock 66.
+function declaredLockId(relPath: string): number | null {
+  const fromSource = extractLockId(readScript(relPath));
+  if (fromSource !== null) return fromSource;
+  const desc = path.join(REPO_ROOT, relPath.replace(/\.js$/, '.descriptor.json'));
+  if (!fs.existsSync(desc)) return null;
+  const lock = JSON.parse(fs.readFileSync(desc, 'utf8'))?.identity?.lock;
+  return Number.isInteger(lock) ? lock : null;
+}
+
 // Parse the §A.5 Bundle-G registry table out of Spec 47 → { script → id }.
 // Rows flagged RETIRED (deleted scripts kept for history) are skipped. This is
 // the spec-table half of the "spec ↔ constant" agreement check; §5.2's
@@ -259,11 +271,10 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
   describe('ADVISORY_LOCK_ID is declared in every JS script', () => {
     for (const file of uniqueJsFiles) {
       it(`${path.basename(file)} (${file})`, () => {
-        const source = readScript(file);
         expect(
-          source,
-          `${file} must declare const ADVISORY_LOCK_ID = <number>`,
-        ).toMatch(/const ADVISORY_LOCK_ID\s*=\s*\d+/);
+          declaredLockId(file),
+          `${file} must declare const ADVISORY_LOCK_ID = <number> (or its descriptor identity.lock)`,
+        ).not.toBeNull();
       });
     }
   });
@@ -294,8 +305,7 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
     const declaredShared = (id: number, a: string, b: string) => specTable[a] === id && specTable[b] === id;
 
     for (const file of allLockedJsFiles) {
-      const source = readScript(file);
-      const id = extractLockId(source);
+      const id = declaredLockId(file);
       if (id === null) continue; // no lock (e.g. backfill/ DDL scripts) — skip
 
       if (seen.has(id) && declaredShared(id, seen.get(id)!, file)) continue;
@@ -312,8 +322,7 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
   describe('each script\'s ADVISORY_LOCK_ID matches the Bundle G registry (§A.5)', () => {
     for (const [registryFile, expectedId] of Object.entries(LOCK_ID_REGISTRY)) {
       it(`${path.basename(registryFile)} has ID ${expectedId}`, () => {
-        const source = readScript(registryFile);
-        const actualId = extractLockId(source);
+        const actualId = declaredLockId(registryFile);
         expect(
           actualId,
           `${registryFile} declares ADVISORY_LOCK_ID = ${actualId} but registry expects ${expectedId}`,
