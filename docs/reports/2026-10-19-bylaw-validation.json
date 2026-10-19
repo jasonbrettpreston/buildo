@@ -1,0 +1,6723 @@
+{
+ "schema": "bylaw-validation-2026-10-19",
+ "tree": "wf2/p4-integrate-5@604149d2",
+ "first_pass_tree": "62269c66",
+ "db": "read-only (BEGIN READ ONLY … ROLLBACK)",
+ "summary": {
+  "tip": "wf2/p4-integrate-5@604149d2",
+  "sample_lots": 279,
+  "invariants": [
+   {
+    "id": "INV-10a",
+    "title": "main_wall_height_m ≤ height_m",
+    "checked": 1002,
+    "violations": 2,
+    "pass_rate": 0.998003992015968
+   },
+   {
+    "id": "INV-16",
+    "title": "every applied unit regulation is in bylaw-provisions.json",
+    "checked": 15490,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "INV-18",
+    "title": "no non-residential-use unit applied to a residential scenario (M-159)",
+    "checked": 15490,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "INV-19",
+    "title": "no not_evaluated:no_candidate on R coverage, R/RT length, RT depth, RT main walls (M-220, OWED)",
+    "checked": 1164,
+    "violations": 1164,
+    "pass_rate": 0
+   },
+   {
+    "id": "INV-11a",
+    "title": "dwelling_units_max ≤ 6, and = u in RD/RS when labelled",
+    "checked": 318,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "Q-M218",
+    "title": "upper_storey_setback_m: 1.4 m with a flat roof only; none with a pitched roof",
+    "checked": 1386,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "Q-label-defs",
+    "title": "detached house required frontage / area = label f / a when labelled",
+    "checked": 243,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "SANITY",
+    "title": "fsi in (0, 3]; height_m in (0, 40]; setbacks ≥ 0",
+    "checked": 4248,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "M-181(2)",
+    "title": "semi-detached houseplex required lot area = 50 % of a (RS/RT/RM)",
+    "checked": 69,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "M-181(3)",
+    "title": "semi-detached houseplex required frontage = 50 % of f (RS/RM)",
+    "checked": 71,
+    "violations": 0,
+    "pass_rate": 1
+   },
+   {
+    "id": "RT-houseplex-6.0",
+    "title": "RT detached houseplex required frontage 6.0 m (10.60.30.20(1)(E))",
+    "checked": 20,
+    "violations": 0,
+    "pass_rate": 1
+   }
+  ],
+  "exception_lots_not_authored": 28,
+  "round2": {
+   "all_agree": 467,
+   "ev=claude≠ds": 34,
+   "readers_agree≠ev": 20,
+   "all_differ": 2,
+   "ev=ds≠claude": 8
+  },
+  "round2_n": 531,
+  "oracle_a": {
+   "n": 218,
+   "comparable": 148,
+   "no_fsi_cap": 70,
+   "share_over_cap": 66.22,
+   "share_over_cap_by_25pct": 35.14,
+   "ratio_p25": 0.98,
+   "ratio_p50": 1.11,
+   "ratio_p75": 1.38,
+   "legacy_comparable": 204,
+   "legacy_share_over": 38.730000000000004,
+   "examples_over": [
+    {
+     "id": "A:24 211115 BLD",
+     "address": "",
+     "zone_label": "RD (f13.5; a510; d0.45)",
+     "lot_area_m2": 277,
+     "residential_sqm": 305.95,
+     "our_fsi": 0.45,
+     "our_gfa_cap": 124.7,
+     "ratio": 2.45,
+     "legacy_gfa": 182.82,
+     "built_fsi": 1.105,
+     "description": "PART 1 - West LotProposal to construct a new 2 storey SFD-detached dwelling with an integral garage and a finished basement. See also 24 211079 DEM, 21 115507 Z"
+    },
+    {
+     "id": "A:24 150153 BLD",
+     "address": "",
+     "zone_label": "RD (f12.0; a370; d0.35)",
+     "lot_area_m2": 621.59,
+     "residential_sqm": 491.3,
+     "our_fsi": 0.35,
+     "our_gfa_cap": 217.6,
+     "ratio": 2.26,
+     "legacy_gfa": 410.24,
+     "built_fsi": 0.79,
+     "description": "Proposed demolition of the existing dwelling and construction of a new 2-storey duplex with integral garage."
+    },
+    {
+     "id": "A:16 271501 BLD",
+     "address": "29 Avon Park Dr",
+     "zone_label": "RD (f13.5; a510; d0.45)",
+     "lot_area_m2": 390.18,
+     "residential_sqm": 367,
+     "our_fsi": 0.45,
+     "our_gfa_cap": 175.6,
+     "ratio": 2.09,
+     "legacy_gfa": 257.52,
+     "built_fsi": 0.941,
+     "description": " Construct new  3 storey single family dwelling with integral garage."
+    },
+    {
+     "id": "A:15 113565 BLD",
+     "address": "3 Daniels St",
+     "zone_label": "RD (f13.5; a510; d0.45)",
+     "lot_area_m2": 245.21,
+     "residential_sqm": 229,
+     "our_fsi": 0.45,
+     "our_gfa_cap": 110.3,
+     "ratio": 2.08,
+     "legacy_gfa": 161.84,
+     "built_fsi": 0.934,
+     "description": "Proposal to construct a new two storey, single family dwelling, complete with integral garage and finished basement."
+    },
+    {
+     "id": "A:16 143317 BLD",
+     "address": "112 Lake Shore Dr",
+     "zone_label": "RD (f7.5; a230; d0.4)",
+     "lot_area_m2": 281,
+     "residential_sqm": 228.9,
+     "our_fsi": 0.4,
+     "our_gfa_cap": 112.4,
+     "ratio": 2.04,
+     "legacy_gfa": 185.46,
+     "built_fsi": 0.815,
+     "description": "Proposal to demolish existing SFD and replace with Part 1 of 2 detached SFD with finished basement  and attached garage."
+    }
+   ],
+   "by_zone": {
+    "RD": {
+     "n": 139,
+     "over": 92
+    },
+    "R": {
+     "n": 9,
+     "over": 6
+    }
+   }
+  },
+  "oracle_b": {
+   "n": 600,
+   "skipped_unit": 1,
+   "comparable": 462,
+   "share_beyond_ours": 91.34,
+   "city_required_match_rate": 75.49,
+   "by_target": {
+    "main_wall_height_m": {
+     "n": 44,
+     "comparable": 44,
+     "beyond": 39,
+     "within": 5,
+     "not_numeric": 0,
+     "city_req_cmp": 44,
+     "city_req_match": 26
+    },
+    "front_setback_m": {
+     "n": 66,
+     "comparable": 0,
+     "beyond": 0,
+     "within": 0,
+     "not_numeric": 66,
+     "city_req_cmp": 0,
+     "city_req_match": 0
+    },
+    "height_m": {
+     "n": 42,
+     "comparable": 42,
+     "beyond": 28,
+     "within": 14,
+     "not_numeric": 0,
+     "city_req_cmp": 42,
+     "city_req_match": 25
+    },
+    "fsi": {
+     "n": 163,
+     "comparable": 163,
+     "beyond": 162,
+     "within": 1,
+     "not_numeric": 0,
+     "city_req_cmp": 163,
+     "city_req_match": 141
+    },
+    "side_setback_m": {
+     "n": 113,
+     "comparable": 60,
+     "beyond": 52,
+     "within": 8,
+     "not_numeric": 53,
+     "city_req_cmp": 59,
+     "city_req_match": 34
+    },
+    "lot_coverage_pct": {
+     "n": 93,
+     "comparable": 89,
+     "beyond": 87,
+     "within": 2,
+     "not_numeric": 4,
+     "city_req_cmp": 89,
+     "city_req_match": 85
+    },
+    "building_length_m": {
+     "n": 43,
+     "comparable": 30,
+     "beyond": 24,
+     "within": 6,
+     "not_numeric": 13,
+     "city_req_cmp": 30,
+     "city_req_match": 14
+    },
+    "rear_setback_m": {
+     "n": 17,
+     "comparable": 17,
+     "beyond": 14,
+     "within": 3,
+     "not_numeric": 0,
+     "city_req_cmp": 17,
+     "city_req_match": 7
+    },
+    "building_depth_m": {
+     "n": 18,
+     "comparable": 17,
+     "beyond": 16,
+     "within": 1,
+     "not_numeric": 1,
+     "city_req_cmp": 17,
+     "city_req_match": 16
+    }
+   },
+   "examples_within": [
+    {
+     "id": "B:toronto_ca_decision_pdf|A0732/17NY|5",
+     "application": "A0732/17NY",
+     "hearing": "2017-10-26T04:00:00.000Z",
+     "address": "396 Cortleigh Blvd",
+     "zone_label": "RM (d0.75)",
+     "target": "side_setback_m",
+     "proposed": 1.22,
+     "city_required": 1.5,
+     "city_required_unit": "m",
+     "ours": 1.2,
+     "ours_winner": "10.80.40.70(3)#(3)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    },
+    {
+     "id": "B:toronto_ca_decision_pdf|A0731/16EYK|5",
+     "application": "A0731/16EYK",
+     "hearing": "2017-02-23T05:00:00.000Z",
+     "address": "126 Caledonia Rd",
+     "zone_label": "R (d0.6)",
+     "target": "height_m",
+     "proposed": 10.29,
+     "city_required": 10,
+     "city_required_unit": "m",
+     "ours": 11,
+     "ours_winner": "10.10.40.10(1)#(1)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    },
+    {
+     "id": "B:toronto_ca_decision_pdf|A0465/17NY|9",
+     "application": "A0465/17NY",
+     "hearing": "2017-11-23T05:00:00.000Z",
+     "address": "9 McBain Ave",
+     "zone_label": "RD (f9.0; a275)",
+     "target": "height_m",
+     "proposed": 9.95,
+     "city_required": 8.8,
+     "city_required_unit": "m",
+     "ours": 10,
+     "ours_winner": "10.20.40.10(1)#(1)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    },
+    {
+     "id": "B:toronto_ca_decision_pdf|A0007/17EYK|5",
+     "application": "A0007/17EYK",
+     "hearing": "2017-03-23T04:00:00.000Z",
+     "address": "48 Denison Rd W",
+     "zone_label": "RD (f12.0; a370; d0.4)",
+     "target": "main_wall_height_m",
+     "proposed": 8.33,
+     "city_required": 7.5,
+     "city_required_unit": "m",
+     "ours": 8.5,
+     "ours_winner": "10.20.40.10(2)#(2)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    },
+    {
+     "id": "B:toronto_ca_decision_pdf|A1224/16TEY|9",
+     "application": "A1224/16TEY",
+     "hearing": "2017-06-07T04:00:00.000Z",
+     "address": "5 Machockie Rd",
+     "zone_label": "RD (f9.0; a280; d0.45)",
+     "target": "rear_setback_m",
+     "proposed": 8.42,
+     "city_required": 9,
+     "city_required_unit": "m",
+     "ours": 7.5,
+     "ours_winner": "10.20.40.70(2)#(2)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    },
+    {
+     "id": "B:toronto_ca_decision_pdf|A0258/17EYK|5",
+     "application": "A0258/17EYK",
+     "hearing": "2017-05-04T04:00:00.000Z",
+     "address": "24 Baleberry Cres",
+     "zone_label": "RD (f13.5; a510; d0.45)",
+     "target": "main_wall_height_m",
+     "proposed": 3.67,
+     "city_required": 1.6,
+     "city_required_unit": "m",
+     "ours": 7,
+     "ours_winner": "10.20.40.10(2)#(2)(A)",
+     "verdict": "within_ours",
+     "city_required_matches_ours": false
+    }
+   ]
+  }
+ },
+ "defects": [
+  {
+   "id": "D2",
+   "title": "valueless permissive Despite clause displaces the base limit (no_candidate)",
+   "parcels": {
+    "rd_side_12_18": 47505,
+    "length": {
+     "RD": 37145,
+     "RM": 16707,
+     "RS": 2440
+    }
+   },
+   "units": [
+    "10.20.40.70(4)#whole",
+    "10.20.40.20(2)#(2)(A..C)",
+    "10.40.40.20(2)#(2)(A..C)",
+    "10.80.40.20(2)#(2)(A..C)",
+    "10.5.60.20(7)#whole",
+    "10.5.60.20(11)#(11)(B)",
+    "10.5.20.40(7)#(7)(A..B)"
+   ],
+   "question": "Q1"
+  },
+  {
+   "id": "D3",
+   "title": "RD 10.20.40.70(5) 7.5 m deep-portion side yard applied to the whole side yard",
+   "parcels": {
+    "RD_f_gt_18": 1486
+   },
+   "evidence": {
+    "probe_lots": [
+     "5159298",
+     "5213799",
+     "5375827"
+    ],
+    "coa_2017_city_required_2_4_vs_ours_7_5": 5
+   },
+   "question": "Q2"
+  },
+  {
+   "id": "D1",
+   "title": "flat-roof height caps in RD exceptions keyed without the roof condition",
+   "units": [
+    "900.3.10(18)#(18)[SSP](C)",
+    "900.3.10(21)#(21)[SSP](A)",
+    "900.3.10(28)#(28)[SSP](A)",
+    "900.3.10(37)#(37)[SSP](A)"
+   ],
+   "parcels": {
+    "x18": 352,
+    "x21": 2735,
+    "x28": 1258,
+    "x37": 1355
+   },
+   "evidence": {
+    "lot": "5444399 11 St George's Rd",
+    "pitched_height": 6.5,
+    "readers": 9.5
+   }
+  },
+  {
+   "id": "D4",
+   "title": "major-street townhouse with individual driveways: frontage falls back to label f",
+   "unit": "x.30.20(1)(D) keyed only for no_individual_private_driveway",
+   "evidence": {
+    "whatif_lots": [
+     "5046461",
+     "5131054"
+    ],
+    "driveways": 18,
+    "no_driveways": 20,
+    "readers_with_driveways": 24
+   },
+   "question": "Q3"
+  },
+  {
+   "id": "D5",
+   "title": "major_street (on_policy_road) set on 21 of 440,093 residential parcels",
+   "kind": "data",
+   "question": "Q4"
+  },
+  {
+   "id": "D6",
+   "title": "flat-roof main-wall cap above an exception height (INV-10a)",
+   "note": "P5.13 must take min(main wall, height)"
+  }
+ ],
+ "known_owed": [
+  "INV-19 / M-220 status no_candidate→unregulated (1,164 on sample)",
+  "exceptions not fully authored: 28/279 (ruling (d))",
+  "front-yard averaging input (10.5.40.70(1))"
+ ],
+ "questions": [
+  {
+   "id": "Q1",
+   "recommend": "y"
+  },
+  {
+   "id": "Q2",
+   "recommend": "y"
+  },
+  {
+   "id": "Q3",
+   "recommend": "y"
+  },
+  {
+   "id": "Q4",
+   "recommend": "y"
+  }
+ ],
+ "round2_disagreements": [
+  {
+   "id": "5391410",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2) (higher of 7.0 m or 2.5 m less than 11 m = 8.5 m; 7.0 m governs)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5391410",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5368211",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2) (higher of 7.0 m or 2.5 m less than 10.0 m = 7.5 m; 7.0 m governs)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5368211",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2); flat roof triggers 10.10.40.10(11)/(12) allowing additional main walls above with 1.4 m setback, but base main wall height remains 7.0 m",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5215232",
+   "exception": "900.2.10(604)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5215232",
+   "exception": "900.2.10(604)",
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5366945",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5366945",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.10.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.10.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.10.40.10(2)"
+  },
+  {
+   "id": "5262612",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 1.2
+   },
+   "deepseek_clause": "10.20.40.70(3)(C)",
+   "claude": {
+    "k": "num",
+    "v": 1.2
+   },
+   "claude_clause": "10.20.40.70(3) band on required frontage 12"
+  },
+  {
+   "id": "5237524",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "all_differ",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 0.9
+   },
+   "deepseek_clause": "10.20.40.70(3)(B)",
+   "claude": {
+    "k": "num",
+    "v": 1.2
+   },
+   "claude_clause": "10.20.40.70(3) band on required frontage 12"
+  },
+  {
+   "id": "5265355",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 1.2
+   },
+   "deepseek_clause": "10.20.40.70(3)(C)",
+   "claude": {
+    "k": "num",
+    "v": 1.2
+   },
+   "claude_clause": "10.20.40.70(3) band on required frontage 12"
+  },
+  {
+   "id": "5072955",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 1.2
+   },
+   "deepseek_clause": "10.20.40.70(3)(C)",
+   "claude": {
+    "k": "num",
+    "v": 1.2
+   },
+   "claude_clause": "10.20.40.70(3) band on required frontage 12"
+  },
+  {
+   "id": "5444399",
+   "exception": "900.3.10(28)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "height_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "num",
+    "v": 6.5
+   },
+   "evaluator_winner": "900.3.10(28)#(28)[SSP](A)",
+   "deepseek": {
+    "k": "num",
+    "v": 9.5
+   },
+   "deepseek_clause": "10.20.40.10(1)(A)",
+   "claude": {
+    "k": "num",
+    "v": 9.5
+   },
+   "claude_clause": "10.20.40.10(1)(A)"
+  },
+  {
+   "id": "5444399",
+   "exception": "900.3.10(28)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 1.2
+   },
+   "deepseek_clause": "900.3.10(28)(D)(ii)",
+   "claude": {
+    "k": "num",
+    "v": 1.2
+   },
+   "claude_clause": "10.20.40.70(3) band on required frontage 13.5"
+  },
+  {
+   "id": "5444399",
+   "exception": "900.3.10(28)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_depth_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 19
+   },
+   "evaluator_winner": "10.20.40.30(1)#whole",
+   "deepseek": {
+    "k": "num",
+    "v": 16.5
+   },
+   "deepseek_clause": "900.3.10(28)(B)",
+   "claude": {
+    "k": "num",
+    "v": 19
+   },
+   "claude_clause": "10.20.40.30(1) (from the required front yard setback)"
+  },
+  {
+   "id": "5444399",
+   "exception": "900.3.10(28)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.20.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.20.40.20(1)"
+  },
+  {
+   "id": "5444399",
+   "exception": "900.3.10(28)",
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.2
+   },
+   "evaluator_winner": "10.20.40.10(4)#(4)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 6.5
+   },
+   "deepseek_clause": "900.3.10(28)(A)",
+   "claude": {
+    "k": "num",
+    "v": 7.2
+   },
+   "claude_clause": "10.20.40.10(4)(A)"
+  },
+  {
+   "id": "5146976",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.20.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.20.40.20(1)"
+  },
+  {
+   "id": "5163532",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5163532",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.80.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.80.40.20(1)"
+  },
+  {
+   "id": "5163532",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5066067",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5066067",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.80.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.80.40.20(1)"
+  },
+  {
+   "id": "5066067",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5269510",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5269510",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5269510",
+   "exception": null,
+   "bt": "semi_detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_frontage_m",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.30.20(1)#(1)(C)",
+   "deepseek": {
+    "k": "num",
+    "v": 7.5
+   },
+   "deepseek_clause": "10.80.30.20(1)(C)",
+   "claude": {
+    "k": "num",
+    "v": 6
+   },
+   "claude_clause": "10.80.30.20(1)(C) 50 % of (A)/(B)"
+  },
+  {
+   "id": "5269510",
+   "exception": null,
+   "bt": "semi_detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "num",
+    "v": 225
+   },
+   "evaluator_winner": "10.80.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "num",
+    "v": 225
+   },
+   "deepseek_clause": "10.80.30.10(1)(C)",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.80.30.10(1) frontage × 30 (10.80.30.10(1)(C))"
+  },
+  {
+   "id": "5046461",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5046461",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.80.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.80.40.20(1)"
+  },
+  {
+   "id": "5046461",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5050446",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.80.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.80.40.20(1)"
+  },
+  {
+   "id": "5160285",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5160285",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5160285",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5168909",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5357098",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5357098",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5357098",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_frontage_m",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "unknown",
+    "why": "existing_building_facts:lot_frontage_m"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "unknown",
+    "why": "unknown:frontage existing on date of enactment"
+   },
+   "deepseek_clause": "900.4.10(256)(A)",
+   "claude": {
+    "k": "num",
+    "v": 15
+   },
+   "claude_clause": "10.40.30.20(1)(B)"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "unknown",
+    "why": "existing_building_facts:lot_area_m2"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "unknown",
+    "why": "unknown:lot area existing on date of enactment"
+   },
+   "deepseek_clause": "900.4.10(256)(B)",
+   "claude": {
+    "k": "num",
+    "v": 450
+   },
+   "claude_clause": "10.40.30.10(1) frontage × 30 (10.40.30.10(1)(C))"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "lot_coverage_pct",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "num",
+    "v": 40
+   },
+   "evaluator_winner": "900.4.10(256)#(256)[SSP](F)",
+   "deepseek": {
+    "k": "num",
+    "v": 40
+   },
+   "deepseek_clause": "900.4.10(256)(F)",
+   "claude": {
+    "k": "num",
+    "v": 33
+   },
+   "claude_clause": "10.40.30.40(1)(A)"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "side_setback_m",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "num",
+    "v": 1.2
+   },
+   "evaluator_winner": "900.4.10(256)#(256)[SSP](E)",
+   "deepseek": {
+    "k": "num",
+    "v": 1.2
+   },
+   "deepseek_clause": "900.4.10(256)(E)",
+   "claude": {
+    "k": "num",
+    "v": 1.5
+   },
+   "claude_clause": "10.40.40.70(3) band on required frontage 15"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "unknown",
+    "why": "existing_building_facts:lot_frontage_m"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "semi_detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_frontage_m",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "unknown",
+    "why": "existing_building_facts:lot_frontage_m"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "unknown",
+    "why": "unknown:frontage existing on date of enactment"
+   },
+   "deepseek_clause": "900.4.10(256)(A)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.40.30.20(1)(C) 50 % of (A)/(B)"
+  },
+  {
+   "id": "5024691",
+   "exception": "900.4.10(256)",
+   "bt": "semi_detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=ds≠claude",
+   "evaluator": {
+    "k": "unknown",
+    "why": "existing_building_facts:lot_area_m2"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "unknown",
+    "why": "unknown:lot area existing on date of enactment"
+   },
+   "deepseek_clause": "900.4.10(256)(B)",
+   "claude": {
+    "k": "num",
+    "v": 225
+   },
+   "claude_clause": "10.40.30.10(1) frontage × 30 (10.40.30.10(1)(C))"
+  },
+  {
+   "id": "5131054",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5193892",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5193892",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5193892",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 8.5
+   },
+   "evaluator_winner": "10.40.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.40.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 8.5
+   },
+   "claude_clause": "10.40.40.10(2)"
+  },
+  {
+   "id": "5071164",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value in label; but note label has 'au' not 'a', so (C) applies requiring frontage x 30 = 180 m2",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5071164",
+   "exception": null,
+   "bt": "detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value; (C) requires frontage x 30 = 180 m2",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5071329",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value in label, so area = frontage x 30; but frontage-based area not a fixed minimum lot area requirement? Actually (C) gives required minimum lot area = required minimum lot frontage x 30 = 6.0 x 30 = 180",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5071329",
+   "exception": null,
+   "bt": "detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value; area = frontage x 30 = 180",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5091429",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value in zone label; lot area requirement is frontage x 30 only when no 'a' value, but here label has 'au' not 'a', so (C) applies: 6.0 x 30 = 180; however 'a' value absent so (A) does not apply",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5091429",
+   "exception": null,
+   "bt": "detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "nolimit"
+   },
+   "deepseek_clause": "10.60.30.10(1)(C) - no 'a' value; (B) applies only to semi-detached houseplex, not detached houseplex",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5070752",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "num",
+    "v": 220
+   },
+   "deepseek_clause": "10.60.30.10(1)(A)",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5070752",
+   "exception": null,
+   "bt": "detached_houseplex",
+   "roof": "pitched",
+   "target": "required_lot_area_m2",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 180
+   },
+   "evaluator_winner": "10.60.30.10(1)#(1)(C)",
+   "deepseek": {
+    "k": "num",
+    "v": 220
+   },
+   "deepseek_clause": "10.60.30.10(1)(A)",
+   "claude": {
+    "k": "num",
+    "v": 180
+   },
+   "claude_clause": "10.60.30.10(1) frontage × 30 (10.60.30.10(1)(C))"
+  },
+  {
+   "id": "5046461-major-whatif",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5046461-major-whatif",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.80.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.80.40.20(1)"
+  },
+  {
+   "id": "5046461-major-whatif",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "flat",
+   "target": "main_wall_height_m",
+   "class": "ev=claude≠ds",
+   "evaluator": {
+    "k": "num",
+    "v": 7.5
+   },
+   "evaluator_winner": "10.80.40.10(2)#(2)(A)",
+   "deepseek": {
+    "k": "num",
+    "v": 7
+   },
+   "deepseek_clause": "10.80.40.10(2)",
+   "claude": {
+    "k": "num",
+    "v": 7.5
+   },
+   "claude_clause": "10.80.40.10(2)"
+  },
+  {
+   "id": "5046461-major-whatif",
+   "exception": null,
+   "bt": "townhouse",
+   "roof": "pitched",
+   "target": "required_lot_frontage_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "unknown",
+    "why": "condition_unknown:all_units_front_street"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 24
+   },
+   "deepseek_clause": "10.80.30.20(1)(D)(i)",
+   "claude": {
+    "k": "num",
+    "v": 24
+   },
+   "claude_clause": "10.80.30.20(1) major-street townhouse arm: 6.0 m × 4 units (each unit has its own driveway)"
+  },
+  {
+   "id": "5131054-major-whatif",
+   "exception": null,
+   "bt": "detached_house",
+   "roof": "pitched",
+   "target": "building_length_m",
+   "class": "readers_agree≠ev",
+   "evaluator": {
+    "k": "nolimit",
+    "why": "no_candidate"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 17
+   },
+   "deepseek_clause": "10.40.40.20(1)",
+   "claude": {
+    "k": "num",
+    "v": 17
+   },
+   "claude_clause": "10.40.40.20(1)"
+  },
+  {
+   "id": "5131054-major-whatif",
+   "exception": null,
+   "bt": "townhouse",
+   "roof": "pitched",
+   "target": "required_lot_frontage_m",
+   "class": "all_differ",
+   "evaluator": {
+    "k": "unknown",
+    "why": "condition_unknown:all_units_front_street"
+   },
+   "evaluator_winner": null,
+   "deepseek": {
+    "k": "num",
+    "v": 20
+   },
+   "deepseek_clause": "10.40.30.20(1)(D)(i)",
+   "claude": {
+    "k": "num",
+    "v": 24
+   },
+   "claude_clause": "10.40.30.20(1) major-street townhouse arm: 6.0 m × 4 units (each unit has its own driveway)"
+  }
+ ],
+ "displacer_sweep": [
+  {
+   "displacer": "10.10.20.41(5)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.40.1(3)#(3)(A)",
+     "target": [
+      "dwelling_units_max"
+     ]
+    },
+    {
+     "id": "10.10.40.1(3)#(3)(B)",
+     "target": [
+      "dwelling_units_max"
+     ]
+    },
+    {
+     "id": "10.5.1.10(3)#(3)(C)",
+     "target": [
+      "lot_area_per_unit_min_m2"
+     ]
+    },
+    {
+     "id": "10.5.1.10(3)#(3)(D)",
+     "target": [
+      "dwelling_units_max"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.20.60(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≥ 100 units",
+   "displaced": [
+    {
+     "id": "10.10.40.1(3)#(3)(A)",
+     "target": [
+      "dwelling_units_max"
+     ]
+    },
+    {
+     "id": "10.10.40.1(3)#(3)(B)",
+     "target": [
+      "dwelling_units_max"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.20.60(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≥ 100 units",
+   "displaced": [
+    {
+     "id": "10.10.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.10.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.20.60(1)#(1)(F)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≥ 100 units",
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.20.60(1)#(1)(I)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≥ 100 units",
+   "displaced": [
+    {
+     "id": "220.5.10.1(2)#(2)[T1.R2.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(2)#(2)[T1.R3.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(2)#(2)[T1.R4.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.20.60(1)#(1)(J)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≥ 100 units",
+   "displaced": [
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(B)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.1(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.40.1(2)#(2)(A)",
+     "target": [
+      "buildings_on_lot"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.10(2)#(2)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.10.40.10(2)#(2)(A)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    },
+    {
+     "id": "10.10.40.10(2)#(2)(B)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.10(3)#(3)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.10.40.10(3)#(3)(A)",
+     "target": [
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.30(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.10.40.30(1)#(1)(A)",
+     "target": [
+      "building_depth_m"
+     ]
+    },
+    {
+     "id": "10.10.40.30(1)#(1)(B)",
+     "target": [
+      "building_depth_m"
+     ]
+    },
+    {
+     "id": "10.10.40.30(1)#(1)(C)",
+     "target": [
+      "building_depth_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.10.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.10.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "10.10.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.10.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.40.71(1)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.40.70(1)#(1)(A)",
+     "target": [
+      "front_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.40.70(1)#(1)(B)",
+     "target": [
+      "front_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.10.60.70(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.70(1)#(1)(A)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.60.70(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.20.100(8)#(8)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.20.100(8)#(8)(B)",
+     "target": [
+      "required_lot_area_m2",
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "10.20.20.100(8)#(8)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.1(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.20.40.1(2)#(2)(A)",
+     "target": [
+      "buildings_on_lot"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.10(2)#(2)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.40.10(2)#(2)(A)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    },
+    {
+     "id": "10.20.40.10(2)#(2)(B)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.10(3)#(3)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.40.10(3)#(3)(A)",
+     "target": [
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.10(4)#(4)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.40.10(4)#(4)(A)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    },
+    {
+     "id": "10.20.40.10(4)#(4)(B)",
+     "target": [
+      "upper_storey_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.20(2)#(2)(A)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RD"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m and required_lot_frontage_m ≤ 18.0 m",
+   "displaced": [
+    {
+     "id": "10.20.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.20(2)#(2)(B)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RD"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m and required_lot_frontage_m ≤ 18.0 m",
+   "displaced": [
+    {
+     "id": "10.20.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.20(2)#(2)(C)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RD"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m and required_lot_frontage_m ≤ 18.0 m",
+   "displaced": [
+    {
+     "id": "10.20.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.20.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "10.20.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.20.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.20.40.70(4)#whole",
+   "archetype": "PERMIT",
+   "zones": [
+    "RD"
+   ],
+   "cond": "required_lot_frontage_m ≥ 12.0 m and required_lot_frontage_m < 18.0 m",
+   "displaced": [
+    {
+     "id": "10.20.40.70(3)#(3)(A)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(B)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(C)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(D)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(E)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(F)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.20.40.70(3)#(3)(G)",
+     "target": [
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.20.100(8)#(8)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RS"
+   ],
+   "displaced": [
+    {
+     "id": "10.40.20.100(8)#(8)(B)",
+     "target": [
+      "required_lot_area_m2",
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "10.40.20.100(8)#(8)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.1(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.40.40.1(2)#(2)(A)",
+     "target": [
+      "buildings_on_lot"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.10(2)#(2)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RS"
+   ],
+   "displaced": [
+    {
+     "id": "10.40.40.10(2)#(2)(A)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    },
+    {
+     "id": "10.40.40.10(2)#(2)(B)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.10(3)#(3)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RS"
+   ],
+   "displaced": [
+    {
+     "id": "10.40.40.10(3)#(3)(A)",
+     "target": [
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.20(2)#(2)(A)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RS"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.40.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.20(2)#(2)(B)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RS"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.40.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.20(2)#(2)(C)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RS"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.40.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RS"
+   ],
+   "displaced": [
+    {
+     "id": "10.40.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.40.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.40.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RS"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "10.40.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.40.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.5.20.40(7)#(7)(A)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.5.20.40(7)#(7)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.5.60.20(11)#(11)(B)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.20(2)#(2)(A)",
+     "target": [
+      "rear_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(2)#(2)(B)",
+     "target": [
+      "rear_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(2)#(2)(C)",
+     "target": [
+      "rear_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(3)#(3)(C)",
+     "target": [
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.5.60.20(7)#whole",
+   "archetype": "PERMIT",
+   "zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.20(3)#(3)(C)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(A)",
+     "target": [
+      "lane_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(B)",
+     "target": [
+      "side_setback_street_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.5.60.70(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.70(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.60.20.100(8)#(8)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RT"
+   ],
+   "displaced": [
+    {
+     "id": "10.60.20.100(8)#(8)(B)",
+     "target": [
+      "required_lot_area_m2",
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "10.60.20.100(8)#(8)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.60.40.10(2)#(2)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RT"
+   ],
+   "displaced": [
+    {
+     "id": "10.60.40.10(2)#(2)(A)",
+     "target": [
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.60.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RT"
+   ],
+   "displaced": [
+    {
+     "id": "10.60.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.60.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.60.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RT"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "10.60.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.60.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.20.100(9)#(9)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.80.20.100(9)#(9)(B)",
+     "target": [
+      "required_lot_area_m2",
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "10.80.20.100(9)#(9)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.10(2)#(2)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.80.40.10(2)#(2)(A)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    },
+    {
+     "id": "10.80.40.10(2)#(2)(B)",
+     "target": [
+      "main_wall_height_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.10(3)#(3)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.80.40.10(3)#(3)(A)",
+     "target": [
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.20(2)#(2)(A)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RM"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.80.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.20(2)#(2)(B)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RM"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.80.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.20(2)#(2)(C)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RM"
+   ],
+   "cond": "required_lot_frontage_m > 12.0 m",
+   "displaced": [
+    {
+     "id": "10.80.40.20(1)#whole",
+     "target": [
+      "building_length_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.40(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.80.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.80.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "10.80.40.40(1)#(1)(D)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RM"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "10.80.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.80.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.48.50.11(1)#(1)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "150.48.50.10(1)#(1)(A)",
+     "target": [
+      "landscaping_strip_width_m"
+     ]
+    },
+    {
+     "id": "150.48.50.10(1)#(1)(B)",
+     "target": [
+      "landscaping_strip_width_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.48.50.11(1)#(1)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "150.48.50.10(1)#(1)(A)",
+     "target": [
+      "landscaping_strip_width_m"
+     ]
+    },
+    {
+     "id": "150.48.50.10(1)#(1)(B)",
+     "target": [
+      "landscaping_strip_width_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.60.50(3)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.50(2)#(2)(A)",
+     "target": [
+      "ancillary_floor_area_m2"
+     ]
+    },
+    {
+     "id": "10.5.60.50(2)#(2)(B)",
+     "target": [
+      "ancillary_floor_area_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.60.60(2)#(2)(A)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.20(11)#(11)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.60.60(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.20(11)#(11)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.60.60(2)#(2)(C)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.20(11)#(11)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.75.1(1)#(1)(A)",
+   "archetype": "INCLUDE",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.75.1(4)#(4)(A)",
+     "target": [
+      "height_projection_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.80.1(1)#(1)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.7.80.1(1)#(1)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.50.10(1)#(1)(C)",
+   "archetype": "REQUIRE",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.50.10(3)#(3)(A)",
+     "target": [
+      "rear_soft_landscaping_pct"
+     ]
+    },
+    {
+     "id": "10.5.50.10(3)#(3)(B)",
+     "target": [
+      "rear_soft_landscaping_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.60.20(3)#(3)(B)",
+   "archetype": "INCLUDE",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.20(1)#(1)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_street_m"
+     ]
+    },
+    {
+     "id": "10.10.60.20(1)#(1)(B)",
+     "target": [
+      "lot_line_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(3)#(3)(C)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(A)",
+     "target": [
+      "lane_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(B)",
+     "target": [
+      "side_setback_street_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.60.50(3)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.50(2)#(2)(A)",
+     "target": [
+      "ancillary_floor_area_m2"
+     ]
+    },
+    {
+     "id": "10.5.60.50(2)#(2)(B)",
+     "target": [
+      "ancillary_floor_area_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.60.60(2)#(2)(B)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.20(11)#(11)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.60.60(2)#(2)(C)",
+   "archetype": "UNUSUAL",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.5.60.20(11)#(11)(A)",
+     "target": [
+      "rear_setback_m",
+      "side_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.80.1(1)#(1)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "150.8.80.1(1)#(1)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.1(1)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.15.1(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.15.2(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.15.3(1)#(1)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.15.3(1)#(1)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.25.15.4(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "10.10.60.70(1)#(1)(B)",
+     "target": [
+      "ancillary_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.40(3)#(3)(C)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.5.10.1(11)#(11)(A)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.5.10.1(11)#(11)(B)",
+   "archetype": "UNUSUAL",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.5.10.1(12)#whole",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+   ],
+   "cond": "dwelling_units ≤ 60 units",
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "220.5.10.11(5)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R2.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R3.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R4.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R5.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R6.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(8)#(8)[T1.R7.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.5.10.1(3)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(B)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.5.10.11(6)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(A)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(B)",
+     "target": [
+      "vertical_clearance_m",
+      "parking_space_width_m",
+      "bicycle_space_wall_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(C)",
+     "target": [
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.11(2)#whole",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.1(1)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.1(3)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.1(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.1(2)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.2(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.3(1)#(1)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.3(1)#(1)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.3(2)#(2)(A)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.3(2)#(2)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.4(1)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(5)#(5)(A)",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "80.5.40.40(1)#(1)(D)",
+     "target": [
+      "gfa_m2"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "230.90.15.4(2)#whole",
+   "archetype": "PREVAILING",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(A)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(7)#(7)(B)",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "40.10.40.10(1)#(1)(C)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "40.10.40.10(1)#(1)(A)",
+     "target": [
+      "height_m"
+     ]
+    },
+    {
+     "id": "40.10.40.10(1)#(1)(B)",
+     "target": [
+      "height_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "40.10.40.10(4)#(4)(B)",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "40.10.40.10(4)#(4)(A)",
+     "target": [
+      "height_m",
+      "height_storeys"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "5.10.40.40(2)#whole",
+   "archetype": "DISAPPLY",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "5.10.40.40(1)#whole",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(5)#(5)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(735)#(735)[SSP](A)(i)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "200.5.1.10(2)#(2)(A)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(B)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(C)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R2.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R3.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R4.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R5.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R6.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R7.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "220.5.10.1(5)#(5)[T1.R8.C2]",
+     "target": [
+      "loading_spaces"
+     ]
+    },
+    {
+     "id": "230.5.1.10(2)#whole",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(A)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(B)",
+     "target": [
+      "vertical_clearance_m",
+      "parking_space_width_m",
+      "bicycle_space_wall_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(C)",
+     "target": [
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(D)",
+     "target": [
+      "parking_space_width_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(4)#(4)(E)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(5)#(5)(A)",
+     "target": [
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.1.10(5)#(5)(B)",
+     "target": [
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R10.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R11.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C2]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R2.C3]",
+     "target": [
+      "bicycle_parking_spaces"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R3.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R4.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R5.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R6.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R7.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R8.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C2]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    },
+    {
+     "id": "230.5.10.1(1)#(1)[T2.R9.C3]",
+     "target": [
+      "bicycle_parking_rate"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(735)#(735)[SSP](M)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "200.5.1.10(2)#(2)(A)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(B)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(C)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(735)#(735)[SSP](N)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "200.5.1.10(2)#(2)(A)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(B)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    },
+    {
+     "id": "200.5.1.10(2)#(2)(C)",
+     "target": [
+      "parking_space_length_m",
+      "parking_space_width_m",
+      "vertical_clearance_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(930)#(930)[SSP](D)(iii)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "R"
+   ],
+   "cond": "platform_height_m > 1.2 m",
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(931)#(931)[SSP](E)(iii)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.2.10(125)#(125)[SSP](B)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.10.40.40(1)#(1)(A)",
+     "target": [
+      "fsi"
+     ]
+    },
+    {
+     "id": "10.10.40.40(1)#(1)(B)",
+     "target": [
+      "fsi"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(961)#(961)[SSP](A)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1335)#(1335)[SSP](D)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1321)#(1321)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1402)#(1402)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1406)#(1406)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1432)#(1432)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(197)#(197)[SSP](D)(iv)",
+   "archetype": "UNUSUAL",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.50.10(2)#(2)(A)",
+     "target": [
+      "side_street_landscaping_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1397)#(1397)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(244)#(244)[SSP](H)(i)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "900.3.10(244)#(244)[SSP](A)",
+     "target": [
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "900.3.10(244)#(244)[SSP](B)",
+     "target": [
+      "required_lot_area_m2"
+     ]
+    },
+    {
+     "id": "900.3.10(244)#(244)[SSP](E)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "900.3.10(244)#(244)[SSP](F)",
+     "target": [
+      "side_setback_street_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(244)#(244)[SSP](H)(ii)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.30.40(1)#(1)(A)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(C)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(D)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.70(1)#(1)(A)",
+     "target": [
+      "front_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.40.70(1)#(1)(B)",
+     "target": [
+      "front_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1430)#(1430)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1249)#(1249)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1332)#(1332)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1329)#(1329)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(235)#(235)[SSP](G)(i)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "900.3.10(235)#(235)[SSP](A)",
+     "target": [
+      "required_lot_frontage_m"
+     ]
+    },
+    {
+     "id": "900.3.10(235)#(235)[SSP](B)",
+     "target": [
+      "required_lot_area_m2"
+     ]
+    },
+    {
+     "id": "900.3.10(235)#(235)[SSP](D)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "900.3.10(235)#(235)[SSP](E)",
+     "target": [
+      "side_setback_street_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(235)#(235)[SSP](G)(ii)",
+   "archetype": "DISAPPLY",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.20.30.40(1)#(1)(A)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(C)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.20.30.40(1)#(1)(D)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.40.70(1)#(1)(A)",
+     "target": [
+      "front_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.40.70(1)#(1)(B)",
+     "target": [
+      "front_setback_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1410)#(1410)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1322)#(1322)[SSP](B)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1281)#(1281)[SSP](C)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1413)#(1413)[SSP](A)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "900.3.10(1409)#(1409)[SSP](A)",
+   "archetype": "PROHIBIT",
+   "zones": [
+    "RD"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.40.60(1)#(1)(D)",
+     "target": [
+      "encroachment_m"
+     ]
+    },
+    {
+     "id": "10.5.40.60(1)#(1)(F)",
+     "target": [
+      "encroachment_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "970.10.15.10(2)#whole",
+   "archetype": "PERMIT",
+   "zones": [
+    "R",
+    "RD",
+    "RS",
+    "RT",
+    "RM"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.20(3)#(3)(C)",
+     "target": [
+      "side_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(A)",
+     "target": [
+      "lane_setback_m"
+     ]
+    },
+    {
+     "id": "10.5.60.20(6)#(6)(B)",
+     "target": [
+      "side_setback_street_m"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "970.10.15.10(5)#(5)(A)",
+   "archetype": "DEFINE",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.70(1)#(1)(A)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.60.70(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "970.10.15.10(5)#(5)(B)",
+   "archetype": "DEFINE",
+   "zones": [
+    "R"
+   ],
+   "displaced": [
+    {
+     "id": "10.5.60.70(1)#(1)(A)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    },
+    {
+     "id": "10.5.60.70(1)#(1)(B)",
+     "target": [
+      "lot_coverage_pct"
+     ]
+    }
+   ]
+  },
+  {
+   "displacer": "200.5.10.1(13)@1075-2026#(13)",
+   "archetype": "PERMIT",
+   "zones": [],
+   "displaced": [
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R10.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R3.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R4.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R5.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    },
+    {
+     "id": "200.5.10.1(1)#(1)[T2.R8.C2]",
+     "target": [
+      "parking_rate"
+     ]
+    }
+   ]
+  }
+ ]
+}
