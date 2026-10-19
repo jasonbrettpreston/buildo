@@ -171,10 +171,11 @@
     },
     {
       "slug": "compute_coa_cost_estimates",
+      "owner_specs": ["docs/specs/01-pipeline/42_chain_coa.md", "docs/specs/01-pipeline/83_lead_cost_model.md"],
       "file": "scripts/compute-coa-cost-estimates.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "MATERIALIZER",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS wave-4 row (operator y 2026-10-18, plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md Q8; McDonald's Airtight V3): MATERIALIZER, the archetype of its twin compute_cost_estimates so both writers of cost_estimates share one. Phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype derived from the legacy script at PH-0 (R-AO): one derived row per priced CoA into cost_estimates (INSERT … ON CONFLICT (lead_id) DO UPDATE … WHERE … IS DISTINCT FROM, scripts/compute-coa-cost-estimates.js:359-397) plus a second target, the coa_applications cost columns and cost_classified_at watermark (:421-427)."
     },
     {
       "slug": "compute_cost_estimates",

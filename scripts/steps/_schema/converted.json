@@ -130,6 +130,13 @@
       "reason": "Phase 4 wave 4 (classify_coa_trades, MATERIALIZER: derived per-lead rows coa_applications(scope_tags) -> lead_trades (unguarded upsert, no retraction) + lead_products (per-lead delete-and-reinsert) + the coa_applications.trade_classified_at watermark; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 on all 15). ① lands the assessment docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + CCT-D1..CCT-D9; ② the descriptor/compute/shell/notes + migration 274 seeds, WAITING on the MATERIALIZER runner-built row form (draft ruling .cursor/v3-materializer-form-ruling-2026-10-18.md, RE-FREEZE) + PRE/POST goldens (nights P3/P4); ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/compute-coa-cost-estimates.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 4 (compute_coa_cost_estimates, MATERIALIZER: one derived cost row per priced CoA -> cost_estimates (guarded upsert ON CONFLICT (lead_id), coa: scope) + the coa_applications cost columns and cost_classified_at watermark; the archetype ladder T2-or-T4 over cost-model-shared; reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 consumer); McDonald's Airtight V3 from ①; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle with the real Brain, D1-D9 it.fails) + gate-K red evidence + CCCE-D1..CCCE-D10; ② the descriptor/compute/shell/notes + migration 275 seeds, WAITING on the MATERIALIZER runner-built row form (draft ruling .cursor/v3-materializer-form-ruling-2026-10-18.md) shared with the wave-3 twin compute_cost_estimates; ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-18",
+      "stage": "red_suite"
     }
   ],
   "converted": [

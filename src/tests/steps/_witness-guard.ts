@@ -133,6 +133,8 @@ export const ADOPTION: Readonly<Record<string, AdoptionClass>> = Object.freeze({
   enrich_coa_zoning: 'legacy_oracle_excluded',
   // classify_coa_trades joined as legacy_oracle_excluded while pending (phase-4 wave 4 commit ①, 2026-10-18; the coa / permits precedent).
   classify_coa_trades: 'legacy_oracle_excluded',
+  // compute_coa_cost_estimates joined as legacy_oracle_excluded while pending (phase-4 wave 4 commit ①, 2026-10-18; the coa / permits precedent).
+  compute_coa_cost_estimates: 'legacy_oracle_excluded',
   address_points: 'guarded',
   assert_engine_health: 'guarded',
   assert_global_coverage: 'guarded',
