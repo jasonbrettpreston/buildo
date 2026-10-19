@@ -140,3 +140,23 @@ describe('D1 — the RD exception "detached house with a flat roof" height caps 
     });
   }
 });
+
+describe('Q3 / D4 resolved (a) 2026-10-19 — M-176(1) stands: a townhouse on a major street takes the no-driveway frontage; the driveway case is disclosed', () => {
+  const TH: Array<[string, string]> = [['RD', '10.20.30.20(1)#(1)(C)'], ['RS', '10.40.30.20(1)#(1)(D)'], ['RM', '10.80.30.20(1)#(1)(D)']];
+  const DISCLOSURE = 'The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units).';
+  const flags = { major_street: true, all_units_front_street: true, unit_not_fronting_street: false, no_individual_private_driveway: true, individual_private_driveway: false };
+  for (const [zone, id] of TH) {
+    it(`${id} carries the plain-words driveway disclosure (≤ 45 words, LC-52)`, () => {
+      const d = unitOf(id).disclosure;
+      expect(d).toBe(DISCLOSURE);
+      expect(d.split(/\s+/).length).toBeLessThanOrEqual(45);
+    });
+    it(`${zone}: a 4-unit townhouse on a major street needs 20 m from ${id}, which discloses the 24 m driveway case`, () => {
+      const r = eff(lot(zone, 'townhouse', { label: { f: 18 }, flags, vars: { dwelling_units: 4 } }), 'required_lot_frontage_m');
+      expect(valueOf(r)).toBe(20);
+      // the winning unit carries the disclosure (unit disclosures travel with the answer to P5.12, not in effective().disclosures)
+      expect(r.winner).toBe(id);
+      expect(unitOf(r.winner).disclosure).toBe(DISCLOSURE);
+    });
+  }
+});

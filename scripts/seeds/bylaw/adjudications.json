@@ -76237,6 +76237,42 @@
           "flat_or_shallow_roof"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.30.20(1)#(1)(C)/disclosure~s2",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19, validation Q3 / D4 resolved (a): M-176(1) stands (\"for townhouse unit width we just assume no driveway\"), so a townhouse on a major street takes 6.0 m less 1.0 m per unit without an individual private driveway (4 units: 20 m), and the driveway case (6.0 m per unit, 24 m) is disclosed in plain words (LC-52, ≤ 45 words), the townhouse_driveway_width form.",
+      "rule": "Spec 69a M-176(1), M-187 (Q4; triage F06; dated note 2026-10-19 resolved (a)); Spec 78 P5.12 townhouse_driveway_width; Spec 131 LC-52; M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/disclosure~s1",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.30.20(1)#(1)(D)/disclosure~s2",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19, validation Q3 / D4 resolved (a): M-176(1) stands (\"for townhouse unit width we just assume no driveway\"), so a townhouse on a major street takes 6.0 m less 1.0 m per unit without an individual private driveway (4 units: 20 m), and the driveway case (6.0 m per unit, 24 m) is disclosed in plain words (LC-52, ≤ 45 words), the townhouse_driveway_width form.",
+      "rule": "Spec 69a M-176(1), M-187 (Q4; triage F06; dated note 2026-10-19 resolved (a)); Spec 78 P5.12 townhouse_driveway_width; Spec 131 LC-52; M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/disclosure~s1",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.30.20(1)#(1)(D)/disclosure~s2",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19, validation Q3 / D4 resolved (a): M-176(1) stands (\"for townhouse unit width we just assume no driveway\"), so a townhouse on a major street takes 6.0 m less 1.0 m per unit without an individual private driveway (4 units: 20 m), and the driveway case (6.0 m per unit, 24 m) is disclosed in plain words (LC-52, ≤ 45 words), the townhouse_driveway_width form.",
+      "rule": "Spec 69a M-176(1), M-187 (Q4; triage F06; dated note 2026-10-19 resolved (a)); Spec 78 P5.12 townhouse_driveway_width; Spec 131 LC-52; M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/disclosure~s1",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units)."
     }
   ]
 }

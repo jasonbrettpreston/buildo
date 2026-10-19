@@ -235,7 +235,8 @@ describe('M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 
       const u = unitOf(id);
       expect([u.archetype, u.target, u.bound, u.calculation_handling.status]).toEqual(['LIMIT', 'required_lot_frontage_m', 'min', 'partially_modelled']);
       expect(u.condition.tokens).toEqual(['major_street', 'all_units_front_street', 'no_individual_private_driveway']);
-      expect(u.disclosure).toBe('If each dwelling unit has an individual private driveway leading to its front: 6.0 m of frontage per unit.');
+      // superseded 2026-10-19 by the operator's Q3 answer (a): the plain-words driveway disclosure (bylaw-validation-fixes.logic.test.ts)
+      expect(u.disclosure).toBe('The frontage assumes no townhouse unit has its own driveway: 5.0 m per unit (20 m for 4 units). If each unit has its own driveway to the front, it needs 6.0 m per unit (24 m for 4 units).');
     });
     it(`${zone}: a 4-unit townhouse on a major street, every unit fronting the street, no driveways: 20.0 m from ${id} (was 12 m from the f label)`, () => {
       const r = eff(lot(zone, 'townhouse', { flags: { ...NO_DRIVEWAY, major_street: true, all_units_front_street: true, unit_not_fronting_street: false }, vars: { dwelling_units: 4 } }), 'required_lot_frontage_m');
