@@ -418,9 +418,9 @@
     {
       "slug": "assert_entity_tracing",
       "file": "scripts/quality/assert-entity-tracing.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "ASSERT",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: seven read-only SELECTs over permits/permit_trades/cost_estimates/trade_forecasts (scripts/quality/assert-entity-tracing.js:71-208), a row-derived non-halting verdict (:264, :298), no write (emitMeta writes {} :288-296). Precedent assert_global_coverage."
     },
     {
       "slug": "assert_lifecycle_phase_distribution",

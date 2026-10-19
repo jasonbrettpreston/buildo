@@ -333,13 +333,15 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 6 -> 8 at wave-4 enrich_permits + enrich_coa_zoning ① (2026-10-18): both census rows flipped (archetype ENRICHER, one shared module). Return to 6 at their ③.
     // 8 -> 9 at wave-4 classify_coa_trades ① (2026-10-18): archetype UNDECLARED -> MATERIALIZER (the ARCH-CENSUS wave-4 row, operator y 2026-10-18). Returns to 8 at its ③.
     // 9 -> 10 at wave-4 compute_coa_cost_estimates ① (2026-10-18): the same move (UNDECLARED -> MATERIALIZER, the twin compute_cost_estimates' archetype). Returns to 9 at its ③.
-    expect(pendingBatch.size).toBe(10);
+    // 10 -> 11 at C6-1 assert_entity_tracing ① (2026-10-19): its census row flipped batch "C6" -> "pending" (archetype ASSERT re-derived at PH-0, R-AO). Returns to 10 at its ③.
+    expect(pendingBatch.size).toBe(11);
     // 36 -> 35 at phase-4 wave 1 commit ① (permits) and 35 -> 34 at coa ①: each row left C6 (R-AO retention keeps it out).
     // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
     // 30 -> 29 at wave-4 classify_coa_trades ①.
     // 29 -> 28 at wave-4 compute_coa_cost_estimates ①.
     // 28 -> 26 at the C6 rulings (2026-10-19): observe_chain (R-EJ) and reclassify_all (R-EK) left C6 as declared exemptions.
-    expect(c6.size).toBe(26);
+    // 26 -> 25 at C6-1 assert_entity_tracing ①.
+    expect(c6.size).toBe(25);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 

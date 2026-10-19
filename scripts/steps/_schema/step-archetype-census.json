@@ -469,10 +469,11 @@
     },
     {
       "slug": "assert_entity_tracing",
+      "owner_specs": ["docs/specs/01-pipeline/41_chain_permits.md"],
       "file": "scripts/quality/assert-entity-tracing.js",
       "archetype": "ASSERT",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script (R-AO). Read-only trace coverage over permits (scripts/quality/assert-entity-tracing.js:73), permit_trades (:131), cost_estimates (:142), trade_forecasts (:167) and lifecycle phase (:187); verdict row-derived from audit rows (:264); records_updated 0 (:83, :275); no INSERT/UPDATE/DELETE anywhere in the file. Non-halting on business FAIL (header :14-16). Precedent assert_global_coverage."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: seven read-only SELECTs over permits/permit_trades/cost_estimates/trade_forecasts (scripts/quality/assert-entity-tracing.js:71-208), a row-derived non-halting verdict (:264, :298), no write (emitMeta writes {} :288-296). Precedent assert_global_coverage."
     },
     {
       "slug": "assert_lifecycle_phase_distribution",
