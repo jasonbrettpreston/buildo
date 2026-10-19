@@ -722,10 +722,10 @@ describe('step.schema.json — the V1-V6 and R6 rulings are actually encoded', (
     expect(wdRules.some((r) => String(r['x-rule'] ?? '').includes('unscoped_set_based'))).toBe(true);
   });
 
-  it('LDG-10 — invalidates[].by is a CLOSED five-value enum (no escape value), requirement kind gains trigger, staleness.pins exists with x-trust', () => {
+  it('LDG-10 — invalidates[].by is a CLOSED six-value enum (no escape value; RE-FREEZE #37 R-EA adds set_null_unless), requirement kind gains trigger, staleness.pins exists with x-trust', () => {
     const inv = at('properties.outputs').anyOf as Array<Record<string, unknown>>;
     const obj = inv.find((b) => b.type === 'object') as { properties: { invalidates: { items: { properties: { by: { enum: string[]; 'x-trust'?: string } } } } } };
-    expect(obj.properties.invalidates.items.properties.by.enum).toEqual(['trigger', 'set_null_on_change_of', 'step', 'pin', 'full_rescan']);
+    expect(obj.properties.invalidates.items.properties.by.enum).toEqual(['trigger', 'set_null_on_change_of', 'step', 'pin', 'full_rescan', 'set_null_unless']);
     expect(obj.properties.invalidates.items.properties.by['x-trust']).toBe('witnessed:#44');
     expect(at('definitions.requirement.properties.kind').enum as string[]).toContain('trigger');
     const pins = at('properties.staleness.properties.pins') as { type?: string; 'x-trust'?: string; 'x-ruling'?: { rungs_tried?: unknown[] } };

@@ -15,6 +15,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
 import { witnessGuard } from '../_witness-guard';
+import { runnerValues } from '../../helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS library + this step's real descriptor/compute */
 const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
@@ -62,7 +63,7 @@ function backfillPool(opts: PoolOpts = {}) {
     }
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(opts.logicVars ?? {}).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...opts.logicVars ?? {} }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };

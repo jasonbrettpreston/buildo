@@ -16,6 +16,7 @@ import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import * as ledger from '../../scripts/analysis/gates/ledger.mjs';
+import { runnerValues } from './helpers/runner-variables';
 
 const REPO_ROOT = process.cwd();
 const TIMEOUT = 120_000;
@@ -305,7 +306,7 @@ describe('L7 — refresh_snapshot schemaColumnCounts through the runner-owned ca
   async function runReads(pool: unknown, compute: unknown = rsCompute): Promise<Record<string, unknown>> {
     let captured: Record<string, unknown> | null = null;
     const out = await runner.runRecorderPhase({
-      descriptor, pool, compute, config, chainId: null, log: silentLog, tag: '[refresh_snapshot]', clockNow: new Date(),
+      descriptor, pool, compute, config, runner: runnerValues(), chainId: null, log: silentLog, tag: '[refresh_snapshot]', clockNow: new Date(),
       preWriteGate: async ({ matched }: { matched: { results: Record<string, unknown> } }) => { captured = matched.results; return { abort: true, failed: ['probe'] }; },
     });
     expect(out.writeSkipped).toBe(true);

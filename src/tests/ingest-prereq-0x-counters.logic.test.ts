@@ -52,6 +52,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
 import * as fs from 'node:fs';
+import { runnerValues } from './helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any -- exercising the real CJS libraries and descriptors */
 const Ajv: any = require('ajv');
@@ -98,7 +99,7 @@ function fakePool() {
   const answer = (text: string) => {
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(seedConfig()).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...seedConfig() }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };

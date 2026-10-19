@@ -20,7 +20,9 @@ const resolve = require('./resolve.cjs');
 
 // Text forms that open / close an explicit transaction block.
 const BEGIN_RE = /^\s*(BEGIN|START\s+TRANSACTION)\b/i;
-const END_RE = /^\s*(COMMIT|ROLLBACK|END)\b/i;
+// RE-FREEZE #37 (Spec 124 R-DM): `ROLLBACK TO [SAVEPOINT] <name>` undoes a savepoint INSIDE the open block
+// (the warn_row derived write); it never ends the transaction, so it is not an END statement.
+const END_RE = /^\s*(COMMIT|END|ROLLBACK(?!\s+(?:WORK\s+|TRANSACTION\s+)?TO\b))\b/i;
 // A statement is a PRODUCER-check carrier when its exclusion list names the
 // runner's own ledger relation.
 const PRODUCER_TABLE = 'pipeline_runs';

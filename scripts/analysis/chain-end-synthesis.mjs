@@ -48,6 +48,7 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const REPORT_DIR = path.join(REPO_ROOT, 'docs/reports/pipeline-validation/sources');
 
 const seam = require(path.join(REPO_ROOT, 'scripts/lib/step/seam.js'));
+const { resolveRunnerVariables } = require(path.join(REPO_ROOT, 'scripts/lib/step/config.js'));
 const { runInvariants, runPlausibility } = require(path.join(REPO_ROOT, 'scripts/lib/step/plausibility.js'));
 
 /**
@@ -154,17 +155,18 @@ function computeValidateOnlyCostCap(descriptorsByName, chainDurationMs) {
  * (they already fired at their own step's run-end hook, index.js:1834) —
  * this tier exists ONLY for the frequency the run-end hook skips.
  */
-async function runValidateOnlyTier(pool, descriptorsByName) {
+async function runValidateOnlyTier(pool, descriptorsByName, concurrency) {
+  // Spec 124 R-EB (a): the batch width is the runner-owned step_post_check_concurrency (no `: 4` fallback).
   const rows = [];
   for (const [stepName, { descriptor }] of Object.entries(descriptorsByName)) {
     const hasInvariants = Array.isArray(descriptor.invariants) && descriptor.invariants.length > 0;
     const hasPlausibility = Array.isArray(descriptor.plausibility) && descriptor.plausibility.length > 0;
     if (!hasInvariants && !hasPlausibility) continue;
     const invRun = hasInvariants
-      ? await runInvariants(pool, descriptor, { frequency: 'validate_only', when: null })
+      ? await runInvariants(pool, descriptor, { frequency: 'validate_only', when: null, concurrency })
       : { checks: [], observations: {} };
     const plRun = hasPlausibility
-      ? await runPlausibility(pool, descriptor, { frequency: 'validate_only', when: null })
+      ? await runPlausibility(pool, descriptor, { frequency: 'validate_only', when: null, concurrency })
       : { checks: [], observations: {} };
     for (const check of [...invRun.checks, ...plRun.checks]) {
       const obs = invRun.observations[check.id] !== undefined ? invRun.observations[check.id] : plRun.observations[check.id];
@@ -194,9 +196,13 @@ async function synthesizeChainEnd(pool, { chainId = 'sources', runId } = {}) {
   const { chainRow, stepRows, joinKind } = fetched;
 
   const descriptorsByName = seam.loadConvertedDescriptors();
-  const seamRows = await seam.runSeamChecks(pool, { chainId, descriptorsByName });
+  // Spec 124 R-EB (a): the seam scan window is the runner-owned step_seam_chain_run_scan_limit, read through
+  // the library's one runner-variable resolver (same statement, same bounds, same refusal).
+  const runner = await resolveRunnerVariables(pool, 'chain-end-synthesis');
+  const scanLimit = runner.step_seam_chain_run_scan_limit;
+  const seamRows = await seam.runSeamChecks(pool, { chainId, descriptorsByName, scanLimit });
   const costCap = computeValidateOnlyCostCap(descriptorsByName, chainRow.duration_ms);
-  const validateOnlyRows = await runValidateOnlyTier(pool, descriptorsByName);
+  const validateOnlyRows = await runValidateOnlyTier(pool, descriptorsByName, runner.step_post_check_concurrency);
 
   return {
     chain: chainId,

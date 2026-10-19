@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/enrich-heritage.js",
   "chain": "none",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,7 +11,7 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "duration_ms": 1331,
+      "duration_ms": 1639,
       "code_version": "none",
       "heritage_designated_by_zone": {
         "RD": {
@@ -70,7 +70,7 @@
       "terminal": "enriched",
       "ledger_row": "owned",
       "chain_run_id": null,
-      "code_sha": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+      "code_sha": "15d79445291f7e4a61961d08a152c0c80d345751",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -157,7 +157,7 @@
           },
           {
             "metric": "enrich_heritage_duration_ms",
-            "value": 1331,
+            "value": 1639,
             "threshold": "viol == 0",
             "status": "INFO",
             "source": "check",
@@ -291,98 +291,98 @@
             "pin_id": "load_heritage.records_meta.heritage_load.spec_version",
             "predicate": "records_meta.heritage_load.spec_version equals \"1.1\"",
             "observed": "1.1",
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": "1.1",
             "threshold": "1.1",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.feature_count",
             "predicate": "records_meta.heritage_load.heritage_register.feature_count nonzero",
             "observed": 8848,
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": 8848,
             "threshold": "nonzero",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.feature_count",
             "predicate": "records_meta.heritage_load.heritage_districts.feature_count nonzero",
             "observed": 29,
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": 29,
             "threshold": "nonzero",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed",
             "predicate": "records_meta.heritage_load.heritage_register.drift_check_passed true",
             "observed": true,
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": true,
             "threshold": "true",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed",
             "predicate": "records_meta.heritage_load.heritage_districts.drift_check_passed true",
             "observed": true,
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": true,
             "threshold": "true",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version",
             "predicate": "records_meta.heritage_load.heritage_register.source_dataset_version nonzero",
             "observed": "37bd232d706be8409f845846474b7c3d",
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": "37bd232d706be8409f845846474b7c3d",
             "threshold": "nonzero",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS"
           },
           {
             "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero",
             "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version",
             "predicate": "records_meta.heritage_load.heritage_districts.source_dataset_version nonzero",
             "observed": "eb37b1a023ddccff155145a9fdd2e3d1",
-            "producer_run_id": 3159,
+            "producer_run_id": 3364,
             "producer_status": "completed_with_warnings",
-            "producer_completed_at": "2026-10-17T19:24:48.929Z",
+            "producer_completed_at": "2026-10-18T03:53:01.010Z",
             "result": "PASS",
             "status": "INFO",
             "value": "eb37b1a023ddccff155145a9fdd2e3d1",
             "threshold": "nonzero",
-            "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS"
+            "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS"
           },
           {
             "metric": "retired_var_row_present:heritage_point_match_radius_m",
@@ -392,19 +392,19 @@
           },
           {
             "metric": "sys_heritage_flag_type_agree_flagged_side_duration_ms",
-            "value": 625,
+            "value": 620,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_flag_type_agree_unflagged_side_duration_ms",
-            "value": 618,
+            "value": 619,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_date_without_type_count_duration_ms",
-            "value": 615,
+            "value": 624,
             "threshold": null,
             "status": "INFO"
           },
@@ -416,31 +416,31 @@
           },
           {
             "metric": "sys_heritage_designated_share_max_pct_duration_ms",
-            "value": 537,
+            "value": 577,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_designated_count_collapse_floor_duration_ms",
-            "value": 536,
+            "value": 576,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_heritage_part_iv_matched_le_source_duration_ms",
-            "value": 537,
+            "value": 577,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_velocity_rows_sec",
-            "value": 198773.02,
+            "value": 174529,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "sys_duration_ms",
-            "value": 2498,
+            "value": 2845,
             "threshold": null,
             "status": "INFO"
           }
@@ -491,16 +491,16 @@
   "ledger_status": [
     "completed"
   ],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=260 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 459ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496535,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1331,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236070,\"designated\":2490},\"R\":{\"parcels\":104546,\"designated\":4593},\"RM\":{\"parcels\":54868,\"designated\":25},\"RS\":{\"parcels\":29681,\"designated\":3},\"CR\":{\"parcels\":19313,\"designated\":2056},\"RT\":{\"parcels\":14928,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17829,\"designated\":515},\"other\":{\"parcels\":15985,\"designated\":260}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"b61efc2b245d507a33c8db4f95e34f07b44389d7\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10616,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1362,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":1331,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_by_zone\",\"value\":{\"RD\":{\"parcels\":236070,\"designated\":2490},\"R\":{\"parcels\":104546,\"designated\":4593},\"RM\":{\"parcels\":54868,\"designated\":25},\"RS\":{\"parcels\":29681,\"designated\":3},\"CR\":{\"parcels\":19313,\"designated\":2056},\"RT\":{\"parcels\":14928,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17829,\"designated\":515},\"other\":{\"parcels\":15985,\"designated\":260}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13801214816247,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10616,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_spec_version\",\"pin_id\":\"load_heritage.records_meta.heritage_load.spec_version\",\"predicate\":\"records_meta.heritage_load.spec_version equals \\\"1.1\\\"\",\"observed\":\"1.1\",\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.1\",\"threshold\":\"1.1\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \\\"1.1\\\" — expected \\\"1.1\\\" — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.feature_count\",\"predicate\":\"records_meta.heritage_load.heritage_register.feature_count nonzero\",\"observed\":8848,\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":8848,\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.feature_count\",\"predicate\":\"records_meta.heritage_load.heritage_districts.feature_count nonzero\",\"observed\":29,\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":29,\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed\",\"predicate\":\"records_meta.heritage_load.heritage_register.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed\",\"predicate\":\"records_meta.heritage_load.heritage_districts.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version\",\"predicate\":\"records_meta.heritage_load.heritage_register.source_dataset_version nonzero\",\"observed\":\"37bd232d706be8409f845846474b7c3d\",\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"37bd232d706be8409f845846474b7c3d\",\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \\\"37bd232d706be8409f845846474b7c3d\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version\",\"predicate\":\"records_meta.heritage_load.heritage_districts.source_dataset_version nonzero\",\"observed\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"producer_run_id\":3159,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-17T19:24:48.929Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \\\"eb37b1a023ddccff155145a9fdd2e3d1\\\" — expected non-empty — PASS\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":625,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":618,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":615,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":624,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":537,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":536,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":537,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":198773.02,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2498,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 2.5s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=264 (floor 244)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join starting (shared txn, timeout 240min)\"}\n{\"level\":\"INFO\",\"tag\":\"[enrich_heritage]\",\"msg\":\"phase heritage_join completed in 525ms\"}\nPIPELINE_SUMMARY:{\"records_total\":496535,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":1639,\"code_version\":\"none\",\"heritage_designated_by_zone\":{\"RD\":{\"parcels\":236070,\"designated\":2490},\"R\":{\"parcels\":104546,\"designated\":4593},\"RM\":{\"parcels\":54868,\"designated\":25},\"RS\":{\"parcels\":29681,\"designated\":3},\"CR\":{\"parcels\":19313,\"designated\":2056},\"RT\":{\"parcels\":14928,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17829,\"designated\":515},\"other\":{\"parcels\":15985,\"designated\":260}},\"config\":{\"enrich_heritage_address_levenshtein_threshold\":2,\"enrich_heritage_unlinked_point_warn_pct\":15,\"enrich_heritage_unlinked_point_fail_pct\":30,\"enrich_heritage_designated_min_count\":1,\"enrich_heritage_part_iv_min_count\":1,\"enrich_heritage_heartbeat_minutes\":5,\"enrich_heritage_lock_timeout_ms\":1800000,\"enrich_heritage_phase_timeout_minutes\":240,\"enrich_heritage_designated_share_plausible_max_pct\":10,\"enrich_heritage_designated_count_collapse_floor\":1000},\"terminal\":\"enriched\",\"ledger_row\":\"owned\",\"chain_run_id\":null,\"code_sha\":\"15d79445291f7e4a61961d08a152c0c80d345751\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":13,\"name\":\"Parcel Heritage Designation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"parcels_heritage_designated_count\",\"value\":10616,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_iv_count\",\"value\":1362,\"threshold\":\"value_min 1\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_part_v_hcd_count\",\"value\":9254,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_source_count\",\"value\":1568,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_points_no_parcel_match\",\"value\":0.8,\"threshold\":\"pct <= 15\",\"status\":\"PASS\",\"source\":\"check\",\"warn_threshold\":\"pct <= 30\",\"observed\":\"after_write\"},{\"metric\":\"parcels_invalid_geom_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_enriched_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"parcels_heritage_enrich_skipped\",\"value\":true,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_source_dataset_version\",\"value\":\"37bd232d706be8409f845846474b7c3d|eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"enrich_heritage_duration_ms\",\"value\":1639,\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_by_zone\",\"value\":{\"RD\":{\"parcels\":236070,\"designated\":2490},\"R\":{\"parcels\":104546,\"designated\":4593},\"RM\":{\"parcels\":54868,\"designated\":25},\"RS\":{\"parcels\":29681,\"designated\":3},\"CR\":{\"parcels\":19313,\"designated\":2056},\"RT\":{\"parcels\":14928,\"designated\":3},\"RA\":{\"parcels\":2609,\"designated\":12},\"CRE\":{\"parcels\":707,\"designated\":659},\"(null)\":{\"parcels\":17829,\"designated\":515},\"other\":{\"parcels\":15985,\"designated\":260}},\"threshold\":\"viol == 0\",\"status\":\"INFO\",\"source\":\"check\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_flagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_flag_type_agree_unflagged_side\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_date_without_type_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_null_date_count\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"invariant\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_share_max_pct\",\"value\":2.13801214816247,\"threshold\":\"value_max 10\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_designated_count_collapse_floor\",\"value\":10616,\"threshold\":\"value_min 1000\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"heritage_part_iv_matched_le_source\",\"value\":0,\"threshold\":\"value_max 0\",\"status\":\"PASS\",\"source\":\"plausibility\",\"observed\":\"after_write\"},{\"metric\":\"inputs_nonempty\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"every declared read table non-empty (inputs.expect_nonempty)\",\"status\":\"INFO\"},{\"metric\":\"empty_source_guard\",\"value\":{\"heritage_properties\":8848,\"heritage_districts\":29},\"threshold\":\"guards.empty_source table(s) non-empty\",\"status\":\"INFO\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_spec_version\",\"pin_id\":\"load_heritage.records_meta.heritage_load.spec_version\",\"predicate\":\"records_meta.heritage_load.spec_version equals \\\"1.1\\\"\",\"observed\":\"1.1\",\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"1.1\",\"threshold\":\"1.1\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \\\"1.1\\\" — expected \\\"1.1\\\" — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.feature_count\",\"predicate\":\"records_meta.heritage_load.heritage_register.feature_count nonzero\",\"observed\":8848,\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":8848,\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.feature_count\",\"predicate\":\"records_meta.heritage_load.heritage_districts.feature_count nonzero\",\"observed\":29,\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":29,\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed\",\"predicate\":\"records_meta.heritage_load.heritage_register.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed\",\"predicate\":\"records_meta.heritage_load.heritage_districts.drift_check_passed true\",\"observed\":true,\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":true,\"threshold\":\"true\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version\",\"predicate\":\"records_meta.heritage_load.heritage_register.source_dataset_version nonzero\",\"observed\":\"37bd232d706be8409f845846474b7c3d\",\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"37bd232d706be8409f845846474b7c3d\",\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \\\"37bd232d706be8409f845846474b7c3d\\\" — expected non-empty — PASS\"},{\"metric\":\"producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero\",\"pin_id\":\"load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version\",\"predicate\":\"records_meta.heritage_load.heritage_districts.source_dataset_version nonzero\",\"observed\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"producer_run_id\":3364,\"producer_status\":\"completed_with_warnings\",\"producer_completed_at\":\"2026-10-18T03:53:01.010Z\",\"result\":\"PASS\",\"status\":\"INFO\",\"value\":\"eb37b1a023ddccff155145a9fdd2e3d1\",\"threshold\":\"nonzero\",\"note\":\"load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \\\"eb37b1a023ddccff155145a9fdd2e3d1\\\" — expected non-empty — PASS\"},{\"metric\":\"retired_var_row_present:heritage_point_match_radius_m\",\"value\":\"\\\"heritage_point_match_radius_m\\\" (retired 2026-06-04, EH-D3) has no logic_variables row\",\"threshold\":\"no logic_variables row for a retired name\",\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_flagged_side_duration_ms\",\"value\":620,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_flag_type_agree_unflagged_side_duration_ms\",\"value\":619,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_date_without_type_count_duration_ms\",\"value\":624,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_null_date_count_duration_ms\",\"value\":624,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_share_max_pct_duration_ms\",\"value\":577,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_designated_count_collapse_floor_duration_ms\",\"value\":576,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_heritage_part_iv_matched_le_source_duration_ms\",\"value\":577,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":174529,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":2845,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"heritage_properties\":[\"id\",\"geom\",\"status\",\"address_text\",\"designated_date\"],\"heritage_districts\":[\"id\",\"geom\",\"designated_date\"],\"parcels\":[\"id\",\"geom\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]},\"writes\":{\"parcels\":[\"is_heritage_designated\",\"heritage_designation_type\",\"heritage_designation_date\",\"heritage_dataset_version_when_enriched\"]}}\n\n[enrich_heritage] completed in 2.8s\n",
   "stderr": "",
   "pipeline_runs": [
     {
-      "id": 3327,
+      "id": 3513,
       "pipeline": "enrich_heritage",
       "status": "completed",
-      "started_at": "2026-10-18T03:36:12.673Z",
-      "completed_at": "2026-10-18T03:36:15.165Z",
-      "duration_ms": 2499,
+      "started_at": "2026-10-19T13:15:33.143Z",
+      "completed_at": "2026-10-19T13:15:35.981Z",
+      "duration_ms": 2846,
       "records_total": 496535,
       "records_new": 0,
       "records_updated": 0,
@@ -518,7 +518,7 @@
           "enrich_heritage_designated_share_plausible_max_pct": 10
         },
         "errors": [],
-        "code_sha": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+        "code_sha": "15d79445291f7e4a61961d08a152c0c80d345751",
         "terminal": "enriched",
         "warnings": [],
         "ledger_row": "owned",
@@ -599,7 +599,7 @@
               "threshold": "viol == 0"
             },
             {
-              "value": 1331,
+              "value": 1639,
               "metric": "enrich_heritage_duration_ms",
               "source": "check",
               "status": "INFO",
@@ -730,7 +730,7 @@
               "threshold": "guards.empty_source table(s) non-empty"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
               "value": "1.1",
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_spec_version",
               "pin_id": "load_heritage.records_meta.heritage_load.spec_version",
@@ -739,12 +739,12 @@
               "observed": "1.1",
               "predicate": "records_meta.heritage_load.spec_version equals \"1.1\"",
               "threshold": "1.1",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
               "value": 8848,
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.feature_count",
@@ -753,12 +753,12 @@
               "observed": 8848,
               "predicate": "records_meta.heritage_load.heritage_register.feature_count nonzero",
               "threshold": "nonzero",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
               "value": 29,
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.feature_count",
@@ -767,12 +767,12 @@
               "observed": 29,
               "predicate": "records_meta.heritage_load.heritage_districts.feature_count nonzero",
               "threshold": "nonzero",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
               "value": true,
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed",
@@ -781,12 +781,12 @@
               "observed": true,
               "predicate": "records_meta.heritage_load.heritage_register.drift_check_passed true",
               "threshold": "true",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
               "value": true,
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed",
@@ -795,12 +795,12 @@
               "observed": true,
               "predicate": "records_meta.heritage_load.heritage_districts.drift_check_passed true",
               "threshold": "true",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
               "value": "37bd232d706be8409f845846474b7c3d",
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version",
@@ -809,12 +809,12 @@
               "observed": "37bd232d706be8409f845846474b7c3d",
               "predicate": "records_meta.heritage_load.heritage_register.source_dataset_version nonzero",
               "threshold": "nonzero",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
               "value": "eb37b1a023ddccff155145a9fdd2e3d1",
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version",
@@ -823,9 +823,9 @@
               "observed": "eb37b1a023ddccff155145a9fdd2e3d1",
               "predicate": "records_meta.heritage_load.heritage_districts.source_dataset_version nonzero",
               "threshold": "nonzero",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
-              "producer_completed_at": "2026-10-17T19:24:48.929Z"
+              "producer_completed_at": "2026-10-18T03:53:01.010Z"
             },
             {
               "value": "\"heritage_point_match_radius_m\" (retired 2026-06-04, EH-D3) has no logic_variables row",
@@ -834,19 +834,19 @@
               "threshold": "no logic_variables row for a retired name"
             },
             {
-              "value": 625,
+              "value": 620,
               "metric": "sys_heritage_flag_type_agree_flagged_side_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 618,
+              "value": 619,
               "metric": "sys_heritage_flag_type_agree_unflagged_side_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 615,
+              "value": 624,
               "metric": "sys_heritage_date_without_type_count_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -858,31 +858,31 @@
               "threshold": null
             },
             {
-              "value": 537,
+              "value": 577,
               "metric": "sys_heritage_designated_share_max_pct_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 536,
+              "value": 576,
               "metric": "sys_heritage_designated_count_collapse_floor_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 537,
+              "value": 577,
               "metric": "sys_heritage_part_iv_matched_le_source_duration_ms",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 198773.02,
+              "value": 174529,
               "metric": "sys_velocity_rows_sec",
               "status": "INFO",
               "threshold": null
             },
             {
-              "value": 2498,
+              "value": 2845,
               "metric": "sys_duration_ms",
               "status": "INFO",
               "threshold": null
@@ -891,7 +891,7 @@
           "phase": 13,
           "verdict": "PASS"
         },
-        "duration_ms": 1331,
+        "duration_ms": 1639,
         "pool_errors": 0,
         "chain_run_id": null,
         "code_version": "none",
@@ -944,7 +944,7 @@
       "error_message": null
     }
   ],
-  "pipeline_runs_max_id_before": 3326,
+  "pipeline_runs_max_id_before": 3512,
   "table_state": [
     {
       "table": "parcels",
@@ -967,7 +967,7 @@
   "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "parcels": 670
+    "parcels": 440
   },
   "table_specs": {
     "parcels": {
@@ -1131,7 +1131,7 @@
               "source": "check",
               "status": "INFO",
               "threshold": "viol == 0",
-              "value": 1331
+              "value": 1639
             },
             {
               "metric": "heritage_designated_by_zone",
@@ -1258,12 +1258,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_spec_version",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
               "observed": "1.1",
               "pin_id": "load_heritage.records_meta.heritage_load.spec_version",
               "predicate": "records_meta.heritage_load.spec_version equals \"1.1\"",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1272,12 +1272,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
               "observed": 8848,
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.feature_count",
               "predicate": "records_meta.heritage_load.heritage_register.feature_count nonzero",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1286,12 +1286,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
               "observed": 29,
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.feature_count",
               "predicate": "records_meta.heritage_load.heritage_districts.feature_count nonzero",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1300,12 +1300,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
               "observed": true,
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed",
               "predicate": "records_meta.heritage_load.heritage_register.drift_check_passed true",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1314,12 +1314,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
               "observed": true,
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed",
               "predicate": "records_meta.heritage_load.heritage_districts.drift_check_passed true",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1328,12 +1328,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
               "observed": "37bd232d706be8409f845846474b7c3d",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version",
               "predicate": "records_meta.heritage_load.heritage_register.source_dataset_version nonzero",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1342,12 +1342,12 @@
             },
             {
               "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero",
-              "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
+              "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
               "observed": "eb37b1a023ddccff155145a9fdd2e3d1",
               "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version",
               "predicate": "records_meta.heritage_load.heritage_districts.source_dataset_version nonzero",
               "producer_completed_at": "<TS>",
-              "producer_run_id": 3159,
+              "producer_run_id": 3364,
               "producer_status": "completed_with_warnings",
               "result": "PASS",
               "status": "INFO",
@@ -1558,7 +1558,7 @@
                 "source": "check",
                 "status": "INFO",
                 "threshold": "viol == 0",
-                "value": 1331
+                "value": 1639
               },
               {
                 "metric": "heritage_designated_by_zone",
@@ -1685,12 +1685,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_spec_version",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.spec_version = \"1.1\" — expected \"1.1\" — PASS",
                 "observed": "1.1",
                 "pin_id": "load_heritage.records_meta.heritage_load.spec_version",
                 "predicate": "records_meta.heritage_load.spec_version equals \"1.1\"",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1699,12 +1699,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_feature_count_nonzero",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.feature_count = 8848 — expected non-empty — PASS",
                 "observed": 8848,
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.feature_count",
                 "predicate": "records_meta.heritage_load.heritage_register.feature_count nonzero",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1713,12 +1713,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_feature_count_nonzero",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.feature_count = 29 — expected non-empty — PASS",
                 "observed": 29,
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.feature_count",
                 "predicate": "records_meta.heritage_load.heritage_districts.feature_count nonzero",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1727,12 +1727,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_drift_check_passed_true",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.drift_check_passed = true — expected true — PASS",
                 "observed": true,
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.drift_check_passed",
                 "predicate": "records_meta.heritage_load.heritage_register.drift_check_passed true",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1741,12 +1741,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_drift_check_passed_true",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.drift_check_passed = true — expected true — PASS",
                 "observed": true,
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.drift_check_passed",
                 "predicate": "records_meta.heritage_load.heritage_districts.drift_check_passed true",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1755,12 +1755,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_register_source_dataset_version_nonzero",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_register.source_dataset_version = \"37bd232d706be8409f845846474b7c3d\" — expected non-empty — PASS",
                 "observed": "37bd232d706be8409f845846474b7c3d",
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_register.source_dataset_version",
                 "predicate": "records_meta.heritage_load.heritage_register.source_dataset_version nonzero",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1769,12 +1769,12 @@
               },
               {
                 "metric": "producer_pin_load_heritage_records_meta_heritage_load_heritage_districts_source_dataset_version_nonzero",
-                "note": "load_heritage run 3159 (completed_with_warnings @ Sat Oct 17 2026 15:24:48 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
+                "note": "load_heritage run 3364 (completed_with_warnings @ Sat Oct 17 2026 23:53:01 GMT-0400 (Eastern Daylight Time)): records_meta.heritage_load.heritage_districts.source_dataset_version = \"eb37b1a023ddccff155145a9fdd2e3d1\" — expected non-empty — PASS",
                 "observed": "eb37b1a023ddccff155145a9fdd2e3d1",
                 "pin_id": "load_heritage.records_meta.heritage_load.heritage_districts.source_dataset_version",
                 "predicate": "records_meta.heritage_load.heritage_districts.source_dataset_version nonzero",
                 "producer_completed_at": "<TS>",
-                "producer_run_id": 3159,
+                "producer_run_id": 3364,
                 "producer_status": "completed_with_warnings",
                 "result": "PASS",
                 "status": "INFO",
@@ -1861,7 +1861,7 @@
       }
     ],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=260 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[enrich_heritage] target: enrich_heritage (descriptor.database) → database=postgres user=postgres migrations=264 (floor 244)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join starting (shared txn, timeout <DUR>)\",\"tag\":\"[enrich_heritage]\"}",
       "{\"level\":\"INFO\",\"msg\":\"phase heritage_join completed in <DUR>\",\"tag\":\"[enrich_heritage]\"}",
       "[enrich_heritage] completed in <DUR>"
@@ -1928,7 +1928,7 @@
       }
     ],
     "reason": "zero writes on 1 table(s) [parcels]",
-    "txid_before_run2": 216344,
+    "txid_before_run2": 325468,
     "run2": {
       "exit_code": 0,
       "skipped": false,
@@ -1937,11 +1937,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3327,
+      "id": 3513,
       "recorded_by": "step"
     },
     {
-      "id": 3328,
+      "id": 3514,
       "recorded_by": "step"
     }
   ],
@@ -1951,5 +1951,5 @@
     "scripts/enrich-heritage.js",
     "scripts/lib/compute/enrich-heritage.js"
   ],
-  "lib_fingerprint": "1d3ae5ed01bac548124a5b5a4ca0d9334bfe62a394abdc164abc2a97e38d149c"
+  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
 }

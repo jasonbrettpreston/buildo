@@ -3,14 +3,14 @@
   "step": "scripts/load-neighbourhoods.js",
   "chain": "sources",
   "source_fingerprint": "8f0b3943d307f3189d23d2a9d2b841f64d4d884f59100ba7dffedeb7bdef72d2",
-  "git_head": "b61efc2b245d507a33c8db4f95e34f07b44389d7",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
   "header": {
     "processes": 1,
-    "calls": 21,
-    "distinct": 16,
-    "utility": 9,
-    "tracer_self_ms": 2.832,
-    "wall_ms": 2002
+    "calls": 19,
+    "distinct": 15,
+    "utility": 7,
+    "tracer_self_ms": 2.87,
+    "wall_ms": 2252
   },
   "statements": [
     {
@@ -40,16 +40,6 @@
       ]
     },
     {
-      "fingerprint": "1b0f8cbcf8a51ea6",
-      "kind": "utility",
-      "count": 1,
-      "rowCount": 0,
-      "reads": {},
-      "writes": {},
-      "excluded": [],
-      "error": null
-    },
-    {
       "fingerprint": "295268ea529014a0",
       "kind": "read",
       "count": 1,
@@ -69,7 +59,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 788,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -188,7 +178,7 @@
       "fingerprint": "89fec6cbb7400f32",
       "kind": "read",
       "count": 1,
-      "rowCount": 4,
+      "rowCount": 15,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -221,7 +211,7 @@
     {
       "fingerprint": "c943c893daafa8b8",
       "kind": "utility",
-      "count": 3,
+      "count": 2,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -251,7 +241,7 @@
   ],
   "transactions": [
     {
-      "client": "73017:2",
+      "client": "52207:2",
       "write_fingerprints": [
         "736eb2f92abef1ed"
       ]

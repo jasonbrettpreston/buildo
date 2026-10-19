@@ -5280,7 +5280,7 @@
     "max": 75,
     "description": "WF3 EP-D17 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C1). The declared ceiling an every_run invariants[]/plausibility[] entry inherits when it declares no statement_timeout of its own — before this, that entry took the bare pool.query branch inside scripts/lib/step/plausibility.js's executeEntry and ran with NO ceiling at all (PIPELINE_STATEMENT_TIMEOUT_MS defaults to 0). Cloud EXPLAIN measured enrich_parcels' 5 post checks (full Seq Scans on parcels) at 16-30s on a vacuumed heap vs 40+ min against a bloated one (run 34506962436, 2026-09-10) — 10 min is comfortably inside the clean-heap cost with headroom, and a genuine regression past it now FAILs loudly instead of wedging the chain. CONSUMED by scripts/lib/step/index.js (the every_run invariants/plausibility executor's default-ceiling resolution); today's sole declaring consumer is enrich_parcels.",
     "admin": {
-      "group": "Source Ingestion"
+      "group": "Pipeline Runner"
     }
   },
   "parcels_dead_tuple_ratio_warn_max": {
@@ -5300,7 +5300,7 @@
     "max": 10,
     "description": "WF3 EP-D17 output-panel fix F7 (2026-09-10, .cursor/wf3_ep_d17_pass5_fullscan_checks_active_task.md C1/C2b). Caps the number of invariants[]/plausibility[] entries scripts/lib/step/plausibility.js's runValidatorEntries executes SIMULTANEOUSLY (batch width) at the run-end every_run hook. The original C2b design ran every selected entry concurrently, unbounded — measured against link_wsib's own 9 declared entries, that would open 9 simultaneous pool clients against a pg default max of 10, on top of the step's own outer advisory-lock client, over budget. Default 4 keeps a wide margin for every converted step regardless of how many entries it declares. CONSUMED by scripts/lib/step/index.js (the every_run invariants/plausibility executor's batch-width resolution); today's sole declaring consumer is enrich_parcels, but the library-level default (4) applies to every step even when undeclared.",
     "admin": {
-      "group": "Source Ingestion"
+      "group": "Pipeline Runner"
     }
   },
   "parcels_maintenance_timeout_minutes": {
@@ -7518,6 +7518,96 @@
     "description": "McDonald's Airtight V3 EXT-1 part c (operator y 2026-10-18; Spec 124 R-EC, R-DJ (2)): the time budget (seconds) for the file-only stages of .husky/pre-commit on a registry-input commit (step-validate selects the whole registry), measured per stage on the Mac mini (25.0 s x 1.10). Fast invariant #52 compares docs/reports/generated/precommit-budget.json against it. Pinned min = max = 27.5 (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; a change is a reviewed seed + migration commit. CONSUMED by scripts/analysis/precommit-budget.mjs.",
     "admin": {
       "hidden": "internal"
+    }
+  },
+  "step_maintenance_default_timeout_minutes": {
+    "default": 15,
+    "type": "number",
+    "min": 1,
+    "max": 60,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the statement_timeout (minutes) an execution.maintenance VACUUM/ANALYZE/REINDEX runs under when its table declares no <table>_maintenance_timeout_minutes of its own. Formerly the MAINTENANCE_DEFAULT_TIMEOUT_MS = 15 * 60000 literal at scripts/lib/step/plausibility.js:369. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/plausibility.js (runMaintenanceStatement, via scripts/lib/step/index.js).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_audit_value_max_chars": {
+    "default": 300,
+    "type": "number",
+    "min": 50,
+    "max": 2000,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the most characters of one check value rendered into the persisted records_meta errors[]/warnings[] (LM-D16), so one large detail cannot make the audit unbounded. Formerly the RENDER_VALUE_MAX_LENGTH = 300 literal at scripts/lib/step/verdict.js:358. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/verdict.js (buildAuditTable, via scripts/lib/step/index.js).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_acquire_pdf_pace_ms": {
+    "default": 2000,
+    "type": "number",
+    "min": 2000,
+    "max": 60000,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the floor (ms) under a pdf_document_set step's declared document pace (pdf.pace_ms_from_config); the min 2000 is Spec 129 §2's politeness floor, so an operator may raise it but never lower it. Formerly the PDF_PACE_FLOOR_MS = 2000 literal at scripts/lib/step/acquire.js:997. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/acquire.js (acquirePdfDocumentSet).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_acquire_max_redirects": {
+    "default": 5,
+    "type": "number",
+    "min": 1,
+    "max": 10,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the most redirect hops the pdf_document_set arm follows (each hop re-checked against the host allowlist) before refusing the document as http_error. Formerly the MAX_REDIRECTS = 5 literal at scripts/lib/step/acquire.js:1022. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/acquire.js (fetchPdfCapped).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_phase_recancel_max_ms": {
+    "default": 5000,
+    "type": "number",
+    "min": 100,
+    "max": 60000,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the ceiling (ms) on the phase-deadline cancel-retry cadence min(max, max(min, bound/divisor)). Formerly the PHASE_DEADLINE_RECANCEL_MS = 5000 literal at scripts/lib/step/index.js:3887. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/index.js (startPhaseDeadline).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_phase_recancel_min_ms": {
+    "default": 50,
+    "type": "number",
+    "min": 10,
+    "max": 5000,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the floor (ms) on the phase-deadline cancel-retry cadence. Formerly the Math.max(50, …) literal at scripts/lib/step/index.js:3982. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/index.js (startPhaseDeadline).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_phase_recancel_divisor": {
+    "default": 4,
+    "type": "number",
+    "min": 1,
+    "max": 20,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): the fraction of the phase bound the cancel-retry cadence derives from (bound / divisor). Formerly the timeoutMs / 4 literal at scripts/lib/step/index.js:3982. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/index.js (startPhaseDeadline).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_stall_ticker_multiplier": {
+    "default": 2,
+    "type": "number",
+    "min": 1,
+    "max": 10,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): how many heartbeat intervals pass before the stall ticker captures its one diagnostic (interval x multiplier). Formerly the intervalMs * 2 literal at scripts/lib/step/index.js:3898. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/index.js (startStallTicker).",
+    "admin": {
+      "group": "Pipeline Runner"
+    }
+  },
+  "step_seam_chain_run_scan_limit": {
+    "default": 40,
+    "type": "number",
+    "min": 2,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 EXT-1 (operator y 2026-10-18; Spec 124 R-EB (a)): how many recent pipeline_runs rows the seam check scans for a shared chain_run_id (and for the temporal fallback), bound as a query parameter. Formerly the LIMIT 40 literals at scripts/lib/step/seam.js:220 and :256. Runner-owned: resolved for every step by scripts/lib/step/config.js RUNNER_VARIABLES; compute never sees it. CONSUMED by scripts/lib/step/seam.js (checkSeam, via scripts/analysis/chain-end-synthesis.mjs).",
+    "admin": {
+      "group": "Pipeline Runner"
     }
   }
 }

@@ -88,6 +88,19 @@ describe('R-DE cross-step vocabulary locks (McDonald\'s Airtight V3)', () => {
     expect(items({ config: { logic_variables: [{ name: 'floor_pct' }] } })).toContain('vocab.config.logic_variables.floor_pct');
   });
 
+  it('(v) shared arm (W4A-R3 + Q-C3, operator y 2026-10-18): a name read by two or more steps keeps its name only on the closed SHARED_LOGIC_VARIABLES list, and only for a listed consumer', () => {
+    const shared = (CB as unknown as { SHARED_LOGIC_VARIABLES: Record<string, { consumers: string[]; owner: string }> }).SHARED_LOGIC_VARIABLES;
+    expect(shared, 'the closed shared list is exported').toBeDefined();
+    for (const [name, entry] of Object.entries(shared)) {
+      expect(entry.consumers.length, `${name}: a shared name has at least two measured consumers`).toBeGreaterThanOrEqual(2);
+      expect(typeof entry.owner, `${name}: every shared name cites its owner`).toBe('string');
+    }
+    const named = (step: string, name: string) => CB.vocabularyViolations(desc({ identity: { name: step, archetype: 'LINK', spec: '43' }, config: { logic_variables: [{ name }] } }), ctx).map((v) => v.item);
+    expect(named('assert_coa_freshness', 'pipeline_timezone')).not.toContain('vocab.config.logic_variables.pipeline_timezone');
+    expect(named('classify_coa_trades', 'vocab_coverage_pass_pct')).not.toContain('vocab.config.logic_variables.vocab_coverage_pass_pct');
+    expect(named('fx', 'vocab_coverage_pass_pct'), 'a step not listed as a consumer is RED').toContain('vocab.config.logic_variables.vocab_coverage_pass_pct');
+  });
+
   it('(vi) guards.empty_source names an own write table (INGESTOR) or a read table (others)', () => {
     expect(items({ guards: { empty_source: 'w' } })).toContain('vocab.guards.empty_source');
     expect(items({ guards: { empty_source: ['r', 'none'] } })).toEqual([]);

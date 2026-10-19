@@ -33,6 +33,7 @@
 // descriptor rather than three isolated units.
 import { describe, expect, it, vi } from 'vitest';
 import { join } from 'node:path';
+import { runnerValues } from './helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS libraries */
 const stepLib = require(join(process.cwd(), 'scripts/lib/step'));
@@ -107,7 +108,7 @@ function fakePool(opts: FakePoolOpts = {}) {
   const answer = (text: string) => {
     if (text.includes('FROM logic_variables')) {
       return {
-        rows: Object.entries(opts.logicVars ?? {}).map(([variable_key, variable_value]) => ({
+        rows: Object.entries({ ...runnerValues(), ...opts.logicVars ?? {} }).map(([variable_key, variable_value]) => ({
           variable_key, variable_value, variable_value_json: null,
         })),
       };

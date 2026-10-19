@@ -45,6 +45,8 @@ function pool(touchedRows = 2, insertRows: Array<Record<string, unknown>> = []) 
   const calls: Array<{ text: string; params: unknown[] | undefined }> = [];
   const query = async (text: string, params?: unknown[]) => {
     calls.push({ text, params });
+    // R-CX (ii): the catalog types the full key for the touch's UNNEST arrays
+    if (/FROM information_schema\.columns/i.test(text)) return { rows: [{ data_type: 'text' }], rowCount: 1 };
     if (/^INSERT INTO permits_x/.test(text)) return { rows: insertRows, rowCount: insertRows.length };
     if (/^UPDATE permits_x AS t SET last_seen_at/.test(text)) return { rows: [], rowCount: touchedRows };
     return { rows: [], rowCount: 0 };
@@ -62,7 +64,7 @@ const runWrite = (p: ReturnType<typeof pool>) => writeLib.executeWrite(p, {
 describe('R-DZ — columns[].written "seen"', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it.fails('the seen column is inserted and set on conflict, never guarded (also under all_declared), and the plan carries the touch (flips at RE-FREEZE #37)', () => {
+  it('the seen column is inserted and set on conflict, never guarded (also under all_declared), and the plan carries the touch (flips at RE-FREEZE #37)', () => {
     const plan = writeLib.buildWritePlan(seenSpec(), desc());
     expect(plan.step_columns).toContain('last_seen_at');
     expect(plan.upsert_sql).toContain('last_seen_at = EXCLUDED.last_seen_at');
@@ -71,7 +73,7 @@ describe('R-DZ — columns[].written "seen"', () => {
     expect(plan.seen_column).toBe('last_seen_at');
   });
 
-  it.fails('composite key: the touch matches the full key from typed UNNEST arrays and skips rows already at run_at (flips at RE-FREEZE #37)', () => {
+  it('composite key: the touch matches the full key from typed UNNEST arrays and skips rows already at run_at (flips at RE-FREEZE #37)', () => {
     const plan = writeLib.buildWritePlan(seenSpec(), desc());
     expect(plan.touch_sql).toBe(
       'UPDATE permits_x AS t SET last_seen_at = $1 FROM UNNEST($2::TEXT[], $3::TEXT[]) AS v(permit_num, revision_num) '
@@ -79,7 +81,7 @@ describe('R-DZ — columns[].written "seen"', () => {
     );
   });
 
-  it.fails('unchanged keys are touched: after a guard-skipped upsert the touch runs with run_at and the key arrays; written.touched counts it (flips at RE-FREEZE #37)', async () => {
+  it('unchanged keys are touched: after a guard-skipped upsert the touch runs with run_at and the key arrays; written.touched counts it (flips at RE-FREEZE #37)', async () => {
     const p = pool(2, []);
     const out = await runWrite(p);
     const touch = p.calls.find((c) => /^UPDATE permits_x AS t/.test(c.text))!;
@@ -88,20 +90,20 @@ describe('R-DZ — columns[].written "seen"', () => {
     expect(out.inserted + out.updated).toBe(0);
   });
 
-  it.fails('the touch runs inside the write transaction, after the upsert (flips at RE-FREEZE #37)', async () => {
+  it('the touch runs inside the write transaction, after the upsert (flips at RE-FREEZE #37)', async () => {
     const p = pool(0, [{ is_insert: true }, { is_insert: false }]);
     await runWrite(p);
     const order = p.calls.map((c) => (/^BEGIN/.test(c.text) ? 'BEGIN' : /^COMMIT/.test(c.text) ? 'COMMIT' : /^INSERT INTO permits_x/.test(c.text) ? 'UPSERT' : /^UPDATE permits_x AS t/.test(c.text) ? 'TOUCH' : 'OTHER'));
     expect(order).toEqual(['BEGIN', 'UPSERT', 'TOUCH', 'COMMIT']);
   });
 
-  it.fails('conservation: touched <= carried - inserted - updated, else RowConservationError (flips at RE-FREEZE #37)', () => {
+  it('conservation: touched <= carried - inserted - updated, else RowConservationError (flips at RE-FREEZE #37)', () => {
     const acquired = { rows_read: 2 };
     expect(() => conservationLib.rowConservation(acquired, { inserted: 1, updated: 0, unchanged: 1, touched: 1 })).not.toThrow();
     expect(() => conservationLib.rowConservation(acquired, { inserted: 1, updated: 0, unchanged: 1, touched: 2 })).toThrow(/touched 2/);
   });
 
-  it.fails('a compute-bound value for a seen column is refused by name (the clock is the runner\'s) (flips at RE-FREEZE #37)', async () => {
+  it('a compute-bound value for a seen column is refused by name (the clock is the runner\'s) (flips at RE-FREEZE #37)', async () => {
     vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
       tier1: { skip: false }, tier2: { skip: false }, emitBlock: null,
       features: [{ permit_num: 'P1', record: { permit_num: 'P1' } }],
@@ -124,7 +126,7 @@ describe('R-DZ — columns[].written "seen"', () => {
     expect(a.runAt).toBe(RUN_AT);
   });
 
-  it.fails('validate: the schema admits "seen"; two seen columns on one target are refused (flips at RE-FREEZE #37)', () => {
+  it('validate: the schema admits "seen"; two seen columns on one target are refused (flips at RE-FREEZE #37)', () => {
     const d = clone(LOAD_WSIB) as Record<string, any>;
     d.outputs.writes[0].columns.find((c: { name: string }) => c.name === 'last_seen_at').written = 'seen';
     expect(() => validateLib.validateDescriptor(d)).not.toThrow();

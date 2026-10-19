@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runnerVariableRows } from './helpers/runner-variables';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS library
 const verdict = require(join(process.cwd(), 'scripts/lib/step/verdict.js')) as {
@@ -170,7 +171,7 @@ describe('P3C1-#52 — checks[].when observation stamping (buildAuditTable + mak
     const mergeAt = slice.indexOf('for (const id of Object.keys(preWriteObserved)) observations[id] = preWriteObserved[id];');
     expect(computeAt).toBeGreaterThan(-1);
     expect(mergeAt).toBeGreaterThan(computeAt);
-    expect(slice).toContain('buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic, observedFor)');
+    expect(slice).toContain('buildAuditTable(descriptor, chainId, observations, extraRows, configValues, onlyChecks, synthetic, observedFor, runnerValues.step_audit_value_max_chars)');
   });
 });
 
@@ -201,7 +202,7 @@ function recordingPool(stepAnswer: (text: string, values: unknown[]) => Answer |
     if (own) return own;
     if (text.includes('current_database()')) return { rows: [{ database: 'postgres', db_user: 'postgres', has_tracking: true }] };
     if (text.includes('FROM logic_variables')) {
-      return { rows: Object.entries(logicVars).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null })) };
+      return { rows: [...runnerVariableRows(), ...Object.entries(logicVars).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null }))] };
     }
     if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: 999 }] };
     if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };

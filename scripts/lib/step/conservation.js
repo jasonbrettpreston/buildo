@@ -165,6 +165,21 @@ function rowConservation(acquired, written) {
     );
   }
 
+  // RE-FREEZE #37 (Spec 124 R-DZ): a seen-touch only reaches rows the guard skipped — inserted and updated
+  // rows already carry run_at — so it can never exceed carried - inserted - updated. Checked only when the
+  // write measured a touch (a declared seen column), so every other target is unchanged.
+  if (w.touched !== undefined) {
+    const touched = readCount(w, 'touched', 'written', counts);
+    const carried = w.rows_scanned !== undefined ? readCount(w, 'rows_scanned', 'written', counts) : inserted + updated + unchanged;
+    if (touched > carried - inserted - updated) {
+      throw new RowConservationError(
+        `row conservation broken: touched ${touched} > carried ${carried} - inserted ${inserted} - updated ${updated} `
+          + '— a seen-touch reached a row the upsert already wrote (Spec 124 R-DZ)',
+        { ...counts, accounted, touched, carried },
+      );
+    }
+  }
+
   return { read, skipped, inserted, updated, unchanged, accounted };
 }
 

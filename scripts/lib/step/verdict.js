@@ -355,7 +355,9 @@ function makeWithinLimit(descriptor, config) {
 }
 
 /** LM-D16 — `errors[]`'s cap: bounded so one large `detail` cannot make the array unbounded. */
-const RENDER_VALUE_MAX_LENGTH = 300;
+// Spec 124 R-EB (a) (census row 7, LM-D16): the persisted audit-value cap is the runner-owned
+// step_audit_value_max_chars (seed 300), resolved for every step and handed to buildAuditTable by the
+// runner — never a literal here.
 
 /**
  * Recursively sort object keys so the same value always serializes the same way,
@@ -385,17 +387,23 @@ function sortKeysDeep(value) {
  * and silently loses the value as the literal text "[object Object]"; this is the
  * one and only place that stringification happens.
  *
- * Capped at `RENDER_VALUE_MAX_LENGTH` so a single check with a large `detail`
- * cannot make `errors[]` unbounded.
+ * Capped at `maxLength` (the runner-owned step_audit_value_max_chars, Spec 124 R-EB (a)) so a single
+ * check with a large `detail` cannot make the persisted `errors[]` unbounded. Absent = uncapped: the
+ * cap is applied where the strings are PERSISTED (runWithPool's audit table), and a non-persisting caller
+ * (the pre_write gate, a test) renders in full; a present value must be a positive integer.
  *
  * @param {*} value
  * @param {number} [maxLength]
  * @returns {string}
  */
-function renderValue(value, maxLength = RENDER_VALUE_MAX_LENGTH) {
+function renderValue(value, maxLength) {
   const rendered = value !== null && typeof value === 'object'
     ? JSON.stringify(sortKeysDeep(value))
     : String(value);
+  if (maxLength === undefined || maxLength === null) return rendered;
+  if (!Number.isInteger(maxLength) || maxLength <= 0) {
+    throw new Error(`renderValue: maxLength must be the resolved step_audit_value_max_chars, a positive integer (got ${String(maxLength)})`);
+  }
   return rendered.length > maxLength ? `${rendered.slice(0, maxLength)}…` : rendered;
 }
 
@@ -409,7 +417,7 @@ function renderValue(value, maxLength = RENDER_VALUE_MAX_LENGTH) {
 function deriveVerdict(rows) {
   let worst = 0;
   for (const r of rows || []) worst = Math.max(worst, SEVERITY_RANK[r.status] ?? 0);
-  return worst === 2 ? 'FAIL' : worst === 1 ? 'WARN' : 'PASS';
+  return worst === SEVERITY_RANK.FAIL ? 'FAIL' : worst === SEVERITY_RANK.WARN ? 'WARN' : 'PASS';
 }
 
 /**
@@ -443,7 +451,7 @@ function deriveVerdict(rows) {
  * @param {{checks?:object[], observations?:Record<string,object>}|null} [synthetic]
  * @returns {{audit_table:object, rows:object[], blockingFailures:string[], errors:string[], warnings:string[]}}
  */
-function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null, synthetic = null, observedFor = null) {
+function buildAuditTable(descriptor, chainId, observations, extraRows = [], config = null, only = null, synthetic = null, observedFor = null, renderMaxChars = null) {
   const onCheckError = (descriptor.execution && descriptor.execution.on_check_error) || 'fail_step';
   // `only` narrows the scored set to a LIFECYCLE-REACHABLE subset — a gated skip
   // scores the `when: "pre"` checks and nothing else, because a post-write check
@@ -461,8 +469,8 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
     if (typeof observedFor === 'function') row.observed = observedFor(check.id);
     rows.push(row);
     // LPA-D6 — severity-separated, never one conflated array (see the header note).
-    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
-    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);
+    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value, renderMaxChars)}`);
+    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value, renderMaxChars)}`);
     if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);
   }
   const syntheticChecks = (synthetic && Array.isArray(synthetic.checks)) ? synthetic.checks : [];
@@ -478,8 +486,8 @@ function buildAuditTable(descriptor, chainId, observations, extraRows = [], conf
     // #52 (fold 19 MQ-A1 (a)) — the observation phase of each checks[]/synthetic row: "before_write" | "after_write" (absent when the caller passes no observedFor).
     if (typeof observedFor === 'function') row.observed = observedFor(check.id);
     rows.push(row);
-    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value)}`);
-    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value)}`);
+    if (row.status === 'FAIL') errors.push(`${check.id}: ${renderValue(row.value, renderMaxChars)}`);
+    else if (row.status === 'WARN') warnings.push(`${check.id}: ${renderValue(row.value, renderMaxChars)}`);
     if (row.status === 'FAIL' && check.blocking === true) blockingFailures.push(check.id);
   }
   rows.push(...extraRows);

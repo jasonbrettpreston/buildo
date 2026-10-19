@@ -13,6 +13,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runnerValues } from './helpers/runner-variables';
 
 /** identity.name of every converted.json converted[] descriptor, read straight from disk (R-AN). */
 function convertedIdentityNames(): string[] {
@@ -39,11 +40,11 @@ const seam = require('../../scripts/lib/step/seam.js') as {
   };
   checkSeam: (
     pool: { query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> },
-    opts: { upstream: string; downstream: string; chainId?: string },
+    opts: { upstream: string; downstream: string; chainId?: string; scanLimit?: number },
   ) => Promise<{ metric: string; value: unknown; threshold: string; status: string; source: string; why?: string }>;
   runSeamChecks: (
     pool: { query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }> },
-    opts?: { chainId?: string; descriptorsByName?: Record<string, { descriptor: Record<string, unknown> }> },
+    opts?: { chainId?: string; descriptorsByName?: Record<string, { descriptor: Record<string, unknown> }>; scanLimit?: number },
   ) => Promise<Array<{ metric: string; status: string }>>;
 };
 
@@ -345,7 +346,7 @@ describe('checkSeam — chain_run_id join (primary, R-U/Fold B-5)', () => {
       ],
       [],
     );
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(row.status).toBe('PASS');
     expect(row.source).toBe('seam');
     expect((row.value as Record<string, unknown>).join).toBe('chain_run_id');
@@ -360,7 +361,7 @@ describe('checkSeam — chain_run_id join (primary, R-U/Fold B-5)', () => {
       ],
       [],
     );
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(row.status).toBe('FAIL');
   });
 
@@ -374,7 +375,7 @@ describe('checkSeam — chain_run_id join (primary, R-U/Fold B-5)', () => {
       ],
       [],
     );
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect((row.value as Record<string, unknown>).join_value).toBe('200');
     expect(row.status).toBe('PASS');
   });
@@ -389,7 +390,7 @@ describe('checkSeam — legacy temporal fallback (Fold A-5, no shared chain_run_
         { pipeline: 'sources:link_massing', id: 2, started_at: '2026-08-30T09:10:00Z', completed_at: '2026-08-30T09:20:00Z' },
       ],
     );
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(row.status).toBe('PASS');
     expect((row.value as Record<string, unknown>).join).toBe('temporal_fallback');
   });
@@ -402,13 +403,13 @@ describe('checkSeam — legacy temporal fallback (Fold A-5, no shared chain_run_
         { pipeline: 'sources:link_massing', id: 2, started_at: '2026-08-30T09:10:00Z', completed_at: '2026-08-30T09:20:00Z' },
       ],
     );
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(row.status).toBe('FAIL');
   });
 
   it('WARN, not a throw, when one side has no run history at all yet', async () => {
     const pool = fakeSeamPool([], [{ pipeline: 'sources:compute_centroids', id: 1, started_at: '2026-08-30T09:00:00Z', completed_at: '2026-08-30T09:05:00Z' }]);
-    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources' });
+    const row = await seam.checkSeam(pool, { upstream: 'compute_centroids', downstream: 'link_massing', chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(row.status).toBe('WARN');
     expect(row.why).toMatch(/link_massing/);
   });
@@ -566,7 +567,7 @@ describe('runSeamChecks — one row per derived pair', () => {
 
   it('runs every live pair against the REAL registry and returns one row each', async () => {
     const pool = fakeSeamPool([], []);
-    const rows = await seam.runSeamChecks(pool, { chainId: 'sources' });
+    const rows = await seam.runSeamChecks(pool, { chainId: 'sources', scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(rows).toHaveLength(EXPECTED_SEAM_METRICS.length);
     expect(rows.map((r) => r?.metric)).toEqual(EXPECTED_SEAM_METRICS);
     for (const row of rows) {
@@ -604,7 +605,7 @@ describe('seam pairs are scoped to the chain they run in (SEAM-CHAIN-1, Spec 122
     expect(scoped.excluded).toEqual([{ ...PAIR, reason: 'upstream_not_in_chain' }]);
 
     const pool = fakeSeamPool([], []);
-    const rows = await seam.runSeamChecks(pool, { chainId: 'permits', descriptorsByName: byName });
+    const rows = await seam.runSeamChecks(pool, { chainId: 'permits', descriptorsByName: byName, scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(rows).toEqual([]);
   });
 
@@ -614,7 +615,7 @@ describe('seam pairs are scoped to the chain they run in (SEAM-CHAIN-1, Spec 122
     expect(scoped.excluded).toEqual([]);
 
     const pool = fakeSeamPool([], []);
-    const rows = await seam.runSeamChecks(pool, { chainId: 'sources', descriptorsByName: byName });
+    const rows = await seam.runSeamChecks(pool, { chainId: 'sources', descriptorsByName: byName, scanLimit: runnerValues().step_seam_chain_run_scan_limit! });
     expect(rows).toHaveLength(1);
   });
 

@@ -8,6 +8,7 @@
 // run-end hook" RED lock — this proves it DOES fire here).
 
 import { describe, expect, it } from 'vitest';
+import { runnerValues } from './helpers/runner-variables';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const synthesis = require('../../scripts/analysis/chain-end-synthesis.mjs') as unknown as {
@@ -18,6 +19,7 @@ const synthesis = require('../../scripts/analysis/chain-end-synthesis.mjs') as u
   runValidateOnlyTier: (
     pool: { query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>; connect: () => Promise<unknown> },
     descriptorsByName: Record<string, { descriptor: Record<string, unknown> }>,
+    concurrency: number,
   ) => Promise<Array<{ step: string; metric: string; source: string; status: string; value: unknown }>>;
 };
 
@@ -126,7 +128,7 @@ describe('runValidateOnlyTier — Ask 6(b) GREEN: validate_only entries DO execu
       },
     });
     const pool = fakePool({ VALIDATE_ONLY_NEEDLE: 7 });
-    const rows = await synthesis.runValidateOnlyTier(pool, byName);
+    const rows = await synthesis.runValidateOnlyTier(pool, byName, runnerValues().step_post_check_concurrency!);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ step: 'link_massing', metric: 'validate_only_entry', source: 'invariant', status: 'INFO', value: 7 });
   });
@@ -134,7 +136,7 @@ describe('runValidateOnlyTier — Ask 6(b) GREEN: validate_only entries DO execu
   it('a step with neither invariants nor plausibility contributes zero rows, no error', async () => {
     const byName = fakeDescriptors({ assert_schema: {} });
     const pool = fakePool({});
-    const rows = await synthesis.runValidateOnlyTier(pool, byName);
+    const rows = await synthesis.runValidateOnlyTier(pool, byName, runnerValues().step_post_check_concurrency!);
     expect(rows).toEqual([]);
   });
 
@@ -148,7 +150,7 @@ describe('runValidateOnlyTier — Ask 6(b) GREEN: validate_only entries DO execu
       query: async () => { throw new Error('simulated DB error'); },
       connect: async () => ({ query: async () => { throw new Error('simulated DB error'); }, release: () => {} }),
     };
-    const rows = await synthesis.runValidateOnlyTier(throwingPool, byName);
+    const rows = await synthesis.runValidateOnlyTier(throwingPool, byName, runnerValues().step_post_check_concurrency!);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.status).toBe('FAIL');
     expect(String(rows[0]?.value)).toMatch(/simulated DB error/);

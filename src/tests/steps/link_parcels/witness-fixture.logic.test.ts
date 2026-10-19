@@ -24,6 +24,7 @@ import { describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { witnessGuard } from '../_witness-guard';
+import { runnerValues } from '../../helpers/runner-variables';
 
 /* eslint-disable @typescript-eslint/no-require-imports -- exercising the real CJS library + this step's real descriptor/compute */
 const pipeline = require(join(process.cwd(), 'scripts/lib/pipeline.js'));
@@ -59,7 +60,7 @@ function recordingPool(stepAnswer: (text: string, values: unknown[]) => Answer |
     if (own) return own;
     if (text.includes('current_database()')) return { rows: [{ database: 'postgres', db_user: 'postgres', has_tracking: true }] };
     if (text.includes('FROM logic_variables')) {
-      return { rows: Object.entries(logicVars).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null })) };
+      return { rows: Object.entries({ ...runnerValues(), ...logicVars }).map(([variable_key, variable_value]) => ({ variable_key, variable_value, variable_value_json: null })) };
     }
     if (text.includes('FROM public.schema_migrations')) return { rows: [{ n: 999 }] };
     if (text.includes('pg_try_advisory_xact_lock')) return { rows: [{ acquired: true }] };

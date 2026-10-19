@@ -228,11 +228,12 @@ describe('fleet2 soft-retire — the schema admits retract:"departed_mark" (fold
       ).properties ?? {}).retract ?? {}
     ) as { enum?: string[]; 'x-frozen'?: boolean; 'x-ruling'?: { rungs_tried?: string[]; why?: string } };
 
-    expect(writesItem.enum, 'the retract enum must name the fourth member').toEqual([
+    expect(writesItem.enum, 'the retract enum names the fourth member (fold 10) and the fifth, replace_keys (RE-FREEZE #37, Spec 124 R-EH)').toEqual([
       'none',
       'departed',
       'all',
       'departed_mark',
+      'replace_keys',
     ]);
     expect(writesItem['x-frozen'], 'the extended enum must stay frozen').toBe(true);
     expect(writesItem['x-ruling'], 'a re-freeze of a frozen enum owes its ruling').toBeDefined();

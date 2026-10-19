@@ -84,7 +84,7 @@ function armArgs(external: Record<string, unknown>, fetchImpl: unknown, guards: 
 const POINT = '{"type":"Point","coordinates":[0,0]}';
 
 describe('R-DX (i) — the geometry-less CKAN arm', () => {
-  it.fails('T1: under guards.srid "none" every record is kept, geojson null, null_geometry_count 0 (flips at RE-FREEZE #37)', async () => {
+  it('T1: under guards.srid "none" every record is kept, geojson null, null_geometry_count 0 (flips at RE-FREEZE #37)', async () => {
     const { fetchImpl } = fakeCkan({ R: [{ _id: 'a', geometry: null }, { _id: 'b' }] });
     const r = await acquireLib.acquireExternal(armArgs(ckanExternal('p', 'R'), fetchImpl, { srid: 'none' }));
     expect(r.acquired.feature_count).toBe(2);
@@ -173,14 +173,14 @@ describe('R-DX (ii)-(iv) — the runner forms', () => {
   let restored: Array<{ mockRestore: () => void }> = [];
   afterEach(() => { for (const s of restored.splice(0)) s.mockRestore(); vi.restoreAllMocks(); });
 
-  it.fails('T3: one targetless CKAN primary runs through runIngestPhase (0y Y4 deleted) (flips at RE-FREEZE #37)', async () => {
+  it('T3: one targetless CKAN primary runs through runIngestPhase (0y Y4 deleted) (flips at RE-FREEZE #37)', async () => {
     restored = stubs({ p: [{ _id: '1', name: 'a' }] });
     const out = await stepLib.runIngestPhase(args(ckanIngestor([ckanExternal('p', 'R')])));
     expect(out.reason).toBe('loaded');
     expect(out.written.inserted).toBe(1);
   });
 
-  it.fails('T4: two primaries on ONE target are one union group: both acquired, deduplicated once across both, ONE write (flips at RE-FREEZE #37)', async () => {
+  it('T4: two primaries on ONE target are one union group: both acquired, deduplicated once across both, ONE write (flips at RE-FREEZE #37)', async () => {
     restored = stubs({ active: [{ _id: '1', name: 'a' }, { _id: '2', name: 'b' }], closed: [{ _id: '2', name: 'b2' }, { _id: '3', name: 'c' }] });
     const d = ckanIngestor([ckanExternal('active', 'RA', { target: 'tc' }), ckanExternal('closed', 'RC', { target: 'tc' })]);
     const out = await stepLib.ingestPrimaries(args(d));
@@ -196,7 +196,7 @@ describe('R-DX (ii)-(iv) — the runner forms', () => {
     expect(out.written.by_target.tc.inserted).toBe(3);
   });
 
-  it.fails('T5: externals[].modes — a "full" member is skipped on an incremental run (selected:false, reason "mode"), acquired on a full run, and the run mode is stamped (flips at RE-FREEZE #37)', async () => {
+  it('T5: externals[].modes — a "full" member is skipped on an incremental run (selected:false, reason "mode"), acquired on a full run, and the run mode is stamped (flips at RE-FREEZE #37)', async () => {
     const d = ckanIngestor([ckanExternal('active', 'RA', { target: 'tc' }), ckanExternal('closed', 'RC', { target: 'tc', modes: ['full'] })]);
     // the schema admits the field
     const schemaOk = (() => { try { validateLib.compileStepSchema(validateLib.loadSchema()); return true; } catch { return false; } })();
@@ -218,7 +218,34 @@ describe('R-DX (ii)-(iv) — the runner forms', () => {
     expect(stepLib.resolveRunMode({ overrides: { force_full: false }, interrupted: false, argv: ['--full'] })).toBe('full');
   });
 
-  it.fails('T6: a union group whose members disagree on key property (or format) is refused by name, before any I/O; a group with zero selected members too (flips at RE-FREEZE #37)', async () => {
+  it('T5b: a single targetless primary that declares modes stamps run_mode when selected and refuses (0x U2) when not', async () => {
+    restored = stubs({ p: [{ _id: '1', name: 'a' }] });
+    const inc = await stepLib.runIngestPhase(args(ckanIngestor([ckanExternal('p', 'R', { modes: ['incremental'] })])));
+    expect(inc.run_mode).toBe('incremental');
+    expect(inc.reason).toBe('loaded');
+    await expect(stepLib.runIngestPhase(args(ckanIngestor([ckanExternal('p', 'R', { modes: ['full'] })])))).rejects.toThrow(/0x U2/);
+  });
+
+  it('T7: a union group keeps each member\'s own truth (0x per-primary form; #33 schema_drift per external id): its dataset version, its header, and a header drift checked against its OWN baseline', async () => {
+    restored = stubs({});
+    restored.shift()!.mockRestore();
+    restored.unshift(vi.spyOn(acquireLib, 'acquireExternal').mockImplementation((async (a: { external: { id: string } }) => {
+      const id = a.external.id;
+      const m = memberAcquired(id, [{ _id: id === 'active' ? '1' : '2', name: id }]);
+      return { ...m, acquired: { ...m.acquired, source_dataset_version: `v-${id}`, record_fields: id === 'active' ? ['_id', 'name'] : ['_id', 'name', 'added'] } };
+    }) as (...args: unknown[]) => unknown));
+    const d = ckanIngestor([ckanExternal('active', 'RA', { target: 'tc' }), ckanExternal('closed', 'RC', { target: 'tc' })]);
+    d.guards.schema_drift = 'warn';
+    const out = await stepLib.ingestPrimaries({ ...args(d), schemaDriftBaseline: { found: true, fields: { active: ['_id', 'name'], closed: ['_id', 'name'] } } });
+    expect(out.acquired.primaries.active.source_dataset_version).toBe('v-active');
+    expect(out.acquired.primaries.closed.source_dataset_version).toBe('v-closed');
+    expect(out.acquired.primaries.active.record_fields).toEqual(['_id', 'name']);
+    expect(out.acquired.primaries.closed.record_fields).toEqual(['_id', 'name', 'added']);
+    const rows = (out.schemaDrift as Array<{ external: string; row: { status: string } }>).map((x) => `${x.external}:${x.row.status}`).sort();
+    expect(rows).toEqual(['active:INFO', 'closed:WARN']);
+  });
+
+  it('T6: a union group whose members disagree on key property (or format) is refused by name, before any I/O; a group with zero selected members too (flips at RE-FREEZE #37)', async () => {
     restored = stubs({});
     const keyMismatch = ckanIngestor([ckanExternal('a', 'RA', { target: 'tc' }), ckanExternal('b', 'RB', { target: 'tc', key_property: 'other_id' })]);
     await expect(stepLib.ingestPrimaries(args(keyMismatch))).rejects.toThrow(/0x U1/);

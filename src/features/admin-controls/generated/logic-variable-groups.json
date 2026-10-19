@@ -476,8 +476,6 @@
       "fya_est_min_m",
       "fya_est_max_m",
       "abut_parcels_with_abutments_warn_pct",
-      "step_post_check_statement_timeout_minutes",
-      "step_post_check_concurrency",
       "parcels_maintenance_timeout_minutes",
       "refresh_snapshot_read_statement_timeout_minutes",
       "refresh_snapshot_phase_deadline_minutes",
@@ -909,6 +907,22 @@
     "label": "Pipeline Clock",
     "keys": [
       "pipeline_timezone"
+    ]
+  },
+  {
+    "label": "Pipeline Runner",
+    "keys": [
+      "step_post_check_statement_timeout_minutes",
+      "step_post_check_concurrency",
+      "step_maintenance_default_timeout_minutes",
+      "step_audit_value_max_chars",
+      "step_acquire_pdf_pace_ms",
+      "step_acquire_max_redirects",
+      "step_phase_recancel_max_ms",
+      "step_phase_recancel_min_ms",
+      "step_phase_recancel_divisor",
+      "step_stall_ticker_multiplier",
+      "step_seam_chain_run_scan_limit"
     ]
   }
 ]

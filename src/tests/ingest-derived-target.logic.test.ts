@@ -89,6 +89,8 @@ function recordingPool(opts: { index?: { unique: boolean; partial: boolean; expr
     if (/FROM pg_index/i.test(text)) {
       return { rows: opts.index === null ? [] : [{ is_unique: opts.index?.unique ?? true, is_partial: opts.index?.partial ?? false, table_name: 'lifecycle_status_history', exprs: opts.index?.exprs ?? LEDGER_EXPRS }] };
     }
+    // R-CX (ii): the catalog types the full key for the prior read's UNNEST arrays
+    if (/FROM information_schema\.columns/i.test(text)) return { rows: [{ data_type: 'text' }] };
     if (/^\s*SELECT .* FROM permits_x/i.test(text)) return { rows: opts.priorRows ?? [] };
     if (/INSERT INTO/i.test(text)) return { rows: [{ is_insert: true }], rowCount: 1 };
     return { rows: [], rowCount: 0 };
@@ -107,7 +109,7 @@ const keyOf = (row: Record<string, unknown>) => JSON.stringify([String(row.permi
 describe('R-DY — derived secondary target', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it.fails('T1: a two-write INGESTOR whose second write declares derive runs; the derived target reaches executeWrite (flips at RE-FREEZE #37)', async () => {
+  it('T1: a two-write INGESTOR whose second write declares derive runs; the derived target reaches executeWrite (flips at RE-FREEZE #37)', async () => {
     vi.spyOn(acquireLib, 'acquireExternal').mockResolvedValue({
       tier1: { skip: false, reason: 'fresh' }, tier2: { skip: false, reason: 'fresh' }, emitBlock: null,
       features: [{ permit_num: 'P1', record: { permit_num: 'P1', revision_num: '00', status: 'Issued' } }],
@@ -133,7 +135,7 @@ describe('R-DY — derived secondary target', () => {
     expect(a.derived.targets[0]!.plan.upsert_sql).toContain(`ON CONFLICT (${LEDGER_EXPRS.join(', ')})`);
   });
 
-  it.fails('T2: inside ONE transaction, per slice: prior read, then the primary upsert, then the derived write (flips at RE-FREEZE #37)', async () => {
+  it('T2: inside ONE transaction, per slice: prior read, then the primary upsert, then the derived write (flips at RE-FREEZE #37)', async () => {
     const d = derivedIngestor();
     const pool = recordingPool({ priorRows: [] });
     const plan = writeLib.buildWritePlan(d.outputs.writes[0], d);
@@ -154,7 +156,7 @@ describe('R-DY — derived secondary target', () => {
     expect(out.inserted).toBe(1);
   });
 
-  it.fails('T3: deriveRows receives prior state for an existing key and undefined for a new key (legacy "treat as NULL") (flips at RE-FREEZE #37)', async () => {
+  it('T3: deriveRows receives prior state for an existing key and undefined for a new key (legacy "treat as NULL") (flips at RE-FREEZE #37)', async () => {
     const d = derivedIngestor();
     const pool = recordingPool({ priorRows: [{ permit_num: 'P1', revision_num: '00', status: 'Issued' }] });
     const seen: unknown[] = [];
@@ -172,7 +174,7 @@ describe('R-DY — derived secondary target', () => {
     expect(seen).toEqual(['Issued', undefined]);
   });
 
-  it.fails('T4: conflict_index renders ON CONFLICT from the probed index expressions; the guard stays preserve_null on event_date (flips at RE-FREEZE #37)', async () => {
+  it('T4: conflict_index renders ON CONFLICT from the probed index expressions; the guard stays preserve_null on event_date (flips at RE-FREEZE #37)', async () => {
     const d = derivedIngestor();
     const probed = await writeLib.probeConflictIndex(recordingPool(), 'lifecycle_status_history', LEDGER_INDEX);
     expect(probed.expressions).toEqual(LEDGER_EXPRS);
@@ -181,7 +183,7 @@ describe('R-DY — derived secondary target', () => {
     expect(plan.upsert_sql).toContain('(EXCLUDED.event_date IS NOT NULL AND lifecycle_status_history.event_date IS DISTINCT FROM EXCLUDED.event_date)');
   });
 
-  it.fails('T5: a missing, non-unique or partial conflict_index is refused by name (failed_missing_precondition), before any acquisition (flips at RE-FREEZE #37)', async () => {
+  it('T5: a missing, non-unique or partial conflict_index is refused by name (failed_missing_precondition), before any acquisition (flips at RE-FREEZE #37)', async () => {
     await expect(writeLib.probeConflictIndex(recordingPool({ index: null }), 'lifecycle_status_history', LEDGER_INDEX)).rejects.toThrow(/conflict_index "uniq_lifecycle_status_history_natural_key".*not found/);
     await expect(writeLib.probeConflictIndex(recordingPool({ index: { unique: false, partial: false, exprs: LEDGER_EXPRS } }), 'lifecycle_status_history', LEDGER_INDEX)).rejects.toThrow(/not unique/);
     await expect(writeLib.probeConflictIndex(recordingPool({ index: { unique: true, partial: true, exprs: LEDGER_EXPRS } }), 'lifecycle_status_history', LEDGER_INDEX)).rejects.toThrow(/partial/);
@@ -198,7 +200,7 @@ describe('R-DY — derived secondary target', () => {
     expect(acq).not.toHaveBeenCalled();
   });
 
-  it.fails('T7: the schema admits writes[i].derive on an INGESTOR at index >= 1 from writes[0].table, and refuses it on writes[0] (flips at RE-FREEZE #37)', () => {
+  it('T7: the schema admits writes[i].derive on an INGESTOR at index >= 1 from writes[0].table, and refuses it on writes[0] (flips at RE-FREEZE #37)', () => {
     const base = clone(LOAD_WSIB) as Record<string, any>;
     base.inputs.reads.tables = [{ table: 'wsib_registry', columns: ['legal_name_normalized', 'mailing_address', 'trade_name'] }];
     const w0 = base.outputs.writes[0];

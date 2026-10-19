@@ -107,7 +107,9 @@ export function declaredWrites(descriptor) {
     ? descriptor.outputs.invalidates
     : [];
   for (const inv of invalidates) {
-    if (!inv || typeof inv.table !== 'string' || typeof inv.column !== 'string' || typeof inv.set_null_on_change_of !== 'string') continue;
+    // RE-FREEZE #37 (Spec 124 R-EA): a by "set_null_unless" row is the same codegen-executed write.
+    const executed = typeof inv?.set_null_on_change_of === 'string' || (inv?.by === 'set_null_unless' && inv?.set_null_unless);
+    if (!inv || typeof inv.table !== 'string' || typeof inv.column !== 'string' || !executed) continue;
     let entry = out.find((e) => e.table === inv.table);
     if (!entry) {
       entry = { table: inv.table, cols: [], dbDefault: new Set() };

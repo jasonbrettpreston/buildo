@@ -3095,12 +3095,6 @@
         "on_invalid": "fail"
       },
       {
-        "name": "step_post_check_concurrency",
-        "min": 1,
-        "max": 10,
-        "on_invalid": "fail"
-      },
-      {
         "name": "parcels_maintenance_timeout_minutes",
         "min": 1,
         "max": 60,

@@ -11,6 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { runnerValues } from './helpers/runner-variables';
 
 const REPO_ROOT = process.cwd();
 const readJson = (rel: string): Record<string, unknown> => JSON.parse(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'));
@@ -163,7 +164,7 @@ describe('Y3 — runRecorderPhase hands compute.buildReads the config AND the ru
       buildWriteSql: () => ({ sql: 'SELECT 1', params: [] }),
     };
     const out = await runner.runRecorderPhase({
-      descriptor, pool, compute, config, chainId: null, log: silentLog, tag: '[refresh_snapshot]', clockNow,
+      descriptor, pool, compute, config, runner: runnerValues(), chainId: null, log: silentLog, tag: '[refresh_snapshot]', clockNow,
       preWriteGate: async () => ({ abort: true, failed: ['probe'] }),
     });
     expect(out.writeSkipped).toBe(true);

@@ -503,7 +503,7 @@ function locateShapefile(extractDir) {
   if (shps.length === 0) throw new Error('no shapefile (.shp) found in zip');
   if (shps.length > 1) throw new Error(`expected one .shp, found ${shps.length}: ${shps.join(', ')}`);
   const shp = shps[0];
-  const base = shp.slice(0, -4);
+  const base = shp.slice(0, -'.shp'.length);
   const dbf = files.find((f) => f.toLowerCase() === `${base.toLowerCase()}.dbf`);
   if (!dbf) throw new Error(`missing companion .dbf for ${shp}`);
   return { shpPath: path.join(extractDir, shp), dbfPath: path.join(extractDir, dbf) };
@@ -964,9 +964,13 @@ async function acquireCkanDatastore({
   let badKeyCount = 0;
   let nullGeometryCount = 0;
   const rowsParsed = records.length;
+  // RE-FREEZE #37 (Spec 124 R-DX (i)): under the declared no-geometry arm (guards.srid "none", RE-FREEZE #28)
+  // every record is kept with geojson null — the null-geometry drop below exists for a geometry-bearing
+  // target only. null_geometry_count stays present (0), so rows_parsed = features + bad_key_count.
+  const geometryLess = descriptor && descriptor.guards && descriptor.guards.srid === 'none';
   for (const rec of records) {
-    if (rec.geometry == null) { nullGeometryCount++; continue; } // legacy order (GR-5e): geometry FIRST
-    const geojson = typeof rec.geometry === 'string' ? rec.geometry : JSON.stringify(rec.geometry);
+    if (!geometryLess && rec.geometry == null) { nullGeometryCount++; continue; } // legacy order (GR-5e): geometry FIRST
+    const geojson = geometryLess ? null : (typeof rec.geometry === 'string' ? rec.geometry : JSON.stringify(rec.geometry));
     const key = coerceKey(rec[keyProperty], { geojson });
     if (key == null) { badKeyCount++; continue; }
     features.push({ [keyColumn]: key, geojson, record: rec });
@@ -993,8 +997,9 @@ async function acquireCkanDatastore({
   };
 }
 
-/** RE-FREEZE #32: the pace floor between document GETs (Spec 129 §2 — politeness, not a tunable). */
-const PDF_PACE_FLOOR_MS = 2000;
+// RE-FREEZE #32: the pace floor between document GETs (Spec 129 §2 — politeness) is the runner-owned
+// step_acquire_pdf_pace_ms (Spec 124 R-EB (a)); its seed min (2000) is the politeness floor itself, so the
+// floor can be raised by an operator but never lowered below Spec 129 §2.
 
 // RE-FREEZE #32 (Spec 122 §8, Spec 129 §11, 2026-10-07): THE PDF DOCUMENT-SET ARM.
 //
@@ -1019,7 +1024,15 @@ const PDF_PACE_FLOOR_MS = 2000;
 
 const PDF_MAGIC = Buffer.from('%PDF-', 'latin1');
 const SHA256_RE = /^[0-9a-f]{64}$/;
-const MAX_REDIRECTS = 5;
+
+/** A runner-owned value the PDF arm needs (Spec 124 R-EB (a)): a positive integer, or a named throw. */
+function runnerInt(tag, runner, name) {
+  const v = runner ? runner[name] : undefined;
+  if (typeof v !== 'number' || !Number.isInteger(v) || v <= 0) {
+    throw new Error(`${tag} the pdf_document_set arm needs the runner-owned "${name}" resolved to a positive integer (Spec 124 R-EB (a); got ${String(v)}).`);
+  }
+  return v;
+}
 
 /** A `*_from_config` knob resolved to a finite positive number, or a named throw. */
 function pdfKnob(tag, external, config, field, { integer = false, min = 0 } = {}) {
@@ -1069,9 +1082,12 @@ function readDocumentManifest(tag, external, repoRoot) {
  * GET one document under the allowlist + cap. Never throws for a network outcome:
  * `{status: 'ok'|'http_error'|'timeout'|'too_large', bytes, bytesRead}`.
  */
-async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, maxBytes }) {
+async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, maxBytes, maxRedirects }) {
+  if (typeof maxRedirects !== 'number' || !Number.isInteger(maxRedirects) || maxRedirects < 0) {
+    throw new Error(`fetchPdfCapped: maxRedirects (step_acquire_max_redirects) must be a resolved integer (got ${String(maxRedirects)})`);
+  }
   let current = url;
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+  for (let hop = 0; hop <= maxRedirects; hop++) {
     let host;
     try {
       const u = new URL(current);
@@ -1086,7 +1102,7 @@ async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, 
       const res = await ctxFetch(current, { redirect: 'manual', headers: { 'User-Agent': userAgent }, signal: ctrl.signal });
       if (res.status >= 300 && res.status < 400) {
         const loc = res.headers && typeof res.headers.get === 'function' ? res.headers.get('location') : null;
-        if (!loc || hop === MAX_REDIRECTS) return { status: 'http_error', bytes: null, bytesRead: 0 };
+        if (!loc || hop === maxRedirects) return { status: 'http_error', bytes: null, bytesRead: 0 };
         current = new URL(loc, current).href;
         continue;
       }
@@ -1132,14 +1148,15 @@ async function fetchPdfCapped(ctxFetch, url, { allowlist, userAgent, timeoutMs, 
  */
 async function acquirePdfDocumentSet({
   ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-  timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty,
+  timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty, runner,
 }) {
   if (typeof shapeDocument !== 'function') {
     throw new Error(`${tag} external "${external.id}" is a pdf_document_set but no shapeDocument seam was handed to the arm.`);
   }
   const allowlist = external.pdf && Array.isArray(external.pdf.host_allowlist) ? external.pdf.host_allowlist : [];
   if (allowlist.length === 0) throw new Error(`${tag} external "${external.id}": pdf.host_allowlist is empty.`);
-  const paceMs = pdfKnob(tag, external, config, 'pace_ms_from_config', { integer: true, min: PDF_PACE_FLOOR_MS });
+  const paceMs = pdfKnob(tag, external, config, 'pace_ms_from_config', { integer: true, min: runnerInt(tag, runner, 'step_acquire_pdf_pace_ms') });
+  const maxRedirects = runnerInt(tag, runner, 'step_acquire_max_redirects');
   const maxBytes = pdfKnob(tag, external, config, 'max_doc_bytes_from_config', { integer: true });
   const maxPages = pdfKnob(tag, external, config, 'max_pages_from_config', { integer: true });
   const maxTextChars = pdfKnob(tag, external, config, 'max_text_chars_from_config', { integer: true });
@@ -1182,7 +1199,7 @@ async function acquirePdfDocumentSet({
       doc_id: d.doc_id, sha256: d.sha256, hearing_date: d.hearing_date, kind: d.kind,
       revision: d.revision, session: d.session, panel: d.panel,
     };
-    const got = await fetchPdfCapped(ctxFetch, d.url, { allowlist, userAgent: manifest.user_agent, timeoutMs, maxBytes });
+    const got = await fetchPdfCapped(ctxFetch, d.url, { allowlist, userAgent: manifest.user_agent, timeoutMs, maxBytes, maxRedirects });
     bytesFetched += got.bytesRead;
     let status = got.status;
     let result = null;
@@ -1259,6 +1276,8 @@ async function acquireExternal({
   // HEAD) and an injectable sleep for the document pace. Both UNDEFINED for every other format.
   shapeDocument,
   sleep,
+  // Spec 124 R-EB (a): the runner-owned values (the pdf_document_set arm's pace floor and redirect cap).
+  runner,
   // R-DD (Spec 124, McDonald's Airtight V3): `async () => boolean`, the runner's probe of the
   // first write target (`staleness.targetIsEmpty`). A tier-1 or tier-2 source-version skip is
   // honoured only when it answers false; it is called only when a gate would skip.
@@ -1392,7 +1411,7 @@ async function acquireExternal({
   if (isDocSet) {
     return acquirePdfDocumentSet({
       ctxFetch, log, tag, external, descriptor, config, prior, forced, emitSkeleton, repoRoot,
-      timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty,
+      timeoutMs, base, tier1, shapeDocument, sleep, targetEmpty, runner,
     });
   }
 
@@ -1535,7 +1554,6 @@ module.exports = {
   // RE-FREEZE #32: the PDF document-set arm and its capped, allowlisted fetch (T-ACQ drives both).
   acquirePdfDocumentSet,
   fetchPdfCapped,
-  PDF_PACE_FLOOR_MS,
   contentHashSkip,
   contentHashDecision,
   buildSkipReEmitMeta,

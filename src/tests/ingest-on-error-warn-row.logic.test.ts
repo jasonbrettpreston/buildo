@@ -81,7 +81,7 @@ function warnRowDescriptor(): Record<string, any> {
 }
 
 describe('R-DM — on_error "warn_row" on a derived target', () => {
-  it.fails('a forced derived failure keeps the primary rows, rolls back to the savepoint and counts 1 (flips at RE-FREEZE #37)', async () => {
+  it('a forced derived failure keeps the primary rows, rolls back to the savepoint and counts 1 (flips at RE-FREEZE #37)', async () => {
     const p = pool({ failDerived: true });
     const out = await run(p);
     expect(out.inserted).toBe(1);
@@ -90,25 +90,25 @@ describe('R-DM — on_error "warn_row" on a derived target', () => {
     expect(tx).toEqual(['BEGIN', 'SAVEPOINT sp_e1', 'ROLLBACK TO SAVEPOINT sp_e1', 'COMMIT']);
   });
 
-  it.fails('a clean derived write releases its savepoint and counts 0 errors (flips at RE-FREEZE #37)', async () => {
+  it('a clean derived write releases its savepoint and counts 0 errors (flips at RE-FREEZE #37)', async () => {
     const p = pool({});
     const out = await run(p);
     expect(out.e1).toEqual({ inserted: 1, updated: 0, errors: 0 });
     expect(p.calls.filter((c) => /SAVEPOINT/.test(c))).toEqual(['SAVEPOINT sp_e1', 'RELEASE SAVEPOINT sp_e1']);
   });
 
-  it.fails('a failed ROLLBACK TO SAVEPOINT propagates (the transaction is already aborted) (flips at RE-FREEZE #37)', async () => {
+  it('a failed ROLLBACK TO SAVEPOINT propagates (the transaction is already aborted) (flips at RE-FREEZE #37)', async () => {
     await expect(run(pool({ failDerived: true, failRollback: true }))).rejects.toThrow(/rollback to savepoint failed/);
   });
 
-  it.fails('the default fail_step keeps today\'s posture: a derived failure fails the write (flips at RE-FREEZE #37)', async () => {
+  it('the default fail_step keeps today\'s posture: a derived failure fails the write (flips at RE-FREEZE #37)', async () => {
     const p = pool({ failDerived: true });
     await expect(run(p, 'fail_step')).rejects.toThrow(/ledger insert failed/);
     expect(p.calls).toContain('ROLLBACK');
     expect(p.calls.some((c) => /SAVEPOINT/.test(c))).toBe(false);
   });
 
-  it.fails('validate: warn_row with a cited WARN viol == 0 check is accepted; on writes[0], without the check, or citing a FAIL check it is refused (flips at RE-FREEZE #37)', () => {
+  it('validate: warn_row with a cited WARN viol == 0 check is accepted; on writes[0], without the check, or citing a FAIL check it is refused (flips at RE-FREEZE #37)', () => {
     expect(() => validateLib.validateDescriptor(warnRowDescriptor())).not.toThrow();
     const onPrimary = warnRowDescriptor();
     onPrimary.outputs.writes[0].on_error = 'warn_row';

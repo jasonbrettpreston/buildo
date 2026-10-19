@@ -201,8 +201,10 @@ describe('gate C — declared emits equals emitted records_meta', () => {
       expect(set.has(key)).toBe(true);
     }
     // A fixed, closed length so a silent drop is caught (13 -> 14: code_sha,
-    // conversion-simplification item 9; 14 -> 15: acquired, P3-C1 #33 schema_drift baseline).
-    expect(emits.RUNNER_META_KEYS.length).toBe(15);
+    // conversion-simplification item 9; 14 -> 15: acquired, P3-C1 #33 schema_drift baseline;
+    // 15 -> 16: run_mode, RE-FREEZE #37 Spec 124 R-DX (iv), stamped when a primary declares modes).
+    expect(emits.RUNNER_META_KEYS.length).toBe(16);
+    expect(set.has('run_mode')).toBe(true);
   });
 
   // -------------------------------------------------------------------------

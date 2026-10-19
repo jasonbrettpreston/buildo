@@ -268,12 +268,15 @@ describe('⑤ — force-full env plumbing', () => {
     },
   );
 
-  it('(a) the --full argv check itself is untouched (the OR is additive, not a replacement) — now in the runner, not the legacy script', () => {
+  it('(a) the --full argv check itself is untouched (the OR is additive, not a replacement) — now in the ONE run-mode helper the runner shares (RE-FREEZE #37, Spec 124 R-DX (iv))', () => {
     const src = readFileSync(STEP_INDEX_PATH, 'utf8');
+    const helper = src.match(/function resolveRunMode\([\s\S]*?\n\}/);
+    expect(helper, 'resolveRunMode helper body not found').not.toBeNull();
+    expect(helper![0]).toMatch(/\.includes\(['"]--full['"]\)/);
+    expect(helper![0]).toMatch(/overrides\.force_full === true/);
     const fnMatch = src.match(/async function runEnrichPhase\([\s\S]*?\n\}/);
     expect(fnMatch, 'runEnrichPhase function body not found').not.toBeNull();
-    expect(fnMatch![0]).toMatch(/process\.argv\.includes\(['"]--full['"]\)/);
-    expect(fnMatch![0]).toMatch(/overrides\.force_full === true/);
+    expect(fnMatch![0]).toMatch(/resolveRunMode\(\{ overrides, [^}]*argv: process\.argv \}\)/);
   });
 
   it(

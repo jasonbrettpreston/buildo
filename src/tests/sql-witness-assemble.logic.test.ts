@@ -319,6 +319,28 @@ describe('sql-witness assemble — two BEGIN..COMMIT blocks on one client (contr
     expect(trace.autocommit_writes).toEqual([]);
   });
 
+  it('RE-FREEZE #37 (R-DM): ROLLBACK TO SAVEPOINT inside a block does not end it — the writes before and after it are ONE transaction', async () => {
+    // Text indexes: 0=BEGIN, 1=UPDATE, 2=SAVEPOINT, 3=ROLLBACK TO SAVEPOINT, 4=UPDATE (other), 5=COMMIT.
+    const trace = await A.assembleTrace({
+      ndjsonTexts: [
+        ndjson([
+          header(3001, 3.75, 6, 4),
+          stmt(0, { text: BEGIN, count: 1, rowCount: 0, clients: [1] }),
+          stmt(1, { text: UPDATE, count: 1, rowCount: 1, clients: [1] }),
+          stmt(2, { text: 'SAVEPOINT sp_e1', count: 1, rowCount: 0, clients: [1] }),
+          stmt(3, { text: 'ROLLBACK TO SAVEPOINT sp_e1', count: 1, rowCount: 0, clients: [1] }),
+          stmt(4, { text: UPDATE.replace(/SET /, 'SET /* after savepoint */ '), count: 1, rowCount: 1, clients: [1] }),
+          stmt(5, { text: COMMIT, count: 1, rowCount: 0, clients: [1] }),
+          client(1, [[0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1]]),
+        ]),
+      ],
+      catalog: CAT,
+      meta: META,
+    });
+    expect(trace.transactions).toHaveLength(1);
+    expect(trace.autocommit_writes).toEqual([]);
+  });
+
   it('GREEN control: a single BEGIN..COMMIT block yields one transaction', async () => {
     const trace = await A.assembleTrace({
       ndjsonTexts: [ndjson(onePidLines())],

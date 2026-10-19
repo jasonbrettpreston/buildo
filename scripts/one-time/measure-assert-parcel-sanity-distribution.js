@@ -19,13 +19,23 @@ const { buildDistributionQuery } = require('../lib/step/plausibility');
 const OUT = path.join(__dirname, '..', 'quality', 'generated', 'assert-parcel-sanity.dist-measured.json');
 const SAMPLE_N = 5;
 
+// eslint-disable-next-line global-require
+const SEED = require('../seeds/logic_variables.json');
+const DIST_OPTS = {
+  percentile: SEED.parcel_sanity_distribution_percentile.default,
+  medianMultiplier: SEED.parcel_sanity_distribution_median_multiplier.default,
+  medianFloor: SEED.parcel_sanity_distribution_median_floor.default,
+};
+
 async function main() {
   const pool = createResolvedPool({ label: 'measure-assert-parcel-sanity-distribution' });
   const commit = execSync('git rev-parse HEAD', { cwd: path.join(__dirname, '..', '..') }).toString().trim();
   const at = new Date().toISOString();
   const out = {};
   for (const d of DIST_DEFS) {
-    const sql = buildDistributionQuery(RES, ZC, d);
+    // Spec 124 R-EB (a): buildDistributionQuery has no literal defaults — pass the registered
+    // parcel_sanity_distribution_* values (their seed defaults; a one-time measurement, no DB config read).
+    const sql = buildDistributionQuery(RES, ZC, d, DIST_OPTS);
     const timings = [];
     let lastRow = null;
     for (let i = 0; i < SAMPLE_N; i++) {
