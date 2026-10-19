@@ -5055,28 +5055,12 @@
     "description": "McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: an estimated neighbour front setback above this (metres) is est_status estimate_out_of_bounds (research p99 17.41 m). CONSUMED by scripts/lib/compute/link-parcel-abutments.js.",
     "admin": { "group": "Source Ingestion" }
   },
-  "fya_estimates_accepted": {
-    "default": 0,
+  "fya_porch_allowance_m": {
+    "default": 1.0,
     "type": "number",
     "min": 0,
-    "max": 1,
-    "description": "Front-setback reliability switch (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-57). 1 = the averaged neighbour front setback (10.5.40.70(1)) is used where every qualifying neighbour is est_status estimated and there are one or two of them; 0 = every lot where averaging would apply takes its zone default front setback (x.40.70(1)), is flagged needs survey and discloses front_yard_needs_survey. Set to 1 only after the CoA-notice oracle (scripts/analysis/bylaw-validation/front-setback-oracle.cjs) shows at least fya_oracle_min_within_tol_pct of averaged estimates within fya_oracle_tol_m. 0 since 2026-10-19: 27 % within 0.5 m, n = 219. CONSUMED by scripts/analysis/bylaw/front-averaging.mjs.",
-    "admin": { "group": "Source Ingestion" }
-  },
-  "fya_oracle_tol_m": {
-    "default": 0.5,
-    "type": "number",
-    "min": 0.1,
-    "max": 2,
-    "description": "Front-setback reliability (Spec 130 Q-B1; operator ruling 2026-10-19, tight): the largest difference (metres) between an averaged neighbour front-setback estimate and the setback a City examiner stated in a CoA notice for that estimate to count as accurate. CONSUMED by scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
-    "admin": { "group": "Source Ingestion" }
-  },
-  "fya_oracle_min_within_tol_pct": {
-    "default": 90,
-    "type": "number",
-    "min": 50,
-    "max": 100,
-    "description": "Front-setback reliability (Spec 130 Q-B1; operator ruling 2026-10-19, tight): the share (percent) of averaged estimates that must fall within fya_oracle_tol_m on the CoA-notice oracle before fya_estimates_accepted may be set to 1. CONSUMED by scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
+    "max": 3,
+    "description": "Front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-58). Where 10.5.40.70(1) averaging applies, the front setback is max(averaged neighbour estimate + this allowance, the zone default of x.40.70(1)), always flagged needs survey. The neighbour estimates are measured to building outlines that take in porches and steps; against 219 CoA notices they sit at or below the examiner's figure 89 % of the time. At 1.0 m: mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %). CONSUMED by scripts/analysis/bylaw/front-averaging.mjs and scripts/analysis/bylaw-validation/front-setback-oracle.cjs.",
     "admin": { "group": "Source Ingestion" }
   },
   "abut_parcels_with_abutments_warn_pct": {

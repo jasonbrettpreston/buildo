@@ -171,10 +171,7 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'abut_street_search_deg',
   'fya_est_min_m',
   'fya_est_max_m',
-  // Front-setback reliability (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-57; Spec 130 Q-B1).
-  'fya_estimates_accepted',
-  'fya_oracle_tol_m',
-  'fya_oracle_min_within_tol_pct',
+  'fya_porch_allowance_m', // front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) note; Spec 131 LC-58)
   'abut_parcels_with_abutments_warn_pct', // H6 QA ruling 2026-10-16 item 2 — the abutment-share WARN floor
   'centreline_propagation_coverage_min', // Spec 62 §8e L24c — enrich-permits propagation coverage gate
   'road_overlay_distance_m', // Spec 58 — seeded for WF2 enrich-parcels (F-C2)
