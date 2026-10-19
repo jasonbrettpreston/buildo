@@ -1,0 +1,342 @@
+{
+ "suite": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+ "base": "ca3bcf0e",
+ "run_on": "2026-10-18",
+ "note": "The lock suite run on the base tree (a detached worktree at ca3bcf0e with this file copied in): every red case fails for its own stated reason; the pass cases are guards that hold before and after.",
+ "counts": {
+  "red": 59,
+  "guard": 7
+ },
+ "cases": [
+  {
+   "name": "G-AGREE holds with every correction of this lane (no orphan) no violation",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot R: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '80.10.40.40(1)#(1)(A)' ] to deeply equal []"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RD: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '80.10.40.40(1)#(1)(A)' ] to deeply equal []"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RS: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '80.10.40.40(1)#(1)(A)' ] to deeply equal []"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RT: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '80.10.40.40(1)#(1)(A)' ] to deeply equal []"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RM: Institutional FSI 80.10.40.40(1)(A) and Commercial Residential storeys 40.10.40.10(7) are not applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '80.10.40.40(1)#(1)(A)' ] to deeply equal []"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot applies() names the zone category it was set aside for",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ true, undefined ] to deeply equal [ false, …(1) ]"
+  },
+  {
+   "name": "M-217 / M-159(1) — a non-residential chapter never limits a residential lot RD 10.20.40.10(4)(A) no longer carries the Chapter 40 \"Development Standard Set 1\" map gate",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise R: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null ] to deeply equal [ 'value', 7.5 ]"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise R: an undecided roof form is undecided, never a silent permit",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'no_candidate' to be 'condition_unknown:flat_or_shallow_roof' // Object.is equality"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RD: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null ] to deeply equal [ 'value', 7.5 ]"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RD: an undecided roof form is undecided, never a silent permit",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'no_candidate' to be 'condition_unknown:flat_or_shallow_roof' // Object.is equality"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RS: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null ] to deeply equal [ 'value', 7.5 ]"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RS: an undecided roof form is undecided, never a silent permit",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'no_candidate' to be 'condition_unknown:flat_or_shallow_roof' // Object.is equality"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RM: a pitched roof keeps max(7.0 m, H − 2.5 m) = 7.5 m (was no_candidate)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null ] to deeply equal [ 'value', 7.5 ]"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise RM: an undecided roof form is undecided, never a silent permit",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'no_candidate' to be 'condition_unknown:flat_or_shallow_roof' // Object.is equality"
+  },
+  {
+   "name": "M-218 — the flat-or-shallow-roof clauses are a design choice; the x.40.10(2) main-wall limit answers otherwise the six flat-roof units test flat_or_shallow_roof",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to deeply equal { tokens: [ 'flat_or_shallow_roof' ] }"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings R garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings R laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RD garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RD laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RS garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RS laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RM garden_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RM laneway_suite: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'front_setback_m', …(1) ] to deeply equal [ 'front_setback_m', [] ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings RT / RM garden suite separation is the suite rule 150.7.60.30(1), not the 11.0 m of x.40.80",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 11, '10.60.40.80(1)#(1)(B)' ] to deeply equal [ 4, '150.7.60.30(1)#(1)(A)' ]"
+  },
+  {
+   "name": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings the 10.5.60.20(10)(A) device distance no longer decides the RT / RM principal front setback",
+   "at_base": "red",
+   "reason": "AssertionError: expected '10.5.60.20(10)#(10)(A)' to match /^10\\.(60|80)\\.40\\.70\\(1\\)#/"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback R: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 1.5, '150.7.60.20(5)#(5)(A)' ] to deeply equal [ 1.2, '150.7.60.20(5)#(5)(B)' ]"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RD: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 1.5, '150.7.60.20(5)#(5)(A)' ] to deeply equal [ 1.2, '150.7.60.20(5)#(5)(B)' ]"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RS: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 1.5, '150.7.60.20(5)#(5)(A)' ] to deeply equal [ 1.2, '150.7.60.20(5)#(5)(B)' ]"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RT: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 7.5, '10.60.40.70(3)#(3)(A)' ] to deeply equal [ 1.2, '150.7.60.20(5)#(5)(B)' ]"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback RM: side 10 % of a 12 m frontage = 1.2 m from (5)(B); rear 1.5 m from (2)(B)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 1.5, '150.7.60.20(5)#(5)(A)' ] to deeply equal [ 1.2, '150.7.60.20(5)#(5)(B)' ]"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback with openings chosen, the with-openings arms bind (the disclosed trade-off)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 10 to be 3 // Object.is equality"
+  },
+  {
+   "name": "M-197 — the garden-suite openings arms are disclosed; the blank wall gives the smallest setback the vocab takes openings as absent (operator 2026-10-18)",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'taken_as')"
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held map not held: 7.5 m from (1)(B), with the unit's disclosure — never not_evaluated:map_area_not_held",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, undefined ] to deeply equal [ 'value', 7.5, …(1) ]"
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held inside a held polygon: 5.0 m from (1)(C)",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-222 / M-224 — the Coxwell area unit takes the literal reading while its polygon is not held a suite ≤ 4.0 m answers 4.0 m and carries no Coxwell disclosure ((C) would not apply)",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap R: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(2) ] to deeply equal [ 'value', 'unregulated', …(2) ]"
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RD: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(2) ] to deeply equal [ 'value', 'unregulated', …(2) ]"
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RS: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(2) ] to deeply equal [ 'value', 'unregulated', …(2) ]"
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RT: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(2) ] to deeply equal [ 'value', 'unregulated', …(2) ]"
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap RM: dwelling_units_max is unregulated by label absence (was label_value_absent:u)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'not_evaluated', null, …(2) ] to deeply equal [ 'value', 'unregulated', …(2) ]"
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap 10.5.1.10(3)(D) applies only when the label carries u (the M-174(4) form, (D) only)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to deeply equal { tokens: [ 'label_value' ], …(1) }"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RD: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected 35 to be 45 // Object.is equality"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RS: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected 35 to be 45 // Object.is equality"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RT: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected 35 to be 45 // Object.is equality"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RM: a detached house with a suite on an LC 35 lot takes the 45 % of x.30.40(1)(D); without one, 35 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected 35 to be 45 // Object.is equality"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class R: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(11) ] to include 'rule 2: 10.10.40.40(1)#(1)(C) drops 1…'"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RD: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(10) ] to include 'rule 2: 10.20.40.40(1)#(1)(C) drops 1…'"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RS: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(10) ] to include 'rule 2: 10.40.40.40(1)#(1)(C) drops 1…'"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RT: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(10) ] to include 'rule 2: 10.60.40.40(1)#(1)(C) drops 1…'"
+  },
+  {
+   "name": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class RM: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(10) ] to include 'rule 2: 10.80.40.40(1)#(1)(C) drops 1…'"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form 10.5.80.1(2)(D) is UNUSUAL like (2)(A): the outdoor parking area is not a building",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'LIMIT', 'street_setback_m', …(2) ] to deeply equal [ 'UNUSUAL', 'none', 'none', 'none' ]"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the M-223 → M-225 re-cite: every live 10.5.80.1(2)(A) correction cites M-225",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'archetype', false, true ] to deeply equal [ 'archetype', true, false ]"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the R garage rule 10.10.60.20(1) and the device rule 10.5.60.20(10) carry their accessory structure",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'parking_space' ] to include 'private_garage'"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the R ancillary 5 % (10.10.60.70(1)) is on ancillary_coverage_pct, never the principal coverage",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'lot_coverage_pct' to be 'ancillary_coverage_pct' // Object.is equality"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form the garden-suite parking variant 150.7.60.20(4)(B) needs a rear-street vehicle entrance",
+   "at_base": "red",
+   "reason": "AssertionError: expected true to be false // Object.is equality"
+  },
+  {
+   "name": "the parking leaks (M-225 extended) and the device leak — the M-159(2) accessory form guard: no live parking- or device-scoped unit decides a principal or suite envelope target on any zone",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', …(2) ]"
+  },
+  {
+   "name": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (owed red vector) RS: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (owed red vector) RM: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+   "at_base": "pass (guard)",
+   "reason": null
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) the main-entrance height is disclosed in all four zone copies (M-215(2))",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to match /1\\.2 m above/"
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) suite parking and bicycle rules are disclosed (M-216)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'No parking is required with the suite…' // Object.is equality"
+  },
+  {
+   "name": "disclosures the tracker owed (M-215(2), M-216, M-209) laneway eligibility names all three arms (M-209)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'A laneway suite needs at least 3.5 m …' to match /rear lot line, along a side lot line,…/"
+  }
+ ]
+}

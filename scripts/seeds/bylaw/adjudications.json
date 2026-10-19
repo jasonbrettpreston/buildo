@@ -70315,6 +70315,1434 @@
       "rule": "Spec 69a M-223; Spec 68 §7.3",
       "unit": "10.5.80.1(2)#(2)(A)",
       "value": "If the lot has a residential building other than a detached house, semi-detached house or duplex and an outdoor area for parking or storing more than 3 vehicles: that area must be at least 6.0 m from every residential building on the lot. The tool does not evaluate this."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.20.30.40(1)#(1)(D)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.20.30.40(1)#(1)(D)",
+      "value": [
+        "detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.30.40(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.20.30.40(1)#(1)(D)",
+      "value": {
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "overlay_mapped": "Lot Coverage Overlay Map",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.40.30.40(1)#(1)(D)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.40.30.40(1)#(1)(D)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.30.40(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.40.30.40(1)#(1)(D)",
+      "value": {
+        "RS": "the RS zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "overlay_mapped": "Lot Coverage Overlay Map",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.30.40(1)#(1)(D)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.60.30.40(1)#(1)(D)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.30.40(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.60.30.40(1)#(1)(D)",
+      "value": {
+        "RT": "the RT zone",
+        "detached_houseplex": "contains detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "overlay_mapped": "the Lot Coverage Overlay Map is less than",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.80.30.40(1)#(1)(D)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.80.30.40(1)#(1)(D)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.30.40(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.80.30.40(1)#(1)(D)",
+      "value": {
+        "RM": "the RM zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "overlay_mapped": "Lot Coverage Overlay Map",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.10.40.40(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.10.40.40(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.40(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.10.40.40(1)#(1)(C)",
+      "value": {
+        "R": "In the R zone",
+        "detached_houseplex": "to a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or a residential building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.20.40.40(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.20.40.40(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.40.40(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.20.40.40(1)#(1)(C)",
+      "value": {
+        "RD": "the RD zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.40.40.40(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.40.40.40(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.40.40(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.40.40.40(1)#(1)(C)",
+      "value": {
+        "RS": "the RS zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.40.40(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.60.40.40(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.40.40(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.60.40.40(1)#(1)(C)",
+      "value": {
+        "RT": "the RT zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.80.40.40(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.80.40.40(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.40.40(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.80.40.40(1)#(1)(C)",
+      "value": {
+        "RM": "the RM zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.10.30.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.10.30.1(2)#whole",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.30.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.10.30.1(2)#whole",
+      "value": {
+        "detached_houseplex": "with a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or a residential building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.20.30.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.20.30.1(2)#whole",
+      "value": [
+        "detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.30.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.20.30.1(2)#whole",
+      "value": {
+        "detached_houseplex": "a lot with a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.40.30.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.40.30.1(2)#whole",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.30.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.40.30.1(2)#whole",
+      "value": {
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.30.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.60.30.1(2)#whole",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.30.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.60.30.1(2)#whole",
+      "value": {
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.80.30.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.80.30.1(2)#whole",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.30.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.80.30.1(2)#whole",
+      "value": {
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "secondary_suite_use": "a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.10.60.70(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "M-182(1)/(2) (operator y 2026-10-18, MF-3): the clause names \"a residential building with a secondary suite\"; that subject is the suite class (has_secondary_suite), matched whatever the principal type (M-177(4)). Reality check §5.2: the suite answer equalled the detached-house answer because no unit carried the class (M-221).",
+      "rule": "Spec 69a M-182(2), M-221, M-177(4); M-75",
+      "unit": "10.10.60.70(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.60.70(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-182(2): the clause words that license the secondary_suite building type.",
+      "rule": "Spec 69a M-182(2), M-221; M-75",
+      "unit": "10.10.60.70(1)#(1)(C)",
+      "value": {
+        "R": "in the R zone",
+        "detached_houseplex": "a detached houseplex",
+        "has_secondary_suite": "a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex a"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.10(11)#(11)(A)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.10(11)#(11)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.10(11)#(11)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": {
+        "R": "in the R zone",
+        "detached_house": "residential building, other than an apartment building",
+        "detached_houseplex": "residential building, other than an apartment building",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units",
+        "semi_detached_house": "residential building, other than an apartment building",
+        "semi_detached_houseplex": "residential building, other than an apartment building",
+        "townhouse": "residential building, other than an apartment building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.10.40.10(12)#(12)(A)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.10(12)#(12)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.10(12)#(12)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": {
+        "R": "in the R zone",
+        "detached_house": "residential building, other than an apartment building",
+        "detached_houseplex": "residential building, other than an apartment building",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units",
+        "semi_detached_house": "residential building, other than an apartment building",
+        "semi_detached_houseplex": "residential building, other than an apartment building",
+        "townhouse": "residential building, other than an apartment building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.40.10(4)#(4)(A)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.20.40.10(4)#(4)(A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.20.40.10(4)#(4)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.20.40.10(4)#(4)(A)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.40.10(4)#(4)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.20.40.10(4)#(4)(A)",
+      "value": {
+        "RD": "the RD zone",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.40.10(4)#(4)(B)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.20.40.10(4)#(4)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.40.10(4)#(4)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": {
+        "RD": "the RD zone",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.40.40.10(6)#(6)(A)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.40.40.10(6)#(6)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.40.10(6)#(6)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": {
+        "RS": "in the RS zone",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.80.40.10(6)#(6)(A)/condition",
+      "kind": "correction",
+      "reason": "M-218 (reality check §5.2): the clause applies only \"if [the building] has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area\"; keyed with condition none it displaced the x.40.10(2) main-wall limit on every lot (main_wall_height_m no_candidate). The roof form is the builder's choice (M-172(3) roof_type), so it is a design-choice token: form (a) takes this clause, form (b) keeps the (2) limit.",
+      "rule": "Spec 69a M-218, M-172(3); M-75; Spec 68 §6 condition",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.80.40.10(6)#(6)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-218: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": [
+        "flat_or_shallow_roof"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.40.10(6)#(6)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-218: the clause words that license flat_or_shallow_roof.",
+      "rule": "Spec 69a M-218; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": {
+        "RM": "in the RM zone",
+        "detached_house": "a detached house or",
+        "flat_or_shallow_roof": "slope of less than 1.0 vertical units for every 10.0 horizontal units",
+        "semi_detached_house": "semi-detached house in the RM zone"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(2)#(2)(C)/condition",
+      "kind": "correction",
+      "reason": "M-197 (operator 2026-10-18: \"assume they will not put windows in doors — default is the smallest setback — rest is disclosure\"): the with-openings arm applies only when the suite wall has openings, a design choice taken as absent (vocab default_overrides.suite_wall_openings); keyed with condition none it bound every garden suite (side 1.5 m over (5)(B)'s 10 % of frontage; rear 3.0 m).",
+      "rule": "Spec 69a M-197, M-172(3), M-149; M-75",
+      "unit": "150.7.60.20(2)#(2)(C)",
+      "value": {
+        "tokens": [
+          "suite_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(2)#(2)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-197: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-197; M-75",
+      "unit": "150.7.60.20(2)#(2)(C)",
+      "value": [
+        "suite_wall_openings"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(2)#(2)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "M-197: the clause words that license suite_wall_openings.",
+      "rule": "Spec 69a M-197; M-75",
+      "unit": "150.7.60.20(2)#(2)(C)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "garden_suite": "containing a garden suite",
+        "suite_wall_openings": "openings such as"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(5)#(5)(A)/condition",
+      "kind": "correction",
+      "reason": "M-197 (operator 2026-10-18: \"assume they will not put windows in doors — default is the smallest setback — rest is disclosure\"): the with-openings arm applies only when the suite wall has openings, a design choice taken as absent (vocab default_overrides.suite_wall_openings); keyed with condition none it bound every garden suite (side 1.5 m over (5)(B)'s 10 % of frontage; rear 3.0 m).",
+      "rule": "Spec 69a M-197, M-172(3), M-149; M-75",
+      "unit": "150.7.60.20(5)#(5)(A)",
+      "value": {
+        "tokens": [
+          "suite_wall_openings"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(5)#(5)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-197: the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-197; M-75",
+      "unit": "150.7.60.20(5)#(5)(A)",
+      "value": [
+        "suite_wall_openings"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(5)#(5)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-197: the clause words that license suite_wall_openings.",
+      "rule": "Spec 69a M-197; M-75",
+      "unit": "150.7.60.20(5)#(5)(A)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "suite_wall_openings": "openings such as"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(4)#(4)(B)/condition",
+      "kind": "correction",
+      "reason": "M-198(5) / M-177(3): the 6.0 m arm applies only to \"an ancillary building containing a garden suite and a parking space\" on a through lot \"and vehicle access is from the street abutting the rear lot line\"; keyed on through_lot alone it bound every garden suite on a through lot. The vehicle entrance is the design-choice token 150.7.60.20(6)(B) already uses (M-172(3)).",
+      "rule": "Spec 69a M-198(5), M-177(3), M-172(3); M-75",
+      "unit": "150.7.60.20(4)#(4)(B)",
+      "value": {
+        "tokens": [
+          "through_lot",
+          "garage_entrance_faces_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(4)#(4)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-198(5): the condition token is licensed by the clause words.",
+      "rule": "Spec 69a M-198(5); M-75",
+      "unit": "150.7.60.20(4)#(4)(B)",
+      "value": [
+        "through_lot",
+        "garage_entrance_faces_street"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(4)#(4)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "M-198(5): the clause words that license garage_entrance_faces_street.",
+      "rule": "Spec 69a M-198(5); M-75",
+      "unit": "150.7.60.20(4)#(4)(B)",
+      "value": {
+        "garage_entrance_faces_street": "vehicle access is from the street abutting the rear lot line",
+        "garden_suite": "containing a garden suite",
+        "parking_space": "a parking space",
+        "through_lot": "a through lot"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.10.60.20(1)#(1)(A)/application.uses",
+      "kind": "correction",
+      "reason": "The R-zone rule is headed \"Rear Yard Setbacks and Side Yard Setbacks for Detached Private Garages\" and governs \"an ancillary building or structure containing a parking space\": a private garage, as at 10.5.60.20(5)/(6), which it displaces. Without the accessory use it set the garden-suite rear setback (1.0 m) in R. Extends the M-225 parking fix to the parking-scoped units that fed suite targets.",
+      "rule": "Spec 69a M-159(2), M-175, M-225; M-75",
+      "unit": "10.10.60.20(1)#(1)(A)",
+      "value": [
+        "private_garage",
+        "parking_space"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.60.20(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-159(2): the clause words that license private_garage.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.10.60.20(1)#(1)(A)",
+      "value": {
+        "R": "in the R zone",
+        "ancillary_building": "for an ancillary building",
+        "parking_space": "containing a parking space",
+        "private_garage": "Detached Private Garages"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.10.60.20(1)#(1)(B)/application.uses",
+      "kind": "correction",
+      "reason": "The R-zone rule is headed \"Rear Yard Setbacks and Side Yard Setbacks for Detached Private Garages\" and governs \"an ancillary building or structure containing a parking space\": a private garage, as at 10.5.60.20(5)/(6), which it displaces. Without the accessory use it set the garden-suite rear setback (1.0 m) in R. Extends the M-225 parking fix to the parking-scoped units that fed suite targets.",
+      "rule": "Spec 69a M-159(2), M-175, M-225; M-75",
+      "unit": "10.10.60.20(1)#(1)(B)",
+      "value": [
+        "private_garage",
+        "parking_space"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.60.20(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "M-159(2): the clause words that license private_garage.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.10.60.20(1)#(1)(B)",
+      "value": {
+        "R": "in the R zone",
+        "ancillary_building": "for an ancillary building",
+        "parking_space": "containing a parking space",
+        "private_garage": "Detached Private Garages"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.5.60.20(10)#(10)(A)/application.uses",
+      "kind": "correction",
+      "reason": "The rule governs \"a heating or air-conditioning device that is mounted on the ground\" (heading \"Ground Mounted Heating or Air-Conditioning Devices\"), an energy device (vocab accessory_structure_use: \"solar or heating, ventilation and air conditioning equipment\"). Without the use its 6.0 m front-yard distance won the principal front setback in RT and RM and the suite front setback everywhere.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": [
+        "energy_device"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.5.60.20(10)#(10)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "M-159(2): the clause words that license energy_device.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.5.60.20(10)#(10)(A)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "energy_device": "heating or air-conditioning device"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.5.60.20(10)#(10)(B)/application.uses",
+      "kind": "correction",
+      "reason": "The rule governs \"a heating or air-conditioning device that is mounted on the ground\" (heading \"Ground Mounted Heating or Air-Conditioning Devices\"), an energy device (vocab accessory_structure_use: \"solar or heating, ventilation and air conditioning equipment\"). Without the use its 6.0 m front-yard distance won the principal front setback in RT and RM and the suite front setback everywhere.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": [
+        "energy_device"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.5.60.20(10)#(10)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "M-159(2): the clause words that license energy_device.",
+      "rule": "Spec 69a M-159(2), M-175; M-75",
+      "unit": "10.5.60.20(10)#(10)(B)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "energy_device": "heating or air-conditioning device"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.60.70(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "The (1) cap is \"the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area\": the all-ancillary coverage target (M-179(1)), as 150.8.60.70(1)(B) is keyed. Keyed on lot_coverage_pct, the parking-scoped (B) leaf fed the principal coverage target and blocked ABS-1 (R has no principal coverage rule).",
+      "rule": "Spec 69a M-179(1), M-225, M-75",
+      "unit": "10.10.60.70(1)#(1)(A)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.60.70(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "M-179(1): the same 5 % on the ancillary-coverage target.",
+      "rule": "Spec 69a M-179(1); M-75",
+      "unit": "10.10.60.70(1)#(1)(A)",
+      "value": [
+        "ancillary_coverage_pct = 5 pct @(1)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.60.70(1)#(1)(B)/target",
+      "kind": "correction",
+      "reason": "The (1) cap is \"the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area\": the all-ancillary coverage target (M-179(1)), as 150.8.60.70(1)(B) is keyed. Keyed on lot_coverage_pct, the parking-scoped (B) leaf fed the principal coverage target and blocked ABS-1 (R has no principal coverage rule).",
+      "rule": "Spec 69a M-179(1), M-225, M-75",
+      "unit": "10.10.60.70(1)#(1)(B)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.60.70(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "M-179(1): the same 5 % on the ancillary-coverage target.",
+      "rule": "Spec 69a M-179(1); M-75",
+      "unit": "10.10.60.70(1)#(1)(B)",
+      "value": [
+        "ancillary_coverage_pct = 5 pct @(1)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.5.1.10(3)#(3)(D)/condition",
+      "kind": "correction",
+      "reason": "M-220 / M-202(3): \"the letter \\\"u\\\" and a numerical value indicates the permitted maximum number of dwelling units\"; with no 'u' in the label there is no 'u' cap. Keyed with condition none, label(u) returned label_value_absent:u on every unlabelled lot. The M-174(4) form, applied to (D) only ((A)–(C), (E) stay held with M-174(4)).",
+      "rule": "Spec 69a M-220, M-202(3), M-174(4); M-75",
+      "unit": "10.5.1.10(3)#(3)(D)",
+      "value": {
+        "if": "labelled(u)",
+        "tokens": [
+          "label_value"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.5.1.10(3)#(3)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "M-220: the label_value token, as 10.20.40.1(5)(A).",
+      "rule": "Spec 69a M-220; M-75",
+      "unit": "10.5.1.10(3)#(3)(D)",
+      "value": [
+        "label_value"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.5.1.10(3)#(3)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "M-220: the clause words that license label_value.",
+      "rule": "Spec 69a M-220; M-75",
+      "unit": "10.5.1.10(3)#(3)(D)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "any": "zone label",
+        "dwelling_unit": "dwelling units",
+        "label_value": "the letter \"u\" and a numerical value"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.80.1(2)#(2)(D)/archetype",
+      "kind": "correction",
+      "reason": "(2)(D) limits how close the ancillary OUTDOOR AREA for parking or storing more than 3 vehicles is to a street lot line; street_setback_m is a building's setback, so the agreed LIMIT borrowed it. The M-225 form of sibling (2)(A).",
+      "rule": "Spec 69a M-225; M-102, M-98, M-159; Spec 68 §7.1, §7.3; KEYING_CONVENTIONS P4 (never borrow a target)",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.80.1(2)#(2)(D)/target",
+      "kind": "correction",
+      "reason": "M-225 form: UNUSUAL carries no target.",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.80.1(2)#(2)(D)/bound",
+      "kind": "correction",
+      "reason": "M-225 form: UNUSUAL carries no bound.",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.80.1(2)#(2)(D)/numeric_expression",
+      "kind": "correction",
+      "reason": "M-225 form: UNUSUAL carries no expression.",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.80.1(2)#(2)(D)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "M-225 form: the 6.0 m limit is not modelled (M-82 Q7), as at (2)(A).",
+      "rule": "Spec 69a M-225; M-82 Q7, M-102; Spec 68 §9 G-CLAUSE",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "3",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(2)(D)(i)",
+          "literal": "6.0",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.80.1(2)#(2)(D)/calculation_handling",
+      "kind": "correction",
+      "reason": "M-225 form: not modelled; its subject is the outdoor parking area.",
+      "rule": "Spec 69a M-225; M-75; Spec 68 §7.3",
+      "unit": "10.5.80.1(2)#(2)(D)",
+      "value": {
+        "description": "On a lot with a residential building other than a detached house, semi-detached house or duplex, an ancillary outdoor area for parking or storing more than 3 vehicles must be no closer to a street lot line than the greater of 6.0 metres or the setback of a residential building on an adjoining lot from the same street.",
+        "gaps": "The subject is the outdoor parking area, not a building: no dsl_target names its distance from a street lot line and no input holds the number of vehicles parked or stored outside (Spec 69a M-225). It never limits the principal building or a suite.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.5.80.1(2)#(2)(A)/archetype~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18 (operator 'fix now'): (2)(A) limits the distance of an ancillary OUTDOOR AREA for parking or storing more than 3 vehicles from a residential building; separation_m is the distance between buildings (vocab concept), and no dsl_target names an outdoor-parking-area distance or a vehicle count, so the agreed LIMIT cannot be keyed and the borrowed target set the garden-suite separation to 6.0 m on every lot",
+      "rule": "Spec 69a M-225; M-102, M-98, M-159; Spec 68 §7.1, §7.3; KEYING_CONVENTIONS P4 (never borrow a target)",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/archetype",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.80.1(2)#(2)(A)/target~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: no licensed target for an outdoor parking area's distance from a residential building; UNUSUAL carries no target",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/target",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.5.80.1(2)#(2)(A)/bound~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: UNUSUAL carries no bound",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/bound",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.80.1(2)#(2)(A)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: UNUSUAL carries no expression",
+      "rule": "Spec 69a M-225; M-102; Spec 68 §7.3",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/numeric_expression",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.80.1(2)#(2)(A)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: the 6.0 m limit is not modelled (M-82 Q7), as at sibling (2)(E) and 150.45.50.1(1)(B)",
+      "rule": "Spec 69a M-225; M-82 Q7, M-102; Spec 68 §9 G-CLAUSE",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/literals_not_expressed",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": [
+        {
+          "clause": "(2)",
+          "literal": "3",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(2)(A)",
+          "literal": "6.0",
+          "reason": "limit_not_modelled"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.80.1(2)#(2)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: the unit is not modelled; its subject is the outdoor parking area",
+      "rule": "Spec 69a M-225; M-75; Spec 68 §7.3",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/calculation_handling",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": {
+        "description": "On a lot with a residential building other than a detached house, semi-detached house or duplex, an ancillary outdoor area for parking or storing more than 3 vehicles must be at least 6.0 metres from a residential building on the same lot.",
+        "gaps": "The subject is the outdoor parking area, not a building: no dsl_target names its distance from a residential building and no input holds the number of vehicles parked or stored outside (Spec 69a M-223). It never limits the principal building or a suite.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.80.1(2)#(2)(A)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Coxwell review 2026-10-18: an UNUSUAL unit carries a disclosure (Spec 68 §7.3)",
+      "rule": "Spec 69a M-225; Spec 68 §7.3",
+      "supersedes": "COR-10.5.80.1(2)#(2)(A)/disclosure",
+      "unit": "10.5.80.1(2)#(2)(A)",
+      "value": "If the lot has a residential building other than a detached house, semi-detached house or duplex and an outdoor area for parking or storing more than 3 vehicles: that area must be at least 6.0 m from every residential building on the lot. The tool does not evaluate this."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(6)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-215(2) / M-174(2): the main-pedestrian-entrance height bounds the first-floor elevation and is disclosed (Spec 78 P5.12 main_entrance_height), shown only where the clause applies — R and RM for a detached or semi-detached house, RD and RS for a residential building, as each unit's building_types already say. The four zone copies alike.",
+      "rule": "Spec 69a M-215(2), M-174(2); Spec 78 P5.12 main_entrance_height; M-75",
+      "unit": "10.10.40.10(6)#whole",
+      "value": "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.10(6)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-215(2) / M-174(2): the main-pedestrian-entrance height bounds the first-floor elevation and is disclosed (Spec 78 P5.12 main_entrance_height), shown only where the clause applies — R and RM for a detached or semi-detached house, RD and RS for a residential building, as each unit's building_types already say. The four zone copies alike.",
+      "rule": "Spec 69a M-215(2), M-174(2); Spec 78 P5.12 main_entrance_height; M-75",
+      "unit": "10.20.40.10(6)#whole",
+      "value": "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.10(4)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-215(2) / M-174(2): the main-pedestrian-entrance height bounds the first-floor elevation and is disclosed (Spec 78 P5.12 main_entrance_height), shown only where the clause applies — R and RM for a detached or semi-detached house, RD and RS for a residential building, as each unit's building_types already say. The four zone copies alike.",
+      "rule": "Spec 69a M-215(2), M-174(2); Spec 78 P5.12 main_entrance_height; M-75",
+      "unit": "10.40.40.10(4)#whole",
+      "value": "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.10(4)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-215(2) / M-174(2): the main-pedestrian-entrance height bounds the first-floor elevation and is disclosed (Spec 78 P5.12 main_entrance_height), shown only where the clause applies — R and RM for a detached or semi-detached house, RD and RS for a residential building, as each unit's building_types already say. The four zone copies alike.",
+      "rule": "Spec 69a M-215(2), M-174(2); Spec 78 P5.12 main_entrance_height; M-75",
+      "unit": "10.80.40.10(4)#whole",
+      "value": "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.80.1(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.7.80.1(1)#(1)(A)",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.80.1(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.7.80.1(1)#(1)(B)",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.80.1(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.7.80.1(2)#whole",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.80.1(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.8.80.1(1)#(1)(A)",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.80.1(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.8.80.1(1)#(1)(B)",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.80.1(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-216 (operator verdicts: 150.7.80.1 \"No parking required. Important\"; 150.8.80.1 \"disclose\"): the suite parking and bicycle rules never size the envelope (LC-14) and are disclosed (Spec 78 P5.12 suite_parking_bicycle). Garden and laneway copies alike.",
+      "rule": "Spec 69a M-216, M-66; Spec 78 P5.12 suite_parking_bicycle; M-75",
+      "unit": "150.8.80.1(2)#whole",
+      "value": "No parking is required with the suite; it must provide two bicycle parking spaces."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 / M-172(3) / M-198(5): the parking-space variant is the restrictive trade-off, disclosed (Spec 78 P5.12 suite_parking_variants), never bound — its condition now tests the vehicle entrance (garage_entrance_faces_street, taken as absent for the maximum).",
+      "rule": "Spec 69a M-216, M-172(3), M-198(5); Spec 78 P5.12 suite_parking_variants; M-75",
+      "unit": "150.7.60.20(4)#(4)(B)",
+      "value": "If the garden suite contains a parking space entered from the street behind a through lot: its rear yard setback is at least 6.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(6)#(6)(B)/disclosure",
+      "kind": "correction",
+      "reason": "M-216 / M-172(3) / M-198(5): the corner-lot parking variant, same form as (4)(B): restrictive trade-off, disclosed (suite_parking_variants), never bound for the maximum (garage_entrance_faces_street taken as absent).",
+      "rule": "Spec 69a M-216, M-172(3), M-198(5); Spec 78 P5.12 suite_parking_variants; M-75",
+      "unit": "150.7.60.20(6)#(6)(B)",
+      "value": "If the garden suite on a corner lot contains a parking space entered from the side street: its side yard setback on that street is at least 6.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.30.20(1)#whole/disclosure",
+      "kind": "correction",
+      "reason": "M-209: eligibility is the three arms of 150.8.30.20(1) (\"rear lot line or side lot line abutting a lane for at least 3.5 metres; or … a cumulative total of at least 3.5 metres along a side lot line and rear lot line\"), measured per edge from toronto_centreline (lane_abutting_length_m, OWED Spec 130); the 20 m abuts_laneway flag is never the test. The disclosure named only the rear-or-side arm.",
+      "rule": "Spec 69a M-209; Spec 78 suite_lane_arm / INV-15; M-75",
+      "unit": "150.8.30.20(1)#whole",
+      "value": "A laneway suite needs at least 3.5 m of lane along the rear lot line, along a side lot line, or along the side and rear lot lines combined; the lane length along each lot line is measured from the lane centreline and is an estimate."
     }
   ]
 }

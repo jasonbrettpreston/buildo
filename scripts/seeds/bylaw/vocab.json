@@ -80,7 +80,7 @@
       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
-    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined"] },
+    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
@@ -280,6 +280,8 @@
     "one_abutting_building_within_15_m": {},
     "two_abutting_buildings_within_15_m": {},
     "has_secondary_suite": { "user_input": "has_secondary_suite" },
+    "flat_or_shallow_roof": { "user_input": "roof_type", "patterns": ["slope of less than 1.0 vertical units for every 10.0 horizontal units"] },
+    "suite_wall_openings": { "user_input": "suite_wall_openings", "patterns": ["openings such as"] },
     "individual_private_driveway": {},
     "garage_entrance_faces_street": {},
     "lowest_level_joists_1_0_to_1_5_m_for_80_pct": {},
@@ -467,6 +469,25 @@
     "90": { "category": "Open Space", "zones": [] },
     "100": { "category": "Utility and Transportation", "zones": [] }
   },
+  "article_application": {
+    "$comment": "Spec 69a M-219 (applies M-159): an Article's own application regulation. x.40.1(1) of each residential zone: the Article's regulations \"apply to buildings or structures in the <zone> zone, other than ancillary buildings or structures which are subject to Article 10.5.60\". A unit of that Article never answers for these building types (a garden or laneway suite is in an ancillary building, 150.7.20.1 / 150.8.20.1); its own chapter (150.7 / 150.8, 10.5.60) does. 10.5.40.1(1) is the same form for Article 10.5.40; 10.5.60.1(1) and R's 10.10.60.1(1) are the converse (\"apply to ancillary buildings or structures\"), so they list included_building_types instead. A unit of these Articles keyed on a principal type (e.g. 10.5.60.70(1)(C), 10.10.60.70(1)(C): \"a lot with a detached houseplex\") names the other building on the lot — a cross-structure condition this one-structure evaluation does not model (M-177(1), P2-10).",
+    "10.5.40": { "citation": "10.5.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.5.60": { "citation": "10.5.60.1(1)", "evidence": "apply to ancillary buildings or structures", "included_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.10.60": { "citation": "10.10.60.1(1)", "evidence": "apply to ancillary buildings or structures in the R zone", "included_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.10.40": { "citation": "10.10.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.20.40": { "citation": "10.20.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.40.40": { "citation": "10.40.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.60.40": { "citation": "10.60.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] },
+    "10.80.40": { "citation": "10.80.40.1(1)", "evidence": "other than ancillary buildings or structures", "excluded_building_types": ["ancillary_building", "garden_suite", "laneway_suite"] }
+  },
+  "map_area_unheld_reading": {
+    "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
+    "150.7.60.30(1)#(1)(C)": { "ruling": "M-224", "map": "Coxwell–Victoria Park area (bylaw_map_areas polygon owed, M-193)" }
+  },
+  "label_absence_unregulated": {
+    "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
+    "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
+  },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },
@@ -601,7 +622,9 @@
       "garage_entrance_faces_street": "the garage's vehicle entrance faces a street",
       "all_units_front_street": "every dwelling unit fronts directly on a street",
       "unit_not_fronting_street": "a townhouse dwelling unit does not front on a street",
-      "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front"
+      "no_individual_private_driveway": "the dwelling unit has no individual private driveway leading to its front",
+      "flat_or_shallow_roof": "the roof slopes less than 1.0 in 10.0 over more than half of its area (a flat or shallow roof)",
+      "suite_wall_openings": "the suite's main wall has openings such as doors or windows"
     },
     "user_input": {
       "has_secondary_suite": "the house has a secondary suite",
@@ -614,6 +637,10 @@
       "individual_private_driveway": {
         "taken_as": false,
         "disclosure": "If each dwelling unit has an individual private driveway leading to its front: the minimum unit width is 6.0 m."
+      },
+      "suite_wall_openings": {
+        "taken_as": false,
+        "why": "operator 2026-10-18 (M-197): \"assume they will not put windows in doors — default is the smallest setback — rest is disclosure\"; the with-openings setback arms are disclosed, never bound"
       },
       "no_individual_private_driveway": {
         "taken_as": true,

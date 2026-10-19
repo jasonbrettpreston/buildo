@@ -202,6 +202,10 @@ export function evaluatorVocab(vocab) {
   const names = Object.keys(types).sort(cmpStr);
   return {
     accessory_structure_use: vocab.accessory_structure_use, // M-175: applies() scopes accessory-structure units out
+    article_application: vocab.article_application, // M-219: x.40.1(1) excludes ancillary buildings from Article x.40
+    label_absence_unregulated: vocab.label_absence_unregulated, // M-220 / M-202(3): no 'u' label, no 'u' cap
+    map_area_unheld_reading: vocab.map_area_unheld_reading, // M-222 / M-224: literal reading while a map is not held
+    zone_category_chapter: vocab.zone_category_chapter, // M-159(1) / M-217: a chapter's base units load only in its zone category
     building_type_parent: Object.fromEntries(names.filter((n) => types[n].parent).map((n) => [n, types[n].parent])),
     building_type_residential: names.filter((n) => types[n].residential === true),
     dsl_input: vocab.dsl_input,

@@ -94,6 +94,17 @@ export function makeContext(vocab, extra = {}) {
     thresholdTokens: new Set(vocab.lot_condition_threshold || []),
     // M-175: uses that name an accessory structure (pool, garage, deck, …); a unit scoped to one limits that structure.
     accessoryUses: new Set(Object.keys(vocab.accessory_structure_use || {}).filter((k) => k !== '$comment')),
+    // M-159(1) / M-217: chapter → {category, zones}; a base unit of a mapped chapter with no zones of its own loads only
+    // on a lot whose zone is in its category (an Institutional or Commercial Residential rule never limits a house).
+    zoneCategory: vocabMap(vocab.zone_category_chapter),
+    // M-219: an Article's own application regulation (x.40.1(1): "other than ancillary buildings or structures") — the
+    // building types it excludes, by Article (3-part number).
+    articleScope: vocabMap(vocab.article_application),
+    // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
+    // disclosure says so), never not_evaluated:map_area_not_held on every lot.
+    mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
+    // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
+    labelAbsence: vocabMap(vocab.label_absence_unregulated),
     enactments: extra.enactments || {},
     absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
     // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
@@ -101,6 +112,7 @@ export function makeContext(vocab, extra = {}) {
     authored: extra.authored || {},
   };
 }
+function vocabMap(o) { return Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== '$comment')); }
 const ctxOf = (c) => (c && c.units ? c : makeContext(c || {}));
 
 const MONTHS = { January: 1, February: 2, March: 3, April: 4, May: 5, June: 6, July: 7, August: 8, September: 9, October: 10, November: 11, December: 12 };
@@ -390,13 +402,30 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   const zones = app.zones || [];
   reads.add('zone');
   if (zones.length && !zones.includes('any') && !zones.includes(lot.zone)) return { ok: false, why: 'zone' };
+  const reg = u.regulation_id || splitRef(u.unit_id).reg;
+  if (!zones.length && u.layer === 'base') { // M-159(1) / M-217
+    const cat = C.zoneCategory && C.zoneCategory[String(reg).split('.')[0]];
+    if (cat && !cat.zones.includes(lot.zone)) return { ok: false, why: `zone category ${cat.category} (M-159(1))` };
+  }
   let unknown = null;
+  const bt = lot.building_type;
+  const scope = C.articleScope && C.articleScope[String(reg).split('.').slice(0, 3).join('.')];
+  if (scope) reads.add('building_type'); // read whether or not the type is known: an unknown type is a value too
+  if (scope && bt) { // M-219: the Article's own application regulation
+    const out = scope.excluded_building_types ? scope.excluded_building_types.includes(bt) : !scope.included_building_types.includes(bt);
+    if (out) return { ok: false, why: `building_type ${bt} (outside ${scope.citation})` };
+  }
   const types = app.building_types || [];
   if (types.length && !types.includes('any')) {
     reads.add('building_type');
-    const bt = lot.building_type;
-    if (!bt) unknown = 'needs_user_input:building_type';
-    else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
+    // M-182(1) / M-221: "a residential building with a secondary suite" matches the class vector's has_secondary_suite,
+    // whatever the principal type (M-177(4))
+    let suite = false;
+    if (types.includes('secondary_suite')) { reads.add('flags.has_secondary_suite'); suite = Boolean(lot.flags && lot.flags.has_secondary_suite === true); }
+    if (!suite) {
+      if (!bt) unknown = 'needs_user_input:building_type';
+      else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
+    }
   }
   // M-175 (operator envelope review 2026-10-15): a unit scoped to an accessory-structure use (vocab
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
@@ -404,10 +433,13 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
   const accUse = (app.uses || []).map((x) => (x && typeof x === 'object' ? x.token : x)).find((x) => C.accessoryUses && C.accessoryUses.has(x));
   if (accUse) { reads.add('uses'); return { ok: false, why: `use ${accUse} (an accessory structure, not the principal building)` }; }
   const part = (u.applies_to && u.applies_to.part) || 'whole';
+  let unheldLiteral = null;
   const refs = (u.applies_to && u.applies_to.refs) || [];
   if (part === 'map_area') {
     reads.add('map_areas');
-    if (!lot.map_areas) unknown = unknown || `map_area_not_held:${refs.join('+') || u.unit_id}`;
+    const literal = C.mapUnheldReading && C.mapUnheldReading[u.unit_id];
+    if (!lot.map_areas && literal) unheldLiteral = literal; // decided after the other tests: only a unit that would otherwise apply discloses
+    else if (!lot.map_areas) unknown = unknown || `map_area_not_held:${refs.join('+') || u.unit_id}`;
     else if (!refs.some((r) => lot.map_areas.includes(r))) return { ok: false, why: 'map_area' };
   } else if (part === 'named_addresses' || part === 'lot_list') {
     reads.add('address');
@@ -439,6 +471,8 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     if (s === false) return { ok: false, why: 'provincial scope' };
     if (s !== true) unknown = unknown || s;
   }
+  // M-222 / M-224: the map is not held and the unit takes the literal reading — set aside, its disclosure attached
+  if (unheldLiteral) return { ok: false, why: `map area not held — literal reading (${unheldLiteral.ruling})`, disclosure: unheldLiteral.disclosure || u.disclosure };
   return unknown ? { ok: null, reason: unknown } : { ok: true };
 }
 
@@ -742,6 +776,7 @@ function effCore(lot, target, candidates, C, env) {
     if (t.length) trace.push(`condition ${u.unit_id}: ${t.join(', ')} → ${a.ok === true ? 'applies' : a.ok === false ? `not applicable (${a.why})` : `undecided (${a.reason})`}`);
     if (a.ok === true) A.add(u);
     else if (a.ok === null) unknown.push({ u, reason: a.reason });
+    else if (a.disclosure && !disclosures.includes(a.disclosure)) disclosures.push(a.disclosure); // M-224 literal reading
   }
   for (const u of prevailing) {
     const a = applies(lot, u, C, resolveVariable, reads, []);
@@ -842,6 +877,14 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   const prov = sortedA.filter((u) => valueSet.has(u) && u.layer === 'provincial').filter(unitOk);
   if (!T.length) {
     for (const p of prov) trace.push(`rule 4 (M-55): ${p.unit_id} not applied — no by-law unit for ${target} (a provincial unit is never additional)`);
+    // M-220 / M-202(3): nothing applies, and the target's rule is a zone-label letter the lot does not carry → no cap
+    const la = C.labelAbsence && C.labelAbsence[target];
+    if (la && lot.label && typeof lot.label === 'object' && (lot.label[la.letter] === undefined || lot.label[la.letter] === null)) {
+      reads.add(`label.${la.letter}`);
+      return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
+        evidence: { kind: 'label_absent', letter: la.letter, ruling: la.ruling, statement: la.statement },
+        bounds: {}, applied: [], trace: [...trace, `rule 7 + ${la.ruling}: no unit applies to ${target} and the zone label has no '${la.letter}' — unregulated (${la.statement})`], disclosures, inputs: ins() };
+    }
     // rule 7a (M-54 note 2026-10-07; Spec 69 M-60): unregulated BY ABSENCE only when (i) a verified ruling covers
     // (zone, target), (ii) the lot's exception and its INCLUDE closure are authored for the target — guaranteed here:
     // effective()'s lot gate already returned exception_not_authored otherwise (ruling (d)), (iii) no by-law unit of
