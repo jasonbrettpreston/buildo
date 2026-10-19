@@ -6,6 +6,7 @@
 // a regeneration from the answer snapshot + dispositions; a mutated registry with a dangling clause, column or logic
 // variable is refused (red-first arms).
 import { describe, expect, it, beforeAll } from 'vitest';
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -56,10 +57,12 @@ describe('answer tracker (INV-25)', () => {
     expect(tracker.problems).toEqual([]);
     expect(tracker.drift).toEqual([]);
   });
-  it('accounts for all 511 answers, every "wrong" carries a fix id, every disclose a code', () => {
-    expect(tracker.rows.length).toBe(511);
+  it('accounts for every answer in the committed snapshot (567 since batch 2, 2026-10-19), every "wrong" carries a fix id, every disclose a code', () => {
+    const snapshot = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/envelope-answers.json'), 'utf8'));
+    expect([snapshot.count, snapshot.answers.length]).toEqual([567, 567]);
+    expect(tracker.rows.length).toBe(snapshot.count);
     const s = tracker.counts.by_state;
-    expect((s.INCORPORATED || 0) + (s.UNFIXED || 0) + (s.OPEN || 0)).toBe(511);
+    expect((s.INCORPORATED || 0) + (s.UNFIXED || 0) + (s.OPEN || 0)).toBe(snapshot.count);
     for (const r of tracker.rows) {
       if (r.verdict === 'wrong') expect(r.fix_ids.length).toBeGreaterThan(0);
       if (r.verdict === 'disclose') expect(r.disclosure_code).not.toBe('');

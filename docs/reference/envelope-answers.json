@@ -1,9 +1,284 @@
 {
  "schema": "envelope-answers-v1",
- "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
- "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18",
- "count": 511,
+ "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567)",
+ "count": 567,
  "answers": [
+  {
+   "note": "",
+   "reading_sha": "bf05f7bbcfd71d33",
+   "regulation_id": "10.10.40.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:15:53.873Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "1b59bfecf5ba1863",
+   "regulation_id": "10.10.40.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:16:02.059Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "46494d4642e94ba5",
+   "regulation_id": "10.10.40.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(1)#(1)(C)",
+   "updated_at": "2026-10-19T17:36:48.255Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "91276fcd17c0377e",
+   "regulation_id": "10.10.40.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(1)#(1)(D)",
+   "updated_at": "2026-10-19T17:36:58.983Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "0cf10694e13fa229",
+   "regulation_id": "10.10.40.10(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(2)#(2)(A)",
+   "updated_at": "2026-10-19T17:05:24.543Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "35610195a9b4a339",
+   "regulation_id": "10.10.40.10(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(2)#(2)(B)",
+   "updated_at": "2026-10-19T17:16:20.845Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height",
+   "reading_sha": "ddb35ff090ade77b",
+   "regulation_id": "10.10.40.10(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(2)#(2)(C)",
+   "updated_at": "2026-10-19T17:44:13.777Z",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
+   "reading_sha": "06cf45f83dd7355d",
+   "regulation_id": "10.10.40.10(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(3)#(3)(A)",
+   "updated_at": "2026-10-19T17:16:28.074Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "36e6e05c60f63883",
+   "regulation_id": "10.10.40.10(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(3)#(3)(B)",
+   "updated_at": "2026-10-19T17:16:33.169Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5988d0619e79249e",
+   "regulation_id": "10.10.40.10(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(3)#(3)(D)",
+   "updated_at": "2026-10-19T17:37:32.102Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2234d3dd064ba2f0",
+   "regulation_id": "10.10.40.10(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(5)#(5)(B)",
+   "updated_at": "2026-10-19T18:07:34.895Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is just talking about the pedestrian entrance size.. disclosure if anything",
+   "reading_sha": "3aa9ac57f52b7d83",
+   "regulation_id": "10.10.40.10(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.10(6)#whole",
+   "updated_at": "2026-10-19T18:08:15.520Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "ce846142620602cb",
+   "regulation_id": "10.10.40.30(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.30(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:37:24.828Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "c8d09a8e9f44c6cb",
+   "regulation_id": "10.10.40.30(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.30(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:46:00.860Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "abce62ddc28a4d3c",
+   "regulation_id": "10.10.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.40(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:10:18.398Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2d9432de07f76e8c",
+   "regulation_id": "10.10.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.40(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:11:43.251Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope.",
+   "reading_sha": "0006a48f3e74341b",
+   "regulation_id": "10.10.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.40(1)#(1)(C)",
+   "updated_at": "2026-10-19T17:47:14.196Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "36913d1fac134c42",
+   "regulation_id": "10.10.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.40(1)#(1)(D)",
+   "updated_at": "2026-10-19T17:49:35.180Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "df54132c50c84431",
+   "regulation_id": "10.10.40.70(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.70(2)#whole",
+   "updated_at": "2026-10-19T17:50:33.332Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "d94598312a2dae08",
+   "regulation_id": "10.10.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.70(3)#(3)(A)",
+   "updated_at": "2026-10-19T17:50:47.611Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "ea0eaa2224d07344",
+   "regulation_id": "10.10.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.70(3)#(3)(B)",
+   "updated_at": "2026-10-19T17:51:59.155Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "e96a1e643c8ac9ae",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(A)",
+   "updated_at": "2026-10-19T18:17:29.302Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2c0e910987b62004",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(B)",
+   "updated_at": "2026-10-19T18:17:43.565Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "our default is no windows or doors",
+   "reading_sha": "4cd610007eb70496",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(C)",
+   "updated_at": "2026-10-19T18:18:25.215Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "This is for an apartment building or a townhouse on a major street. ",
+   "reading_sha": "c681a7a5407d01d0",
+   "regulation_id": "10.10.40.70(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.10.40.70(5)#(5)(A)",
+   "updated_at": "2026-10-19T17:57:04.110Z",
+   "verdict": "no_application"
+  },
   {
    "note": "Important - procedural",
    "reading_sha": "4dec8cbcdddd7d1f",
@@ -41,12 +316,14 @@
    "verdict": "no_application"
   },
   {
-   "note": "procedural 1) Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (A) a detached house, then a permitted detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for a detached house. [ By-law: 648-2025 ]",
+   "note": "procedural 1) Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (A) a detached house, then a permitted detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for a detached house. [ By-law: 648-2025 ]",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "b73519bcdf43e3bd",
    "regulation_id": "10.20.30.1(1)",
    "set": "base",
    "source": "operator copy-paste 2026-10-16",
    "unit_id": "10.20.30.1(1)#(1)(A)",
+   "updated_at": "2026-10-16T19:30:16.474Z",
    "verdict": "unsure"
   },
   {
@@ -293,12 +570,14 @@
    "verdict": "no_application"
   },
   {
-   "note": "procedural - detached houseplex that is the only one on the lot. Chapter 900 Exceptions  Applicable Principal Building Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains principal building requirements for: (A) a detached house, then the permitted detached houseplex is subject to the applicable Chapter 900 Exception's building requirements for a detached house.",
+   "note": "procedural - detached houseplex that is the only one on the lot. Chapter 900 Exceptions  Applicable Principal Building Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains principal building requirements for: (A) a detached house, then the permitted detached houseplex is subject to the applicable Chapter 900 Exception's building requirements for a detached house.",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "ab19696120d5f574",
    "regulation_id": "10.20.40.1(6)",
    "set": "base",
    "source": "operator copy-paste 2026-10-16",
    "unit_id": "10.20.40.1(6)#(6)(A)",
+   "updated_at": "2026-10-16T19:42:48.716Z",
    "verdict": null
   },
   {
@@ -448,13 +727,15 @@
    "verdict": "matches"
   },
   {
-   "note": "This is critical the maximum number of stories doesn't apply to a houseplex. for the RD zone.",
+   "note": "This is critical the maximum number of stories doesn't apply to a houseplex.  for the RD zone. ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(3)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(3)#(3)(C)",
+   "updated_at": "2026-10-17T16:17:14.732Z",
    "verdict": "wrong"
   },
   {
@@ -468,13 +749,15 @@
    "verdict": "matches"
   },
   {
-   "note": "…(the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map. The architect can design any wall. We create the optimal wall for the maximum height. You can get an answer here. RE-do!",
+   "note": "In your calculation why you are doing this-  (the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map.  The architect can design any wall.  We create the optimal wall for the maximum height.  You can get an answer here. RE-do!",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(4)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(4)#(4)(A)",
+   "updated_at": "2026-10-17T16:22:29.191Z",
    "verdict": "wrong"
   },
   {
@@ -488,73 +771,87 @@
    "verdict": "no_application"
   },
   {
-   "note": "This is a disclosure for building shallow roofs - important only if the maximal design uses a flat roof.",
+   "note": "This is a disclosure for building shallow roofs - important only if the maximal design uses a flat roof. shallow roofs Maximum Height of Main Walls of a Residential Building with a Flat or Shallow Roof ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(4)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(4)#(4)(C)",
+   "updated_at": "2026-10-17T16:34:53.009Z",
    "verdict": null
   },
   {
-   "note": "Exemption for Parapet…",
+   "note": "5) Exemption for Parapet on a Residential Building with a Flat or Shallow Roof ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(5)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(5)#whole",
+   "updated_at": "2026-10-17T16:35:14.908Z",
    "verdict": "no_application"
   },
   {
-   "note": "This only impacts the Height of Main Pedestrian Entrance - not the building envelope. Just a disclosure if anything.",
+   "note": "This only impacts the Height of Main Pedestrian Entrance - not the building envelope.  Just a disclosure if anything.",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(6)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(6)#whole",
+   "updated_at": "2026-10-17T16:35:55.612Z",
    "verdict": "wrong"
   },
   {
-   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "note": "This is important just from a design perspective - if you have build with dormers - you don't want them to be considered main walls - this will impact the build envelope.  This explains how they don't count. Disclosure ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(7)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(7)#(7)(A)",
+   "updated_at": "2026-10-17T16:43:03.091Z",
    "verdict": "disclose"
   },
   {
-   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "note": "his is important just from a design perspective - if you have build with dormers - you don't want them to be considered main walls - this will impact the build envelope.  This explains how they don't count. Disclosure ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(7)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(7)#(7)(B)",
+   "updated_at": "2026-10-17T16:43:21.493Z",
    "verdict": "wrong"
   },
   {
-   "note": "Exclusion of Certain Floor Area Within an Attic Space - dependent upon the design",
+   "note": " Exclusion of Certain Floor Area Within an Attic Space - this is dependent upon the design - a design with attic space. ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.10(8)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.10(8)#whole",
+   "updated_at": "2026-10-17T16:46:24.250Z",
    "verdict": "disclose"
   },
   {
-   "note": "changing the roof line of an existing building for a renovation… disclosure for renovations to existing footprint",
+   "note": "Talks about changing the roof line of an existing building for a renovation. This could be a disclosure for renovations to existing footprint",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": null,
    "reading_sha_note": "left blank: the reading_sha is in the coordinator's earlier write to the live artifact DB, not in the local copy",
    "regulation_id": "10.20.40.11(1)",
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.11(1)#whole",
+   "updated_at": "2026-10-17T16:47:28.636Z",
    "verdict": "disclose"
   },
   {
@@ -565,6 +862,215 @@
    "set": "base",
    "source": "operator copy-paste 2026-10-18",
    "unit_id": "10.20.40.20(1)#whole",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "d039ef42a6ea06b3",
+   "regulation_id": "10.20.40.20(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.20(3)#(3)(A)",
+   "updated_at": "2026-10-19T18:08:41.357Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "e05ba8ea69d3de08",
+   "regulation_id": "10.20.40.20(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.20(3)#(3)(B)",
+   "updated_at": "2026-10-19T18:11:39.801Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "3dc89a536e386dd1",
+   "regulation_id": "10.20.40.30(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.30(1)#whole",
+   "updated_at": "2026-10-19T18:05:08.942Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5124e8eae36e5eed",
+   "regulation_id": "10.20.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.40(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:10:43.557Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "ea629521b9f946a0",
+   "regulation_id": "10.20.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.40(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:12:09.824Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope.",
+   "reading_sha": "08a2bf7eb0bad201",
+   "regulation_id": "10.20.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.40(1)#(1)(C)",
+   "updated_at": "2026-10-19T17:47:34.436Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "69b6fb7bb631e80b",
+   "regulation_id": "10.20.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.40(1)#(1)(D)",
+   "updated_at": "2026-10-19T17:49:39.773Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "The required minimum rear yard setback in the RM zone is the greater of: (A) 7.5 metres; or (B) 25% of the lot depth. This needs to calculate the greater of A or B",
+   "reading_sha": "6a3188264d1488a2",
+   "regulation_id": "10.20.40.70(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(2)#(2)(A)",
+   "updated_at": "2026-10-19T18:12:09.460Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "81ca02d8cff8d404",
+   "regulation_id": "10.20.40.70(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(2)#(2)(B)",
+   "updated_at": "2026-10-19T17:50:14.846Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "b258e60124a316dc",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(3)#(3)(A)",
+   "updated_at": "2026-10-19T17:51:50.709Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "21a734a99319a92c",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(3)#(3)(B)",
+   "updated_at": "2026-10-19T17:52:05.075Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "6a530650d90da749",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(3)#(3)(C)",
+   "updated_at": "2026-10-19T17:52:26.775Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "343ef2fa4187cf37",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(3)#(3)(D)",
+   "updated_at": "2026-10-19T17:52:43.425Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "101ca3e5cefe1e99",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(3)#(3)(E)",
+   "updated_at": "2026-10-19T18:12:47.288Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "74dbc2e92b52c9a5",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(3)#(3)(F)",
+   "updated_at": "2026-10-19T18:13:00.240Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "96f0eebf590811b7",
+   "regulation_id": "10.20.40.70(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(3)#(3)(G)",
+   "updated_at": "2026-10-19T18:13:33.617Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2b7e31d4fd5646e6",
+   "regulation_id": "10.20.40.70(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(5)#(5)(A)",
+   "updated_at": "2026-10-19T18:04:30.536Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "ab913031c02b1877",
+   "regulation_id": "10.20.40.70(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(6)#(6)(A)",
+   "updated_at": "2026-10-19T18:05:54.901Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "6fc08a8f3ce1104d",
+   "regulation_id": "10.20.40.70(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.20.40.70(6)#(6)(B)",
+   "updated_at": "2026-10-19T18:06:42.954Z",
    "verdict": "matches"
   },
   {
@@ -1163,6 +1669,17 @@
   },
   {
    "note": "",
+   "reading_sha": "da5b3753d69d7c67",
+   "regulation_id": "10.40.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.40.40.40(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:11:19.066Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
    "reading_sha": "f9b73f3db75e1b51",
    "regulation_id": "10.40.40.40(1)",
    "set": "base",
@@ -1441,6 +1958,105 @@
    "verdict": "disclose"
   },
   {
+   "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure - ",
+   "reading_sha": "75fb2eda71a69cde",
+   "regulation_id": "10.5.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:09:32.201Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure -",
+   "reading_sha": "aaa83f8e3f8093a4",
+   "regulation_id": "10.5.40.40(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:09:57.925Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "In the mx build scenarios - we create an envelope - we assume all max build's have a basement - we can calculate this and it will impact the GFA for the new builds - basically it saying if I read this correctly GFA removes the basement from the calculation??",
+   "reading_sha": "6da9f6f2afaa7132",
+   "regulation_id": "10.5.40.40(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(3)#(3)(A)",
+   "updated_at": "2026-10-19T17:23:17.737Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is design dependent if you have a void in the floor of a certain size you can reduce it from the GFA to a mx of 10%. Design driven",
+   "reading_sha": "bf2b4c85137a2593",
+   "regulation_id": "10.5.40.40(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(3)#(3)(B)",
+   "updated_at": "2026-10-19T17:26:46.385Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "You can also reduce the GFA if you have a built in garage or something but only to a max of one parking space. Design decision.  This is a disclosure",
+   "reading_sha": "011af4a2c0f0bd42",
+   "regulation_id": "10.5.40.40(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(3)#(3)(C)",
+   "updated_at": "2026-10-19T17:28:01.065Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "You can also reduce the GFA if you have a built in garage or something but only to a max of one parking space. Design decision.  This is a disclosure",
+   "reading_sha": "1764aed482617698",
+   "regulation_id": "10.5.40.40(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.40(3)#(3)(D)",
+   "updated_at": "2026-10-19T17:28:23.155Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is a disclosure because it says the front yard setback (if the lot is abutting has a building 15 m from your lot ) the required setback is the same set back as the abutting lot.  We will not know that.  We need to add it as a disclosure of high importance.  ",
+   "reading_sha": "16e2a92cca07a898",
+   "regulation_id": "10.5.40.70(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.70(1)#(1)(A)",
+   "updated_at": "2026-10-19T17:35:47.994Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "1) Front Yard Setback  - this is where we have two abutting lots within 15 m on either side - the set-back is the average between both of them.  Which makes sense.  We don't have this data - so this is a disclosure",
+   "reading_sha": "08e62b27e073d011",
+   "regulation_id": "10.5.40.70(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.70(1)#(1)(B)",
+   "updated_at": "2026-10-19T17:41:16.720Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "b3c8bedb0821453f",
+   "regulation_id": "10.5.40.70(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.5.40.70(2)#whole",
+   "updated_at": "2026-10-19T18:04:55.717Z",
+   "verdict": "matches"
+  },
+  {
    "note": "This just states what we know from 150.10 - RT applies",
    "reading_sha": "a79f9b205ed03464",
    "regulation_id": "10.60.20.100(12)",
@@ -1486,12 +2102,14 @@
    "verdict": "unsure"
   },
   {
-   "note": " Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex or semi-detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (B) a semi-detached house, then a permitted semi-detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for the portion of a semi-detached house that constitutes an individual dwelling unit",
+   "note": " Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex or semi-detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (B) a semi-detached house, then a permitted semi-detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for the portion of a semi-detached house that constitutes an individual dwelling unit",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "64c2f75dd47865f5",
    "regulation_id": "10.60.30.1(1)",
    "set": "base",
    "source": "operator copy-paste 2026-10-16",
    "unit_id": "10.60.30.1(1)#(1)(B)",
+   "updated_at": "2026-10-16T18:09:41.755Z",
    "verdict": "unsure"
   },
   {
@@ -2460,6 +3078,17 @@
    "verdict": "wrong"
   },
   {
+   "note": "Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height",
+   "reading_sha": "2390b0680fe679b7",
+   "regulation_id": "10.80.40.10(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
+   "unit_id": "10.80.40.10(2)#(2)(C)",
+   "updated_at": "2026-10-19T17:44:48.807Z",
+   "verdict": "unsure"
+  },
+  {
    "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
    "note": "",
    "reading_sha": "58740993c9033553",
@@ -2679,6 +3308,17 @@
    "set": "base",
    "source": "operator copy-paste 2026-10-15",
    "unit_id": "10.80.40.70(3)#(3)(B)",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "07d0d8058fccc67c",
+   "regulation_id": "10.80.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.80.40.70(4)#(4)(A)",
+   "updated_at": "2026-10-19T18:17:37.231Z",
    "verdict": "matches"
   },
   {
@@ -2927,33 +3567,36 @@
    "verdict": "wrong"
   },
   {
-   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
+   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "fff0c1773a146ebd",
    "regulation_id": "150.7.60.20(2)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.20(2)#(2)(A)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T14:42:27.548Z",
    "verdict": "wrong"
   },
   {
-   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
+   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "ca30743c68876658",
    "regulation_id": "150.7.60.20(2)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.20(2)#(2)(B)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T14:43:07.841Z",
    "verdict": "wrong"
   },
   {
-   "note": "Garden Suite  Rear Yard Setback = if the garden suite has windows facing the rear main above 4m - need to increase the setback by 1.5m",
+   "note": "Garden Suite  Rear Yard Setback = if the garden suite has windows facing the rear main above 4m - need to increase the setback by 1.5m",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "1429e0a36adac4a6",
    "regulation_id": "150.7.60.20(2)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.20(2)#(2)(C)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T14:45:00.045Z",
    "verdict": "wrong"
   },
   {
@@ -3397,82 +4040,90 @@
    "verdict": "no_application"
   },
   {
-   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
+   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "9b75039884147a7c",
    "regulation_id": "150.7.60.50(4)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.50(4)#(4)(A)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:18:48.707Z",
    "verdict": "wrong"
   },
   {
-   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
+   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "489df0b8d12392ad",
    "regulation_id": "150.7.60.50(4)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.50(4)#(4)(B)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:20:21.509Z",
    "verdict": "wrong"
   },
   {
-   "note": " Garden Suite  Gross Floor Area Calculations - calculating can be reduced subject to regulations 10.5.40.40 (1), (2), and (3)(A) and (B). [ By-law: 849-2025 ]",
+   "note": " Garden Suite  Gross Floor Area Calculations - calculating can be reduced subject to regulations 10.5.40.40 (1), (2), and (3)(A) and (B). [ By-law: 849-2025 ]",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "eae17e087612b59c",
    "regulation_id": "150.7.60.50(5)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.50(5)#whole",
-   "updated_at": "2026-10-16T15:40:37.467Z"
+   "updated_at": "2026-10-16T15:21:04.224Z"
   },
   {
-   "note": " Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": " Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "04f0d54baa6ebbf6",
    "regulation_id": "150.7.60.51(1)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.51(1)#(1)(A)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:21:34.480Z",
    "verdict": "disclose"
   },
   {
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "b1abdb27aa3678e4",
    "regulation_id": "150.7.60.51(1)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.51(1)#(1)(B)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:21:52.547Z",
    "verdict": "disclose"
   },
   {
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "020615c3d880c0ce",
    "regulation_id": "150.7.60.51(1)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.51(1)#(1)(C)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:22:06.161Z",
    "verdict": "disclose"
   },
   {
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "06d49620006730f6",
    "regulation_id": "150.7.60.51(2)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.51(2)#(2)(A)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:22:18.172Z",
    "verdict": "disclose"
   },
   {
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note_refreshed": "claude.ai review page DB 2026-10-19 (envdb8)",
    "reading_sha": "09744a3e3bc27d82",
    "regulation_id": "150.7.60.51(2)",
    "set": "base",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "unit_id": "150.7.60.51(2)#(2)(B)",
-   "updated_at": "2026-10-16T15:40:37.467Z",
+   "updated_at": "2026-10-16T15:22:22.919Z",
    "verdict": "disclose"
   },
   {

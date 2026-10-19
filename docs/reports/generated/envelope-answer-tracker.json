@@ -8,43 +8,49 @@
   "docs/specs/01-pipeline/78_optimal_lot_configuration.md"
  ],
  "counts": {
-  "answers": 511,
+  "answers": 567,
   "by_state": {
-   "INCORPORATED": 473,
+   "INCORPORATED": 529,
    "UNFIXED": 38
   },
   "by_verdict": {
-   "disclose": 90,
-   "matches": 125,
-   "no_application": 163,
+   "disclose": 98,
+   "matches": 163,
+   "no_application": 166,
    "null": 12,
-   "unsure": 28,
-   "wrong": 93
+   "unsure": 30,
+   "wrong": 98
   },
   "by_disposition": {
-   "disclosed_by": 90,
-   "excluded": 163,
-   "fixed_by": 77,
-   "matches": 125,
-   "resolved_by": 42,
-   "verified_by_lock": 14
+   "disclosed_by": 98,
+   "excluded": 166,
+   "fixed_by": 79,
+   "matches": 163,
+   "resolved_by": 44,
+   "verified_by_lock": 17
   },
   "by_chapter": {
+   "10.10": {
+    "total": 25,
+    "INCORPORATED": 25,
+    "UNFIXED": 0,
+    "OPEN": 0
+   },
    "10.20": {
-    "total": 61,
-    "INCORPORATED": 61,
+    "total": 80,
+    "INCORPORATED": 80,
     "UNFIXED": 0,
     "OPEN": 0
    },
    "10.40": {
-    "total": 87,
-    "INCORPORATED": 87,
+    "total": 88,
+    "INCORPORATED": 88,
     "UNFIXED": 0,
     "OPEN": 0
    },
    "10.5": {
-    "total": 10,
-    "INCORPORATED": 10,
+    "total": 19,
+    "INCORPORATED": 19,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -55,8 +61,8 @@
     "OPEN": 0
    },
    "10.80": {
-    "total": 77,
-    "INCORPORATED": 77,
+    "total": 79,
+    "INCORPORATED": 79,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -103,7 +109,7 @@
     "OPEN": 0
    }
   },
-  "feeding_a_lineage_field": 173
+  "feeding_a_lineage_field": 227
  },
  "rows": [
   {
@@ -280,7 +286,7 @@
    "regulation_id": "150.7.60.20(2)",
    "chapter": "150.7",
    "verdict": "wrong",
-   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
+   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -306,7 +312,7 @@
    "regulation_id": "150.7.60.20(2)",
    "chapter": "150.7",
    "verdict": "wrong",
-   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
+   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -633,7 +639,7 @@
    "regulation_id": "150.7.60.50(4)",
    "chapter": "150.7",
    "verdict": "wrong",
-   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
+   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -658,7 +664,7 @@
    "regulation_id": "150.7.60.50(4)",
    "chapter": "150.7",
    "verdict": "wrong",
-   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
+   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -1057,6 +1063,641 @@
    "reason": "ruled; keyed correction not applied yet"
   },
   {
+   "unit_id": "10.10.40.10(1)#(1)(A)",
+   "regulation_id": "10.10.40.10(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "height_status",
+    "main_height_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(B)",
+   "regulation_id": "10.10.40.10(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "height_status",
+    "main_height_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(C)",
+   "regulation_id": "10.10.40.10(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "height_status",
+    "main_height_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(D)",
+   "regulation_id": "10.10.40.10(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "height_status",
+    "main_height_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(A)",
+   "regulation_id": "10.10.40.10(2)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(B)",
+   "regulation_id": "10.10.40.10(2)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(C)",
+   "regulation_id": "10.10.40.10(2)",
+   "chapter": "10.10",
+   "verdict": "unsure",
+   "note": "Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse on a major street (R names townhouses only, x.40.10(2)(C)); that form is not modelled and is disclosed. For every other R building the x.40.10(2) limit max(7.0 m; H − 2.5 m) is an envelope limit (M-176(2)).",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(A)",
+   "regulation_id": "10.10.40.10(3)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(B)",
+   "regulation_id": "10.10.40.10(3)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(D)",
+   "regulation_id": "10.10.40.10(3)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_storeys",
+    "storeys_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.10(5)#(5)(B)",
+   "regulation_id": "10.10.40.10(5)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormers within the 40 % width share are not main walls; the maximum design takes the 40 %.",
+   "disclosure_code": "dormers_at_max",
+   "question": "",
+   "fields": [
+    "gfa_pitched_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code dormers_at_max",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.10.40.10(6)#whole",
+   "regulation_id": "10.10.40.10(6)",
+   "chapter": "10.10",
+   "verdict": "wrong",
+   "note": "This is just talking about the pedestrian entrance size.. disclosure if anything",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-215"
+   ],
+   "corrected_value": "Main pedestrian entrance height (1.2 m) is a disclosure only, not a building-envelope limit.",
+   "disclosure_code": "main_entrance_height",
+   "question": "",
+   "fields": [
+    "first_floor_elevation_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.10.40.10(6)#whole/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(A)",
+   "regulation_id": "10.10.40.30(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "gain_reasons",
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(B)",
+   "regulation_id": "10.10.40.30(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "gain_reasons",
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(A)",
+   "regulation_id": "10.10.40.40(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(B)",
+   "regulation_id": "10.10.40.40(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(C)",
+   "regulation_id": "10.10.40.40(1)",
+   "chapter": "10.10",
+   "verdict": "wrong",
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a detached houseplex, a semi-detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-answers-batch-2.logic.test.ts",
+     "describe": "M-183 — R names the semi-detached houseplex in its FSI exemption (10.10.40.40(1)(C)); RD names none",
+     "it": "R: a semi-detached houseplex is FSI-exempt (not_applicable by 10.10.40.40(1)(C)); RD: it is not named, so a d of 0.6 applies",
+     "asserts": [
+      "semi_detached_houseplex",
+      "10.10.40.40(1)#(1)(C)"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-10.10.40.40(1)#(1)(C)/application.building_types, COR-10.10.40.40(1)#(1)(C)/application.evidence",
+    "verified by named lock: M-182, M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(D)",
+   "regulation_id": "10.10.40.40(1)",
+   "chapter": "10.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.10.40.70(2)#whole",
+   "regulation_id": "10.10.40.70(2)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_rear_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(3)#(3)(A)",
+   "regulation_id": "10.10.40.70(3)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(3)#(3)(B)",
+   "regulation_id": "10.10.40.70(3)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(A)",
+   "regulation_id": "10.10.40.70(4)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(B)",
+   "regulation_id": "10.10.40.70(4)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(C)",
+   "regulation_id": "10.10.40.70(4)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "our default is no windows or doors",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(A)",
+   "regulation_id": "10.10.40.70(5)",
+   "chapter": "10.10",
+   "verdict": "no_application",
+   "note": "This is for an apartment building or a townhouse on a major street. ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "10.20.20.100(12)#whole",
    "regulation_id": "10.20.20.100(12)",
    "chapter": "10.20",
@@ -1143,7 +1784,7 @@
    "regulation_id": "10.20.30.1(1)",
    "chapter": "10.20",
    "verdict": "unsure",
-   "note": "procedural 1) Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (A) a detached house, then a permitted detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for a detached house. [ By-law: 648-2025 ]",
+   "note": "procedural 1) Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (A) a detached house, then a permitted detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for a detached house. [ By-law: 648-2025 ]",
    "source": "operator copy-paste 2026-10-16",
    "disposition": "resolved_by",
    "fix_ids": [
@@ -1745,7 +2386,7 @@
    "regulation_id": "10.20.40.1(6)",
    "chapter": "10.20",
    "verdict": null,
-   "note": "procedural - detached houseplex that is the only one on the lot. Chapter 900 Exceptions  Applicable Principal Building Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains principal building requirements for: (A) a detached house, then the permitted detached houseplex is subject to the applicable Chapter 900 Exception's building requirements for a detached house.",
+   "note": "procedural - detached houseplex that is the only one on the lot. Chapter 900 Exceptions  Applicable Principal Building Requirements for a Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains principal building requirements for: (A) a detached house, then the permitted detached houseplex is subject to the applicable Chapter 900 Exception's building requirements for a detached house.",
    "source": "operator copy-paste 2026-10-16",
    "disposition": "resolved_by",
    "fix_ids": [
@@ -2135,7 +2776,7 @@
    "regulation_id": "10.20.40.10(3)",
    "chapter": "10.20",
    "verdict": "wrong",
-   "note": "This is critical the maximum number of stories doesn't apply to a houseplex. for the RD zone.",
+   "note": "This is critical the maximum number of stories doesn't apply to a houseplex.  for the RD zone. ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "verified_by_lock",
    "fix_ids": [
@@ -2202,7 +2843,7 @@
    "regulation_id": "10.20.40.10(4)",
    "chapter": "10.20",
    "verdict": "wrong",
-   "note": "…(the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map. The architect can design any wall. We create the optimal wall for the maximum height. You can get an answer here. RE-do!",
+   "note": "In your calculation why you are doing this-  (the map area (Development Standard Set 1) is not held in our data) - I don't see any reference or need to consult a development map.  The architect can design any wall.  We create the optimal wall for the maximum height.  You can get an answer here. RE-do!",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -2288,7 +2929,7 @@
    "regulation_id": "10.20.40.10(4)",
    "chapter": "10.20",
    "verdict": null,
-   "note": "This is a disclosure for building shallow roofs - important only if the maximal design uses a flat roof.",
+   "note": "This is a disclosure for building shallow roofs - important only if the maximal design uses a flat roof. shallow roofs Maximum Height of Main Walls of a Residential Building with a Flat or Shallow Roof ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "resolved_by",
    "fix_ids": [
@@ -2313,7 +2954,7 @@
    "regulation_id": "10.20.40.10(5)",
    "chapter": "10.20",
    "verdict": "no_application",
-   "note": "Exemption for Parapet…",
+   "note": "5) Exemption for Parapet on a Residential Building with a Flat or Shallow Roof ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "excluded",
    "fix_ids": [],
@@ -2332,7 +2973,7 @@
    "regulation_id": "10.20.40.10(6)",
    "chapter": "10.20",
    "verdict": "wrong",
-   "note": "This only impacts the Height of Main Pedestrian Entrance - not the building envelope. Just a disclosure if anything.",
+   "note": "This only impacts the Height of Main Pedestrian Entrance - not the building envelope.  Just a disclosure if anything.",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -2357,7 +2998,7 @@
    "regulation_id": "10.20.40.10(7)",
    "chapter": "10.20",
    "verdict": "disclose",
-   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "note": "This is important just from a design perspective - if you have build with dormers - you don't want them to be considered main walls - this will impact the build envelope.  This explains how they don't count. Disclosure ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -2383,7 +3024,7 @@
    "regulation_id": "10.20.40.10(7)",
    "chapter": "10.20",
    "verdict": "wrong",
-   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "note": "his is important just from a design perspective - if you have build with dormers - you don't want them to be considered main walls - this will impact the build envelope.  This explains how they don't count. Disclosure ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -2408,7 +3049,7 @@
    "regulation_id": "10.20.40.10(8)",
    "chapter": "10.20",
    "verdict": "disclose",
-   "note": "Exclusion of Certain Floor Area Within an Attic Space - dependent upon the design",
+   "note": " Exclusion of Certain Floor Area Within an Attic Space - this is dependent upon the design - a design with attic space. ",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -2432,7 +3073,7 @@
    "regulation_id": "10.20.40.11(1)",
    "chapter": "10.20",
    "verdict": "disclose",
-   "note": "changing the roof line of an existing building for a renovation… disclosure for renovations to existing footprint",
+   "note": "Talks about changing the roof line of an existing building for a renovation. This could be a disclosure for renovations to existing footprint",
    "source": "operator copy-paste 2026-10-18",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -2466,6 +3107,494 @@
    "question": "",
    "fields": [
     "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.20(3)#(3)(A)",
+   "regulation_id": "10.20.40.20(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.20(3)#(3)(B)",
+   "regulation_id": "10.20.40.20(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_length_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.30(1)#whole",
+   "regulation_id": "10.20.40.30(1)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_depth_cap_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(A)",
+   "regulation_id": "10.20.40.40(1)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "gain_reasons",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(B)",
+   "regulation_id": "10.20.40.40(1)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "gain_reasons",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(C)",
+   "regulation_id": "10.20.40.40(1)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "Important FSI doesn't apply to etached houseplex, semi-detached houseplex or a residential building with a secondary suite; . Definitely affects building envelope.",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap). RD names no semi-detached houseplex (RD permits none, 10.20.20.40(1)).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "gain_reasons",
+    "main_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-10.20.40.40(1)#(1)(C)/application.building_types, COR-10.20.40.40(1)#(1)(C)/application.evidence",
+    "verified by named lock: M-182, M-183"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(D)",
+   "regulation_id": "10.20.40.40(1)",
+   "chapter": "10.20",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "gain_reasons",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.20.40.70(2)#(2)(A)",
+   "regulation_id": "10.20.40.70(2)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "The required minimum rear yard setback in the RM zone is the greater of: (A) 7.5 metres; or (B) 25% of the lot depth. This needs to calculate the greater of A or B",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-answers-batch-2.logic.test.ts",
+     "describe": "M-205(3) — RD rear setback is the greater of 7.5 m and 25 % of lot depth (10.20.40.70(2)); R stays a flat 7.5 m",
+     "it": "RD: depth 40 m → 10.0 m from (2)(B); depth 20 m → 7.5 m from (2)(A)",
+     "asserts": [
+      "rear_setback_m",
+      "10.20.40.70(2)"
+     ],
+     "satisfies": [
+      "M-205"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-205"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "10.20.40.70(2)#(2)(B)",
+   "regulation_id": "10.20.40.70(2)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_rear_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(A)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(B)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(C)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(D)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(E)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(F)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(G)",
+   "regulation_id": "10.20.40.70(3)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(5)#(5)(A)",
+   "regulation_id": "10.20.40.70(5)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(6)#(6)(A)",
+   "regulation_id": "10.20.40.70(6)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.70(6)#(6)(B)",
+   "regulation_id": "10.20.40.70(6)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_side_setbacks_m"
    ],
    "locks": [],
    "owed": [],
@@ -3953,6 +5082,30 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.40.40.40(1)#(1)(A)",
+   "regulation_id": "10.40.40.40(1)",
+   "chapter": "10.40",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "fsi_status",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.40.40.40(1)#(1)(B)",
    "regulation_id": "10.40.40.40(1)",
    "chapter": "10.40",
@@ -4725,6 +5878,252 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "10.5.40.40(1)#(1)(A)",
+   "regulation_id": "10.5.40.40(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure - ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-203"
+   ],
+   "corrected_value": "An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed.",
+   "disclosure_code": "attic_outside_gfa",
+   "question": "",
+   "fields": [
+    "attic_outside_gfa_sqm",
+    "gfa_pitched_sqm",
+    "interior_attic_gfa_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code attic_outside_gfa",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.40(1)#(1)(B)",
+   "regulation_id": "10.5.40.40(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure -",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-203"
+   ],
+   "corrected_value": "An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed.",
+   "disclosure_code": "attic_outside_gfa",
+   "question": "",
+   "fields": [
+    "attic_outside_gfa_sqm",
+    "gfa_pitched_sqm",
+    "interior_attic_gfa_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code attic_outside_gfa",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(A)",
+   "regulation_id": "10.5.40.40(3)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "In the mx build scenarios - we create an envelope - we assume all max build's have a basement - we can calculate this and it will impact the GFA for the new builds - basically it saying if I read this correctly GFA removes the basement from the calculation??",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Yes: GFA may exclude the basement floor area. The max build excludes the basement from GFA and shows it as livable area outside the GFA total (M-171 dated note 2026-10-18; Spec 78 P5.4).",
+   "disclosure_code": "basement_excluded",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.40(3)#(3)(A)/disclosure, COR-10.5.40.40(3)#(3)(A)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(B)",
+   "regulation_id": "10.5.40.40(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is design dependent if you have a void in the floor of a certain size you can reduce it from the GFA to a mx of 10%. Design driven",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "A floor void over 4.5 m may be left out of GFA up to 10 %; design-dependent, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code gfa_deductions_not_applied",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(C)",
+   "regulation_id": "10.5.40.40(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "You can also reduce the GFA if you have a built in garage or something but only to a max of one parking space. Design decision.  This is a disclosure",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Up to one parking space per dwelling unit inside the building may be left out of GFA; design-dependent, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code gfa_deductions_not_applied",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(D)",
+   "regulation_id": "10.5.40.40(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "You can also reduce the GFA if you have a built in garage or something but only to a max of one parking space. Design decision.  This is a disclosure",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "One more parking space for a detached house on a lot over 12.0 m frontage may be left out of GFA; disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code gfa_deductions_not_applied",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.70(1)#(1)(A)",
+   "regulation_id": "10.5.40.70(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is a disclosure because it says the front yard setback (if the lot is abutting has a building 15 m from your lot ) the required setback is the same set back as the abutting lot.  We will not know that.  We need to add it as a disclosure of high importance.  ",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging).",
+   "disclosure_code": "front_yard_averaging",
+   "question": "",
+   "fields": [
+    "main_front_setback_basis",
+    "main_front_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code front_yard_averaging",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.70(1)#(1)(B)",
+   "regulation_id": "10.5.40.70(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "1) Front Yard Setback  - this is where we have two abutting lots within 15 m on either side - the set-back is the average between both of them.  Which makes sense.  We don't have this data - so this is a disclosure",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging).",
+   "disclosure_code": "front_yard_averaging",
+   "question": "",
+   "fields": [
+    "main_front_setback_basis",
+    "main_front_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code front_yard_averaging",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.70(2)#whole",
+   "regulation_id": "10.5.40.70(2)",
+   "chapter": "10.5",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_lane_centreline_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.60.20.100(12)#whole",
    "regulation_id": "10.60.20.100(12)",
    "chapter": "10.60",
@@ -4832,7 +6231,7 @@
    "regulation_id": "10.60.30.1(1)",
    "chapter": "10.60",
    "verdict": "unsure",
-   "note": " Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex or semi-detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (B) a semi-detached house, then a permitted semi-detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for the portion of a semi-detached house that constitutes an individual dwelling unit",
+   "note": " Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.10(4)(A), for a detached houseplex or semi-detached houseplex that is the only residential building on a lot, if an applicable Chapter 900 Exception contains lot requirements for: (B) a semi-detached house, then a permitted semi-detached houseplex is subject to the applicable Chapter 900 Exception's lot requirements for the portion of a semi-detached house that constitutes an individual dwelling unit",
    "source": "operator copy-paste 2026-10-16",
    "disposition": "resolved_by",
    "fix_ids": [
@@ -7239,6 +8638,32 @@
    "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
+   "unit_id": "10.80.40.10(2)#(2)(C)",
+   "regulation_id": "10.80.40.10(2)",
+   "chapter": "10.80",
+   "verdict": "unsure",
+   "note": "Since we are designing the max build envelope this may apply.  Max height is either 7m above grade or 2.5m less than max permitted height",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed. For an RM detached or semi-detached house the x.40.10(2) limit is an envelope limit (M-176(2)).",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
    "unit_id": "10.80.40.10(3)#(3)(A)",
    "regulation_id": "10.80.40.10(3)",
    "chapter": "10.80",
@@ -7810,6 +9235,27 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.80.40.70(4)#(4)(A)",
+   "regulation_id": "10.80.40.70(4)",
+   "chapter": "10.80",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-19 (envdb8 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.80.40.70(4)#(4)(B)",
    "regulation_id": "10.80.40.70(4)",
    "chapter": "10.80",
@@ -8228,7 +9674,7 @@
    "regulation_id": "150.7.60.20(2)",
    "chapter": "150.7",
    "verdict": "wrong",
-   "note": "Garden Suite  Rear Yard Setback = if the garden suite has windows facing the rear main above 4m - need to increase the setback by 1.5m",
+   "note": "Garden Suite  Rear Yard Setback = if the garden suite has windows facing the rear main above 4m - need to increase the setback by 1.5m",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "fixed_by",
    "fix_ids": [
@@ -8967,7 +10413,7 @@
    "regulation_id": "150.7.60.50(5)",
    "chapter": "150.7",
    "verdict": null,
-   "note": " Garden Suite  Gross Floor Area Calculations - calculating can be reduced subject to regulations 10.5.40.40 (1), (2), and (3)(A) and (B). [ By-law: 849-2025 ]",
+   "note": " Garden Suite  Gross Floor Area Calculations - calculating can be reduced subject to regulations 10.5.40.40 (1), (2), and (3)(A) and (B). [ By-law: 849-2025 ]",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "resolved_by",
    "fix_ids": [
@@ -8990,7 +10436,7 @@
    "regulation_id": "150.7.60.51(1)",
    "chapter": "150.7",
    "verdict": "disclose",
-   "note": " Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": " Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -9014,7 +10460,7 @@
    "regulation_id": "150.7.60.51(1)",
    "chapter": "150.7",
    "verdict": "disclose",
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -9038,7 +10484,7 @@
    "regulation_id": "150.7.60.51(1)",
    "chapter": "150.7",
    "verdict": "disclose",
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -9062,7 +10508,7 @@
    "regulation_id": "150.7.60.51(2)",
    "chapter": "150.7",
    "verdict": "disclose",
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -9086,7 +10532,7 @@
    "regulation_id": "150.7.60.51(2)",
    "chapter": "150.7",
    "verdict": "disclose",
-   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
+   "note": "Transition  Gross Floor Area for a Garden Suite - Grandfathering in existing suites ",
    "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
    "disposition": "disclosed_by",
    "fix_ids": [

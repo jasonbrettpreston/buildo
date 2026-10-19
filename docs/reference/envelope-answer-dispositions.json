@@ -1,8 +1,196 @@
 {
  "schema": "envelope-answer-dispositions-v1",
- "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
- "count": 511,
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings.",
+ "count": 567,
  "dispositions": [
+  {
+   "unit_id": "10.10.40.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(2)#(2)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse on a major street (R names townhouses only, x.40.10(2)(C)); that form is not modelled and is disclosed. For every other R building the x.40.10(2) limit max(7.0 m; H − 2.5 m) is an envelope limit (M-176(2)).",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RD 10.20.40.10(2)(C); M-176(2), M-190, M-214(1)"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormers within the 40 % width share are not main walls; the maximum design takes the 40 %.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RM 10.80.40.10(5)(B); M-185"
+  },
+  {
+   "unit_id": "10.10.40.10(6)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-215"
+   ],
+   "corrected_value": "Main pedestrian entrance height (1.2 m) is a disclosure only, not a building-envelope limit.",
+   "disclosure_code": "main_entrance_height",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RD 10.20.40.10(6) (M-215(2) correction already on the R unit)"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a detached houseplex, a semi-detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RS/RT x.40.40(1)(C); M-183 + M-182; already right, the round-2 locks cover R",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-answers-batch-2.logic.test.ts",
+     "describe": "M-183 — R names the semi-detached houseplex in its FSI exemption (10.10.40.40(1)(C)); RD names none",
+     "it": "R: a semi-detached houseplex is FSI-exempt (not_applicable by 10.10.40.40(1)(C)); RD: it is not named, so a d of 0.6 applies",
+     "asserts": [
+      "semi_detached_houseplex",
+      "10.10.40.40(1)#(1)(C)"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.40.40(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.70(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
   {
    "unit_id": "10.20.20.100(12)#whole",
    "verdict": "unsure",
@@ -500,6 +688,152 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.20.40.20(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.20(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.30(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a detached houseplex or a residential building with a secondary suite (not_applicable, no FSI cap). RD names no semi-detached houseplex (RD permits none, 10.20.20.40(1)).",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RS/RT x.40.40(1)(C); M-183 + M-182; already right, the round-2 locks cover RD",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "${zone}: d 0.6 — a detached house answers 0.6 from x.40.40(1)(A); a houseplex and a house with a suite answer not_applicable (x.40.40(1)(C))",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "detached_houseplex"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    },
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-221 / M-182 — \"a residential building with a secondary suite\" is the suite class",
+     "it": "${zone}: the FSI DISAPPLY x.40.40(1)(C) applies to a house with a suite",
+     "asserts": [
+      "40.40(1)#(1)(C)",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-182"
+     ]
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.40(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.70(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RS/RM x.40.70(2)(A); M-205(3); already right, guard added for RD",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-answers-batch-2.logic.test.ts",
+     "describe": "M-205(3) — RD rear setback is the greater of 7.5 m and 25 % of lot depth (10.20.40.70(2)); R stays a flat 7.5 m",
+     "it": "RD: depth 40 m → 10.0 m from (2)(B); depth 20 m → 7.5 m from (2)(A)",
+     "asserts": [
+      "rear_setback_m",
+      "10.20.40.70(2)"
+     ],
+     "satisfies": [
+      "M-205"
+     ]
+    }
+   ]
+  },
+  {
+   "unit_id": "10.20.40.70(2)#(2)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(E)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(F)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(3)#(3)(G)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(5)#(5)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(6)#(6)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(6)#(6)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.40.20.100(12)#whole",
    "verdict": "unsure",
    "disposition": "resolved_by",
@@ -954,6 +1288,11 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.40.40.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.40.40.40(1)#(1)(B)",
    "verdict": "matches",
    "disposition": "matches"
@@ -1264,6 +1603,99 @@
    "corrected_value": "Permitted maximum height answered; a greater lawful height of an existing building stands (caveat).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "10.5.40.40(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-203"
+   ],
+   "corrected_value": "An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed.",
+   "disclosure_code": "attic_outside_gfa",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); M-203"
+  },
+  {
+   "unit_id": "10.5.40.40(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-203"
+   ],
+   "corrected_value": "An attic over the headroom and size test counts in GFA; one that fails is livable area outside the GFA total; disclosed.",
+   "disclosure_code": "attic_outside_gfa",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); M-203"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Yes: GFA may exclude the basement floor area. The max build excludes the basement from GFA and shows it as livable area outside the GFA total (M-171 dated note 2026-10-18; Spec 78 P5.4).",
+   "disclosure_code": "basement_excluded",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); M-171 + dated note 2026-10-18; Spec 78 P5.4"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "A floor void over 4.5 m may be left out of GFA up to 10 %; design-dependent, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as 970.10.15.10(1)(B); M-171"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Up to one parking space per dwelling unit inside the building may be left out of GFA; design-dependent, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as 970.10.15.10(1)(C); M-171"
+  },
+  {
+   "unit_id": "10.5.40.40(3)#(3)(D)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "One more parking space for a detached house on a lot over 12.0 m frontage may be left out of GFA; disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as 970.10.15.10(1)(D); M-171"
+  },
+  {
+   "unit_id": "10.5.40.70(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging).",
+   "disclosure_code": "front_yard_averaging",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); M-205(1); the operator's \"high importance\" is question Q-front-averaging-mandatory"
+  },
+  {
+   "unit_id": "10.5.40.70(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Front-yard averaging uses the estimated setbacks of the abutting buildings within 15 m; the averaged value is disclosed (front_yard_averaging).",
+   "disclosure_code": "front_yard_averaging",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); M-205(1)"
+  },
+  {
+   "unit_id": "10.5.40.70(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
   },
   {
    "unit_id": "10.60.20.100(12)#whole",
@@ -2071,6 +2503,18 @@
    "basis": "findings A2; M-176(2), M-190"
   },
   {
+   "unit_id": "10.80.40.10(2)#(2)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed. For an RM detached or semi-detached house the x.40.10(2) limit is an envelope limit (M-176(2)).",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "basis": "review answers batch 2 (live page DB 2026-10-19); as RD 10.20.40.10(2)(C); M-176(2), M-190, M-214(1)"
+  },
+  {
    "unit_id": "10.80.40.10(3)#(3)(A)",
    "verdict": "matches",
    "disposition": "matches"
@@ -2258,6 +2702,11 @@
   },
   {
    "unit_id": "10.80.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.70(4)#(4)(A)",
    "verdict": "matches",
    "disposition": "matches"
   },

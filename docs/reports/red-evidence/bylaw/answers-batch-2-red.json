@@ -1,0 +1,62 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-2.logic.test.ts",
+ "base": "604149d2",
+ "run_on": "2026-10-19",
+ "note": "Review answers batch 2 (live page DB dump envdb8). Red: the M-171 deduction sentences and the basement answer on 10.5.40.40(3)(A)–(D), the M-203 attic sentence on 10.5.40.40(1)(A)/(B), the M-205(1) averaging sentence on 10.5.40.70(1)(A)/(B). Pass both sides (guards, named locks): RD rear greater-of; the R semi-detached houseplex FSI exemption (added after this run, also right at 604149d2).",
+ "counts": {
+  "red": 9,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "M-171 — GFA may exclude the basement, voids and parking: each 10.5.40.40(3) deduction carries its closed sentence 10.5.40.40(3)#(3)(A) carries the vocab sentence verbatim",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude t…' // Object.is equality"
+  },
+  {
+   "name": "M-171 — GFA may exclude the basement, voids and parking: each 10.5.40.40(3) deduction carries its closed sentence 10.5.40.40(3)#(3)(B) carries the vocab sentence verbatim",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude t…' // Object.is equality"
+  },
+  {
+   "name": "M-171 — GFA may exclude the basement, voids and parking: each 10.5.40.40(3) deduction carries its closed sentence 10.5.40.40(3)#(3)(C) carries the vocab sentence verbatim",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude t…' // Object.is equality"
+  },
+  {
+   "name": "M-171 — GFA may exclude the basement, voids and parking: each 10.5.40.40(3) deduction carries its closed sentence 10.5.40.40(3)#(3)(D) carries the vocab sentence verbatim",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude o…' // Object.is equality"
+  },
+  {
+   "name": "M-171 — GFA may exclude the basement, voids and parking: each 10.5.40.40(3) deduction carries its closed sentence 10.5.40.40(3)(A): the basement is excluded from GFA (M-171 dated note 2026-10-18; Spec 78 P5.4 basement in_gfa false)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Your counted floor area may exclude t…' // Object.is equality"
+  },
+  {
+   "name": "M-203 — the attic test (10.5.40.40(1)(A)/(B)) is disclosed with the attic_outside_gfa sentence 10.5.40.40(1)#(1)(A) carries the closed attic sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An attic that does not meet the headr…' // Object.is equality"
+  },
+  {
+   "name": "M-203 — the attic test (10.5.40.40(1)(A)/(B)) is disclosed with the attic_outside_gfa sentence 10.5.40.40(1)#(1)(B) carries the closed attic sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An attic that does not meet the headr…' // Object.is equality"
+  },
+  {
+   "name": "M-205(1) — front-yard averaging (10.5.40.70(1)(A)/(B)) carries the front_yard_averaging sentence 10.5.40.70(1)#(1)(A) discloses that the averaged setback uses estimated neighbour setbacks",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'The front setback averages the neighb…' // Object.is equality"
+  },
+  {
+   "name": "M-205(1) — front-yard averaging (10.5.40.70(1)(A)/(B)) carries the front_yard_averaging sentence 10.5.40.70(1)#(1)(B) discloses that the averaged setback uses estimated neighbour setbacks",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'The front setback averages the neighb…' // Object.is equality"
+  },
+  {
+   "name": "M-205(3) — RD rear setback is the greater of 7.5 m and 25 % of lot depth (10.20.40.70(2)); R stays a flat 7.5 m RD: depth 40 m → 10.0 m from (2)(B); depth 20 m → 7.5 m from (2)(A)",
+   "at_base": "pass",
+   "reason": null
+  }
+ ]
+}

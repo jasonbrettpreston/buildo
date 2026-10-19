@@ -75991,6 +75991,111 @@
       "supersedes": "COR-10.80.30.20(1)#(1)(C)/disclosure",
       "unit": "10.80.30.20(1)#(1)(C)",
       "value": "If the semi-detached house is divided onto two lots: each lot's minimum lot frontage is 50 % of the requirement."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(3)#(3)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 2 (operator, live page DB 2026-10-19): the GFA deductions of 10.5.40.40(3) are design-dependent; M-171: each deduction DEFINE unit carries its closed vocab sentence (as 970.10.15.10(1), disclosure round 2). The sentence was in vocab.measure_deduction_disclosure but not on the unit.",
+      "rule": "Spec 69a M-171 (+ dated note 2026-10-18); Spec 78 P5.4, P5.12 basement_excluded / gfa_deductions_not_applied; M-75",
+      "unit": "10.5.40.40(3)#(3)(B)",
+      "value": "Your counted floor area may exclude the area of a floor void with more than 4.5 m of clearance, up to 10% of the permitted maximum floor area."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(3)#(3)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 2 (operator, live page DB 2026-10-19): the GFA deductions of 10.5.40.40(3) are design-dependent; M-171: each deduction DEFINE unit carries its closed vocab sentence (as 970.10.15.10(1), disclosure round 2). The sentence was in vocab.measure_deduction_disclosure but not on the unit.",
+      "rule": "Spec 69a M-171 (+ dated note 2026-10-18); Spec 78 P5.4, P5.12 basement_excluded / gfa_deductions_not_applied; M-75",
+      "unit": "10.5.40.40(3)#(3)(C)",
+      "value": "Your counted floor area may exclude the area of up to one parking space per dwelling unit inside the building."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(3)#(3)(D)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 2 (operator, live page DB 2026-10-19): the GFA deductions of 10.5.40.40(3) are design-dependent; M-171: each deduction DEFINE unit carries its closed vocab sentence (as 970.10.15.10(1), disclosure round 2). The sentence was in vocab.measure_deduction_disclosure but not on the unit.",
+      "rule": "Spec 69a M-171 (+ dated note 2026-10-18); Spec 78 P5.4, P5.12 basement_excluded / gfa_deductions_not_applied; M-75",
+      "unit": "10.5.40.40(3)#(3)(D)",
+      "value": "Your counted floor area may exclude one more parking space, for a detached house on a lot with more than 12.0 m of frontage."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answer 10.5.40.40(3)(A) (operator 2026-10-19: \"we assume all max build's have a basement … GFA removes the basement from the calculation??\"). Yes: the clause says GFA \"may be reduced by: (A) the floor area of the basement\", and the M-171 dated note 2026-10-18 rules that the max build answers it by excluding the basement from GFA; Spec 78 P5.4 shows the basement as livable area with in_gfa: false (disclosed basement_excluded). The unit now carries the M-171 sentence and says so.",
+      "rule": "Spec 69a M-171 (+ dated note 2026-10-18); Spec 78 P5.4, P5.12 basement_excluded / gfa_deductions_not_applied; M-75",
+      "unit": "10.5.40.40(3)#(3)(A)",
+      "value": "Your counted floor area may exclude the basement floor area."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answer 10.5.40.40(3)(A) (operator 2026-10-19: \"we assume all max build's have a basement … GFA removes the basement from the calculation??\"). Yes: the clause says GFA \"may be reduced by: (A) the floor area of the basement\", and the M-171 dated note 2026-10-18 rules that the max build answers it by excluding the basement from GFA; Spec 78 P5.4 shows the basement as livable area with in_gfa: false (disclosed basement_excluded). The unit now carries the M-171 sentence and says so.",
+      "rule": "Spec 69a M-171 (+ dated note 2026-10-18); Spec 78 P5.4, P5.12 basement_excluded / gfa_deductions_not_applied; M-75",
+      "unit": "10.5.40.40(3)#(3)(A)",
+      "value": {
+        "description": "Exclusion rule: GFA of a residential building other than an apartment building may be reduced by the basement floor area.",
+        "gaps": "M-171 dated note 2026-10-18: the max build excludes the basement from GFA; Spec 78 P5.4 reports it as livable area with in_gfa: false (P5.12 basement_excluded). The permitted maximum GFA itself is unchanged.",
+        "not_modelled_reason": "none",
+        "status": "informational",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers 10.5.40.40(1)(A)/(B) (operator 2026-10-19: \"depending on your design the attic … may force you to include the attic space as GFA … This is disclosure\"); M-203: the attic test decides inclusion in GFA and a failing attic is livable area outside the GFA total, disclosed attic_outside_gfa (closed form of the P5.12 template, no placeholder).",
+      "rule": "Spec 69a M-203; Spec 78 P5.12 attic_outside_gfa; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": "An attic that does not meet the headroom and size test is livable but not counted in the City's floor-area total (GFA)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers 10.5.40.40(1)(A)/(B) (operator 2026-10-19: \"depending on your design the attic … may force you to include the attic space as GFA … This is disclosure\"); M-203: the attic test decides inclusion in GFA and a failing attic is livable area outside the GFA total, disclosed attic_outside_gfa (closed form of the P5.12 template, no placeholder).",
+      "rule": "Spec 69a M-203; Spec 78 P5.12 attic_outside_gfa; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": "An attic that does not meet the headroom and size test is livable but not counted in the City's floor-area total (GFA)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.70(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers 10.5.40.70(1)(A)/(B) (operator 2026-10-19: disclose, \"high importance\"); M-205(1): front-yard averaging applies where parcel_abutments holds the abutting buildings and uses their estimated setbacks, so its basis is disclosed front_yard_averaging (closed form of the P5.12 template, no placeholder).",
+      "rule": "Spec 69a M-205(1); Spec 78 P5.12 front_yard_averaging; M-75",
+      "unit": "10.5.40.70(1)#(1)(A)",
+      "value": "The front setback averages the neighbouring houses' setbacks, which are estimated; a survey may differ."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.70(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers 10.5.40.70(1)(A)/(B) (operator 2026-10-19: disclose, \"high importance\"); M-205(1): front-yard averaging applies where parcel_abutments holds the abutting buildings and uses their estimated setbacks, so its basis is disclosed front_yard_averaging (closed form of the P5.12 template, no placeholder).",
+      "rule": "Spec 69a M-205(1); Spec 78 P5.12 front_yard_averaging; M-75",
+      "unit": "10.5.40.70(1)#(1)(B)",
+      "value": "The front setback averages the neighbouring houses' setbacks, which are estimated; a survey may differ."
     }
   ]
 }
