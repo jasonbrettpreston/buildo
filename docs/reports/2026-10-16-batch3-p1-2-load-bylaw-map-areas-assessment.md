@@ -190,7 +190,7 @@ The generated validation scorecard is appended at capture (H6 runbook step 3) by
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 3 · unexplained: 0
+- compare ran: true · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
 - 2639/2640 passed (suite success=false)

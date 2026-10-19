@@ -179,7 +179,7 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 6 · unexplained: 0
+- compare ran: true · diffs found: 0 · unexplained: 0
 
 ### Test suite (item iii)
 - 2638/2640 passed (suite success=false)
