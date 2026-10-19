@@ -88,5 +88,28 @@
    "at_base": "red",
    "reason": "Error: front averaging: no rule yet"
   }
+ ],
+ "followups": [
+  {
+   "base": "79ff0d5d",
+   "run_on": "2026-10-19",
+   "note": "Operator y 2026-10-19: front_yard_needs_survey must also say the actual setback may be larger or smaller (≤ 45 words, LC-52). Red at 79ff0d5d: the template lacked the sentence; the word-count guard passed both sides.",
+   "counts": {
+    "red": 1,
+    "pass": 1
+   },
+   "cases": [
+    {
+     "name": "P5.12 front_yard_needs_survey wording (LC-52; operator 2026-10-19: the actual setback may be larger or smaller) names the averaging by-law, says the standard setback is shown, and that the actual one may be larger or smaller",
+     "at_base": "red",
+     "reason": "AssertionError: expected 'The by-law sets this lot\\'s front set…' to match /standard \\{X\\} m is shown/"
+    },
+    {
+     "name": "P5.12 front_yard_needs_survey wording (LC-52; operator 2026-10-19: the actual setback may be larger or smaller) stays within 45 words",
+     "at_base": "pass",
+     "reason": ""
+    }
+   ]
+  }
  ]
 }

@@ -62,6 +62,21 @@ describe('LC-57 / M-205(1): the threshold is externalized and starts closed', ()
   });
 });
 
+describe('P5.12 front_yard_needs_survey wording (LC-52; operator 2026-10-19: the actual setback may be larger or smaller)', () => {
+  const spec = fs.readFileSync(path.join(process.cwd(), 'docs/specs/01-pipeline/78_optimal_lot_configuration.md'), 'utf8');
+  const row = spec.split('\n').find((l) => l.startsWith('| `front_yard_needs_survey` |')) ?? '';
+  const template = (/^\| `front_yard_needs_survey` \| "([^"]+)"/.exec(row) ?? [])[1] ?? '';
+  it('names the averaging by-law, says the standard setback is shown, and that the actual one may be larger or smaller', () => {
+    expect(template).toMatch(/10\.5\.40\.70\(1\)/);
+    expect(template).toMatch(/standard \{X\} m is shown/);
+    expect(template).toMatch(/the actual setback may be larger or smaller/);
+    expect(template).toMatch(/A survey is needed\.$/);
+  });
+  it('stays within 45 words', () => {
+    expect(template.split(/\s+/).filter(Boolean).length).toBeLessThanOrEqual(45);
+  });
+});
+
 describe('threshold fails (today): averaging would apply → zone default, needs survey, averaging disclosed', () => {
   it('two neighbours, both estimated: zone_default_needs_survey with front_yard_needs_survey', () => {
     const r = FA.resolveFrontAveraging([nb(), nb({ front_setback_est_m: 5.4 })], OFF);
