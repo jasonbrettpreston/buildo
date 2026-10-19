@@ -1,0 +1,7821 @@
+{
+ "generated_from": "coa_notice_variances x parcel_abutments",
+ "summary": {
+  "n_oracle": 232,
+  "n_with_estimate": 219,
+  "tol_m": 0.5,
+  "min_within_tol_pct": 90,
+  "median_abs_err_m": 1.1,
+  "p90_abs_err_m": 2.79,
+  "within_tol_pct": 26.9,
+  "within_1m_pct": 47.5,
+  "meets_threshold": false
+ },
+ "rows": [
+  {
+   "application_number": "A0180/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 327589,
+   "zone": "RD",
+   "subject_frontage_m": 21.25,
+   "corner": false,
+   "required_m": 9.54,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.97,
+    8.52
+   ],
+   "neighbour_setback2_m": [
+    7.77,
+    7.18
+   ],
+   "neighbour_dist_m": [
+    1.64,
+    0.02
+   ],
+   "neighbour_frontage_m": [
+    21.25,
+    21.25
+   ],
+   "est_m": 8.75,
+   "setback2_m": 7.48,
+   "err_m": -0.79,
+   "err2_m": -2.06
+  },
+  {
+   "application_number": "A0185/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 73959,
+   "zone": "RD",
+   "subject_frontage_m": 15.53,
+   "corner": false,
+   "required_m": 9.78,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.05
+   ],
+   "neighbour_setback2_m": [
+    7.62
+   ],
+   "neighbour_dist_m": [
+    0.53
+   ],
+   "neighbour_frontage_m": [
+    15.5
+   ],
+   "est_m": 9.05,
+   "setback2_m": 7.62,
+   "err_m": -0.73,
+   "err2_m": -2.16
+  },
+  {
+   "application_number": "A0220/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 213274,
+   "zone": "RD",
+   "subject_frontage_m": 13.23,
+   "corner": false,
+   "required_m": 7.79,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.1,
+    5.94
+   ],
+   "neighbour_setback2_m": [
+    4.92,
+    4.87
+   ],
+   "neighbour_dist_m": [
+    0.99,
+    0.5
+   ],
+   "neighbour_frontage_m": [
+    13.23,
+    13.27
+   ],
+   "est_m": 6.02,
+   "setback2_m": 4.9,
+   "err_m": -1.77,
+   "err2_m": -2.89
+  },
+  {
+   "application_number": "A0248/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 235666,
+   "zone": "RD",
+   "subject_frontage_m": 15.21,
+   "corner": false,
+   "required_m": 11.83,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.32,
+    13.94
+   ],
+   "neighbour_setback2_m": [
+    6.43,
+    12.61
+   ],
+   "neighbour_dist_m": [
+    0.54,
+    0.7
+   ],
+   "neighbour_frontage_m": [
+    15.21,
+    16.87
+   ],
+   "est_m": 10.63,
+   "setback2_m": 9.52,
+   "err_m": -1.2,
+   "err2_m": -2.31
+  },
+  {
+   "application_number": "A0258/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 211054,
+   "zone": "RD",
+   "subject_frontage_m": 19.24,
+   "corner": false,
+   "required_m": 7.86,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.96,
+    7.76
+   ],
+   "neighbour_setback2_m": [
+    5.47,
+    7.06
+   ],
+   "neighbour_dist_m": [
+    0.73,
+    0.18
+   ],
+   "neighbour_frontage_m": [
+    13.72,
+    23.67
+   ],
+   "est_m": 7.36,
+   "setback2_m": 6.26,
+   "err_m": -0.5,
+   "err2_m": -1.6
+  },
+  {
+   "application_number": "A0246/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 211256,
+   "zone": "RD",
+   "subject_frontage_m": 14.24,
+   "corner": false,
+   "required_m": 8.05,
+   "fya": "fya_ambiguous_multi",
+   "n_qualifying": 3,
+   "statuses": [
+    "estimated",
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.46,
+    8.08,
+    7.33
+   ],
+   "neighbour_setback2_m": [
+    3.69,
+    6.81,
+    6.2
+   ],
+   "neighbour_dist_m": [
+    1.88,
+    2.59,
+    1.96
+   ],
+   "neighbour_frontage_m": [
+    15.19,
+    14.24,
+    15.21
+   ],
+   "est_m": null,
+   "setback2_m": 5.57,
+   "err_m": null,
+   "err2_m": -2.48
+  },
+  {
+   "application_number": "A0272/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 306243,
+   "zone": "RM",
+   "subject_frontage_m": 8.66,
+   "corner": false,
+   "required_m": 3.93,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.55,
+    3.51
+   ],
+   "neighbour_setback2_m": [
+    2.08,
+    2.55
+   ],
+   "neighbour_dist_m": [
+    2.1,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.61,
+    9.23
+   ],
+   "est_m": 3.53,
+   "setback2_m": 2.31,
+   "err_m": -0.4,
+   "err2_m": -1.62
+  },
+  {
+   "application_number": "A0298/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 72327,
+   "zone": "RD",
+   "subject_frontage_m": 20.31,
+   "corner": true,
+   "required_m": 8.41,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.4
+   ],
+   "neighbour_setback2_m": [
+    5.42
+   ],
+   "neighbour_dist_m": [
+    0.12
+   ],
+   "neighbour_frontage_m": [
+    16.2
+   ],
+   "est_m": 6.4,
+   "setback2_m": 5.42,
+   "err_m": -2.01,
+   "err2_m": -2.99
+  },
+  {
+   "application_number": "A0063/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 121280,
+   "zone": "RD",
+   "subject_frontage_m": 15.24,
+   "corner": false,
+   "required_m": 8.11,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.16,
+    7.05
+   ],
+   "neighbour_setback2_m": [
+    6.69,
+    5.62
+   ],
+   "neighbour_dist_m": [
+    0,
+    1.2
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.62
+   ],
+   "est_m": 7.61,
+   "setback2_m": 6.15,
+   "err_m": -0.5,
+   "err2_m": -1.96
+  },
+  {
+   "application_number": "A0064/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 121280,
+   "zone": "RD",
+   "subject_frontage_m": 15.24,
+   "corner": false,
+   "required_m": 8.11,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.16,
+    7.05
+   ],
+   "neighbour_setback2_m": [
+    6.69,
+    5.62
+   ],
+   "neighbour_dist_m": [
+    0,
+    1.2
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.62
+   ],
+   "est_m": 7.61,
+   "setback2_m": 6.15,
+   "err_m": -0.5,
+   "err2_m": -1.96
+  },
+  {
+   "application_number": "A0916/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 190047,
+   "zone": "RD",
+   "subject_frontage_m": 15.4,
+   "corner": false,
+   "required_m": 7.72,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.27,
+    7.13
+   ],
+   "neighbour_setback2_m": [
+    6.7,
+    5.63
+   ],
+   "neighbour_dist_m": [
+    0.97,
+    0.29
+   ],
+   "neighbour_frontage_m": [
+    17.35,
+    14.9
+   ],
+   "est_m": 7.2,
+   "setback2_m": 6.17,
+   "err_m": -0.52,
+   "err2_m": -1.55
+  },
+  {
+   "application_number": "A0309/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 417836,
+   "zone": "R",
+   "subject_frontage_m": 7.59,
+   "corner": false,
+   "required_m": 5.38,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.03,
+    2.58
+   ],
+   "neighbour_setback2_m": [
+    3.59,
+    1.67
+   ],
+   "neighbour_dist_m": [
+    0.15,
+    0.46
+   ],
+   "neighbour_frontage_m": [
+    7.75,
+    8.09
+   ],
+   "est_m": 3.81,
+   "setback2_m": 2.63,
+   "err_m": -1.57,
+   "err2_m": -2.75
+  },
+  {
+   "application_number": "A0311/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 246610,
+   "zone": "RD",
+   "subject_frontage_m": 8.97,
+   "corner": true,
+   "required_m": 5.76,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.81
+   ],
+   "neighbour_setback2_m": [
+    3.33
+   ],
+   "neighbour_dist_m": [
+    0.64
+   ],
+   "neighbour_frontage_m": [
+    8.81
+   ],
+   "est_m": 4.81,
+   "setback2_m": 3.33,
+   "err_m": -0.95,
+   "err2_m": -2.43
+  },
+  {
+   "application_number": "A0313/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 107056,
+   "zone": "RD",
+   "subject_frontage_m": 12.77,
+   "corner": false,
+   "required_m": 4.57,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.86,
+    3.92
+   ],
+   "neighbour_setback2_m": [
+    2.79,
+    2.87
+   ],
+   "neighbour_dist_m": [
+    1.51,
+    4.45
+   ],
+   "neighbour_frontage_m": [
+    12.64,
+    12.58
+   ],
+   "est_m": 3.89,
+   "setback2_m": 2.83,
+   "err_m": -0.68,
+   "err2_m": -1.74
+  },
+  {
+   "application_number": "A0337/17TEY",
+   "cited": "10.10.40.70(1)(A)",
+   "parcel_id": 356780,
+   "zone": "R",
+   "subject_frontage_m": 7.82,
+   "corner": false,
+   "required_m": 2.73,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.77,
+    1.37
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    1.11,
+    0.22
+   ],
+   "neighbour_frontage_m": [
+    7.87,
+    4.76
+   ],
+   "est_m": 1.07,
+   "setback2_m": 0,
+   "err_m": -1.66,
+   "err2_m": -2.73
+  },
+  {
+   "application_number": "A0340/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 374144,
+   "zone": "RD",
+   "subject_frontage_m": 16.79,
+   "corner": false,
+   "required_m": 5.14,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.84,
+    3.08
+   ],
+   "neighbour_setback2_m": [
+    3.35,
+    3.02
+   ],
+   "neighbour_dist_m": [
+    2.28,
+    2.41
+   ],
+   "neighbour_frontage_m": [
+    17.64,
+    15.25
+   ],
+   "est_m": 3.46,
+   "setback2_m": 3.19,
+   "err_m": -1.68,
+   "err2_m": -1.95
+  },
+  {
+   "application_number": "A0147/17TEY",
+   "cited": "10.40.40.70(1)",
+   "parcel_id": 14618,
+   "zone": "RS",
+   "subject_frontage_m": 6.28,
+   "corner": false,
+   "required_m": 2.97,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.01,
+    1.19
+   ],
+   "neighbour_setback2_m": [
+    1,
+    1.16
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.33
+   ],
+   "neighbour_frontage_m": [
+    6.54,
+    6.27
+   ],
+   "est_m": 1.1,
+   "setback2_m": 1.08,
+   "err_m": -1.87,
+   "err2_m": -1.89
+  },
+  {
+   "application_number": "A1088/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 61685,
+   "zone": "R",
+   "subject_frontage_m": 8.49,
+   "corner": true,
+   "required_m": 3.62,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.54
+   ],
+   "neighbour_setback2_m": [
+    0.12
+   ],
+   "neighbour_dist_m": [
+    0.74
+   ],
+   "neighbour_frontage_m": [
+    6.05
+   ],
+   "est_m": 1.54,
+   "setback2_m": 0.12,
+   "err_m": -2.08,
+   "err2_m": -3.5
+  },
+  {
+   "application_number": "A1094/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 452938,
+   "zone": "RD",
+   "subject_frontage_m": 17.69,
+   "corner": false,
+   "required_m": 14.56,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    17.41,
+    10.22
+   ],
+   "neighbour_setback2_m": [
+    15.99,
+    8.72
+   ],
+   "neighbour_dist_m": [
+    1.47,
+    1.04
+   ],
+   "neighbour_frontage_m": [
+    9.95,
+    19.42
+   ],
+   "est_m": 13.82,
+   "setback2_m": 12.35,
+   "err_m": -0.74,
+   "err2_m": -2.21
+  },
+  {
+   "application_number": "A1099/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 387602,
+   "zone": "R",
+   "subject_frontage_m": 6.19,
+   "corner": true,
+   "required_m": 7.02,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.53
+   ],
+   "neighbour_setback2_m": [
+    0.16
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.44
+   ],
+   "est_m": 1.53,
+   "setback2_m": 0.16,
+   "err_m": -5.49,
+   "err2_m": -6.86
+  },
+  {
+   "application_number": "A1113/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 6322154,
+   "zone": "R",
+   "subject_frontage_m": 7.68,
+   "corner": false,
+   "required_m": 3.77,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimate_negative"
+   ],
+   "neighbour_est_m": [
+    null
+   ],
+   "neighbour_setback2_m": [
+    0
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    6.36
+   ],
+   "est_m": null,
+   "setback2_m": 0,
+   "err_m": null,
+   "err2_m": -3.77
+  },
+  {
+   "application_number": "A0005/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 201698,
+   "zone": "R",
+   "subject_frontage_m": 5.59,
+   "corner": false,
+   "required_m": 5.16,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.49,
+    2.26
+   ],
+   "neighbour_setback2_m": [
+    1.05,
+    0.86
+   ],
+   "neighbour_dist_m": [
+    1.52,
+    1.47
+   ],
+   "neighbour_frontage_m": [
+    6.83,
+    5.64
+   ],
+   "est_m": 2.38,
+   "setback2_m": 0.95,
+   "err_m": -2.78,
+   "err2_m": -4.21
+  },
+  {
+   "application_number": "A0007/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 392175,
+   "zone": "R",
+   "subject_frontage_m": 8.21,
+   "corner": false,
+   "required_m": 2.91,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.86,
+    0.79
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.22
+   ],
+   "neighbour_frontage_m": [
+    5.97,
+    5.06
+   ],
+   "est_m": 0.83,
+   "setback2_m": 0,
+   "err_m": -2.08,
+   "err2_m": -2.91
+  },
+  {
+   "application_number": "A0018/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 38321,
+   "zone": "RS",
+   "subject_frontage_m": 15.94,
+   "corner": false,
+   "required_m": 3.8,
+   "fya": "fya_ambiguous_multi",
+   "n_qualifying": 3,
+   "statuses": [
+    "estimated",
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.35,
+    0.9,
+    1.56
+   ],
+   "neighbour_setback2_m": [
+    0.72,
+    0,
+    0.08
+   ],
+   "neighbour_dist_m": [
+    0,
+    7.64,
+    0.69
+   ],
+   "neighbour_frontage_m": [
+    6.83,
+    6.98,
+    6.98
+   ],
+   "est_m": null,
+   "setback2_m": 0.27,
+   "err_m": null,
+   "err2_m": -3.53
+  },
+  {
+   "application_number": "A0019/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 470661,
+   "zone": "R",
+   "subject_frontage_m": 7.58,
+   "corner": false,
+   "required_m": 7.85,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.77,
+    4.07
+   ],
+   "neighbour_setback2_m": [
+    7.34,
+    2.57
+   ],
+   "neighbour_dist_m": [
+    1.34,
+    3.35
+   ],
+   "neighbour_frontage_m": [
+    7.96,
+    7.66
+   ],
+   "est_m": 6.42,
+   "setback2_m": 4.95,
+   "err_m": -1.43,
+   "err2_m": -2.9
+  },
+  {
+   "application_number": "A0023/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 397258,
+   "zone": "RD",
+   "subject_frontage_m": 10,
+   "corner": false,
+   "required_m": 4.35,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.05,
+    4.88
+   ],
+   "neighbour_setback2_m": [
+    3.62,
+    3.38
+   ],
+   "neighbour_dist_m": [
+    0.57,
+    2.21
+   ],
+   "neighbour_frontage_m": [
+    10.51,
+    10.29
+   ],
+   "est_m": 4.97,
+   "setback2_m": 3.5,
+   "err_m": 0.62,
+   "err2_m": -0.85
+  },
+  {
+   "application_number": "A0330/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 403764,
+   "zone": "R",
+   "subject_frontage_m": 7.4,
+   "corner": false,
+   "required_m": 4.75,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.17,
+    4.25
+   ],
+   "neighbour_setback2_m": [
+    2.74,
+    2.85
+   ],
+   "neighbour_dist_m": [
+    0.48,
+    0.84
+   ],
+   "neighbour_frontage_m": [
+    7.97,
+    8.03
+   ],
+   "est_m": 4.21,
+   "setback2_m": 2.8,
+   "err_m": -0.54,
+   "err2_m": -1.95
+  },
+  {
+   "application_number": "A0349/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 407464,
+   "zone": "R",
+   "subject_frontage_m": 6.15,
+   "corner": false,
+   "required_m": 4.83,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.23,
+    2.54
+   ],
+   "neighbour_setback2_m": [
+    0.8,
+    1.35
+   ],
+   "neighbour_dist_m": [
+    2.08,
+    0
+   ],
+   "neighbour_frontage_m": [
+    6.27,
+    6.03
+   ],
+   "est_m": 2.38,
+   "setback2_m": 1.07,
+   "err_m": -2.45,
+   "err2_m": -3.76
+  },
+  {
+   "application_number": "A0883/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 153151,
+   "zone": "RD",
+   "subject_frontage_m": 10.37,
+   "corner": false,
+   "required_m": 4.97,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.73,
+    2.99
+   ],
+   "neighbour_setback2_m": [
+    3.24,
+    1.49
+   ],
+   "neighbour_dist_m": [
+    2.45,
+    0.1
+   ],
+   "neighbour_frontage_m": [
+    10.37,
+    10.37
+   ],
+   "est_m": 3.86,
+   "setback2_m": 2.37,
+   "err_m": -1.11,
+   "err2_m": -2.6
+  },
+  {
+   "application_number": "A1068/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 246300,
+   "zone": "RD",
+   "subject_frontage_m": 8.45,
+   "corner": true,
+   "required_m": 4.57,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.99
+   ],
+   "neighbour_setback2_m": [
+    2.58
+   ],
+   "neighbour_dist_m": [
+    1.48
+   ],
+   "neighbour_frontage_m": [
+    9.46
+   ],
+   "est_m": 2.99,
+   "setback2_m": 2.58,
+   "err_m": -1.58,
+   "err2_m": -1.99
+  },
+  {
+   "application_number": "A0881/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 212408,
+   "zone": "RD",
+   "subject_frontage_m": 21.22,
+   "corner": false,
+   "required_m": 8.28,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.78,
+    7.1
+   ],
+   "neighbour_setback2_m": [
+    7.3,
+    6.95
+   ],
+   "neighbour_dist_m": [
+    1.94,
+    1.89
+   ],
+   "neighbour_frontage_m": [
+    18.02,
+    17.92
+   ],
+   "est_m": 7.94,
+   "setback2_m": 7.13,
+   "err_m": -0.34,
+   "err2_m": -1.15
+  },
+  {
+   "application_number": "A0894/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 4207,
+   "zone": "RD",
+   "subject_frontage_m": 25.34,
+   "corner": false,
+   "required_m": 12.97,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.94,
+    13.23
+   ],
+   "neighbour_setback2_m": [
+    8.85,
+    12.86
+   ],
+   "neighbour_dist_m": [
+    0.68,
+    1.38
+   ],
+   "neighbour_frontage_m": [
+    28.71,
+    23.05
+   ],
+   "est_m": 11.09,
+   "setback2_m": 10.85,
+   "err_m": -1.88,
+   "err2_m": -2.12
+  },
+  {
+   "application_number": "A0912/16EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 5226,
+   "zone": "RM",
+   "subject_frontage_m": 11.11,
+   "corner": false,
+   "required_m": 7.21,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.49,
+    7.16
+   ],
+   "neighbour_setback2_m": [
+    5.16,
+    5.67
+   ],
+   "neighbour_dist_m": [
+    1.78,
+    2.02
+   ],
+   "neighbour_frontage_m": [
+    10.64,
+    7.6
+   ],
+   "est_m": 6.83,
+   "setback2_m": 5.41,
+   "err_m": -0.38,
+   "err2_m": -1.8
+  },
+  {
+   "application_number": "A0837/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 211521,
+   "zone": "RD",
+   "subject_frontage_m": 17.32,
+   "corner": true,
+   "required_m": 9.94,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.82,
+    11.03
+   ],
+   "neighbour_setback2_m": [
+    6.38,
+    9.55
+   ],
+   "neighbour_dist_m": [
+    0.91,
+    0.77
+   ],
+   "neighbour_frontage_m": [
+    17.07,
+    17.85
+   ],
+   "est_m": 9.43,
+   "setback2_m": 7.96,
+   "err_m": -0.51,
+   "err2_m": -1.98
+  },
+  {
+   "application_number": "A0385/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 432570,
+   "zone": "R",
+   "subject_frontage_m": 5.92,
+   "corner": false,
+   "required_m": 2.9,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.5,
+    2.64
+   ],
+   "neighbour_setback2_m": [
+    1,
+    1.17
+   ],
+   "neighbour_dist_m": [
+    4.5,
+    0.22
+   ],
+   "neighbour_frontage_m": [
+    4.62,
+    5.03
+   ],
+   "est_m": 2.57,
+   "setback2_m": 1.09,
+   "err_m": -0.33,
+   "err2_m": -1.81
+  },
+  {
+   "application_number": "A0396/17TEY",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 262289,
+   "zone": "RD",
+   "subject_frontage_m": 13.33,
+   "corner": true,
+   "required_m": 4.92,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.76
+   ],
+   "neighbour_setback2_m": [
+    3.71
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    14.77
+   ],
+   "est_m": 4.76,
+   "setback2_m": 3.71,
+   "err_m": -0.16,
+   "err2_m": -1.21
+  },
+  {
+   "application_number": "A1166/16TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 462985,
+   "zone": "R",
+   "subject_frontage_m": 4.64,
+   "corner": false,
+   "required_m": 6.32,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.72,
+    1.08
+   ],
+   "neighbour_setback2_m": [
+    0.45,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.7,
+    5.97
+   ],
+   "est_m": 1.4,
+   "setback2_m": 0.22,
+   "err_m": -4.92,
+   "err2_m": -6.1
+  },
+  {
+   "application_number": "A0026/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 420627,
+   "zone": "RD",
+   "subject_frontage_m": 15.29,
+   "corner": true,
+   "required_m": 5.44,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimate_negative"
+   ],
+   "neighbour_est_m": [
+    null
+   ],
+   "neighbour_setback2_m": [
+    8.51
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    13.44
+   ],
+   "est_m": null,
+   "setback2_m": 8.51,
+   "err_m": null,
+   "err2_m": 3.07
+  },
+  {
+   "application_number": "A0358/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 78186,
+   "zone": "RD",
+   "subject_frontage_m": 10.35,
+   "corner": false,
+   "required_m": 9.53,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.56,
+    9.83
+   ],
+   "neighbour_setback2_m": [
+    7.06,
+    8.39
+   ],
+   "neighbour_dist_m": [
+    0.06,
+    2.18
+   ],
+   "neighbour_frontage_m": [
+    10.35,
+    11.91
+   ],
+   "est_m": 9.2,
+   "setback2_m": 7.73,
+   "err_m": -0.33,
+   "err2_m": -1.8
+  },
+  {
+   "application_number": "A0394/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 417053,
+   "zone": "RD",
+   "subject_frontage_m": 21.38,
+   "corner": true,
+   "required_m": 10.39,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.94
+   ],
+   "neighbour_setback2_m": [
+    8.45
+   ],
+   "neighbour_dist_m": [
+    0.47
+   ],
+   "neighbour_frontage_m": [
+    18.26
+   ],
+   "est_m": 9.94,
+   "setback2_m": 8.45,
+   "err_m": -0.45,
+   "err2_m": -1.94
+  },
+  {
+   "application_number": "A0403/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 409072,
+   "zone": "RD",
+   "subject_frontage_m": 21.22,
+   "corner": false,
+   "required_m": 12.28,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.16,
+    13.32
+   ],
+   "neighbour_setback2_m": [
+    10.12,
+    13.07
+   ],
+   "neighbour_dist_m": [
+    5.63,
+    7.42
+   ],
+   "neighbour_frontage_m": [
+    21.31,
+    25.44
+   ],
+   "est_m": 11.74,
+   "setback2_m": 11.59,
+   "err_m": -0.54,
+   "err2_m": -0.69
+  },
+  {
+   "application_number": "A1198/16TEY",
+   "cited": "10.40.40.70(1)",
+   "parcel_id": 339257,
+   "zone": "RS",
+   "subject_frontage_m": 5.34,
+   "corner": false,
+   "required_m": 4.39,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.42
+   ],
+   "neighbour_setback2_m": [
+    1.01
+   ],
+   "neighbour_dist_m": [
+    0.05
+   ],
+   "neighbour_frontage_m": [
+    5.34
+   ],
+   "est_m": 2.42,
+   "setback2_m": 1.01,
+   "err_m": -1.97,
+   "err2_m": -3.38
+  },
+  {
+   "application_number": "A1200/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 374903,
+   "zone": "RD",
+   "subject_frontage_m": 12.08,
+   "corner": false,
+   "required_m": 10.52,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.13,
+    9.42
+   ],
+   "neighbour_setback2_m": [
+    5.79,
+    7.94
+   ],
+   "neighbour_dist_m": [
+    0.56,
+    6.36
+   ],
+   "neighbour_frontage_m": [
+    10.12,
+    27.66
+   ],
+   "est_m": 8.28,
+   "setback2_m": 6.86,
+   "err_m": -2.24,
+   "err2_m": -3.66
+  },
+  {
+   "application_number": "A1216/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 440571,
+   "zone": "R",
+   "subject_frontage_m": 6.61,
+   "corner": false,
+   "required_m": 1.64,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.36,
+    1.37
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0.35
+   ],
+   "neighbour_dist_m": [
+    0.6,
+    0.35
+   ],
+   "neighbour_frontage_m": [
+    6.71,
+    7.72
+   ],
+   "est_m": 0.87,
+   "setback2_m": 0.18,
+   "err_m": -0.77,
+   "err2_m": -1.46
+  },
+  {
+   "application_number": "A1217/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 270494,
+   "zone": "R",
+   "subject_frontage_m": 4.93,
+   "corner": false,
+   "required_m": 2.61,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.1,
+    0.6
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    1.53
+   ],
+   "neighbour_frontage_m": [
+    4.58,
+    5.93
+   ],
+   "est_m": 0.35,
+   "setback2_m": 0,
+   "err_m": -2.26,
+   "err2_m": -2.61
+  },
+  {
+   "application_number": "A1220/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 14081,
+   "zone": "R",
+   "subject_frontage_m": 7.6,
+   "corner": false,
+   "required_m": 11.45,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.48,
+    12.93
+   ],
+   "neighbour_setback2_m": [
+    8.03,
+    11.46
+   ],
+   "neighbour_dist_m": [
+    0.51,
+    1.37
+   ],
+   "neighbour_frontage_m": [
+    9.27,
+    7.6
+   ],
+   "est_m": 11.21,
+   "setback2_m": 9.74,
+   "err_m": -0.24,
+   "err2_m": -1.71
+  },
+  {
+   "application_number": "A1225/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 223313,
+   "zone": "RD",
+   "subject_frontage_m": 8.24,
+   "corner": true,
+   "required_m": 4.78,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.35
+   ],
+   "neighbour_setback2_m": [
+    2.9
+   ],
+   "neighbour_dist_m": [
+    1.77
+   ],
+   "neighbour_frontage_m": [
+    9.06
+   ],
+   "est_m": 4.35,
+   "setback2_m": 2.9,
+   "err_m": -0.43,
+   "err2_m": -1.88
+  },
+  {
+   "application_number": "A0204/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 338765,
+   "zone": "RD",
+   "subject_frontage_m": 9.34,
+   "corner": true,
+   "required_m": 4.83,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.39
+   ],
+   "neighbour_setback2_m": [
+    3.04
+   ],
+   "neighbour_dist_m": [
+    1.67
+   ],
+   "neighbour_frontage_m": [
+    9.65
+   ],
+   "est_m": 3.39,
+   "setback2_m": 3.04,
+   "err_m": -1.44,
+   "err2_m": -1.79
+  },
+  {
+   "application_number": "A0220/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 473042,
+   "zone": "RD",
+   "subject_frontage_m": 19.01,
+   "corner": false,
+   "required_m": 9.84,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.53,
+    6.92
+   ],
+   "neighbour_setback2_m": [
+    9.45,
+    16.17
+   ],
+   "neighbour_dist_m": [
+    2.89,
+    0
+   ],
+   "neighbour_frontage_m": [
+    18.59,
+    21.73
+   ],
+   "est_m": 8.23,
+   "setback2_m": 12.81,
+   "err_m": -1.62,
+   "err2_m": 2.97
+  },
+  {
+   "application_number": "A0225/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 14118,
+   "zone": "RD",
+   "subject_frontage_m": 13.7,
+   "corner": false,
+   "required_m": 3.14,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.44
+   ],
+   "neighbour_setback2_m": [
+    1.07
+   ],
+   "neighbour_dist_m": [
+    0.54
+   ],
+   "neighbour_frontage_m": [
+    12.94
+   ],
+   "est_m": 2.44,
+   "setback2_m": 1.07,
+   "err_m": -0.7,
+   "err2_m": -2.07
+  },
+  {
+   "application_number": "A0233/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 361765,
+   "zone": "RD",
+   "subject_frontage_m": 7.24,
+   "corner": false,
+   "required_m": 9.6,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.79,
+    18.99
+   ],
+   "neighbour_setback2_m": [
+    7.58,
+    19.17
+   ],
+   "neighbour_dist_m": [
+    0.73,
+    3.58
+   ],
+   "neighbour_frontage_m": [
+    6.82,
+    19.84
+   ],
+   "est_m": 13.89,
+   "setback2_m": 13.37,
+   "err_m": 4.29,
+   "err2_m": 3.77
+  },
+  {
+   "application_number": "A0244/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 436363,
+   "zone": "R",
+   "subject_frontage_m": 5.37,
+   "corner": false,
+   "required_m": 4.94,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.84,
+    2.17
+   ],
+   "neighbour_setback2_m": [
+    0.35,
+    0.67
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.36,
+    5.7
+   ],
+   "est_m": 2.01,
+   "setback2_m": 0.51,
+   "err_m": -2.94,
+   "err2_m": -4.43
+  },
+  {
+   "application_number": "A0070/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 406701,
+   "zone": "R",
+   "subject_frontage_m": 6.1,
+   "corner": false,
+   "required_m": 1.64,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.64,
+    0.59
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    1.61,
+    0.13
+   ],
+   "neighbour_frontage_m": [
+    6.32,
+    5.96
+   ],
+   "est_m": 0.62,
+   "setback2_m": 0,
+   "err_m": -1.02,
+   "err2_m": -1.64
+  },
+  {
+   "application_number": "A0076/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 224776,
+   "zone": "RD",
+   "subject_frontage_m": 11.6,
+   "corner": false,
+   "required_m": 6.3,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.25,
+    6.3
+   ],
+   "neighbour_setback2_m": [
+    4.77,
+    5.97
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.95
+   ],
+   "neighbour_frontage_m": [
+    12.82,
+    13.48
+   ],
+   "est_m": 6.28,
+   "setback2_m": 5.37,
+   "err_m": -0.02,
+   "err2_m": -0.93
+  },
+  {
+   "application_number": "A0080/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 468754,
+   "zone": "R",
+   "subject_frontage_m": 7.62,
+   "corner": false,
+   "required_m": 2.67,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.53,
+    1.46
+   ],
+   "neighbour_setback2_m": [
+    0.35,
+    1.53
+   ],
+   "neighbour_dist_m": [
+    0.35,
+    7.61
+   ],
+   "neighbour_frontage_m": [
+    3.91,
+    7.62
+   ],
+   "est_m": 1,
+   "setback2_m": 0.94,
+   "err_m": -1.67,
+   "err2_m": -1.73
+  },
+  {
+   "application_number": "A0085/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 285313,
+   "zone": "RD",
+   "subject_frontage_m": 15.18,
+   "corner": false,
+   "required_m": 10.02,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7,
+    7.4
+   ],
+   "neighbour_setback2_m": [
+    5.69,
+    6.78
+   ],
+   "neighbour_dist_m": [
+    0.41,
+    0.75
+   ],
+   "neighbour_frontage_m": [
+    15.18,
+    15.18
+   ],
+   "est_m": 7.2,
+   "setback2_m": 6.23,
+   "err_m": -2.82,
+   "err2_m": -3.79
+  },
+  {
+   "application_number": "A0093/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 201288,
+   "zone": "R",
+   "subject_frontage_m": 4.86,
+   "corner": false,
+   "required_m": 15,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.48,
+    3.39
+   ],
+   "neighbour_setback2_m": [
+    2.19,
+    2.09
+   ],
+   "neighbour_dist_m": [
+    0.03,
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.86,
+    4.83
+   ],
+   "est_m": 3.44,
+   "setback2_m": 2.14,
+   "err_m": -11.56,
+   "err2_m": -12.86
+  },
+  {
+   "application_number": "A0101/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 399923,
+   "zone": "R",
+   "subject_frontage_m": 4.82,
+   "corner": false,
+   "required_m": 3.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.82,
+    0.39
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    1.15,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.95,
+    4.59
+   ],
+   "est_m": 0.61,
+   "setback2_m": 0,
+   "err_m": -2.51,
+   "err2_m": -3.12
+  },
+  {
+   "application_number": "A0104/17TEY",
+   "cited": "10.40.40.70(1)(B)",
+   "parcel_id": 154143,
+   "zone": "RS",
+   "subject_frontage_m": 5.52,
+   "corner": false,
+   "required_m": 3.17,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.82,
+    0.33
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0.65,
+    0
+   ],
+   "neighbour_frontage_m": [
+    6.39,
+    5.48
+   ],
+   "est_m": 0.57,
+   "setback2_m": 0,
+   "err_m": -2.59,
+   "err2_m": -3.17
+  },
+  {
+   "application_number": "A0110/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 199490,
+   "zone": "R",
+   "subject_frontage_m": 10.04,
+   "corner": false,
+   "required_m": 8.02,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.94,
+    9.02
+   ],
+   "neighbour_setback2_m": [
+    5.44,
+    7.55
+   ],
+   "neighbour_dist_m": [
+    0,
+    2.17
+   ],
+   "neighbour_frontage_m": [
+    9.42,
+    9.42
+   ],
+   "est_m": 7.98,
+   "setback2_m": 6.5,
+   "err_m": -0.04,
+   "err2_m": -1.52
+  },
+  {
+   "application_number": "A0446/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 170350,
+   "zone": "RD",
+   "subject_frontage_m": 15.2,
+   "corner": false,
+   "required_m": 9.72,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.02
+   ],
+   "neighbour_setback2_m": [
+    7.22
+   ],
+   "neighbour_dist_m": [
+    4.93
+   ],
+   "neighbour_frontage_m": [
+    15.2
+   ],
+   "est_m": 8.02,
+   "setback2_m": 7.22,
+   "err_m": -1.7,
+   "err2_m": -2.5
+  },
+  {
+   "application_number": "A0449/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 32611,
+   "zone": "R",
+   "subject_frontage_m": 8.01,
+   "corner": false,
+   "required_m": 3.23,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.07,
+    1.43
+   ],
+   "neighbour_setback2_m": [
+    0.61,
+    0.3
+   ],
+   "neighbour_dist_m": [
+    0.79,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.49,
+    7.43
+   ],
+   "est_m": 1.25,
+   "setback2_m": 0.46,
+   "err_m": -1.98,
+   "err2_m": -2.77
+  },
+  {
+   "application_number": "A0457/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 235874,
+   "zone": "RD",
+   "subject_frontage_m": 9.48,
+   "corner": true,
+   "required_m": 3.05,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.99
+   ],
+   "neighbour_setback2_m": [
+    1.51
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.33
+   ],
+   "est_m": 1.99,
+   "setback2_m": 1.51,
+   "err_m": -1.06,
+   "err2_m": -1.54
+  },
+  {
+   "application_number": "A0500/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 378737,
+   "zone": "R",
+   "subject_frontage_m": 7.94,
+   "corner": false,
+   "required_m": 7.53,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.08,
+    4.63
+   ],
+   "neighbour_setback2_m": [
+    3.69,
+    3.16
+   ],
+   "neighbour_dist_m": [
+    0.12,
+    0
+   ],
+   "neighbour_frontage_m": [
+    8.04,
+    7.64
+   ],
+   "est_m": 4.86,
+   "setback2_m": 3.42,
+   "err_m": -2.67,
+   "err2_m": -4.11
+  },
+  {
+   "application_number": "A0065/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 379746,
+   "zone": "RM",
+   "subject_frontage_m": 12.17,
+   "corner": true,
+   "required_m": 3.73,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.6
+   ],
+   "neighbour_setback2_m": [
+    1.53
+   ],
+   "neighbour_dist_m": [
+    0.79
+   ],
+   "neighbour_frontage_m": [
+    9.13
+   ],
+   "est_m": 1.6,
+   "setback2_m": 1.53,
+   "err_m": -2.13,
+   "err2_m": -2.2
+  },
+  {
+   "application_number": "A0066/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 379746,
+   "zone": "RM",
+   "subject_frontage_m": 12.17,
+   "corner": true,
+   "required_m": 3.73,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.6
+   ],
+   "neighbour_setback2_m": [
+    1.53
+   ],
+   "neighbour_dist_m": [
+    0.79
+   ],
+   "neighbour_frontage_m": [
+    9.13
+   ],
+   "est_m": 1.6,
+   "setback2_m": 1.53,
+   "err_m": -2.13,
+   "err2_m": -2.2
+  },
+  {
+   "application_number": "A0359/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 379060,
+   "zone": "RD",
+   "subject_frontage_m": 10.68,
+   "corner": false,
+   "required_m": 9.55,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.92,
+    8.88
+   ],
+   "neighbour_setback2_m": [
+    9.42,
+    8.32
+   ],
+   "neighbour_dist_m": [
+    0.86,
+    2.02
+   ],
+   "neighbour_frontage_m": [
+    12.8,
+    17.5
+   ],
+   "est_m": 9.9,
+   "setback2_m": 8.87,
+   "err_m": 0.35,
+   "err2_m": -0.68
+  },
+  {
+   "application_number": "A0164/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 411794,
+   "zone": "R",
+   "subject_frontage_m": 4.98,
+   "corner": false,
+   "required_m": 3.18,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.78,
+    1.08
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.19
+   ],
+   "neighbour_frontage_m": [
+    5.08,
+    5.34
+   ],
+   "est_m": 0.93,
+   "setback2_m": 0,
+   "err_m": -2.25,
+   "err2_m": -3.18
+  },
+  {
+   "application_number": "A1164/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 468870,
+   "zone": "R",
+   "subject_frontage_m": 7.93,
+   "corner": false,
+   "required_m": 4.2,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.63,
+    2.87
+   ],
+   "neighbour_setback2_m": [
+    2.42,
+    1.93
+   ],
+   "neighbour_dist_m": [
+    2.34,
+    0
+   ],
+   "neighbour_frontage_m": [
+    10.48,
+    8.24
+   ],
+   "est_m": 2.75,
+   "setback2_m": 2.18,
+   "err_m": -1.45,
+   "err2_m": -2.02
+  },
+  {
+   "application_number": "A0791/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 53610,
+   "zone": "RD",
+   "subject_frontage_m": 26.35,
+   "corner": true,
+   "required_m": 7.58,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.67
+   ],
+   "neighbour_setback2_m": [
+    6.32
+   ],
+   "neighbour_dist_m": [
+    0.51
+   ],
+   "neighbour_frontage_m": [
+    20.03
+   ],
+   "est_m": 7.67,
+   "setback2_m": 6.32,
+   "err_m": 0.09,
+   "err2_m": -1.26
+  },
+  {
+   "application_number": "A0677/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 292414,
+   "zone": "R",
+   "subject_frontage_m": 8.89,
+   "corner": false,
+   "required_m": 4.68,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.69,
+    4.41
+   ],
+   "neighbour_setback2_m": [
+    2.2,
+    2.95
+   ],
+   "neighbour_dist_m": [
+    0,
+    1.7
+   ],
+   "neighbour_frontage_m": [
+    8.45,
+    7.67
+   ],
+   "est_m": 3.55,
+   "setback2_m": 2.58,
+   "err_m": -1.13,
+   "err2_m": -2.1
+  },
+  {
+   "application_number": "A0119/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 456477,
+   "zone": "R",
+   "subject_frontage_m": 4.53,
+   "corner": false,
+   "required_m": 3.6,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.66,
+    1.61
+   ],
+   "neighbour_setback2_m": [
+    0.23,
+    0.13
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.96,
+    4.94
+   ],
+   "est_m": 1.64,
+   "setback2_m": 0.18,
+   "err_m": -1.96,
+   "err2_m": -3.42
+  },
+  {
+   "application_number": "A0132/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 247339,
+   "zone": "R",
+   "subject_frontage_m": 9.74,
+   "corner": false,
+   "required_m": 5.5,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.79,
+    2.62
+   ],
+   "neighbour_setback2_m": [
+    1.59,
+    2.61
+   ],
+   "neighbour_dist_m": [
+    0.05,
+    1.79
+   ],
+   "neighbour_frontage_m": [
+    9.74,
+    10.65
+   ],
+   "est_m": 2.71,
+   "setback2_m": 2.1,
+   "err_m": -2.79,
+   "err2_m": -3.4
+  },
+  {
+   "application_number": "A0138/17TEY",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 409344,
+   "zone": "R",
+   "subject_frontage_m": 6.69,
+   "corner": false,
+   "required_m": 8.38,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.32
+   ],
+   "neighbour_setback2_m": [
+    6.87
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    8.34
+   ],
+   "est_m": 8.32,
+   "setback2_m": 6.87,
+   "err_m": -0.06,
+   "err2_m": -1.51
+  },
+  {
+   "application_number": "A0143/17TEY",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 410307,
+   "zone": "R",
+   "subject_frontage_m": 7.57,
+   "corner": false,
+   "required_m": 1.57,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimate_negative"
+   ],
+   "neighbour_est_m": [
+    null
+   ],
+   "neighbour_setback2_m": [
+    0
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.19
+   ],
+   "est_m": null,
+   "setback2_m": 0,
+   "err_m": null,
+   "err2_m": -1.57
+  },
+  {
+   "application_number": "A0145/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 379645,
+   "zone": "R",
+   "subject_frontage_m": 6.69,
+   "corner": true,
+   "required_m": 15,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.93
+   ],
+   "neighbour_setback2_m": [
+    1.45
+   ],
+   "neighbour_dist_m": [
+    0.5
+   ],
+   "neighbour_frontage_m": [
+    7.28
+   ],
+   "est_m": 2.93,
+   "setback2_m": 1.45,
+   "err_m": -12.07,
+   "err2_m": -13.55
+  },
+  {
+   "application_number": "A0193/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 474341,
+   "zone": "R",
+   "subject_frontage_m": 4.5,
+   "corner": true,
+   "required_m": 6.03,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.99
+   ],
+   "neighbour_setback2_m": [
+    0.64
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.56
+   ],
+   "est_m": 1.99,
+   "setback2_m": 0.64,
+   "err_m": -4.04,
+   "err2_m": -5.39
+  },
+  {
+   "application_number": "A0194/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 474341,
+   "zone": "R",
+   "subject_frontage_m": 4.5,
+   "corner": true,
+   "required_m": 6.03,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.99
+   ],
+   "neighbour_setback2_m": [
+    0.64
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.56
+   ],
+   "est_m": 1.99,
+   "setback2_m": 0.64,
+   "err_m": -4.04,
+   "err2_m": -5.39
+  },
+  {
+   "application_number": "A0210/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 193799,
+   "zone": "RM",
+   "subject_frontage_m": 6.1,
+   "corner": false,
+   "required_m": 2.8,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.42,
+    0.28
+   ],
+   "neighbour_setback2_m": [
+    0.94,
+    0
+   ],
+   "neighbour_dist_m": [
+    0.64,
+    0.5
+   ],
+   "neighbour_frontage_m": [
+    6.1,
+    6.1
+   ],
+   "est_m": 1.35,
+   "setback2_m": 0.47,
+   "err_m": -1.45,
+   "err2_m": -2.33
+  },
+  {
+   "application_number": "A0232/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 171038,
+   "zone": "RM",
+   "subject_frontage_m": 5.93,
+   "corner": false,
+   "required_m": 5.14,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.07,
+    2.96
+   ],
+   "neighbour_setback2_m": [
+    1.58,
+    1.65
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.66
+   ],
+   "neighbour_frontage_m": [
+    5.57,
+    6.59
+   ],
+   "est_m": 3.01,
+   "setback2_m": 1.62,
+   "err_m": -2.12,
+   "err2_m": -3.52
+  },
+  {
+   "application_number": "A0239/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 457551,
+   "zone": "R",
+   "subject_frontage_m": 6.9,
+   "corner": false,
+   "required_m": 3.07,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimate_negative",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    null,
+    2.73
+   ],
+   "neighbour_setback2_m": [
+    0,
+    1.23
+   ],
+   "neighbour_dist_m": [
+    1.05,
+    0.84
+   ],
+   "neighbour_frontage_m": [
+    6.76,
+    6.1
+   ],
+   "est_m": null,
+   "setback2_m": 0.62,
+   "err_m": null,
+   "err2_m": -2.45
+  },
+  {
+   "application_number": "A0727/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 162377,
+   "zone": "RD",
+   "subject_frontage_m": 19.03,
+   "corner": false,
+   "required_m": 11.29,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.85,
+    11.52
+   ],
+   "neighbour_setback2_m": [
+    9.38,
+    10.41
+   ],
+   "neighbour_dist_m": [
+    2.18,
+    2.01
+   ],
+   "neighbour_frontage_m": [
+    14.73,
+    14.74
+   ],
+   "est_m": 11.18,
+   "setback2_m": 9.89,
+   "err_m": -0.11,
+   "err2_m": -1.4
+  },
+  {
+   "application_number": "A0553/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 287066,
+   "zone": "RM",
+   "subject_frontage_m": 8.38,
+   "corner": false,
+   "required_m": 6.11,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.1,
+    5.86
+   ],
+   "neighbour_setback2_m": [
+    4.6,
+    4.39
+   ],
+   "neighbour_dist_m": [
+    0.23,
+    0.74
+   ],
+   "neighbour_frontage_m": [
+    7.92,
+    8.38
+   ],
+   "est_m": 5.98,
+   "setback2_m": 4.5,
+   "err_m": -0.13,
+   "err2_m": -1.61
+  },
+  {
+   "application_number": "A0559/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 193397,
+   "zone": "RM",
+   "subject_frontage_m": 10.15,
+   "corner": false,
+   "required_m": 5.25,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.36,
+    3.37
+   ],
+   "neighbour_setback2_m": [
+    2.09,
+    1.99
+   ],
+   "neighbour_dist_m": [
+    0.63,
+    0.27
+   ],
+   "neighbour_frontage_m": [
+    10.15,
+    7.61
+   ],
+   "est_m": 3.37,
+   "setback2_m": 2.04,
+   "err_m": -1.88,
+   "err2_m": -3.21
+  },
+  {
+   "application_number": "A0575/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 193638,
+   "zone": "RM",
+   "subject_frontage_m": 7.61,
+   "corner": false,
+   "required_m": 5.7,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.63,
+    2.79
+   ],
+   "neighbour_setback2_m": [
+    5.14,
+    2.38
+   ],
+   "neighbour_dist_m": [
+    1.27,
+    0.03
+   ],
+   "neighbour_frontage_m": [
+    7.61,
+    7.15
+   ],
+   "est_m": 4.71,
+   "setback2_m": 3.76,
+   "err_m": -0.99,
+   "err2_m": -1.94
+  },
+  {
+   "application_number": "A0613/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 378244,
+   "zone": "R",
+   "subject_frontage_m": 8.96,
+   "corner": false,
+   "required_m": 5.3,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.17,
+    3.34
+   ],
+   "neighbour_setback2_m": [
+    1.67,
+    1.85
+   ],
+   "neighbour_dist_m": [
+    0,
+    1.15
+   ],
+   "neighbour_frontage_m": [
+    8.45,
+    9.42
+   ],
+   "est_m": 3.26,
+   "setback2_m": 1.76,
+   "err_m": -2.04,
+   "err2_m": -3.54
+  },
+  {
+   "application_number": "A0434/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 332297,
+   "zone": "RM",
+   "subject_frontage_m": 8.08,
+   "corner": true,
+   "required_m": 8.81,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.73
+   ],
+   "neighbour_setback2_m": [
+    5.35
+   ],
+   "neighbour_dist_m": [
+    0.06
+   ],
+   "neighbour_frontage_m": [
+    7.62
+   ],
+   "est_m": 6.73,
+   "setback2_m": 5.35,
+   "err_m": -2.08,
+   "err2_m": -3.46
+  },
+  {
+   "application_number": "A0988/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 404337,
+   "zone": "R",
+   "subject_frontage_m": 6.6,
+   "corner": false,
+   "required_m": 4.59,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.04,
+    2.49
+   ],
+   "neighbour_setback2_m": [
+    2.58,
+    2.45
+   ],
+   "neighbour_dist_m": [
+    1.04,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.1,
+    7.76
+   ],
+   "est_m": 3.27,
+   "setback2_m": 2.51,
+   "err_m": -1.32,
+   "err2_m": -2.08
+  },
+  {
+   "application_number": "A1003/16TEY",
+   "cited": "10.10.40.70(1)(B)",
+   "parcel_id": 461485,
+   "zone": "R",
+   "subject_frontage_m": 5.76,
+   "corner": false,
+   "required_m": 3.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.17,
+    0.46
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0.19
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.3,
+    7.37
+   ],
+   "est_m": 0.82,
+   "setback2_m": 0.1,
+   "err_m": -2.31,
+   "err2_m": -3.02
+  },
+  {
+   "application_number": "A0943/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 31227,
+   "zone": "RM",
+   "subject_frontage_m": 5.49,
+   "corner": false,
+   "required_m": 3.61,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    28.51,
+    2.86
+   ],
+   "neighbour_setback2_m": [
+    27.01,
+    1.36
+   ],
+   "neighbour_dist_m": [
+    0.13,
+    0
+   ],
+   "neighbour_frontage_m": [
+    10.9,
+    5.49
+   ],
+   "est_m": 15.69,
+   "setback2_m": 14.19,
+   "err_m": 12.08,
+   "err2_m": 10.58
+  },
+  {
+   "application_number": "A0997/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 211471,
+   "zone": "RD",
+   "subject_frontage_m": 12.05,
+   "corner": false,
+   "required_m": 9.95,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.92,
+    6.07
+   ],
+   "neighbour_setback2_m": [
+    7.72,
+    5.93
+   ],
+   "neighbour_dist_m": [
+    2.69,
+    1.04
+   ],
+   "neighbour_frontage_m": [
+    12.09,
+    12.7
+   ],
+   "est_m": 7.5,
+   "setback2_m": 6.82,
+   "err_m": -2.45,
+   "err2_m": -3.13
+  },
+  {
+   "application_number": "A0019/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 238270,
+   "zone": "RD",
+   "subject_frontage_m": 16.42,
+   "corner": true,
+   "required_m": 8.34,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.49
+   ],
+   "neighbour_setback2_m": [
+    6.11
+   ],
+   "neighbour_dist_m": [
+    2.63
+   ],
+   "neighbour_frontage_m": [
+    17.99
+   ],
+   "est_m": 7.49,
+   "setback2_m": 6.11,
+   "err_m": -0.85,
+   "err2_m": -2.23
+  },
+  {
+   "application_number": "A0058/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 145070,
+   "zone": "RD",
+   "subject_frontage_m": 13.24,
+   "corner": false,
+   "required_m": 8.2,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.38,
+    7.21
+   ],
+   "neighbour_setback2_m": [
+    6.99,
+    6.08
+   ],
+   "neighbour_dist_m": [
+    1.4,
+    3.01
+   ],
+   "neighbour_frontage_m": [
+    13.44,
+    14.75
+   ],
+   "est_m": 7.3,
+   "setback2_m": 6.54,
+   "err_m": -0.9,
+   "err2_m": -1.66
+  },
+  {
+   "application_number": "A0061/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 332367,
+   "zone": "RM",
+   "subject_frontage_m": 7.6,
+   "corner": false,
+   "required_m": 8.77,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.51,
+    1.39
+   ],
+   "neighbour_setback2_m": [
+    0.03,
+    0.15
+   ],
+   "neighbour_dist_m": [
+    0.91,
+    0.15
+   ],
+   "neighbour_frontage_m": [
+    7.6,
+    7.6
+   ],
+   "est_m": 0.95,
+   "setback2_m": 0.09,
+   "err_m": -7.82,
+   "err2_m": -8.68
+  },
+  {
+   "application_number": "A0569/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 475839,
+   "zone": "RD",
+   "subject_frontage_m": 13.43,
+   "corner": true,
+   "required_m": 8.32,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    14.44
+   ],
+   "neighbour_setback2_m": [
+    13.91
+   ],
+   "neighbour_dist_m": [
+    0
+   ],
+   "neighbour_frontage_m": [
+    12.3
+   ],
+   "est_m": 14.44,
+   "setback2_m": 13.91,
+   "err_m": 6.12,
+   "err2_m": 5.59
+  },
+  {
+   "application_number": "A0420/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 397318,
+   "zone": "R",
+   "subject_frontage_m": 9.22,
+   "corner": false,
+   "required_m": 8.65,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.36,
+    5.34
+   ],
+   "neighbour_setback2_m": [
+    3.9,
+    3.87
+   ],
+   "neighbour_dist_m": [
+    1.25,
+    0
+   ],
+   "neighbour_frontage_m": [
+    9.18,
+    5.87
+   ],
+   "est_m": 5.35,
+   "setback2_m": 3.89,
+   "err_m": -3.3,
+   "err2_m": -4.76
+  },
+  {
+   "application_number": "A0424/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 429416,
+   "zone": "R",
+   "subject_frontage_m": 4.93,
+   "corner": false,
+   "required_m": 3.45,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.15,
+    2.42
+   ],
+   "neighbour_setback2_m": [
+    3.69,
+    0.97
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.14
+   ],
+   "neighbour_frontage_m": [
+    4.99,
+    3.85
+   ],
+   "est_m": 3.79,
+   "setback2_m": 2.33,
+   "err_m": 0.34,
+   "err2_m": -1.12
+  },
+  {
+   "application_number": "A0430/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 316859,
+   "zone": "R",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 6.38,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.32,
+    3.81
+   ],
+   "neighbour_setback2_m": [
+    2.82,
+    2.35
+   ],
+   "neighbour_dist_m": [
+    2.28,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    5.57
+   ],
+   "est_m": 4.07,
+   "setback2_m": 2.58,
+   "err_m": -2.31,
+   "err2_m": -3.8
+  },
+  {
+   "application_number": "A0440/17TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 292309,
+   "zone": "RD",
+   "subject_frontage_m": 12.21,
+   "corner": false,
+   "required_m": 4.83,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.62,
+    3.2
+   ],
+   "neighbour_setback2_m": [
+    2.62,
+    2.48
+   ],
+   "neighbour_dist_m": [
+    0.16,
+    3.17
+   ],
+   "neighbour_frontage_m": [
+    12.21,
+    12.21
+   ],
+   "est_m": 2.91,
+   "setback2_m": 2.55,
+   "err_m": -1.92,
+   "err2_m": -2.28
+  },
+  {
+   "application_number": "A0752/16EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 398818,
+   "zone": "R",
+   "subject_frontage_m": 5.83,
+   "corner": false,
+   "required_m": 3.65,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.68,
+    0.83
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    5.74,
+    0.64
+   ],
+   "neighbour_frontage_m": [
+    5.98,
+    6.66
+   ],
+   "est_m": 0.76,
+   "setback2_m": 0,
+   "err_m": -2.89,
+   "err2_m": -3.65
+  },
+  {
+   "application_number": "A0875/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 100984,
+   "zone": "RM",
+   "subject_frontage_m": 5.48,
+   "corner": false,
+   "required_m": 4.52,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.76,
+    2.58
+   ],
+   "neighbour_setback2_m": [
+    1.41,
+    1.14
+   ],
+   "neighbour_dist_m": [
+    0.58,
+    0.26
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    5.48
+   ],
+   "est_m": 2.67,
+   "setback2_m": 1.27,
+   "err_m": -1.85,
+   "err2_m": -3.25
+  },
+  {
+   "application_number": "A1022/16TEY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 465412,
+   "zone": "RD",
+   "subject_frontage_m": 15.21,
+   "corner": false,
+   "required_m": 5.42,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.82,
+    4.23
+   ],
+   "neighbour_setback2_m": [
+    3.38,
+    4.2
+   ],
+   "neighbour_dist_m": [
+    3.43,
+    13.16
+   ],
+   "neighbour_frontage_m": [
+    15.2,
+    7.62
+   ],
+   "est_m": 4.53,
+   "setback2_m": 3.79,
+   "err_m": -0.89,
+   "err2_m": -1.63
+  },
+  {
+   "application_number": "A1033/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 441763,
+   "zone": "R",
+   "subject_frontage_m": 6.6,
+   "corner": false,
+   "required_m": 8.78,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.45,
+    7.07
+   ],
+   "neighbour_setback2_m": [
+    6.95,
+    5.61
+   ],
+   "neighbour_dist_m": [
+    0.46,
+    2.06
+   ],
+   "neighbour_frontage_m": [
+    9.61,
+    15.11
+   ],
+   "est_m": 7.76,
+   "setback2_m": 6.28,
+   "err_m": -1.02,
+   "err2_m": -2.5
+  },
+  {
+   "application_number": "A0368/16TEY",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 54334,
+   "zone": "RM",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 5.2,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.03,
+    2.97
+   ],
+   "neighbour_setback2_m": [
+    3.57,
+    1.5
+   ],
+   "neighbour_dist_m": [
+    0.96,
+    0.11
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.63
+   ],
+   "est_m": 4,
+   "setback2_m": 2.53,
+   "err_m": -1.2,
+   "err2_m": -2.67
+  },
+  {
+   "application_number": "A1253/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 200540,
+   "zone": "RS",
+   "subject_frontage_m": 9.76,
+   "corner": false,
+   "required_m": 4.8,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.81,
+    4.58
+   ],
+   "neighbour_setback2_m": [
+    2.81,
+    3.08
+   ],
+   "neighbour_dist_m": [
+    0.19,
+    0.32
+   ],
+   "neighbour_frontage_m": [
+    9.76,
+    9.76
+   ],
+   "est_m": 3.7,
+   "setback2_m": 2.94,
+   "err_m": -1.1,
+   "err2_m": -1.86
+  },
+  {
+   "application_number": "A1260/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 85694,
+   "zone": "R",
+   "subject_frontage_m": 7.66,
+   "corner": false,
+   "required_m": 4.74,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.2,
+    4.2
+   ],
+   "neighbour_setback2_m": [
+    2.78,
+    2.8
+   ],
+   "neighbour_dist_m": [
+    0.9,
+    0
+   ],
+   "neighbour_frontage_m": [
+    6.34,
+    7.66
+   ],
+   "est_m": 4.2,
+   "setback2_m": 2.79,
+   "err_m": -0.54,
+   "err2_m": -1.95
+  },
+  {
+   "application_number": "A1261/16TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 317004,
+   "zone": "R",
+   "subject_frontage_m": 4.55,
+   "corner": false,
+   "required_m": 5.16,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.45,
+    1.93
+   ],
+   "neighbour_setback2_m": [
+    1.95,
+    0.43
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.52
+   ],
+   "neighbour_frontage_m": [
+    4.6,
+    4.58
+   ],
+   "est_m": 2.69,
+   "setback2_m": 1.19,
+   "err_m": -2.47,
+   "err2_m": -3.97
+  },
+  {
+   "application_number": "A0028/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 61014,
+   "zone": "RD",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 2.73,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.33,
+    3.22
+   ],
+   "neighbour_setback2_m": [
+    0.58,
+    1.79
+   ],
+   "neighbour_dist_m": [
+    0.33,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    5.19
+   ],
+   "est_m": 2.28,
+   "setback2_m": 1.19,
+   "err_m": -0.45,
+   "err2_m": -1.54
+  },
+  {
+   "application_number": "A0040/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 7774,
+   "zone": "RA",
+   "subject_frontage_m": 30.31,
+   "corner": false,
+   "required_m": 7.62,
+   "fya": "fya_none",
+   "n_qualifying": 0,
+   "statuses": [],
+   "neighbour_est_m": [],
+   "neighbour_setback2_m": [],
+   "neighbour_dist_m": [],
+   "neighbour_frontage_m": [],
+   "est_m": null,
+   "setback2_m": null,
+   "err_m": null,
+   "err2_m": null
+  },
+  {
+   "application_number": "A0063/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 15942,
+   "zone": "R",
+   "subject_frontage_m": 7.07,
+   "corner": false,
+   "required_m": 5.15,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.97,
+    3.29
+   ],
+   "neighbour_setback2_m": [
+    0.62,
+    1.81
+   ],
+   "neighbour_dist_m": [
+    2.69,
+    0
+   ],
+   "neighbour_frontage_m": [
+    10.67,
+    7.91
+   ],
+   "est_m": 2.63,
+   "setback2_m": 1.21,
+   "err_m": -2.52,
+   "err2_m": -3.94
+  },
+  {
+   "application_number": "A0064/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 425174,
+   "zone": "R",
+   "subject_frontage_m": 6.25,
+   "corner": false,
+   "required_m": 1.63,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.26,
+    0.71
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    1.21,
+    0
+   ],
+   "neighbour_frontage_m": [
+    6,
+    8.24
+   ],
+   "est_m": 0.49,
+   "setback2_m": 0,
+   "err_m": -1.14,
+   "err2_m": -1.63
+  },
+  {
+   "application_number": "A0058/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 474376,
+   "zone": "R",
+   "subject_frontage_m": 6.25,
+   "corner": false,
+   "required_m": 7.37,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.65,
+    8.31
+   ],
+   "neighbour_setback2_m": [
+    4.48,
+    6.91
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.94
+   ],
+   "neighbour_frontage_m": [
+    5.25,
+    11
+   ],
+   "est_m": 6.98,
+   "setback2_m": 5.69,
+   "err_m": -0.39,
+   "err2_m": -1.68
+  },
+  {
+   "application_number": "A0257/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 387458,
+   "zone": "R",
+   "subject_frontage_m": 6.61,
+   "corner": false,
+   "required_m": 3.07,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.19,
+    0.22
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0.74,
+    0
+   ],
+   "neighbour_frontage_m": [
+    6.88,
+    5.56
+   ],
+   "est_m": 0.21,
+   "setback2_m": 0,
+   "err_m": -2.86,
+   "err2_m": -3.07
+  },
+  {
+   "application_number": "A0261/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 441480,
+   "zone": "R",
+   "subject_frontage_m": 5.29,
+   "corner": false,
+   "required_m": 3.69,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.19,
+    1.7
+   ],
+   "neighbour_setback2_m": [
+    0.71,
+    0.26
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.51,
+    4.84
+   ],
+   "est_m": 1.94,
+   "setback2_m": 0.49,
+   "err_m": -1.74,
+   "err2_m": -3.2
+  },
+  {
+   "application_number": "A0265/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 382080,
+   "zone": "R",
+   "subject_frontage_m": 4.14,
+   "corner": false,
+   "required_m": 1.4,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimate_negative",
+    "estimate_negative"
+   ],
+   "neighbour_est_m": [
+    null,
+    null
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.03,
+    3.75
+   ],
+   "est_m": null,
+   "setback2_m": 0,
+   "err_m": null,
+   "err2_m": -1.4
+  },
+  {
+   "application_number": "A0265/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 382080,
+   "zone": "R",
+   "subject_frontage_m": 4.14,
+   "corner": false,
+   "required_m": 1.4,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimate_negative",
+    "estimate_negative"
+   ],
+   "neighbour_est_m": [
+    null,
+    null
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0
+   ],
+   "neighbour_frontage_m": [
+    4.03,
+    3.75
+   ],
+   "est_m": null,
+   "setback2_m": 0,
+   "err_m": null,
+   "err2_m": -1.4
+  },
+  {
+   "application_number": "A0925/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 76823,
+   "zone": "RD",
+   "subject_frontage_m": 17.33,
+   "corner": false,
+   "required_m": 18.95,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    21.27,
+    15.12
+   ],
+   "neighbour_setback2_m": [
+    20.05,
+    14
+   ],
+   "neighbour_dist_m": [
+    1.21,
+    9.01
+   ],
+   "neighbour_frontage_m": [
+    17.69,
+    25.45
+   ],
+   "est_m": 18.2,
+   "setback2_m": 17.02,
+   "err_m": -0.75,
+   "err2_m": -1.93
+  },
+  {
+   "application_number": "A0371/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 142822,
+   "zone": "RD",
+   "subject_frontage_m": 12.13,
+   "corner": true,
+   "required_m": 6.59,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.14
+   ],
+   "neighbour_setback2_m": [
+    4.65
+   ],
+   "neighbour_dist_m": [
+    0.76
+   ],
+   "neighbour_frontage_m": [
+    12.13
+   ],
+   "est_m": 6.14,
+   "setback2_m": 4.65,
+   "err_m": -0.45,
+   "err2_m": -1.94
+  },
+  {
+   "application_number": "A0396/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 326672,
+   "zone": "RD",
+   "subject_frontage_m": 16.73,
+   "corner": false,
+   "required_m": 7.95,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.46,
+    7.29
+   ],
+   "neighbour_setback2_m": [
+    2.45,
+    7.17
+   ],
+   "neighbour_dist_m": [
+    10.24,
+    1.02
+   ],
+   "neighbour_frontage_m": [
+    15.8,
+    18.59
+   ],
+   "est_m": 4.88,
+   "setback2_m": 4.81,
+   "err_m": -3.07,
+   "err2_m": -3.14
+  },
+  {
+   "application_number": "A0416/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 305166,
+   "zone": "RD",
+   "subject_frontage_m": 19.17,
+   "corner": false,
+   "required_m": 11.97,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.85,
+    16.39
+   ],
+   "neighbour_setback2_m": [
+    8.39,
+    14.94
+   ],
+   "neighbour_dist_m": [
+    0.85,
+    0.34
+   ],
+   "neighbour_frontage_m": [
+    14.61,
+    22.66
+   ],
+   "est_m": 13.12,
+   "setback2_m": 11.66,
+   "err_m": 1.15,
+   "err2_m": -0.31
+  },
+  {
+   "application_number": "A0405/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 167561,
+   "zone": "RD",
+   "subject_frontage_m": 7.73,
+   "corner": false,
+   "required_m": 5.73,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.49,
+    3.91
+   ],
+   "neighbour_setback2_m": [
+    4.76,
+    2.71
+   ],
+   "neighbour_dist_m": [
+    0.69,
+    0.73
+   ],
+   "neighbour_frontage_m": [
+    13.47,
+    7.76
+   ],
+   "est_m": 4.7,
+   "setback2_m": 3.74,
+   "err_m": -1.03,
+   "err2_m": -1.99
+  },
+  {
+   "application_number": "A0423/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 329041,
+   "zone": "RD",
+   "subject_frontage_m": 13.73,
+   "corner": false,
+   "required_m": 6.11,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.25,
+    5.98
+   ],
+   "neighbour_setback2_m": [
+    3.92,
+    5.66
+   ],
+   "neighbour_dist_m": [
+    0.89,
+    0.87
+   ],
+   "neighbour_frontage_m": [
+    13.72,
+    13.73
+   ],
+   "est_m": 5.62,
+   "setback2_m": 4.79,
+   "err_m": -0.5,
+   "err2_m": -1.32
+  },
+  {
+   "application_number": "A0420/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 49429,
+   "zone": "RD",
+   "subject_frontage_m": 23.2,
+   "corner": false,
+   "required_m": 8.43,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.65,
+    9.15
+   ],
+   "neighbour_setback2_m": [
+    9.88,
+    7.65
+   ],
+   "neighbour_dist_m": [
+    1.47,
+    0.96
+   ],
+   "neighbour_frontage_m": [
+    31.5,
+    20.26
+   ],
+   "est_m": 9.9,
+   "setback2_m": 8.77,
+   "err_m": 1.47,
+   "err2_m": 0.34
+  },
+  {
+   "application_number": "A0427/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 325145,
+   "zone": "RD",
+   "subject_frontage_m": 15.26,
+   "corner": false,
+   "required_m": 18.87,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    19.44
+   ],
+   "neighbour_setback2_m": [
+    18.15
+   ],
+   "neighbour_dist_m": [
+    3.57
+   ],
+   "neighbour_frontage_m": [
+    18.06
+   ],
+   "est_m": 19.44,
+   "setback2_m": 18.15,
+   "err_m": 0.57,
+   "err2_m": -0.72
+  },
+  {
+   "application_number": "A0429/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 51362,
+   "zone": "RD",
+   "subject_frontage_m": 12.98,
+   "corner": false,
+   "required_m": 9.13,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.7,
+    8.76
+   ],
+   "neighbour_setback2_m": [
+    7.21,
+    7.27
+   ],
+   "neighbour_dist_m": [
+    0.53,
+    3.82
+   ],
+   "neighbour_frontage_m": [
+    12.98,
+    12.99
+   ],
+   "est_m": 8.73,
+   "setback2_m": 7.24,
+   "err_m": -0.4,
+   "err2_m": -1.89
+  },
+  {
+   "application_number": "A0049/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 167571,
+   "zone": "RM",
+   "subject_frontage_m": 7.31,
+   "corner": false,
+   "required_m": 5.44,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.37,
+    3.54
+   ],
+   "neighbour_setback2_m": [
+    2.87,
+    2.04
+   ],
+   "neighbour_dist_m": [
+    0.49,
+    0.92
+   ],
+   "neighbour_frontage_m": [
+    7.5,
+    7.33
+   ],
+   "est_m": 3.96,
+   "setback2_m": 2.46,
+   "err_m": -1.49,
+   "err2_m": -2.98
+  },
+  {
+   "application_number": "A0917/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 379236,
+   "zone": "RD",
+   "subject_frontage_m": 9.3,
+   "corner": false,
+   "required_m": 6.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.33,
+    5.96
+   ],
+   "neighbour_setback2_m": [
+    3.83,
+    5.11
+   ],
+   "neighbour_dist_m": [
+    1.51,
+    0
+   ],
+   "neighbour_frontage_m": [
+    8.95,
+    11.43
+   ],
+   "est_m": 5.65,
+   "setback2_m": 4.47,
+   "err_m": -0.48,
+   "err2_m": -1.65
+  },
+  {
+   "application_number": "A0054/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 107617,
+   "zone": "RS",
+   "subject_frontage_m": 7.62,
+   "corner": false,
+   "required_m": 3.65,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.11,
+    2.52
+   ],
+   "neighbour_setback2_m": [
+    0.95,
+    1.08
+   ],
+   "neighbour_dist_m": [
+    0.69,
+    0.23
+   ],
+   "neighbour_frontage_m": [
+    7.62,
+    7.62
+   ],
+   "est_m": 2.32,
+   "setback2_m": 1.02,
+   "err_m": -1.33,
+   "err2_m": -2.63
+  },
+  {
+   "application_number": "A1134/16TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 293844,
+   "zone": "RS",
+   "subject_frontage_m": 9.12,
+   "corner": false,
+   "required_m": 8.22,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.76,
+    6.27
+   ],
+   "neighbour_setback2_m": [
+    4.46,
+    4.78
+   ],
+   "neighbour_dist_m": [
+    0.21,
+    0.22
+   ],
+   "neighbour_frontage_m": [
+    9.12,
+    5.41
+   ],
+   "est_m": 6.02,
+   "setback2_m": 4.62,
+   "err_m": -2.21,
+   "err2_m": -3.6
+  },
+  {
+   "application_number": "A0934/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 327273,
+   "zone": "RD",
+   "subject_frontage_m": 14.76,
+   "corner": false,
+   "required_m": 8.05,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.7,
+    8
+   ],
+   "neighbour_setback2_m": [
+    6.23,
+    6.5
+   ],
+   "neighbour_dist_m": [
+    0.69,
+    0.55
+   ],
+   "neighbour_frontage_m": [
+    13.66,
+    14.69
+   ],
+   "est_m": 7.85,
+   "setback2_m": 6.37,
+   "err_m": -0.2,
+   "err2_m": -1.68
+  },
+  {
+   "application_number": "A0953/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 235478,
+   "zone": "RD",
+   "subject_frontage_m": 15.76,
+   "corner": false,
+   "required_m": 7.91,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.47
+   ],
+   "neighbour_setback2_m": [
+    6.14
+   ],
+   "neighbour_dist_m": [
+    0.91
+   ],
+   "neighbour_frontage_m": [
+    15.53
+   ],
+   "est_m": 7.47,
+   "setback2_m": 6.14,
+   "err_m": -0.44,
+   "err2_m": -1.77
+  },
+  {
+   "application_number": "A0959/16EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 167450,
+   "zone": "RM",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 4.52,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.1,
+    2.06
+   ],
+   "neighbour_setback2_m": [
+    0.64,
+    0.71
+   ],
+   "neighbour_dist_m": [
+    0.38,
+    0.67
+   ],
+   "neighbour_frontage_m": [
+    7.64,
+    7.63
+   ],
+   "est_m": 2.08,
+   "setback2_m": 0.67,
+   "err_m": -2.44,
+   "err2_m": -3.85
+  },
+  {
+   "application_number": "A0967/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 481575,
+   "zone": "RD",
+   "subject_frontage_m": 12.66,
+   "corner": false,
+   "required_m": 3.82,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.49
+   ],
+   "neighbour_setback2_m": [
+    1.87
+   ],
+   "neighbour_dist_m": [
+    0.78
+   ],
+   "neighbour_frontage_m": [
+    12.99
+   ],
+   "est_m": 2.49,
+   "setback2_m": 1.87,
+   "err_m": -1.33,
+   "err2_m": -1.95
+  },
+  {
+   "application_number": "A0971/16EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 74712,
+   "zone": "RM",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 4.1,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.09,
+    1.35
+   ],
+   "neighbour_setback2_m": [
+    1.59,
+    0.49
+   ],
+   "neighbour_dist_m": [
+    1.49,
+    1.24
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.63
+   ],
+   "est_m": 2.22,
+   "setback2_m": 1.04,
+   "err_m": -1.88,
+   "err2_m": -3.06
+  },
+  {
+   "application_number": "A0792/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 280339,
+   "zone": "RD",
+   "subject_frontage_m": 22.7,
+   "corner": false,
+   "required_m": 12.22,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.17
+   ],
+   "neighbour_setback2_m": [
+    7.85
+   ],
+   "neighbour_dist_m": [
+    1.96
+   ],
+   "neighbour_frontage_m": [
+    22.7
+   ],
+   "est_m": 9.17,
+   "setback2_m": 7.85,
+   "err_m": -3.05,
+   "err2_m": -4.37
+  },
+  {
+   "application_number": "A0793/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 280339,
+   "zone": "RD",
+   "subject_frontage_m": 22.7,
+   "corner": false,
+   "required_m": 12.22,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.17
+   ],
+   "neighbour_setback2_m": [
+    7.85
+   ],
+   "neighbour_dist_m": [
+    1.96
+   ],
+   "neighbour_frontage_m": [
+    22.7
+   ],
+   "est_m": 9.17,
+   "setback2_m": 7.85,
+   "err_m": -3.05,
+   "err2_m": -4.37
+  },
+  {
+   "application_number": "A0896/16EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 378549,
+   "zone": "RM",
+   "subject_frontage_m": 7.66,
+   "corner": false,
+   "required_m": 8.56,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.9,
+    6.45
+   ],
+   "neighbour_setback2_m": [
+    6.6,
+    5.18
+   ],
+   "neighbour_dist_m": [
+    0.95,
+    0
+   ],
+   "neighbour_frontage_m": [
+    7.61,
+    7.66
+   ],
+   "est_m": 7.18,
+   "setback2_m": 5.89,
+   "err_m": -1.38,
+   "err2_m": -2.67
+  },
+  {
+   "application_number": "A0221/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 394104,
+   "zone": "R",
+   "subject_frontage_m": 7.57,
+   "corner": false,
+   "required_m": 7,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimate_out_of_bounds",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    null,
+    3.43
+   ],
+   "neighbour_setback2_m": [
+    33.73,
+    2.03
+   ],
+   "neighbour_dist_m": [
+    0.88,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.98,
+    8.1
+   ],
+   "est_m": null,
+   "setback2_m": 17.88,
+   "err_m": null,
+   "err2_m": 10.88
+  },
+  {
+   "application_number": "A0264/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 97110,
+   "zone": "RD",
+   "subject_frontage_m": 14.38,
+   "corner": true,
+   "required_m": 8.47,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7
+   ],
+   "neighbour_setback2_m": [
+    5.58
+   ],
+   "neighbour_dist_m": [
+    0.96
+   ],
+   "neighbour_frontage_m": [
+    13.37
+   ],
+   "est_m": 7,
+   "setback2_m": 5.58,
+   "err_m": -1.47,
+   "err2_m": -2.89
+  },
+  {
+   "application_number": "A0276/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 264659,
+   "zone": null,
+   "subject_frontage_m": 12.16,
+   "corner": false,
+   "required_m": 7.73,
+   "fya": "fya_none",
+   "n_qualifying": 0,
+   "statuses": [],
+   "neighbour_est_m": [],
+   "neighbour_setback2_m": [],
+   "neighbour_dist_m": [],
+   "neighbour_frontage_m": [],
+   "est_m": null,
+   "setback2_m": null,
+   "err_m": null,
+   "err2_m": null
+  },
+  {
+   "application_number": "A0286/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 328764,
+   "zone": "RD",
+   "subject_frontage_m": 12.17,
+   "corner": false,
+   "required_m": 6.3,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.82,
+    6.1
+   ],
+   "neighbour_setback2_m": [
+    4.44,
+    4.72
+   ],
+   "neighbour_dist_m": [
+    0.77,
+    1
+   ],
+   "neighbour_frontage_m": [
+    12.17,
+    12.17
+   ],
+   "est_m": 5.96,
+   "setback2_m": 4.58,
+   "err_m": -0.34,
+   "err2_m": -1.72
+  },
+  {
+   "application_number": "A0310/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 28131,
+   "zone": "RM",
+   "subject_frontage_m": 12.5,
+   "corner": false,
+   "required_m": 7.96,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.82,
+    6.16
+   ],
+   "neighbour_setback2_m": [
+    6.54,
+    5.43
+   ],
+   "neighbour_dist_m": [
+    1.57,
+    2.51
+   ],
+   "neighbour_frontage_m": [
+    12.5,
+    12.5
+   ],
+   "est_m": 6.99,
+   "setback2_m": 5.99,
+   "err_m": -0.97,
+   "err2_m": -1.97
+  },
+  {
+   "application_number": "A0188/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 260131,
+   "zone": "RD",
+   "subject_frontage_m": 12.71,
+   "corner": true,
+   "required_m": 10.52,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.65,
+    10.78
+   ],
+   "neighbour_setback2_m": [
+    7.41,
+    9.34
+   ],
+   "neighbour_dist_m": [
+    1.82,
+    2.95
+   ],
+   "neighbour_frontage_m": [
+    12.71,
+    12.71
+   ],
+   "est_m": 9.72,
+   "setback2_m": 8.37,
+   "err_m": -0.8,
+   "err2_m": -2.15
+  },
+  {
+   "application_number": "A0218/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 256713,
+   "zone": "RD",
+   "subject_frontage_m": 15.83,
+   "corner": false,
+   "required_m": 12.55,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.26,
+    7.64
+   ],
+   "neighbour_setback2_m": [
+    8.9,
+    6.55
+   ],
+   "neighbour_dist_m": [
+    1.22,
+    0.56
+   ],
+   "neighbour_frontage_m": [
+    17.13,
+    19.28
+   ],
+   "est_m": 8.95,
+   "setback2_m": 7.73,
+   "err_m": -3.6,
+   "err2_m": -4.82
+  },
+  {
+   "application_number": "A0316/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 73995,
+   "zone": "RD",
+   "subject_frontage_m": 16.35,
+   "corner": false,
+   "required_m": 7.8,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.59,
+    7.14
+   ],
+   "neighbour_setback2_m": [
+    6.29,
+    5.68
+   ],
+   "neighbour_dist_m": [
+    1.05,
+    0.73
+   ],
+   "neighbour_frontage_m": [
+    16.4,
+    16.35
+   ],
+   "est_m": 7.37,
+   "setback2_m": 5.98,
+   "err_m": -0.43,
+   "err2_m": -1.82
+  },
+  {
+   "application_number": "A0344/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 51294,
+   "zone": "RD",
+   "subject_frontage_m": 12.17,
+   "corner": false,
+   "required_m": 10.02,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.6,
+    9.68
+   ],
+   "neighbour_setback2_m": [
+    8.56,
+    8.43
+   ],
+   "neighbour_dist_m": [
+    1.94,
+    1.7
+   ],
+   "neighbour_frontage_m": [
+    12.17,
+    12.17
+   ],
+   "est_m": 9.64,
+   "setback2_m": 8.5,
+   "err_m": -0.38,
+   "err2_m": -1.52
+  },
+  {
+   "application_number": "A0266/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 258278,
+   "zone": "RD",
+   "subject_frontage_m": 17.12,
+   "corner": false,
+   "required_m": 7.74,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.96,
+    7.47
+   ],
+   "neighbour_setback2_m": [
+    4.5,
+    6.01
+   ],
+   "neighbour_dist_m": [
+    1.19,
+    0.53
+   ],
+   "neighbour_frontage_m": [
+    15.83,
+    15.6
+   ],
+   "est_m": 6.72,
+   "setback2_m": 5.25,
+   "err_m": -1.03,
+   "err2_m": -2.49
+  },
+  {
+   "application_number": "A0370/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 143222,
+   "zone": "RD",
+   "subject_frontage_m": 12.91,
+   "corner": false,
+   "required_m": 8.87,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.93
+   ],
+   "neighbour_setback2_m": [
+    5.51
+   ],
+   "neighbour_dist_m": [
+    0.63
+   ],
+   "neighbour_frontage_m": [
+    12.91
+   ],
+   "est_m": 6.93,
+   "setback2_m": 5.51,
+   "err_m": -1.94,
+   "err2_m": -3.36
+  },
+  {
+   "application_number": "A0393/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 214299,
+   "zone": "RM",
+   "subject_frontage_m": 15.24,
+   "corner": false,
+   "required_m": 5.8,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.66,
+    5.76
+   ],
+   "neighbour_setback2_m": [
+    4.19,
+    4.92
+   ],
+   "neighbour_dist_m": [
+    4.12,
+    2.41
+   ],
+   "neighbour_frontage_m": [
+    7.61,
+    15.21
+   ],
+   "est_m": 5.71,
+   "setback2_m": 4.55,
+   "err_m": -0.09,
+   "err2_m": -1.25
+  },
+  {
+   "application_number": "A0428/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 281185,
+   "zone": "RD",
+   "subject_frontage_m": 15.23,
+   "corner": false,
+   "required_m": 9.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.44,
+    9.85
+   ],
+   "neighbour_setback2_m": [
+    7,
+    8.41
+   ],
+   "neighbour_dist_m": [
+    1.25,
+    2.18
+   ],
+   "neighbour_frontage_m": [
+    15.23,
+    26.36
+   ],
+   "est_m": 9.15,
+   "setback2_m": 7.71,
+   "err_m": 0.03,
+   "err2_m": -1.41
+  },
+  {
+   "application_number": "A0447/17EYK",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 463596,
+   "zone": "RD",
+   "subject_frontage_m": 20.61,
+   "corner": false,
+   "required_m": 13.24,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    13.17
+   ],
+   "neighbour_setback2_m": [
+    12.6
+   ],
+   "neighbour_dist_m": [
+    11.58
+   ],
+   "neighbour_frontage_m": [
+    32.53
+   ],
+   "est_m": 13.17,
+   "setback2_m": 12.6,
+   "err_m": -0.07,
+   "err2_m": -0.64
+  },
+  {
+   "application_number": "A0501/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 213370,
+   "zone": "RD",
+   "subject_frontage_m": 16.79,
+   "corner": false,
+   "required_m": 12.46,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    14.44
+   ],
+   "neighbour_setback2_m": [
+    13.25
+   ],
+   "neighbour_dist_m": [
+    0.89
+   ],
+   "neighbour_frontage_m": [
+    16.49
+   ],
+   "est_m": 14.44,
+   "setback2_m": 13.25,
+   "err_m": 1.98,
+   "err2_m": 0.79
+  },
+  {
+   "application_number": "A0483/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 329826,
+   "zone": "RD",
+   "subject_frontage_m": 10.17,
+   "corner": false,
+   "required_m": 4.67,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.88,
+    3.7
+   ],
+   "neighbour_setback2_m": [
+    3.61,
+    3.04
+   ],
+   "neighbour_dist_m": [
+    0.23,
+    0.01
+   ],
+   "neighbour_frontage_m": [
+    15.25,
+    10.17
+   ],
+   "est_m": 4.29,
+   "setback2_m": 3.33,
+   "err_m": -0.38,
+   "err2_m": -1.34
+  },
+  {
+   "application_number": "A0554/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 189032,
+   "zone": "RD",
+   "subject_frontage_m": 12.51,
+   "corner": false,
+   "required_m": 6.7,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.94,
+    5.53
+   ],
+   "neighbour_setback2_m": [
+    4.56,
+    4.36
+   ],
+   "neighbour_dist_m": [
+    2.01,
+    0
+   ],
+   "neighbour_frontage_m": [
+    12.51,
+    12.51
+   ],
+   "est_m": 5.74,
+   "setback2_m": 4.46,
+   "err_m": -0.96,
+   "err2_m": -2.24
+  },
+  {
+   "application_number": "A0632/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 4186,
+   "zone": "RD",
+   "subject_frontage_m": 14.59,
+   "corner": true,
+   "required_m": 7.59,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.76
+   ],
+   "neighbour_setback2_m": [
+    5.32
+   ],
+   "neighbour_dist_m": [
+    1.74
+   ],
+   "neighbour_frontage_m": [
+    11.27
+   ],
+   "est_m": 6.76,
+   "setback2_m": 5.32,
+   "err_m": -0.83,
+   "err2_m": -2.27
+  },
+  {
+   "application_number": "A0199/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 280606,
+   "zone": "RD",
+   "subject_frontage_m": 26.71,
+   "corner": false,
+   "required_m": 7.88,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.25,
+    5.97
+   ],
+   "neighbour_setback2_m": [
+    4.82,
+    4.53
+   ],
+   "neighbour_dist_m": [
+    1.11,
+    1.11
+   ],
+   "neighbour_frontage_m": [
+    17,
+    18.76
+   ],
+   "est_m": 6.11,
+   "setback2_m": 4.67,
+   "err_m": -1.77,
+   "err2_m": -3.21
+  },
+  {
+   "application_number": "A0457/17TEY",
+   "cited": "10.5.40.70(1)(A)",
+   "parcel_id": 241311,
+   "zone": "R",
+   "subject_frontage_m": 13.18,
+   "corner": false,
+   "required_m": 18.01,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    29.28
+   ],
+   "neighbour_setback2_m": [
+    27.79
+   ],
+   "neighbour_dist_m": [
+    0.98
+   ],
+   "neighbour_frontage_m": [
+    12
+   ],
+   "est_m": 29.28,
+   "setback2_m": 27.79,
+   "err_m": 11.27,
+   "err2_m": 9.78
+  },
+  {
+   "application_number": "A0476/17TEY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 194757,
+   "zone": "R",
+   "subject_frontage_m": 4.9,
+   "corner": false,
+   "required_m": 2.2,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    0.96,
+    0.64
+   ],
+   "neighbour_setback2_m": [
+    0,
+    0
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.56
+   ],
+   "neighbour_frontage_m": [
+    4.48,
+    5.82
+   ],
+   "est_m": 0.8,
+   "setback2_m": 0,
+   "err_m": -1.4,
+   "err2_m": -2.2
+  },
+  {
+   "application_number": "A0484/17TEY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 146706,
+   "zone": "RM",
+   "subject_frontage_m": 5.08,
+   "corner": false,
+   "required_m": 4.05,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.48,
+    3.18
+   ],
+   "neighbour_setback2_m": [
+    1.02,
+    2.31
+   ],
+   "neighbour_dist_m": [
+    0.16,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.09,
+    7.63
+   ],
+   "est_m": 2.83,
+   "setback2_m": 1.66,
+   "err_m": -1.22,
+   "err2_m": -2.39
+  },
+  {
+   "application_number": "A0506/17TEY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 383503,
+   "zone": "R",
+   "subject_frontage_m": 7.12,
+   "corner": false,
+   "required_m": 8.87,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.66,
+    8.32
+   ],
+   "neighbour_setback2_m": [
+    5.17,
+    6.82
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.62
+   ],
+   "neighbour_frontage_m": [
+    8.72,
+    7.41
+   ],
+   "est_m": 7.49,
+   "setback2_m": 6,
+   "err_m": -1.38,
+   "err2_m": -2.87
+  },
+  {
+   "application_number": "A1178/16TEY",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 123651,
+   "zone": "RM",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 4.33,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.73,
+    1.94
+   ],
+   "neighbour_setback2_m": [
+    0.23,
+    0.44
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.79
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.63
+   ],
+   "est_m": 1.84,
+   "setback2_m": 0.34,
+   "err_m": -2.49,
+   "err2_m": -3.99
+  },
+  {
+   "application_number": "A0105/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 143225,
+   "zone": "RD",
+   "subject_frontage_m": 12.61,
+   "corner": true,
+   "required_m": 9.57,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.81
+   ],
+   "neighbour_setback2_m": [
+    7.39
+   ],
+   "neighbour_dist_m": [
+    0.46
+   ],
+   "neighbour_frontage_m": [
+    12.61
+   ],
+   "est_m": 8.81,
+   "setback2_m": 7.39,
+   "err_m": -0.76,
+   "err2_m": -2.18
+  },
+  {
+   "application_number": "A0130/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 166140,
+   "zone": "RD",
+   "subject_frontage_m": 14.9,
+   "corner": false,
+   "required_m": 7.56,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.16
+   ],
+   "neighbour_setback2_m": [
+    4.15
+   ],
+   "neighbour_dist_m": [
+    1.16
+   ],
+   "neighbour_frontage_m": [
+    14.93
+   ],
+   "est_m": 5.16,
+   "setback2_m": 4.15,
+   "err_m": -2.4,
+   "err2_m": -3.41
+  },
+  {
+   "application_number": "A0141/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 281279,
+   "zone": "RD",
+   "subject_frontage_m": 16.74,
+   "corner": true,
+   "required_m": 8.42,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.69
+   ],
+   "neighbour_setback2_m": [
+    5.63
+   ],
+   "neighbour_dist_m": [
+    6.41
+   ],
+   "neighbour_frontage_m": [
+    16.73
+   ],
+   "est_m": 5.69,
+   "setback2_m": 5.63,
+   "err_m": -2.73,
+   "err2_m": -2.79
+  },
+  {
+   "application_number": "A0144/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 190702,
+   "zone": "RM",
+   "subject_frontage_m": 10.05,
+   "corner": false,
+   "required_m": 7.9,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.84
+   ],
+   "neighbour_setback2_m": [
+    2.65
+   ],
+   "neighbour_dist_m": [
+    11.33
+   ],
+   "neighbour_frontage_m": [
+    9.22
+   ],
+   "est_m": 2.84,
+   "setback2_m": 2.65,
+   "err_m": -5.06,
+   "err2_m": -5.25
+  },
+  {
+   "application_number": "A0147/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 26109,
+   "zone": "RD",
+   "subject_frontage_m": 13.73,
+   "corner": false,
+   "required_m": 8.54,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.15,
+    8.42
+   ],
+   "neighbour_setback2_m": [
+    5.85,
+    7.15
+   ],
+   "neighbour_dist_m": [
+    3.07,
+    1.4
+   ],
+   "neighbour_frontage_m": [
+    13.73,
+    13.72
+   ],
+   "est_m": 7.79,
+   "setback2_m": 6.5,
+   "err_m": -0.75,
+   "err2_m": -2.04
+  },
+  {
+   "application_number": "A0243/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 188332,
+   "zone": "RD",
+   "subject_frontage_m": 23.42,
+   "corner": false,
+   "required_m": 23.81,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    23.91,
+    21.51
+   ],
+   "neighbour_setback2_m": [
+    23.19,
+    20.77
+   ],
+   "neighbour_dist_m": [
+    0.02,
+    1.88
+   ],
+   "neighbour_frontage_m": [
+    25.7,
+    23.9
+   ],
+   "est_m": 22.71,
+   "setback2_m": 21.98,
+   "err_m": -1.1,
+   "err2_m": -1.83
+  },
+  {
+   "application_number": "A0177/17EYK",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 141074,
+   "zone": "RD",
+   "subject_frontage_m": 14.56,
+   "corner": false,
+   "required_m": 13.76,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    16.11,
+    15.16
+   ],
+   "neighbour_setback2_m": [
+    15.01,
+    16.97
+   ],
+   "neighbour_dist_m": [
+    1.73,
+    1.06
+   ],
+   "neighbour_frontage_m": [
+    23,
+    14.4
+   ],
+   "est_m": 15.64,
+   "setback2_m": 15.99,
+   "err_m": 1.88,
+   "err2_m": 2.23
+  },
+  {
+   "application_number": "A535/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 74766,
+   "zone": "RD",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 6.09,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.52,
+    3.59
+   ],
+   "neighbour_setback2_m": [
+    2.06,
+    2.1
+   ],
+   "neighbour_dist_m": [
+    0.95,
+    0.1
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.63
+   ],
+   "est_m": 3.56,
+   "setback2_m": 2.08,
+   "err_m": -2.53,
+   "err2_m": -4.01
+  },
+  {
+   "application_number": "A0113/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 162971,
+   "zone": "RD",
+   "subject_frontage_m": 18.09,
+   "corner": false,
+   "required_m": 7.21,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.81,
+    7.13
+   ],
+   "neighbour_setback2_m": [
+    5.41,
+    6.18
+   ],
+   "neighbour_dist_m": [
+    1.73,
+    1.13
+   ],
+   "neighbour_frontage_m": [
+    20.06,
+    17.25
+   ],
+   "est_m": 6.97,
+   "setback2_m": 5.79,
+   "err_m": -0.24,
+   "err2_m": -1.42
+  },
+  {
+   "application_number": "A0114/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 236100,
+   "zone": "RD",
+   "subject_frontage_m": 21,
+   "corner": false,
+   "required_m": 9.46,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    11.78,
+    4.07
+   ],
+   "neighbour_setback2_m": [
+    11.53,
+    3.36
+   ],
+   "neighbour_dist_m": [
+    0.62,
+    11.03
+   ],
+   "neighbour_frontage_m": [
+    19.03,
+    15.82
+   ],
+   "est_m": 7.93,
+   "setback2_m": 7.45,
+   "err_m": -1.54,
+   "err2_m": -2.01
+  },
+  {
+   "application_number": "A0124/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 27924,
+   "zone": "RM",
+   "subject_frontage_m": 12.2,
+   "corner": false,
+   "required_m": 7.77,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.43,
+    7.51
+   ],
+   "neighbour_setback2_m": [
+    5.98,
+    6.08
+   ],
+   "neighbour_dist_m": [
+    4.07,
+    0.83
+   ],
+   "neighbour_frontage_m": [
+    12.2,
+    12.2
+   ],
+   "est_m": 7.47,
+   "setback2_m": 6.03,
+   "err_m": -0.3,
+   "err2_m": -1.74
+  },
+  {
+   "application_number": "A0691/16EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 120473,
+   "zone": "RD",
+   "subject_frontage_m": 15.45,
+   "corner": false,
+   "required_m": 8.24,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.01,
+    7.81
+   ],
+   "neighbour_setback2_m": [
+    5.92,
+    6.49
+   ],
+   "neighbour_dist_m": [
+    1.18,
+    0
+   ],
+   "neighbour_frontage_m": [
+    15.45,
+    15.45
+   ],
+   "est_m": 7.41,
+   "setback2_m": 6.21,
+   "err_m": -0.83,
+   "err2_m": -2.03
+  },
+  {
+   "application_number": "A0079/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 3501,
+   "zone": "RD",
+   "subject_frontage_m": 15.2,
+   "corner": false,
+   "required_m": 7.57,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.44,
+    6.37
+   ],
+   "neighbour_setback2_m": [
+    6.14,
+    6.34
+   ],
+   "neighbour_dist_m": [
+    1.15,
+    1.64
+   ],
+   "neighbour_frontage_m": [
+    15.21,
+    15.85
+   ],
+   "est_m": 6.91,
+   "setback2_m": 6.24,
+   "err_m": -0.66,
+   "err2_m": -1.33
+  },
+  {
+   "application_number": "A0086/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 97163,
+   "zone": "RD",
+   "subject_frontage_m": 15.56,
+   "corner": false,
+   "required_m": 7.82,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.5,
+    7.16
+   ],
+   "neighbour_setback2_m": [
+    6.04,
+    5.68
+   ],
+   "neighbour_dist_m": [
+    1.17,
+    0.26
+   ],
+   "neighbour_frontage_m": [
+    15.56,
+    15.56
+   ],
+   "est_m": 7.33,
+   "setback2_m": 5.86,
+   "err_m": -0.49,
+   "err2_m": -1.96
+  },
+  {
+   "application_number": "A0462/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 166533,
+   "zone": "RD",
+   "subject_frontage_m": 15.22,
+   "corner": false,
+   "required_m": 7.62,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.32,
+    7.11
+   ],
+   "neighbour_setback2_m": [
+    5.96,
+    5.68
+   ],
+   "neighbour_dist_m": [
+    0.98,
+    0.57
+   ],
+   "neighbour_frontage_m": [
+    15.22,
+    15.22
+   ],
+   "est_m": 7.22,
+   "setback2_m": 5.82,
+   "err_m": -0.41,
+   "err2_m": -1.8
+  },
+  {
+   "application_number": "A0499/17EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 329767,
+   "zone": "RM",
+   "subject_frontage_m": 8.7,
+   "corner": false,
+   "required_m": 4.66,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.47,
+    1.71
+   ],
+   "neighbour_setback2_m": [
+    0.42,
+    0.58
+   ],
+   "neighbour_dist_m": [
+    0.42,
+    0.89
+   ],
+   "neighbour_frontage_m": [
+    8.7,
+    8.7
+   ],
+   "est_m": 1.59,
+   "setback2_m": 0.5,
+   "err_m": -3.07,
+   "err2_m": -4.16
+  },
+  {
+   "application_number": "A0503/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 234770,
+   "zone": "RD",
+   "subject_frontage_m": 14.17,
+   "corner": false,
+   "required_m": 7.9,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.06,
+    7.45
+   ],
+   "neighbour_setback2_m": [
+    7.85,
+    6.43
+   ],
+   "neighbour_dist_m": [
+    0.6,
+    1.32
+   ],
+   "neighbour_frontage_m": [
+    14.73,
+    15.89
+   ],
+   "est_m": 8.26,
+   "setback2_m": 7.14,
+   "err_m": 0.36,
+   "err2_m": -0.76
+  },
+  {
+   "application_number": "A0688/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 453987,
+   "zone": "R",
+   "subject_frontage_m": 6.66,
+   "corner": false,
+   "required_m": 6.24,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.63,
+    2.77
+   ],
+   "neighbour_setback2_m": [
+    3.43,
+    1.71
+   ],
+   "neighbour_dist_m": [
+    0,
+    0.46
+   ],
+   "neighbour_frontage_m": [
+    5.92,
+    5.61
+   ],
+   "est_m": 3.7,
+   "setback2_m": 2.57,
+   "err_m": -2.54,
+   "err2_m": -3.67
+  },
+  {
+   "application_number": "A0989/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 50486,
+   "zone": "RD",
+   "subject_frontage_m": 15.23,
+   "corner": false,
+   "required_m": 7.7,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.94,
+    7.55
+   ],
+   "neighbour_setback2_m": [
+    6.11,
+    6.09
+   ],
+   "neighbour_dist_m": [
+    4.03,
+    0.29
+   ],
+   "neighbour_frontage_m": [
+    15.23,
+    15.23
+   ],
+   "est_m": 7.25,
+   "setback2_m": 6.1,
+   "err_m": -0.46,
+   "err2_m": -1.6
+  },
+  {
+   "application_number": "A1001/16EYK",
+   "cited": "10.80.40.70(1)",
+   "parcel_id": 283098,
+   "zone": "RM",
+   "subject_frontage_m": 7.61,
+   "corner": false,
+   "required_m": 5.33,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.79,
+    3.98
+   ],
+   "neighbour_setback2_m": [
+    1.51,
+    2.72
+   ],
+   "neighbour_dist_m": [
+    0.84,
+    0.21
+   ],
+   "neighbour_frontage_m": [
+    7.61,
+    7.6
+   ],
+   "est_m": 3.39,
+   "setback2_m": 2.11,
+   "err_m": -1.95,
+   "err2_m": -3.22
+  },
+  {
+   "application_number": "A0029/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 50883,
+   "zone": "RD",
+   "subject_frontage_m": 15.18,
+   "corner": true,
+   "required_m": 6.73,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.45
+   ],
+   "neighbour_setback2_m": [
+    5
+   ],
+   "neighbour_dist_m": [
+    0.66
+   ],
+   "neighbour_frontage_m": [
+    15.18
+   ],
+   "est_m": 6.45,
+   "setback2_m": 5,
+   "err_m": -0.28,
+   "err2_m": -1.73
+  },
+  {
+   "application_number": "A0046/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 4134,
+   "zone": "RD",
+   "subject_frontage_m": 17.19,
+   "corner": false,
+   "required_m": 6.16,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.4,
+    4.98
+   ],
+   "neighbour_setback2_m": [
+    4.57,
+    3.72
+   ],
+   "neighbour_dist_m": [
+    0.75,
+    0.93
+   ],
+   "neighbour_frontage_m": [
+    17.64,
+    11.41
+   ],
+   "est_m": 5.19,
+   "setback2_m": 4.14,
+   "err_m": -0.97,
+   "err2_m": -2.02
+  },
+  {
+   "application_number": "A0073/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 329538,
+   "zone": "RD",
+   "subject_frontage_m": 12.06,
+   "corner": false,
+   "required_m": 7.82,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.83,
+    6.81
+   ],
+   "neighbour_setback2_m": [
+    5.38,
+    5.57
+   ],
+   "neighbour_dist_m": [
+    2.61,
+    1.14
+   ],
+   "neighbour_frontage_m": [
+    12.1,
+    17
+   ],
+   "est_m": 6.32,
+   "setback2_m": 5.47,
+   "err_m": -1.5,
+   "err2_m": -2.35
+  },
+  {
+   "application_number": "A0077/17EYK",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 328627,
+   "zone": "RD",
+   "subject_frontage_m": 14.19,
+   "corner": false,
+   "required_m": 7.45,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.15
+   ],
+   "neighbour_setback2_m": [
+    7.05
+   ],
+   "neighbour_dist_m": [
+    1.32
+   ],
+   "neighbour_frontage_m": [
+    17.06
+   ],
+   "est_m": 8.15,
+   "setback2_m": 7.05,
+   "err_m": 0.7,
+   "err2_m": -0.4
+  },
+  {
+   "application_number": "A0112/17EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 55337,
+   "zone": "RM",
+   "subject_frontage_m": 5.41,
+   "corner": false,
+   "required_m": 3.96,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.97,
+    2.04
+   ],
+   "neighbour_setback2_m": [
+    0.58,
+    0.63
+   ],
+   "neighbour_dist_m": [
+    0.45,
+    0
+   ],
+   "neighbour_frontage_m": [
+    5.39,
+    5.42
+   ],
+   "est_m": 2.01,
+   "setback2_m": 0.6,
+   "err_m": -1.95,
+   "err2_m": -3.36
+  },
+  {
+   "application_number": "A0060/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 122720,
+   "zone": "RD",
+   "subject_frontage_m": 15.14,
+   "corner": false,
+   "required_m": 7.64,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.97,
+    7.69
+   ],
+   "neighbour_setback2_m": [
+    4.58,
+    7.08
+   ],
+   "neighbour_dist_m": [
+    0.99,
+    1.56
+   ],
+   "neighbour_frontage_m": [
+    15.19,
+    15.12
+   ],
+   "est_m": 6.83,
+   "setback2_m": 5.83,
+   "err_m": -0.81,
+   "err2_m": -1.81
+  },
+  {
+   "application_number": "A0161/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 255359,
+   "zone": "RD",
+   "subject_frontage_m": 14.52,
+   "corner": false,
+   "required_m": 7.07,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.3,
+    7.19
+   ],
+   "neighbour_setback2_m": [
+    4.96,
+    5.9
+   ],
+   "neighbour_dist_m": [
+    1.5,
+    0.72
+   ],
+   "neighbour_frontage_m": [
+    17.03,
+    17.7
+   ],
+   "est_m": 6.75,
+   "setback2_m": 5.43,
+   "err_m": -0.33,
+   "err2_m": -1.64
+  },
+  {
+   "application_number": "A0146/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 354789,
+   "zone": "RD",
+   "subject_frontage_m": 10.35,
+   "corner": false,
+   "required_m": 4.62,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.52,
+    4.26
+   ],
+   "neighbour_setback2_m": [
+    3.02,
+    2.76
+   ],
+   "neighbour_dist_m": [
+    0.38,
+    0.57
+   ],
+   "neighbour_frontage_m": [
+    10.35,
+    10.35
+   ],
+   "est_m": 4.39,
+   "setback2_m": 2.89,
+   "err_m": -0.23,
+   "err2_m": -1.73
+  },
+  {
+   "application_number": "A0632/16EYK",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 3833,
+   "zone": "RS",
+   "subject_frontage_m": 9.14,
+   "corner": false,
+   "required_m": 7.07,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.32,
+    5.92
+   ],
+   "neighbour_setback2_m": [
+    7,
+    4.71
+   ],
+   "neighbour_dist_m": [
+    3.69,
+    0
+   ],
+   "neighbour_frontage_m": [
+    9.14,
+    9.14
+   ],
+   "est_m": 7.12,
+   "setback2_m": 5.86,
+   "err_m": 0.05,
+   "err2_m": -1.21
+  },
+  {
+   "application_number": "A0780/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 458613,
+   "zone": "RD",
+   "subject_frontage_m": 17.96,
+   "corner": false,
+   "required_m": 6.45,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    1.9,
+    8.72
+   ],
+   "neighbour_setback2_m": [
+    1.57,
+    8.23
+   ],
+   "neighbour_dist_m": [
+    8.44,
+    0.94
+   ],
+   "neighbour_frontage_m": [
+    17.93,
+    16.26
+   ],
+   "est_m": 5.31,
+   "setback2_m": 4.9,
+   "err_m": -1.14,
+   "err2_m": -1.55
+  },
+  {
+   "application_number": "A0783/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 238448,
+   "zone": "RD",
+   "subject_frontage_m": 15.28,
+   "corner": true,
+   "required_m": 8.21,
+   "fya": "fya_none",
+   "n_qualifying": 0,
+   "statuses": [],
+   "neighbour_est_m": [],
+   "neighbour_setback2_m": [],
+   "neighbour_dist_m": [],
+   "neighbour_frontage_m": [],
+   "est_m": null,
+   "setback2_m": null,
+   "err_m": null,
+   "err2_m": null
+  },
+  {
+   "application_number": "A0786/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 128722,
+   "zone": "RD",
+   "subject_frontage_m": 27.07,
+   "corner": false,
+   "required_m": 10.04,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    11.27,
+    7.23
+   ],
+   "neighbour_setback2_m": [
+    9.98,
+    5.8
+   ],
+   "neighbour_dist_m": [
+    1.75,
+    1.62
+   ],
+   "neighbour_frontage_m": [
+    17.64,
+    19.77
+   ],
+   "est_m": 9.25,
+   "setback2_m": 7.89,
+   "err_m": -0.79,
+   "err2_m": -2.15
+  },
+  {
+   "application_number": "A0793/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 314582,
+   "zone": "ON",
+   "subject_frontage_m": 19.1,
+   "corner": false,
+   "required_m": 13.35,
+   "fya": "fya_none",
+   "n_qualifying": 0,
+   "statuses": [],
+   "neighbour_est_m": [],
+   "neighbour_setback2_m": [],
+   "neighbour_dist_m": [],
+   "neighbour_frontage_m": [],
+   "est_m": null,
+   "setback2_m": null,
+   "err_m": null,
+   "err2_m": null
+  },
+  {
+   "application_number": "A0811/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 261269,
+   "zone": "RD",
+   "subject_frontage_m": 11.02,
+   "corner": false,
+   "required_m": 9.24,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.82,
+    9.78
+   ],
+   "neighbour_setback2_m": [
+    6.35,
+    8.31
+   ],
+   "neighbour_dist_m": [
+    0.63,
+    0.61
+   ],
+   "neighbour_frontage_m": [
+    10,
+    11.1
+   ],
+   "est_m": 8.8,
+   "setback2_m": 7.33,
+   "err_m": -0.44,
+   "err2_m": -1.91
+  },
+  {
+   "application_number": "A0801/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 33804,
+   "zone": "RD",
+   "subject_frontage_m": 30.41,
+   "corner": false,
+   "required_m": 6.39,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.91
+   ],
+   "neighbour_setback2_m": [
+    6.44
+   ],
+   "neighbour_dist_m": [
+    7.8
+   ],
+   "neighbour_frontage_m": [
+    33.46
+   ],
+   "est_m": 6.91,
+   "setback2_m": 6.44,
+   "err_m": 0.52,
+   "err2_m": 0.05
+  },
+  {
+   "application_number": "A0658/17NY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 103480,
+   "zone": "RD",
+   "subject_frontage_m": 12.16,
+   "corner": true,
+   "required_m": 7.56,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.21,
+    5.45
+   ],
+   "neighbour_setback2_m": [
+    5.37,
+    4.03
+   ],
+   "neighbour_dist_m": [
+    1.28,
+    0.09
+   ],
+   "neighbour_frontage_m": [
+    12.16,
+    12.16
+   ],
+   "est_m": 5.83,
+   "setback2_m": 4.7,
+   "err_m": -1.73,
+   "err2_m": -2.86
+  },
+  {
+   "application_number": "A0691/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 82206,
+   "zone": "RD",
+   "subject_frontage_m": 23.11,
+   "corner": false,
+   "required_m": 8.86,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.63
+   ],
+   "neighbour_setback2_m": [
+    8.44
+   ],
+   "neighbour_dist_m": [
+    1.44
+   ],
+   "neighbour_frontage_m": [
+    28.84
+   ],
+   "est_m": 9.63,
+   "setback2_m": 8.44,
+   "err_m": 0.77,
+   "err2_m": -0.42
+  },
+  {
+   "application_number": "A0704/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 221795,
+   "zone": "RD",
+   "subject_frontage_m": 21.52,
+   "corner": false,
+   "required_m": 9.22,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    12.18,
+    8.47
+   ],
+   "neighbour_setback2_m": [
+    10.75,
+    7.98
+   ],
+   "neighbour_dist_m": [
+    2.22,
+    1.15
+   ],
+   "neighbour_frontage_m": [
+    22.8,
+    22.07
+   ],
+   "est_m": 10.33,
+   "setback2_m": 9.37,
+   "err_m": 1.1,
+   "err2_m": 0.15
+  },
+  {
+   "application_number": "A0715/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 174138,
+   "zone": "RD",
+   "subject_frontage_m": 18.22,
+   "corner": false,
+   "required_m": 7.86,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.36,
+    7.01
+   ],
+   "neighbour_setback2_m": [
+    6.9,
+    5.51
+   ],
+   "neighbour_dist_m": [
+    0.93,
+    1.01
+   ],
+   "neighbour_frontage_m": [
+    19.78,
+    16.99
+   ],
+   "est_m": 7.19,
+   "setback2_m": 6.21,
+   "err_m": -0.67,
+   "err2_m": -1.65
+  },
+  {
+   "application_number": "A0717/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 149059,
+   "zone": "RD",
+   "subject_frontage_m": 15.82,
+   "corner": false,
+   "required_m": 8.05,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.87,
+    7.87
+   ],
+   "neighbour_setback2_m": [
+    5.5,
+    6.48
+   ],
+   "neighbour_dist_m": [
+    0.51,
+    1.05
+   ],
+   "neighbour_frontage_m": [
+    15.83,
+    15.82
+   ],
+   "est_m": 7.37,
+   "setback2_m": 5.99,
+   "err_m": -0.68,
+   "err2_m": -2.06
+  },
+  {
+   "application_number": "A0718/17NY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 106947,
+   "zone": "RD",
+   "subject_frontage_m": 12.13,
+   "corner": false,
+   "required_m": 6.36,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.08,
+    6.16
+   ],
+   "neighbour_setback2_m": [
+    4.84,
+    4.83
+   ],
+   "neighbour_dist_m": [
+    0.62,
+    3.66
+   ],
+   "neighbour_frontage_m": [
+    12.13,
+    12.13
+   ],
+   "est_m": 6.12,
+   "setback2_m": 4.84,
+   "err_m": -0.24,
+   "err2_m": -1.52
+  },
+  {
+   "application_number": "A0513/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 33852,
+   "zone": "RD",
+   "subject_frontage_m": 15.21,
+   "corner": false,
+   "required_m": 8.369,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.14,
+    7.25
+   ],
+   "neighbour_setback2_m": [
+    5.75,
+    6.48
+   ],
+   "neighbour_dist_m": [
+    2.56,
+    1.72
+   ],
+   "neighbour_frontage_m": [
+    15.21,
+    14.65
+   ],
+   "est_m": 7.2,
+   "setback2_m": 6.11,
+   "err_m": -1.17,
+   "err2_m": -2.25
+  },
+  {
+   "application_number": "A0251/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 218576,
+   "zone": "RD",
+   "subject_frontage_m": 15.21,
+   "corner": false,
+   "required_m": 7.87,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.09,
+    5.14
+   ],
+   "neighbour_setback2_m": [
+    6.67,
+    3.71
+   ],
+   "neighbour_dist_m": [
+    0.88,
+    0.69
+   ],
+   "neighbour_frontage_m": [
+    16.13,
+    15.22
+   ],
+   "est_m": 6.62,
+   "setback2_m": 5.19,
+   "err_m": -1.25,
+   "err2_m": -2.68
+  },
+  {
+   "application_number": "A0828/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 52774,
+   "zone": "RD",
+   "subject_frontage_m": 15.22,
+   "corner": false,
+   "required_m": 7.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.59,
+    5.05
+   ],
+   "neighbour_setback2_m": [
+    5.24,
+    5.03
+   ],
+   "neighbour_dist_m": [
+    0.62,
+    0.65
+   ],
+   "neighbour_frontage_m": [
+    15.22,
+    15.22
+   ],
+   "est_m": 5.82,
+   "setback2_m": 5.14,
+   "err_m": -1.3,
+   "err2_m": -1.98
+  },
+  {
+   "application_number": "A0838/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 9775,
+   "zone": "RD",
+   "subject_frontage_m": 18.05,
+   "corner": false,
+   "required_m": 8.23,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.24,
+    7.62
+   ],
+   "neighbour_setback2_m": [
+    6.37,
+    6.22
+   ],
+   "neighbour_dist_m": [
+    1.05,
+    1.63
+   ],
+   "neighbour_frontage_m": [
+    18.22,
+    18.39
+   ],
+   "est_m": 7.43,
+   "setback2_m": 6.3,
+   "err_m": -0.8,
+   "err2_m": -1.93
+  },
+  {
+   "application_number": "A0847/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 330948,
+   "zone": "RD",
+   "subject_frontage_m": 15.05,
+   "corner": false,
+   "required_m": 7.18,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.06,
+    6.84
+   ],
+   "neighbour_setback2_m": [
+    5.63,
+    5.38
+   ],
+   "neighbour_dist_m": [
+    0.59,
+    0.56
+   ],
+   "neighbour_frontage_m": [
+    15.06,
+    15.05
+   ],
+   "est_m": 6.45,
+   "setback2_m": 5.5,
+   "err_m": -0.73,
+   "err2_m": -1.68
+  },
+  {
+   "application_number": "A0849/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 221465,
+   "zone": "RD",
+   "subject_frontage_m": 18.37,
+   "corner": false,
+   "required_m": 8.57,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.03,
+    9.03
+   ],
+   "neighbour_setback2_m": [
+    5.67,
+    7.64
+   ],
+   "neighbour_dist_m": [
+    1.01,
+    0.84
+   ],
+   "neighbour_frontage_m": [
+    18.35,
+    18.38
+   ],
+   "est_m": 8.03,
+   "setback2_m": 6.65,
+   "err_m": -0.54,
+   "err2_m": -1.92
+  },
+  {
+   "application_number": "A0730/17NY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 359558,
+   "zone": "RD",
+   "subject_frontage_m": 19.09,
+   "corner": false,
+   "required_m": 7.67,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.31,
+    7.27
+   ],
+   "neighbour_setback2_m": [
+    5.85,
+    6.29
+   ],
+   "neighbour_dist_m": [
+    0.89,
+    2.38
+   ],
+   "neighbour_frontage_m": [
+    18.22,
+    22.97
+   ],
+   "est_m": 7.29,
+   "setback2_m": 6.07,
+   "err_m": -0.38,
+   "err2_m": -1.6
+  },
+  {
+   "application_number": "A0806/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 75663,
+   "zone": "RD",
+   "subject_frontage_m": 15.03,
+   "corner": false,
+   "required_m": 5.62,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.07,
+    7.11
+   ],
+   "neighbour_setback2_m": [
+    4.07,
+    6.3
+   ],
+   "neighbour_dist_m": [
+    0.53,
+    3.34
+   ],
+   "neighbour_frontage_m": [
+    15.2,
+    14.81
+   ],
+   "est_m": 6.09,
+   "setback2_m": 5.18,
+   "err_m": 0.47,
+   "err2_m": -0.44
+  },
+  {
+   "application_number": "A0818/17NY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 172190,
+   "zone": "RD",
+   "subject_frontage_m": 15.52,
+   "corner": false,
+   "required_m": 7.67,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.07,
+    5.47
+   ],
+   "neighbour_setback2_m": [
+    5.74,
+    4.43
+   ],
+   "neighbour_dist_m": [
+    0.71,
+    1.95
+   ],
+   "neighbour_frontage_m": [
+    15.52,
+    15.52
+   ],
+   "est_m": 6.27,
+   "setback2_m": 5.09,
+   "err_m": -1.4,
+   "err2_m": -2.58
+  },
+  {
+   "application_number": "A0820/17NY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 357583,
+   "zone": "RD",
+   "subject_frontage_m": 15.19,
+   "corner": false,
+   "required_m": 8.36,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.43,
+    8.89
+   ],
+   "neighbour_setback2_m": [
+    5.97,
+    8.86
+   ],
+   "neighbour_dist_m": [
+    3.41,
+    5.87
+   ],
+   "neighbour_frontage_m": [
+    15.22,
+    21.25
+   ],
+   "est_m": 8.16,
+   "setback2_m": 7.41,
+   "err_m": -0.2,
+   "err2_m": -0.95
+  },
+  {
+   "application_number": "A0737/17NY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 312197,
+   "zone": "RD",
+   "subject_frontage_m": 15.21,
+   "corner": false,
+   "required_m": 7.57,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.65
+   ],
+   "neighbour_setback2_m": [
+    5.63
+   ],
+   "neighbour_dist_m": [
+    1.15
+   ],
+   "neighbour_frontage_m": [
+    15.21
+   ],
+   "est_m": 5.65,
+   "setback2_m": 5.63,
+   "err_m": -1.92,
+   "err2_m": -1.94
+  },
+  {
+   "application_number": "A0749/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 267768,
+   "zone": "RD",
+   "subject_frontage_m": 19.32,
+   "corner": false,
+   "required_m": 6.92,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.59,
+    5.8
+   ],
+   "neighbour_setback2_m": [
+    6.44,
+    5.11
+   ],
+   "neighbour_dist_m": [
+    1.19,
+    1.37
+   ],
+   "neighbour_frontage_m": [
+    21.24,
+    19.05
+   ],
+   "est_m": 6.7,
+   "setback2_m": 5.78,
+   "err_m": -0.22,
+   "err2_m": -1.14
+  },
+  {
+   "application_number": "A0753/17NY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 244434,
+   "zone": "RD",
+   "subject_frontage_m": 17.94,
+   "corner": false,
+   "required_m": 4.36,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    4.27,
+    3.91
+   ],
+   "neighbour_setback2_m": [
+    3.18,
+    3.62
+   ],
+   "neighbour_dist_m": [
+    3.35,
+    2.08
+   ],
+   "neighbour_frontage_m": [
+    17.41,
+    17.95
+   ],
+   "est_m": 4.09,
+   "setback2_m": 3.4,
+   "err_m": -0.27,
+   "err2_m": -0.96
+  },
+  {
+   "application_number": "A0755/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 199262,
+   "zone": "RD",
+   "subject_frontage_m": 15.04,
+   "corner": false,
+   "required_m": 7.68,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.22,
+    7.33
+   ],
+   "neighbour_setback2_m": [
+    4.72,
+    5.86
+   ],
+   "neighbour_dist_m": [
+    0.26,
+    0.68
+   ],
+   "neighbour_frontage_m": [
+    13.6,
+    12.2
+   ],
+   "est_m": 6.78,
+   "setback2_m": 5.29,
+   "err_m": -0.9,
+   "err2_m": -2.39
+  },
+  {
+   "application_number": "A0777/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 264696,
+   "zone": "RD",
+   "subject_frontage_m": 16.11,
+   "corner": false,
+   "required_m": 7.975,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.72
+   ],
+   "neighbour_setback2_m": [
+    7.12
+   ],
+   "neighbour_dist_m": [
+    1.47
+   ],
+   "neighbour_frontage_m": [
+    16.86
+   ],
+   "est_m": 7.72,
+   "setback2_m": 7.12,
+   "err_m": -0.25,
+   "err2_m": -0.86
+  },
+  {
+   "application_number": "A0905/17NY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 169963,
+   "zone": "RM",
+   "subject_frontage_m": 7.63,
+   "corner": false,
+   "required_m": 4,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.87,
+    0.36
+   ],
+   "neighbour_setback2_m": [
+    2.76,
+    0.35
+   ],
+   "neighbour_dist_m": [
+    0.5,
+    0.42
+   ],
+   "neighbour_frontage_m": [
+    7.63,
+    7.63
+   ],
+   "est_m": 2.12,
+   "setback2_m": 1.55,
+   "err_m": -1.88,
+   "err2_m": -2.45
+  },
+  {
+   "application_number": "A0910/17NY",
+   "cited": "10.5.40.70(1)(B)",
+   "parcel_id": 6619,
+   "zone": "RD",
+   "subject_frontage_m": 16.87,
+   "corner": false,
+   "required_m": 6.06,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    3.73,
+    5.94
+   ],
+   "neighbour_setback2_m": [
+    2.41,
+    4.63
+   ],
+   "neighbour_dist_m": [
+    0.86,
+    4.26
+   ],
+   "neighbour_frontage_m": [
+    16.87,
+    16.87
+   ],
+   "est_m": 4.84,
+   "setback2_m": 3.52,
+   "err_m": -1.22,
+   "err2_m": -2.54
+  },
+  {
+   "application_number": "A0918/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 390471,
+   "zone": "RD",
+   "subject_frontage_m": 7.58,
+   "corner": false,
+   "required_m": 6.24,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.52,
+    6.4
+   ],
+   "neighbour_setback2_m": [
+    5.06,
+    4.93
+   ],
+   "neighbour_dist_m": [
+    1.35,
+    0.52
+   ],
+   "neighbour_frontage_m": [
+    8.44,
+    12.1
+   ],
+   "est_m": 6.46,
+   "setback2_m": 4.99,
+   "err_m": 0.22,
+   "err2_m": -1.25
+  },
+  {
+   "application_number": "A0930/17NY",
+   "cited": "10.5.40.70(1)",
+   "parcel_id": 125501,
+   "zone": "RD",
+   "subject_frontage_m": 17.34,
+   "corner": false,
+   "required_m": 8.605,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.75,
+    7.25
+   ],
+   "neighbour_setback2_m": [
+    7.35,
+    5.97
+   ],
+   "neighbour_dist_m": [
+    2.87,
+    1.25
+   ],
+   "neighbour_frontage_m": [
+    17.34,
+    17.34
+   ],
+   "est_m": 8,
+   "setback2_m": 6.66,
+   "err_m": -0.61,
+   "err2_m": -1.95
+  },
+  {
+   "application_number": "A0149/17NY",
+   "cited": "10.10.40.70(1)",
+   "parcel_id": 479906,
+   "zone": "R",
+   "subject_frontage_m": 6.85,
+   "corner": false,
+   "required_m": 5.12,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    2.92,
+    3.05
+   ],
+   "neighbour_setback2_m": [
+    1.53,
+    2.77
+   ],
+   "neighbour_dist_m": [
+    0,
+    2.05
+   ],
+   "neighbour_frontage_m": [
+    6.85,
+    11.57
+   ],
+   "est_m": 2.99,
+   "setback2_m": 2.15,
+   "err_m": -2.14,
+   "err2_m": -2.97
+  },
+  {
+   "application_number": "A0670/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 102991,
+   "zone": "RD",
+   "subject_frontage_m": 15.22,
+   "corner": false,
+   "required_m": 9.17,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    8.74,
+    8.56
+   ],
+   "neighbour_setback2_m": [
+    7.33,
+    7.14
+   ],
+   "neighbour_dist_m": [
+    0.99,
+    1.05
+   ],
+   "neighbour_frontage_m": [
+    15.21,
+    15.21
+   ],
+   "est_m": 8.65,
+   "setback2_m": 7.24,
+   "err_m": -0.52,
+   "err2_m": -1.93
+  },
+  {
+   "application_number": "A0907/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 261572,
+   "zone": "RD",
+   "subject_frontage_m": 13.88,
+   "corner": true,
+   "required_m": 5.58,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    6.15
+   ],
+   "neighbour_setback2_m": [
+    4.69
+   ],
+   "neighbour_dist_m": [
+    1.05
+   ],
+   "neighbour_frontage_m": [
+    14.76
+   ],
+   "est_m": 6.15,
+   "setback2_m": 4.69,
+   "err_m": 0.57,
+   "err2_m": -0.89
+  },
+  {
+   "application_number": "A0936/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 127575,
+   "zone": "RD",
+   "subject_frontage_m": 15.23,
+   "corner": false,
+   "required_m": 12.21,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    11.9,
+    11.98
+   ],
+   "neighbour_setback2_m": [
+    10.54,
+    10.48
+   ],
+   "neighbour_dist_m": [
+    1.25,
+    0.77
+   ],
+   "neighbour_frontage_m": [
+    15.89,
+    15.23
+   ],
+   "est_m": 11.94,
+   "setback2_m": 10.51,
+   "err_m": -0.27,
+   "err2_m": -1.7
+  },
+  {
+   "application_number": "A0949/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 34168,
+   "zone": "RD",
+   "subject_frontage_m": 13.31,
+   "corner": true,
+   "required_m": 6.32,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    5.78
+   ],
+   "neighbour_setback2_m": [
+    4.98
+   ],
+   "neighbour_dist_m": [
+    2.48
+   ],
+   "neighbour_frontage_m": [
+    12.49
+   ],
+   "est_m": 5.78,
+   "setback2_m": 4.98,
+   "err_m": -0.54,
+   "err2_m": -1.34
+  },
+  {
+   "application_number": "A0953/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 175080,
+   "zone": "RD",
+   "subject_frontage_m": 20.47,
+   "corner": false,
+   "required_m": 8.35,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.09,
+    7.29
+   ],
+   "neighbour_setback2_m": [
+    7.73,
+    6.1
+   ],
+   "neighbour_dist_m": [
+    2.99,
+    1.83
+   ],
+   "neighbour_frontage_m": [
+    19.12,
+    19.72
+   ],
+   "est_m": 8.19,
+   "setback2_m": 6.92,
+   "err_m": -0.16,
+   "err2_m": -1.43
+  },
+  {
+   "application_number": "A0644/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 104601,
+   "zone": "RD",
+   "subject_frontage_m": 8.74,
+   "corner": true,
+   "required_m": 9.58,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    9.13
+   ],
+   "neighbour_setback2_m": [
+    8.27
+   ],
+   "neighbour_dist_m": [
+    0.5
+   ],
+   "neighbour_frontage_m": [
+    10.28
+   ],
+   "est_m": 9.13,
+   "setback2_m": 8.27,
+   "err_m": -0.45,
+   "err2_m": -1.31
+  },
+  {
+   "application_number": "A0873/17NY",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 267895,
+   "zone": "RD",
+   "subject_frontage_m": 27.05,
+   "corner": false,
+   "required_m": 11.89,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.51,
+    12.32
+   ],
+   "neighbour_setback2_m": [
+    9.8,
+    11.68
+   ],
+   "neighbour_dist_m": [
+    5.98,
+    1.63
+   ],
+   "neighbour_frontage_m": [
+    23.71,
+    29.42
+   ],
+   "est_m": 11.42,
+   "setback2_m": 10.74,
+   "err_m": -0.48,
+   "err2_m": -1.15
+  },
+  {
+   "application_number": "A0897/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 265587,
+   "zone": "RD",
+   "subject_frontage_m": 25.81,
+   "corner": false,
+   "required_m": 7.865,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.64,
+    7.82
+   ],
+   "neighbour_setback2_m": [
+    6.69,
+    7.08
+   ],
+   "neighbour_dist_m": [
+    0.64,
+    1.28
+   ],
+   "neighbour_frontage_m": [
+    16.49,
+    22.12
+   ],
+   "est_m": 7.73,
+   "setback2_m": 6.89,
+   "err_m": -0.13,
+   "err2_m": -0.98
+  },
+  {
+   "application_number": "A0900/17NY",
+   "cited": "10.20.40.70(1)(B)",
+   "parcel_id": 401008,
+   "zone": "RD",
+   "subject_frontage_m": 14.1,
+   "corner": false,
+   "required_m": 9.04,
+   "fya": "fya_two",
+   "n_qualifying": 2,
+   "statuses": [
+    "estimated",
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    10.48,
+    8.92
+   ],
+   "neighbour_setback2_m": [
+    9.56,
+    7.59
+   ],
+   "neighbour_dist_m": [
+    4.85,
+    1
+   ],
+   "neighbour_frontage_m": [
+    14.93,
+    14.94
+   ],
+   "est_m": 9.7,
+   "setback2_m": 8.58,
+   "err_m": 0.66,
+   "err2_m": -0.46
+  },
+  {
+   "application_number": "A0001/17EYK",
+   "cited": "10.20.40.70(1)",
+   "parcel_id": 212798,
+   "zone": "RD",
+   "subject_frontage_m": 14.81,
+   "corner": true,
+   "required_m": 7.7,
+   "fya": "fya_one",
+   "n_qualifying": 1,
+   "statuses": [
+    "estimated"
+   ],
+   "neighbour_est_m": [
+    7.03
+   ],
+   "neighbour_setback2_m": [
+    5.79
+   ],
+   "neighbour_dist_m": [
+    1.09
+   ],
+   "neighbour_frontage_m": [
+    12.13
+   ],
+   "est_m": 7.03,
+   "setback2_m": 5.79,
+   "err_m": -0.67,
+   "err2_m": -1.91
+  }
+ ]
+}

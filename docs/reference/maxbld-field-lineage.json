@@ -650,7 +650,7 @@
     "2",
     "RA"
    ],
-   "computation": "10.5.40.70(1) averaging (one neighbour → its setback; two → their average; buildings ≤ 15.0 m on the same street) else x.40.70(1) 6.0 m (M-205(1))",
+   "computation": "10.5.40.70(1) averaging (one neighbour → its setback; two → their average; buildings ≤ 15.0 m on the same street) only when fya_estimates_accepted = 1 and every qualifying neighbour is est_status estimated; else x.40.70(1)'s zone default (M-205(1), LC-57)",
    "regulation_ids": [
     "10.5.40.70(1)",
     "10.20.40.70(1)",
@@ -670,7 +670,7 @@
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
      },
      {
-      "what": "front averaging computed in Layer 2 (today `not_evaluated:condition_unknown:front_averaging_not_applicable`)",
+      "what": "wiring of the on-read front-averaging resolution (scripts/analysis/bylaw/front-averaging.mjs) into the Layer 2 lot flags",
       "owner": "Layer 2 step"
      }
     ]
@@ -691,6 +691,10 @@
     {
      "column": "parcel_abutments.est_status",
      "migration": "migrations/255_parcel_abutments.sql"
+    },
+    {
+     "column": "parcel_abutments.neighbour_residential",
+     "migration": "migrations/255_parcel_abutments.sql"
     }
    ],
    "logic_variables": [],
@@ -700,11 +704,11 @@
     "INV-9"
    ],
    "persisted": true,
-   "change": "new 2026-10-18 (M-205)"
+   "change": "new 2026-10-18 (M-205); reliability switch 2026-10-19 (LC-57)"
   },
   {
    "field": "main_front_setback_basis",
-   "type": "text `averaged_two` / `averaged_one` / `zone_default`",
+   "type": "text `averaged_two` / `averaged_one` / `zone_default` / `zone_default_needs_survey`",
    "scenarios": [
     "D",
     "H",
@@ -712,7 +716,7 @@
     "2",
     "RA"
    ],
-   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status",
+   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status; zone_default_needs_survey where averaging would apply but the estimate is not accepted (LC-57)",
    "regulation_ids": [
     "10.5.40.70(1)"
    ],
@@ -732,7 +736,7 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": "new 2026-10-18 (M-205)"
+   "change": "new 2026-10-18 (M-205); zone_default_needs_survey 2026-10-19 (LC-57)"
   },
   {
    "field": "main_side_setbacks_m",
