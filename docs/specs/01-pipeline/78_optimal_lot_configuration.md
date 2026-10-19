@@ -1271,6 +1271,8 @@ Its commit ① lands after them. If a runner form it needs changes shape, the ch
 | `attic_outside_gfa` | "The attic ({A} m²) is livable but not counted in the City's floor-area total (GFA): it does not meet the headroom and size test." | M-203; 10.5.40.40(1) |
 | `existing_roof_alteration` | "Changing the existing roof line is limited (roof slope rules for altered roofs)." | 10.10.40.11, 10.20.40.11; M-192 |
 | `decks_platforms_not_modelled` | "Decks, porches, balconies and platforms are not modelled; they have their own size and setback rules." | x.40.50; 150.7.60.60; 150.8.60.60 |
+| `setback_encroachments` | "Bay windows, wall-mounted equipment and similar parts may project into a setback within set limits; they are design details and are not modelled." | 10.5.40.60; M-169(4) (operator 2026-10-19, review answers batch 4) |
+| `r_roof_slope` | "In the R zone a detached house's roof above the second storey may be no steeper than 5 vertical to 3 horizontal; the roof design is not checked." | 10.10.40.10(4); M-169(1); O-7 (slope keying owed); F-33 (operator 2026-10-19, review answers batch 4) |
 | `lawfully_existing_relief` | "If the existing building or suite is lawfully existing, {clause} lets it keep its {height / setback / separation / size}." | M-158, M-178, M-192 |
 | `existing_ancillary_setbacks` | "If the existing ancillary building is lawfully existing, a laneway suite in it may keep its setbacks." | 150.8.60.21; M-211(4) |
 | `vacant_existing_lot` | "If this is a vacant lot that existed before the current rules, a house or detached houseplex may be built on it only if the lot frontage is at least 6.0 m and it meets the rest of the by-law." | 10.5.30.21(3); M-158, M-169 (site fact taken as not holding); review answers batch 3, 2026-10-19 |

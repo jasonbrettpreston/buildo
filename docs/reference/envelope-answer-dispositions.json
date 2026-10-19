@@ -1,8 +1,89 @@
 {
  "schema": "envelope-answer-dispositions-v1",
- "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions.",
- "count": 605,
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions. Batch 4 (26 answers, dump envdb10, 2026-10-19) added by Claude under existing rulings; 0 OPEN.",
+ "count": 631,
  "dispositions": [
+  {
+   "unit_id": "10.10.30.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.30.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.30.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.30.20(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.30.20(1)#(1)(D)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-214",
+    "M-169"
+   ],
+   "corrected_value": "A townhouse with any unit not facing the street needs 30.0 m of frontage; unit orientation is a layout fact (unit_not_fronting_street, M-169(2)) and townhouse forms are deferred and disclosed (M-214(3)); the keyed unit carries the disclosure.",
+   "disclosure_code": "forms_deferred",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(2) undetermined token; M-214(3) townhouse deferred"
+  },
+  {
+   "unit_id": "10.10.40.1(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-202"
+   ],
+   "corrected_value": "The R 'u' label is the maximum number of dwelling units on the lot (with u3 the cap is 3; no 'u' means no 'u' cap); the 600.60 lift to 6 applies to a houseplex only (M-202(2)).",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-202 'u' cap (as RT 10.60.40.1(2)(A)); verified by named lock",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-answers-batch-4.logic.test.ts",
+     "describe": "M-202 — R 10.10.40.1(3)(A) is the 'u' dwelling-unit cap",
+     "it": "M-202: with u3 an R detached house is capped at 3; the R unit reads the label",
+     "asserts": [
+      "'10.10.40.1(3)#(3)(A)'",
+      "'R'"
+     ],
+     "satisfies": [
+      "M-202"
+     ]
+    }
+   ]
+  },
+  {
+   "unit_id": "10.10.40.1(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.1(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.1(8)#(8)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.1(8)#(8)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.1(8)#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
   {
    "unit_id": "10.10.40.10(1)#(1)(A)",
    "verdict": "matches",
@@ -107,6 +188,28 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.10.40.10(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "The R 5:3 roof-slope cap above the second storey of a detached house is disclosed; the roof design is not checked (slope keying owed, Spec 78 O-7; scoped to the detached house, F-33).",
+   "disclosure_code": "r_roof_slope",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(1); Spec 78 O-7, F-33; new P5.12 code r_roof_slope"
+  },
+  {
+   "unit_id": "10.10.40.10(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls are not main walls; the maximum design takes the dormers at the 40 % share (the RD 10.20.40.10(7)(A) sentence).",
+   "disclosure_code": "dormers_at_max",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-185; RS (5)(A) given the same sentence (family)"
+  },
+  {
    "unit_id": "10.10.40.10(5)#(5)(B)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -127,6 +230,18 @@
    "corrected_value": "Main pedestrian entrance height (1.2 m) is a disclosure only, not a building-envelope limit.",
    "disclosure_code": "main_entrance_height",
    "basis": "review answers batch 2 (live page DB 2026-10-19); as RD 10.20.40.10(6) (M-215(2) correction already on the R unit)"
+  },
+  {
+   "unit_id": "10.10.40.10(7)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-211",
+    "M-192"
+   ],
+   "corrected_value": "A rear addition's floors may not rise above the existing top floor; applied in the renovation answer (M-211(2)) and disclosed.",
+   "disclosure_code": "rear_addition_floor_levels",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-211(2) (applied in renovation), M-192"
   },
   {
    "unit_id": "10.10.40.20(1)#(1)(A)",
@@ -268,6 +383,16 @@
    "corrected_value": "0.45 m side yard for a semi-detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall).",
    "disclosure_code": "blank_side_wall",
    "basis": "review answers batch 3 (live page DB 2026-10-19); M-205(2); Spec 78 main_side_setbacks_m"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(F)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Item (F) was deleted by By-law 648-2025 and has no effect. The 0.45 m side yard for walls without windows or doors that the note describes is carried by (A)–(E) under M-205(2) (blank_side_wall, taken without openings by default).",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); by-law text \"(F) (Deleted by By-law 648-2025)\"; M-205(2)"
   },
   {
    "unit_id": "10.10.40.70(5)#(5)(A)",
@@ -1891,6 +2016,49 @@
    "basis": "review answers batch 3 (live page DB 2026-10-19); M-192, M-211(1)"
   },
   {
+   "unit_id": "10.5.40.30(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-31"
+   ],
+   "corrected_value": "Procedural: a measurement rule saying where building depth is measured (all main walls, above and below ground, excluding footings); it sets no limit (as 10.5.40.20(1) for length).",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-31 informational row"
+  },
+  {
+   "unit_id": "10.5.40.30(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Not a depth rule: parts permitted to encroach into a setback (10.5.40.60) are excluded from the depth measure; disclosed, the maximum depth unchanged (as 10.5.40.20(2)).",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-171 (as 10.5.40.20(2), batch 3)"
+  },
+  {
+   "unit_id": "10.5.40.31(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building deeper than the limit keeps its depth; renovation reading, disclosed (as 10.5.40.21(1) for length).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-192 (10.5.40.31 disclosed, never applied)"
+  },
+  {
+   "unit_id": "10.5.40.31(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "An addition to an over-deep lawfully existing building must meet every other rule (or a minor variance); renovation reading, disclosed (as 10.5.40.21(2); M-211(1) depth caps still bind).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-192, M-211(1)"
+  },
+  {
    "unit_id": "10.5.40.40(1)#(1)(A)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -1957,6 +2125,45 @@
    "basis": "review answers batch 2 (live page DB 2026-10-19); as 970.10.15.10(1)(D); M-171"
   },
   {
+   "unit_id": "10.5.40.40(5)#(5)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171",
+    "M-203"
+   ],
+   "corrected_value": "A note states what the FSI counts: GFA plus an attic passing the 10.5.40.40(1) test (less up to 20 m² mechanical attic, (2)), minus the (3) deductions; the maximum build leaves out the basement, voids and parking depend on the design.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-203 attic test, M-171 deductions disclosed"
+  },
+  {
+   "unit_id": "10.5.40.41(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.40.60(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Bay and box window projections into a setback are a design detail; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(4) encroachment permissions disclosed; new P5.12 code setback_encroachments"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(E)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Wall-mounted utility meters in a setback are a design detail; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(4); new P5.12 code setback_encroachments"
+  },
+  {
    "unit_id": "10.5.40.70(1)#(1)(A)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -1984,6 +2191,17 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.5.40.71(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building closer to the front lot line keeps that front setback; renovation reading, disclosed, never applied (as (1)(B), (1)(C)).",
+   "disclosure_code": "existing_walls_site_fact",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-192 (10.5.40.71(1) disclosed, never applied)"
+  },
+  {
    "unit_id": "10.5.40.71(1)#(1)(B)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -2004,6 +2222,18 @@
    "corrected_value": "A lawfully existing building closer to a side lot line keeps that setback; disclosed.",
    "disclosure_code": "existing_walls_site_fact",
    "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.71(3)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "On a lot of 12.2 m or less an addition above a lawfully existing building keeps its setbacks: applied in the renovation answer (setbacks only; depth and length caps still bind), disclosed addition_above_existing.",
+   "disclosure_code": "addition_above_existing",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-192 (the one relief applied), M-211(1)"
   },
   {
    "unit_id": "10.5.40.71(4)#(4)(A)",
@@ -2894,6 +3124,17 @@
    "corrected_value": "Main pedestrian entrance 1.2 m is disclosed, not an envelope condition.",
    "disclosure_code": "main_entrance_height",
    "basis": "findings C3; M-174(2), M-215"
+  },
+  {
+   "unit_id": "10.80.40.10(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls are not main walls; the maximum design takes the dormers at the 40 % share (the RD 10.20.40.10(7)(A) sentence).",
+   "disclosure_code": "dormers_at_max",
+   "basis": "review answers batch 4 (live page DB 2026-10-19); M-174, M-185 (as RM (5)(B))"
   },
   {
    "unit_id": "10.80.40.10(5)#(5)(B)",

@@ -76533,6 +76533,188 @@
           "lawfully_existing_status"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(5)#(5)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): R 10.10.40.10(5)(A) \"Our default is they will not be considered main walls. Disclosure\". M-185: the maximum takes dormers at the 40 % share and their walls are not main walls; the (A) unit carries the RD 10.20.40.10(7)(A) sentence (one form per provision family).",
+      "rule": "Spec 69a M-185; Spec 78 P5.12 dormers_at_max; M-75",
+      "unit": "10.10.40.10(5)#(5)(A)",
+      "value": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.10(5)#(5)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): family twin of R 10.10.40.10(5)(A) / RM 10.80.40.10(5)(A) (parallel chapters; RS (5)(A) resolved by M-185 earlier). M-185: the RD 10.20.40.10(7)(A) sentence, one form per provision family.",
+      "rule": "Spec 69a M-185; Spec 78 P5.12 dormers_at_max; M-75",
+      "unit": "10.40.40.10(5)#(5)(A)",
+      "value": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.10(5)#(5)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): RM 10.80.40.10(5)(A) \"Our default is they will not be considered main walls. Disclosure\". M-185 (as RM (5)(B)): the RD 10.20.40.10(7)(A) sentence, one form per provision family.",
+      "rule": "Spec 69a M-174, M-185; Spec 78 P5.12 dormers_at_max; M-75",
+      "unit": "10.80.40.10(5)#(5)(A)",
+      "value": "Dormer walls do not count as main walls if each dormer face sits in a roof directly above a part of a main wall within the main wall height limit; the design chooses the dormers."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(7)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): R 10.10.40.10(7) \"an addition or renovation scenario ... this is a disclosure\". M-211(2) applies the clause in the renovation answer (back-room storeys ≤ existing storeys); the old sentence \"we do not check this\" contradicted that.",
+      "rule": "Spec 69a M-211(2), M-192; Spec 78 P5.12 rear_addition_floor_levels; M-75",
+      "unit": "10.10.40.10(7)#whole",
+      "value": "In the R zone a rear addition's floors may not rise above the existing top floor; the renovation answer keeps the back-room storeys at or below the existing storeys."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.30(1)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.30(1) \"This just talks about a portion of the building - procedural\". The clause says where building depth is measured; it is an informational DEFINE with no limit (M-31), worded as the length twin 10.5.40.20(1).",
+      "rule": "Spec 69a M-31 (informational rows are in scope); M-75",
+      "unit": "10.5.40.30(1)#whole",
+      "value": {
+        "description": "Measurement rule (procedural, sets no limit): building depth is measured to all main walls of a building, above and below ground, excluding the footings.",
+        "gaps": "M-31: an informational measurement rule; it sets no number and changes no answer (as 10.5.40.20(1) for length).",
+        "not_modelled_reason": "none",
+        "status": "informational",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.30(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.30(2) \"This is an exclusion ... procedural\". The clause excludes parts permitted to encroach into a setback (10.5.40.60) from the depth measure; by M-171 the exclusion is disclosed and the maximum depth answered unchanged (as 10.5.40.20(2) for length).",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed); M-75",
+      "unit": "10.5.40.30(2)#whole",
+      "value": "Parts of the building allowed to project into a setback, such as eaves, steps or a porch, are not counted in its depth."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.30(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.30(2) \"This is an exclusion ... procedural\". The clause excludes parts permitted to encroach into a setback (10.5.40.60) from the depth measure; by M-171 the exclusion is disclosed and the maximum depth answered unchanged (as 10.5.40.20(2) for length).",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed); M-75",
+      "unit": "10.5.40.30(2)#whole",
+      "value": {
+        "description": "Excludes from the building-depth measure any part of a building or structure permitted to encroach into a required setback under 10.5.40.60; it sets no depth of its own.",
+        "gaps": "M-171: a measure exclusion that needs design facts (which encroaching parts exist) is disclosed; the permitted maximum building depth is answered unchanged.",
+        "not_modelled_reason": "none",
+        "status": "informational",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(5)#(5)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.40(5)(B) \"We just need a note to understand what needs to be included in the GFA calculation\". M-203 (the attic test decides inclusion) and M-171 (design-dependent deductions are disclosed; the basement is left out in the maximum build) give the note.",
+      "rule": "Spec 69a M-171, M-203; Spec 78 P5.12 gfa_deductions_not_applied, basement_excluded, attic_outside_gfa; M-75",
+      "unit": "10.5.40.40(5)#(5)(B)",
+      "value": "Floor space index counts the gross floor area plus an attic that meets the headroom and size test (less up to 20 m² of mechanical attic space), minus the basement, floor voids and inside parking the by-law lets you leave out; the maximum build leaves out the basement, and the voids and parking depend on the design."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(6)#(6)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.60(6)(A) \"a minor design decision ... disclose\". M-169(4): encroachment permissions the user would have to verify are disclosed, never evaluated.",
+      "rule": "Spec 69a M-169(4); Spec 78 P5.12 setback_encroachments (2026-10-19); M-75",
+      "unit": "10.5.40.60(6)#(6)(A)",
+      "value": "A bay or box window may project up to 0.75 m into the front or rear yard setback if the projections take up no more than 65% of that wall's width at each storey; this is a design detail and is not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.60(8)#(8)(E)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.60(8)(E) \"Relates to equipment and is not overly relevant. Just disclose\". M-169(4): encroachment permissions are disclosed, never evaluated.",
+      "rule": "Spec 69a M-169(4); Spec 78 P5.12 setback_encroachments (2026-10-19); M-75",
+      "unit": "10.5.40.60(8)#(8)(E)",
+      "value": "Wall-mounted utility meters may project into any setback if they stay at least 0.3 m from the lot line; this is a design detail and is not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.71(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.71(1)(A) \"Permitted Setbacks for Lawfully existing buildings - condition ...\". M-192 lists 10.5.40.71(1) as disclosed, never applied; the front arm now says so in its own words.",
+      "rule": "Spec 69a M-192; Spec 78 P5.12 existing_walls_site_fact; M-75",
+      "unit": "10.5.40.71(1)#(1)(A)",
+      "value": "A lawfully existing building that sits closer to the front lot line than today's minimum keeps that front setback; this needs the existing building's position, so it is disclosed, not calculated."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.71(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.71(1)(A) \"Permitted Setbacks for Lawfully existing buildings - condition ...\". M-192 lists 10.5.40.71(1) as disclosed, never applied; the front arm now says so in its own words.",
+      "rule": "Spec 69a M-192; Spec 78 P5.12 existing_walls_site_fact; M-75",
+      "unit": "10.5.40.71(1)#(1)(A)",
+      "value": {
+        "description": "If a lawfully existing building or structure is closer to the front lot line than the required minimum, its lawful setback is its minimum front yard setback.",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. M-192: a lawfully-existing setback relief; it needs the existing building position, so it is disclosed, never applied (as (1)(B), (1)(C)).",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.71(3)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.71(3) \"additions or renovation above lawfully existing buildings - ie building up ... lot frontage of 12.2 or less\". M-192 applies it in the renovation answer; M-211(1) limits it to setbacks. The old sentence \"we cannot check existing setbacks\" contradicted that.",
+      "rule": "Spec 69a M-192, M-211(1); Spec 78 P5.12 addition_above_existing; M-75",
+      "unit": "10.5.40.71(3)#whole",
+      "value": "On a lot of 12.2 m or less, an addition above the house keeps its setbacks (achieved if the house is lawfully existing)."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.71(3)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 4 (operator, live page DB 2026-10-19): 10.5.40.71(3) \"additions or renovation above lawfully existing buildings - ie building up ... lot frontage of 12.2 or less\". M-192 applies it in the renovation answer; M-211(1) limits it to setbacks. The old sentence \"we cannot check existing setbacks\" contradicted that.",
+      "rule": "Spec 69a M-192, M-211(1); Spec 78 P5.12 addition_above_existing; M-75",
+      "unit": "10.5.40.71(3)#whole",
+      "value": {
+        "description": "On a lot with frontage of 12.2 m or less, an addition above a lawfully existing building may use the lawful existing setbacks permitted by 10.5.40.71(1).",
+        "gaps": "The clause sets the minimum to the as-built value of a lawfully existing building but names no date, so it cannot be written with existing(variable; date) without inventing one; keyed UNUSUAL (conservative) rather than as a LIMIT. Zones left empty: the unit text names no zone. M-192 / M-211(1): the one lawfully-existing relief applied in the renovation answer — on a lot of 12.2 m or less the up-addition keeps the existing footprint setbacks (setbacks only; the depth and length caps still bind), achieved if the house is lawfully existing (disclosed addition_above_existing).",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "lawfully_existing_status"
+        ]
+      }
     }
   ]
 }

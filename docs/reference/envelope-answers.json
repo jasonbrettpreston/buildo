@@ -1,9 +1,130 @@
 {
  "schema": "envelope-answers-v1",
- "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). + 38 answers from dump envdb9 (2026-10-19). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
- "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567) + envdb9 2026-10-19 (605)",
- "count": 605,
+ "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). + 38 answers from dump envdb9 (2026-10-19). + 26 answers from dump envdb10 (2026-10-19). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567) + envdb9 2026-10-19 (605) + envdb10 2026-10-19 (631)",
+ "count": 631,
  "answers": [
+  {
+   "note": "",
+   "reading_sha": "aa563574728a2f17",
+   "regulation_id": "10.10.30.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.10(1)#(1)(A)",
+   "updated_at": "2026-10-19T23:16:21.303Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "a2f4eb39dd3ad4fb",
+   "regulation_id": "10.10.30.10(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.10(1)#(1)(B)",
+   "updated_at": "2026-10-19T23:16:40.219Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "0cda856f25a96fa4",
+   "regulation_id": "10.10.30.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.20(1)#(1)(A)",
+   "updated_at": "2026-10-19T23:17:11.552Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "90ca4eb3dc9accc2",
+   "regulation_id": "10.10.30.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.20(1)#(1)(B)",
+   "updated_at": "2026-10-19T23:17:29.515Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "We don't know which way they are facing.. just a disclosure",
+   "reading_sha": "355ada889ed0f689",
+   "regulation_id": "10.10.30.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.20(1)#(1)(D)",
+   "updated_at": "2026-10-19T23:18:18.563Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Determines the number of dwellings on a lot. pplying to a lot in the R zone on the Zoning By-law Map has the letter \"u\", the numerical value following the letter \"u\" is the maximum number of dwelling units permitted on the lot; and",
+   "reading_sha": "e6af7df254f50690",
+   "regulation_id": "10.10.40.1(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(3)#(3)(A)",
+   "updated_at": "2026-10-19T23:19:15.160Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "ee00c384fdda0908",
+   "regulation_id": "10.10.40.1(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(3)#(3)(B)",
+   "updated_at": "2026-10-19T23:19:38.253Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "38dde6fe922f3ec5",
+   "regulation_id": "10.10.40.1(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(4)#(4)(B)",
+   "updated_at": "2026-10-19T23:19:54.374Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "8d51351daedf4677",
+   "regulation_id": "10.10.40.1(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(8)#(8)(A)",
+   "updated_at": "2026-10-19T23:20:01.201Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "21769b5279764ff8",
+   "regulation_id": "10.10.40.1(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(8)#(8)(B)",
+   "updated_at": "2026-10-19T23:20:07.132Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "5a3aeb0668d659ca",
+   "regulation_id": "10.10.40.1(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(8)#(8)(C)",
+   "updated_at": "2026-10-19T23:20:11.351Z",
+   "verdict": "no_application"
+  },
   {
    "note": "",
    "reading_sha": "bf05f7bbcfd71d33",
@@ -148,6 +269,28 @@
    "verdict": "matches"
   },
   {
+   "note": "on a 2 storey house need to meet this restriction",
+   "reading_sha": "32142aa323e611ed",
+   "regulation_id": "10.10.40.10(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(4)#whole",
+   "updated_at": "2026-10-19T23:20:55.032Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This bylaw explain whether dormers are considered main walls. I fhtey are considered main walls that would impact the envelope.  Our default is they will not be considered main walls.  Disclosure",
+   "reading_sha": "e84924abbcd7d87d",
+   "regulation_id": "10.10.40.10(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(5)#(5)(A)",
+   "updated_at": "2026-10-19T23:22:11.261Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "",
    "reading_sha": "2234d3dd064ba2f0",
    "regulation_id": "10.10.40.10(5)",
@@ -168,6 +311,17 @@
    "unit_id": "10.10.40.10(6)#whole",
    "updated_at": "2026-10-19T18:08:15.520Z",
    "verdict": "wrong"
+  },
+  {
+   "note": "This speaks to an addition or renovation scenario in R zone - it just says all floor levels within an additional may not be higher than the highest level of the buildings its being added to.  makes sense.  this is a disclosure",
+   "reading_sha": "11388661be3aa0e8",
+   "regulation_id": "10.10.40.10(7)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(7)#whole",
+   "updated_at": "2026-10-19T23:27:03.693Z",
+   "verdict": "disclose"
   },
   {
    "note": "",
@@ -355,6 +509,16 @@
    "unit_id": "10.10.40.70(4)#(4)(E)",
    "updated_at": "2026-10-19T19:56:18.467Z",
    "verdict": "wrong"
+  },
+  {
+   "note": "Min Side Yard for walls with no windows or doors =.45 for the following building types.  Condition = no windows or doors on that wall.  By-law: 648-2025 ]",
+   "reading_sha": "0cb8573e4527aa5a",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(F)",
+   "updated_at": "2026-10-19T23:28:34.070Z"
   },
   {
    "note": "This is for an apartment building or a townhouse on a major street. ",
@@ -2321,6 +2485,50 @@
    "verdict": "unsure"
   },
   {
+   "note": "This just talks about a portion of the building  - procedural",
+   "reading_sha": "592388dafe741793",
+   "regulation_id": "10.5.40.30(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.30(1)#whole",
+   "updated_at": "2026-10-19T22:58:49.786Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is an exclusion This just talks about a portion of the building  - procedural",
+   "reading_sha": "cb54e09b6421eb33",
+   "regulation_id": "10.5.40.30(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.30(2)#whole",
+   "updated_at": "2026-10-19T22:59:07.415Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "The is the permitted building depth for an existing structure and it s the greater of the permitted amount or the existing depth - grandfathered. disclosure ",
+   "reading_sha": "e0e6b2e5940f3357",
+   "regulation_id": "10.5.40.31(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.31(1)#whole",
+   "updated_at": "2026-10-19T23:00:38.069Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Procedural - focused on additions to existing structures - lawfully existing ",
+   "reading_sha": "f19f9066e058e5e0",
+   "regulation_id": "10.5.40.31(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.31(2)#whole",
+   "updated_at": "2026-10-19T23:01:32.857Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure - ",
    "reading_sha": "75fb2eda71a69cde",
    "regulation_id": "10.5.40.40(1)",
@@ -2387,6 +2595,50 @@
    "verdict": "disclose"
   },
   {
+   "note": "also includes the attic mentioned earlier for the GFA and  minus the 0.5.40.40(2) minus the areas listed in regulation 10.5.40.40(3 ).  We just need a note to understand what needs to be included in the GFA calculation",
+   "reading_sha": "24bba329f0dfeb4b",
+   "regulation_id": "10.5.40.40(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.40(5)#(5)(B)",
+   "updated_at": "2026-10-19T23:03:54.631Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "70cb7cace995fcaa",
+   "regulation_id": "10.5.40.41(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.41(1)#whole",
+   "updated_at": "2026-10-19T23:04:27.192Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "This  is a minor design decision that impacts ",
+   "reading_sha": "c2392700d0f1d6b2",
+   "regulation_id": "10.5.40.60(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.60(6)#(6)(A)",
+   "updated_at": "2026-10-19T23:06:28.548Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Relates to equipment and is not overly relevant.  Just disclose",
+   "reading_sha": "4257384bd1e5f5f8",
+   "regulation_id": "10.5.40.60(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.60(8)#(8)(E)",
+   "updated_at": "2026-10-19T23:10:37.669Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "This is a disclosure because it says the front yard setback (if the lot is abutting has a building 15 m from your lot ) the required setback is the same set back as the abutting lot.  We will not know that.  We need to add it as a disclosure of high importance.  ",
    "reading_sha": "16e2a92cca07a898",
    "regulation_id": "10.5.40.70(1)",
@@ -2420,6 +2672,17 @@
    "verdict": "matches"
   },
   {
+   "note": "Permitted Setbacks for Lawfully existing buildings - condition - if the lawful building setback of a lawfully existing building or structure is less than the required minimum building setback from: (A) a front lot line, that lawful building setback is the minimum front yard setback for that lawfully existing building or structure;",
+   "reading_sha": "a9ec3672e93c7e6c",
+   "regulation_id": "10.5.40.71(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(1)#(1)(A)",
+   "updated_at": "2026-10-19T23:14:00.331Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "Lawfully existing - just grandfathering in the minimum rear yard setback ",
    "reading_sha": "2615aeca83708ce6",
    "regulation_id": "10.5.40.71(1)",
@@ -2440,6 +2703,17 @@
    "unit_id": "10.5.40.71(1)#(1)(C)",
    "updated_at": "2026-10-19T20:47:29.477Z",
    "verdict": "disclose"
+  },
+  {
+   "note": "This pertains to additions or renovation above lawfully existing buildings - ie building up. Applied to a lot with lot frontage of 12.2 or less - this is what applies the required minimum building setback for any addition or extension above a lawfully existing building or structure referred to in regulation 10.5.40.71(1) is the minimum building setback from the respective lot line permitted by regulation 10.5.40.71(1).",
+   "reading_sha": "4502fbb624515cf8",
+   "regulation_id": "10.5.40.71(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(3)#whole",
+   "updated_at": "2026-10-19T23:16:13.435Z",
+   "verdict": "wrong"
   },
   {
    "note": "This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage is less than 9M =the minimum sideboard setback permitted. This speaks to the renovations scenario",
@@ -3545,6 +3819,17 @@
    "set": "base",
    "source": "operator copy-paste 2026-10-15",
    "unit_id": "10.80.40.10(4)#whole",
+   "verdict": "disclose"
+  },
+  {
+   "note": "his bylaw explain whether dormers are considered main walls. I fhtey are considered main walls that would impact the envelope.  Our default is they will not be considered main walls.  Disclosure",
+   "reading_sha": "82b0aab10114d7e8",
+   "regulation_id": "10.80.40.10(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb10 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.80.40.10(5)#(5)(A)",
+   "updated_at": "2026-10-19T23:22:27.263Z",
    "verdict": "disclose"
   },
   {
