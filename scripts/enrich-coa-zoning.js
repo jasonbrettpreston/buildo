@@ -14,6 +14,9 @@
  */
 'use strict';
 
+// §R2 source-text constant: Spec 66 DEC-2 shares lock 66 with scripts/enrich-permits.js, whose main()
+// acquires it (Spec 47 §A.5 declares the two files' shared ID).
+const ADVISORY_LOCK_ID = 66; // eslint-disable-line no-unused-vars
 const pipeline = require('./lib/pipeline');
 const { main } = require('./enrich-permits');
 

@@ -492,7 +492,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=262 |
+| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=263 |
 | 2 | link_neighbourhoods | PASS | 5 declared, missing from seeds: none |
 | 3 | link_neighbourhoods | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_neighbourhoods | PASS | SPEC LINK header present=true |

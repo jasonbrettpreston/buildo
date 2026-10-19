@@ -57,6 +57,9 @@ const LOCK_ID_REGISTRY: Record<string, number> = {
   // (enrich_permits / enrich_coa_zoning via ENRICH_TARGET) → one shared lock (the
   // chains run 1h apart + are chain-locked, so no harmful serialisation).
   'scripts/enrich-permits.js':       66,
+  // Phase-4 wave 4 ① (2026-10-18): the enrich_coa_zoning identity-split shell keeps the SAME lock 66
+  // (Spec 66 DEC-2); Spec 47 §A.5 lists both files at 66, the one declared shared ID (see SHARED_LOCK_IDS).
+  'scripts/enrich-coa-zoning.js':    66,
   'scripts/load-bylaw-map-areas.js':  127, // Spec 58 — load_bylaw_map_areas (600.60 map seed)
   'scripts/link-parcel-abutments.js':  130, // Spec 130 — link_parcel_abutments
   'scripts/load-coa.js':             95,
@@ -285,12 +288,17 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
   it('all ADVISORY_LOCK_IDs are unique across all JS scripts (incl. one-time/backfill)', () => {
     const seen = new Map<number, string>();
     const duplicates: string[] = [];
+    // A shared ID is legal only where Spec 47 §A.5 lists EVERY file holding it at that ID (Spec 66 DEC-2:
+    // enrich-permits.js + enrich-coa-zoning.js share 66). Any undeclared duplicate still fails.
+    const specTable = parseSpecA5Table();
+    const declaredShared = (id: number, a: string, b: string) => specTable[a] === id && specTable[b] === id;
 
     for (const file of allLockedJsFiles) {
       const source = readScript(file);
       const id = extractLockId(source);
       if (id === null) continue; // no lock (e.g. backfill/ DDL scripts) — skip
 
+      if (seen.has(id) && declaredShared(id, seen.get(id)!, file)) continue;
       if (seen.has(id)) {
         duplicates.push(`ID ${id} used by both "${seen.get(id)}" and "${file}"`);
       } else {

@@ -58,9 +58,12 @@ describe('migration 166 — permits + coa zoning columns', () => {
 });
 
 describe('manifest.json — dual-entry enrich-permits cascade', () => {
-  it('registers both modes pointing to scripts/enrich-permits.js with env.ENRICH_TARGET', () => {
+  // Phase-4 wave 4 ① (2026-10-18, wave-4 plan question 9): the identity split gives enrich_coa_zoning its own
+  // shell file, a legacy pass-through to scripts/enrich-permits.js's main() with ENRICH_TARGET=coa.
+  it('registers both modes over scripts/enrich-permits.js (coa through its identity-split shell) with env.ENRICH_TARGET', () => {
     expect(manifest.scripts.enrich_permits?.file).toBe('scripts/enrich-permits.js');
-    expect(manifest.scripts.enrich_coa_zoning?.file).toBe('scripts/enrich-permits.js');
+    expect(manifest.scripts.enrich_coa_zoning?.file).toBe('scripts/enrich-coa-zoning.js');
+    expect(readFileSync(resolve(root, 'scripts/enrich-coa-zoning.js'), 'utf8')).toMatch(/require\('\.\/enrich-permits'\)/);
     expect(manifest.scripts.enrich_permits.env?.ENRICH_TARGET).toBe('permits');
     expect(manifest.scripts.enrich_coa_zoning.env?.ENRICH_TARGET).toBe('coa');
     expect(manifest.scripts.enrich_permits.telemetry_tables).toContain('permits');

@@ -1971,7 +1971,8 @@ and registry-vs-code agreement.
 | **61** | `scripts/load-heritage.js` | 4 — Load/Ingest (Spec 61 §8c) | YES — source ingest timestamps |
 | **62** | `scripts/enrich-heritage.js` | 3 — Enrich (Spec 61 §8d) | NO — set-based parcels heritage enrichment |
 | **65** | `scripts/enrich-parcels.js` | 3 — Enrich (Spec 65) | YES — `zoning_enriched_at` + max-build/opt/existing lineage |
-| **66** | `scripts/enrich-permits.js` | 3 — Enrich (Spec 66; ONE file, two manifest entries enrich_permits / enrich_coa_zoning via ENRICH_TARGET → one shared lock) | YES — enrichment lineage |
+| **66** | `scripts/enrich-permits.js` | 3 — Enrich (Spec 66 DEC-2; the enrich_permits shell; ONE shared lock 66 with enrich_coa_zoning) | YES — enrichment lineage |
+| **66** | `scripts/enrich-coa-zoning.js` | 3 — Enrich (Spec 66 DEC-2; the enrich_coa_zoning identity-split shell, phase-4 wave 4 ① 2026-10-18; the SAME lock 66 as enrich-permits.js, declared shared here — the only sanctioned shared ID) | YES — enrichment lineage |
 | **78** | `scripts/compute-build-norms.js` | 5 — Compute (Spec 78) | YES — `computed_at` |
 | **93** | `scripts/compute-phase-calibration.js` | 5 — Compute | YES — `computed_at` |
 | **195** | `scripts/compute-storey-norms.js` | 5 — Compute (Spec 195/neighbourhood_storey_norms) | YES — `computed_at` |

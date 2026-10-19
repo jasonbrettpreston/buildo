@@ -491,7 +491,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_ravines | PASS | min_migration=167 <= migrations count=262 |
+| 1 | load_ravines | PASS | min_migration=167 <= migrations count=263 |
 | 2 | load_ravines | PASS | 9 declared, missing from seeds: none |
 | 3 | load_ravines | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_ravines | PASS | SPEC LINK header present=true |

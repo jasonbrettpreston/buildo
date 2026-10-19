@@ -1386,7 +1386,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=262 |
+| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=263 |
 | 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
 | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_centroids | PASS | SPEC LINK header present=true |
