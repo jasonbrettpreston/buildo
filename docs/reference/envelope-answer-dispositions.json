@@ -1,7 +1,7 @@
 {
  "schema": "envelope-answer-dispositions-v1",
- "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings.",
- "count": 567,
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions.",
+ "count": 605,
  "dispositions": [
   {
    "unit_id": "10.10.40.10(1)#(1)(A)",
@@ -22,6 +22,28 @@
    "unit_id": "10.10.40.10(1)#(1)(D)",
    "verdict": "matches",
    "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.10(11)#(11)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-218"
+   ],
+   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60)",
+   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "disclosure_code": "flat_roof_setback"
+  },
+  {
+   "unit_id": "10.10.40.10(12)#(12)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-218"
+   ],
+   "basis": "review answers batch 3 (live page DB 2026-10-19); keyed under Q-M218 / LC-54 (a17a3b60)",
+   "corrected_value": "The R flat-roof step-back carries its disclosure (flat_roof_setback) and is also keyed as the upper_storey_setback_m measure under Q-M218 (applied only when the design picks a flat roof). Whether it should be disclosure-only is question Q-r-flat-roof-disclose; neither side is changed until it is answered.",
+   "disclosure_code": "flat_roof_setback"
   },
   {
    "unit_id": "10.10.40.10(2)#(2)(A)",
@@ -56,6 +78,30 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.10.40.10(3)#(3)(C)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex in R (not_applicable, no limit).",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); as RD 10.20.40.10(3)(C); M-183; the round-2 lock covers every zone",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ]
+  },
+  {
    "unit_id": "10.10.40.10(3)#(3)(D)",
    "verdict": "matches",
    "disposition": "matches"
@@ -83,6 +129,11 @@
    "basis": "review answers batch 2 (live page DB 2026-10-19); as RD 10.20.40.10(6) (M-215(2) correction already on the R unit)"
   },
   {
+   "unit_id": "10.10.40.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.10.40.30(1)#(1)(A)",
    "verdict": "matches",
    "disposition": "matches"
@@ -91,6 +142,11 @@
    "unit_id": "10.10.40.30(1)#(1)(B)",
    "verdict": "matches",
    "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.30(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
   },
   {
    "unit_id": "10.10.40.40(1)#(1)(A)",
@@ -157,6 +213,11 @@
    "disposition": "excluded"
   },
   {
+   "unit_id": "10.10.40.70(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.10.40.70(2)#whole",
    "verdict": "matches",
    "disposition": "matches"
@@ -187,7 +248,44 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.10.40.70(4)#(4)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "0.45 m side yard for a detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall).",
+   "disclosure_code": "blank_side_wall",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-205(2); Spec 78 main_side_setbacks_m"
+  },
+  {
+   "unit_id": "10.10.40.70(4)#(4)(E)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "0.45 m side yard for a semi-detached houseplex, taken without windows or doors on that side by default (Layer 3 main_side_setbacks_m); the condition is disclosed (blank_side_wall).",
+   "disclosure_code": "blank_side_wall",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-205(2); Spec 78 main_side_setbacks_m"
+  },
+  {
    "unit_id": "10.10.40.70(5)#(5)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.70(5)#(5)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.10.40.80(1)#(1)(C)",
    "verdict": "no_application",
    "disposition": "excluded"
   },
@@ -688,6 +786,39 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.20.40.20(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-206; LC-57 Q1"
+  },
+  {
+   "unit_id": "10.20.40.20(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "The one-storey 2.0 m extension is applied in the renovation scenario only and disclosed; the new-build length keeps the base limit (optional variation, LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-206; LC-57 Q1"
+  },
+  {
+   "unit_id": "10.20.40.20(2)#(2)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "Yes, a renovation calculation: in the renovation_addition scenario the back room may extend 2.0 m beyond the length cap if it is one storey, ≤ 5.0 m high, ≤ 50 % of the width and ≥ 3.0 m from each side lot line, from the user's existing-house inputs; the new build keeps the base length (LC-57 Q1).",
+   "disclosure_code": "one_storey_extension",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-206 (renovations only, operator 2026-10-18); LC-57 Q1"
+  },
+  {
    "unit_id": "10.20.40.20(3)#(3)(A)",
    "verdict": "matches",
    "disposition": "matches"
@@ -698,7 +829,22 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.20.40.20(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.20.40.30(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.30(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.30(2)#(2)(B)",
    "verdict": "matches",
    "disposition": "matches"
   },
@@ -824,6 +970,17 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.20.40.70(5)#(5)(B)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "RD lots needing more than 18.0 m of frontage: 7.5 m side yard for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard, keyed as its own measure deep_side_setback_m and disclosed (validation Q2).",
+   "disclosure_code": "deep_side_setback",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-205(2) dated note 2026-10-19; LC-57 Q2"
+  },
+  {
    "unit_id": "10.20.40.70(6)#(6)(A)",
    "verdict": "matches",
    "disposition": "matches"
@@ -832,6 +989,21 @@
    "unit_id": "10.20.40.70(6)#(6)(B)",
    "verdict": "matches",
    "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(7)#(7)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.70(7)#(7)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
   },
   {
    "unit_id": "10.40.20.100(12)#whole",
@@ -1558,6 +1730,44 @@
    "basis": "findings F note-only; M-158 min-template caveat"
   },
   {
+   "unit_id": "10.5.30.20(2)#(2)(A)",
+   "verdict": "unsure",
+   "disposition": "open",
+   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
+   "basis": "review answers batch 3 (live page DB 2026-10-19)"
+  },
+  {
+   "unit_id": "10.5.30.20(2)#(2)(B)",
+   "verdict": "unsure",
+   "disposition": "open",
+   "question": "Q-front-lot-line-3.5: keep 10.5.30.20(2) (no residential building on a lot whose front lot line is under 3.5 m, unless it abuts a 6.0 m lane) as a disclosure, not evaluated?",
+   "basis": "review answers batch 3 (live page DB 2026-10-19)"
+  },
+  {
+   "unit_id": "10.5.30.21(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "Applies only to a vacant lawfully existing lot, a site fact taken as not holding: never bound, disclosed (vacant_existing_lot).",
+   "disclosure_code": "vacant_existing_lot",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-158(1), M-169"
+  },
+  {
+   "unit_id": "10.5.30.21(3)#(3)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "Vacant lawfully existing lot: the house must meet the rest of the by-law or have a minor variance; disclosed.",
+   "disclosure_code": "vacant_existing_lot",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-158(1), M-169"
+  },
+  {
    "unit_id": "10.5.30.40(1)#whole",
    "verdict": null,
    "disposition": "resolved_by",
@@ -1577,6 +1787,16 @@
    "corrected_value": "Coverage is answered; if lawfully existing coverage is greater, that coverage stands (caveat disclosed).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings F note-only; M-158"
+  },
+  {
+   "unit_id": "10.5.30.50(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.30.50(1)#(1)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
   },
   {
    "unit_id": "10.5.40.10(1)#whole",
@@ -1603,6 +1823,66 @@
    "corrected_value": "Permitted maximum height answered; a greater lawful height of an existing building stands (caveat).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "10.5.40.11(4)#(4)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing main walls taller than the limit keep their height; disclosed, never applied.",
+   "disclosure_code": "existing_walls_site_fact",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.11(4)#(4)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing main walls taller than the limit keep their height; disclosed, never applied.",
+   "disclosure_code": "existing_walls_site_fact",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.20(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.40.20(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "Not a length rule: parts permitted to encroach into a setback (10.5.40.60) are excluded from the length measure; disclosed, the maximum length answered unchanged.",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-171 (measure exclusion disclosed)"
+  },
+  {
+   "unit_id": "10.5.40.21(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building longer than the limit keeps its length; renovation reading, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192, M-158"
+  },
+  {
+   "unit_id": "10.5.40.21(2)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "Renovation scenario: an addition to a building that keeps its lawful length must meet every other rule (or a minor variance); disclosed with 10.5.40.21(1).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192, M-211(1)"
   },
   {
    "unit_id": "10.5.40.40(1)#(1)(A)",
@@ -1696,6 +1976,50 @@
    "unit_id": "10.5.40.70(2)#whole",
    "verdict": "matches",
    "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.40.71(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building closer to the rear lot line keeps that setback; disclosed.",
+   "disclosure_code": "existing_walls_site_fact",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.71(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "A lawfully existing building closer to a side lot line keeps that setback; disclosed.",
+   "disclosure_code": "existing_walls_site_fact",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.71(4)#(4)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211"
+   ],
+   "corrected_value": "Renovation rule for side or rear additions to a lawfully existing building (lot under 9.0 m): disclosed, not calculated (needs the existing side-wall position).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-211(5), M-192"
+  },
+  {
+   "unit_id": "10.5.40.71(4)#(4)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211"
+   ],
+   "corrected_value": "Renovation rule for side or rear additions to a lawfully existing building (lot 9.0–12.2 m): the larger of half the side yard or the existing one; disclosed, not calculated.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); M-211(5), M-192"
   },
   {
    "unit_id": "10.60.20.100(12)#whole",
@@ -2523,6 +2847,30 @@
    "unit_id": "10.80.40.10(3)#(3)(B)",
    "verdict": "matches",
    "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(3)#(3)(C)",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex in RM (not_applicable, no limit).",
+   "basis": "review answers batch 3 (live page DB 2026-10-19); as RD 10.20.40.10(3)(C); M-183; the round-2 lock covers every zone",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-174(4) on (E) + M-183 — the houseplex and house-with-suite FSI exemption takes effect (round 2, operator 2026-10-19)",
+     "it": "M-183: houseplex storeys under ST 2 are not capped (x.40.10(3)(C); RT x.40.10(2)(C)); a house keeps 2",
+     "asserts": [
+      "detached_houseplex",
+      "height_storeys"
+     ],
+     "satisfies": [
+      "M-183"
+     ]
+    }
+   ]
   },
   {
    "unit_id": "10.80.40.10(3)#(3)(D)",

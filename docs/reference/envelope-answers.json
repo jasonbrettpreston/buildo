@@ -1,8 +1,8 @@
 {
  "schema": "envelope-answers-v1",
- "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
- "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567)",
- "count": 567,
+ "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). + 38 answers from dump envdb9 (2026-10-19). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567) + envdb9 2026-10-19 (605)",
+ "count": 605,
  "answers": [
   {
    "note": "",
@@ -47,6 +47,28 @@
    "unit_id": "10.10.40.10(1)#(1)(D)",
    "updated_at": "2026-10-19T17:36:58.983Z",
    "verdict": "matches"
+  },
+  {
+   "note": "Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R zone - doesn't apply to apartment buildings. So you can exceed the permitted max height if you meet this condition  the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.10.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.10.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.10.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.10.40.10(2. - this is just a disclosure ",
+   "reading_sha": "1036cef3a73f65d8",
+   "regulation_id": "10.10.40.10(11)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(11)#(11)(A)",
+   "updated_at": "2026-10-19T20:05:39.373Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "aximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R zone - doesn't apply to apartment buildings. So you can exceed the permitted max height if you meet this condition  the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.10.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.10.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.10.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.10.40.10(2. - this is just a disclosure ",
+   "reading_sha": "9525e8e5730e0256",
+   "regulation_id": "10.10.40.10(12)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(12)#(12)(A)",
+   "updated_at": "2026-10-19T20:06:03.916Z",
+   "verdict": "disclose"
   },
   {
    "note": "",
@@ -104,6 +126,17 @@
    "verdict": "matches"
   },
   {
+   "note": "his is critical the maximum number of stories doesn't apply to a houseplex. for the R zone",
+   "reading_sha": "d86e27ce3a2fb01e",
+   "regulation_id": "10.10.40.10(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(3)#(3)(C)",
+   "updated_at": "2026-10-19T20:00:47.787Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "",
    "reading_sha": "5988d0619e79249e",
    "regulation_id": "10.10.40.10(3)",
@@ -138,6 +171,17 @@
   },
   {
    "note": "",
+   "reading_sha": "ec1e37beaaca6fd0",
+   "regulation_id": "10.10.40.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.20(1)#(1)(A)",
+   "updated_at": "2026-10-19T20:06:34.529Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
    "reading_sha": "ce846142620602cb",
    "regulation_id": "10.10.40.30(1)",
    "set": "base",
@@ -157,6 +201,17 @@
    "unit_id": "10.10.40.30(1)#(1)(B)",
    "updated_at": "2026-10-19T17:46:00.860Z",
    "verdict": "matches"
+  },
+  {
+   "note": "Max building depth doesn't apply to townhouses and apartment buildings",
+   "reading_sha": "f76cc2cd80f2639b",
+   "regulation_id": "10.10.40.30(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.30(1)#(1)(D)",
+   "updated_at": "2026-10-19T20:34:57.660Z",
+   "verdict": "no_application"
   },
   {
    "note": "",
@@ -201,6 +256,17 @@
    "unit_id": "10.10.40.40(1)#(1)(D)",
    "updated_at": "2026-10-19T17:49:35.180Z",
    "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "1b7b0e49b1e45538",
+   "regulation_id": "10.10.40.70(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(1)#whole",
+   "updated_at": "2026-10-19T20:35:47.296Z",
+   "verdict": "matches"
   },
   {
    "note": "",
@@ -269,6 +335,28 @@
    "verdict": "matches"
   },
   {
+   "note": "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this.",
+   "reading_sha": "94147c2a0f0830b1",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(D)",
+   "updated_at": "2026-10-19T19:55:41.474Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This correct but you forgot the key condition -if there are no windows or doors in that side of the building - which we assume is the case - we need to disclose this. You say above this applies with no condition which is wrong",
+   "reading_sha": "947a2bc6cda4e1d2",
+   "regulation_id": "10.10.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(4)#(4)(E)",
+   "updated_at": "2026-10-19T19:56:18.467Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "This is for an apartment building or a townhouse on a major street. ",
    "reading_sha": "c681a7a5407d01d0",
    "regulation_id": "10.10.40.70(5)",
@@ -277,6 +365,39 @@
    "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
    "unit_id": "10.10.40.70(5)#(5)(A)",
    "updated_at": "2026-10-19T17:57:04.110Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e094ca0cb2a62af5",
+   "regulation_id": "10.10.40.70(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(5)#(5)(B)",
+   "updated_at": "2026-10-19T19:56:48.361Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "bd782eeff0fbd43f",
+   "regulation_id": "10.10.40.70(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.70(5)#(5)(C)",
+   "updated_at": "2026-10-19T20:56:20.068Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "86e521a2541c64f8",
+   "regulation_id": "10.10.40.80(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.80(1)#(1)(C)",
+   "updated_at": "2026-10-19T21:00:48.437Z",
    "verdict": "no_application"
   },
   {
@@ -865,6 +986,39 @@
    "verdict": "matches"
   },
   {
+   "note": "this is not a concern for us - but should be disclosed. Renovation or expanding the envelope.",
+   "reading_sha": "dc7aeea17580485f",
+   "regulation_id": "10.20.40.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.20(2)#(2)(A)",
+   "updated_at": "2026-10-19T20:07:06.453Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "his is not a concern for us - but should be disclosed. Renovation or expanding the envelope.",
+   "reading_sha": "09362d60e535e969",
+   "regulation_id": "10.20.40.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.20(2)#(2)(B)",
+   "updated_at": "2026-10-19T20:07:17.154Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is critical calculation for the renovation of the existing building - the user will provide the inputs -on a lot with a required minimum lot frontage of more than 12.0 metres to 18.0 metres, a detached house may extend beyond the permitted maximum building length by a maximum of 2.0 metres, if the extended part: (C) is at least 3.0 metres from each side lot line",
+   "reading_sha": "29a263679d473e10",
+   "regulation_id": "10.20.40.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.20(2)#(2)(C)",
+   "updated_at": "2026-10-19T20:34:20.243Z",
+   "verdict": "unsure"
+  },
+  {
    "note": "",
    "reading_sha": "d039ef42a6ea06b3",
    "regulation_id": "10.20.40.20(3)",
@@ -888,6 +1042,17 @@
   },
   {
    "note": "",
+   "reading_sha": "a7a53c6518f467a5",
+   "regulation_id": "10.20.40.20(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.20(4)#(4)(A)",
+   "updated_at": "2026-10-19T20:55:51.407Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
    "reading_sha": "3dc89a536e386dd1",
    "regulation_id": "10.20.40.30(1)",
    "set": "base",
@@ -895,6 +1060,28 @@
    "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
    "unit_id": "10.20.40.30(1)#whole",
    "updated_at": "2026-10-19T18:05:08.942Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "b23b4ee81cbccdef",
+   "regulation_id": "10.20.40.30(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.30(2)#(2)(A)",
+   "updated_at": "2026-10-19T20:35:11.183Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "c5806dc51c0479cd",
+   "regulation_id": "10.20.40.30(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.30(2)#(2)(B)",
+   "updated_at": "2026-10-19T20:35:41.658Z",
    "verdict": "matches"
   },
   {
@@ -1053,6 +1240,17 @@
   },
   {
    "note": "",
+   "reading_sha": "f7803d1e93c80897",
+   "regulation_id": "10.20.40.70(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(5)#(5)(B)",
+   "updated_at": "2026-10-19T20:00:04.488Z",
+   "verdict": "unsure"
+  },
+  {
+   "note": "",
    "reading_sha": "ab913031c02b1877",
    "regulation_id": "10.20.40.70(6)",
    "set": "base",
@@ -1072,6 +1270,39 @@
    "unit_id": "10.20.40.70(6)#(6)(B)",
    "updated_at": "2026-10-19T18:06:42.954Z",
    "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "6c01ec19b796ea60",
+   "regulation_id": "10.20.40.70(7)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(7)#(7)(B)",
+   "updated_at": "2026-10-19T21:00:20.925Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "5872b0037cc4db63",
+   "regulation_id": "10.20.40.70(7)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(7)#(7)(C)",
+   "updated_at": "2026-10-19T21:00:32.066Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "0ba70b327f18e17b",
+   "regulation_id": "10.20.40.80(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.80(1)#(1)(C)",
+   "updated_at": "2026-10-19T21:00:54.383Z",
+   "verdict": "no_application"
   },
   {
    "note": "12) Secondary Suite A secondary suite in the RS zone must comply with the specific use regulations in Section 150.10. we have this",
@@ -1912,6 +2143,50 @@
    "unit_id": "10.5.30.11(1)#whole"
   },
   {
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "reading_sha": "10d677dbae7915c2",
+   "regulation_id": "10.5.30.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.20(2)#(2)(A)",
+   "updated_at": "2026-10-19T21:03:06.056Z",
+   "verdict": "unsure"
+  },
+  {
+   "note": "Minimum front lot line for a residential building  is 3.5M unless abuts lane with a minimum width of 6M - Not sure this applies to anything",
+   "reading_sha": "2bc9227bd9228b3d",
+   "regulation_id": "10.5.30.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.20(2)#(2)(B)",
+   "updated_at": "2026-10-19T21:03:26.465Z",
+   "verdict": "unsure"
+  },
+  {
+   "note": "This only applies to a vacant lot.  No every lot.  And it says that to build a house or a detached houseplex you need lot frontage of at least 6M. This doesn't apply to a lot that is not vacant.  Disclosure",
+   "reading_sha": "24c3e403f28a365c",
+   "regulation_id": "10.5.30.21(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.21(3)#(3)(A)",
+   "updated_at": "2026-10-19T20:37:52.075Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This just dels with a vacant lot - a structure can only be built if it complies with the bylaw. we Wouldn't know if the lot is vacant. very unimportant",
+   "reading_sha": "750136efd60bc5a5",
+   "regulation_id": "10.5.30.21(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.21(3)#(3)(B)",
+   "updated_at": "2026-10-19T21:04:49.099Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "This is looking at legal encroachments - that are excluded from the regular calculation of lot coverage, but since we cant identify the encroachments - this bylaw doesnt apply - except as an exception they may need to look into.",
    "reading_sha": "e857a01f9c5538b7",
    "regulation_id": "10.5.30.40(1)",
@@ -1926,6 +2201,28 @@
    "set": "base",
    "source": "recovered from operator paste 2026-10-15",
    "unit_id": "10.5.30.41(1)#whole"
+  },
+  {
+   "note": "",
+   "reading_sha": "86bc65fbf1258842",
+   "regulation_id": "10.5.30.50(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.50(1)#(1)(A)",
+   "updated_at": "2026-10-19T21:05:00.328Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "155b93e30f157db1",
+   "regulation_id": "10.5.30.50(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.30.50(1)#(1)(B)",
+   "updated_at": "2026-10-19T21:05:04.114Z",
+   "verdict": "no_application"
   },
   {
    "note": "This is just defining how to determine the height of a building - nothing applies here.",
@@ -1956,6 +2253,72 @@
    "source": "recovered from operator paste 2026-10-15",
    "unit_id": "10.5.40.11(1)#whole",
    "verdict": "disclose"
+  },
+  {
+   "note": "This is a disclosure - fi the max height of the existing walls for an existing structure - they get grandfathers in.  Disclosure. ",
+   "reading_sha": "ade5976c3176d0b6",
+   "regulation_id": "10.5.40.11(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.11(4)#(4)(A)",
+   "updated_at": "2026-10-19T20:39:22.387Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "4) Height of Main Walls for Lawfully Existing Buildings In the Residential Zone category, if the lawful height of the exterior portion of the main walls of a lawfully existing building or structure is greater than the permitted maximum height for each respective pair of the following main walls, that lawful height is the maximum height for the exterior portion of the respective pair of main walls for that lawfully existing building or structure: (A) the front and rear main walls; o",
+   "reading_sha": "0ded49f42b254ed1",
+   "regulation_id": "10.5.40.11(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.11(4)#(4)(B)",
+   "updated_at": "2026-10-19T20:40:17.930Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "a7d842d79f151a59",
+   "regulation_id": "10.5.40.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.20(1)#whole",
+   "updated_at": "2026-10-19T20:40:46.841Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "This does not define the building length - this is the exclusion from the building length in the residential zone.  ie. ny part of a building or structure permitted to encroach into a required minimum building setback in Clause 10.5.40.60 is excluded from the calculation of building length.",
+   "reading_sha": "b966c79ebbfbd6d3",
+   "regulation_id": "10.5.40.20(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.20(2)#whole",
+   "updated_at": "2026-10-19T20:42:01.859Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is the permitted building length for a lawfully existing building - grandfathering in the length - its a disclosure - the person will input the data for the existing building",
+   "reading_sha": "19f770becd8a7d84",
+   "regulation_id": "10.5.40.21(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.21(1)#whole",
+   "updated_at": "2026-10-19T20:44:51.285Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This speaks to renovations scenario - just says it must comply with other bylaws",
+   "reading_sha": "51ab6639a123b266",
+   "regulation_id": "10.5.40.21(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.21(2)#whole",
+   "updated_at": "2026-10-19T21:05:32.977Z",
+   "verdict": "unsure"
   },
   {
    "note": "This is a disclosure - Depending on your design the attic of the building you design may force you to include the attic space as GFA.  You can also design a home without an attic and thus not adding any GFA. This is disclosure - ",
@@ -2055,6 +2418,50 @@
    "unit_id": "10.5.40.70(2)#whole",
    "updated_at": "2026-10-19T18:04:55.717Z",
    "verdict": "matches"
+  },
+  {
+   "note": "Lawfully existing - just grandfathering in the minimum rear yard setback ",
+   "reading_sha": "2615aeca83708ce6",
+   "regulation_id": "10.5.40.71(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(1)#(1)(B)",
+   "updated_at": "2026-10-19T20:46:14.829Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Lawfully existing - just grandfathering in the existing side lot line",
+   "reading_sha": "cb9337a0ced19e4c",
+   "regulation_id": "10.5.40.71(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(1)#(1)(C)",
+   "updated_at": "2026-10-19T20:47:29.477Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage is less than 9M =the minimum sideboard setback permitted. This speaks to the renovations scenario",
+   "reading_sha": "5045e44c68b5ba2a",
+   "regulation_id": "10.5.40.71(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(4)#(4)(A)",
+   "updated_at": "2026-10-19T20:53:46.139Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "This is referring to additions to the rear or side of lawfully existing buildings - any extension to the rear or side = if the lot frontage ifrom 9Mto 12M is the greater of 50% of the min side yard setback or the minimum side yard setback permitted. Important for the renovations scenario",
+   "reading_sha": "286b1e9ee02d894b",
+   "regulation_id": "10.5.40.71(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(4)#(4)(B)",
+   "updated_at": "2026-10-19T20:55:29.683Z",
+   "verdict": "wrong"
   },
   {
    "note": "This just states what we know from 150.10 - RT applies",
@@ -3107,6 +3514,17 @@
    "source": "operator copy-paste 2026-10-15",
    "unit_id": "10.80.40.10(3)#(3)(B)",
    "verdict": "matches"
+  },
+  {
+   "note": "his is critical the maximum number of stories doesn't apply to a houseplex. for the RM zone.",
+   "reading_sha": "22618b42cf26b7be",
+   "regulation_id": "10.80.40.10(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.80.40.10(3)#(3)(C)",
+   "updated_at": "2026-10-19T20:01:04.153Z",
+   "verdict": "wrong"
   },
   {
    "fixed": "2026-10-15: verdict \"matches |\" from the paste parser normalised to \"matches\"",
