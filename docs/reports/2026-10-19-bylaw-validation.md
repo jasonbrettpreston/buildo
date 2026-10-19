@@ -2,7 +2,7 @@
 
 **Tree validated:** `wf2/p4-integrate-5@604149d2`. That is the programme tip 221f3e37 plus the C6 rulings and every by-law fix from 2026-10-19, including the Spec 68 "percent of the requirements cited in" link. A first pass ran on `62269c66` and is superseded; where the result moved, both are given.
 
-**Database:** read-only. Every query ran inside `BEGIN READ ONLY … ROLLBACK`, and nothing was written. Tooling is in `scripts/analysis/bylaw/validation/`, and the machine-readable results are in `docs/reports/2026-10-19-bylaw-validation.json`.
+**Database:** read-only. Every query ran inside `BEGIN READ ONLY … ROLLBACK`, and nothing was written. Tooling is in `scripts/analysis/bylaw-validation/`, and the machine-readable results are in `docs/reports/2026-10-19-bylaw-validation.json`.
 
 ## Counts first
 
@@ -152,7 +152,7 @@ A real test needs above-grade GFA, for example from imagery massing.
 ## Reproduce
 
 ```
-cd scripts/analysis/bylaw/validation
+cd scripts/analysis/bylaw-validation
 DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r dotenv/config pull-lots.cjs out/lots.json 4
 node eval-lots.mjs <tree> out/lots.json out/eval.json && node check-invariants.mjs <tree> out/eval.json out/inv.json
 node claude-reading.mjs out/hc-lots.json out/claude-round1.json
