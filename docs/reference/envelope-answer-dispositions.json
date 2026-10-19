@@ -1,0 +1,3868 @@
+{
+ "schema": "envelope-answer-dispositions-v1",
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "count": 511,
+ "dispositions": [
+  {
+   "unit_id": "10.20.20.100(12)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: the RD secondary suite must comply with Section 150.10 (an INCLUDE owned by M-177), not a separate envelope answer.",
+   "basis": "triage F01; M-187 Q14 says the suite pointers are matches"
+  },
+  {
+   "unit_id": "10.20.20.100(16)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RD laneway suite must comply with Section 150.8 (INCLUDE owned by M-177).",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.20.20.100(17)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RD garden suite must comply with Section 150.7 (INCLUDE owned by M-177).",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.20.20.20(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.30.1(1)#(1)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "On an exception lot the exception's detached-house lot requirements apply to a detached houseplex (substitution, more permissive prevails).",
+   "basis": "triage F02; MF-1(1) became M-180"
+  },
+  {
+   "unit_id": "10.20.30.1(2)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180",
+    "M-182"
+   ],
+   "corrected_value": "The more permissive of the base and Chapter 900 exception coverage prevails for a houseplex or a suite; re-read as wrong -> M-180 (with M-182).",
+   "basis": "triage F03/Q1; RD null recorded as wrong -> MF-1 (M-180)"
+  },
+  {
+   "unit_id": "10.20.30.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.10(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.20(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.20(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F06 (M-187 Q13 re-key) with M-176(1) driveway default"
+  },
+  {
+   "unit_id": "10.20.30.20(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.40(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.30.40(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-182",
+    "M-221"
+   ],
+   "corrected_value": "Lot coverage 45 % also applies to a residential building with a secondary suite (the suite class subject is now read).",
+   "basis": "triage F08; MF-3 became M-182, release unkeyed per M-221"
+  },
+  {
+   "unit_id": "10.20.40.1(1)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-219",
+    "M-159"
+   ],
+   "corrected_value": "Article 10.20.40 governs the principal building only (\"other than ancillary buildings\"): the garden / laneway suite takes its own 150.7 / 150.8 rules, never the x.40 setbacks (the evaluator defect is M-219).",
+   "basis": "triage F09; M-158 default, no ruling names this unit"
+  },
+  {
+   "unit_id": "10.20.40.1(10)#(10)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(10)#(10)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(10)#(10)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(10)#(10)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(10)#(10)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(2)#(2)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "MaxBLD answers the one-building case: the detached houseplex is the only residential building on the lot (new-build default).",
+   "basis": "triage F09 (class b); M-180/MF-1 uses the x.40.1(2)(A) new-build default, stated in M-158"
+  },
+  {
+   "unit_id": "10.20.40.1(2)#(2)(B)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-214"
+   ],
+   "corrected_value": "More than one townhouse or apartment building on a major-street lot belongs to the major-street forms, which are not modelled and are disclosed (major_street_forms_not_modelled).",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "basis": "triage F09 (class b)"
+  },
+  {
+   "unit_id": "10.20.40.1(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(3)#(3)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(4)#(4)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse unit width answered 5.0 m (no individual private driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F10; M-187 Q4, M-176(1)"
+  },
+  {
+   "unit_id": "10.20.40.1(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.1(5)#(5)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-202",
+    "M-195"
+   ],
+   "corrected_value": "The 'u' label is a dwelling-unit cap on the class; a garden or laneway suite does not count toward it (no 'u' = no cap).",
+   "basis": "triage F09/Q11; M-202 'u' cap ruling"
+  },
+  {
+   "unit_id": "10.20.40.1(5)#(5)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(6)#(6)(A)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "Chapter 900 principal-building requirements for a detached house also apply to the detached houseplex, more permissive prevailing.",
+   "basis": "triage F11/Q1; RD null recorded as wrong -> MF-1 (M-180)"
+  },
+  {
+   "unit_id": "10.20.40.1(7)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "Where the exception and the zone's houseplex rule both apply, the more permissive applies, with the losing value disclosed.",
+   "basis": "triage F11/Q1; RD null recorded as wrong -> MF-1 (M-180)"
+  },
+  {
+   "unit_id": "10.20.40.1(8)#(8)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(8)#(8)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(8)#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(9)#(9)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(9)#(9)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.1(9)#(9)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(2)#(2)(B)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-176",
+    "M-190",
+    "M-218"
+   ],
+   "corrected_value": "Specified pairs of main walls is an envelope limit (main_wall_height_m), not a disclosure only.",
+   "basis": "triage F13 (class b); M-176(2) with M-190/M-218"
+  },
+  {
+   "unit_id": "10.20.40.10(2)#(2)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed.",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "basis": "triage F13 (C) only covered by Q-MW3 for RT; RD answer unruled"
+  },
+  {
+   "unit_id": "10.20.40.10(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(3)#(3)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached houseplex (not_applicable, no limit).",
+   "basis": "triage F14; MF-4 became M-183"
+  },
+  {
+   "unit_id": "10.20.40.10(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.10(4)#(4)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-217",
+    "M-218",
+    "M-184"
+   ],
+   "corrected_value": "No development map applies: for a flat or shallow roof (a design choice), all main walls ≤ max(7.2 m, H − 2.5 m) with the storey above set back 1.4 m ((4)(B)); the \"Development Standard Set 1\" gate is a Chapter 40 leak (M-217) and the roof-slope condition is unkeyed (M-218).",
+   "basis": "triage F13 PIN-5; M-218 roof-slope condition, M-184 roof forms"
+  },
+  {
+   "unit_id": "10.20.40.10(4)#(4)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.10(4)#(4)(C)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-184"
+   ],
+   "corrected_value": "The shallow-roof disclosure stands; both roof forms are modelled and the alternative is disclosed.",
+   "disclosure_code": "flat_roof_setback",
+   "basis": "triage F13; M-184 both roof forms"
+  },
+  {
+   "unit_id": "10.20.40.10(5)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.10(6)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-215"
+   ],
+   "corrected_value": "Main pedestrian entrance height (1.2 m) is a disclosure only, not a building-envelope limit.",
+   "disclosure_code": "main_entrance_height",
+   "basis": "triage F15; M-215 main-entrance clause scope"
+  },
+  {
+   "unit_id": "10.20.40.10(7)#(7)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls are not main walls within the 40 % share; the maximum design takes the 40 %.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "triage F16; dormer ruling M-185"
+  },
+  {
+   "unit_id": "10.20.40.10(7)#(7)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls within the 40 % width share are not main walls, so the maximum design places the dormers at that share.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "triage F16; M-185"
+  },
+  {
+   "unit_id": "10.20.40.10(8)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-203"
+   ],
+   "corrected_value": "RD 10.20.40.10(8) excludes a mechanical attic of ≤ 20 m² from the storey count, not from floor area; a failing attic is reported outside the floor-area total (GFA) under 10.5.40.40(1) (M-203), disclosed.",
+   "disclosure_code": "attic_outside_gfa",
+   "basis": "M-203; 10.20.40.10(8) verbatim \"this space is not a storey\" (storey rule)"
+  },
+  {
+   "unit_id": "10.20.40.11(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192",
+    "M-196"
+   ],
+   "corrected_value": "Changing the roofline of an existing building is a renovation/extension reading, disclosed.",
+   "disclosure_code": "existing_roof_alteration",
+   "basis": "renovation disclosure; M-192/M-196 renovation readings"
+  },
+  {
+   "unit_id": "10.20.40.20(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.20.100(12)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RS secondary suite must comply with Section 150.10 (INCLUDE owned by M-177).",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.40.20.100(16)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RS laneway suite must comply with Section 150.8.",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.40.20.100(17)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RS garden suite must comply with Section 150.7.",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.40.20.20(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.30.1(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.1(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-180",
+    "M-182"
+   ],
+   "corrected_value": "More permissive of the base and the Chapter 900 exception coverage prevails for a houseplex or a residential building with a secondary suite.",
+   "basis": "triage F03; MF-1 (M-180) and MF-3 (M-182)"
+  },
+  {
+   "unit_id": "10.40.30.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.10(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
+   "disclosure_code": "semi_house_two_lots",
+   "basis": "triage F05; MF-2 became M-181"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F06; M-187 Q13, M-176(1)"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(E)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.40(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.30.40(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-182",
+    "M-221"
+   ],
+   "corrected_value": "The 45 % coverage applies to a detached or semi-detached houseplex or a residential building with a secondary suite, shown in the summary.",
+   "basis": "triage F08; MF-3 became M-182, release unkeyed per M-221"
+  },
+  {
+   "unit_id": "10.40.40.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(5)#(5)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(5)#(5)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(6)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.1(7)#(7)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "corrected_value": "Bedroom cap: 4 × units at two units, 3 × units at three or more; reported as max_bedrooms and disclosed (bedroom_cap).",
+   "disclosure_code": "bedroom_cap",
+   "basis": "triage F12 (class d); bedroom cap report field"
+  },
+  {
+   "unit_id": "10.40.40.1(7)#(7)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "corrected_value": "Bedroom cap reported as max_bedrooms; disclosed.",
+   "disclosure_code": "bedroom_cap",
+   "basis": "triage F12"
+  },
+  {
+   "unit_id": "10.40.40.1(7)#(7)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "corrected_value": "A bachelor unit counts as one bedroom for the cap; disclosed.",
+   "disclosure_code": "bedroom_cap",
+   "basis": "triage F12"
+  },
+  {
+   "unit_id": "10.40.40.1(8)#(8)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(8)#(8)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(8)#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(9)#(9)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158",
+    "M-178"
+   ],
+   "corrected_value": "A transition definition of \"lawfully existing\" (26 June 2025); it only feeds the lawfully-existing caveat.",
+   "basis": "triage F12/F24; M-187 procedural recommendation"
+  },
+  {
+   "unit_id": "10.40.40.1(9)#(9)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(9)#(9)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(9)#(9)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.1(9)#(9)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(2)#(2)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(2)#(2)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed.",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "basis": "triage F13 Q-MW3 answered: RT has no main-wall rule (M-186)"
+  },
+  {
+   "unit_id": "10.40.40.10(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(3)#(3)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
+   "basis": "triage F14; MF-4 became M-183"
+  },
+  {
+   "unit_id": "10.40.40.10(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.10(4)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.40.40.10(5)#(5)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls are not main walls; dormers count only through the 40 % width share in the maximum design.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "triage F16; M-185"
+  },
+  {
+   "unit_id": "10.40.40.10(5)#(5)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls within the 40 % share are not main walls; the maximum design places dormers at that share.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "triage F16; M-185"
+  },
+  {
+   "unit_id": "10.40.40.10(6)#(6)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-184",
+    "M-200"
+   ],
+   "corrected_value": "Flat-or-shallow-roof set-back storey: an envelope allowance for a chosen flat roof, disclosed; both roof forms modelled.",
+   "disclosure_code": "flat_roof_setback",
+   "basis": "M-184 both roof forms; M-200 flat-roof set-back storey"
+  },
+  {
+   "unit_id": "10.40.40.20(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.20(2)#(2)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "Applied in the renovation (addition) scenario only (operator 2026-10-18, M-206): +2.0 m beyond the length cap, one storey ≤ 5.0 m, ≤ 50 % of the building width, ≥ 3.0 m from each side line; disclosed. New-build rows do not take it.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206 one-storey 2.0 m extension"
+  },
+  {
+   "unit_id": "10.40.40.20(2)#(2)(B)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "As (A): renovation (addition) only (M-206), disclosed.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206"
+  },
+  {
+   "unit_id": "10.40.40.20(2)#(2)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "As (A): renovation (addition) only (M-206), disclosed.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206"
+  },
+  {
+   "unit_id": "10.40.40.20(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.20(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.20(4)#(4)(A)",
+   "verdict": "wrong",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "No change: (A) is the townhouse 19.0 m and (B) the apartment 25.0 m, a separate unit, so the answer already matches.",
+   "basis": "triage F18/Q8; M-187 Q8 no change"
+  },
+  {
+   "unit_id": "10.40.40.30(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.30(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.30(2)#(2)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.40(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a houseplex or a residential building with a secondary suite (not_applicable, no FSI cap).",
+   "basis": "triage F19; M-183 + M-182"
+  },
+  {
+   "unit_id": "10.40.40.40(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "FSI does not apply to a townhouse or apartment building with 60 dwelling units or fewer (not_applicable).",
+   "basis": "triage F19; MF-4 became M-183"
+  },
+  {
+   "unit_id": "10.40.40.50(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Decks and platforms are accessory scope, never limiting the principal building; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "triage F20; M-175 / M-159(2)"
+  },
+  {
+   "unit_id": "10.40.40.50(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Upper-storey platforms are accessory scope; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "triage F20"
+  },
+  {
+   "unit_id": "10.40.40.50(3)#(3)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Upper-storey platforms are accessory scope; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "triage F20"
+  },
+  {
+   "unit_id": "10.40.40.70(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
+   "basis": "triage F21/F22; M-205 rear greater-of"
+  },
+  {
+   "unit_id": "10.40.40.70(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205"
+   ],
+   "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
+   "basis": "triage F21; M-205"
+  },
+  {
+   "unit_id": "10.40.40.70(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(3)#(3)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.70(4)#(4)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.80(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.80(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.80(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.40.40.80(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Building separation applies only when two or more buildings are on the lot; disclosed as a multi-building rule, not bound.",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22; M-187 Q12"
+  },
+  {
+   "unit_id": "10.40.40.80(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Building separation disclosed as a multi-building rule (5.5 m / 11.0 m), not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22; M-187 Q12"
+  },
+  {
+   "unit_id": "10.5.1.10(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.1.10(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.1.10(3)#(3)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.5.1.10(3)#(3)(E)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-174"
+   ],
+   "corrected_value": "The 'd' letter defines the permitted maximum FSI; the binding max is answered by x.40.40(1) and the label mask is released.",
+   "basis": "findings E unsure; M-174(4) zone-label mask"
+  },
+  {
+   "unit_id": "10.5.30.11(1)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Required minimum lot area is answered; if the lot lawfully existed smaller on 9 May 2013 that lawful area is the minimum (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings F note-only; M-158 min-template caveat"
+  },
+  {
+   "unit_id": "10.5.30.40(1)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Encroachment coverage exclusions are disclosed, never evaluated.",
+   "basis": "findings F note-only; M-169(4)"
+  },
+  {
+   "unit_id": "10.5.30.41(1)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Coverage is answered; if lawfully existing coverage is greater, that coverage stands (caveat disclosed).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings F note-only; M-158"
+  },
+  {
+   "unit_id": "10.5.40.10(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.10(4)#(4)(B)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Equipment above the maximum height: the 20 % face-width limit is not modelled and is disclosed; the reading changed after this review.",
+   "basis": "findings F note-only (sha differs); M-169"
+  },
+  {
+   "unit_id": "10.5.40.11(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Permitted maximum height answered; a greater lawful height of an existing building stands (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "10.60.20.100(12)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RT secondary suite must comply with Section 150.10 (INCLUDE owned by M-177).",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.60.20.100(16)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RT laneway suite must comply with Section 150.8.",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.60.20.100(17)#whole",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Suite pointer matches: an RT garden suite must comply with Section 150.7.",
+   "basis": "triage F01; M-187 Q14"
+  },
+  {
+   "unit_id": "10.60.20.20(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.30.1(1)#(1)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "On an exception lot the exception's detached-house lot requirements apply to a detached houseplex (more permissive prevails).",
+   "basis": "triage F02; M-180"
+  },
+  {
+   "unit_id": "10.60.30.1(1)#(1)(B)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "On an exception lot the exception's semi-detached-house lot requirements apply to a semi-detached houseplex.",
+   "basis": "triage F02; M-180"
+  },
+  {
+   "unit_id": "10.60.30.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-180",
+    "M-182"
+   ],
+   "corrected_value": "Where the houseplex or suite coverage and the Chapter 900 exception coverage both apply, the more permissive prevails (build bigger).",
+   "basis": "triage F03; M-180 + M-182"
+  },
+  {
+   "unit_id": "10.60.30.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.10(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed).",
+   "disclosure_code": "semi_house_two_lots",
+   "basis": "triage F04; MF-2 became M-181"
+  },
+  {
+   "unit_id": "10.60.30.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.10(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.20(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.20(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F06; M-187 Q13, M-176(1)"
+  },
+  {
+   "unit_id": "10.60.30.20(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.20(1)#(1)(E)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(C)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "No change: (C) names only a townhouse or apartment building on a major street; the suite subject lives in (D).",
+   "basis": "triage F08/Q7; M-187 Q7"
+  },
+  {
+   "unit_id": "10.60.30.40(1)#(1)(D)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-182"
+   ],
+   "corrected_value": "The 45 % coverage also applies to a residential building with a secondary suite (suite class subject).",
+   "basis": "triage F08; MF-3 became M-182"
+  },
+  {
+   "unit_id": "10.60.40.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-202"
+   ],
+   "corrected_value": "The RT 'u' label caps dwelling units on the class (no 'u' means no cap); it is not a one-building-per-lot rule.",
+   "basis": "triage F09; M-202 'u' cap, not a one-building rule"
+  },
+  {
+   "unit_id": "10.60.40.1(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(3)#(3)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-176"
+   ],
+   "corrected_value": "Townhouse unit width answered 5.0 m (no individual private driveway); 6.0 m disclosed if each unit has one.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F10; M-176(1)"
+  },
+  {
+   "unit_id": "10.60.40.1(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.1(4)#(4)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(4)#(4)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(5)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "Houseplex principal-building requirements take the more permissive of the Chapter 900 exception and the zone rule.",
+   "basis": "triage F11; MF-1 became M-180"
+  },
+  {
+   "unit_id": "10.60.40.1(6)#(6)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(6)#(6)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(6)#(6)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(7)#(7)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(7)#(7)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(7)#(7)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(8)#(8)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(8)#(8)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(8)#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(8)#(8)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.1(8)#(8)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.60.40.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(2)#(2)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(2)#(2)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.10(2)#(2)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "Storeys not capped for a detached or semi-detached houseplex (not_applicable, no limit).",
+   "basis": "triage F14; MF-4 became M-183"
+  },
+  {
+   "unit_id": "10.60.40.10(2)#(2)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183",
+    "M-182"
+   ],
+   "corrected_value": "FSI does not apply to a houseplex or a detached house with a secondary suite (not_applicable, no FSI cap).",
+   "basis": "triage F19; M-183 + M-182"
+  },
+  {
+   "unit_id": "10.60.40.40(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-183"
+   ],
+   "corrected_value": "FSI does not apply to a townhouse with 60 dwelling units or fewer (not_applicable).",
+   "basis": "triage F19/Q6; M-183"
+  },
+  {
+   "unit_id": "10.60.40.70(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(2)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.70(4)#(4)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.80(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.80(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.60.40.80(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation applies only to two or more buildings on the same lot; disclosed as a multi-building rule (the suite's own separation is 150.7/150.8.60.30(1)).",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22/Q12; M-187 Q12"
+  },
+  {
+   "unit_id": "10.60.40.80(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22/Q12; M-187 Q12"
+  },
+  {
+   "unit_id": "10.60.40.80(2)#(2)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "The 2.4 m side-main-wall separation is disclosed as part of the multi-building rule (two or more buildings on the lot).",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22/Q12; M-187 Q12"
+  },
+  {
+   "unit_id": "10.60.40.81(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Lawfully existing buildings keep their lawful separation (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "triage F23; M-158"
+  },
+  {
+   "unit_id": "10.60.40.81(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "Separation exemptions for additions to an existing building; renovation reading disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "triage F23; M-158 + M-196"
+  },
+  {
+   "unit_id": "10.80.20.100(15)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.20.100(19)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.20.100(20)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.20.20(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.30.1(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.30.1(1)#(1)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.30.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-182",
+    "M-180"
+   ],
+   "corrected_value": "Adding a secondary suite gives the more permissive coverage of the suite rule and the exception (build bigger), answered not just keyed.",
+   "basis": "triage F03; M-182 + M-180"
+  },
+  {
+   "unit_id": "10.80.30.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.10(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-181",
+    "M-174"
+   ],
+   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house or apartment on two lots is out of scope and disclosed (M-174(1) note amended by M-181).",
+   "disclosure_code": "semi_house_two_lots",
+   "basis": "findings C1 + triage F04; M-174(1), M-181"
+  },
+  {
+   "unit_id": "10.80.30.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.10(2)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.30.10(3)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-187",
+    "M-174"
+   ],
+   "corrected_value": "No change: the 12.0 m / 15.0 m / 24.0 m frontage is already keyed on 'no f label'; released by the M-174(4) label mask.",
+   "basis": "triage F07/Q9; M-187 Q9 + M-174(4)"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-181",
+    "M-174"
+   ],
+   "corrected_value": "The 50 % semi frontage arm is not applied to a semi house on two lots; the two-lot condition is disclosed.",
+   "disclosure_code": "semi_house_two_lots",
+   "basis": "findings C1 + triage F05; M-174(1), M-181"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "basis": "triage F06; M-187 Q13, M-176(1)"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(E)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.40(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.30.40(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(3)#(3)(A)",
+   "verdict": "unsure",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-176"
+   ],
+   "corrected_value": "Townhouse unit width answered 5.0 m (no individual private driveway), 6.0 m as the trade-off disclosure.",
+   "basis": "findings F unsure; M-176(1)"
+  },
+  {
+   "unit_id": "10.80.40.1(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.1(4)#(4)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(4)#(4)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(5)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-180"
+   ],
+   "corrected_value": "Houseplex principal-building requirements take the more permissive of the Chapter 900 exception and the zone rule.",
+   "basis": "triage F11; MF-1 became M-180"
+  },
+  {
+   "unit_id": "10.80.40.1(6)#(6)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(6)#(6)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(6)#(6)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(7)#(7)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(7)#(7)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(7)#(7)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(8)#(8)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(8)#(8)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(8)#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(8)#(8)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.1(8)#(8)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.10(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(1)#(1)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(1)#(1)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-176",
+    "M-190"
+   ],
+   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
+   "basis": "findings A2; M-176(2) supersedes the note, M-190"
+  },
+  {
+   "unit_id": "10.80.40.10(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-176",
+    "M-190"
+   ],
+   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
+   "basis": "findings A2; M-176(2), M-190"
+  },
+  {
+   "unit_id": "10.80.40.10(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(3)#(3)(D)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.10(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-174",
+    "M-215"
+   ],
+   "corrected_value": "Main pedestrian entrance 1.2 m is disclosed, not an envelope condition.",
+   "disclosure_code": "main_entrance_height",
+   "basis": "findings C3; M-174(2), M-215"
+  },
+  {
+   "unit_id": "10.80.40.10(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-174",
+    "M-185"
+   ],
+   "corrected_value": "Dormers within the 40 % width share are not main walls; the maximum design takes the 40 %.",
+   "disclosure_code": "dormers_at_max",
+   "basis": "findings C3 + triage F16; M-174(3), M-185"
+  },
+  {
+   "unit_id": "10.80.40.10(6)#(6)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.20(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "Applied in the renovation (addition) scenario only (operator 2026-10-18, M-206): +2.0 m beyond the length cap, one storey ≤ 5.0 m, ≤ 50 % of the building width, ≥ 3.0 m from each side line; disclosed. New-build rows do not take it.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206"
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "As (A): renovation (addition) only (M-206), disclosed.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206"
+  },
+  {
+   "unit_id": "10.80.40.20(2)#(2)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-206"
+   ],
+   "corrected_value": "As (A): renovation (addition) only (M-206), disclosed.",
+   "disclosure_code": "one_storey_extension",
+   "basis": "triage F17; M-206"
+  },
+  {
+   "unit_id": "10.80.40.20(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.30(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.40(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.40(1)#(1)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.40(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.50(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.50(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.80.40.70(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.70(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205",
+    "M-174"
+   ],
+   "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
+   "basis": "findings A3 + triage F21; M-174(5), M-205"
+  },
+  {
+   "unit_id": "10.80.40.70(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-205",
+    "M-174"
+   ],
+   "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
+   "basis": "findings A3 + triage F21; M-174(5), M-205"
+  },
+  {
+   "unit_id": "10.80.40.70(3)#(3)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.70(3)#(3)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.70(4)#(4)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.70(4)#(4)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.80(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.80(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.80.40.80(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation is a two-or-more-buildings-on-the-lot rule; disclosed, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22; M-187 Q12"
+  },
+  {
+   "unit_id": "10.80.40.80(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "basis": "triage F22; M-187 Q12"
+  },
+  {
+   "unit_id": "10.80.40.81(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Lawfully existing buildings keep their lawful state (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "triage F23; M-158"
+  },
+  {
+   "unit_id": "10.80.40.81(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "Additions and extensions relieve the existing building only; renovation reading disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "triage F23; M-158 + M-196"
+  },
+  {
+   "unit_id": "150.10.1(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A scope sentence (\"Section 150.10 applies to secondary suites\") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199.",
+   "basis": "findings D scope sentence; note is purely descriptive, no ruling"
+  },
+  {
+   "unit_id": "150.10.20.1(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope.",
+   "basis": "findings B4; M-177 suites in scope"
+  },
+  {
+   "unit_id": "150.10.20.1(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope.",
+   "basis": "findings B4; M-177"
+  },
+  {
+   "unit_id": "150.10.20.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Each dwelling unit may have one secondary suite; the suite class carries one suite per host unit.",
+   "basis": "findings B4; M-177"
+  },
+  {
+   "unit_id": "150.10.20.1(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "A secondary suite is allowed in zones where houses are not permitted if a lawfully existing house is on the lot; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C1; M-158, M-159(1) out of residential zones"
+  },
+  {
+   "unit_id": "150.10.40.40(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-199"
+   ],
+   "corrected_value": "A secondary suite's interior floor area is capped at 45 % of the whole house's interior floor area.",
+   "basis": "new ruling M-199 (whole-house reading), findings B4"
+  },
+  {
+   "unit_id": "150.10.40.40(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-199",
+    "M-177"
+   ],
+   "corrected_value": "In a one-storey detached house the basement suite may occupy the whole basement (permissive arm of the 45 % rule).",
+   "basis": "findings B4; M-199 with M-177 suite class"
+  },
+  {
+   "unit_id": "150.7.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(1)#(1)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(1)#(1)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(1)#(1)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.20.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "One ancillary building with a garden or laneway suite per lot; a lot may have one, not both (A-axis definition).",
+   "basis": "findings B2; M-177 / M-63 A axis"
+  },
+  {
+   "unit_id": "150.7.50.10(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "Garden suite: at least 50 % of the rear yard behind the house must be soft landscaping; the required area is computed and disclosed, not binding (operator 2026-10-18, M-208); the suite is not reduced.",
+   "disclosure_code": "suite_soft_landscaping",
+   "basis": "findings C6 + M-208"
+  },
+  {
+   "unit_id": "150.7.50.10(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "As (A), at 25 % for a frontage ≤ 6.0 m; disclosed, not binding (M-208).",
+   "disclosure_code": "suite_soft_landscaping",
+   "basis": "findings C6 + M-208"
+  },
+  {
+   "unit_id": "150.7.60.20(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198",
+    "M-219"
+   ],
+   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the garden suite, excluding footings.",
+   "basis": "findings B1; M-198 suite setbacks, M-219 garden inherits principal setbacks"
+  },
+  {
+   "unit_id": "150.7.60.20(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Rear setback on a lot deeper than 45.0 m is the greater of 1.5 m and half the suite height (3.15 m at 6.3 m).",
+   "basis": "findings B1; M-198 suite setbacks"
+  },
+  {
+   "unit_id": "150.7.60.20(2)#(2)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite rear setback default is 1.5 m.",
+   "basis": "findings B1; M-198"
+  },
+  {
+   "unit_id": "150.7.60.20(2)#(2)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-172"
+   ],
+   "corrected_value": "Rear-wall windows above 4.0 m are taken as absent (no openings in the max-build suite), so the 3.0 m arm is not bound.",
+   "disclosure_code": "suite_openings_setback",
+   "basis": "findings B1 latent defect; M-197 suite openings default none, M-172"
+  },
+  {
+   "unit_id": "150.7.60.20(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
+   "disclosure_code": "suite_lot_fact_unknown",
+   "basis": "findings B1 + M-198 lot fact not held"
+  },
+  {
+   "unit_id": "150.7.60.20(3)#(3)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "In all other cases the garden-suite rear setback is 1.5 m.",
+   "basis": "findings B1; M-198"
+  },
+  {
+   "unit_id": "150.7.60.20(4)#(4)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172",
+    "M-216"
+   ],
+   "corrected_value": "A parking space in the garden suite on a through lot changes the rear setback; disclosed.",
+   "disclosure_code": "suite_parking_variants",
+   "basis": "findings C3; M-172 design choice, M-216 suite parking"
+  },
+  {
+   "unit_id": "150.7.60.20(4)#(4)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172",
+    "M-216"
+   ],
+   "corrected_value": "With a parking space and rear-street access the rear setback is 6.0 m; disclosed as the trade-off.",
+   "disclosure_code": "suite_parking_variants",
+   "basis": "findings C3; M-172, M-216"
+  },
+  {
+   "unit_id": "150.7.60.20(5)#(5)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "Openings in the suite side wall are taken as absent (design choice), so the greater side setback arm is disclosed, not bound.",
+   "disclosure_code": "suite_openings_setback",
+   "basis": "findings B1 latent defect; M-197, M-198"
+  },
+  {
+   "unit_id": "150.7.60.20(5)#(5)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite side setback is the greater of 0.6 m and 10 % of frontage, capped at 3.0 m.",
+   "basis": "findings B1; M-198"
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198",
+    "M-193"
+   ],
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "disclosure_code": "suite_lot_fact_unknown",
+   "basis": "findings B1 + M-198; M-193 (under review) for the Coxwell clause"
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-216",
+    "M-172"
+   ],
+   "corrected_value": "A 6.0 m side setback applies only if the suite has a parking space on a corner lot; max build takes no parking, so it is disclosed.",
+   "disclosure_code": "suite_parking_variants",
+   "basis": "findings B1 latent defect; M-216, M-172(3)"
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(C)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-179",
+    "M-198"
+   ],
+   "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
+   "basis": "findings B1 operator Q; M-179(2) corner-lot arm"
+  },
+  {
+   "unit_id": "150.7.60.21(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-158",
+    "M-198"
+   ],
+   "corrected_value": "A lawfully existing smaller rear setback stands for the garden suite (min template), answered with the caveat.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158 form, M-198"
+  },
+  {
+   "unit_id": "150.7.60.21(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-158",
+    "M-198"
+   ],
+   "corrected_value": "A lawfully existing smaller side setback stands for the garden suite (min template), answered with the caveat.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158 form, M-198"
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "A lawfully existing garden suite keeps its smaller setback under the 24 July 2025 transition; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178 24 July 2025 transition"
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "A suite built under a permit resting on a pre-24 July 2025 application keeps its setback; permit history not held, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178(2) permit arm"
+  },
+  {
+   "unit_id": "150.7.60.21(2)#(2)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "No further noncompliance may be added to a transitional suite; permit history not held, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178"
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.21(3)#(3)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.30(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172",
+    "M-176"
+   ],
+   "corrected_value": "4.0 m separation for a suite no taller than 4.0 m; the 7.5 m / 6.3 m arm is taken where the lot depth fits, disclosed.",
+   "disclosure_code": "suite_separation_arm",
+   "basis": "findings C3; M-172(3), M-176"
+  },
+  {
+   "unit_id": "150.7.60.30(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172",
+    "M-176"
+   ],
+   "corrected_value": "7.5 m separation for a suite taller than 4.0 m, disclosed as the placement trade-off.",
+   "disclosure_code": "suite_separation_arm",
+   "basis": "findings C3; M-172(3), M-176"
+  },
+  {
+   "unit_id": "150.7.60.30(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-224",
+    "M-193"
+   ],
+   "corrected_value": "Ruled 2026-10-18 (generous reading, M-224): in the Coxwell area a suite over 4.0 m needs 5.0 m and may be 6.3 m at ≥ 5.0 m, with the mandatory \"the City may read the 4.0 m cap as applying below 7.5 m\" disclosure; literal reading until the polygon is held.",
+   "disclosure_code": "coxwell_area",
+   "basis": "findings C1; M-193 Coxwell map area (UNDER REVIEW), M-222"
+  },
+  {
+   "unit_id": "150.7.60.30(2)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.30(3)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.30(4)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.31(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Separation between lawfully existing buildings keeps its lawful value (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "150.7.60.40(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite maximum height is 4.0 m when it is less than 7.5 m from the house.",
+   "basis": "findings B1; M-177(2) suite placement, M-198"
+  },
+  {
+   "unit_id": "150.7.60.40(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Maximum height 6.3 m when the suite is 7.5 m or more from the house; the max build couples the suite placement to that distance.",
+   "basis": "findings B1; M-177(2), M-198"
+  },
+  {
+   "unit_id": "150.7.60.40(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A garden suite may have up to two storeys.",
+   "basis": "findings B1; M-177 suite class"
+  },
+  {
+   "unit_id": "150.7.60.40(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(3)#(3)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(3)#(3)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(3)#(3)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(4)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.40(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Roof equipment may exceed the suite height by 1.0 m; envelope-neutral, disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4; M-172(3)"
+  },
+  {
+   "unit_id": "150.7.60.40(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Roof equipment projection disclosed; envelope-neutral for the principal.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.40(5)#(5)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Roof equipment projection disclosed; envelope-neutral for the principal.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.40(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Rooftop elements may cover at most 30 % of the suite roof; disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.40(6)#(6)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Rooftop elements must sit at least 1.0 m from the suite's main walls; disclosed (note text was paste debris).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4 + data-quality flag (stray shell command note)"
+  },
+  {
+   "unit_id": "150.7.60.40(7)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.50(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The garden-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap and the suite adds floor area.",
+   "basis": "findings B2; M-177 suite class"
+  },
+  {
+   "unit_id": "150.7.60.50(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The garden-suite GFA must be less than the principal building's GFA (a cross-structure limit).",
+   "basis": "findings B2; M-177"
+  },
+  {
+   "unit_id": "150.7.60.50(3)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Garden-suite maximum gross floor area is 120 m² (and less than the principal's GFA).",
+   "basis": "findings B1; M-177"
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A one-storey garden suite is capped at 60 m².",
+   "basis": "findings B1; M-177"
+  },
+  {
+   "unit_id": "150.7.60.50(5)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-210"
+   ],
+   "corrected_value": "Applied (M-210): the suite's attic, mechanical, basement and void areas (10.5.40.40(1), (2), (3)(A)/(B)) are taken out of its GFA before the 120 m² cap and the less-than-main test; disclosed suite_gfa_reductions.",
+   "disclosure_code": "suite_gfa_reductions",
+   "basis": "findings F note-only; M-210 suite GFA reductions"
+  },
+  {
+   "unit_id": "150.7.60.51(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "A lawfully existing garden suite may keep a larger GFA under the 24 July 2025 transition; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178"
+  },
+  {
+   "unit_id": "150.7.60.51(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "GFA excess allowed for a suite under a permit resting on a pre-24 July 2025 application; permit history not held, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178(2)"
+  },
+  {
+   "unit_id": "150.7.60.51(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "No further excess GFA may be added to a transitional suite; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178"
+  },
+  {
+   "unit_id": "150.7.60.51(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "Definition serving the 24 July 2025 transition; its content lives in the transition disclosure.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2 definition; M-178"
+  },
+  {
+   "unit_id": "150.7.60.51(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "Definition of a zoning certificate request serving the transition; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2 definition; M-178"
+  },
+  {
+   "unit_id": "150.7.60.51(2)#(2)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.51(2)#(2)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.51(2)#(2)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.60(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform sides are not main walls; platform allowances are accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4; M-175"
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform size limit (10 % of interior floor area) is accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform setbacks are accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(2)#(2)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform screening is accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(3)#(3)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform height 0.2 m above grade; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(3)#(3)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "First-floor platform level; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Platform encroachment 1.5 m; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Canopy height 4.0 m; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Canopy encroachment 1.5 m; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(5)#(5)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Canopy encroachment limited by the lot-line setback; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Architectural feature encroachment 0.6 m; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(6)#(6)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Chimney breast encroachment 0.6 m; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(7)#(7)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Wall-mounted equipment encroachment 0.6 m; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(7)#(7)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Wall-mounted equipment encroachment 0.6 m; disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(7)@1075-2026#(7)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Replaced equipment clause, same 0.6 m encroachment; accessory scope, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.7.60.60(7)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.60.70(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-191"
+   ],
+   "corrected_value": "Lot coverage with a garden suite is the more permissive of 45 % of all buildings and the ancillary-coverage alternative (one max, not a min-combine).",
+   "basis": "findings B2 + M-191 garden coverage A/B"
+  },
+  {
+   "unit_id": "150.7.60.70(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-179",
+    "M-191"
+   ],
+   "corrected_value": "The suite is outside lot coverage; all ancillary buildings together are capped at 20 % on their own ancillary-coverage target.",
+   "disclosure_code": "other_ancillary_buildings",
+   "basis": "findings B2 latent defect; M-179(1) ancillary coverage, M-191"
+  },
+  {
+   "unit_id": "150.7.60.70(2)#row",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-214"
+   ],
+   "corrected_value": "Garden suite beside an apartment building: the apartment is not in MaxBLD scope, so this is disclosed as a deferred form.",
+   "disclosure_code": "forms_deferred",
+   "basis": "findings C1 out-of-scope; M-214 forms not modelled"
+  },
+  {
+   "unit_id": "150.7.75.1(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A solar device on the suite follows the suite's setbacks; it never limits the principal building.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings B6; M-175 accessory scope"
+  },
+  {
+   "unit_id": "150.7.75.1(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A solar device may rise at most 1.2 m above the suite's permitted height; accessory scope, not a principal limit.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings B6; M-175"
+  },
+  {
+   "unit_id": "150.7.75.1(2)@1075-2026#(2)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "HVAC device encroachment for a garden suite; accessory scope, disclosed (no note given).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4; M-175"
+  },
+  {
+   "unit_id": "150.7.75.1(2)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.7.80.1(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "No parking is required on a lot with a garden suite; this is a report field and disclosed.",
+   "disclosure_code": "suite_parking_bicycle",
+   "basis": "findings B5; M-216 suite parking disclosures"
+  },
+  {
+   "unit_id": "150.7.80.1(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "No parking space is required for a garden suite; disclosed.",
+   "disclosure_code": "suite_parking_bicycle",
+   "basis": "findings B5; M-216"
+  },
+  {
+   "unit_id": "150.7.80.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "Two bicycle parking spaces are required for a garden suite; report field, disclosed.",
+   "disclosure_code": "suite_parking_bicycle",
+   "basis": "findings B5; M-216"
+  },
+  {
+   "unit_id": "150.7.80.1(3)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "Vehicle access to a parking space must use a lawfully existing access; an existing-site fact, disclosed.",
+   "disclosure_code": "suite_parking_variants",
+   "basis": "findings C2; M-216"
+  },
+  {
+   "unit_id": "150.8.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(1)#(1)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(1)#(1)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(1)#(1)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(1)#(1)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.20.1(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "One ancillary building with a laneway or garden suite per lot; a lot may hold one, not both.",
+   "basis": "findings B2; M-177 / M-63 A axis"
+  },
+  {
+   "unit_id": "150.8.30.20(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-209"
+   ],
+   "corrected_value": "A laneway suite needs at least 3.5 m of rear or side lot line on a lane (or cumulative 3.5 m); eligibility is tested by the three arms.",
+   "basis": "findings B2; M-209 laneway eligibility"
+  },
+  {
+   "unit_id": "150.8.50.10(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "Laneway suite: 85 % of the area between the house and the suite must be soft landscaping; the required area is computed and disclosed, not binding (operator 2026-10-18, M-208); the suite is not reduced.",
+   "disclosure_code": "suite_soft_landscaping",
+   "basis": "findings C6 + M-208"
+  },
+  {
+   "unit_id": "150.8.50.10(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "Laneway suite: the area between the suite and the lane line must be soft landscaping; computed and disclosed, not binding (M-208).",
+   "disclosure_code": "suite_soft_landscaping",
+   "basis": "findings C6 + M-208"
+  },
+  {
+   "unit_id": "150.8.60.20(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the laneway suite, excluding footings.",
+   "basis": "findings B3; M-198 suite setbacks"
+  },
+  {
+   "unit_id": "150.8.60.20(2)#(2)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "A 0.0 m rear setback needs no rear-wall openings and a rear lot line off street and lane; openings are taken as none, so it is disclosed.",
+   "disclosure_code": "suite_openings_setback",
+   "basis": "findings B3 latent defect; M-197, M-198"
+  },
+  {
+   "unit_id": "150.8.60.20(2)#(2)(B)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Rear setback 1.0 m in all other cases (the usual answer where the rear abuts a lane); keyed correctly.",
+   "basis": "findings F note-only; M-198"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "A 0.0 m side setback needs no openings and a side lot line off street and lane; as keyed the 1.0 m default answers.",
+   "disclosure_code": "suite_openings_setback",
+   "basis": "findings B3 latent defect; M-197, M-198"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Where the side lot line abuts a street, the suite takes the residential building's required side setback; a cross-structure value, disclosed.",
+   "disclosure_code": "suite_lot_fact_unknown",
+   "basis": "findings B3; M-198 lot fact not held"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "MANDATORY (M-198, operator 2026-10-18): above 4.0 m the laneway suite steps back 1.5 m from a side line abutting another lot's rear line; applied in the suite search and stated by the laneway_upper_side_stepback disclosure.",
+   "disclosure_code": "laneway_upper_side_stepback",
+   "basis": "M-198 laneway 1.5 m step-back MANDATORY; findings C3"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(D)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Laneway-suite side setback default is 1.0 m.",
+   "basis": "findings B3; M-198"
+  },
+  {
+   "unit_id": "150.8.60.21(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211",
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing smaller rear setback stands for the laneway suite (min template), answered with the caveat.",
+   "disclosure_code": "existing_ancillary_setbacks",
+   "basis": "findings C2; M-158, M-216 existing ancillary setbacks"
+  },
+  {
+   "unit_id": "150.8.60.21(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211",
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing smaller side setback stands for the laneway suite (min template), answered with the caveat.",
+   "disclosure_code": "existing_ancillary_setbacks",
+   "basis": "findings C2; M-158, M-216"
+  },
+  {
+   "unit_id": "150.8.60.30(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "4.0 m separation between the house and a laneway suite no taller than 4.0 m; the max build takes the taller/larger arm where the lot fits.",
+   "disclosure_code": "suite_separation_arm",
+   "basis": "findings B3; M-177(2), M-198"
+  },
+  {
+   "unit_id": "150.8.60.30(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "7.5 m separation where the suite is taller than 4.0 m; disclosed as the placement trade-off.",
+   "disclosure_code": "suite_separation_arm",
+   "basis": "findings B3; M-177(2), M-198"
+  },
+  {
+   "unit_id": "150.8.60.30(2)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.30(3)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.30(4)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.30(5)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Laneway-suite maximum building length is 10.0 m.",
+   "basis": "findings B3; M-177"
+  },
+  {
+   "unit_id": "150.8.60.30(6)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Laneway-suite maximum building width is 8.0 m.",
+   "basis": "findings B3; M-177"
+  },
+  {
+   "unit_id": "150.8.60.31(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Separation between lawfully existing buildings keeps its lawful value (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "150.8.60.31(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing longer ancillary building keeps its length (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "150.8.60.31(3)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing wider ancillary building keeps its width (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "150.8.60.40(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Maximum height 6.3 m when the laneway suite is 7.5 m or more from the house; the max build couples placement to that distance.",
+   "basis": "findings B3; M-177(2), M-198"
+  },
+  {
+   "unit_id": "150.8.60.40(2)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A laneway suite may have up to two storeys.",
+   "basis": "findings F note-only; M-177"
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(D)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Satellite dishes may exceed the suite height by 1.0 m; accessory scope, disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings F note-only; M-172(3)"
+  },
+  {
+   "unit_id": "150.8.60.40(3)#(3)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.40(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Skylights may exceed the suite height by 0.3 m; envelope-neutral, disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4; M-172"
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Roof equipment may exceed the suite height by 1.5 m; disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Roof equipment projection disclosed; envelope-neutral.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.8.60.40(5)#(5)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Enclosures of roof equipment may exceed the suite height by 1.5 m; disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.8.60.40(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Rooftop elements may cover at most 30 % of the roof; disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.8.60.40(6)#(6)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172"
+   ],
+   "corrected_value": "Rooftop elements must sit 1.5 m from the suite's main walls; disclosed.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "findings C4"
+  },
+  {
+   "unit_id": "150.8.60.40(7)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.50(1)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap.",
+   "basis": "findings B2; M-177"
+  },
+  {
+   "unit_id": "150.8.60.50(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway-suite GFA must be less than the principal building's GFA.",
+   "basis": "findings B2; M-177"
+  },
+  {
+   "unit_id": "150.8.60.50(3)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead.",
+   "basis": "findings B3; M-177"
+  },
+  {
+   "unit_id": "150.8.60.50(4)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-210"
+   ],
+   "corrected_value": "Applied (M-210): the reductions are taken out of the laneway suite's GFA before its caps; disclosed suite_gfa_reductions.",
+   "disclosure_code": "suite_gfa_reductions",
+   "basis": "findings C5 + M-210"
+  },
+  {
+   "unit_id": "150.8.60.51(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "A lawfully existing laneway suite may keep a larger GFA under the 24 July 2025 transition; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178"
+  },
+  {
+   "unit_id": "150.8.60.51(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "GFA excess allowed for a suite under a permit resting on a pre-24 July 2025 application; permit history not held, disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178(2)"
+  },
+  {
+   "unit_id": "150.8.60.51(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-178"
+   ],
+   "corrected_value": "No further excess GFA may be added to a transitional laneway suite; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "findings C2; M-178"
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(D)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.51(2)#(2)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(2)#(2)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(4)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(5)#(5)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(5)#(5)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(6)#(6)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(6)#(6)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(7)#(7)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(7)#(7)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.60(7)@1075-2026#(7)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "Wall-mounted equipment encroachment 0.6 m; accessory scope, disclosed (no note given).",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "findings C4; M-175"
+  },
+  {
+   "unit_id": "150.8.60.60(7)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.60.70(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap.",
+   "basis": "findings B2; M-177"
+  },
+  {
+   "unit_id": "150.8.60.70(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-179"
+   ],
+   "corrected_value": "All ancillary buildings together are capped at 30 %; other ancillary buildings are taken as absent (new build) and disclosed.",
+   "disclosure_code": "other_ancillary_buildings",
+   "basis": "findings C1 + M-158 new build, M-179(1)"
+  },
+  {
+   "unit_id": "150.8.75.1(1)@1075-2026#(1)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.75.1(1)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "150.8.80.1(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "No parking space is required for a laneway suite; disclosed.",
+   "disclosure_code": "suite_parking_bicycle",
+   "basis": "findings C6; M-216"
+  },
+  {
+   "unit_id": "150.8.80.1(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-216"
+   ],
+   "corrected_value": "Two bicycle parking spaces are required for a laneway suite; report field, disclosed.",
+   "disclosure_code": "suite_parking_bicycle",
+   "basis": "findings C6; M-216"
+  },
+  {
+   "unit_id": "5.10.40.40(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-212"
+   ],
+   "corrected_value": "Floor area is answered; the shoreline / top-of-bank restriction is disclosed (whether the lot is on a shoreline is not held).",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "findings C1; M-212 site-fact disclosures (shoreline)"
+  },
+  {
+   "unit_id": "5.10.40.70(5)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-212"
+   ],
+   "corrected_value": "The lot is flagged triangular and the radial rear-setback calculation is disclosed (reading changed after this review).",
+   "disclosure_code": "triangular_lot",
+   "basis": "findings C1; M-212 triangular lot"
+  },
+  {
+   "unit_id": "600.60.40(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-172",
+    "M-176"
+   ],
+   "corrected_value": "The 5-6 unit houseplex 10.5 m height is answered with a disclosure of how the lowest-level conditions are achieved.",
+   "disclosure_code": "sixplex_height_conditions",
+   "basis": "findings C3; M-172 achieved-if, M-176(1)"
+  },
+  {
+   "unit_id": "800.50(100)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(105)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(110)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(240)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(285)#(285)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(285)#(285)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(290)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(320)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(375)#(375)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(375)#(375)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(375)#(375)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(425)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(435)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(440)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(445)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(45)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(455)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(635)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(650)#(650)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(650)#(650)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(655)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(730)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(770)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(775)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(820)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "800.50(830)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "970.10.15.10(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "GFA may be reduced by the basement area; not held, disclosed as a measure deduction.",
+   "disclosure_code": "basement_excluded",
+   "basis": "findings C5; M-171"
+  },
+  {
+   "unit_id": "970.10.15.10(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "GFA may be reduced by a void over 4.5 m up to 10 %; not held, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "findings C5; M-171"
+  },
+  {
+   "unit_id": "970.10.15.10(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "GFA may be reduced by the required parking space area; not held, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "findings C5; M-171"
+  },
+  {
+   "unit_id": "970.10.15.10(1)#(1)(D)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-171"
+   ],
+   "corrected_value": "One extra parking space deduction for a frontage over 12.0 m; not held, disclosed.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "basis": "findings C5; M-171"
+  }
+ ]
+}

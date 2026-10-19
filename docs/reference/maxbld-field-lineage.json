@@ -1,0 +1,3623 @@
+{
+ "schema": "maxbld-field-lineage-v1",
+ "description": "Field-lineage registry for parcel_maxbld_scenarios (Spec 78 §Phase-5 P5.10, P5.15). One entry per field: scenarios, by-law regulation_ids, keyed unit ids / Layer 2 targets (or OWED with owner), input columns (table.column + migration), logic variables, trust tier, invariants. scripts/analysis/bylaw/generate-maxbld-lineage.mjs validates it and renders the Spec 78 P5.10 table and the P5.15 invariant table inside generated markers (R-BF: never hand-kept). Edit this file, then run the generator with --write.",
+ "spec": "docs/specs/01-pipeline/78_optimal_lot_configuration.md",
+ "table": "parcel_maxbld_scenarios",
+ "logic_variable_prefix": "compute_maxbld_scenarios_",
+ "scenario_codes": {
+  "2": "house_with_secondary_suite",
+  "D": "detached_house",
+  "H": "detached_houseplex",
+  "S": "semi_detached_houseplex",
+  "RA": "renovation_addition",
+  "RI": "renovation_interior",
+  "RB": "renovation_basement",
+  "suite": "the rear-suite add-on columns (every row)"
+ },
+ "trust_tiers": {
+  "bylaw_derived": "high: by-law (through Layer 2) + lot geometry + declared logic variables only",
+  "estimate": "low, user-correctable: reads an estimated input (existing-house massing, neighbour setbacks, lane edges)",
+  "user_input": "needs the owner's entry (existing house); NULL in the pipeline when the entry is required",
+  "precedent_estimate": "CoA tier: calibrated from realized CoA builds (M-65), never law; kept apart from the as-of-right numbers",
+  "observed": "empirical context (norms, comps, applications), never a multiplier",
+  "metadata": "identity, provenance and run lineage"
+ },
+ "logic_variables": [
+  {
+   "name": "storey_height_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "roof_pitch",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "roof_assembly_depth_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "basement_livable_share",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "circulation_share",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "unit_min_interior_sqm",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "suite_weight",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "depth_search_step_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "suite_gfa_strict_margin_sqm",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "min_dimension_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "lot_min_sqm",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "lot_max_sqm",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "existing_confidence_min",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "existing_shared_footprint_penalty",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "batch_size",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "not_evaluated_max_pct",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "first_floor_elevation_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "lane_buffer_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "triangle_simplify_tol_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "lot_viability_margin_m",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "coxwell_generous_reading",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  },
+  {
+   "name": "trust_high_min_pass_pct",
+   "status": "OWED",
+   "owner": "step commit ① (P5.9 seed migration, R-CV form)"
+  }
+ ],
+ "invariants": [
+  {
+   "id": "INV-1",
+   "statement": "Identity: `total_gfa = main_gfa_with_suite + suite_gfa` (new build); RA `existing + addition_up + addition_back`.",
+   "runs_at": "step check + P5.13 test"
+  },
+  {
+   "id": "INV-2",
+   "statement": "`suite_gfa ≤ main_gfa_with_suite − suite_gfa_strict_margin` (exists as `suite_lt_main`).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-3",
+   "statement": "`main_gfa_with_suite ≤ main_gfa_without_suite` (a suite never enlarges the main).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-4",
+   "statement": "`gain_vs_detached_* ≥ 0` whenever both rows are permitted (release only removes limits).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-5",
+   "statement": "Houseplex GFA ≥ detached GFA on the same lot when both are permitted.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-6",
+   "statement": "`gain_reasons = none` ⇒ `gain_vs_detached_gfa = 0`.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-7",
+   "statement": "`fsi_status = applies:v` ⇒ `main_gfa ≤ v × lot_size_sqm` above grade (exists as `fsi_consistent`).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-8",
+   "statement": "Footprint ≤ coverage × lot where coverage applies; garden option A total ≤ 45 %, option B ancillary ≤ 20 %; laneway ancillary ≤ 30 % (`coverage_consistent`).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-9",
+   "statement": "Every setback used ≥ the Layer 2 minimum for that class; front ≥ the averaged value; ≥ 2.5 m from a lane centreline.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-10",
+   "statement": "`main_height ≤ height_m`; `main_storeys ≤ height_storeys` unless not_applicable; `suite_height ∈ {4.0, 6.3}`; outside the Coxwell polygon `suite_separation ≥ 7.5 ⇔ suite_height > 4.0`, inside it `≥ 5.0`.",
+   "runs_at": "step check + P5.13 test"
+  },
+  {
+   "id": "INV-11",
+   "statement": "`dwelling_units ≤ min(u [no 'u' = no cap; lifted to 6 only in R/RT/RM inside 600.60], 4 [S always], 6 iff gis_in and detached, floors)` (M-202); `dwelling_units ≥ 2` on H/S (`units_within_cap`).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-12",
+   "statement": "`Σ unit_breakdown.interior_area ≤ (Σ plates + basement_livable) × (1 − circulation_share)`.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-13",
+   "statement": "`suite_interior ≤ 0.45 × house_interior` (M-199), or the whole basement of a one-storey house.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-14",
+   "statement": "`max_bedrooms = 4 × units` at 2 units, `3 × units` at ≥ 3.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-15",
+   "statement": "`suite_type = laneway` ⇒ a 150.8.30.20(1) arm passed (rear, side or cumulative ≥ 3.5 m).",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-16",
+   "statement": "Every `cited_clauses` entry exists in `bylaw-provisions.json`.",
+   "runs_at": "step check + generator check (lineage)"
+  },
+  {
+   "id": "INV-17",
+   "statement": "Every numeric output traces to an applied Layer 2 unit id or a P5.9 logic variable (the lineage registry names one for every field; G-EXC-LIT / compute-literals scan the code).",
+   "runs_at": "generator check (lineage) + gate E #32"
+  },
+  {
+   "id": "INV-18",
+   "statement": "No applied unit comes from a non-residential chapter (M-159(1); would have caught M-217) and no excluded-use unit (M-225) enters a suite target.",
+   "runs_at": "test (by-law evaluator lane) + step guard on the Layer 2 rows"
+  },
+  {
+   "id": "INV-19",
+   "statement": "No `not_evaluated:no_candidate` on a target whose article does not exist in that zone (R coverage, R/RT length, RT/RM-houseplex depth, main walls with the roof-slope condition) — those are `unregulated` / `not_applicable` (M-218, M-220).",
+   "runs_at": "test (by-law evaluator lane) + step check"
+  },
+  {
+   "id": "INV-20",
+   "statement": "Renovation columns NULL unless the scenario is a renovation; `existing_storeys` NULL on every pipeline row (user input only, O-13).",
+   "runs_at": "step check (`renovation_columns_scoped`)"
+  },
+  {
+   "id": "INV-21",
+   "statement": "Gates: `zoning_holding` ⇒ new-build `not_permitted:holding_zone`; every `gate_flags` value has its disclosure code; front lot line < 3.5 m ⇒ `not_buildable:10.5.30.20(2)`.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-22",
+   "statement": "`row_trust_level` equals the P5.14 computation over the row's own `trust_checks` (never asserted).",
+   "runs_at": "step check (`trust_level_computed`)"
+  },
+  {
+   "id": "INV-23",
+   "statement": "CoA tier apart: `coa_*` fields never feed `total_gfa_sqm`, `is_headline` or any as-of-right field; `coa_gfa_sqm = main_gfa_sqm × u` or NULL with a `coa_status` reason.",
+   "runs_at": "step check"
+  },
+  {
+   "id": "INV-24",
+   "statement": "Every P5.10 field is in the lineage registry with resolvable regulation ids, migration columns and logic variables (seeded or OWED); the P5.10 table is generated from it.",
+   "runs_at": "generator check (`generate-maxbld-lineage.mjs --check`)"
+  },
+  {
+   "id": "INV-25",
+   "statement": "Every operator envelope answer has a disposition (matches → unit exists; wrong → fix id; disclose → P5.12 code; unsure/null → OPEN with its question).",
+   "runs_at": "generator check (`generate-answer-tracker.mjs --check`)"
+  }
+ ],
+ "fields": [
+  {
+   "field": "parcel_id",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the parcel",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.id",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "scenario",
+   "type": "text, closed",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.1 closed set",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "scenario_status",
+   "type": "text, closed prefix",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`permitted` / `not_permitted:<clause>` / `not_buildable:<clauses>` / `not_evaluated:<reason>` (Spec 68 §11.1); gates first (P5.1: holding, lot viability, exception)",
+   "regulation_ids": [
+    "10.5.30.20(2)",
+    "10.5.30.21(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "`vocab.layer3.scenario_status` forms (M-223(1))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.zoning_holding",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.exception_number",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.zoning_is_ambiguous",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [
+    "lot_viability_margin_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-21"
+   ],
+   "persisted": true,
+   "change": "gates added 2026-10-18 (M-207, M-213)"
+  },
+  {
+   "field": "building_class",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "Layer 2 class (P5.1)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "house + secondary suite class; detached_houseplex_5_6 mapping (M-223(4))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "is_headline",
+   "type": "boolean",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "largest `total_gfa_sqm` among permitted, buildable new-build rows; tie → catalogue order",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (false on renovations)",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gate_flags",
+   "type": "text[], closed",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the P5.1 gates that hold: `holding_zone` · `exception_not_authored` · `heritage_designated` · `ravine_protection` · `shoreline_hazard` · `triangular_lot` · `irregular_lot_approximation` (M-207, M-212, M-213)",
+   "regulation_ids": [
+    "5.10.40.40(1)",
+    "5.10.40.70(5)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "the field, its computation and its check",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.zoning_holding",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.exception_number",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.is_heritage_designated",
+     "migration": "migrations/171_parcels_heritage_columns.sql"
+    },
+    {
+     "column": "parcels.heritage_designation_type",
+     "migration": "migrations/171_parcels_heritage_columns.sql"
+    },
+    {
+     "column": "parcels.is_in_ravine_protection_area",
+     "migration": "migrations/168_parcels_ravine_columns.sql"
+    },
+    {
+     "column": "parcels.ravine_distance_m",
+     "migration": "migrations/168_parcels_ravine_columns.sql"
+    },
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    }
+   ],
+   "logic_variables": [
+    "triangle_simplify_tol_m",
+    "lot_viability_margin_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (may be empty)",
+   "invariants": [
+    "INV-21"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-212, M-213)"
+  },
+  {
+   "field": "main_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "headline-form GFA (P5.2 items 8–9); FSI cap only where `fsi` applies (R no-d 0.6, M-215(1)); RA: the renovation envelope",
+   "regulation_ids": [
+    "10.10.40.40(1)",
+    "10.20.40.40(1)",
+    "10.40.40.40(1)",
+    "10.60.40.40(1)",
+    "10.80.40.40(1)",
+    "10.5.40.40(1)",
+    "10.5.40.40(3)"
+   ],
+   "keyed": {
+    "units": [
+     "10.10.40.40(1)#(1)(B)",
+     "10.20.40.40(1)#(1)(C)"
+    ],
+    "layer2_targets": [
+     "fsi",
+     "height_m",
+     "height_storeys",
+     "main_wall_height_m",
+     "lot_coverage_pct"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "M-217 zone-category scope (houseplex FSI leak)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    },
+    {
+     "column": "parcels.lot_size_sqm",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [
+    "storey_height_m",
+    "roof_pitch",
+    "roof_assembly_depth_m",
+    "first_floor_elevation_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-5",
+    "INV-7",
+    "INV-17"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "plate `F` (P5.2 item 1): the smallest of the setback box (explicit setbacks below), the coverage cap and the buffered polygon; one-storey extension (M-206) added on RA only (renovations only, operator 2026-10-18)",
+   "regulation_ids": [
+    "10.20.30.40(1)",
+    "10.40.30.40(1)",
+    "10.60.30.40(1)",
+    "10.80.30.40(1)",
+    "10.20.40.20(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "lot_coverage_pct",
+     "building_depth_m",
+     "building_length_m",
+     "front_setback_m",
+     "rear_setback_m",
+     "side_setback_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    },
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [
+    "min_dimension_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-8",
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_front_setback_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "10.5.40.70(1) averaging (one neighbour → its setback; two → their average; buildings ≤ 15.0 m on the same street) else x.40.70(1) 6.0 m (M-205(1))",
+   "regulation_ids": [
+    "10.5.40.70(1)",
+    "10.20.40.70(1)",
+    "10.40.40.70(1)",
+    "10.60.40.70(1)",
+    "10.80.40.70(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "front_setback_m",
+     "averaging_distance_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "front averaging computed in Layer 2 (today `not_evaluated:condition_unknown:front_averaging_not_applicable`)",
+      "owner": "Layer 2 step"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcel_abutments.same_frontage_street",
+     "migration": "migrations/255_parcel_abutments.sql"
+    },
+    {
+     "column": "parcel_abutments.bldg_to_subject_m",
+     "migration": "migrations/255_parcel_abutments.sql"
+    },
+    {
+     "column": "parcel_abutments.front_setback_est_m",
+     "migration": "migrations/255_parcel_abutments.sql"
+    },
+    {
+     "column": "parcel_abutments.est_status",
+     "migration": "migrations/255_parcel_abutments.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-205)"
+  },
+  {
+   "field": "main_front_setback_basis",
+   "type": "text `averaged_two` / `averaged_one` / `zone_default`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status",
+   "regulation_ids": [
+    "10.5.40.70(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcel_abutments.est_status",
+     "migration": "migrations/255_parcel_abutments.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-205)"
+  },
+  {
+   "field": "main_side_setbacks_m",
+   "type": "jsonb `{side_1, side_2, street_side, beyond_17m}` m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "zone side yards; R 0.45 m blank wall by default (10.10.40.70(4)); RD 10.20.40.70(5) 7.5 m beyond the lesser of 17.0 m / 19.0 m (required frontage > 18.0 m); RD (6) corner 3.0 m; party wall 0 (M-205(2))",
+   "regulation_ids": [
+    "10.10.40.70(3)",
+    "10.10.40.70(4)",
+    "10.20.40.70(3)",
+    "10.20.40.70(5)",
+    "10.20.40.70(6)",
+    "10.40.40.70(3)",
+    "10.60.40.70(3)",
+    "10.80.40.70(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "side_setback_m",
+     "side_setback_street_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.is_corner_lot",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    },
+    {
+     "column": "parcels.zoning_zn_string",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-205)"
+  },
+  {
+   "field": "main_rear_setback_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "greater of 7.5 m and 25 % of lot depth (RD/RS/RM, M-174(5)); R/RT 7.5 m; triangular lot: radius from the side-line meeting point (5.10.40.70(5))",
+   "regulation_ids": [
+    "10.10.40.70(2)",
+    "10.20.40.70(2)",
+    "10.40.40.70(2)",
+    "10.60.40.70(2)",
+    "10.80.40.70(2)",
+    "5.10.40.70(5)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "rear_setback_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    }
+   ],
+   "logic_variables": [
+    "triangle_simplify_tol_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-205, M-212)"
+  },
+  {
+   "field": "main_depth_cap_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "Layer 2 depth from the required front yard; houseplex 19.0 m on large lots; RM houseplex `not_applicable`; RT `unregulated` (M-204)",
+   "regulation_ids": [
+    "10.10.40.30(1)",
+    "10.20.40.30(1)",
+    "10.20.40.30(2)",
+    "10.40.40.30(1)",
+    "10.40.40.30(2)",
+    "10.80.40.30(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "building_depth_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "unregulated / not_applicable (status in `binding_constraint`)",
+   "invariants": [
+    "INV-5",
+    "INV-19"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-204, M-205)"
+  },
+  {
+   "field": "main_length_cap_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "Layer 2 length; RD/RS houseplex 19.0 m on large lots; one-storey +2.0 m extension on RA only (M-206); RM houseplex `not_applicable`; R/RT off a major street `unregulated`",
+   "regulation_ids": [
+    "10.20.40.20(1)",
+    "10.20.40.20(2)",
+    "10.20.40.20(3)",
+    "10.40.40.20(1)",
+    "10.40.40.20(3)",
+    "10.80.40.20(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "building_length_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "unregulated / not_applicable",
+   "invariants": [
+    "INV-5",
+    "INV-19"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-204, M-206)"
+  },
+  {
+   "field": "main_lane_centreline_setback_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "distance kept from the lane centreline, ≥ 2.5 m (10.5.40.70(2)); NULL where no lane edge",
+   "regulation_ids": [
+    "10.5.40.70(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "lane_centreline_setback_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
+      "owner": "Spec 130 lane / enrich_centreline WF3"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "toronto_centreline.feature_code_desc",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    },
+    {
+     "column": "toronto_centreline.geom",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    }
+   ],
+   "logic_variables": [
+    "lane_buffer_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "no lane edge",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-205(5))"
+  },
+  {
+   "field": "main_height_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "`height_m` (x.40.10(1)); houseplex (1)(C) max(HT, 10.0); RM unlabelled houseplex 12.0 m (M-201)",
+   "regulation_ids": [
+    "10.10.40.10(1)",
+    "10.20.40.10(1)",
+    "10.40.40.10(1)",
+    "10.60.40.10(1)",
+    "10.80.40.10(1)"
+   ],
+   "keyed": {
+    "units": [
+     "10.80.40.10(1)#(1)(B)",
+     "10.80.40.10(1)#(1)(C)"
+    ],
+    "layer2_targets": [
+     "height_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "M-217 Chapter 40 map-gate leak on RD houseplex height",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.zoning_overlays",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-10"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_storeys",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "headline-form storeys incl. the set-back or attic storey (800.50(820)); houseplex storeys `not_applicable`",
+   "regulation_ids": [
+    "10.10.40.10(3)",
+    "10.20.40.10(3)",
+    "10.40.40.10(3)",
+    "10.60.40.10(2)",
+    "10.80.40.10(3)",
+    "800.50(820)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "height_storeys"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "M-217 storeys leak (40.10.40.10(7))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.zoning_overlays",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    }
+   ],
+   "logic_variables": [
+    "storey_height_m",
+    "first_floor_elevation_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-10"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "first_floor_elevation_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "the logic-variable first-floor height above established grade used in `n_w`; ≤ the 1.2 m entrance limit where it applies (R/RM detached and semi; RD/RS all)",
+   "regulation_ids": [
+    "10.5.40.10(1)",
+    "10.10.40.10(6)",
+    "10.20.40.10(6)",
+    "10.40.40.10(4)",
+    "10.80.40.10(4)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "entrance_height_m"
+    ],
+    "owed": [
+     {
+      "what": "the field, its computation and its check",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "first_floor_elevation_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-215(2))"
+  },
+  {
+   "field": "main_wall_limit_m",
+   "type": "numeric m",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "`Hw` = max(7.0, H − 2.5) (x.40.10(2)); flat-roof form RD max(7.2, H − 2.5) ((4)(A))",
+   "regulation_ids": [
+    "10.10.40.10(2)",
+    "10.20.40.10(2)",
+    "10.20.40.10(4)",
+    "10.40.40.10(2)",
+    "10.80.40.10(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "main_wall_height_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "M-218 roof-slope condition (no_candidate today)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`main_wall_status` not applies",
+   "invariants": [
+    "INV-19"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_wall_pair",
+   "type": "text `side` / `front_rear` / `none`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "P5.2 item 3 (70 % sides, or 60 / 50 / 40 % front-rear by frontage tier)",
+   "regulation_ids": [
+    "10.10.40.10(2)",
+    "10.20.40.10(2)",
+    "10.40.40.10(2)",
+    "10.80.40.10(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "keying of the share tiers (O-7; vocab target owed, M-223(3))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gfa_flat_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "form (a): storeys above `Hw` at `F − 2 × 1.4 m × W` (R (11)/(12) M-200, RD (4)(B), RS/RM (6)(A))",
+   "regulation_ids": [
+    "10.10.40.10(11)",
+    "10.10.40.10(12)",
+    "10.20.40.10(4)",
+    "10.40.40.10(6)",
+    "10.80.40.10(6)"
+   ],
+   "keyed": {
+    "units": [
+     "10.10.40.10(11)#(11)(A)",
+     "10.10.40.10(12)#(12)(A)"
+    ],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "keying of upper_storey_setback_m (1.4 m) (O-7; vocab target owed, M-223(3))",
+      "owner": "by-law keying/evaluator lane"
+     },
+     {
+      "what": "M-218 roof-slope condition",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "storey_height_m",
+    "first_floor_elevation_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": "R added 2026-10-18 (M-200)"
+  },
+  {
+   "field": "storeys_flat",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "form (a) storeys",
+   "regulation_ids": [
+    "800.50(820)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "keying of upper_storey_setback_m (O-7; vocab target owed, M-223(3))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "storey_height_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gfa_pitched_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "form (b): plates + attic counted by the 10.5.40.40(1) test + dormers ≤ 40 % (x.40.10(5)/(7)); R 5:3 above the 2nd storey of a detached house only",
+   "regulation_ids": [
+    "10.5.40.40(1)",
+    "10.10.40.10(4)",
+    "10.10.40.10(5)",
+    "10.20.40.10(7)",
+    "10.40.40.10(5)",
+    "10.80.40.10(5)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "element_width_pct"
+    ],
+    "owed": [
+     {
+      "what": "keying of roof_slope_max, the attic test (O-7; vocab target owed, M-223(3))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "roof_pitch",
+    "roof_assembly_depth_m",
+    "storey_height_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "attic_outside_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "attic floor area with clearance > 1.4 m that the 10.5.40.40(1) test leaves out of GFA: livable, outside FSI (M-203)",
+   "regulation_ids": [
+    "10.5.40.40(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "roof_pitch",
+    "roof_assembly_depth_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "form (b) not computed or the attic passes",
+   "invariants": [],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-203)"
+  },
+  {
+   "field": "storeys_pitched",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "form (b) storeys (the attic is a storey, 800.50(820))",
+   "regulation_ids": [
+    "800.50(820)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "storey_height_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "roof_form_headline",
+   "type": "text `flat_setback` / `pitched_attic`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA"
+   ],
+   "computation": "larger of the two forms (M-184); tie → (a)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "roof_pitch",
+   "type": "numeric ratio",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI"
+   ],
+   "computation": "the logic-variable value used",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "roof_pitch"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "form (b) not computed",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "fsi_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies:<value>` / `not_applicable:<clause>` / `undecided` / `not_evaluated:<reason>` (Spec 68 §5a part 3)",
+   "regulation_ids": [
+    "10.10.40.40(1)",
+    "10.20.40.40(1)",
+    "10.40.40.40(1)",
+    "10.60.40.40(1)",
+    "10.80.40.40(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "fsi"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-7",
+    "INV-18"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "coverage_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies:<value>` / `not_applicable:<clause>` / `undecided` / `not_evaluated:<reason>` (Spec 68 §5a part 3)",
+   "regulation_ids": [
+    "10.20.30.40(1)",
+    "10.40.30.40(1)",
+    "10.60.30.40(1)",
+    "10.80.30.40(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "lot_coverage_pct"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-8",
+    "INV-19"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "storeys_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies:<value>` / `not_applicable:<clause>` / `undecided` / `not_evaluated:<reason>` (Spec 68 §5a part 3)",
+   "regulation_ids": [
+    "10.10.40.10(3)",
+    "10.20.40.10(3)",
+    "10.40.40.10(3)",
+    "10.60.40.10(2)",
+    "10.80.40.10(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "height_storeys"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-10",
+    "INV-18"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_wall_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies:<value>` / `not_applicable:<clause>` / `undecided` / `not_evaluated:<reason>` (Spec 68 §5a part 3)",
+   "regulation_ids": [
+    "10.10.40.10(2)",
+    "10.20.40.10(2)",
+    "10.40.40.10(2)",
+    "10.80.40.10(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "main_wall_height_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-19"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "height_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies:<value>` / `not_applicable:<clause>` / `undecided` / `not_evaluated:<reason>` (Spec 68 §5a part 3)",
+   "regulation_ids": [
+    "10.10.40.10(1)",
+    "10.20.40.10(1)",
+    "10.40.40.10(1)",
+    "10.60.40.10(1)",
+    "10.80.40.10(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "height_m"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-10",
+    "INV-18"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "dwelling_units",
+   "type": "integer",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "D 1; H/S P5.4 = min(u [no u = no cap; lift to 6 only R/RT/RM in 600.60], 4 for S, 4/6 for H, floors); 2: 2 (O-9); RI conversion count (needs existing storeys); RA/RB incl. a basement unit",
+   "regulation_ids": [
+    "800.50(181)",
+    "800.50(746)",
+    "600.60.20(1)",
+    "600.60.40(1)",
+    "10.10.40.1(3)",
+    "10.20.40.1(5)",
+    "10.40.40.1(3)",
+    "10.60.40.1(2)",
+    "10.80.40.1(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "dwelling_units_max"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "M-220 no-u → not_evaluated",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.zoning_zn_string",
+     "migration": "migrations/165_parcels_zoning_columns.sql"
+    },
+    {
+     "column": "parcels.sixplex_membership_basis",
+     "migration": "migrations/254_bylaw_map_areas_sixplex.sql"
+    }
+   ],
+   "logic_variables": [
+    "circulation_share",
+    "unit_min_interior_sqm"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted; RI without user storeys",
+   "invariants": [
+    "INV-11"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "unit_breakdown",
+   "type": "jsonb `[{floor, interior_area_sqm, in_gfa}]`",
+   "scenarios": [
+    "H",
+    "S",
+    "2",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.4 per-floor split",
+   "regulation_ids": [
+    "800.50(181)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "circulation_share",
+    "basement_livable_share",
+    "unit_min_interior_sqm"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "D or units = 1",
+   "invariants": [
+    "INV-12"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "basement_livable_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "plate × `basement_livable_share`; a design choice, not in GFA (10.5.40.40(3)(A); M-171 note)",
+   "regulation_ids": [
+    "10.5.40.40(3)",
+    "800.50(80)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "basement_livable_share"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "share = 0",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "max_bedrooms",
+   "type": "integer",
+   "scenarios": [
+    "H",
+    "S",
+    "RI"
+   ],
+   "computation": "Layer 2 `bedrooms`: 4 × units at 2 units, 3 × units at 3+ (R/RD 40.1(8), RS (7), RT/RM (6))",
+   "regulation_ids": [
+    "10.10.40.1(8)",
+    "10.20.40.1(8)",
+    "10.40.40.1(7)",
+    "10.60.40.1(6)",
+    "10.80.40.1(6)"
+   ],
+   "keyed": {
+    "units": [
+     "10.20.40.1(8)#(8)(B)"
+    ],
+    "layer2_targets": [
+     "bedrooms"
+    ],
+    "owed": [
+     {
+      "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
+      "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "not a houseplex",
+   "invariants": [
+    "INV-14"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "host_interior_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "2"
+   ],
+   "computation": "the whole house's interior area (the 150.10.40.40(1) denominator, M-199); the main unit is this − `suite_interior_sqm`",
+   "regulation_ids": [
+    "150.10.40.40(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "no secondary suite",
+   "invariants": [
+    "INV-13"
+   ],
+   "persisted": true,
+   "change": "redefined 2026-10-18 (M-199)"
+  },
+  {
+   "field": "suite_interior_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "2",
+    "RI",
+    "RB"
+   ],
+   "computation": "≤ 45 % of the whole house's interior (M-199; stricter reading disclosed); a one-storey detached house's suite may take the whole basement (150.10.40.40(2)); RI/RB need the user's storeys",
+   "regulation_ids": [
+    "150.10.40.40(1)",
+    "150.10.40.40(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "interior_floor_area_m2"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     },
+     {
+      "what": "M-221 secondary-suite release unkeyed; M-217 interior_floor_area_m2 leak (150.50.20.1(1))",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "no secondary suite",
+   "invariants": [
+    "INV-13"
+   ],
+   "persisted": true,
+   "change": "reading changed 2026-10-18 (M-199)"
+  },
+  {
+   "field": "gain_vs_detached_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "2",
+    "H",
+    "S"
+   ],
+   "computation": "this row − the `detached_house` row, same roof-form basis (P5.2 item 11)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "either row not permitted",
+   "invariants": [
+    "INV-4",
+    "INV-5",
+    "INV-6"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gain_vs_detached_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "2",
+    "H",
+    "S"
+   ],
+   "computation": "as above, footprint",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "either row not permitted",
+   "invariants": [
+    "INV-4"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gain_vs_detached_storeys",
+   "type": "integer",
+   "scenarios": [
+    "2",
+    "H",
+    "S"
+   ],
+   "computation": "as above, storeys",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "either row not permitted",
+   "invariants": [
+    "INV-4"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "gain_reasons",
+   "type": "text[], closed",
+   "scenarios": [
+    "2",
+    "H",
+    "S"
+   ],
+   "computation": "`fsi_not_applicable` · `coverage_45` · `storeys_not_applicable` · `height_houseplex` · `main_wall_not_applicable` · `depth_length_19m` · `depth_length_not_applicable` · `none` (M-204 added two)",
+   "regulation_ids": [
+    "10.20.40.40(1)",
+    "10.20.30.40(1)",
+    "10.20.40.10(3)",
+    "10.20.40.10(1)",
+    "10.10.40.30(1)",
+    "10.80.40.30(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "either row not permitted",
+   "invariants": [
+    "INV-6"
+   ],
+   "persisted": true,
+   "change": "two values added 2026-10-18 (M-204)"
+  },
+  {
+   "field": "suite_type",
+   "type": "text `none` / `garden` / `laneway`",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.5; laneway needs one of the three 150.8.30.20(1) arms (M-209), never the 20 m flag",
+   "regulation_ids": [
+    "150.7.20.1(2)",
+    "150.8.20.1(2)",
+    "150.8.30.20(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     },
+     {
+      "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
+      "owner": "Spec 130 lane / enrich_centreline WF3"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "toronto_centreline.feature_code_desc",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    },
+    {
+     "column": "toronto_centreline.geom",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    },
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    },
+    {
+     "column": "parcels.primary_frontage_street_name",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    }
+   ],
+   "logic_variables": [
+    "lane_buffer_m"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never",
+   "invariants": [
+    "INV-15"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_lane_arm",
+   "type": "text `rear` / `side` / `cumulative`",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "which 150.8.30.20(1) arm passed, with `lane_rear_length_m` / `lane_side_length_m` (M-209)",
+   "regulation_ids": [
+    "150.8.30.20(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
+      "owner": "Spec 130 lane / enrich_centreline WF3"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "toronto_centreline.feature_code_desc",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    },
+    {
+     "column": "toronto_centreline.geom",
+     "migration": "migrations/173_create_toronto_centreline.sql"
+    },
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    }
+   ],
+   "logic_variables": [
+    "lane_buffer_m"
+   ],
+   "trust_tier": "estimate",
+   "null_when": "`suite_type` ≠ laneway",
+   "invariants": [
+    "INV-15"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-209)"
+  },
+  {
+   "field": "suite_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.5 caps after the 10.5.40.40 reductions (M-210) and `< main` (150.7.60.50(2)/(4), 150.8.60.50(2))",
+   "regulation_ids": [
+    "150.7.60.50(2)",
+    "150.7.60.50(4)",
+    "150.7.60.50(5)",
+    "150.8.60.50(2)",
+    "150.8.60.50(4)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "gfa_m2"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "depth_search_step_m",
+    "suite_gfa_strict_margin_sqm"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-1",
+    "INV-2"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.5 region ∩ caps (150.8.60.30(5)/(6)); soft landscaping is disclosed, not a cap (M-208)",
+   "regulation_ids": [
+    "150.8.60.30(5)",
+    "150.8.60.30(6)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "building_length_m",
+     "building_width_m"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-8"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_height_m",
+   "type": "numeric m",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "4.0 or 6.3 by actual separation (150.7.60.40(1), 150.8.60.40(1)); Coxwell area 6.3 at ≥ 5.0 m (M-224)",
+   "regulation_ids": [
+    "150.7.60.40(1)",
+    "150.8.60.40(1)",
+    "150.7.60.30(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "height_m"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "coxwell_generous_reading"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-10"
+   ],
+   "persisted": true,
+   "change": "Coxwell coupling 2026-10-18 (M-224)"
+  },
+  {
+   "field": "suite_separation_m",
+   "type": "numeric m",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "4.0 / 7.5; Coxwell in the held polygon 5.0 (M-224); never from Layer 2 until M-225 is fixed",
+   "regulation_ids": [
+    "150.7.60.30(1)",
+    "150.8.60.30(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "separation_m"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     },
+     {
+      "what": "M-222 Coxwell map gate; M-225 10.5.80.1(2)(A) leak (being fixed)",
+      "owner": "by-law keying/evaluator lane"
+     },
+     {
+      "what": "Coxwell polygon in bylaw_map_areas (M-193, M-224)",
+      "owner": "Spec 58 lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "bylaw_map_areas.map_code",
+     "migration": "migrations/254_bylaw_map_areas_sixplex.sql"
+    },
+    {
+     "column": "bylaw_map_areas.geom",
+     "migration": "migrations/254_bylaw_map_areas_sixplex.sql"
+    }
+   ],
+   "logic_variables": [
+    "coxwell_generous_reading"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-10"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_rear_setback_m",
+   "type": "numeric m",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "garden 150.7.60.20(2)(A)/(B) (half-height on lots > 45.0 m), through lot (3); laneway 150.8.60.20(2); ≥ 2.5 m from the lane centreline (10.5.60.20(4)); no openings by default (LC-35)",
+   "regulation_ids": [
+    "150.7.60.20(2)",
+    "150.7.60.20(3)",
+    "150.8.60.20(2)",
+    "10.5.60.20(4)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "rear_setback_m",
+     "lane_centreline_setback_m"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     },
+     {
+      "what": "M-219 principal setbacks applied to the suite",
+      "owner": "by-law keying/evaluator lane"
+     },
+     {
+      "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
+      "owner": "Spec 130 lane / enrich_centreline WF3"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.is_through_lot",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_side_setbacks_m",
+   "type": "jsonb `{side_1, side_2, street_side, upper_stepback}` m",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "garden (5)(B) default, corner (6) larger-of; laneway (3)(A) 0.0 m, street side (3)(B), **(3)(C) 1.5 m above 4.0 m applied** (M-198)",
+   "regulation_ids": [
+    "150.7.60.20(5)",
+    "150.7.60.20(6)",
+    "150.8.60.20(3)"
+   ],
+   "keyed": {
+    "units": [
+     "150.8.60.20(3)#(3)(C)"
+    ],
+    "layer2_targets": [
+     "side_setback_m",
+     "side_setback_street_m"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     },
+     {
+      "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
+      "owner": "Spec 130 lane / enrich_centreline WF3"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.is_corner_lot",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    },
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcel_abutments.neighbour_residential",
+     "migration": "migrations/255_parcel_abutments.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-9"
+   ],
+   "persisted": true,
+   "change": "(3)(C) applied 2026-10-18 (M-198)"
+  },
+  {
+   "field": "suite_setback_basis",
+   "type": "jsonb",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "`{openings: none, lot_depth_gt_45, corner_lot, through_lot, lane_line, street_line, rear_abuts_residential, coxwell: in/may_qualify/out, unknown_facts_taken_larger}`",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.depth_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.is_corner_lot",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    },
+    {
+     "column": "parcels.is_through_lot",
+     "migration": "migrations/174_parcels_centreline_columns.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "`suite_type = none`",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_openings_loss_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "suite GFA lost if openings are added on every wall with an openings arm (150.7.60.20(2)(C), (5)(A); 150.8.60.20(2)(B), (3)(D))",
+   "regulation_ids": [
+    "150.7.60.20(2)",
+    "150.7.60.20(5)",
+    "150.8.60.20(2)",
+    "150.8.60.20(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none` or no openings arm",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_coverage_option",
+   "type": "text `A` / `B` / `laneway`",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "150.7.60.70(1) / 150.8.60.70(1) (M-191)",
+   "regulation_ids": [
+    "150.7.60.70(1)",
+    "150.8.60.70(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "lot_coverage_pct",
+     "ancillary_coverage_pct"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-8"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "suite_soft_landscaping_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "the soft-landscaping area 150.7.50.10(1) / 150.8.50.10(1) require; disclosed (`suite_soft_landscaping`), never sizes the suite (M-208, operator 2026-10-18)",
+   "regulation_ids": [
+    "150.7.50.10(1)",
+    "150.8.50.10(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [
+     "rear_soft_landscaping_pct"
+    ],
+    "owed": [
+     {
+      "what": "suite classes and the applies() suite match (M-182, M-177)",
+      "owner": "P2-10 / by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    },
+    {
+     "column": "parcels.geom",
+     "migration": "migrations/039_schema_hardening.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [],
+   "persisted": true,
+   "change": "new 2026-10-18 (M-208)"
+  },
+  {
+   "field": "main_depth_chosen_m",
+   "type": "numeric m",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "the optimal `d` (P5.5)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "depth_search_step_m",
+    "suite_weight"
+   ],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_gfa_without_suite_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.2 with no suite",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [
+    "INV-3"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "main_gfa_with_suite_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.2 at `d`",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [
+    "INV-1",
+    "INV-3"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "total_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "main (with suite) + suite; RA: existing + up + back; RI: existing + attic (needs user storeys)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted; renovation rows without user storeys",
+   "invariants": [
+    "INV-1"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "binding_constraint",
+   "type": "text, closed",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.2 item 10 (adds `front_averaging`, `lane_centreline`, `lot_viability`)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": "three values added 2026-10-18"
+  },
+  {
+   "field": "suite_binding",
+   "type": "text, closed",
+   "scenarios": [
+    "suite"
+   ],
+   "computation": "P5.5 (adds `upper_side_stepback`, `lane_centreline`, `lane_frontage`; no soft-landscaping value, M-208 disclosed)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "`suite_type = none`",
+   "invariants": [],
+   "persisted": true,
+   "change": "three values added 2026-10-18"
+  },
+  {
+   "field": "cited_clauses",
+   "type": "text[]",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "Layer 1 unit ids applied, sorted (incl. the suite setback units that decided)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "Layer 3 lineage (Spec 68 §5a part 6)",
+      "owner": "step commit ①"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (may be empty only when not_evaluated)",
+   "invariants": [
+    "INV-16",
+    "INV-17"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "disclosures",
+   "type": "text[]",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.12 codes + carried Layer 2 disclosures, sorted",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "P5.12 codes in vocab.json",
+      "owner": "step commit ①"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "never (may be empty)",
+   "invariants": [
+    "INV-21"
+   ],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_width_m",
+   "type": "numeric m",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "shorter side of the oriented envelope of the primary footprint (not width along the street; P5.14 ML-5)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.existing_width_m",
+     "migration": "migrations/187_parcels_existing_structure_columns.sql"
+    },
+    {
+     "column": "parcel_buildings.is_primary",
+     "migration": "migrations/024_parcel_buildings.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "no primary building linked",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_depth_m",
+   "type": "numeric m",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "longer side of the oriented envelope (as above)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.existing_length_m",
+     "migration": "migrations/187_parcels_existing_structure_columns.sql"
+    },
+    {
+     "column": "parcel_buildings.is_primary",
+     "migration": "migrations/024_parcel_buildings.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "no primary building linked",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_storeys",
+   "type": "integer",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "**user input only** (O-13 amended 2026-10-18); NULL in the pipeline",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "user_input",
+   "null_when": "always in the pipeline",
+   "invariants": [
+    "INV-20"
+   ],
+   "persisted": true,
+   "change": "source removed 2026-10-18 (cur_storeys_range is a neighbourhood range)"
+  },
+  {
+   "field": "existing_basement",
+   "type": "boolean",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "unknown in the pipeline (O-14); user input",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "user_input",
+   "null_when": "always in the pipeline",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "width × depth (envelope ≥ true footprint on L-shapes)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.existing_width_m",
+     "migration": "migrations/187_parcels_existing_structure_columns.sql"
+    },
+    {
+     "column": "parcels.existing_length_m",
+     "migration": "migrations/187_parcels_existing_structure_columns.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "width or depth NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_confidence",
+   "type": "numeric [0, 1]",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.6 (mislink flag, link confidence, shared-footprint penalty)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.existing_data_quality_flag",
+     "migration": "migrations/193_parcels_cur_gfa_range.sql"
+    },
+    {
+     "column": "parcel_buildings.confidence",
+     "migration": "migrations/026_parcel_buildings_confidence.sql"
+    },
+    {
+     "column": "parcel_buildings.is_primary",
+     "migration": "migrations/024_parcel_buildings.sql"
+    }
+   ],
+   "logic_variables": [
+    "existing_shared_footprint_penalty"
+   ],
+   "trust_tier": "estimate",
+   "null_when": "no primary building linked",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_source",
+   "type": "text `estimated`",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "provenance; the app overlays `user_entered` (P5.7)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never on renovation rows",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "existing_low_confidence",
+   "type": "boolean",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`existing_confidence < existing_confidence_min`",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "existing_confidence_min"
+   ],
+   "trust_tier": "estimate",
+   "null_when": "confidence NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "renovation_envelope_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.2 for the renovation class",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "renovation_envelope_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "P5.2 plate for the renovation class",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "bylaw_derived",
+   "null_when": "status ≠ permitted",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "addition_up_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA"
+   ],
+   "computation": "up room: 10.5.40.71(3) on ≤ 12.2 m frontage (setbacks only), still within depth / length caps and `fsi × lot − existing GFA` (M-211(1)); needs user storeys",
+   "regulation_ids": [
+    "10.5.40.71(3)",
+    "10.5.40.21(2)",
+    "10.5.40.31(2)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "keying of 10.5.40.71(3) (12.2 m)",
+      "owner": "by-law keying/evaluator lane"
+     }
+    ]
+   },
+   "inputs": [
+    {
+     "column": "parcels.frontage_m",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "user_input",
+   "null_when": "existing input NULL (storeys always NULL in the pipeline)",
+   "invariants": [
+    "INV-1"
+   ],
+   "persisted": true,
+   "change": "caps added 2026-10-18 (M-211)"
+  },
+  {
+   "field": "addition_back_footprint_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA"
+   ],
+   "computation": "`max(0, F − existing footprint)`",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "estimate",
+   "null_when": "existing input NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "addition_back_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RA"
+   ],
+   "computation": "back footprint × storeys allowed; R: storeys ≤ existing storeys (10.10.40.10(7), APPLIED, M-211(2)); needs user storeys in R",
+   "regulation_ids": [
+    "10.10.40.10(7)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "user_input",
+   "null_when": "existing input NULL; R without user storeys",
+   "invariants": [
+    "INV-1"
+   ],
+   "persisted": true,
+   "change": "R floor cap applied 2026-10-18 (M-211)"
+  },
+  {
+   "field": "interior_attic_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RI"
+   ],
+   "computation": "attic test inside the existing box (10.5.40.40(1)); needs user storeys",
+   "regulation_ids": [
+    "10.5.40.40(1)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "roof_pitch"
+   ],
+   "trust_tier": "user_input",
+   "null_when": "existing input NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "interior_units_gain",
+   "type": "integer",
+   "scenarios": [
+    "RI"
+   ],
+   "computation": "conversion units − 1 (10.5.20.40(1); 600.60.40(3)); needs user storeys",
+   "regulation_ids": [
+    "10.5.20.40(1)",
+    "600.60.40(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "user_input",
+   "null_when": "existing input NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "basement_livable_gain_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "RB"
+   ],
+   "computation": "existing footprint × share; not GFA (10.5.40.40(3)(A))",
+   "regulation_ids": [
+    "10.5.40.40(3)"
+   ],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [
+    "basement_livable_share"
+   ],
+   "trust_tier": "estimate",
+   "null_when": "existing input NULL",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "row_trust_level",
+   "type": "text `high` / `disclosed` / `low` / `not_evaluated`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "COMPUTED from `trust_checks` and the field tiers (P5.14), never asserted",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "the field, its computation and its check",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [
+    "trust_high_min_pass_pct"
+   ],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [
+    "INV-22"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-17)"
+  },
+  {
+   "field": "trust_checks",
+   "type": "jsonb `[{check, result}]`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "every applicable P5.15 invariant id with pass / fail / n/a for this row, plus the ML-n register items that touch it",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": [
+     {
+      "what": "the field, its computation and its check",
+      "owner": "step commit ① (Spec 78 §Phase-5)"
+     }
+    ]
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [
+    "INV-22"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-17)"
+  },
+  {
+   "field": "coa_form",
+   "type": "text `single` / `single_suite` / `multiplex`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "M-65 P → form map: D → single; 2 → single_suite; H/S → multiplex (§6.4 rule 2); RA/RI/RB and the suite add-on have no form (LC-49, P5.10a)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "precedent_estimate",
+   "null_when": "renovation rows; no form",
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "coa_factor",
+   "type": "jsonb `{lv_id, value, version, fit_basis}`",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "the u logic variable of the form, bounded [1.0, 1.5], backed by the pinned re-fit audit (§6.4 rule 3)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "precedent_estimate",
+   "null_when": "no form; unfitted form",
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "coa_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "AOR(s) × u_form, AOR(s) = this row's `main_gfa_sqm` (§6.4); `not_evaluated:coa_factor_unfitted:single_suite` until the trial fits it",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "precedent_estimate",
+   "null_when": "no form; unfitted; status ≠ permitted",
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "coa_increment_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "`coa_gfa_sqm − main_gfa_sqm`, labelled \"calibrated from realized CoA builds of this form, not law\" (M-65(5))",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "precedent_estimate",
+   "null_when": "as `coa_gfa_sqm`",
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "coa_status",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "`applies` · `not_evaluated:coa_factor_unfitted:<form>` · `not_applicable:no_coa_form` (renovation rows; LC-49). The suite add-on has no CoA figure; `coa_gfa_sqm` covers the main building only",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "precedent_estimate",
+   "null_when": "never",
+   "invariants": [
+    "INV-23"
+   ],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "nearby_coa_builds_gfa_sqm",
+   "type": "numeric m²",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2"
+   ],
+   "computation": "median realized FSI of ≥ 5 nearby same-form CoA builds (≤ 3 km, lot area ± 30 %) × this lot's area; kind `empirical_ref`, never a multiplier (§6.4)",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.lot_size_sqm",
+     "migration": "migrations/011_parcels.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "observed",
+   "null_when": "fewer comps → `not_evaluated:insufficient_comps`",
+   "invariants": [],
+   "persisted": true,
+   "change": "new 2026-10-18 (O-18)"
+  },
+  {
+   "field": "nbhd_coa_approval_rate",
+   "type": "numeric (reference)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "by reference: `neighbourhood_build_norms.coa_approved / coa_refused / coa_total / coa_approval_rate` (§Phase-1 P1.2) via `parcels.neighbourhood_id`; no new computation",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "neighbourhood_build_norms.coa_approved",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    },
+    {
+     "column": "neighbourhood_build_norms.coa_refused",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    },
+    {
+     "column": "neighbourhood_build_norms.coa_total",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    },
+    {
+     "column": "neighbourhood_build_norms.coa_approval_rate",
+     "migration": "migrations/199_neighbourhood_build_norms.sql"
+    },
+    {
+     "column": "parcels.neighbourhood_id",
+     "migration": "migrations/196_parcels_neighbourhood_maxbuild.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "observed",
+   "null_when": "no neighbourhood",
+   "invariants": [],
+   "persisted": false,
+   "change": "reference 2026-10-18"
+  },
+  {
+   "field": "comparable_builds_ref",
+   "type": "jsonb (reference)",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "by reference: `parcels.comparable_builds` (§P3C.2, incl. `coa_decision`) and `comp_count`; with `nearby_coa_builds_gfa_sqm` this is the per-lot CoA list (LC-51); no new computation",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [
+    {
+     "column": "parcels.comparable_builds",
+     "migration": "migrations/202_parcels_comparable_builds.sql"
+    },
+    {
+     "column": "parcels.comp_count",
+     "migration": "migrations/202_parcels_comparable_builds.sql"
+    }
+   ],
+   "logic_variables": [],
+   "trust_tier": "observed",
+   "null_when": "no comps",
+   "invariants": [],
+   "persisted": false,
+   "change": "reference 2026-10-18"
+  },
+  {
+   "field": "layer2_table_version",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "run lineage (§6.1 \"Every value\")",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "evaluator_version",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "run lineage",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "code_version",
+   "type": "text",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "run lineage",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  },
+  {
+   "field": "computed_at",
+   "type": "timestamptz",
+   "scenarios": [
+    "D",
+    "H",
+    "S",
+    "2",
+    "RA",
+    "RI",
+    "RB"
+   ],
+   "computation": "the run clock; never a guard term",
+   "regulation_ids": [],
+   "keyed": {
+    "units": [],
+    "layer2_targets": [],
+    "owed": []
+   },
+   "inputs": [],
+   "logic_variables": [],
+   "trust_tier": "metadata",
+   "null_when": "never",
+   "invariants": [],
+   "persisted": true,
+   "change": null
+  }
+ ]
+}

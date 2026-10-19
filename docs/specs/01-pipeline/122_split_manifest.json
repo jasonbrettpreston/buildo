@@ -40,6 +40,14 @@
         "bytes": 115418,
         "commit": "156a7d7b"
       }
+    },
+    "131": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 126,
+        "bytes": 22153,
+        "commit": "new spec, seeded at landing on 69c1a1ef (2026-10-18; equals the landed file, reviewed)"
+      }
     }
   },
   "reader_guards": [
@@ -518,6 +526,45 @@
       "content_sha256": "89dc0ae67ed0f411655316af79a7799907efb9585d257af7ac19d07085e27585",
       "moved_at": "2026-10-18",
       "commit": "58152c42"
+    },
+    {
+      "id": "M28",
+      "from_spec": "68",
+      "anchor": "## 13. Benchmarks and design rationale",
+      "to_spec": "68a",
+      "to_anchor": "## Appendix §C1 — Benchmarks and design rationale (moved from Spec 68 §13) — HISTORICAL, 2026-10-18",
+      "content_sha256": "a1d7f5c46e71d948874cd9b790caad125e32162a60f96890c1ec96843cb6a89d",
+      "line_count": 18,
+      "moved_at": "2026-10-18",
+      "commit": "69c1a1ef",
+      "classification": "HISTORICAL",
+      "evidence": "Spec 68 budget split (operator 2026-10-18); design rationale, no gate reads it."
+    },
+    {
+      "id": "M29",
+      "from_spec": "68",
+      "anchor": "## 14. Known limits — what this design still cannot guarantee",
+      "to_spec": "68a",
+      "to_anchor": "## Appendix §C2 — Known limits of the v0.5 design (moved from Spec 68 §14) — HISTORICAL, 2026-10-18",
+      "content_sha256": "217ba59550d583ec83419d457ce7cbb6489bf66b4da45b0b2f60cad6361171c7",
+      "line_count": 17,
+      "moved_at": "2026-10-18",
+      "commit": "69c1a1ef",
+      "classification": "HISTORICAL",
+      "evidence": "Spec 68 budget split (operator 2026-10-18); the v0.5 limits list, no gate reads it."
+    },
+    {
+      "id": "M30",
+      "from_spec": "68",
+      "anchor": "> **v0.5 (2026-10-06, operator-approved change package):** 24 Phase 1 gates merged into 13 (§9), with every reason code",
+      "to_spec": "68a",
+      "to_anchor": "## Appendix §C3 — v0.5, S1 and S12b amendment notes (moved from Spec 68 §header) — HISTORICAL, 2026-10-18",
+      "content_sha256": "c9613942cb5caaf9eed74efcf9c56031d1dba122441a5f2428a92a6409096d42",
+      "line_count": 17,
+      "moved_at": "2026-10-18",
+      "commit": "69c1a1ef",
+      "classification": "HISTORICAL",
+      "evidence": "Spec 68 budget split (operator 2026-10-18); dated change notes."
     }
   ]
 }

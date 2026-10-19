@@ -48,6 +48,8 @@ export const GENERATED_DOCS = [
     proposed: 'keep', note: 'wire `--check docs/reports/generated/122-vocabulary.md` (already the pre-commit command in the plan).' },
   { file: '127-surface-registry.md', generator: 'scripts/violations/generate-surface-registry.mjs', has_check: true,
     proposed: 'keep', note: '--check exits 1 on drift.' },
+  { file: 'envelope-answer-tracker.md', generator: 'scripts/analysis/bylaw/generate-answer-tracker.mjs', has_check: true,
+    proposed: 'keep', note: '--check exits 1 on drift (Spec 78 P5.15 INV-25); wired 2026-10-18 with the max-build trace tooling.' },
   { file: '127-surface-review-queue.md', generator: 'scripts/violations/generate-surface-registry.mjs', has_check: true,
     proposed: 'keep', note: 'same generator + --check arm as the registry; written together.' },
   // --- explicitly retired 2026-09-26 (orchestrator ruling, gate J closing

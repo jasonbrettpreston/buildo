@@ -38,6 +38,10 @@ const SPEC_FILES: Record<string, string> = {
   '69': '69_mcbylaw_policy.md',
   // Spec 69's §1 register, moved out by M19 (2026-10-07) — a move destination like 124a.
   '69a': '69a_mcbylaw_register.md',
+  // Spec 68's appendix, moved out by M28/M29 (2026-10-18) — a move destination like 69a.
+  '68a': '68a_mcbylaw_standard_appendix.md',
+  // Lot Configuration Policy (2026-10-18): the policy half of Spec 78, arm (iv) budget.
+  '131': '131_lot_configuration_policy.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {
@@ -278,6 +282,15 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
     const m19 = manifest.moves.find((m) => m.id === 'M19');
     expect(m19 && [m19.from_spec, m19.to_spec]).toEqual(['69', '69a']);
     expect(m19!.content_sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('GREEN — the Spec 68 -> 68a budget split (M28-M30, operator 2026-10-18) is declared, hashed, HISTORICAL and lands in 68a', () => {
+    const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; from_spec: string; to_spec: string; classification: string; content_sha256: string | null }[] };
+    for (const id of ['M28', 'M29', 'M30']) {
+      const mv = manifest.moves.find((m) => m.id === id);
+      expect(mv && [mv.from_spec, mv.to_spec, mv.classification], id).toEqual(['68', '68a', 'HISTORICAL']);
+      expect(mv!.content_sha256, id).toMatch(/^[0-9a-f]{64}$/);
+    }
   });
 
   it('RED — bad-move-breaks-reader.json: a move whose anchor collides with a declared reader_guards slice fails --check', () => {
