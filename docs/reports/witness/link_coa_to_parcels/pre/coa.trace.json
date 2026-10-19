@@ -1,0 +1,461 @@
+{
+  "trace_version": 1,
+  "step": "scripts/link-coa-to-parcels.js",
+  "chain": "coa",
+  "source_fingerprint": null,
+  "git_head": "97747fb72d53154a82bbcf452048f4198cd5061d",
+  "header": {
+    "processes": 1,
+    "calls": 3816,
+    "distinct": 23,
+    "utility": 1099,
+    "tracer_self_ms": 30.904,
+    "wall_ms": 1296
+  },
+  "statements": [
+    {
+      "fingerprint": "0201ab8bf4a1a3a5",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 546,
+      "reads": {
+        "coa_applications": [
+          "id",
+          "latitude",
+          "lead_id",
+          "longitude",
+          "neighbourhood_id",
+          "parcel_linked_at",
+          "street_name",
+          "street_name_normalized",
+          "street_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "0785f3332266f06c",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "lead_id"
+        ],
+        "lead_parcels": [
+          "lead_id"
+        ]
+      },
+      "writes": {
+        "lead_parcels": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "231f5cbb6a734dec",
+      "kind": "write",
+      "count": 12,
+      "rowCount": 12,
+      "reads": {
+        "coa_applications": [
+          "id",
+          "parcel_linked_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "parcel_linked_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4369b24dd3b21853",
+      "kind": "write",
+      "count": 534,
+      "rowCount": 0,
+      "reads": {
+        "lead_parcels": [
+          "confidence",
+          "match_type"
+        ]
+      },
+      "writes": {
+        "lead_parcels": [
+          "confidence",
+          "lead_id",
+          "match_type",
+          "matched_at",
+          "parcel_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "48fff050b75165ff",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "lead_id",
+          "street_name",
+          "street_name_normalized"
+        ],
+        "lead_parcels": [
+          "lead_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4da6a2f10c1922ae",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 3,
+      "reads": {
+        "coa_applications": [
+          "lead_id",
+          "parcel_linked_at",
+          "street_name_normalized"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "parcel_linked_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 788,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5f259e47ca7ccfb0",
+      "kind": "write",
+      "count": 534,
+      "rowCount": 534,
+      "reads": {
+        "coa_applications": [
+          "id",
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "parcel_linked_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "parcel_linked_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "602a4aab6d75b63e",
+      "kind": "read",
+      "count": 12,
+      "rowCount": 0,
+      "reads": {
+        "parcels": [
+          "addr_num_normalized",
+          "centroid_lat",
+          "centroid_lng",
+          "geom",
+          "id",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "60d618658252d2af",
+      "kind": "utility",
+      "count": 546,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "62f55e7b33708b65",
+      "kind": "read",
+      "count": 534,
+      "rowCount": 534,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8ae099686f43d2de",
+      "kind": "read",
+      "count": 546,
+      "rowCount": 534,
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_point_id",
+          "address_status",
+          "linear_name_normalized",
+          "maint_stage",
+          "retired_at",
+          "street_type_normalized"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "geom",
+          "id",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "8ebd566ea1bf947b",
+      "kind": "utility",
+      "count": 546,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afb5a28bbff96664",
+      "kind": "read",
+      "count": 534,
+      "rowCount": 534,
+      "reads": {
+        "neighbourhoods": [
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "cba20a16dd98d7e7",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 158,
+      "reads": {
+        "neighbourhoods": [
+          "geometry",
+          "id",
+          "name",
+          "neighbourhood_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f17d4ddd8e7940dc",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "lead_id",
+          "parcel_linked_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "4249:2",
+      "write_fingerprints": [
+        "231f5cbb6a734dec",
+        "4369b24dd3b21853",
+        "5f259e47ca7ccfb0"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "0785f3332266f06c",
+    "4da6a2f10c1922ae"
+  ],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "addr_num_normalized",
+        "address_class_desc",
+        "address_point_id",
+        "address_status",
+        "linear_name_normalized",
+        "maint_stage",
+        "retired_at",
+        "street_type_normalized"
+      ],
+      "coa_applications": [
+        "id",
+        "latitude",
+        "lead_id",
+        "longitude",
+        "neighbourhood_id",
+        "parcel_linked_at",
+        "street_name",
+        "street_name_normalized",
+        "street_num"
+      ],
+      "lead_parcels": [
+        "confidence",
+        "lead_id",
+        "match_type",
+        "matched_at",
+        "parcel_id"
+      ],
+      "neighbourhoods": [
+        "geom",
+        "geometry",
+        "id",
+        "name",
+        "neighbourhood_id"
+      ],
+      "parcel_address_points": [
+        "address_point_id",
+        "parcel_id"
+      ],
+      "parcels": [
+        "addr_num_normalized",
+        "centroid_lat",
+        "centroid_lng",
+        "geom",
+        "id",
+        "street_name_normalized",
+        "street_type_normalized"
+      ]
+    },
+    "writes": {
+      "coa_applications": [
+        "latitude",
+        "longitude",
+        "neighbourhood_id",
+        "parcel_linked_at"
+      ],
+      "lead_parcels": [
+        "confidence",
+        "lead_id",
+        "match_type",
+        "matched_at",
+        "parcel_id"
+      ]
+    }
+  },
+  "errors": []
+}

@@ -1,0 +1,330 @@
+{
+  "harness": "scripts/analysis/capture-step-golden.js",
+  "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
+  "step": "scripts/classify-coa-scope.js",
+  "chain": "none",
+  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "exit_code": 0,
+  "signal": null,
+  "summary": {
+    "records_total": 0,
+    "records_new": 0,
+    "records_updated": 0,
+    "records_meta": {
+      "duration_ms": 28,
+      "coa_processed": 0,
+      "scope_classified": 0,
+      "unmapped_scope": 0,
+      "no_class": 0,
+      "no_project_type": 0,
+      "structure_typed": 0,
+      "project_type_distribution": {},
+      "coa_type_class_distribution": {},
+      "audit_table": {
+        "phase": 42,
+        "name": "CoA Scope Classification",
+        "verdict": "PASS",
+        "rows": [
+          {
+            "metric": "coa_processed",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "scope_classified",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "unmapped_scope_count",
+            "value": "0.0%",
+            "threshold": "<= 10%",
+            "status": "PASS"
+          },
+          {
+            "metric": "scope_classified_pct",
+            "value": "0.0%",
+            "threshold": ">= 90%",
+            "status": "PASS"
+          },
+          {
+            "metric": "no_class",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_type_class_null_pct",
+            "value": "0.0%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "no_project_type",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "structure_type_classified_pct",
+            "value": "0.0%",
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "project_type_distribution",
+            "value": {},
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "coa_type_class_distribution",
+            "value": {},
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_velocity_rows_sec",
+            "value": 0,
+            "threshold": null,
+            "status": "INFO"
+          },
+          {
+            "metric": "sys_duration_ms",
+            "value": 37,
+            "threshold": null,
+            "status": "INFO"
+          }
+        ]
+      }
+    }
+  },
+  "summary_count": 1,
+  "meta": [
+    {
+      "reads": {
+        "coa_applications": [
+          "id",
+          "description",
+          "status",
+          "decision",
+          "last_seen_at",
+          "scope_classified_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "coa_type_class",
+          "project_type",
+          "scope_tags",
+          "structure_type",
+          "scope_classified_at",
+          "scope_source"
+        ]
+      }
+    }
+  ],
+  "parse_errors": [],
+  "verdict": "PASS",
+  "ledger_status": [],
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"duration_ms\":28,\"coa_processed\":0,\"scope_classified\":0,\"unmapped_scope\":0,\"no_class\":0,\"no_project_type\":0,\"structure_typed\":0,\"project_type_distribution\":{},\"coa_type_class_distribution\":{},\"audit_table\":{\"phase\":42,\"name\":\"CoA Scope Classification\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"coa_processed\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"scope_classified\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"unmapped_scope_count\",\"value\":\"0.0%\",\"threshold\":\"<= 10%\",\"status\":\"PASS\"},{\"metric\":\"scope_classified_pct\",\"value\":\"0.0%\",\"threshold\":\">= 90%\",\"status\":\"PASS\"},{\"metric\":\"no_class\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_null_pct\",\"value\":\"0.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"no_project_type\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"structure_type_classified_pct\",\"value\":\"0.0%\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"project_type_distribution\",\"value\":{},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_type_class_distribution\",\"value\":{},\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":37,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"description\",\"status\",\"decision\",\"last_seen_at\",\"scope_classified_at\"]},\"writes\":{\"coa_applications\":[\"coa_type_class\",\"project_type\",\"scope_tags\",\"structure_type\",\"scope_classified_at\",\"scope_source\"]}}\n{\"level\":\"INFO\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"Classification complete\",\"context\":{\"processed\":0,\"scope_classified\":0,\"unmapped_scope\":0,\"no_class\":0,\"no_project_type\":0,\"duration\":\"0.0s\"}}\n\n[classify-coa-scope] completed in 0.0s\n",
+  "stderr": "{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[classify-coa-scope]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
+  "pipeline_runs": [],
+  "pipeline_runs_max_id_before": 3413,
+  "table_state": [
+    {
+      "table": "coa_applications",
+      "row_count": 33949,
+      "content_hash": "890071032f8af6a963608fac93fc0438",
+      "order_by": "pk",
+      "columns": [
+        "id",
+        "coa_type_class",
+        "project_type",
+        "scope_tags",
+        "structure_type",
+        "scope_source"
+      ]
+    }
+  ],
+  "tables_source": "arg",
+  "table_row_ceiling": 100000,
+  "table_timing": {
+    "coa_applications": 36
+  },
+  "table_specs": {
+    "coa_applications": {
+      "columns": [
+        "id",
+        "coa_type_class",
+        "project_type",
+        "scope_tags",
+        "structure_type",
+        "scope_source"
+      ],
+      "columns_source": "arg",
+      "order": null,
+      "order_source": "none"
+    }
+  },
+  "invariants": [],
+  "invariants_file": null,
+  "db_target": "postgresql://postgres:***@127.0.0.1:54322/postgres",
+  "runtime": "node",
+  "args": [],
+  "nondeterminism": [
+    "key:summary.records_meta.duration_ms",
+    "pattern:duration_literal",
+    "row:sys_duration_ms",
+    "row:sys_velocity_rows_sec"
+  ],
+  "normalised": {
+    "step": "scripts/classify-coa-scope.js",
+    "chain": "none",
+    "exit_code": 0,
+    "summary": {
+      "records_meta": {
+        "audit_table": {
+          "name": "CoA Scope Classification",
+          "phase": 42,
+          "rows": [
+            {
+              "metric": "coa_processed",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "scope_classified",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "unmapped_scope_count",
+              "status": "PASS",
+              "threshold": "<= 10%",
+              "value": "0.0%"
+            },
+            {
+              "metric": "scope_classified_pct",
+              "status": "PASS",
+              "threshold": ">= 90%",
+              "value": "0.0%"
+            },
+            {
+              "metric": "no_class",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "coa_type_class_null_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "0.0%"
+            },
+            {
+              "metric": "no_project_type",
+              "status": "INFO",
+              "threshold": null,
+              "value": 0
+            },
+            {
+              "metric": "structure_type_classified_pct",
+              "status": "INFO",
+              "threshold": null,
+              "value": "0.0%"
+            },
+            {
+              "metric": "project_type_distribution",
+              "status": "INFO",
+              "threshold": null,
+              "value": {}
+            },
+            {
+              "metric": "coa_type_class_distribution",
+              "status": "INFO",
+              "threshold": null,
+              "value": {}
+            }
+          ],
+          "verdict": "PASS"
+        },
+        "coa_processed": 0,
+        "coa_type_class_distribution": {},
+        "no_class": 0,
+        "no_project_type": 0,
+        "project_type_distribution": {},
+        "scope_classified": 0,
+        "structure_typed": 0,
+        "unmapped_scope": 0
+      },
+      "records_new": 0,
+      "records_total": 0,
+      "records_updated": 0
+    },
+    "summary_count": 1,
+    "meta": [
+      {
+        "reads": {
+          "coa_applications": [
+            "id",
+            "description",
+            "status",
+            "decision",
+            "last_seen_at",
+            "scope_classified_at"
+          ]
+        },
+        "writes": {
+          "coa_applications": [
+            "coa_type_class",
+            "project_type",
+            "scope_tags",
+            "structure_type",
+            "scope_classified_at",
+            "scope_source"
+          ]
+        }
+      }
+    ],
+    "parse_errors": [],
+    "pipeline_runs": [],
+    "stdout_lines": [
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[classify-coa-scope]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[classify-coa-scope]\"}",
+      "{\"context\":{\"duration\":\"<DUR>\",\"no_class\":0,\"no_project_type\":0,\"processed\":0,\"scope_classified\":0,\"unmapped_scope\":0},\"level\":\"INFO\",\"msg\":\"Classification complete\",\"tag\":\"[classify-coa-scope]\"}",
+      "[classify-coa-scope] completed in <DUR>"
+    ],
+    "table_state": [
+      {
+        "columns": [
+          "id",
+          "coa_type_class",
+          "project_type",
+          "scope_tags",
+          "structure_type",
+          "scope_source"
+        ],
+        "content_hash": "890071032f8af6a963608fac93fc0438",
+        "order_by": "pk",
+        "row_count": 33949,
+        "table": "coa_applications"
+      }
+    ],
+    "invariants": []
+  },
+  "capture_ledger_rows": [
+    {
+      "id": 3414,
+      "recorded_by": "harness"
+    }
+  ],
+  "source_fingerprint": null,
+  "fingerprint_files": [],
+  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
+}
