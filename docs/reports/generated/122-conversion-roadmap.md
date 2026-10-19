@@ -7,13 +7,13 @@
 
 ## Counts
 
-Remaining files: **32** (+ **5** pending) · remaining slugs: **34** (+ **5** pending)
+Remaining files: **31** (+ **6** pending) · remaining slugs: **33** (+ **6** pending)
 
 | Batch | Files | Slots |
 |---|---:|---:|
 | C4 | 0 | 0 |
-| C5 | 5 | 5 |
-| C6 | 32 | 36 |
+| C5 | 6 | 6 |
+| C6 | 31 | 35 |
 
 ## C4 — archetype-grouped, risk-ascending
 
@@ -34,10 +34,12 @@ Remaining files: **32** (+ **5** pending) · remaining slugs: **34** (+ **5** pe
 | INGESTOR | `scripts/load-coa-notices.js` | load_coa_notices [pending: shape_clean_pending_recapture] | coa_notices (1) | — | — | — |
 | INGESTOR | `scripts/load-coa.js` | coa [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (coa); CHAIN-TOOLING (coa); EP-PIN-D17 (coa) |
 | INGESTOR | `scripts/load-permits.js` | permits [pending: red_suite] | permits (1) | — | — | LDG-10 (permits); CHAIN-TOOLING (permits); EP-PIN-D17 (permits) |
+| LINK | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels [pending: red_suite] | coa (1) | — | supports_full | LDG-10 (link_coa_to_parcels); CHAIN-TOOLING (link_coa_to_parcels); EP-PIN-D17 (link_coa_to_parcels) |
 
 <details><summary>C5 — why each archetype (census <code>reason</code>)</summary>
 
 - `scripts/classify-coa-scope.js` (ENRICHER): ARCH-CENSUS key-step scope (wave-4 plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 recommendation 8; McDonald's Airtight V3) declared ENRICHER; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed ENRICHER: a per-row JS classifier (scripts/lib/coa-scope-classifier.js, scripts/classify-coa-scope.js:177) over its own input table's pending cursor (:165-173) writing six derived columns back onto coa_applications (:134-145). Precedent compute_parcel_cost_estimates (JS per-row compute, one post_commit phase).
+- `scripts/link-coa-to-parcels.js` (LINK): ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan question 8; McDonald's Airtight V3) declared LINK; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed LINK: an address-tier cascade (address-points bridge, parcels exact, name-only; scripts/link-coa-to-parcels.js:366-470) that writes lead_parcels (guarded upsert ON CONFLICT (lead_id, parcel_id), :458) with retraction (the coa-scoped ghost DELETE, :587-595) and back-fills coa_applications lat/lng/neighbourhood_id/parcel_linked_at (:532, :551, pre-pass :322). Same shape as link_parcels (link_keyed + link_full_retraction + the parcel_linked_at marker); the bundled neighbourhood pass follows link_neighbourhoods.
 - `scripts/load-coa-notices.js` (INGESTOR): NET-NEW step, converted from day one (WF1 load_coa_notices, Spec 129; plan .cursor/wf1_load_coa_notices_active_task.md v3, authorized 2026-10-07). Classified INGESTOR from the plan before any code existed (an external document set acquired and written to one table); there is no legacy script to classify. The one file in converted.json pending[] until its cutover.
 - `scripts/load-coa.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3) declared INGESTOR provisionally; phase-4 wave-1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR multi-target (two CKAN DataStore resources -> coa_applications upsert + lifecycle_status_history ledger rows; scripts/load-coa.js:105, :293, :390)
 - `scripts/load-permits.js` (INGESTOR): ARCH-CENSUS key-step scope (operator y 2026-10-17, phase-4 decision 1; McDonald's Airtight V3). Phase-4 wave 1 conversion IN FLIGHT (commit ①, 2026-10-17) — archetype re-derived from the code at PH-0 (R-AO), confirmed INGESTOR (one CKAN DataStore primary, scripts/load-permits.js:33 CKAN_BASE; two write targets: the permits class-B guarded upsert :338-390 and the lifecycle_status_history append ledger :458; the legacy sync_runs run row :725 retires at cutover, CP-PERMITS D-P1). Multi-target INGESTOR, precedent load_zoning.
@@ -73,7 +75,6 @@ Remaining files: **32** (+ **5** pending) · remaining slugs: **34** (+ **5** pe
 | permits | `scripts/update-tracked-projects.js` | update_tracked_projects | permits (1) |
 | coa | `scripts/classify-coa-trades.js` | classify_coa_trades | coa (1) |
 | coa | `scripts/compute-coa-cost-estimates.js` | compute_coa_cost_estimates | coa (1) |
-| coa | `scripts/link-coa-to-parcels.js` | link_coa_to_parcels | coa (1) |
 | deep_scrapes | `scripts/classify-inspection-status.js` | classify_inspection_status | deep_scrapes (1) |
 | deep_scrapes | `scripts/quality/assert-network-health.js` | assert_network_health | deep_scrapes (1) |
 | deep_scrapes | `scripts/quality/assert-staleness.js` | assert_staleness | deep_scrapes (1) |
@@ -82,7 +83,7 @@ Remaining files: **32** (+ **5** pending) · remaining slugs: **34** (+ **5** pe
 | orphan | `scripts/observe-chain.js` | observe_chain |  (0) |
 | orphan | `scripts/reclassify-all.js` | reclassify_all |  (0) |
 
-*C6 chain-bucket counts (files):* permits=22 · coa=3 · deep_scrapes=3 · entities_wsib=2 · orphan=2
+*C6 chain-bucket counts (files):* permits=22 · coa=2 · deep_scrapes=3 · entities_wsib=2 · orphan=2
 
 ## Declared exemptions (Ask A2 + Spec 124 R-AP) — manifest slugs with NO JS file, and RUNNER-owned concerns, excluded by ruling, never silently dropped
 
@@ -94,4 +95,4 @@ Remaining files: **32** (+ **5** pending) · remaining slugs: **34** (+ **5** pe
 
 ---
 
-*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **5** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **34** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*
+*Totality (both directions, proven by `src/tests/conversion-roadmap.infra.test.ts`; slug-grain, IDENTITY HOLDS): **71** manifest.scripts slugs = **29** converted + **6** pending + **3** declared exemptions (Ask A2, excluded from the conversion programme entirely — never silently dropped, see the table above) + **33** remaining, each counted exactly once, in exactly one of C4/C5/C6/pending/exempted.*

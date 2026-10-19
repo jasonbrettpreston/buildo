@@ -102,6 +102,13 @@
       "reason": "Phase-4 wave 4 (classify_coa_scope, ENRICHER: a per-row JS classifier over the coa_applications pending cursor (scope_classified_at IS NULL OR < last_seen_at) -> six derived columns on its own input table, one VALUES UPDATE per 1000-row batch; McDonald's Airtight V3 from ①: R-BZ zero purity findings, R-BA every gate hard, R-DF seven questions incl. EXTERNALIZED, R-DE (v) step-owned variable names, R-CT rls_bypass_or_policy, R-DL admin visibility; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md + red suite (L1-L13 legacy oracle pins executing the verbatim legacy text with the real classifier, D1-D9 it.fails) + gate-K red evidence + CCS-D1..CCS-D7; ② the descriptor/compute/shell/notes (ctx.stream / ctx.flushBatch seams, the compute_parcel_cost_estimates form) + migration 271 (classify_coa_scope_unmapped_max_pct renamed from coa_scope_unmapped_threshold_pct, classify_coa_scope_batch_size 1000) + PIPELINE_TABLE_MAP + manifest supports_full; PRE on the ① tree (night P3, trap 7), POST + forced NULL-scope_classified_at bracket at night P4; ③ registers, per Spec 124 R-K. Consumes R-DW (the coa root's last_seen_at touch for every fed key) unchanged: parity re-classifies every fed key per run.",
       "declared": "2026-10-18",
       "stage": "red_suite"
+    },
+    {
+      "file": "scripts/link-coa-to-parcels.js",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 4 (link_coa_to_parcels, LINK: address-tier cascade coa_applications -> parcels writing lead_parcels (guarded upsert + coa-scoped retraction) and the coa_applications lat/lng/neighbourhood_id/parcel_linked_at back-fill; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator-approved 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md + red suite (L1-L18 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + LCTP-D1..LCTP-D10; ② the descriptor/compute/notes/seeds with the three ruled behaviour changes (re-check every run per link_parcels O4 row 7 with the back-fill fired only on a link change, set-based fail_fast in place of per-row SAVEPOINTs, Turf fallback retired per R-W with guards.requires postgis) + PRE/POST goldens under the DB lock (R-CQ, night P3/P4); ③ registers, per Spec 124 R-K.",
+      "declared": "2026-10-18",
+      "stage": "red_suite"
     }
   ],
   "converted": [

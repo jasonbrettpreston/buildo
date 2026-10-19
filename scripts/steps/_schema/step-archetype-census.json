@@ -320,10 +320,11 @@
     },
     {
       "slug": "link_coa_to_parcels",
+      "owner_specs": ["docs/specs/01-pipeline/42_chain_coa.md", "docs/specs/01-pipeline/47_pipeline_script_protocol.md"],
       "file": "scripts/link-coa-to-parcels.js",
-      "archetype": "UNDECLARED",
-      "batch": "C6",
-      "reason": "Spec 122 §1.10's census covers only the 27 `sources` steps; this file is outside that scope — deferred to ARCH-CENSUS (Ask A3), a dedicated WF before C6 opens"
+      "archetype": "LINK",
+      "batch": "pending",
+      "reason": "ARCH-CENSUS wave-4 scope (operator y 2026-10-18, wave-4 plan question 8; McDonald's Airtight V3) declared LINK; phase-4 wave-4 conversion IN FLIGHT (commit ①, 2026-10-18) — archetype re-derived from the code at PH-0 (R-AO), confirmed LINK: an address-tier cascade (address-points bridge, parcels exact, name-only; scripts/link-coa-to-parcels.js:366-470) that writes lead_parcels (guarded upsert ON CONFLICT (lead_id, parcel_id), :458) with retraction (the coa-scoped ghost DELETE, :587-595) and back-fills coa_applications lat/lng/neighbourhood_id/parcel_linked_at (:532, :551, pre-pass :322). Same shape as link_parcels (link_keyed + link_full_retraction + the parcel_linked_at marker); the bundled neighbourhood pass follows link_neighbourhoods."
     },
     {
       "slug": "link_coa",
