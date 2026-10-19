@@ -94,7 +94,10 @@ describe('step-archetype-census.json — schema validity', () => {
     // Spec 124 R-AP (batch-2 Phase 0.8, 2026-09-15): the totality lock moves 2 -> 3.
     // `reconcile` is NOT a conversion and NOT a no-JS-file exemption — it is the
     // third, named class: a RUNNER-owned concern (Spec 122 §4/§7.3 row 4/§7.4 A3).
-    expect(slugs).toEqual(['coa_documents', 'inspections', 'reconcile']);
+    // Spec 124 R-EJ + R-EK (C6 rulings, operator y 2026-10-19): 3 -> 5. observe_chain joins the
+    // runner_owned class (chain observation is a RUNNER concern, run-chain.js:1353); reclassify_all is
+    // the first `retired` row (its closed predicate is checked by the generator, c6-rulings.infra).
+    expect(slugs).toEqual(['coa_documents', 'inspections', 'observe_chain', 'reclassify_all', 'reconcile']);
     const inspections = data.exemptions.find((e) => e.slug === 'inspections');
     expect(inspections?.reason).toBe('python_step_excluded');
     const reconcile = data.exemptions.find((e) => e.slug === 'reconcile');
@@ -200,8 +203,10 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 64 -> 66 / 66 -> 68 at H6 (2026-10-16): two NET-NEW pending steps (load_bylaw_map_areas, link_parcel_abutments; R-CS).
     // 66 -> 67 files at phase-4 wave 4 enrich pair ① (2026-10-18): the enrich_coa_zoning identity split gave the
     // slug its own file (scripts/enrich-coa-zoning.js); the slug total is unchanged (68).
-    expect(remaining.length + doneFiles.length).toBe(67);
-    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(68);
+    // 67 -> 65 files / 68 -> 66 slugs at the C6 rulings (2026-10-19): observe_chain (R-EJ, runner_owned) and
+    // reclassify_all (R-EK, retired) became declared exemptions, so neither is convertible any more.
+    expect(remaining.length + doneFiles.length).toBe(65);
+    expect(remainingSlugCount + doneFiles.reduce((n, f) => n + (fileToSlugs[f]?.length ?? 0), 0)).toBe(66);
   });
 
   it('the census file-count-by-batch matches the independently re-derived C4/C5/C6 split (C4=0 — CLOSED, C5=12 — `reconcile` left C5 for the R-AP RUNNER-owned exemption, 2026-09-15 — C6=36; pending=0 — geocode_permits flipped C4 -> pending at the batch-2 I5 folded commit 5 and was RETAINED as status:\"converted\" at its commit 9 the same day, emptying C4 entirely; link_neighbourhoods was pending from batch-2 I4 commit 1 and converted at commit 3, both on 2026-09-16; assert_engine_health\'s own row was deleted entirely at batch1 I3 commit 9, 2026-09-14, mirroring the assert_data_bounds/I2 commit 9 cutover precedent)', () => {
@@ -333,7 +338,8 @@ describe('measured counts — independently re-derived, not transcribed from the
     // 34 -> 33 at wave-4 assert_coa_freshness ①; 33 -> 32 at wave-4 classify_coa_scope ①; 32 -> 31 at wave-4 link_coa_to_parcels ①; 31 -> 30 at the enrich pair ① (C6 counts FILES: the shared scripts/enrich-permits.js left it once; enrich-coa-zoning.js was born pending).
     // 30 -> 29 at wave-4 classify_coa_trades ①.
     // 29 -> 28 at wave-4 compute_coa_cost_estimates ①.
-    expect(c6.size).toBe(28);
+    // 28 -> 26 at the C6 rulings (2026-10-19): observe_chain (R-EJ) and reclassify_all (R-EK) left C6 as declared exemptions.
+    expect(c6.size).toBe(26);
     expect(c4.size + c5.size + c6.size).toBe(remaining.length);
   });
 
@@ -522,7 +528,8 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
   it('HIGH-1 + R-AP: the 3 declared exemptions (inspections, coa_documents, reconcile) are NOT silently dropped — 68 total manifest slugs = 19 converted + 0 pending + 3 exempted + 46 remaining', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
-    expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'reconcile']);
+    // 3 -> 5 at the C6 rulings (2026-10-19): observe_chain (R-EJ) and reclassify_all (R-EK).
+    expect(args.exemptions.map((e) => e.slug).sort()).toEqual(['coa_documents', 'inspections', 'observe_chain', 'reclassify_all', 'reconcile']);
     const rows = mod.buildRoadmap(args);
     const remainingSlugs = rows.filter((r) => !r.pending).reduce((n, r) => n + r.slugs.length, 0);
     const pendingSlugs = rows.filter((r) => r.pending).reduce((n, r) => n + r.slugs.length, 0);
@@ -582,6 +589,9 @@ describe('buildRoadmap() — totality over the real committed data (HIGH-1: slug
     expect(rendered).toContain('no_file');
     expect(rendered).toContain('reconcile');
     expect(rendered).toContain('runner_owned');
+    expect(rendered).toContain('observe_chain');
+    expect(rendered).toContain('reclassify_all');
+    expect(rendered).toContain('retired');
     expect(rendered).toContain('IDENTITY HOLDS');
     expect(rendered).not.toContain('IDENTITY VIOLATED');
   });
@@ -604,11 +614,12 @@ describe('buildRoadmap() — both directions on declared exemptions (HIGH-1)', (
     expect(() => mod.buildRoadmap(badFile)).toThrow(/slug "inspections" declares file.*but manifest.scripts says/);
   });
 
-  it('GREEN — the real, committed exemptions (3: inspections, coa_documents, reconcile) never throw', async () => {
+  it('GREEN — the real, committed exemptions (5: inspections, coa_documents, reconcile, observe_chain, reclassify_all) never throw', async () => {
     const mod = (await import(pathToFileURL(GENERATOR).href)) as unknown as RoadmapModule;
     const args = await loadRealArgs(mod);
     expect(() => mod.buildRoadmap(args)).not.toThrow();
-    expect(REAL_CENSUS.exemptions).toHaveLength(3);
+    // 3 -> 5 at the C6 rulings (2026-10-19): observe_chain (R-EJ) and reclassify_all (R-EK).
+    expect(REAL_CENSUS.exemptions).toHaveLength(5);
   });
 });
 
