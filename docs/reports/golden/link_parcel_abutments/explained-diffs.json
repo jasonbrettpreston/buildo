@@ -4,14 +4,6 @@
     {
       "key": "stdout_lines[]",
       "why": "Environmental, not a data diff (R-DA; operator y 2026-10-19, replay night N1): the step's first stdout line prints the target's applied-migration count (\"target: … migrations=<n> (floor …)\"). It moves whenever a migration lands between the committed POST and its retake — N1 applied 266, 267, 268 and 273, so it reads migrations=264 where the committed POST read 260. The R-DK stability half compares every retaken POST with the committed one, so every migration night shows this line."
-    },
-    {
-      "key": "table_state[].content_hash",
-      "why": "ONE-TIME, removed in the follow-up commit straight after RE-FREEZE #37 (operator y 2026-10-19): the parcel_abutments capture projection drops the run-clock column linked_at (columns[].source \"run_at\"), which the R-DK delete-and-rebuild restamps on every replay. This follows the standing rule that a run-clock column is projected out of goldens or explained (Spec 124 R-DA; R-DZ \"goldens project it out or explain it\"), as link_massing already does for parcel_buildings.linked_at. The committed POST hashed 10 columns, including linked_at (4a36b0f647c21368d2c567bb908de33a); the retake hashes the 9 value columns (448d1039…). Row count is unchanged at 1,674,346, and every metric is unchanged."
-    },
-    {
-      "key": "table_state[].columns[]",
-      "why": "ONE-TIME, removed in the follow-up commit straight after RE-FREEZE #37 (operator y 2026-10-19): the parcel_abutments capture projection drops the run-clock column linked_at (columns[].source \"run_at\"), which the R-DK delete-and-rebuild restamps on every replay. This follows the standing rule that a run-clock column is projected out of goldens or explained (Spec 124 R-DA; R-DZ \"goldens project it out or explain it\"), as link_massing already does for parcel_buildings.linked_at. The committed POST hashed 10 columns, including linked_at (4a36b0f647c21368d2c567bb908de33a); the retake hashes the 9 value columns (448d1039…). Row count is unchanged at 1,674,346, and every metric is unchanged."
     }
   ]
 }
