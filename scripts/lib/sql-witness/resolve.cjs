@@ -811,6 +811,11 @@ function applyColumn(colRef, scope, catalog, reads, writes, excluded, _isWrite) 
     return;
   }
 
+  // Spec 124a R-BW (6) (124a:240): system columns stay derived — never credited (SYSTEM_COLUMNS,
+  // above). Applied here, once, so every path honours it: qualified (`lp.ctid`), unqualified in a
+  // SELECT scope (lone relation / fence (ii)), and the write scope (writeScopeUnqualified).
+  if (SYSTEM_COLUMNS.has(names[names.length - 1])) return;
+
   if (names.length >= 2) {
     const column = names[names.length - 1];
     const qualifier = names[names.length - 2];
