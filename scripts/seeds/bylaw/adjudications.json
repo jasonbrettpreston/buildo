@@ -72068,6 +72068,468 @@
       "supersedes": "COR-10.80.30.10(1)#(1)(B)/disclosure",
       "unit": "10.80.30.10(1)#(1)(B)",
       "value": "If the semi-detached house or apartment building is divided onto two lots, each lot's minimum lot area is 50 % of the 'a' value."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.10.30.1(2)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.10.30.1(2)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.20.30.1(2)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.20.30.1(2)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.40.30.1(2)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.40.30.1(2)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.60.30.1(2)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.60.30.1(2)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.80.30.1(2)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.80.30.1(2)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.10.40.1(7)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.10.40.1(7)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.20.40.1(7)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.20.40.1(7)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.40.40.1(6)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.40.40.1(6)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.60.40.1(5)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.60.40.1(5)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "ranks_layers",
+      "id": "COR-10.80.40.1(5)#whole/ranks_layers",
+      "kind": "correction",
+      "reason": "M-180(2) (operator y 2026-10-18, MF-1): \"if [the zone rule] … is more permissive than the regulation that would apply … under [the Applicable clause / the exception], then the more permissive regulation prevails\". Keyed \"base > exception\", the unit never acted (a PROCEDURAL with no value unit to rank) and the exception won outright under rule 4. The more_permissive form makes §7.5 rule 4 return the more permissive of the base and exception values for the classes the clause names, as rule 4 does for a provincial unit (M-55).",
+      "rule": "Spec 69a M-180(2), M-55; M-75",
+      "unit": "10.80.40.1(5)#whole",
+      "value": {
+        "more_permissive": [
+          "exception",
+          "base"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.10.30.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.10.30.1(2)#whole",
+      "value": {
+        "articles": [
+          "10.10.60.70"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_houseplex": "with a detached houseplex",
+          "has_secondary_suite": "with a secondary suite",
+          "secondary_suite": "a residential building with a secondary suite",
+          "semi_detached_houseplex": "semi-detached houseplex or a residential building"
+        },
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.20.30.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.20.30.1(2)#whole",
+      "value": {
+        "articles": [
+          "10.20.30.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_houseplex": "a lot with a detached houseplex",
+          "has_secondary_suite": "with a secondary suite",
+          "secondary_suite": "a residential building with a secondary suite"
+        },
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.40.30.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.40.30.1(2)#whole",
+      "value": {
+        "articles": [
+          "10.40.30.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "has_secondary_suite": "with a secondary suite",
+          "secondary_suite": "a residential building with a secondary suite",
+          "secondary_suite_use": "a secondary suite",
+          "semi_detached_houseplex": "semi-detached houseplex or"
+        },
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.60.30.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.60.30.1(2)#whole",
+      "value": {
+        "articles": [
+          "10.60.30.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "has_secondary_suite": "with a secondary suite",
+          "secondary_suite": "a residential building with a secondary suite",
+          "secondary_suite_use": "a secondary suite",
+          "semi_detached_houseplex": "semi-detached houseplex or"
+        },
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.80.30.1(2)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.80.30.1(2)#whole",
+      "value": {
+        "articles": [
+          "10.80.30.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex",
+          "secondary_suite"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "has_secondary_suite": "with a secondary suite",
+          "secondary_suite": "a residential building with a secondary suite",
+          "secondary_suite_use": "a secondary suite",
+          "semi_detached_houseplex": "semi-detached houseplex or"
+        },
+        "lot_conditions": [
+          "has_secondary_suite"
+        ],
+        "uses": [
+          "secondary_suite_use"
+        ],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.10.40.1(7)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.10.40.1(7)#whole",
+      "value": {
+        "articles": [
+          "10.10.40.10",
+          "10.10.40.30",
+          "10.10.40.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex is"
+        },
+        "lot_conditions": [],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.20.40.1(7)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.20.40.1(7)#whole",
+      "value": {
+        "articles": [
+          "10.20.40.10",
+          "10.20.40.20",
+          "10.20.40.30",
+          "10.20.40.40",
+          "10.20.40.50"
+        ],
+        "building_types": [
+          "detached_houseplex"
+        ],
+        "evidence": {
+          "detached_houseplex": "for a detached houseplex"
+        },
+        "lot_conditions": [],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.40.40.1(6)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.40.40.1(6)#whole",
+      "value": {
+        "articles": [
+          "10.40.40.10",
+          "10.40.40.20",
+          "10.40.40.30",
+          "10.40.40.40",
+          "10.40.40.50"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex is"
+        },
+        "lot_conditions": [],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.60.40.1(5)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.60.40.1(5)#whole",
+      "value": {
+        "articles": [
+          "10.60.40.10",
+          "10.60.40.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "or semi-detached houseplex"
+        },
+        "lot_conditions": [],
+        "uses": [],
+        "zones": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application",
+      "id": "COR-10.80.40.1(5)#whole/application",
+      "kind": "correction",
+      "reason": "M-180(2): the articles whose regulations the clause names (\"clauses …\" / \"under clause …\"), as data, never an id in code.",
+      "rule": "Spec 69a M-180(2); M-75",
+      "unit": "10.80.40.1(5)#whole",
+      "value": {
+        "articles": [
+          "10.80.40.10",
+          "10.80.40.40"
+        ],
+        "building_types": [
+          "detached_houseplex",
+          "semi_detached_houseplex"
+        ],
+        "evidence": {
+          "detached_houseplex": "a detached houseplex",
+          "semi_detached_houseplex": "semi-detached houseplex is"
+        },
+        "lot_conditions": [],
+        "uses": [],
+        "zones": []
+      }
     }
   ]
 }

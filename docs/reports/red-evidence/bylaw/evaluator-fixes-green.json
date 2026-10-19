@@ -1,9 +1,9 @@
 {
  "suite": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
- "tree": "wf1/bylaw-evaluator-fixes round 2 (before commit)",
+ "tree": "wf1/bylaw-evaluator-fixes round 3 (before commit)",
  "run_on": "2026-10-19",
  "counts": {
-  "passed": 82,
+  "passed": 91,
   "failed": 0
  },
  "cases": [
@@ -333,6 +333,42 @@
   },
   {
    "name": "disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P5.12 disclosure is on its keyed unit M-208: the laneway soft-landscaping area is shown and never shrinks the suite",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) the ten \"more permissive\" units carry ranks_layers {more_permissive} and their article list as data",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) RD: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) RS: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) RM: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) x.30.1(2) names \"a residential building with a secondary suite\" too: a house with a suite on the exception lot takes the zone 45 % over the exception 30 % (panel round 1)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) a looser exception stands for the houseplex (12 m over the zone 10 m)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) M-180(1) substitution: an exception rule for a detached house binds the houseplex (RS)",
+   "status": "passed"
+  },
+  {
+   "name": "M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and \"more permissive prevails\" (round 3) RD names the detached houseplex only: a semi-detached-house exception rule does not bind an RD semi-detached houseplex",
+   "status": "passed"
+  },
+  {
+   "name": "the R default FSI (review of the round-2 knock-on, 2026-10-19) 10.10.40.40(1)(B) says \"if the zone label does not include a \"d\" value … the permitted maximum floor space index is 0.6\": an R house with no d answers 0.6 from (B)",
    "status": "passed"
   }
  ]

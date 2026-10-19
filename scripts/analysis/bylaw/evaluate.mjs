@@ -105,6 +105,8 @@ export function makeContext(vocab, extra = {}) {
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
+    // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
+    exceptionTypeAlias: vocabMap(vocab.exception_type_alias),
     enactments: extra.enactments || {},
     absences: [...(extra.absences || [])].sort((a, b) => cmpStr(String(a.id), String(b.id))), // absence-rulings.json (M-54 note)
     // exception id -> 'authored' | {status: 'authored'} | {status: 'partial', targets: [...]} (the G-AGREE outcome);
@@ -424,10 +426,15 @@ export function applies(lot, u, ctx, resolveVariable, reads = new Set(), trace =
     // whatever the principal type (M-177(4))
     let suite = false;
     if (types.includes('secondary_suite')) { reads.add('flags.has_secondary_suite'); suite = Boolean(lot.flags && lot.flags.has_secondary_suite === true); }
-    if (!suite) {
+    // M-180(1): on an exception lot a Chapter 900 rule for a detached (semi-detached) house also binds the detached
+    // (semi-detached) houseplex, where the zone's own "Applicable … Requirements" clause says so
+    const alias = u.layer === 'exception' && bt && C.exceptionTypeAlias && C.exceptionTypeAlias[lot.zone];
+    const aliased = Boolean(alias && types.some((t) => alias[t] === bt));
+    if (!suite && !aliased) {
       if (!bt) unknown = 'needs_user_input:building_type';
       else if (!types.includes(bt) && !types.includes(C.typeParent[bt])) return { ok: false, why: 'building_type' };
     }
+    if (aliased) trace.push(`M-180(1): ${u.unit_id} binds ${bt} as its ${types.find((t) => alias[t] === bt)} rule`);
   }
   // M-175 (operator envelope review 2026-10-15): a unit scoped to an accessory-structure use (vocab
   // accessory_structure_use) limits that structure, never the principal building this evaluator answers for. Before
@@ -785,7 +792,9 @@ function effCore(lot, target, candidates, C, env) {
     if (a.ok === true) disclosures.push(`alternate compliance path under ${u.unit_id} — not evaluated (rule 5)`);
     else if (a.ok === null) disclosures.push(`alternate compliance path under ${u.unit_id} may apply (${a.reason}) — not evaluated (rule 5)`);
   }
-  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2 };
+  // M-180(2): applicable "the more permissive regulation prevails" units (ranks_layers {more_permissive}), data-driven
+  const morePermissive = mpUnits(candidates).filter((u) => applies(lot, u, C, resolveVariable, reads, []).ok === true);
+  const base = { lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, morePermissive };
   if (!unknown.length) return resolveSet(base, A, trace, disclosures);
   for (const x of unknown) trace.push(`applicability unknown: ${x.u.unit_id} (${x.reason})`);
   const reason = pickReason(unknown.map((x) => x.reason));
@@ -830,7 +839,14 @@ function exceptionNotAuthored(lot, target, candidates, C, info = null) {
 }
 
 /** Rules 3, 2, 1 (unit check), 7 / 7a, 4, 4a, the provincial restraint (rule 4, M-55) over one applicable set A. */
-function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2 }, A, trace, disclosures) {
+const MP_UNITS = new WeakMap();
+function mpUnits(candidates) {
+  if (!Array.isArray(candidates)) return candidates.filter((u) => u.archetype === 'PROCEDURAL' && u.ranks_layers && Array.isArray(u.ranks_layers.more_permissive));
+  if (!MP_UNITS.has(candidates)) MP_UNITS.set(candidates, candidates.filter((u) => u.archetype === 'PROCEDURAL' && u.ranks_layers && Array.isArray(u.ranks_layers.more_permissive)));
+  return MP_UNITS.get(candidates);
+}
+const articleOf = (u) => String(u.regulation_id || splitRef(u.unit_id).reg).replace(/@.*$/, '').replace(/\(.*$/, '');
+function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, reads, consideredOrdered, r3, r2, morePermissive = [] }, A, trace, disclosures) {
   const ins = () => [...reads].sort(cmpStr);
   const sortedA = consideredOrdered.filter((u) => A.has(u)); // A ⊆ considered; consideredOrdered keeps the candidates order
   // rule 3 (M-38, M-49): a unit displacing a precedence rule ranks just above the highest layer that rule ranks
@@ -920,12 +936,21 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   const boundOfUnit = (u) => (u.bound === 'min' || u.bound === 'max' ? u.bound : 'exact'); // DEFINE / 'none' / missing → exact
   const byBound = {};
   for (const u of T) (byBound[boundOfUnit(u)] = byBound[boundOfUnit(u)] || []).push(u);
-  const kept = {};
+  const kept = {}; const altKept = {};
   for (const [b, us] of Object.entries(byBound).sort(([a], [c]) => cmpStr(a, c))) {
     const top = Math.max(...us.map(rank));
     kept[b] = us.filter((u) => rank(u) === top);
     const lost = us.filter((u) => rank(u) !== top).map((u) => u.unit_id);
     if (lost.length) trace.push(`rule 4: ${lost.join(', ')} replaced by a higher layer (bound ${b})`);
+    // M-180(2): the exception layer won, but the zone's houseplex rule says the more permissive prevails — keep the
+    // base units of the named articles as the alternative, compared after evaluation
+    if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception')) {
+      for (const p of morePermissive) {
+        const arts = new Set((p.application && p.application.articles) || []);
+        const alt = us.filter((u) => rank(u) !== top && layerOf(u) === 'base' && arts.has(articleOf(u)));
+        if (alt.length) { (altKept[b] = altKept[b] || { by: p.unit_id, units: [] }).units.push(...alt.filter((u) => !altKept[b].units.includes(u))); }
+      }
+    }
   }
 
   // evaluate + rule 4a
@@ -934,20 +959,34 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     addAll(reads, r.inputs);
     return r;
   };
-  const vals = {};
-  for (const [b, us] of Object.entries(kept)) {
-    vals[b] = [];
-    for (const u of us) for (const s of parsedFor(u, target)) {
-      const ed = edits.get(u.unit_id);
-      const r = ev1(s, ed ? ed.args : {});
-      const id = ed ? `${u.unit_id}<${ed.by.join('+')}` : u.unit_id;
-      if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures, inputs: ins() });
-      vals[b].push({ id, unitId: u.unit_id, v: r.value });
-      trace.push(`${id} → ${r.value} ${tUnit ?? ''}${r.trace.length ? ` [${r.trace.join(', ')}]` : ''}`.trim());
+  const vals = {}; const altVals = {};
+  for (const [into, groups] of [[vals, kept], [altVals, Object.fromEntries(Object.entries(altKept).map(([b, g]) => [b, g.units]))]]) {
+    for (const [b, us] of Object.entries(groups)) {
+      into[b] = [];
+      for (const u of us) for (const s of parsedFor(u, target)) {
+        const ed = edits.get(u.unit_id);
+        const r = ev1(s, ed ? ed.args : {});
+        const id = ed ? `${u.unit_id}<${ed.by.join('+')}` : u.unit_id;
+        if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures, inputs: ins() });
+        into[b].push({ id, unitId: u.unit_id, v: r.value });
+        trace.push(`${id} → ${r.value} ${tUnit ?? ''}${r.trace.length ? ` [${r.trace.join(', ')}]` : ''}`.trim());
+      }
     }
   }
   const finite = (xs) => xs.filter((x) => typeof x.v === 'number');
   const res = {};
+  // M-180(2): reduce the alternative (base, named articles) as rule 4a would, then keep the more permissive per bound
+  for (const [b, xs] of Object.entries(altVals)) {
+    if (!xs.length || !vals[b] || !vals[b].length) continue;
+    const red = (ys) => { const f = finite(ys); return f.length ? f.reduce((a, c) => ((b === 'min' ? c.v > a.v : c.v < a.v) ? c : a)) : (ys.find((y) => y.v === 'unlimited') || ys[0]); };
+    const ex = red(vals[b]); const ba = red(xs);
+    const looser = (p, q) => (b === 'max' ? (p.v === 'unlimited' || p.v === 'unregulated' || (typeof q.v === 'number' && typeof p.v === 'number' && p.v > q.v)) : (typeof p.v === 'number' && typeof q.v === 'number' && p.v < q.v));
+    if (looser(ba, ex)) {
+      trace.push(`rule 4 + M-180(2): ${altKept[b].by} — the zone rule ${ba.id} (${ba.v}) is more permissive than the exception's ${ex.id} (${ex.v}); it prevails`);
+      disclosures.push(`On this exception lot the ${target} is ${ba.v} from ${ba.unitId}: the zone's houseplex rule is more permissive than the exception's detached-house rule (${ex.v}).`);
+      vals[b] = xs;
+    } else trace.push(`rule 4 + M-180(2): ${altKept[b].by} — the exception's ${ex.id} (${ex.v}) is at least as permissive as the zone rule ${ba.id} (${ba.v}); it stands`);
+  }
   for (const [b, xs] of Object.entries(vals)) {
     if (b === 'exact') {
       const d = [...new Set(xs.map((x) => String(x.v)))].sort(cmpStr);

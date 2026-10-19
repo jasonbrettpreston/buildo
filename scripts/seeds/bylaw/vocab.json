@@ -484,6 +484,14 @@
     "$comment": "Spec 69a M-222 / M-224: a map-gated unit whose map polygon is not held (lot.map_areas absent) takes the literal reading — the unit is set aside and its disclosure is attached — instead of not_evaluated:map_area_not_held on every lot. Listed units only; any other map-gated unit stays not_evaluated until its map is held.",
     "150.7.60.30(1)#(1)(C)": { "ruling": "M-224", "map": "Coxwell–Victoria Park area (bylaw_map_areas polygon owed, M-193)" }
   },
+  "exception_type_alias": {
+    "$comment": "Spec 69a M-180(1): each zone's \"Applicable Lot Requirements\" (x.30.1(1)) and \"Applicable Principal Building Requirements\" (x.40.1) clauses: if an applicable Chapter 900 exception has requirements for a detached house (semi-detached house), the permitted detached houseplex (semi-detached houseplex) is subject to them. Read by applies() for exception-layer units only, on the classes the zone's clause names (RD names the detached houseplex only).",
+    "R": { "citation": "10.10.30.1(1), 10.10.40.1(6)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
+    "RD": { "citation": "10.20.30.1(1), 10.20.40.1(6)", "detached_house": "detached_houseplex" },
+    "RS": { "citation": "10.40.30.1(1), 10.40.40.1(5)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
+    "RT": { "citation": "10.60.30.1(1), 10.60.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" },
+    "RM": { "citation": "10.80.30.1(1), 10.80.40.1(4)", "detached_house": "detached_houseplex", "semi_detached_house": "semi_detached_houseplex" }
+  },
   "label_absence_unregulated": {
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }

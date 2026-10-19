@@ -323,3 +323,67 @@ describe('disclosure round 2 (operator 2026-10-19, decision 4) — every ruled P
     expect(unitOf('150.8.50.10(1)#(1)(B)').disclosure).toMatch(/does not shrink the suite/);
   });
 });
+
+describe('M-180 — Chapter 900 exceptions and houseplexes: the detached-house substitution and "more permissive prevails" (round 3)', () => {
+  // a synthetic authored exception with detached-house rules: height 8.5 m (strict) / 12.0 m (loose), coverage 30 %
+  const EXC = '900.2.10(9999)';
+  const X = (o: Json): Json => ({ layer: 'exception', exception: EXC, regulation_id: EXC, archetype: 'LIMIT', bound: 'max', condition: 'none', displaces: [],
+    applies_to: { part: 'whole', refs: [] }, application: { zones: [], building_types: ['detached_house'], lot_conditions: [], uses: [] }, calculation_handling: { status: 'modelled' }, ...o });
+  const withExc = (height: number): Json[] => [...units,
+    X({ unit_id: `${EXC}#(A)`, target: 'height_m', numeric_expression: [`height_m = ${height} m @(A)`] }),
+    X({ unit_id: `${EXC}#(B)`, target: 'lot_coverage_pct', numeric_expression: ['lot_coverage_pct = 30 pct @(B)'] })];
+  const CX = E.makeContext(VO.evaluatorVocab(I.vocab), { absences: I.absences, authored: { [EXC]: 'authored' } });
+  const excLot = (zone: string, bt: string): Json => {
+    const l = lot(zone, bt, { overlays: { LC: 35 }, flags: { lowest_level_joists_1_0_to_1_5_m_for_80_pct: false } });
+    l.exception = EXC;
+    return l;
+  };
+  const ev = (l: Json, t: string, us: Json[]): Json => E.effective(l, t, E.loadCandidates(l, us).candidates, CX);
+
+  it('the ten "more permissive" units carry ranks_layers {more_permissive} and their article list as data', () => {
+    for (const id of ['10.10.30.1(2)#whole', '10.20.30.1(2)#whole', '10.40.30.1(2)#whole', '10.60.30.1(2)#whole', '10.80.30.1(2)#whole',
+      '10.10.40.1(7)#whole', '10.20.40.1(7)#whole', '10.40.40.1(6)#whole', '10.60.40.1(5)#whole', '10.80.40.1(5)#whole']) {
+      const u = unitOf(id);
+      expect([id, u.ranks_layers]).toEqual([id, { more_permissive: ['exception', 'base'] }]);
+      expect(u.application.articles.length).toBeGreaterThan(0);
+    }
+    expect(unitOf('10.60.40.1(5)#whole').application.articles).toEqual(['10.60.40.10', '10.60.40.40']);
+  });
+  for (const zone of ['RD', 'RS', 'RM']) {
+    it(`${zone}: the exception binds the detached house (8.5 m, 30 %); for the houseplex the more permissive zone rule prevails (10 m, 45 % with LC 35)`, () => {
+      const us = withExc(8.5);
+      expect([ev(excLot(zone, 'detached_house'), 'height_m', us).value, ev(excLot(zone, 'detached_house'), 'lot_coverage_pct', us).value]).toEqual([8.5, 30]);
+      const h = ev(excLot(zone, 'detached_houseplex'), 'height_m', us);
+      expect([h.value, h.disclosures.some((d: string) => /more permissive than the exception/.test(d))]).toEqual([10, true]);
+      expect(ev(excLot(zone, 'detached_houseplex'), 'lot_coverage_pct', us).value).toBe(45);
+    });
+  }
+  it('x.30.1(2) names "a residential building with a secondary suite" too: a house with a suite on the exception lot takes the zone 45 % over the exception 30 % (panel round 1)', () => {
+    for (const zone of ['RD', 'RS', 'RT', 'RM']) {
+      const l = excLot(zone, 'detached_house'); l.flags.has_secondary_suite = true;
+      expect([zone, ev(l, 'lot_coverage_pct', withExc(8.5)).value]).toEqual([zone, 45]);
+    }
+  });
+  it('a looser exception stands for the houseplex (12 m over the zone 10 m)', () => {
+    const r = ev(excLot('RS', 'detached_houseplex'), 'height_m', withExc(12));
+    expect([r.value, r.winner]).toEqual([12, `${EXC}#(A)`]);
+  });
+  it('M-180(1) substitution: an exception rule for a detached house binds the houseplex (RS)', () => {
+    const u = withExc(8.5).find((x) => x.unit_id === `${EXC}#(A)`);
+    expect(E.applies(excLot('RS', 'detached_houseplex'), u, CX).ok).toBe(true);
+  });
+  it('RD names the detached houseplex only: a semi-detached-house exception rule does not bind an RD semi-detached houseplex', () => {
+    const semi = X({ unit_id: `${EXC}#(C)`, target: 'height_m', numeric_expression: ['height_m = 8.0 m @(C)'], application: { zones: [], building_types: ['semi_detached_house'], lot_conditions: [], uses: [] } });
+    expect(E.applies(excLot('RD', 'semi_detached_houseplex'), semi, CX).ok).toBe(false);
+    expect(E.applies(excLot('RS', 'semi_detached_houseplex'), semi, CX).ok).toBe(true);
+  });
+});
+
+describe('the R default FSI (review of the round-2 knock-on, 2026-10-19)', () => {
+  it('10.10.40.40(1)(B) says "if the zone label does not include a "d" value … the permitted maximum floor space index is 0.6": an R house with no d answers 0.6 from (B)', () => {
+    const l = lot('R', 'detached_house'); l.label = { f: 12 };
+    const r = eff(l, 'fsi');
+    expect([r.status, r.value, r.winner]).toEqual(['value', 0.6, '10.10.40.40(1)#(1)(B)']);
+    expect(unitOf('10.10.40.40(1)#(1)(B)').condition).toEqual({ tokens: ['label_value'], if: 'not labelled(d)' });
+  });
+});
