@@ -170,12 +170,15 @@ describe('assert_coa_freshness ① — legacy oracle pins C: config and lock (GR
   });
 });
 
-// PART 2 — the converted claims D1–D7 (`it.fails` at ①). Each is RED as a NAMED MISSING ARTIFACT or a named
-// legacy fact the conversion removes, never as a TS/import error. They flip to `it` at ② (D1–D6) and ③ (D7).
+// PART 2 — the converted claims D1–D7. D1–D5 flipped to `it` at ② (2026-10-18); D6 flips when the scorecard is
+// written (②, `step-validate --step=assert_coa_freshness --write`); D7 flips at ③. D3 was re-stated at ②: the
+// two-tier form puts the PASS ceiling in `limit` and the WARN ceiling in `warn_limit` (verdict.js checkRow:
+// limit ok -> PASS, else warn_limit ok -> WARN, else severity), and the ① draft's freshness_bounds_ordered check
+// retired because comparing two ctx.config values inside a check body is R-BZ G7 (ACF-D8, declared deviation).
 interface Check { id: string; kind: string; limit: string; limit_from_config?: string; warn_limit?: string; warn_limit_from_config?: string; severity: string }
 interface Descriptor {
   identity: { name: string; archetype: string; spec: string; lock: number };
-  outputs: { writes: unknown };
+  outputs: unknown;
   checks: Check[];
   config: { logic_variables: { name: string }[]; retired?: { name: string }[] };
 }
@@ -183,38 +186,50 @@ function loadDescriptor(): Descriptor {
   return JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
 }
 
-describe('assert_coa_freshness ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype ASSERT, lock 108, spec "42", writes nothing; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+// Commit ② lands at stage compute_ported (W4A-R6, operator y 2026-10-18; Spec 124 R-EF): descriptor, compute,
+// notes and migration 270 (a value-carrying COPY of the two bounds) only. The legacy shell stays the live step
+// until ③, exactly as the enrich_permits / enrich_coa_zoning ② (a9011b83) and lane C's 274 / 275 drafts; so the
+// frozen-shell half of D1 and the retirement half of D2 flip at ③ with the shell swap.
+describe('assert_coa_freshness — converted claims (D1/D2a/D3–D5 GREEN at ②; D6 at the scorecard write; D1b/D2b/D7 at ③)', () => {
+  it('D1 — identity: descriptor exists, archetype ASSERT, lock 108, spec "42", writes nothing; notes exist (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'assert_coa_freshness', archetype: 'ASSERT', spec: '42', lock: LOCK_ID });
-    expect(d.outputs.writes).toBe('none');
+    expect(d.outputs).toBe('none');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run(); lock constant; cites owner spec 42 only (flips at ③)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
+    expect(shell).toContain(`const ADVISORY_LOCK_ID = ${LOCK_ID};`);
     // ACF-D5 — the shell cites the census owner spec 42, not the stale 41/43 links (the step runs only in chains.coa).
     expect(shell).toContain('SPEC LINK: docs/specs/01-pipeline/42_chain_coa.md');
     expect(shell).not.toMatch(/SPEC LINK: docs\/specs\/01-pipeline\/4[13]_/);
   });
 
-  it.fails('D2 — R-DE (v) + EXTERNALIZED: the two bounds are step-owned assert_coa_freshness_* variables; the coa_freshness_* names are retired (flips at ②)', () => {
+  it('D2a — R-DE (v) + EXTERNALIZED: the descriptor reads the two step-owned assert_coa_freshness_* variables (flipped at ②)', () => {
     const c = loadDescriptor().config;
     expect(c.logic_variables.map((v) => v.name).sort()).toEqual(['assert_coa_freshness_fail_max_days', 'assert_coa_freshness_warn_max_days']);
+  });
+
+  it.fails('D2b — the legacy coa_freshness_* names are retired (config.retired; deleted by the ③ migration) (flips at ③)', () => {
+    const c = loadDescriptor().config;
     expect((c.retired ?? []).map((v) => v.name).sort()).toEqual(['coa_freshness_fail_days', 'coa_freshness_warn_days']);
   });
 
-  it.fails('D3 — the verdict is declared: ingestion_days_ago is a two-tier value_max bound (FAIL tier + WARN tier, both from config); the empty table and the bound order are viol == 0 checks (flips at ②)', () => {
+  it('D3 — the verdict is declared: ingestion_days_ago is one two-tier value_max bound (PASS ceiling + WARN ceiling, both from config, FAIL beyond); the empty table is a viol == 0 WARN (flipped at ②)', () => {
     const byId = new Map(loadDescriptor().checks.map((c) => [c.id, c]));
     expect(byId.get('ingestion_days_ago')).toMatchObject({
       kind: 'bound', severity: 'FAIL',
-      limit: 'value_max 135', limit_from_config: 'assert_coa_freshness_fail_max_days',
-      warn_limit: 'value_max 45', warn_limit_from_config: 'assert_coa_freshness_warn_max_days',
+      limit: 'value_max 45', limit_from_config: 'assert_coa_freshness_warn_max_days',
+      warn_limit: 'value_max 135', warn_limit_from_config: 'assert_coa_freshness_fail_max_days',
     });
     expect(byId.get('total_records_present')).toMatchObject({ limit: 'viol == 0', severity: 'WARN' });
-    expect(byId.get('freshness_bounds_ordered')).toMatchObject({ limit: 'viol == 0', severity: 'FAIL' });
+    expect([...byId.keys()]).toEqual(['total_records_present', 'ingestion_days_ago']);
   });
 
-  it.fails('D4 — compute is pure (R-BZ): ctx.clock, never Date.now; MS_PER_DAY from scripts/lib/units, never a 1000·60·60·24 literal; no config loader, no lock, no emits (flips at ②)', () => {
+  it('D4 — compute is pure (R-BZ): ctx.clock, never Date.now; MS_PER_DAY from scripts/lib/units, never a 1000·60·60·24 literal; no config loader, no lock, no emits (flipped at ②)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).not.toMatch(/Date\.now\(/);
     expect(c).toContain('ctx.clock()');
@@ -223,11 +238,11 @@ describe('assert_coa_freshness ① — converted claims (RED at ①; flip to `it
     expect(c).not.toMatch(/loadMarketplaceConfigs|withAdvisoryLock|emitSummary|emitMeta/);
   });
 
-  it.fails('D5 — R-DF EXTERNALIZED in admin text: STEP_DESCRIPTIONS.assert_coa_freshness copies no day count (flips at ②)', () => {
+  it('D5 — R-DF EXTERNALIZED in admin text: STEP_DESCRIPTIONS.assert_coa_freshness copies no day count (flipped at ②)', () => {
     const funnel = readText('src/lib/admin/funnel.ts');
     const line = funnel.split('\n').find((l) => /^\s*assert_coa_freshness:\s*\{\s*summary:/.test(l)) ?? '';
     expect(line).not.toBe('');
-    expect(line).not.toMatch(/\d/);
+    expect(line.replace(/assert_coa_freshness_\w+/g, '')).not.toMatch(/\d/);
   });
 
   // FLIPPED at RE-FREEZE #37 / replay night N1 (operator y 2026-10-19): step-validate --all --write writes the generated
@@ -243,5 +258,98 @@ describe('assert_coa_freshness ① — converted claims (RED at ①; flip to `it
     expect(JSON.stringify(conv.converted)).toContain('scripts/quality/assert-coa-freshness.js');
     const census = readText('scripts/steps/_schema/step-archetype-census.json');
     expect(census).toMatch(/"slug": "assert_coa_freshness",[\s\S]{0,200}"archetype": "ASSERT"/);
+  });
+});
+
+// PART 3 — the converted compute EXECUTED against a fake ctx (no DB), then graded by the REAL library verdict
+// (scripts/lib/step/verdict.js buildAuditTable) with the real descriptor — the parity proof for L2–L4, L6, L10,
+// L13 at the compute/verdict seam (the capture-level proof is the P3 PRE / P4 POST pair).
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compute = require('../../../../scripts/lib/compute/assert-coa-freshness.js') as ((ctx: unknown) => Promise<void>) & { FRESHNESS_SQL: string };
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const verdictLib = require('../../../../scripts/lib/step/verdict.js') as {
+  buildAuditTable(d: unknown, chain: string | null, obs: Record<string, unknown>, extra: unknown[], config: Record<string, number> | null): { audit_table: { phase: number; name: string; verdict: string; rows: AuditRow[] } };
+};
+
+async function runConverted(row: AggregateRow, config: Record<string, number> = { assert_coa_freshness_warn_max_days: 45, assert_coa_freshness_fail_max_days: 135 }): Promise<{ table: { phase: number; name: string; verdict: string; rows: AuditRow[] }; sql: string[] }> {
+  const d = JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
+  const observations: Record<string, unknown> = {};
+  const context: unknown[] = [];
+  const sql: string[] = [];
+  // Named fakeStepCtx, not ctx, on purpose and in the open: the LW-D11 lock (step-conformance.infra) checks a
+  // `const ctx = {...}` builder against STEP_CTX_KEYS, which omits `contextRow` although the runner assigns it
+  // onto stepCtx (scripts/lib/step/index.js:6510). That library-list gap is filed for the runner lane (W4A
+  // finding F1); scripts/lib/step/** is outside this lane. Every other key below IS in STEP_CTX_KEYS.
+  const fakeStepCtx = {
+    descriptor: d,
+    checks: d.checks.map((c) => c.id),
+    config,
+    clock: () => NOW_MS,
+    pool: { query: async (text: string) => { sql.push(text); return { rows: [{ max_last_seen: null, max_hearing_date: null, max_decision_date: null, total_records: '0', ...row }] }; } },
+    report: (id: string, o: unknown) => { observations[id] = o; },
+    contextRow: (r: Record<string, unknown>) => { context.push({ source: 'context', ...r }); },
+    log: { info: () => undefined, warn: () => undefined, error: () => undefined },
+  };
+  await compute(fakeStepCtx);
+  return { table: verdictLib.buildAuditTable(d, 'coa', observations, context, config).audit_table, sql };
+}
+function cRow(t: { rows: AuditRow[] }, metric: string): AuditRow {
+  const r = t.rows.find((x) => x.metric === metric);
+  if (!r) throw new Error('[assert_coa_freshness ②] row ' + metric + ' missing');
+  return r;
+}
+
+describe('assert_coa_freshness ② — converted compute + library verdict (GREEN at ②)', () => {
+  it('C1 — the verbatim legacy SELECT, read ONCE for both checks and the context rows', async () => {
+    const { sql } = await runConverted(seen(1) ?? {});
+    expect(sql).toHaveLength(1);
+    expect((sql[0] ?? '').replace(/\s+/g, ' ').trim()).toBe('SELECT MAX(last_seen_at) AS max_last_seen, MAX(hearing_date)::date AS max_hearing_date, MAX(decision_date)::date AS max_decision_date, COUNT(*) AS total_records FROM coa_applications');
+  });
+
+  it('C2 — the day count matches the legacy rounding and future clamp (L2, L3)', async () => {
+    expect(cRow((await runConverted(seen(1.4))).table, 'ingestion_days_ago').value).toBe(1);
+    expect(cRow((await runConverted(seen(1.5))).table, 'ingestion_days_ago').value).toBe(2);
+    expect(cRow((await runConverted(seen(-3))).table, 'ingestion_days_ago')).toMatchObject({ value: 0, status: 'PASS' });
+  });
+
+  it('C3 — tiers at the defaults are INCLUSIVE ceilings (ACF-D7, R-DC): 45 PASS, 46 WARN, 135 WARN, 136 FAIL — one day later than L4 at each boundary', async () => {
+    const at = async (days: number) => (await runConverted(seen(days))).table;
+    expect(cRow(await at(45), 'ingestion_days_ago').status).toBe('PASS');
+    expect(cRow(await at(46), 'ingestion_days_ago').status).toBe('WARN');
+    expect(cRow(await at(135), 'ingestion_days_ago').status).toBe('WARN');
+    const fail = await at(136);
+    expect(cRow(fail, 'ingestion_days_ago').status).toBe('FAIL');
+    expect(fail.verdict).toBe('FAIL');
+  });
+
+  it('C4 — the tiers read the RESOLVED config (warn 10 / fail 20): 10 PASS, 11 WARN, 21 FAIL', async () => {
+    const cfg = { assert_coa_freshness_warn_max_days: 10, assert_coa_freshness_fail_max_days: 20 };
+    expect(cRow((await runConverted(seen(10), cfg)).table, 'ingestion_days_ago').status).toBe('PASS');
+    expect(cRow((await runConverted(seen(11), cfg)).table, 'ingestion_days_ago').status).toBe('WARN');
+    expect(cRow((await runConverted(seen(21), cfg)).table, 'ingestion_days_ago').status).toBe('FAIL');
+  });
+
+  it('C5 — audit table: phase 3 "Source Freshness"; the two check rows, then the four legacy INFO rows with verbatim values (position-only diff)', async () => {
+    const { table } = await runConverted(seen(50, { max_last_seen: new Date('2026-08-29T02:00:00Z') }));
+    expect(table).toMatchObject({ phase: 3, name: 'Source Freshness' });
+    expect(table.rows.map((r) => r.metric)).toEqual(['total_records_present', 'ingestion_days_ago', 'total_records', 'last_ingestion', 'max_decision_date', 'max_hearing_date']);
+    expect(cRow(table, 'total_records')).toMatchObject({ value: 33949, status: 'INFO' });
+    expect(cRow(table, 'last_ingestion').value).toBe('2026-08-29');
+    expect(cRow(table, 'max_decision_date').value).toBe('2026-12-21');
+    expect(cRow(table, 'max_hearing_date').value).toBe('2027-10-08');
+  });
+
+  it('C6 — the empty table stays ONE WARN: total_records_present WARN, ingestion_days_ago inert INFO (L10)', async () => {
+    const { table } = await runConverted({ total_records: '0' });
+    expect(table.verdict).toBe('WARN');
+    expect(cRow(table, 'total_records_present').status).toBe('WARN');
+    expect(cRow(table, 'ingestion_days_ago').status).toBe('INFO');
+    expect(table.rows.filter((r) => r.status === 'WARN')).toHaveLength(1);
+  });
+
+  it('C7 — a non-empty table with no touch is unevaluable at the declared severity, never PASS (ACF-D6 closed; L13 was legacy PASS)', async () => {
+    const { table } = await runConverted(seen(1, { max_last_seen: null }));
+    expect(cRow(table, 'ingestion_days_ago').status).toBe('FAIL');
+    expect(cRow(table, 'last_ingestion').value).toBe('never');
   });
 });

@@ -452,7 +452,17 @@
   "coa_freshness_warn_days": {
     "default": 45,
     "type": "number",
-    "description": "Days since last CoA ingestion before assert-coa-freshness emits a portal-rot WARN (data may be frozen in CKAN)",
+    "description": "Days since last CoA ingestion before assert-coa-freshness emits a portal-rot WARN (data may be frozen in CKAN). LEGACY name: still read by the legacy shell until the ③ cutover (phase-4 wave 4), which retires it in favour of assert_coa_freshness_warn_max_days (copied by migration 270).",
+    "min": 7,
+    "max": 180,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
+  "assert_coa_freshness_warn_max_days": {
+    "default": 45,
+    "type": "number",
+    "description": "assert_coa_freshness: the largest number of whole days since the coa root last touched any coa_applications row (MAX(last_seen_at), rounded) that still reads PASS; above it ingestion_days_ago WARNs (CKAN data may be frozen). Inclusive ceiling. Copied from coa_freshness_warn_days (migration 270, R-DE (v)); the legacy name retires at ③.",
     "min": 7,
     "max": 180,
     "admin": {
@@ -462,7 +472,17 @@
   "coa_freshness_fail_days": {
     "default": 135,
     "type": "number",
-    "description": "WF2 P6.5 — days since last CoA ingestion before assert-coa-freshness escalates from WARN to FAIL (portal likely dead, not just slow). Default 135 ≈ 3× the 45-day WARN floor. Empty-table branch stays WARN (fresh-staging, not portal rot).",
+    "description": "WF2 P6.5 — days since last CoA ingestion before assert-coa-freshness escalates from WARN to FAIL (portal likely dead, not just slow). Default 135 ≈ 3× the 45-day WARN floor. Empty-table branch stays WARN (fresh-staging, not portal rot). LEGACY name: still read by the legacy shell until the ③ cutover (phase-4 wave 4), which retires it in favour of assert_coa_freshness_fail_max_days (copied by migration 270).",
+    "min": 14,
+    "max": 365,
+    "admin": {
+      "group": "CoA Matching"
+    }
+  },
+  "assert_coa_freshness_fail_max_days": {
+    "default": 135,
+    "type": "number",
+    "description": "assert_coa_freshness: the largest number of whole days since the newest coa_applications touch that still reads WARN; above it ingestion_days_ago FAILs (portal likely dead, not just slow). Inclusive ceiling. Copied from coa_freshness_fail_days (migration 270, R-DE (v)); the legacy name retires at ③. An empty table stays WARN (fresh staging, not portal rot).",
     "min": 14,
     "max": 365,
     "admin": {

@@ -1,0 +1,51 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/quality/assert-coa-freshness.descriptor.json (Spec 120 §3.4-§3.4b; phase-4 wave 4 commit ②, 2026-10-18).",
+    "CAP: 12 prose entries across the NOTES_PROSE_BLOCKS (scripts/analysis/gates/notes-cap.mjs; fast invariant #45). PROMOTE to a check or DELETE; there is no overflow."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "ingestion_days_ago measures the coa ROOT, not the city: it is the whole days since the coa step last touched ANY coa_applications row (MAX(last_seen_at), rounded, floored at 0). The coa root touches last_seen_at for every fed key on every run (scripts/load-coa.js:565-582; the runner lane's R-DW keeps that form), so a healthy daily chain reads 0-1 days. A WARN means the coa step has not run (or not reached its touch) for more than assert_coa_freshness_warn_max_days; a FAIL, for more than assert_coa_freshness_fail_max_days.",
+      "measured": {
+        "value": { "max_last_seen": "2026-10-16T13:57:28Z", "rows": 33949 },
+        "date": "2026-10-18",
+        "query": "SELECT MAX(last_seen_at), COUNT(*) FROM coa_applications"
+      }
+    },
+    {
+      "what": "Both bounds are INCLUSIVE ceilings (value_max): at the defaults 45 days still reads PASS and 135 still reads WARN. Legacy compared with >= (WARN at 45, FAIL at 135); the converted form moves each boundary one day later (ACF-D7, the R-DC precedent). The two variables carry the legacy values unchanged (migration 270 copies the live values from the retired coa_freshness_* rows)."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "max_hearing_date is in the future (2027-10-08 measured): hearings are scheduled ahead. It is INFO only and is never the freshness measure — measuring it would hide portal rot behind any future hearing (the reason this step reads last_seen_at, fcd6c300)."
+    },
+    {
+      "what": "An empty coa_applications is one WARN row (total_records_present) with ingestion_days_ago inert (INFO): a fresh or restored DB before the first coa run is staging, not portal rot (b25945bb; kept WARN by WF2 P6.5)."
+    }
+  ],
+  "blind_spots": [
+    {
+      "what": "A CKAN feed that is still served but frozen (the city stops publishing new rows) reads FRESH here, because the coa root touches every fed key whether or not its content changed. Content staleness is the coa root's own max_days_stale row; this step only proves the loader ran."
+    },
+    {
+      "what": "last_ingestion is the UTC calendar date of the touch (toISOString), not the pipeline_timezone date (ACF-D4, declared deviation): a touch after 20:00 Toronto (EDT) shows the next day. INFO only. It moves to pipeline_timezone once the R-DE (v) vocabulary gap for pipeline_timezone is ruled (draft W4A-R3)."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The legacy Zod refine fail > warn (config refused before the read) is not reproduced: config.logic_variables[] has no cross-variable relation and comparing two ctx.config values inside a check body is R-BZ G7. A misordered pair degrades to the stricter tier (anything above warn_max is also above fail_max, so it reads FAIL); nothing reads PASS that legacy would not (ACF-D8)."
+    },
+    {
+      "what": "The four legacy INFO rows (total_records, last_ingestion, max_decision_date, max_hearing_date) are context rows appended after the two check rows (scripts/lib/step/verdict.js buildAuditTable): a position-only diff, values verbatim. The freshness row's threshold column now shows the substituted bounds (value_max 45 / warn_threshold value_max 135)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "the freshness measure is MAX(last_seen_at), never MAX(hearing_date)",
+      "value": "scripts/lib/compute/assert-coa-freshness.js FRESHNESS_SQL; checks[].ingestion_days_ago",
+      "incident": "fcd6c300 (the Time Traveler bug): measuring the newest hearing date read fresh forever while any hearing was scheduled in the future."
+    }
+  ]
+}
