@@ -97,6 +97,17 @@
       "reno_bath_gfa_pct",
       "coa_cost_coverage_threshold_pct",
       "coa_cost_coverage_fail_pct",
+      "compute_coa_cost_estimates_coverage_threshold_pct",
+      "compute_coa_cost_estimates_coverage_fail_pct",
+      "compute_coa_cost_estimates_batch_size",
+      "compute_coa_cost_estimates_distribution_p25",
+      "compute_coa_cost_estimates_distribution_p50",
+      "compute_coa_cost_estimates_distribution_p75",
+      "archetype_cost_enabled",
+      "model_range_pct",
+      "compute_coa_cost_estimates_model_range_pct",
+      "fallback_range_pct",
+      "compute_coa_cost_estimates_fallback_range_pct",
       "cost_est_legacy_cost_ceiling_cad",
       "cost_est_legacy_gfa_ceiling_sqm",
       "permit_declared_cost_ceiling",
@@ -162,7 +173,15 @@
     "keys": [
       "coa_scope_unmapped_threshold_pct",
       "coa_trades_unmapped_threshold_pct",
-      "coa_active_trades_warn_max"
+      "coa_active_trades_warn_max",
+      "classify_coa_trades_unmapped_threshold_pct",
+      "classify_coa_trades_active_trades_warn_max",
+      "classify_coa_trades_eligible_min_count",
+      "classify_coa_trades_batch_size",
+      "classify_coa_trades_max_detail_keys",
+      "classify_coa_trades_tier",
+      "classify_coa_trades_lead_score_scale",
+      "classify_coa_trades_realtor_confidence"
     ]
   },
   {

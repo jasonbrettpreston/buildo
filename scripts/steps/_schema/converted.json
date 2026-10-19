@@ -84,7 +84,7 @@
     },
     {
       "file": "scripts/load-coa.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "registers_at": "commit ③ cutover, full form (Spec 123 §7; R-PACE-1 ineligible — 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
       "reason": "Phase 4 wave 1 (coa, INGESTOR multi-target: two CKAN DataStore resources Active + Closed -> coa_applications upsert + lifecycle_status_history ledger rows; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md). ① lands the assessment docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md + red suite (L1-L24 legacy pins executing the frozen oracle, D1-D8 it.fails) + gate-K red evidence + COA-D1..COA-D10; ② the descriptor/compute/shell/notes/seeds (operator 2026-10-17: prefix COA, prior-status via the ingest lookup seam, portal rot from the newest hearing on/before the run date, stats query dropped, R-DM on_error warn_row for lifecycle_status_history) + PRE/POST goldens under the DB lock (R-CQ) with an R-CZ forced cohort; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-17",
       "stage": "red_suite"
@@ -105,7 +105,7 @@
     },
     {
       "file": "scripts/link-coa-to-parcels.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "registers_at": "commit ③ cutover, full form (Spec 123 §7; R-PACE-1 ineligible — 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
       "reason": "Phase 4 wave 4 (link_coa_to_parcels, LINK: address-tier cascade coa_applications -> parcels writing lead_parcels (guarded upsert + coa-scoped retraction) and the coa_applications lat/lng/neighbourhood_id/parcel_linked_at back-fill; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, all 15 recommendations operator-approved 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md + red suite (L1-L18 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + LCTP-D1..LCTP-D10; ② the descriptor/compute/notes/seeds with the three ruled behaviour changes (re-check every run per link_parcels O4 row 7 with the back-fill fired only on a link change, set-based fail_fast in place of per-row SAVEPOINTs, Turf fallback retired per R-W with guards.requires postgis) + PRE/POST goldens under the DB lock (R-CQ, night P3/P4); ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
       "stage": "red_suite"
@@ -126,17 +126,17 @@
     },
     {
       "file": "scripts/classify-coa-trades.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
-      "reason": "Phase 4 wave 4 (classify_coa_trades, MATERIALIZER: derived per-lead rows coa_applications(scope_tags) -> lead_trades (unguarded upsert, no retraction) + lead_products (per-lead delete-and-reinsert) + the coa_applications.trade_classified_at watermark; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 on all 15). ① lands the assessment docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + CCT-D1..CCT-D9; ② the descriptor/compute/shell/notes + migration 274 seeds, WAITING on the MATERIALIZER runner-built row form (draft ruling .cursor/v3-materializer-form-ruling-2026-10-18.md, RE-FREEZE) + PRE/POST goldens (nights P3/P4); ③ registers, per Spec 124 R-K.",
+      "registers_at": "commit 9 cutover, full form (Spec 123 §7; R-PACE-1 ineligible: 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
+      "reason": "Phase 4 wave 4 (classify_coa_trades, MATERIALIZER: derived per-lead rows coa_applications(scope_tags) -> lead_trades (unguarded upsert, no retraction) + lead_products (per-lead delete-and-reinsert) + the coa_applications.trade_classified_at watermark; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF/R-DL; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18 on all 15). ① lands the assessment docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle, D1-D9 it.fails) + gate-K red evidence + CCT-D1..CCT-D9; full form (Spec 123 §7, operator Q5 y 2026-10-19): row 7 descriptor + compute (R-EH rows form, RE-FREEZE #37) + notes + migration 274 seeds at stage compute_ported (W4A-R6, R-EF), the legacy shell live; PRE golden at N1 (dedb7e90); the row-8 peel differentials and the POST at night P4; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
-      "stage": "red_suite"
+      "stage": "compute_ported"
     },
     {
       "file": "scripts/compute-coa-cost-estimates.js",
-      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
-      "reason": "Phase 4 wave 4 (compute_coa_cost_estimates, MATERIALIZER: one derived cost row per priced CoA -> cost_estimates (guarded upsert ON CONFLICT (lead_id), coa: scope) + the coa_applications cost columns and cost_classified_at watermark; the archetype ladder T2-or-T4 over cost-model-shared; reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 consumer); McDonald's Airtight V3 from ①; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle with the real Brain, D1-D9 it.fails) + gate-K red evidence + CCCE-D1..CCCE-D10; ② the descriptor/compute/shell/notes + migration 275 seeds, WAITING on the MATERIALIZER runner-built row form (draft ruling .cursor/v3-materializer-form-ruling-2026-10-18.md) shared with the wave-3 twin compute_cost_estimates; ③ registers, per Spec 124 R-K.",
+      "registers_at": "commit 9 cutover, full form (Spec 123 §7; R-PACE-1 ineligible: 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
+      "reason": "Phase 4 wave 4 (compute_coa_cost_estimates, MATERIALIZER: one derived cost row per priced CoA -> cost_estimates (guarded upsert ON CONFLICT (lead_id), coa: scope) + the coa_applications cost columns and cost_classified_at watermark; the archetype ladder T2-or-T4 over cost-model-shared; reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 consumer); McDonald's Airtight V3 from ①; plan .cursor/v3-wave4-coa-and-dispatch-2026-10-18.md, operator y 2026-10-18). ① lands the assessment docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md + red suite (L1-L20 legacy pins executing the frozen oracle with the real Brain, D1-D9 it.fails) + gate-K red evidence + CCCE-D1..CCCE-D10; full form (Spec 123 §7, operator Q5 y 2026-10-19): row 7 descriptor + compute (R-EH rows form, RE-FREEZE #37) + notes + migration 275 seeds at stage compute_ported (W4A-R6, R-EF), the legacy shell live; PRE golden at N1 (dedb7e90); the row-8 peel differentials and the POST at night P4; ③ registers, per Spec 124 R-K.",
       "declared": "2026-10-18",
-      "stage": "red_suite"
+      "stage": "compute_ported"
     },
     {
       "file": "scripts/quality/assert-entity-tracing.js",

@@ -7629,5 +7629,195 @@
     "admin": {
       "group": "Pipeline Runner"
     }
+  },
+  "classify_coa_trades_batch_size": {
+    "default": 1000,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 (Spec 124 R-DE (i); CCT-D4; migration 274): MATERIALIZER keyset batch size for classify_coa_trades — source CoAs per transaction. 1000 = the former Math.min(1000, …) cap. Not verdict-affecting.",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_max_detail_keys": {
+    "default": 50,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 (CCT-D4; migration 274): how many distinct unresolved trade slugs slug_resolution_misses lists (former SLUG_MISS_CAP). A DISPLAY bound; the count is exact.",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_tier": {
+    "default": 3,
+    "type": "number",
+    "min": 3,
+    "max": 3,
+    "description": "McDonald's Airtight V3 (CCT-D4; R-CV pinned; migration 274): the lead_trades tier of every CoA trade row — always 3 for CoA-side rows (migration 124). Pinned min = max.",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_lead_score_scale": {
+    "default": 100,
+    "type": "number",
+    "min": 100,
+    "max": 100,
+    "description": "McDonald's Airtight V3 (CCT-D4; R-CV unit; migration 274): lead_score = round(confidence × this). Pinned min = max = 100.",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_realtor_confidence": {
+    "default": 0.7,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "McDonald's Airtight V3 (CCT-D4; migration 274): confidence of the realtor row appended to a residential CoA (Spec 80 §5).",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_unmapped_threshold_pct": {
+    "default": 20,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "McDonald's Airtight V3 (R-DE (v); CCT-D8; migration 274): WARN ceiling on the share of processed CoAs producing zero trades. Seeded from coa_trades_unmapped_threshold_pct (retires at ③).",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_active_trades_warn_max": {
+    "default": 18,
+    "type": "number",
+    "min": 1,
+    "max": 35,
+    "description": "McDonald's Airtight V3 (R-DE (v); CCT-D8; migration 274): WARN ceiling on mean ALL-ACTIVE trades per CoA. Seeded from coa_active_trades_warn_max (retires at ③).",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_trades_eligible_min_count": {
+    "default": 1,
+    "type": "number",
+    "min": 1,
+    "max": 1,
+    "description": "McDonald's Airtight V3 (R-CV definitional form; migration 274): the fewest CoAs a run must process before coa_eligible stops WARNing (an empty cursor WARNs, legacy :460-465, pinned L16). Pinned min = max: the check states it. CONSUMED by classify_coa_trades (checks[].limit_from_config).",
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "compute_coa_cost_estimates_batch_size": {
+    "default": 1000,
+    "type": "number",
+    "min": 1,
+    "max": 1000,
+    "description": "McDonald's Airtight V3 (Spec 124 R-DE (i); CCCE-D2; migration 275): MATERIALIZER keyset batch size for compute_coa_cost_estimates. 1000 = the former Math.min(1000, …) cap. Not verdict-affecting.",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_distribution_p25": {
+    "default": 0.25,
+    "type": "number",
+    "min": 0.25,
+    "max": 0.25,
+    "description": "McDonald's Airtight V3 (CCCE-D2; R-CV definitional; migration 275): lower percentile of cost_distribution_p25_p50_p75. Pinned min = max.",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_distribution_p50": {
+    "default": 0.5,
+    "type": "number",
+    "min": 0.5,
+    "max": 0.5,
+    "description": "McDonald's Airtight V3 (CCCE-D2; R-CV definitional; migration 275): median of cost_distribution_p25_p50_p75. Pinned min = max.",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_distribution_p75": {
+    "default": 0.75,
+    "type": "number",
+    "min": 0.75,
+    "max": 0.75,
+    "description": "McDonald's Airtight V3 (CCCE-D2; R-CV definitional; migration 275): upper percentile of cost_distribution_p25_p50_p75. Pinned min = max.",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_coverage_threshold_pct": {
+    "default": 65,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "McDonald's Airtight V3 (R-DE (v); CCCE-D8; migration 275): WARN floor of cost_estimate_coverage_pct. Seeded from coa_cost_coverage_threshold_pct (retires at ③).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_coverage_fail_pct": {
+    "default": 5,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "McDonald's Airtight V3 (R-DE (v); CCCE-D8; migration 275): FAIL floor of cost_estimate_coverage_pct (coverage at or below FAILs). Seeded from coa_cost_coverage_fail_pct (retires at ③).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "archetype_cost_enabled": {
+    "default": 1,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "McDonald's Airtight V3 (CCCE-D3; Q-CE1 unruled, SHARED with compute_cost_estimates; migration 275): 1 = the Spec 83 §3-ARCHETYPE ladder prices first; 0 = rollback to the legacy geometric T4 path. Replaces the ARCHETYPE_COST_DISABLED env kill switch.",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "model_range_pct": {
+    "default": 0.2,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "CoA cost model ±range for a model-priced estimate (seeded by migration 156; added to the seeds registry by CCCE-D8, McDonald's Airtight V3 R-CV). LEGACY name: still read by the legacy compute-coa-cost-estimates.js until the ③ cutover, which retires it in favour of compute_coa_cost_estimates_model_range_pct (copied by migration 275).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_model_range_pct": {
+    "default": 0.2,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "compute_coa_cost_estimates: the CoA cost model ±range for a model-priced estimate — the step-owned copy (Spec 124 R-DE (v); one consumer, so not a Q-C3 shared name), copied from model_range_pct by migration 275; model_range_pct retires at ③. CONSUMED by compute_coa_cost_estimates (materializeRows, via buildCoaConfig).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "fallback_range_pct": {
+    "default": 0.4,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "CoA cost model ±range for a fallback-priced estimate (seeded by migration 156; added to the seeds registry by CCCE-D8, McDonald's Airtight V3 R-CV). LEGACY name: still read by the legacy compute-coa-cost-estimates.js until the ③ cutover, which retires it in favour of compute_coa_cost_estimates_fallback_range_pct (copied by migration 275).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
+  },
+  "compute_coa_cost_estimates_fallback_range_pct": {
+    "default": 0.4,
+    "type": "number",
+    "min": 0,
+    "max": 1,
+    "description": "compute_coa_cost_estimates: the CoA cost model ±range for a fallback-priced estimate — the step-owned copy (Spec 124 R-DE (v); one consumer, so not a Q-C3 shared name), copied from fallback_range_pct by migration 275; fallback_range_pct retires at ③. CONSUMED by compute_coa_cost_estimates (materializeRows, via buildCoaConfig).",
+    "admin": {
+      "group": "Cost Tuning"
+    }
   }
 }

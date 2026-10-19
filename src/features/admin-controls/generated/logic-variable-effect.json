@@ -19,6 +19,62 @@
       "legacy_name": "coa_freshness_warn_days",
       "reason": "assert_coa_freshness still runs its legacy script, which reads coa_freshness_warn_days; this value is used from the step's cutover (stage compute_ported)."
     },
+    "classify_coa_trades_active_trades_warn_max": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": "coa_active_trades_warn_max",
+      "reason": "classify_coa_trades still runs its legacy script, which reads coa_active_trades_warn_max; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_batch_size": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_eligible_min_count": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_lead_score_scale": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_max_detail_keys": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_realtor_confidence": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_tier": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": null,
+      "reason": "classify_coa_trades still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_trades_unmapped_threshold_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_trades",
+      "legacy_name": "coa_trades_unmapped_threshold_pct",
+      "reason": "classify_coa_trades still runs its legacy script, which reads coa_trades_unmapped_threshold_pct; this value is used from the step's cutover (stage compute_ported)."
+    },
     "coa_notices_link_precision_min": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
@@ -38,6 +94,62 @@
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
+    },
+    "compute_coa_cost_estimates_batch_size": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": null,
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_coverage_fail_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": "coa_cost_coverage_fail_pct",
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which reads coa_cost_coverage_fail_pct; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_coverage_threshold_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": "coa_cost_coverage_threshold_pct",
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which reads coa_cost_coverage_threshold_pct; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_distribution_p25": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": null,
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_distribution_p50": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": null,
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_distribution_p75": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": null,
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_fallback_range_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": "fallback_range_pct",
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which reads fallback_range_pct; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "compute_coa_cost_estimates_model_range_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "compute_coa_cost_estimates",
+      "legacy_name": "model_range_pct",
+      "reason": "compute_coa_cost_estimates still runs its legacy script, which reads model_range_pct; this value is used from the step's cutover (stage compute_ported)."
     },
     "enrich_coa_zoning_bylaw_max_coverage_null_warn_pct": {
       "badge": "takes_effect_at_cutover",

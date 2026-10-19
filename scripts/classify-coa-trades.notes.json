@@ -1,0 +1,40 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 — the INTERPRETATION file for classify_coa_trades, capped at 12 prose entries (notes-cap.mjs).",
+    "Phase-4 wave 4 lane C build, landed at full-form row 7 (Spec 123 §7; operator Q5 y 2026-10-19) at stage compute_ported (W4A-R6, R-EF). MATERIALIZER rows form, Spec 124 R-EH (RE-FREEZE #37)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "Classifies each scope-classified CoA into lead_trades rows (tag-matrix evidence + gated inference + the residential realtor append) and lead_products rows (tag + archetype bundle), then advances coa_applications.trade_classified_at. The classifier is the shipped dual-path module (Spec 84 §7); only the I/O moved to the runner (R-EH: the runner pages the source, reads the trades / product_groups lookups once and writes every target in one transaction per batch).",
+      "measured": {
+        "value": "Parity pinned by src/tests/steps/classify_coa_trades/violations.test.ts L1-L20 (frozen legacy text) and compute-parity.logic.test.ts (compute rows ≡ legacy rows).",
+        "date": "2026-10-18",
+        "query": "n/a (code read)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "lead_products is replaced per processed lead: the e2 replace_keys delete and the e3 insert run in one batch transaction (R-EH (d) F), the same per-lead DELETE + INSERT the legacy step ran (classify-coa-trades.js:228, :241)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "key_prefix coa: on every lead_trades / lead_products write and replace key",
+      "value": "outputs.writes[].write_discipline.key_prefix",
+      "incident": "lead_trades is also written by the trigger trg_mirror_permit_trades_to_lead_trades for permit: keys (migrations/143_*.sql:90); an unscoped write or replace would touch permit rows (CCT-D3).",
+      "commit": "fb2d950d",
+      "lock_test": "src/tests/steps/classify_coa_trades/violations.test.ts"
+    }
+  ],
+  "constants": [
+    {
+      "what": "\"realtor\" is the persona trade slug resolved from the trades lookup (Spec 80 §5), vocabulary, not a tunable."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 0,
+    "unpromoted_suspicious_if": 0
+  }
+}

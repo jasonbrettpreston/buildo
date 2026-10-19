@@ -810,7 +810,7 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_zoning | PASS | min_migration=227 <= migrations count=265 |
+| 1 | load_zoning | PASS | min_migration=227 <= migrations count=267 |
 | 2 | load_zoning | PASS | 15 declared, missing from seeds: none |
 | 3 | load_zoning | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_zoning | PASS | SPEC LINK header present=true |
@@ -834,11 +834,11 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 494 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 495 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
-| 32 | (registry) | FAIL | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1); ESTATE-LITERALS (gate E estate arm, R-EB): 1 finding(s) in scripts/analysis/gates, scripts/lib/step [scripts/analysis/gates/variable-effect.mjs:49 8]; tooling ratchet (PIN EXT-2) 128 finding(s) over 6 files, at or below the marks |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1); ESTATE-LITERALS (gate E estate arm, R-EB): 0 finding(s) in scripts/analysis/gates, scripts/lib/step; tooling ratchet (PIN EXT-2) 128 finding(s) over 6 files, at or below the marks |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 0 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 43 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
@@ -847,8 +847,8 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
 | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 531 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 168 terminal(s) unwitnessed (no capture) |
-| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (10 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 12 take effect at cutover, 9 not read; admin badges current |
+| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (8 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 28 take effect at cutover, 9 not read; admin badges current |
 
 ### Captures (item iv)
 - missing invocations (POST): none

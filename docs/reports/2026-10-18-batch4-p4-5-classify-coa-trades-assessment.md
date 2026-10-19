@@ -2,8 +2,8 @@
 
 **Target standard:** McDonald's Airtight V3 (Spec 124 R-DF). That means zero purity findings with no ledger allowance (R-BZ), every gate hard from ① (R-BA), the seven admission questions including EXTERNALIZED, and admin visibility (R-DL).
 **Archetype:** MATERIALIZER (ARCH-CENSUS wave-4 row, operator y 2026-10-18, wave-4 plan Q8). It derives per-lead rows into `lead_trades` and `lead_products` from `coa_applications.scope_tags` and advances the `trade_classified_at` watermark.
-**Commit form: compressed (R-PACE-1)**. Commit ① is this report plus the red suite. Commit ② adds the descriptor, compute, notes, shell and the seeds migration (274). Commit ③ is the cutover. The MATERIALIZER archetype has more than two full-form members in flight (link_parcel_addresses converted; compute_cost_estimates and compute_trade_forecasts in wave 3; compute_coa_cost_estimates in this wave), so compressed is the default (#24).
-**Commit ② waits on a library form.** The MATERIALIZER runner today runs only a compute-authored `INSERT … SELECT` (`scripts/lib/step/index.js:2818-2847`). The runner-built row form is drafted in `.cursor/v3-materializer-form-ruling-2026-10-18.md` (Q-MZ, operator y owed; one RE-FREEZE).
+**Commit form: full (Spec 123 §7, nine commits).** **Full form reason:** R-PACE-1 (Spec 124a:145) allows the compressed form only once two members of the archetype have landed in the full form and are in `converted.json`; MATERIALIZER has one (link_parcel_addresses), so fast invariant #23 COMPRESSED-FORM-ELIGIBLE refuses the compressed form, and R-AH (124a:149) leaves the full form as the only legal plan (operator Q5 y, 2026-10-19). An earlier version of this line claimed compressed eligibility from members still in flight; #23 counts converted members only. Rows 1–6 (PH-0, PH-3, PH-5, PH-6, the golden master, PH-7) are evidenced by commit ① (this report and the red suite) and the replay-night-N1 PRE (dedb7e90). Row 7 (descriptor + compute) lands at stage compute_ported (W4A-R6, Spec 124 R-EF) with the seeds migration (274); the legacy shell stays live. The row-8 peels' green differentials and row 9 (cutover, frozen shell, registration) need the POST, so they ride night P4 and ③.
+**Library form landed.** The MATERIALIZER runner-built row form is Spec 124 R-EH (`execution.materialize_form: "rows"`, RE-FREEZE #37, operator y 2026-10-18 on Q-MZ); classify_coa_trades is one of its named members.
 **Frozen legacy oracle:** `src/tests/steps/classify_coa_trades/fixtures/legacy-classify-coa-trades.js.txt`, byte-identical to `scripts/classify-coa-trades.js` (sha256 `bb241cb58299d228…`, last changed by `638d2b76`).
 **Owner specs:** 42 (`42_chain_coa.md` §6.5 step 5, §6.8 row 667, §6.11 Phase D R5.4) and 80 (`80_taxonomies.md` §5), per the SPEC LINK header at `classify-coa-trades.js:32-35`. 47 and 84 are governing (protocol; dual-path classifier). **Target spec:** 42 (`identity.spec` "42", a census owner spec, R-DE (ii)).
 **Chain:** `coa`, position 7 of 16 (`manifest.json:98`): after classify_coa_scope (writes `scope_tags`), before compute_coa_cost_estimates (reads `lead_trades`).
@@ -75,31 +75,54 @@ The legacy pins L1–L20 in `src/tests/steps/classify_coa_trades/violations.test
 3. **Watermark last:** products must be durable before the cursor stops re-fetching the lead (`:223-226`).
 4. **Telemetry:** provenance split (evidence/inference), dual-scope fan-out, a vocab coverage row.
 
+Each intent traced to the commit that introduced it (`git log -S … -- scripts/classify-coa-trades.js`, measured 2026-10-19 at full-form row 7). The disposition column is the agent's proposal; the operator adjudicated the open ones as Q-C2..Q-C4 (2026-10-18) and Q-W4G-1 (2026-10-19) (Spec 121 §12.5).
+
+| Intent | Source (introducing commit) | Disposition at row 7 |
+|---|---|---|
+| Tag-matrix classification per CoA | `95d77b2c` (WF1 R5.4); archetype bundle parity `c99fd8ed` | preserved-in-compute (`materializeRows` over the unchanged dual-path classifier); why in notes.json read_this_way |
+| Residential realtor append | `95d77b2c` | preserved-in-compute; realtor id resolved from the `trades` lookup (CCT-D7); why in notes.json read_this_way |
+| Per-lead lead_products replace | `44e16ca5` (lead_products) | preserved-in-runner (R-EH F `replace_keys` + A re-insert, one batch transaction; Q-W4G-1) |
+| Watermark last (trade_classified_at) | `95d77b2c` | preserved-in-runner (R-EH G, run_at stamped; Q-W4G-1) |
+| Unguarded lead_trades upsert | `95d77b2c` | encoded-as-descriptor-field (`guard: "none"` + guard_why, grandfathered; Q-C2) |
+| Advisory lock 4203 | `95d77b2c` | preserved-in-runner (`identity.lock`) |
+| Slug-miss detail cap | `95d77b2c` | encoded-as-descriptor-field (`classify_coa_trades_max_detail_keys`, migration 274) |
+| Unmapped-scope WARN ceiling | `95d77b2c` | encoded-as-descriptor-field (`classify_coa_trades_unmapped_threshold_pct`, copied) |
+| Active fan-out WARN ceiling | `9883656d` (WF2 P6.6) | encoded-as-descriptor-field (`classify_coa_trades_active_trades_warn_max`, copied) |
+| attachment_basis column | `638d2b76` (P16-16D) | preserved-in-compute; why in notes.json read_this_way |
+| Vocabulary coverage row | `1b6e7512` | encoded-as-descriptor-field (declared vocab_coverage checks, CCT-D6), read once after the loop by `buildPostSql` (R-EH (e)); parity in `post-read-parity.logic` |
+
 ## 5. PH-5 — Seam map
-| Legacy site | Converted owner |
-|---|---|
-| `getDbTimestamp` (`:94`), `Date.now` (`:95`, `:421`) | runner RUN_AT / runner duration |
-| `loadMarketplaceConfigs` + zod (`:97-107`) | descriptor `config.logic_variables` (R-CV), runner `failed_config_out_of_bounds` |
-| `withAdvisoryLock(4203)` (`:109`) | runner lock |
-| realtor probe + `trades` / `product_groups` reads (`:112-129`) | runner lookups (`role:"lookup"`), compute resolves slug → id (CCT-D7) |
-| `streamQuery` source (`:267-276`) | `buildSourceSql` → runner keyset pages over `coa_applications.id` |
-| per-row classification (`:278-414`) | pure `materializeRows` |
-| `flushBatch` writes (`:182-263`) | runner ROWS arm, one txn per batch, declared order |
-| audit statuses (`:457-559`) | declared checks (`limit_from_config` / `viol == 0`); compute emits measured values only (G7) |
-| `manifest.json` + `computeVocabCoverage` (`:49`, `:563-564`) | declared vocab_coverage check over the runner READ ONLY snapshot (R-CH) (CCT-D6) |
-| `emitMeta` (`:601-631`) | derived from the descriptor (`deriveMeta`) |
+| Seam | Legacy site | Converted owner |
+|---|---|---|
+| clock seam | `getDbTimestamp` (`:94`), `Date.now` (`:95`, `:421`) | runner RUN_AT / runner duration |
+| db seam | `loadMarketplaceConfigs` + zod (`:97-107`) | descriptor `config.logic_variables` (R-CV), runner `failed_config_out_of_bounds` |
+| db seam | `withAdvisoryLock(4203)` (`:109`) | runner lock |
+| db seam | realtor probe + `trades` / `product_groups` reads (`:112-129`) | runner lookups (`role:"lookup"`), compute resolves slug → id (CCT-D7) |
+| db seam | `streamQuery` source (`:267-276`) | `buildSourceSql` → runner keyset pages over `coa_applications.id` |
+| compute | per-row classification (`:278-414`) | pure `materializeRows` |
+| db seam | `flushBatch` writes (`:182-263`) | runner ROWS arm, one txn per batch, declared order |
+| verdict | audit statuses (`:457-559`) | declared checks (`limit_from_config` / `viol == 0`); compute emits measured values only (G7) |
+| db seam | `manifest.json` + `computeVocabCoverage` (`:49`, `:563-564`) | declared vocab_coverage check over the runner READ ONLY snapshot (R-CH) (CCT-D6) |
+| telemetry | `emitMeta` (`:601-631`) | derived from the descriptor (`deriveMeta`) |
+| network seam | none (no outside call) | — |
+| argv/env seam | none read (the manifest passes no argv; `supports_full` is dead, CCT-D9) | — |
 
 **Parity notes:**
 - The keyset re-query vs legacy's one cursor is equivalent. The ORDER BY id is the same, and the only writer of `trade_classified_at` is this step, which advances it per flush. `scope_classified_at` is written upstream in chain order.
 - The realtor id is resolved by slug: legacy writes the constant 33 only when `(33, 'realtor')` exists. That is identical on the live vocab, and the pin is dataset equality.
 
 ### 5.1 Risk class
-**MEDIUM:**
-- three targets on three tables, one shared with a trigger co-writer;
-- a destructive per-lead replace;
-- a library form that does not exist yet.
+**MEDIUM.**
+
+| Risk class | Chance | Impact | Mitigation |
+|---|---|---|---|
+| A write touches permit: rows of lead_trades (trigger co-writer, CCT-D3) | low | high — permit leads lose trades | `key_prefix {lead_id, coa:}` refuses an out-of-family row or key before the batch transaction (R-EH (d)) |
+| The per-lead replace deletes products it does not re-insert | low | medium — products missing until the next run | DELETE and re-INSERT in one batch transaction, rolled back whole on any write failure (R-EH (f)) |
+| Keyset paging differs from the legacy single cursor | low | medium — a CoA skipped or repeated in one run | same ORDER BY id; the runner refuses a batch whose last key does not advance; parity at the night-P4 POST |
 
 The domain logic (the classifier) is unchanged and already dual-path pinned (`src/tests/coa-trade-classifier.logic.test.ts`).
+
+PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch artifact `docs/reports/generated/122-churn-complexity.md` covers only the sources chain and `classify_coa_trades` is outside its scope; no hand-plotted quadrant is substituted.
 
 ## 6. PH-6 — Classification and defect ledger (rows CCT-D1…CCT-D9 in `docs/reports/defect-ledger.md`; prefix CCT, the initials default, unique across all manifest slugs, so no override is needed — fast invariant #42)
 
@@ -114,6 +137,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 - **CCT-D7**: realtor probe swallow and hard-coded id 33 (R-BZ G13 (closure) / Rule 3) — lookup plus declared WARN check
 - **CCT-D8**: variable names not `<slug>_<name>` (R-DE (v)) — re-seeded; shared names → Q-C3
 - **CCT-D9**: dead `supports_full`; no PIPELINE_TABLE_MAP entry (registry / R-DL) — ②
+- **CCT-D10** (row 7): data present over an empty vocabulary reads FAIL (unevaluable at the declared severity, Spec 122a:639) where the legacy cov_ row read WARN — declared deviation, pinned in `post-read-parity.logic`
 
 ## 7. PH-6 — Literal ledger (Rule 3, R-DF EXTERNALIZED)
 | Literal | Site | Converted |
@@ -189,7 +213,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 ## 14. V3 package (Spec 124 `:275`, six parts) — state at ①
 | Part | State | Evidence |
 |---|---|---|
-| (1) STANDARDIZED GATES | **OWED** (②) | No descriptor yet, so gates A–K cannot run. R-DU keeps ① non-blocking (`124:266`). Gate K evidence MET: `docs/reports/red-evidence/classify_coa_trades/pre2-artifacts-missing.json` |
+| (1) STANDARDIZED GATES | **MET at row 7** (compute_ported) | The descriptor landed, so gates A–K run; the capture-derived gates (G8, #30, #38, #40) are stage-gated until the night-P4 POST (Spec 124 R-EF). Gate K evidence is the artifact cited in the red-suite section above. |
 | (2) REGISTRY | **PARTIAL**: converted.json pending ✓ (`scripts/steps/_schema/converted.json` new entry); census ✓; R-DL slug-keyed arms ✓ (`FreshnessTimeline.tsx:60`, `funnel.ts:686`); PIPELINE_TABLE_MAP **OWED** (CCT-D9) | — |
 | (3) CROSS-STEP TRUTH | **OWED**: the trigger co-writer declaration (CCT-D3), and #44 after ② captures | `migrations/143_*.sql:90` |
 | (4) COMPUTE PURITY | **OWED** (②): the draft compute is uncommitted (§8 estimate 0 findings) | `scripts/lib/compute/classify-coa-trades.js` (draft) |
@@ -218,7 +242,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 > Generated by `node scripts/analysis/step-validate.mjs --step=classify_coa_trades --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 5/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: YES (G7, G8, Rule 1 (unpinned enforced-red), Rule 5 (unpinned enforced-red), Rule 6 (unpinned enforced-red), Rule 7 (unpinned enforced-red), Rule 8 (unpinned enforced-red), Rule 9 (unpinned enforced-red), Rule 13 (unpinned enforced-red))**
+**Score: 13/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
 
@@ -233,22 +257,29 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 0 | 1 | PH-3 section found=true sha-count=0 |
-| G2 | 0 | 1 | no generated churn×complexity row for this slug, no PH-2/churn×complexity section, and ASSESSMENT-INCOMPLETE not claimed either |
-| G3 | 1 | 2 | table rows=0 vocab-hit rows=0 |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
-| G5 | 0 | 1 | db=false clock=false network=false argv/env=false |
-| G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |
-| G7 | 0 | 3 | file=true fences=0 it-count=31 red-evidence-claims=2 red-evidence-pass=false ledger-deferred=false |
-| G8 | 0 | 3 | missing-invocations=2 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=12 |
+| G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
+| G3 | 1 | 2 | table rows=12 vocab-hit rows=11 |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
+| G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+| G6 | 3 | 3 | 10 ledger row(s), 0 without CLOSED/PIN () |
+| G7 | 3 | 3 | file=true fences=1 it-count=32 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
+| G8 | 0 | 3 | missing-invocations=2 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (compute_ported) |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
-| G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=31 |
-| G-shape | PASS | — | file-clean=null compute-clean=null |
+| G4d (fence<=lock) | PASS | — | fences=1 lock-it-count=32 |
+| G-shape | PASS | — | file-clean=null compute-clean=true |
 
 ### Fast invariants (always run — the fast descriptor gate)
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
+| 1 | classify_coa_trades | PASS | min_migration=216 <= migrations count=267 |
+| 2 | classify_coa_trades | PASS | 11 declared, missing from seeds: none |
+| 3 | classify_coa_trades | PASS | retired=0 overlap-with-declared=none |
+| 7 | classify_coa_trades | PASS | SPEC LINK header present=true |
+| 8 | classify_coa_trades | PASS | G-4: 11 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 20 | classify_coa_trades | PASS | HB-1: execution.shape="materialize" — HB-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
+| 21 | classify_coa_trades | PASS | CEIL-1: execution.shape="materialize" — CEIL-1 applies_when execution.shape=="enrich" only (RS-D-STA); not applicable, never a pass-by-omission |
 | 4 | (registry) | PASS | overlap: none |
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
@@ -266,11 +297,11 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 494 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 495 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
-| 32 | (registry) | FAIL | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1); ESTATE-LITERALS (gate E estate arm, R-EB): 1 finding(s) in scripts/analysis/gates, scripts/lib/step [scripts/analysis/gates/variable-effect.mjs:49 8]; tooling ratchet (PIN EXT-2) 128 finding(s) over 6 files, at or below the marks |
+| 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1); ESTATE-LITERALS (gate E estate arm, R-EB): 0 finding(s) in scripts/analysis/gates, scripts/lib/step; tooling ratchet (PIN EXT-2) 128 finding(s) over 6 files, at or below the marks |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 0 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
 | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 43 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
@@ -279,8 +310,8 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 531 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 168 terminal(s) unwitnessed (no capture) |
-| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (10 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 12 take effect at cutover, 9 not read; admin badges current |
+| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (8 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 28 take effect at cutover, 9 not read; admin badges current |
 
 ### Captures (item iv)
 - missing invocations (POST): coa::, none::
@@ -295,20 +326,20 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
 
 | Rule | Name | Status | Note |
 |---|---|---|---|
-| 1 | Nothing hidden | enforced-red | G-1 schema-baseline: schema-baseline clean |
+| 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
-| 3 | Tunables externalized | enforced-green | G-4: no descriptor · P4/LW-D10/R-A not evaluated (vitest did not run) |
-| 4 | Compute rule declared | enforced-green | G-2: 0 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
-| 5 | checks >= 1 | enforced-red |  |
-| 6 | Omission fails (20 categories) | enforced-red |  |
-| 7 | Archetype gates categories | enforced-red |  |
-| 8 | Per-target write discipline | enforced-red |  |
-| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-red |  |
+| 3 | Tunables externalized | enforced-green | G-4: 11 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
+| 4 | Compute rule declared | enforced-green | G-2: 3 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
+| 5 | checks >= 1 | enforced-green |  |
+| 6 | Omission fails (20 categories) | enforced-green |  |
+| 7 | Archetype gates categories | enforced-green |  |
+| 8 | Per-target write discipline | enforced-green |  |
+| 9 | Banned write needs ledger (+ V7 no_retraction) | enforced-green |  |
 | 10 | Verdict row-derived | enforced-green | (a) OK — 11 corpus file(s) scanned, 0 unsanctioned second derivations, 2 sanctioned hit(s) matched SANCTIONED_VERDICT_SITES · (b) OK — SELF_SKIPPED audit table folds to verdict=WARN (!= PASS), row-derived off 1 non-INFO row(s) — VRD-SKIP closed |
-| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no descriptor — G-3 completeness half stays open |
-| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): no descriptor · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
-| 13 | A step validates itself | enforced-red | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=0B notes=0B checks=0 rows records_meta=(no capture) |
+| 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | vacuous | no when:"pre_write" checks — vacuously nothing to cite — G-3 completeness half stays open |
+| 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
+| 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=29439B notes=2182B checks=8 rows records_meta=(no capture) |
 
-**Enforced-green: 4/14** · not-run: 1 · vacuous: 1
+**Enforced-green: 11/14** · not-run: 1 · vacuous: 1
 

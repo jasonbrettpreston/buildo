@@ -295,17 +295,24 @@ function loadDescriptor(): Descriptor {
 }
 
 describe('compute_coa_cost_estimates ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: archetype MATERIALIZER, lock 4204, spec "42", shape "materialize"; shell is pipeline.step() (flips at ②)', () => {
+// Full-form row 7 lands at stage compute_ported (Spec 123 §7; W4A-R6 / Spec 124 R-EF; operator Q5 y 2026-10-19):
+// descriptor, compute, notes and the seeds migration only — the legacy shell stays the live step until the cutover, as
+// the enrich_coa_zoning ② (a9011b83) and the assert_coa_freshness ② (ffec8296). So every frozen-shell assertion is split
+// out as an it.fails that flips at the cutover (row 9 / ③), and the descriptor halves flip here.
+  it('D1 — identity: archetype MATERIALIZER, lock 4204, spec "42", shape "materialize"; notes exist (flipped at row 7)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'compute_coa_cost_estimates', archetype: 'MATERIALIZER', spec: '42', lock: LOCK_ID });
     expect(d.execution.shape).toBe('materialize');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step() (flips at the cutover)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
   });
 
-  it.fails('D2 — two write targets (cost_estimates scoped lead_id LIKE \'coa:%\', coa_applications), each with rls_bypass_or_policy (flips at ②)', () => {
+  it('D2 — two write targets (cost_estimates scoped lead_id LIKE \'coa:%\', coa_applications), each with rls_bypass_or_policy (flipped at row 7)', () => {
     const d = loadDescriptor();
     expect(d.outputs.writes.map((w) => w.table).sort()).toEqual(['coa_applications', 'cost_estimates']);
     expect(d.outputs.writes.find((w) => w.table === 'cost_estimates')?.write_discipline.scope ?? '').toContain("lead_id LIKE 'coa:%'");
@@ -313,36 +320,48 @@ describe('compute_coa_cost_estimates ① — converted claims (RED at ①; flip 
     expect(req).toEqual(['coa_applications', 'cost_estimates']);
   });
 
-  it.fails('D3 — the declared read keeps the enrich_parcels max-build family on coa_applications exactly (Spec 78 O-11 consumer list) (flips at ②)', () => {
+  it('D3 — the declared read keeps the enrich_parcels max-build family on coa_applications exactly (Spec 78 O-11 consumer list) (flipped at row 7)', () => {
     const ca = loadDescriptor().inputs.reads.tables.find((t) => t.table === 'coa_applications');
     for (const c of MAX_BUILD_COLS) expect(ca?.columns).toContain(c);
   });
 
-  it.fails('D4 — every legacy literal and operator knob is declared (R-DF EXTERNALIZED, R-BD): batch size registered; --full is override.force_full; --dry-run / --limit / ARCHETYPE_COST_DISABLED declared or retired (flips at ②)', () => {
+  it('D4 — every legacy literal and operator knob is declared (R-DF EXTERNALIZED, R-BD): batch size registered and executed from config (flipped at row 7)', () => {
     const d = loadDescriptor();
     expect(d.config.logic_variables.map((v) => v.name)).toContain('compute_coa_cost_estimates_batch_size');
     expect(d.execution.batch_size_from_config).toBe('compute_coa_cost_estimates_batch_size');
+  });
+
+  it.fails('D4b — the shell reads no argv / env knob (--full is override.force_full; --dry-run / --limit / ARCHETYPE_COST_DISABLED retired) (flips at the cutover)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).not.toMatch(/process\.argv|process\.env/);
   });
 
-  it.fails('D5 — compute is pure (R-BZ): no .query, no transaction, no Date.now, no pg_constraint probe, no LIMIT interpolation (flips at ②)', () => {
+  // The post-run distribution read is SQL TEXT the compute authors and the runner executes once after the loop
+  // (Spec 124 R-EH (e) buildPostSql; CCCE-D6), so PERCENTILE_CONT may appear there and nowhere else in the compute.
+  it('D5 — compute is pure (R-BZ): no .query, no transaction, no Date.now, no pg_constraint probe, no LIMIT interpolation; PERCENTILE_CONT only in buildPostSql (flipped at row 7)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).not.toMatch(/\.query\(|withTransaction|streamQuery|Date\.now\(/);
-    expect(c).not.toMatch(/pg_constraint|PERCENTILE_CONT/);
+    expect(c).not.toMatch(/pg_constraint/);
     expect(c).not.toMatch(/LIMIT \$\{/);
+    const post = c.slice(c.indexOf('function buildPostSql'));
+    expect(c.slice(0, c.indexOf('function buildPostSql'))).not.toMatch(/PERCENTILE_CONT/);
+    expect(post.slice(0, post.indexOf('\n}\n'))).toMatch(/PERCENTILE_CONT/);
+    expect(post.slice(post.indexOf('\n}\n'))).not.toMatch(/PERCENTILE_CONT/);
   });
 
-  it.fails('D6 — the verdict is row-derived (G7): coverage FAIL / WARN bounds and the nofit WARN are declared checks reading their own variables; compute holds no PASS/WARN/FAIL (flips at ②)', () => {
+  it('D6 — the verdict is row-derived (G7): coverage FAIL / WARN bounds and the nofit WARN are declared checks reading their own variables; compute holds no PASS/WARN/FAIL (flipped at row 7)', () => {
     const d = loadDescriptor();
     const byId = new Map(d.checks.map((c) => [c.id, c]));
-    expect(byId.get('cost_estimate_coverage_pct')?.limit_from_config).toBe('compute_coa_cost_estimates_coverage_fail_pct');
-    expect(byId.get('cost_estimate_coverage_pct')?.warn_limit_from_config).toBe('compute_coa_cost_estimates_coverage_threshold_pct');
+    // Spec 124a R-AD: `limit` is the PASS bound and `warn_limit` the looser one (one row PASS/WARN/FAIL), so the coverage
+    // threshold binds `limit` and the fail floor `warn_limit` (the ① claim had them swapped, which left the WARN tier
+    // unreachable; parity with the legacy row is pinned in post-read-parity.logic (3)).
+    expect(byId.get('cost_estimate_coverage_pct')?.limit_from_config).toBe('compute_coa_cost_estimates_coverage_threshold_pct');
+    expect(byId.get('cost_estimate_coverage_pct')?.warn_limit_from_config).toBe('compute_coa_cost_estimates_coverage_fail_pct');
     expect(byId.get('archetype_map_nofit_residential_pct')).toBeDefined();
     expect(readText(COMPUTE_REL)).not.toMatch(/'(PASS|WARN|FAIL)'/);
   });
 
-  it.fails('D7 — the legacy parity defect CCCE-D1 (a stale cost_estimates row survives a NULL cost) is a declared deviation on the cost_estimates write (flips at ②)', () => {
+  it('D7 — the legacy parity defect CCCE-D1 (a stale cost_estimates row survives a NULL cost) is a declared deviation on the cost_estimates write (flipped at row 7)', () => {
     const ce = loadDescriptor().outputs.writes.find((w) => w.table === 'cost_estimates');
     expect(ce?.write_discipline.why?.text ?? '').toContain('CCCE-D1');
   });

@@ -145,6 +145,26 @@
       "adjudicated_by": "orchestrator landing of row 3.2 ② (test-staleness repoint, WF3 Commit 2 precedent preserved)",
       "date": "2026-09-24",
       "lock_test": "src/tests/wf3-class-c-antibypass.infra.test.ts"
+    },
+    "classify_coa_trades": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "All four classify_coa_trades writes carry guard \"none\" (MATERIALIZER rows form, Spec 124 R-EH; legacy parity). (1) outputs.writes[0] lead_trades guarded_upsert: legacy upserts unguarded (classify-coa-trades.js:206-214, pinned L6), every conflict rewrites the row and counts in records_updated (L11); kept for parity, a guard is a follow-up behaviour ruling (CCT-D2, operator Q-C2 y 2026-10-18). (2) outputs.writes[1] lead_products link_full_retraction: the per-lead DELETE of the replace pair — a row removal has no value to compare, so no IS DISTINCT FROM guard applies (the link_parcels E1 form). (3) outputs.writes[2] lead_products guarded_upsert: the per-lead re-INSERT immediately after that DELETE in the same batch transaction (R-EH (d) F); every row was just removed, so a change guard has nothing to compare. (4) outputs.writes[3] coa_applications.trade_classified_at: a clock-only watermark (its one set column is source run_at), so no non-clock guard set exists and the watermark advances for every processed CoA, as the legacy step did (:252) and as compute_coa_cost_estimates' watermark (Q-CE2). (2)-(4) operator Q-W4G-1 y 2026-10-19.",
+      "commit": "wf2/p4-w4-g-materializers full-form row 7 (2026-10-19)",
+      "adjudicated_by": "operator Q-C2 y 2026-10-18 (lead_trades); operator Q-W4G-1 y 2026-10-19 (lead_products replace pair, trade_classified_at watermark)",
+      "date": "2026-10-19",
+      "lock_test": "src/tests/steps/classify_coa_trades/violations.test.ts"
+    },
+    "compute_coa_cost_estimates": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[1] coa_applications (set_based_scoped, MATERIALIZER rows form R-EH): every processed CoA advances its cost columns and the cost_classified_at watermark unconditionally, as the legacy step did (:407-430, pinned L12); a change guard would leave the cursor re-fetching unchanged CoAs every run (Q-CE2, operator y 2026-10-18). outputs.writes[0] cost_estimates keeps its IS DISTINCT FROM guard.",
+      "commit": "wf2/p4-w4-g-materializers full-form row 7 (2026-10-19)",
+      "adjudicated_by": "operator Q-CE2 y 2026-10-18",
+      "date": "2026-10-19",
+      "lock_test": "src/tests/steps/compute_coa_cost_estimates/violations.test.ts"
     }
   }
 }

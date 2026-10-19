@@ -1,0 +1,40 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 — the INTERPRETATION file for compute_coa_cost_estimates, capped at 12 prose entries (notes-cap.mjs).",
+    "Phase-4 wave 4 lane C build, landed at full-form row 7 (Spec 123 §7; operator Q5 y 2026-10-19) at stage compute_ported (W4A-R6, R-EF). MATERIALIZER rows form, Spec 124 R-EH (RE-FREEZE #37)."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "Prices CoAs through the shipped Brain (archetype T2 first, geometric T4 fallthrough) and persists non-NULL estimates to cost_estimates plus the CoA cost columns and the cost_classified_at watermark. Reads the enrich_parcels max-build family on coa_applications unchanged (Spec 78 O-11 lists this step as a consumer that must migrate before any enrich column switch).",
+      "measured": {
+        "value": "Parity pinned by src/tests/steps/compute_coa_cost_estimates/violations.test.ts L1-L20 (frozen legacy text, real Brain) and compute-parity.logic.test.ts.",
+        "date": "2026-10-18",
+        "query": "n/a (code read)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "cost_distribution_p25_p50_p75 covers only rows written this run (computed_at = run_at), read once after the loop through buildPostSql (R-EH (e); CCCE-D6, legacy parity: guard-skipped rows keep their old computed_at and are excluded)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "key_prefix coa: on every cost_estimates write",
+      "value": "outputs.writes[0].write_discipline.key_prefix",
+      "incident": "cost_estimates is shared with compute_cost_estimates (permit: keys); an unscoped write would touch permit rows.",
+      "commit": "fb593a9e",
+      "lock_test": "src/tests/steps/compute_coa_cost_estimates/violations.test.ts"
+    }
+  ],
+  "constants": [
+    {
+      "what": "\"en-CA\" is the display locale of the distribution string, pinned for a stable observer diff (legacy :697), not a tunable."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 0,
+    "unpromoted_suspicious_if": 0
+  }
+}

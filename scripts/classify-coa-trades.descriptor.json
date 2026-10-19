@@ -1,0 +1,932 @@
+{
+  "identity": {
+    "name": "classify_coa_trades",
+    "display_name": "Classify CoA Trades",
+    "owner": "data",
+    "description": "Derives per-lead trade rows (lead_trades) and product rows (lead_products) for every CoA whose scope was (re)classified, from coa_applications.scope_tags through the shipped TAG_TRADE_MATRIX classifier plus the gated inference complement and the residential realtor append; advances coa_applications.trade_classified_at. MATERIALIZER ROWS form: the runner pages the source, reads the trades/product_groups lookups once and writes every target in one transaction per batch.",
+    "lock": 4203,
+    "why_lock": {
+      "text": "Spec 42 §6.8 Phase D allocation (classify-coa-trades.js:52); kept textually so LOCK_ID_REGISTRY stays green.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "42",
+    "spec_version": "1.0",
+    "archetype": "MATERIALIZER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "classify_coa_scope"
+        }
+      ],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "id",
+            "lead_id",
+            "scope_tags",
+            "coa_type_class",
+            "project_type",
+            "structure_type",
+            "scope_classified_at",
+            "trade_classified_at"
+          ]
+        },
+        {
+          "table": "trades",
+          "columns": [
+            "id",
+            "slug"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "slug"
+          ],
+          "on_empty": "fail"
+        },
+        {
+          "table": "product_groups",
+          "columns": [
+            "id",
+            "slug"
+          ],
+          "role": "lookup",
+          "unique_on": [
+            "slug"
+          ],
+          "on_empty": "fail"
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "warn"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "lead_trades",
+        "key": [
+          "lead_id",
+          "trade_id"
+        ],
+        "columns": [
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "trade_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "tier",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "is_active",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "phase",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "lead_score",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "attachment_basis",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "classified_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "none",
+          "guard_why": {
+            "text": "CCT-D2 (operator Q-C2 y 2026-10-18): legacy upserts unguarded (classify-coa-trades.js:206-214, pinned L6) — every conflict rewrites all 7 columns incl. classified_at and counts as records_updated (L11). Parity kept; a guard changes the records_updated semantics and is a follow-up ruling.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/classify-coa-trades.js"
+            }
+          },
+          "guard_columns": "all_declared",
+          "scope": "lead_id LIKE 'coa:%' — lead_trades is shared with the live trigger trg_mirror_permit_trades_to_lead_trades on permit_trades (migrations/143_*.sql:90; 1,784,196 permit: rows), which this step never touches (CCT-D3)",
+          "key_prefix": {
+            "column": "lead_id",
+            "prefix": "coa:"
+          },
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "CCT-D1 (declared deviation, operator y 2026-10-18 wave-4 Q12): a trade that drops out of a CoA scope is never retracted (legacy :203-215 is upsert-only, pinned L10). retract \"none\" is the truthful declaration; the fix is a separate behaviour change with its own capture.",
+            "liveness": {
+              "kind": "check",
+              "ref": "slug_resolution_miss_count"
+            }
+          },
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_parcel_addresses / refresh_snapshot precedent): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause, and classified_at (source run_at) is never a change guard on this target.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "lead_products",
+        "key": [
+          "lead_id"
+        ],
+        "columns": [
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          }
+        ],
+        "write_discipline": {
+          "class": "link_full_retraction",
+          "guard": "none",
+          "guard_why": {
+            "text": "A keyed replace: every processed lead is deleted then re-inserted (legacy :227-229, pinned L12); nothing to compare.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          },
+          "scope": "lead_id = ANY(<the batch's processed leads>) AND lead_id LIKE 'coa:%'",
+          "key_prefix": {
+            "column": "lead_id",
+            "prefix": "coa:"
+          },
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Spec 80 §5.B: a CoA whose products changed or dropped to zero is fully resynced (operator y wave-4 Q11: the per-key replace under MATERIALIZER, ruling §6). Before-imaged per batch (R-M).",
+            "liveness": {
+              "kind": "table",
+              "ref": "lead_products"
+            }
+          },
+          "guard_columns": "all_declared"
+        },
+        "retract": "replace_keys"
+      },
+      {
+        "table": "lead_products",
+        "key": [
+          "lead_id",
+          "product_id"
+        ],
+        "columns": [
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "product_id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "confidence",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "classified_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "none",
+          "guard_why": {
+            "text": "Follows the e2 replace of the same keys in the same transaction, so the only possible conflict is a duplicate (lead_id, product_id) within a batch, which classifyCoaProducts cannot emit (one entry per slug). Legacy DO NOTHING ≡ generated DO UPDATE on that dataset (ruling §6).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/coa-trade-classifier.js"
+            }
+          },
+          "guard_columns": "all_declared",
+          "scope": "lead_id LIKE 'coa:%'",
+          "key_prefix": {
+            "column": "lead_id",
+            "prefix": "coa:"
+          },
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "The reinsert half of the lead_products per-lead replace.",
+            "liveness": {
+              "kind": "table",
+              "ref": "lead_products"
+            }
+          },
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_parcel_addresses / refresh_snapshot precedent): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause, and classified_at (source run_at) is never a change guard on this target.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "coa_applications",
+        "key": [
+          "id"
+        ],
+        "columns": [
+          {
+            "name": "id",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "compute"
+          },
+          {
+            "name": "trade_classified_at",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "source": "run_at"
+          }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "rows": "compute",
+          "guard": "none",
+          "guard_why": {
+            "text": "The watermark advances on EVERY processed CoA, zero-trade CoAs included, or the cursor re-fetches forever (legacy :248-256, pinned L14). Written LAST in the batch transaction (products durable before the cursor stops re-fetching, :223-226).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/classify-coa-trades.js"
+            }
+          },
+          "scope": "id = ANY(<the batch source keys>)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "The pending cursor watermark (claim #54 invalidator: coa_applications.scope_classified_at, producer classify_coa_scope).",
+            "liveness": {
+              "kind": "table",
+              "ref": "coa_applications"
+            }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_parcel_addresses / refresh_snapshot precedent): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause, and trade_classified_at (source run_at) is never a change guard on this target.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/step/write.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 4,
+      "why": {
+        "text": "Per batch, one transaction: e1 upsert, e2 keyed DELETE, e3 upsert, e4 keyed UPDATE — runner-built (ruling §2 (d)).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": "none",
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": [
+      "scripts/lib/coa-trade-classifier.js"
+    ],
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "lead_trades",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on lead_trades (wave-4 plan §B.2, read-only DB): under a role that does not bypass RLS the write affects 0 rows with no error (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "lead_trades"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "lead_products",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on lead_products (wave-4 plan §B.2, read-only DB): under a role that does not bypass RLS the write affects 0 rows with no error (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "lead_products"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on coa_applications (wave-4 plan §B.2, read-only DB): under a role that does not bypass RLS the write affects 0 rows with no error (R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_applications"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "materialize",
+    "materialize_form": "rows",
+    "materialize_source": {
+      "table": "coa_applications",
+      "key": "id",
+      "why": {
+        "text": "The legacy cursor is ORDER BY id over the pending set (:267-276); keyset paging over id is equivalent because this step is the only writer of trade_classified_at.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/classify-coa-trades.js"
+        }
+      },
+      "pending": {
+        "table": "coa_applications",
+        "predicate": "trade_classified_at IS NULL OR trade_classified_at < scope_classified_at",
+        "invalidated_by": "coa_applications.scope_classified_at"
+      }
+    },
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "30m",
+    "batch": 1000,
+    "batch_size_from_config": "classify_coa_trades_batch_size",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the compute already measured; a throwing check is a defect and reddens the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/classify-coa-trades.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "coa_eligible",
+      "kind": "bound",
+      "expect": {
+        "reports": "CoAs processed this run (an empty cursor WARNs, legacy :460-465, L16)"
+      },
+      "limit": "value_min 1",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable classify_coa_trades_eligible_min_count (R-CV definitional, pinned 1), never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      },
+      "limit_from_config": "classify_coa_trades_eligible_min_count"
+    },
+    {
+      "id": "unmapped_scope_pct",
+      "kind": "bound",
+      "expect": {
+        "reports": "processed CoAs with zero trades / processed (L18)"
+      },
+      "limit": "pct <= 20",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "classify_coa_trades_unmapped_threshold_pct",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "avg_active_trades_per_lead",
+      "kind": "bound",
+      "expect": {
+        "reports": "mean ALL-ACTIVE trades per CoA with ≥1 active row (L19)"
+      },
+      "limit": "value_max 18",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "classify_coa_trades_active_trades_warn_max",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "slug_resolution_miss_count",
+      "kind": "invariant",
+      "expect": {
+        "reports": "matrix slugs absent from the trades lookup (schema drift, L19)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "product_slug_miss_count",
+      "kind": "invariant",
+      "expect": {
+        "reports": "product slugs absent from the product_groups lookup (L13)"
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "realtor_unavailable",
+      "kind": "invariant",
+      "expect": {
+        "reports": "the trades lookup lacks slug \"realtor\" — the append is skipped (CCT-D7; legacy warn log, L8)"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the legacy audit row of the same metric (pinned in src/tests/steps/classify_coa_trades/violations.test.ts); the bound is the declared variable, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "trade_vocab_coverage",
+      "kind": "vocab_coverage",
+      "expect": {
+        "reports": "distinct coa: lead_trades.trade_id vs the non-deprecated trades vocab (CCT-D6, R-CH snapshot)"
+      },
+      "limit": "pct >= 90",
+      "warn_limit": "pct >= 70",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "vocab_coverage_pass_pct",
+      "warn_limit_from_config": "vocab_coverage_warn_pct",
+      "why": {
+        "text": "Ported from the legacy cov_ audit row (scripts/lib/pipeline.js:500-516; parity pinned in src/tests/steps/classify_coa_trades/post-read-parity.logic.test.ts): PASS at or above vocab_coverage_pass_pct, WARN at or above vocab_coverage_warn_pct (the R-AD warn_limit tier), FAIL below it, as legacy; the bounds are the declared shared variables, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    },
+    {
+      "id": "product_vocab_coverage",
+      "kind": "vocab_coverage",
+      "expect": {
+        "reports": "distinct coa: lead_products.product_id vs product_groups (CCT-D6)"
+      },
+      "limit": "pct >= 90",
+      "warn_limit": "pct >= 70",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "limit_from_config": "vocab_coverage_pass_pct",
+      "warn_limit_from_config": "vocab_coverage_warn_pct",
+      "why": {
+        "text": "Ported from the legacy cov_ audit row (scripts/lib/pipeline.js:500-516; parity pinned in src/tests/steps/classify_coa_trades/post-read-parity.logic.test.ts): PASS at or above vocab_coverage_pass_pct, WARN at or above vocab_coverage_warn_pct (the R-AD warn_limit tier), FAIL below it, as legacy; the bounds are the declared shared variables, never a compute comparison (G7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "src/tests/steps/classify_coa_trades/violations.test.ts"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "coa_with_trades",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_zero_trades",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "residential_count",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "realtor_append_count",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_trades_strong_signal",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_trades_inference",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "inference_layer_enabled",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_with_active_trades",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "median_active_trades_per_lead_nonzero",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "avg_evidence_trades_per_lead",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "median_evidence_trades_per_lead_nonzero",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "realtor_inclusion_pct",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "coa_with_products",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "lead_products_written",
+      "type": "number",
+      "consumers": []
+    },
+    {
+      "key": "slug_resolution_misses",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "trade_slug_distribution",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "coa_trades_per_lead_histogram",
+      "type": "object",
+      "consumers": []
+    }
+  ],
+  "deviations": [
+    {
+      "from": "legacy audit values are display strings (\"20.0%\", \"N/A\"; :473-521)",
+      "why": {
+        "text": "Converted check rows carry the measured number; the rendered threshold comes from the declared check. An explained golden diff (R-DA) at P4.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "legacy realtor id is the constant 33 written when (33, \"realtor\") exists (pipeline-realtor-availability.js:23-44)",
+      "why": {
+        "text": "Resolved from the trades lookup by slug; identical on the live vocab (CCT-D7).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/classify-coa-trades.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-18 (wave-4 rulings Q-C2..Q-C4, Q-CE1..Q-CE3; .cursor/QUEUE.md)",
+      "date": "2026-10-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "CCT-D1: stale lead_trades rows are never retracted (declared deviation, follow-up).",
+      "measured": "pinned L10",
+      "check_id": "slug_resolution_miss_count"
+    }
+  ],
+  "interpretation": {
+    "file": "classify-coa-trades.notes.json"
+  },
+  "recovery": {
+    "reset": "UPDATE coa_applications SET trade_classified_at = NULL WHERE lead_id LIKE 'coa:%' — the next run reclassifies every scoped CoA (idempotent: unguarded upsert + per-lead product replace).",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Each batch commits its e2 delete and e3 reinsert atomically in one transaction, so no lead is left half-replaced; an interrupted run leaves later batches pending under the cursor.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/index.js"
+      }
+    },
+    "before_image": "generated"
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 216,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "matched.processed"
+    },
+    "records_new": {
+      "source": "written.e1.inserted"
+    },
+    "records_updated": {
+      "source": "written.e1.updated"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "classify_coa_trades_batch_size",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_max_detail_keys",
+        "min": 1,
+        "max": 1000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_tier",
+        "min": 3,
+        "max": 3,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_lead_score_scale",
+        "min": 100,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_realtor_confidence",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_unmapped_threshold_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_active_trades_warn_max",
+        "min": 1,
+        "max": 35,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "classify_coa_trades_eligible_min_count",
+        "min": 1,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "p16_inference_layer_enabled",
+        "min": 0,
+        "max": 1,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "vocab_coverage_pass_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "vocab_coverage_warn_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa": 7
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "materialized_incremental",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The cursor ran to completion with no WARN/FAIL row.",
+        "liveness": {
+          "kind": "check",
+          "ref": "coa_eligible"
+        }
+      }
+    },
+    {
+      "id": "materialized_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A WARN row stands (empty cursor, unmapped share, fan-out, realtor absent, vocab coverage) and nothing FAILED.",
+        "liveness": {
+          "kind": "check",
+          "ref": "unmapped_scope_pct"
+        }
+      }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A lookup is empty or carries a duplicate slug (runner refusal before any write).",
+        "liveness": {
+          "kind": "table",
+          "ref": "trades"
+        }
+      }
+    }
+  ]
+}

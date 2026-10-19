@@ -449,6 +449,29 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'enrich_permits_zoning_coverage_pass_min_pct',
   'enrich_coa_zoning_zoning_coverage_fail_pct',
   'enrich_coa_zoning_zoning_coverage_pass_min_pct',
+  // phase-4 wave 4 lane C, full-form row 7 (migrations 274 / 275): classify_coa_trades and compute_coa_cost_estimates.
+  // The copies (classify_coa_trades_unmapped_threshold_pct, …_active_trades_warn_max, compute_coa_cost_estimates_coverage_*,
+  // …_model_range_pct, …_fallback_range_pct) sit beside legacy keys that stay until the cutover retires the legacy shell.
+  'classify_coa_trades_batch_size',
+  'classify_coa_trades_max_detail_keys',
+  'classify_coa_trades_tier',
+  'classify_coa_trades_lead_score_scale',
+  'classify_coa_trades_realtor_confidence',
+  'classify_coa_trades_unmapped_threshold_pct',
+  'classify_coa_trades_active_trades_warn_max',
+  'classify_coa_trades_eligible_min_count',
+  'compute_coa_cost_estimates_batch_size',
+  'compute_coa_cost_estimates_distribution_p25',
+  'compute_coa_cost_estimates_distribution_p50',
+  'compute_coa_cost_estimates_distribution_p75',
+  'compute_coa_cost_estimates_coverage_threshold_pct',
+  'compute_coa_cost_estimates_coverage_fail_pct',
+  'compute_coa_cost_estimates_model_range_pct',
+  'compute_coa_cost_estimates_fallback_range_pct',
+  // The shared cost model (Q-C3 / Q-CE1): the archetype kill switch and the two legacy range keys the legacy script reads.
+  'archetype_cost_enabled',
+  'model_range_pct',
+  'fallback_range_pct',
   // P16 §5.C [BUG-6] — hard gate for the lean scope-mapped inference layer (seeded OFF).
   'p16_inference_layer_enabled',
   // P16 16E — provenance weight for inference-basis forecast inputs (0.5× default).
