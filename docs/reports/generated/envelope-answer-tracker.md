@@ -6,18 +6,18 @@
 
 ## Counts
 
-- Answers: **511** — INCORPORATED **468**, UNFIXED **43**, OPEN **0**.
+- Answers: **511** — INCORPORATED **472**, UNFIXED **39**, OPEN **0**.
 - By verdict: disclose 90 · matches 125 · no_application 163 · null 12 · unsure 28 · wrong 93.
 - By disposition: disclosed_by 90 · excluded 163 · fixed_by 77 · matches 125 · resolved_by 42 · verified_by_lock 14.
 - Answers whose provision feeds a P5.10 lineage field: 173.
 
 | Chapter | Answers | Incorporated | Unfixed | Open |
 |---|---|---|---|---|
-| 10.20 | 61 | 60 | 1 | 0 |
-| 10.40 | 87 | 85 | 2 | 0 |
+| 10.20 | 61 | 61 | 0 | 0 |
+| 10.40 | 87 | 86 | 1 | 0 |
 | 10.5 | 10 | 10 | 0 | 0 |
-| 10.60 | 66 | 65 | 1 | 0 |
-| 10.80 | 77 | 76 | 1 | 0 |
+| 10.60 | 66 | 66 | 0 | 0 |
+| 10.80 | 77 | 77 | 0 | 0 |
 | 150.10 | 7 | 1 | 6 | 0 |
 | 150.7 | 95 | 78 | 17 | 0 |
 | 150.8 | 75 | 60 | 15 | 0 |
@@ -31,15 +31,11 @@
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
 
-## UNFIXED (43)
+## UNFIXED (39)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
-| `10.20.30.20(1)#(1)(C)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed. | ruled; keyed correction not applied yet | — | inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway |
 | `10.40.30.20(1)#(1)(C)` | wrong | fixed_by | M-181, `semi_house_two_lots` | Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact. | ruled; keyed correction not applied yet | — | for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseple |
-| `10.40.30.20(1)#(1)(D)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed. | ruled; keyed correction not applied yet | — | townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway |
-| `10.60.30.10(1)#(1)(B)` | wrong | fixed_by | M-181, `semi_house_two_lots` | Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed). | ruled; keyed correction not applied yet | — | There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detache |
-| `10.80.30.20(1)#(1)(D)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed. | ruled; keyed correction not applied yet | — | Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwel |
 | `150.10.1(1)#whole` | wrong | fixed_by | M-177 | A scope sentence ("Section 150.10 applies to secondary suites") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199. | ruled; keyed correction not applied yet | — | Stating this section applies to secondary suites |
 | `150.10.20.1(1)#(1)(A)` | wrong | fixed_by | M-177 | A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures a) detached house |
 | `150.10.20.1(1)#(1)(B)` | wrong | fixed_by | M-177 | A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope. | ruled; keyed correction not applied yet | — | Secondary Suite permitted structures b semi detached house. |
@@ -79,7 +75,7 @@
 | `150.8.60.50(3)#whole` | wrong | fixed_by | M-177 | The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead. | ruled; keyed correction not applied yet | — | This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway s |
 | `150.8.60.70(1)#(1)(A)` | wrong | fixed_by | M-177 | The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap. | ruled; keyed correction not applied yet | `suite_coverage_option` | This is critical the lot coverage calculation does not include the laneway suite |
 
-## INCORPORATED (468)
+## INCORPORATED (472)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -94,6 +90,7 @@
 | `10.20.30.10(2)#whole` | matches | matches | — | — | keyed unit agreed | — | Its just minimum not minimum required minimum  |
 | `10.20.30.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.20.30.20(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.20.30.20(1)#(1)(C)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed. | every cited ruling applied (keyed correction or named lock) | — | inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway |
 | `10.20.30.20(1)#(1)(D)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.20.30.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `gain_reasons`, `main_footprint_sqm` |  |
 | `10.20.30.40(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `gain_reasons`, `main_footprint_sqm` |  |
@@ -156,6 +153,7 @@
 | `10.40.30.10(2)#whole` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
 | `10.40.30.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
 | `10.40.30.20(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | — | you call it the minimum minimum lot area - its just the minimum  |
+| `10.40.30.20(1)#(1)(D)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed. | every cited ruling applied (keyed correction or named lock) | — | townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway |
 | `10.40.30.20(1)#(1)(E)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.40.30.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `main_footprint_sqm` |  |
 | `10.40.30.40(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `main_footprint_sqm` |  |
@@ -246,6 +244,7 @@
 | `10.60.30.1(1)#(1)(B)` | unsure | resolved_by | M-180 | On an exception lot the exception's semi-detached-house lot requirements apply to a semi-detached houseplex. | resolved by a RATIFIED ruling | — |  Procedural -Chapter 900 Exceptions  Applicable Lot Requirements for a Detached Houseplex or Semi-Detached Houseplex Despite regulations 900.1.10(3) and 900.1.1 |
 | `10.60.30.1(2)#whole` | wrong | fixed_by | M-180, M-182 | Where the houseplex or suite coverage and the Chapter 900 exception coverage both apply, the more permissive prevails (build bigger). | every cited ruling applied (keyed correction or named lock) | — | This means a detached houseplex, semi detached houseplex or residential building with a secondary suite - the more permissive regulation prevails - this is the  |
 | `10.60.30.10(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
+| `10.60.30.10(1)#(1)(B)` | wrong | fixed_by | M-181, `semi_house_two_lots` | Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed). | every cited ruling applied (keyed correction or named lock) | — | There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detache |
 | `10.60.30.10(1)#(1)(C)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.60.30.10(2)#whole` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.60.30.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
@@ -318,6 +317,7 @@
 | `10.80.30.20(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.80.30.20(1)#(1)(B)` | wrong | resolved_by | M-187, M-174 | No change: the 12.0 m / 15.0 m / 24.0 m frontage is already keyed on 'no f label'; released by the M-174(4) label mask. | resolved by a RATIFIED ruling | — | This only holds if there is no f on the map In the RM zone: (B) if the zone label does not include an "f" value on the Zoning By-law Map, the required minimum l |
 | `10.80.30.20(1)#(1)(C)` | disclose | disclosed_by | M-181, M-174, `semi_house_two_lots` | The 50 % semi frontage arm is not applied to a semi house on two lots; the two-lot condition is disclosed. | keyed disclosure + P5.12 code | — | Minimum Lot Frontage : Zone RM - Condition two lots - we can never identify these situations  |
+| `10.80.30.20(1)#(1)(D)` | wrong | fixed_by | M-187, M-176, `townhouse_driveway_width` | Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed. | every cited ruling applied (keyed correction or named lock) | — | Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwel |
 | `10.80.30.20(1)#(1)(E)` | matches | matches | — | — | keyed unit agreed | — |  |
 | `10.80.30.40(1)#(1)(A)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `main_footprint_sqm` |  |
 | `10.80.30.40(1)#(1)(B)` | matches | matches | — | — | keyed unit agreed | `coverage_status`, `main_footprint_sqm` |  |

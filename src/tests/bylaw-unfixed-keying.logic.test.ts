@@ -191,3 +191,77 @@ describe('M-211(4) / M-158(1) — 150.8.60.21(1): the new build is answered; the
     });
   }
 });
+
+describe('M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions', () => {
+  for (const id of ['10.5.1.10(3)#(3)(A)', '10.5.1.10(3)#(3)(B)']) {
+    it(`${id} is a DEFINE with no target and no statement, the same form as (D) and (E)`, () => {
+      const u = unitOf(id);
+      expect([u.archetype, u.target, u.numeric_expression]).toEqual(['DEFINE', 'none', 'none']);
+    });
+  }
+  // ordinary lots keep their answer: the zone's own x.30.20(1)(A) / x.30.10(1)(A) reads the same label value
+  const LABELS = [{ f: 12, a: 370 }, { f: 15, a: 460 }, { f: 7.5, a: 230 }];
+  for (const zone of ['R', 'RD', 'RS', 'RT', 'RM']) {
+    it(`${zone}: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)`, () => {
+      const z = { R: '10', RD: '20', RS: '40', RT: '60', RM: '80' }[zone];
+      for (const label of LABELS) for (const bt of ['detached_house', 'detached_houseplex']) {
+        const l = lot(zone, bt, { flags: { major_street: false }, vars: { dwelling_units: 1 } }); l.label = { ...l.label, ...label };
+        const f = eff(l, 'required_lot_frontage_m');
+        const a = eff(l, 'required_lot_area_m2');
+        // RT 10.60.30.20(1)(E) (648-2025): "despite (A) … the required minimum lot frontage is 6.0 metres for a lot with a detached houseplex" — unmasked, by law
+        const rtHp = zone === 'RT' && bt === 'detached_houseplex';
+        expect([zone, bt, label.f, f.status, f.value, f.winner]).toEqual([zone, bt, label.f, 'value', rtHp ? 6 : label.f, rtHp ? '10.60.30.20(1)#(1)(E)' : `10.${z}.30.20(1)#(1)(A)`]);
+        expect([zone, bt, label.a, a.status, a.value, a.winner]).toEqual([zone, bt, label.a, 'value', label.a, `10.${z}.30.10(1)#(1)(A)`]);
+      }
+    });
+  }
+});
+
+describe('M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs)', () => {
+  for (const id of ['10.10.20.100(8)#(8)(B)', '10.20.20.100(8)#(8)(B)', '10.20.20.100(8)#(8)(C)', '10.60.20.100(8)#(8)(B)', '10.60.20.100(8)#(8)(C)']) {
+    it(`${id} is keyed to the non-residential building, never a house lot`, () => {
+      expect(unitOf(id).application.building_types).toEqual(['non_residential_building']);
+      expect(E.applies(lot('R', 'detached_house', { zone: { '10': 'R', '20': 'RD', '60': 'RT' }[id.slice(3, 5)], flags: { major_street: true } }), unitRow(id), C).ok).toBe(false);
+    });
+  }
+  it('RD / RT: a plain lot\'s gfa_m2 is never capped by the place-of-worship 2,000 / 2,500 m² rule', () => {
+    for (const zone of ['RD', 'RT']) expect([zone, touched(eff(lot(zone, 'detached_house', { flags: { major_street: false } }), 'gfa_m2')).filter((x) => x.includes('.20.100(8)'))]).toEqual([zone, []]);
+  });
+});
+
+describe('M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed', () => {
+  for (const [zone, id] of [['RD', '10.20.30.20(1)#(1)(C)'], ['RS', '10.40.30.20(1)#(1)(D)'], ['RM', '10.80.30.20(1)#(1)(D)']] as [string, string][]) {
+    it(`${zone}: ${id} is a LIMIT on required_lot_frontage_m under the no-driveway token`, () => {
+      const u = unitOf(id);
+      expect([u.archetype, u.target, u.bound, u.calculation_handling.status]).toEqual(['LIMIT', 'required_lot_frontage_m', 'min', 'partially_modelled']);
+      expect(u.condition.tokens).toEqual(['major_street', 'all_units_front_street', 'no_individual_private_driveway']);
+      expect(u.disclosure).toBe('If each dwelling unit has an individual private driveway leading to its front: 6.0 m of frontage per unit.');
+    });
+    it(`${zone}: a 4-unit townhouse on a major street, every unit fronting the street, no driveways: 20.0 m from ${id} (was 12 m from the f label)`, () => {
+      const r = eff(lot(zone, 'townhouse', { flags: { ...NO_DRIVEWAY, major_street: true, all_units_front_street: true, unit_not_fronting_street: false }, vars: { dwelling_units: 4 } }), 'required_lot_frontage_m');
+      expect([r.status, r.value, r.winner]).toEqual(['value', 20, id]);
+    });
+  }
+});
+
+describe('M-181(2) — the semi-detached houseplex takes 50 % of the lot area; a semi-detached house on two lots is disclosed', () => {
+  for (const [zone, z] of [['RS', '40'], ['RT', '60'], ['RM', '80']] as [string, string][]) {
+    it(`${zone}: a semi-detached houseplex needs 50 % of 'a' (185 m² of 370) from 10.${z}.30.10(1)(B); a semi-detached house is not bound by it`, () => {
+      const l = (bt: string): Json => { const x = lot(zone, bt, { flags: { major_street: false } }); x.label = { ...x.label, a: 370 }; return x; };
+      const hp = eff(l('semi_detached_houseplex'), 'required_lot_area_m2');
+      expect([hp.status, hp.value, hp.winner]).toEqual(['value', 185, `10.${z}.30.10(1)#(1)(B)`]);
+      expect(touched(eff(l('semi_detached_house'), 'required_lot_area_m2'))).not.toContain(`10.${z}.30.10(1)#(1)(B)`);
+      expect(unitOf(`10.${z}.30.10(1)#(1)(B)`).application.building_types).toEqual(['semi_detached_houseplex']);
+    });
+  }
+});
+
+describe('G-EVAL evaluates with the evaluator\'s displacement links (operator y 2026-10-19; Spec 68 §9 G-EVAL, §6 generated displaces[], §7.5 rule 2)', () => {
+  it('the G-EVAL gate keeps 10.20.40.20(3)(B) "Despite regulation 10.20.40.20(1)": V25:building_length_m stays needs_user_input:building_type (houseplex 19.0 m, other types 17.0 m)', async () => {
+    const { ctx } = await V.runGates(I);
+    const row = ctx.evalResult.rows.find((x: Json) => x.id === 'V25:building_length_m');
+    expect([row.per_type.detached_houseplex, row.per_type.detached_house]).toEqual([19, 17]);
+    expect(row.got).toBe('not_evaluated:needs_user_input:building_type');
+    expect(ctx.evalResult.violations.filter((v: string) => v.includes('V25'))).toEqual([]);
+  }, 300_000);
+});

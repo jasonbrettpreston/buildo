@@ -74963,6 +74963,784 @@
       "rule": "Spec 69a M-211(4), M-158(1); Spec 78 P5.12 existing_ancillary_setbacks; M-75",
       "unit": "150.8.60.21(1)#(1)(B)",
       "value": "If the existing ancillary building is lawfully existing, a laneway suite in it may keep its setbacks."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.1.10(3)#(3)(A)/target",
+      "kind": "correction",
+      "reason": "Operator y 2026-10-19 (review page Q-label-defs): 10.5.1.10(3)(A) says what the letter \"f\" in the zone label MEANS (the required minimum lot frontage); it is a label definition, the same form as (D) and (E). Keyed as a DEFINE value (bound exact) it outranked every \"despite\" minimum lot frontage rule (rule 4: exact wins), so the M-181 semi-detached houseplex 50 % and the M-187 F06 townhouse frontage could not take effect. Every zone carries its own x.30.20(1)(A) = label(f) rule, so ordinary lots keep their answer. This supersedes the operator's earlier \"matches\" verdict on (3)(A) for the keying.",
+      "rule": "Spec 69a M-174(4) (amended 2026-10-19, Q-label-defs; supersedes the \"matches\" verdicts on (3)(A)/(B) for the keying); M-75",
+      "unit": "10.5.1.10(3)#(3)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.1.10(3)#(3)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator y 2026-10-19 (review page Q-label-defs): 10.5.1.10(3)(A) says what the letter \"f\" in the zone label MEANS (the required minimum lot frontage); it is a label definition, the same form as (D) and (E). Keyed as a DEFINE value (bound exact) it outranked every \"despite\" minimum lot frontage rule (rule 4: exact wins), so the M-181 semi-detached houseplex 50 % and the M-187 F06 townhouse frontage could not take effect. Every zone carries its own x.30.20(1)(A) = label(f) rule, so ordinary lots keep their answer. This supersedes the operator's earlier \"matches\" verdict on (3)(A) for the keying.",
+      "rule": "Spec 69a M-174(4) (amended 2026-10-19, Q-label-defs; supersedes the \"matches\" verdicts on (3)(A)/(B) for the keying); M-75",
+      "unit": "10.5.1.10(3)#(3)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.1.10(3)#(3)(B)/target",
+      "kind": "correction",
+      "reason": "Operator y 2026-10-19 (review page Q-label-defs): 10.5.1.10(3)(B) says what the letter \"a\" in the zone label MEANS (the required minimum lot area); it is a label definition, the same form as (D) and (E). Keyed as a DEFINE value (bound exact) it outranked every \"despite\" minimum lot area rule (rule 4: exact wins), so the M-181 semi-detached houseplex 50 % and the M-187 F06 townhouse frontage could not take effect. Every zone carries its own x.30.10(1)(A) = label(a) rule, so ordinary lots keep their answer. This supersedes the operator's earlier \"matches\" verdict on (3)(B) for the keying.",
+      "rule": "Spec 69a M-174(4) (amended 2026-10-19, Q-label-defs; supersedes the \"matches\" verdicts on (3)(A)/(B) for the keying); M-75",
+      "unit": "10.5.1.10(3)#(3)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.1.10(3)#(3)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator y 2026-10-19 (review page Q-label-defs): 10.5.1.10(3)(B) says what the letter \"a\" in the zone label MEANS (the required minimum lot area); it is a label definition, the same form as (D) and (E). Keyed as a DEFINE value (bound exact) it outranked every \"despite\" minimum lot area rule (rule 4: exact wins), so the M-181 semi-detached houseplex 50 % and the M-187 F06 townhouse frontage could not take effect. Every zone carries its own x.30.10(1)(A) = label(a) rule, so ordinary lots keep their answer. This supersedes the operator's earlier \"matches\" verdict on (3)(B) for the keying.",
+      "rule": "Spec 69a M-174(4) (amended 2026-10-19, Q-label-defs; supersedes the \"matches\" verdicts on (3)(A)/(B) for the keying); M-75",
+      "unit": "10.5.1.10(3)#(3)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.30.20(1)#(1)(C)/archetype~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/archetype",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.30.20(1)#(1)(C)/target~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/target",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "required_lot_frontage_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.30.20(1)#(1)(C)/bound~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/bound",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.30.20(1)#(1)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/numeric_expression",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": [
+        "required_lot_frontage_m = 6.0 m × dwelling_units − 1.0 m × dwelling_units @(1)(C)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.30.20(1)#(1)(C)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/literals_not_expressed",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.20.30.20(1)#(1)(C)/condition",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "all_units_front_street",
+          "no_individual_private_driveway"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.20.30.20(1)#(1)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": [
+        "major_street",
+        "all_units_front_street",
+        "no_individual_private_driveway"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.30.20(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": {
+        "RD": "the RD zone",
+        "all_units_front_street": "every dwelling unit fronting directly on a street",
+        "dwelling_unit": "each dwelling unit",
+        "major_street": "abutting a major street",
+        "no_individual_private_driveway": "does not have an individual private driveway",
+        "townhouse": "if a townhouse is located"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.30.20(1)#(1)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/calculation_handling",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": {
+        "description": "For a townhouse on a lot abutting a major street where every unit fronts directly on a street, the required minimum lot frontage is 6.0 m for each dwelling unit, reduced by 1.0 m for each unit without an individual private driveway leading to its front.",
+        "gaps": "Answered under no_individual_private_driveway (M-176(1), build more): 5.0 m per dwelling unit. The number of dwelling units in the block is a Layer 3 scenario value (M-160); with a driveway for each unit the frontage is 6.0 m per unit (disclosed).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.30.20(1)#(1)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.20.30.20(1)#(1)(C)/disclosure",
+      "unit": "10.20.30.20(1)#(1)(C)",
+      "value": "If each dwelling unit has an individual private driveway leading to its front: 6.0 m of frontage per unit."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.30.20(1)#(1)(D)/archetype~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/archetype",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.30.20(1)#(1)(D)/target~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/target",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "required_lot_frontage_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.30.20(1)#(1)(D)/bound~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/bound",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.30.20(1)#(1)(D)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/numeric_expression",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": [
+        "required_lot_frontage_m = 6.0 m × dwelling_units − 1.0 m × dwelling_units @(1)(D)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.30.20(1)#(1)(D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/literals_not_expressed",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.40.30.20(1)#(1)(D)/condition",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "all_units_front_street",
+          "no_individual_private_driveway"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.40.30.20(1)#(1)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": [
+        "major_street",
+        "all_units_front_street",
+        "no_individual_private_driveway"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.30.20(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": {
+        "RS": "the RS zone",
+        "all_units_front_street": "every dwelling unit fronting directly",
+        "major_street": "a major street",
+        "no_individual_private_driveway": "does not have an individual private driveway",
+        "townhouse": "a townhouse is"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.30.20(1)#(1)(D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/calculation_handling",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": {
+        "description": "For a townhouse on a lot abutting a major street where every unit fronts directly on a street, the required minimum lot frontage is 6.0 m for each dwelling unit, reduced by 1.0 m for each unit without an individual private driveway leading to its front.",
+        "gaps": "Answered under no_individual_private_driveway (M-176(1), build more): 5.0 m per dwelling unit. The number of dwelling units in the block is a Layer 3 scenario value (M-160); with a driveway for each unit the frontage is 6.0 m per unit (disclosed).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.30.20(1)#(1)(D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.40.30.20(1)#(1)(D)/disclosure",
+      "unit": "10.40.30.20(1)#(1)(D)",
+      "value": "If each dwelling unit has an individual private driveway leading to its front: 6.0 m of frontage per unit."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.30.20(1)#(1)(D)/archetype~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/archetype",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.30.20(1)#(1)(D)/target~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/target",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "required_lot_frontage_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.30.20(1)#(1)(D)/bound~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/bound",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.30.20(1)#(1)(D)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/numeric_expression",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": [
+        "required_lot_frontage_m = 6.0 m × dwelling_units − 1.0 m × dwelling_units @(1)(D)(i)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.30.20(1)#(1)(D)/literals_not_expressed~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/literals_not_expressed",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-10.80.30.20(1)#(1)(D)/condition",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": {
+        "tokens": [
+          "major_street",
+          "all_units_front_street",
+          "no_individual_private_driveway"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.80.30.20(1)#(1)(D)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": [
+        "major_street",
+        "all_units_front_street",
+        "no_individual_private_driveway"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.30.20(1)#(1)(D)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": {
+        "RM": "the RM zone",
+        "all_units_front_street": "every dwelling unit fronting directly",
+        "major_street": "a major street",
+        "no_individual_private_driveway": "does not have an individual private driveway",
+        "townhouse": "a townhouse is"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.30.20(1)#(1)(D)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/calculation_handling",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": {
+        "description": "For a townhouse on a lot abutting a major street where every unit fronts directly on a street, the required minimum lot frontage is 6.0 m for each dwelling unit, reduced by 1.0 m for each unit without an individual private driveway leading to its front.",
+        "gaps": "Answered under no_individual_private_driveway (M-176(1), build more): 5.0 m per dwelling unit. The number of dwelling units in the block is a Layer 3 scenario value (M-160); with a driveway for each unit the frontage is 6.0 m per unit (disclosed).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.30.20(1)#(1)(D)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Operator verdicts (RD \"6m per dwelling but 5m without a private driveway\"; RS/RM the same); M-187 adopted triage F06. Since M-176(1) the driveway is known by rule (no individual private driveway), so the reduction is answered: 6.0 m less 1.0 m per dwelling unit, with 6.0 m disclosed. The block's unit count is Layer 3 (partially_modelled). Applied once 10.5.1.10(3)(A) stopped overriding the \"despite\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-187 (Q4; triage F06), M-176(1), M-172(3); M-75",
+      "supersedes": "COR-10.80.30.20(1)#(1)(D)/disclosure",
+      "unit": "10.80.30.20(1)#(1)(D)",
+      "value": "If each dwelling unit has an individual private driveway leading to its front: 6.0 m of frontage per unit."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.40.30.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.40.30.10(1)#(1)(B)",
+      "value": [
+        "semi_detached_houseplex"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.40.30.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.40.30.10(1)#(1)(B)",
+      "value": {
+        "RS": "In the RS zone",
+        "semi_detached_houseplex": "for a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.30.10(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.40.30.10(1)#(1)(B)",
+      "value": {
+        "description": "For a semi-detached house on two lots, and for a semi-detached houseplex, the required minimum lot area for each lot is 50 percent of the label \"a\" value.",
+        "gaps": "M-181(2): binds the semi-detached houseplex (each lot 50 % of label(a)); a semi-detached house (RM: or apartment building) on two lots is a site fact, disclosed, never bound (M-174(1)). The houseplex scenario is offered only where the parcel holds half a semi (M-181(4)).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.30.10(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.40.30.10(1)#(1)(B)",
+      "value": "If the semi-detached house is divided onto two lots: each lot's minimum lot area is 50 % of the 'a' value."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.30.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.60.30.10(1)#(1)(B)",
+      "value": [
+        "semi_detached_houseplex"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.30.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.60.30.10(1)#(1)(B)",
+      "value": {
+        "RT": "the RT zone",
+        "label_value": "following the letter \"a\"",
+        "semi_detached_houseplex": "a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.60.30.10(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.60.30.10(1)#(1)(B)",
+      "value": {
+        "description": "For a semi-detached house on two lots, and for a semi-detached houseplex, the minimum lot area for each lot is 50% of the label 'a' value.",
+        "gaps": "M-181(2): binds the semi-detached houseplex (each lot 50 % of label(a)); a semi-detached house (RM: or apartment building) on two lots is a site fact, disclosed, never bound (M-174(1)). The houseplex scenario is offered only where the parcel holds half a semi (M-181(4)).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.60.30.10(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.60.30.10(1)#(1)(B)",
+      "value": "If the semi-detached house is divided onto two lots: each lot's minimum lot area is 50 % of the 'a' value."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.80.30.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.80.30.10(1)#(1)(B)",
+      "value": [
+        "semi_detached_houseplex"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.80.30.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "unit": "10.80.30.10(1)#(1)(B)",
+      "value": {
+        "RM": "In the RM zone",
+        "semi_detached_houseplex": "for a semi-detached houseplex"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.30.10(1)#(1)(B)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Operator verdict 10.60.30.10(1)(B) (MF-2: \"this only applied to a semi detached [house] on two lots … disclosure. However, for the [semi-detached houseplex] the formula works\"); M-181: the semi-detached houseplex's 50 % is its own requirement; a semi-detached house (or RM apartment building) \"on two lots\" stays a disclosed site fact. Applied once 10.5.1.10(3)(B) stopped overriding the \"despite (A)\" arm (M-174(4) amended, Q-label-defs).",
+      "rule": "Spec 69a M-181(2), M-174(1); M-75",
+      "supersedes": "COR-10.80.30.10(1)#(1)(B)/calculation_handling",
+      "unit": "10.80.30.10(1)#(1)(B)",
+      "value": {
+        "description": "For a semi-detached house or apartment building on two lots, and for a semi-detached houseplex, the required minimum lot area for each lot is 50 percent of the label \"a\" value.",
+        "gaps": "M-181(2): binds the semi-detached houseplex (each lot 50 % of label(a)); a semi-detached house (RM: or apartment building) on two lots is a site fact, disclosed, never bound (M-174(1)). The houseplex scenario is offered only where the parcel holds half a semi (M-181(4)).",
+        "not_modelled_reason": "none",
+        "status": "modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.10.20.100(8)#(8)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.10.20.100(8)#(8)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.20.100(8)#(8)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.10.20.100(8)#(8)(B)",
+      "value": {
+        "R": "the R zone",
+        "non_residential_building": "a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.20.20.100(8)#(8)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.20.20.100(8)#(8)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.20.100(8)#(8)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.20.20.100(8)#(8)(B)",
+      "value": {
+        "RD": "the RD zone",
+        "frontage_band": "a lot frontage of at least 30 metres",
+        "lot_area_band": "a lot area of at least 2,000 square metres",
+        "major_street": "a major street",
+        "non_residential_building": "a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.20.20.100(8)#(8)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.20.20.100(8)#(8)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.20.20.100(8)#(8)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.20.20.100(8)#(8)(C)",
+      "value": {
+        "RD": "the RD zone",
+        "non_residential_building": "a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.20.100(8)#(8)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.60.20.100(8)#(8)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.20.100(8)#(8)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.60.20.100(8)#(8)(B)",
+      "value": {
+        "RT": "the RT zone",
+        "major_street": "abutting a major street",
+        "non_residential_building": "a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.60.20.100(8)#(8)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.60.20.100(8)#(8)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.60.20.100(8)#(8)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "Q-label-defs (operator y 2026-10-19) removed the exact label(f) value that had masked it: 10.10.20.100(8)(B) (\"a place of worship must … be on a lot with a lot frontage of at least 30 metres\") is keyed building_types any, so every plain R lot answered 30 m. Each place-of-worship unit says in its own gaps that it \"must not be applied to residential building types\"; by M-159 it governs its own subject only, so it is keyed to the non-residential building that the place of worship is. One form for R / RD / RT (8)(B), (8)(C).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject); M-174(4) amended (Q-label-defs); M-75",
+      "unit": "10.60.20.100(8)#(8)(C)",
+      "value": {
+        "RT": "the RT zone",
+        "non_residential_building": "a place of worship"
+      }
     }
   ]
 }

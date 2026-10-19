@@ -1,0 +1,297 @@
+{
+ "suite": "src/tests/bylaw-unfixed-keying.logic.test.ts",
+ "base": "e9990eea",
+ "run_on": "2026-10-19",
+ "note": "Q-label-defs (operator y 2026-10-19), G-EVAL with the evaluator displacement links (y), M-181(2) lot area, M-187 F06 frontage, M-159 place of worship: run on e9990eea (detached worktree, this file copied in; validate.mjs at e9990eea). Red: the label-definition shape, plain lots answering from the zone rule (R: 30 m place-of-worship leak once unmasked; winner 10.5.1.10), the place-of-worship keying and RD/RT GFA cap, F06 20.0 m, the semi houseplex 185 m², and the G-EVAL gate dropping 10.20.40.20(3)(B) on V25 (houseplex 17 instead of 19). Pass both sides: every earlier-lane case.",
+ "counts": {
+  "red": 23,
+  "pass": 34
+ },
+ "cases": [
+  {
+   "name": "G-AGREE holds with every correction of the unfixed lane (no orphan) no violation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q12 / triage F22 — separation between buildings on the same lot is a disclosed scope, never bound (M-149) the 11 x.40.80(2) units are UNUSUAL with no target, their limit literal recorded and a closed \"If the lot …\" disclosure",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q12 / triage F22 — separation between buildings on the same lot is a disclosed scope, never bound (M-149) RT: a one-building lot takes no separation_m from x.40.80(2) (was 11.0 m from (2)(B))",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q12 / triage F22 — separation between buildings on the same lot is a disclosed scope, never bound (M-149) RM: a one-building lot takes no separation_m from x.40.80(2) (was 11.0 m from (2)(B))",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q12 / triage F22 — separation between buildings on the same lot is a disclosed scope, never bound (M-149) R / RS: a townhouse on a major street takes no separation_m from x.40.80(2)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) R: 10.10.40.1(4)#(4)(A) is keyed on no_individual_private_driveway and carries the P5.12 townhouse_driveway_width sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) R: no driveway answers 5.0 m from (A); a driveway answers 6.0 m and (A) is set aside",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RD: 10.20.40.1(4)#(4)(A) is keyed on no_individual_private_driveway and carries the P5.12 townhouse_driveway_width sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RD: no driveway answers 5.0 m from (A); a driveway answers 6.0 m and (A) is set aside",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RS: 10.40.40.1(4)#(4)(A) is keyed on no_individual_private_driveway and carries the P5.12 townhouse_driveway_width sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RS: no driveway answers 5.0 m from (A); a driveway answers 6.0 m and (A) is set aside",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RT: 10.60.40.1(3)#(3)(A) is keyed on no_individual_private_driveway and carries the P5.12 townhouse_driveway_width sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RT: no driveway answers 5.0 m from (A); a driveway answers 6.0 m and (A) is set aside",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RM: 10.80.40.1(3)#(3)(A) is keyed on no_individual_private_driveway and carries the P5.12 townhouse_driveway_width sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-187 Q4 / triage F10 — townhouse unit width is 5.0 m under the no-driveway default, 6.0 m disclosed (M-176(1)) RM: no driveway answers 5.0 m from (A); a driveway answers 6.0 m and (A) is set aside",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-190 / M-214(1) — x.40.10(2)(C) disapplies the main-wall cap for major-street forms, which are disclosed as not modelled 10.10.40.10(2)#(2)(C) stays a DISAPPLY and carries major_street_forms_not_modelled",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-190 / M-214(1) — x.40.10(2)(C) disapplies the main-wall cap for major-street forms, which are disclosed as not modelled 10.20.40.10(2)#(2)(C) stays a DISAPPLY and carries major_street_forms_not_modelled",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-190 / M-214(1) — x.40.10(2)(C) disapplies the main-wall cap for major-street forms, which are disclosed as not modelled 10.40.40.10(2)#(2)(C) stays a DISAPPLY and carries major_street_forms_not_modelled",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-190 / M-214(1) — x.40.10(2)(C) disapplies the main-wall cap for major-street forms, which are disclosed as not modelled 10.80.40.10(2)#(2)(C) stays a DISAPPLY and carries major_street_forms_not_modelled",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-190 / M-214(1) — x.40.10(2)(C) disapplies the main-wall cap for major-street forms, which are disclosed as not modelled RS: a townhouse on a major street has no main-wall cap (not_applicable by (C))",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-176(2) / M-190 — the eight x.40.10(2)(A)/(B) main-wall units are an envelope limit, subject per zone handling is partially_modelled (the pair is a Layer 3 design choice), never the M-173(3) disclosure-only not_modelled",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-176(2) / M-190 — the eight x.40.10(2)(A)/(B) main-wall units are an envelope limit, subject per zone RM: a detached house answers 7.5 m from 10.80.40.10(2); a detached houseplex has no RM main-wall cap (M-190)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-179(1) / M-191 — garden-suite coverage: (A)/(B) one max statement, (B)'s 20 % on ancillary_coverage_pct 150.7.60.70(1)(A) is one statement: max(45 % @(1)(A); overlay @(1)(B)(i)) where mapped, else none, never a min-combine with (B)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-179(1) / M-191 — garden-suite coverage: (A)/(B) one max statement, (B)'s 20 % on ancillary_coverage_pct 150.7.60.70(1)(B) bounds the ancillary buildings together at 20 %, on its own target (as the laneway twin 150.8.60.70(1)(B) at 30 %)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-179(1) / M-191 — garden-suite coverage: (A)/(B) one max statement, (B)'s 20 % on ancillary_coverage_pct no garden-suite unit keys two statements on lot_coverage_pct any more",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-185 — dormers are taken at the 40 % share (element_width_pct re-keyed partially_modelled) 10.10.40.10(5)#(5)(B): 40 % kept as data, partially_modelled with no user input, the closed design-choice sentence on the unit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-185 — dormers are taken at the 40 % share (element_width_pct re-keyed partially_modelled) 10.20.40.10(7)#(7)(B): 40 % kept as data, partially_modelled with no user input, the closed design-choice sentence on the unit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-185 — dormers are taken at the 40 % share (element_width_pct re-keyed partially_modelled) 10.40.40.10(5)#(5)(B): 40 % kept as data, partially_modelled with no user input, the closed design-choice sentence on the unit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-185 — dormers are taken at the 40 % share (element_width_pct re-keyed partially_modelled) 10.80.40.10(5)#(5)(B): 40 % kept as data, partially_modelled with no user input, the closed design-choice sentence on the unit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1)) 150.7.75.1(1)#(1)(A): applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1)) 150.7.75.1(1)#(1)(B): applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1)) 150.7.75.1(1): no height or setback answer of a house or a garden-suite lot is touched by the solar-device unit",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-211(4) / M-158(1) — 150.8.60.21(1): the new build is answered; the lawfully existing setback is the disclosed caveat 150.8.60.21(1)#(1)(A): set aside on a new-build lot (lawfully_existing false) and carries the P5.12 existing_ancillary_setbacks sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-211(4) / M-158(1) — 150.8.60.21(1): the new build is answered; the lawfully existing setback is the disclosed caveat 150.8.60.21(1)#(1)(B): set aside on a new-build lot (lawfully_existing false) and carries the P5.12 existing_ancillary_setbacks sentence",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions 10.5.1.10(3)#(3)(A) is a DEFINE with no target and no statement, the same form as (D) and (E)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'DEFINE', …(2) ] to deeply equal [ 'DEFINE', 'none', 'none' ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions 10.5.1.10(3)#(3)(B) is a DEFINE with no target and no statement, the same form as (D) and (E)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'DEFINE', …(2) ] to deeply equal [ 'DEFINE', 'none', 'none' ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions R: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 'detached_house', 12, …(3) ] to deeply equal [ 'R', 'detached_house', 12, …(3) ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions RD: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RD', 'detached_house', 12, …(3) ] to deeply equal [ 'RD', 'detached_house', 12, …(3) ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions RS: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RS', 'detached_house', 12, …(3) ] to deeply equal [ 'RS', 'detached_house', 12, …(3) ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions RT: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RT', 'detached_house', 12, …(3) ] to deeply equal [ 'RT', 'detached_house', 12, …(3) ]"
+  },
+  {
+   "name": "M-174(4) amended (operator y 2026-10-19, Q-label-defs) — the zone-label letters f and a are label definitions RM: plain lots (detached house, detached houseplex) answer the label's f and a from the zone's own rule (RT houseplex: its own 6.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RM', 'detached_house', 12, …(3) ] to deeply equal [ 'RM', 'detached_house', 12, …(3) ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) 10.10.20.100(8)#(8)(B) is keyed to the non-residential building, never a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'any' ] to deeply equal [ 'non_residential_building' ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) 10.20.20.100(8)#(8)(B) is keyed to the non-residential building, never a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'any' ] to deeply equal [ 'non_residential_building' ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) 10.20.20.100(8)#(8)(C) is keyed to the non-residential building, never a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'any' ] to deeply equal [ 'non_residential_building' ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) 10.60.20.100(8)#(8)(B) is keyed to the non-residential building, never a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'any' ] to deeply equal [ 'non_residential_building' ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) 10.60.20.100(8)#(8)(C) is keyed to the non-residential building, never a house lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'any' ] to deeply equal [ 'non_residential_building' ]"
+  },
+  {
+   "name": "M-159 — the place-of-worship rules govern a place of worship only (exposed on plain R lots by Q-label-defs) RD / RT: a plain lot's gfa_m2 is never capped by the place-of-worship 2,000 / 2,500 m² rule",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'RD', …(1) ] to deeply equal [ 'RD', [] ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RD: 10.20.30.20(1)#(1)(C) is a LIMIT on required_lot_frontage_m under the no-driveway token",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'UNUSUAL', 'none', 'none', …(1) ] to deeply equal [ 'LIMIT', …(3) ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RD: a 4-unit townhouse on a major street, every unit fronting the street, no driveways: 20.0 m from 10.20.30.20(1)#(1)(C) (was 12 m from the f label)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 12, '10.5.1.10(3)#(3)(A)' ] to deeply equal [ Array(3) ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RS: 10.40.30.20(1)#(1)(D) is a LIMIT on required_lot_frontage_m under the no-driveway token",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'UNUSUAL', 'none', 'none', …(1) ] to deeply equal [ 'LIMIT', …(3) ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RS: a 4-unit townhouse on a major street, every unit fronting the street, no driveways: 20.0 m from 10.40.30.20(1)#(1)(D) (was 12 m from the f label)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 12, '10.5.1.10(3)#(3)(A)' ] to deeply equal [ Array(3) ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RM: 10.80.30.20(1)#(1)(D) is a LIMIT on required_lot_frontage_m under the no-driveway token",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'UNUSUAL', 'none', 'none', …(1) ] to deeply equal [ 'LIMIT', …(3) ]"
+  },
+  {
+   "name": "M-187 Q4 / triage F06 — townhouse frontage on a major street is 5.0 m per unit (6.0 m less 1.0 m), 6.0 m disclosed RM: a 4-unit townhouse on a major street, every unit fronting the street, no driveways: 20.0 m from 10.80.30.20(1)#(1)(D) (was 12 m from the f label)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 12, '10.5.1.10(3)#(3)(A)' ] to deeply equal [ Array(3) ]"
+  },
+  {
+   "name": "M-181(2) — the semi-detached houseplex takes 50 % of the lot area; a semi-detached house on two lots is disclosed RS: a semi-detached houseplex needs 50 % of 'a' (185 m² of 370) from 10.40.30.10(1)(B); a semi-detached house is not bound by it",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 370, '10.5.1.10(3)#(3)(B)' ] to deeply equal [ 'value', 185, …(1) ]"
+  },
+  {
+   "name": "M-181(2) — the semi-detached houseplex takes 50 % of the lot area; a semi-detached house on two lots is disclosed RT: a semi-detached houseplex needs 50 % of 'a' (185 m² of 370) from 10.60.30.10(1)(B); a semi-detached house is not bound by it",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 370, '10.5.1.10(3)#(3)(B)' ] to deeply equal [ 'value', 185, …(1) ]"
+  },
+  {
+   "name": "M-181(2) — the semi-detached houseplex takes 50 % of the lot area; a semi-detached house on two lots is disclosed RM: a semi-detached houseplex needs 50 % of 'a' (185 m² of 370) from 10.80.30.10(1)(B); a semi-detached house is not bound by it",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 370, '10.5.1.10(3)#(3)(B)' ] to deeply equal [ 'value', 185, …(1) ]"
+  },
+  {
+   "name": "G-EVAL evaluates with the evaluator's displacement links (operator y 2026-10-19; Spec 68 §9 G-EVAL, §6 generated displaces[], §7.5 rule 2) the G-EVAL gate keeps 10.20.40.20(3)(B) \"Despite regulation 10.20.40.20(1)\": V25:building_length_m stays needs_user_input:building_type (houseplex 19.0 m, other types 17.0 m)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(2) ] to deeply equal [ 19, 17 ]"
+  }
+ ]
+}

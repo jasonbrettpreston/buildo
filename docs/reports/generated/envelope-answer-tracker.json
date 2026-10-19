@@ -10,8 +10,8 @@
  "counts": {
   "answers": 511,
   "by_state": {
-   "INCORPORATED": 468,
-   "UNFIXED": 43
+   "INCORPORATED": 472,
+   "UNFIXED": 39
   },
   "by_verdict": {
    "disclose": 90,
@@ -32,14 +32,14 @@
   "by_chapter": {
    "10.20": {
     "total": 61,
-    "INCORPORATED": 60,
-    "UNFIXED": 1,
+    "INCORPORATED": 61,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.40": {
     "total": 87,
-    "INCORPORATED": 85,
-    "UNFIXED": 2,
+    "INCORPORATED": 86,
+    "UNFIXED": 1,
     "OPEN": 0
    },
    "10.5": {
@@ -50,14 +50,14 @@
    },
    "10.60": {
     "total": 66,
-    "INCORPORATED": 65,
-    "UNFIXED": 1,
+    "INCORPORATED": 66,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.80": {
     "total": 77,
-    "INCORPORATED": 76,
-    "UNFIXED": 1,
+    "INCORPORATED": 77,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "150.10": {
@@ -107,30 +107,6 @@
  },
  "rows": [
   {
-   "unit_id": "10.20.30.20(1)#(1)(C)",
-   "regulation_id": "10.20.30.20(1)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
    "unit_id": "10.40.30.20(1)#(1)(C)",
    "regulation_id": "10.40.30.20(1)",
    "chapter": "10.40",
@@ -143,77 +119,6 @@
    ],
    "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
    "disclosure_code": "semi_house_two_lots",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.30.20(1)#(1)(D)",
-   "regulation_id": "10.40.30.20(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.30.10(1)#(1)(B)",
-   "regulation_id": "10.60.30.10(1)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detached houseplex the formal works.  Do need to removed the semi detached build type here.",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-181"
-   ],
-   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed).",
-   "disclosure_code": "semi_house_two_lots",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.30.20(1)#(1)(D)",
-   "regulation_id": "10.80.30.20(1)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwelling unit fronting directly on a street: (a) is 6.0 metres for each dwelling unit; and (b) may be reduced by 1.0 metre for each dwelling unit that does not have an individual private driveway leading directly to the front of it; and [ By-l",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
    "locks": [],
@@ -1403,6 +1308,30 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.30.20(1)#(1)(C)",
+   "regulation_id": "10.20.30.20(1)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.20.30.20(1)#(1)(C)/archetype~s1, COR-10.20.30.20(1)#(1)(C)/target~s1, COR-10.20.30.20(1)#(1)(C)/bound~s1, COR-10.20.30.20(1)#(1)(C)/numeric_expression~s1, COR-10.20.30.20(1)#(1)(C)/literals_not_expressed~s1, COR-10.20.30.20(1)#(1)(C)/condition, COR-10.20.30.20(1)#(1)(C)/application.lot_conditions, COR-10.20.30.20(1)#(1)(C)/application.evidence, COR-10.20.30.20(1)#(1)(C)/calculation_handling~s1, COR-10.20.30.20(1)#(1)(C)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.20.30.20(1)#(1)(D)",
@@ -2842,6 +2771,30 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(D)",
+   "regulation_id": "10.40.30.20(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.30.20(1)#(1)(D)/archetype~s1, COR-10.40.30.20(1)#(1)(D)/target~s1, COR-10.40.30.20(1)#(1)(D)/bound~s1, COR-10.40.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.40.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.40.30.20(1)#(1)(D)/condition, COR-10.40.30.20(1)#(1)(D)/application.lot_conditions, COR-10.40.30.20(1)#(1)(D)/application.evidence, COR-10.40.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.40.30.20(1)#(1)(D)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.30.20(1)#(1)(E)",
@@ -4941,6 +4894,29 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.60.30.10(1)#(1)(B)",
+   "regulation_id": "10.60.30.10(1)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detached houseplex the formal works.  Do need to removed the semi detached build type here.",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed).",
+   "disclosure_code": "semi_house_two_lots",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.30.10(1)#(1)(B)/application.building_types, COR-10.60.30.10(1)#(1)(B)/application.evidence, COR-10.60.30.10(1)#(1)(B)/calculation_handling, COR-10.60.30.10(1)#(1)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.60.30.10(1)#(1)(C)",
    "regulation_id": "10.60.30.10(1)",
    "chapter": "10.60",
@@ -6589,6 +6565,30 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(D)",
+   "regulation_id": "10.80.30.20(1)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwelling unit fronting directly on a street: (a) is 6.0 metres for each dwelling unit; and (b) may be reduced by 1.0 metre for each dwelling unit that does not have an individual private driveway leading directly to the front of it; and [ By-l",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.30.20(1)#(1)(D)/archetype~s1, COR-10.80.30.20(1)#(1)(D)/target~s1, COR-10.80.30.20(1)#(1)(D)/bound~s1, COR-10.80.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.80.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.80.30.20(1)#(1)(D)/condition, COR-10.80.30.20(1)#(1)(D)/application.lot_conditions, COR-10.80.30.20(1)#(1)(D)/application.evidence, COR-10.80.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.80.30.20(1)#(1)(D)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.30.20(1)#(1)(E)",
