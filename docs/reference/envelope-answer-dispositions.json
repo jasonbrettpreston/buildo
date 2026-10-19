@@ -956,22 +956,42 @@
   {
    "unit_id": "10.40.40.70(2)#(2)(A)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-205"
    ],
    "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
-   "basis": "triage F21/F22; M-205 rear greater-of"
+   "basis": "triage F21/F22; M-205 rear greater-of; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
+   "lock": {
+    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+    "asserts": [
+     "'RS'",
+     "rear_setback_m"
+    ],
+    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
+   }
   },
   {
    "unit_id": "10.40.40.70(2)#(2)(B)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-205"
    ],
    "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
-   "basis": "triage F21; M-205"
+   "basis": "triage F21; M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
+   "lock": {
+    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+    "asserts": [
+     "'RS'",
+     "rear_setback_m"
+    ],
+    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
+   }
   },
   {
    "unit_id": "10.40.40.70(3)#(3)(A)",
@@ -1290,12 +1310,22 @@
   {
    "unit_id": "10.60.40.1(2)#(2)(A)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-202"
    ],
    "corrected_value": "The RT 'u' label caps dwelling units on the class (no 'u' means no cap); it is not a one-building-per-lot rule.",
-   "basis": "triage F09; M-202 'u' cap, not a one-building rule"
+   "basis": "triage F09; M-202 'u' cap, not a one-building rule; verified by named lock (operator 2026-10-19)",
+   "lock": {
+    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+    "describe": "M-220 / M-202(3) — no 'u' in the label: no 'u' cap",
+    "it": "with u3 the cap is 3 (M-202(4): RT 10.60.40.1(2)(A) is the 'u' cap, not a one-building rule)",
+    "asserts": [
+     "'10.60.40.1(2)#(2)(A)'",
+     "'RT'"
+    ],
+    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
+   }
   },
   {
    "unit_id": "10.60.40.1(2)#(2)(B)",
@@ -1990,24 +2020,44 @@
   {
    "unit_id": "10.80.40.70(2)#(2)(A)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-205",
     "M-174"
    ],
    "corrected_value": "Rear setback answered as the greater of 7.5 m and 25 % of lot depth (depth 40 m answers 10.0 m).",
-   "basis": "findings A3 + triage F21; M-174(5), M-205"
+   "basis": "findings A3 + triage F21; M-174(5), M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
+   "lock": {
+    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+    "asserts": [
+     "'RM'",
+     "rear_setback_m"
+    ],
+    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
+   }
   },
   {
    "unit_id": "10.80.40.70(2)#(2)(B)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-205",
     "M-174"
    ],
    "corrected_value": "The 25 % leaf is combined with the 7.5 m leaf as one greater-of rear setback.",
-   "basis": "findings A3 + triage F21; M-174(5), M-205"
+   "basis": "findings A3 + triage F21; M-174(5), M-205; already correct at ca3bcf0e (evaluator lane), verified by named lock (operator 2026-10-19)",
+   "lock": {
+    "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+    "describe": "M-205(3) / M-174(5) — RS and RM rear setback is the greater of 7.5 m and 25 % of lot depth (the owed P2-0 vector; already right at ca3bcf0e, so a guard, not a red)",
+    "it": "${zone}: depth 40 m → 10.0 m; depth 20 m → 7.5 m",
+    "asserts": [
+     "'RM'",
+     "rear_setback_m"
+    ],
+    "pin": "origin/wf1/bylaw-evaluator-fixes@c37dd492"
+   }
   },
   {
    "unit_id": "10.80.40.70(3)#(3)(A)",

@@ -44,9 +44,9 @@
     "131": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 126,
-        "bytes": 22153,
-        "commit": "new spec, seeded at landing on 69c1a1ef (2026-10-18; equals the landed file, reviewed)"
+        "lines": 127,
+        "bytes": 22915,
+        "commit": "new spec, landed 541f3dc2; re-seeded with LC-53 (2026-10-19; equals the committed file)"
       }
     }
   },

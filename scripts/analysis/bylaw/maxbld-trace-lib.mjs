@@ -235,3 +235,65 @@ export function lintDisclosureTemplates(specText) {
   }
   return problems;
 }
+
+/**
+ * Balanced `(`…`)` span starting at the `(` at index `open`, skipping string/template literals and comments.
+ * Returns the index of the matching `)` or -1.
+ */
+function matchParenInSource(src, open) {
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === '/' && src[i + 1] === '/') { i = src.indexOf('\n', i); if (i < 0) return -1; continue; }
+    if (ch === '/' && src[i + 1] === '*') { i = src.indexOf('*/', i + 2) + 1; if (i <= 0) return -1; continue; }
+    if (ch === '\'' || ch === '"' || ch === '`') {
+      for (i++; i < src.length && src[i] !== ch; i++) if (src[i] === '\\') i++;
+      continue;
+    }
+    if (ch === '(') depth++;
+    else if (ch === ')') { depth--; if (depth === 0) return i; }
+  }
+  return -1;
+}
+
+/** Every `<fn>(<literal>, …)` call in `src`: [{ title (raw literal source between the quotes), start, end }]. */
+function calls(src, fn) {
+  const out = [];
+  const re = new RegExp(`\\b${fn}\\(\\s*(['"\`])`, 'g');
+  let m;
+  while ((m = re.exec(src))) {
+    const q = m[1];
+    const s = m.index + m[0].length;
+    let e = s;
+    for (; e < src.length && src[e] !== q; e++) if (src[e] === '\\') e++;
+    const open = src.indexOf('(', m.index);
+    const end = matchParenInSource(src, open);
+    if (end < 0) continue;
+    out.push({ title: src.slice(s, e).replace(/\\(['"`])/g, '$1'), start: m.index, end });
+  }
+  return out;
+}
+
+/**
+ * Verify a named lock (Spec 78 P5.15, disposition `verified_by_lock`) against the test file's source. A lock is
+ * `{ file, describe, it, asserts: string[] }`: `describe` and `it` are the exact titles as written in the source (a
+ * template title keeps its `${…}` text); `asserts` are tokens that must occur in the describe block, at least one of
+ * them on an `expect(` line of the it block. `fixIds` must each be named in the describe or it title (every cited
+ * ruling is the one the test locks). Returns null when verified, else why.
+ */
+export function verifyLock(src, lock, fixIds = []) {
+  const ds = calls(src, 'describe').filter((c) => c.title === lock.describe);
+  if (ds.length !== 1) return `describe "${lock.describe}" found ${ds.length} times (want 1)`;
+  const block = src.slice(ds[0].start, ds[0].end + 1);
+  const its = calls(block, 'it').filter((c) => c.title === lock.it);
+  if (its.length !== 1) return `it "${lock.it}" found ${its.length} times in the describe block (want 1)`;
+  const body = block.slice(its[0].start, its[0].end + 1);
+  const expectLines = body.split('\n').filter((l) => l.includes('expect('));
+  if (!expectLines.length) return 'the it block has no expect(';
+  if (!Array.isArray(lock.asserts) || !lock.asserts.length) return 'lock names no asserts';
+  for (const a of lock.asserts) if (!block.includes(a)) return `assert token ${a} not in the describe block`;
+  if (!lock.asserts.some((a) => expectLines.some((l) => l.includes(a)))) return 'no assert token on an expect( line of the it block';
+  const titles = `${lock.describe} ${lock.it}`;
+  for (const id of fixIds) if (!new RegExp(`${id.replace(/[-]/g, '\\-')}\\b`).test(titles)) return `fix id ${id} is not named in the test titles`;
+  return null;
+}

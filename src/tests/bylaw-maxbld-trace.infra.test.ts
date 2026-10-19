@@ -78,3 +78,38 @@ describe('disclosure wording (Spec 131 LC-52)', () => {
     expect(problems.some((p: string) => p.startsWith('x_long'))).toBe(true);
   });
 });
+
+describe('verified by named lock; no partial green (Spec 131 LC-53)', () => {
+  const SRC = [
+    "describe('M-205(3) / M-174(5) — rear setback', () => {",
+    "  for (const zone of ['RS', 'RM']) {",
+    "    it(`${zone}: depth 40 m → 10.0 m`, () => {",
+    "      expect(eff(lot(zone, 'detached_house'), 'rear_setback_m').value).toBe(10);",
+    '    });',
+    '  }',
+    "  it('a test with no assertion', () => { run(); });",
+    '});',
+  ].join('\n');
+  const LOCK = { file: 'x.test.ts', describe: 'M-205(3) / M-174(5) — rear setback', it: '${zone}: depth 40 m → 10.0 m', asserts: ["'RS'", 'rear_setback_m'] };
+  it('verifies a lock that names its test, an expect on the unit and every cited ruling', () => {
+    expect(LIB.verifyLock(SRC, LOCK, ['M-205', 'M-174'])).toBeNull();
+  });
+  it('refuses a wrong title, an it with no expect, a missing assert token and an unnamed ruling (red arms)', () => {
+    expect(LIB.verifyLock(SRC, { ...LOCK, it: '${zone}: depth 40 m' }, ['M-205'])).toMatch(/found 0 times/);
+    expect(LIB.verifyLock(SRC, { ...LOCK, it: 'a test with no assertion' }, ['M-205'])).toMatch(/no expect/);
+    expect(LIB.verifyLock(SRC, { ...LOCK, asserts: ["'RT'"] }, ['M-205'])).toMatch(/not in the describe block/);
+    expect(LIB.verifyLock(SRC, LOCK, ['M-202'])).toMatch(/not named in the test titles/);
+  });
+  it('a row citing several rulings is green only when a correction cites every one', () => {
+    const one = [{ id: 'COR-1', rule: 'Spec 69a M-182, M-75' }];
+    expect(TRK.fixedByState(['M-180', 'M-182'], one, ['RATIFIED', 'RATIFIED']).state).toBe('UNFIXED');
+    expect(TRK.fixedByState(['M-182'], one, ['RATIFIED']).state).toBe('INCORPORATED');
+  });
+  it('every verified_by_lock row is green only with its lock verified, or UNFIXED with a pin while its file is absent', () => {
+    for (const r of tracker.rows.filter((x: Json) => x.disposition === 'verified_by_lock')) {
+      expect(r.lock && r.lock.file && r.lock.describe && r.lock.it).toBeTruthy();
+      if (r.state === 'INCORPORATED') expect(r.checks.join(' ')).toMatch(/lock verified/);
+      else expect([r.state, r.lock.pin]).toEqual(['UNFIXED', expect.stringMatching(/@[0-9a-f]{7,}/)]);
+    }
+  });
+});

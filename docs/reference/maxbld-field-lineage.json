@@ -257,7 +257,7 @@
   },
   {
    "id": "INV-25",
-   "statement": "Every operator envelope answer has a disposition (matches → unit exists; wrong → fix id; disclose → P5.12 code; unsure/null → OPEN with its question).",
+   "statement": "Every operator envelope answer has a disposition (matches → unit exists; wrong → every fix id cited by a keyed correction, or a verified named lock (LC-53); disclose → P5.12 code; unsure/null → OPEN with its question).",
    "runs_at": "generator check (`generate-answer-tracker.mjs --check`)"
   }
  ],
