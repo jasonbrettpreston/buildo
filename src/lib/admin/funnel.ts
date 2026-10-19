@@ -718,7 +718,7 @@ export const STEP_DESCRIPTIONS: Record<string, StepDescription> = {
   assert_network_health: { summary: 'Validates scraper network health: proxy errors, latency, schema drift, WAF traps', table: 'pipeline_runs' },
   assert_staleness:      { summary: 'Detects stale inspection permits not scraped within 14 days', table: 'pipeline_runs' },
   assert_pre_permit_aging: { summary: 'Detects approved+unlinked CoA applications aging past 12/18 months', table: 'pipeline_runs' },
-  assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — warns if newest CoA data is >45 days stale', table: 'pipeline_runs' },
+  assert_coa_freshness:    { summary: 'Checks CKAN portal freshness — WARN/FAIL when the newest CoA ingestion is older than the step-owned freshness bounds (assert_coa_freshness_warn_max_days / assert_coa_freshness_fail_max_days)', table: 'pipeline_runs' },
   assert_lifecycle_phase_distribution: { summary: 'Validates lifecycle phase distribution bands and unclassified count after classifier runs', table: 'pipeline_runs' },
   assert_entity_tracing:   { summary: 'Checks coverage of new permits across 5 downstream tables: permit_trades, cost_estimates, trade_forecasts, lifecycle_phase, opportunity_score', table: 'pipeline_runs' },
   assert_global_coverage:  { summary: 'Field-level coverage profile for a predefined set of steps in the current chain (static list — update manually when chain steps are added)', table: 'pipeline_runs' },

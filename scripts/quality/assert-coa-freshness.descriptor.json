@@ -1,0 +1,361 @@
+{
+  "identity": {
+    "name": "assert_coa_freshness",
+    "display_name": "Source Freshness",
+    "owner": "data",
+    "description": "CoA source freshness (portal-rot) ASSERT: one aggregate SELECT over coa_applications measures the days since the coa root last touched any row (MAX(last_seen_at), touched for every fed key) and grades it PASS / WARN / FAIL on two step-owned logic variables; an empty table WARNs (fresh staging, not portal rot). Read-only: no write, no recovery, no counters (the ASSERT profile).",
+    "lock": 108,
+    "why_lock": {
+      "text": "Ported verbatim from the pre-conversion `const ADVISORY_LOCK_ID = 108` (scripts/quality/assert-coa-freshness.js:38, Bundle G Wave 6 retrofit cc2f5d5d), agreeing with src/tests/pipeline-advisory-lock.infra.test.ts. Kept via identity.lock + the §5.4 source-text convention (declared, never read, in the frozen shell).",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "42",
+    "spec_version": "1.0",
+    "archetype": "ASSERT",
+    "contract_version": 1,
+    "gate_exempt": true
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        {
+          "step": "coa"
+        },
+        {
+          "step": "link_coa"
+        }
+      ],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "decision_date",
+            "hearing_date",
+            "last_seen_at"
+          ]
+        }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "halt"
+  },
+  "outputs": "none",
+  "staleness": {
+    "trigger": [
+      {
+        "signal": "always",
+        "position": "pre_compute"
+      }
+    ],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "queue"
+  },
+  "guards": {
+    "requires": [],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "txn_scope": "none",
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "One aggregate SELECT feeds both checks; a query that throws means the step could not measure freshness at all, which must redden the run rather than read as a healthy or empty table (Spec 30 §5.4.1: an exception-derived failure halts). The pre-conversion step let the same error escape pipeline.run().",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/assert-coa-freshness.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    {
+      "id": "total_records_present",
+      "kind": "bound",
+      "expect": {
+        "reports": "1 when coa_applications has no rows, else 0"
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from the empty-table lane (scripts/quality/assert-coa-freshness.js:68-81, b25945bb; kept WARN by WF2 P6.5 fb593a9e): an empty table is fresh staging, not portal rot, so it WARNs and never FAILs. The exact zero-tolerance answer (R-DF EXTERNALIZED: a count bound with no tunable). On an empty table ingestion_days_ago reports inert (INFO), so the verdict stays one WARN.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    },
+    {
+      "id": "ingestion_days_ago",
+      "kind": "bound",
+      "expect": {
+        "reports": "round((run clock - MAX(coa_applications.last_seen_at)) / 1 day), floored at 0; inert on an empty table"
+      },
+      "limit": "value_max 45",
+      "limit_from_config": "assert_coa_freshness_warn_max_days",
+      "warn_limit": "value_max 135",
+      "warn_limit_from_config": "assert_coa_freshness_fail_max_days",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Ported from :85-94 (fcd6c300 measure ingestion not hearing_date; f1dca94f WF3-E5 externalized WARN; fb593a9e WF2 P6.5 FAIL tier). PASS <= assert_coa_freshness_warn_max_days, WARN <= assert_coa_freshness_fail_max_days, else FAIL (RE-FREEZE #7 warn_limit). ACF-D7 declared deviation: legacy compared >= (exclusive ceilings); value_max is inclusive, so exactly 45 (135) rounded days now reads PASS (WARN), one day later — the R-DC precedent (assert_data_bounds' boolcfg checks, operator y 2026-10-17). Values unchanged. Never blocking: legacy never halted the chain on portal rot.",
+        "liveness": {
+          "kind": "table",
+          "ref": "coa_applications"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": "none",
+  "emits": [
+    {
+      "key": "checks_passed",
+      "type": "string",
+      "consumers": []
+    },
+    {
+      "key": "checks_failed",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "checks_warned",
+      "type": "int",
+      "consumers": []
+    },
+    {
+      "key": "errors",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "warnings",
+      "type": "array",
+      "consumers": []
+    },
+    {
+      "key": "config",
+      "type": "object",
+      "consumers": []
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx",
+        "src/lib/admin/funnel.ts"
+      ]
+    }
+  ],
+  "deviations": [
+    {
+      "from": "Pre-conversion config refusal: the Zod refine `coa_freshness_fail_days > coa_freshness_warn_days` threw before the read (scripts/quality/assert-coa-freshness.js:34-36)",
+      "why": {
+        "text": "config.logic_variables[] carries independent per-variable bounds and no cross-variable relation, and a check that compares two ctx.config values inside its body is a compute-decides finding (R-BZ G7, R-DC). A misordered pair degrades safely in the two-tier check: when fail_max < warn_max, any value above warn_max is above fail_max too, so it reads FAIL (the stricter tier wins); nothing reads PASS that legacy would not. Recorded as ACF-D8.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "draft ruling W4A-R2 (wave-4 lane A, id at integration)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "Pre-conversion audit row order (total_records, last_ingestion, ingestion_days_ago, max_decision_date, max_hearing_date) and the empty-table lane's single row",
+      "why": {
+        "text": "scripts/lib/step/verdict.js buildAuditTable appends compute context rows AFTER the declared checks, so the four INFO rows move behind the two check rows (a position-only diff; values verbatim) and the empty lane also carries the inert ingestion_days_ago row and the INFO context rows (verdict WARN, unchanged). The freshness row's threshold column now shows the substituted bound (value_max 45, warn value_max 135) instead of the legacy prose.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/verdict.js"
+        }
+      },
+      "adjudicated_by": "the assert_parcel_sanity contextRow precedent (batch2 P1.1)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "R-CE: a calendar date derives from ctx.clock in the zone named by pipeline_timezone",
+      "why": {
+        "text": "ACF-D4: last_ingestion keeps the legacy UTC calendar date (toISOString, pinned L7) because pipeline_timezone is outside R-DE (v) for a new step (it is grandfathered by name for four converted steps only, LOGIC_VARIABLE_GRANDFATHER). INFO row only, verdict-neutral. Closes when the vocabulary gap is ruled (draft W4A-R3).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/gates/closed-bounds.mjs"
+        }
+      },
+      "adjudicated_by": "draft ruling W4A-R3 (wave-4 lane A, id at integration)",
+      "date": "2026-10-18"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "The metric is the coa root's ingestion touch, so it measures whether the LOADER ran, not whether the city published anything new: the coa root touches last_seen_at for every fed key (R-DW keeps it), so a frozen CKAN feed that is still served reads fresh. Portal content staleness is the coa root's own max_days_stale row.",
+      "measured": "scripts/load-coa.js:565-582 (the every-fed-key touch); DB 2026-10-18 MAX(last_seen_at) 2026-10-16 13:57 UTC after the H6 --full runs.",
+      "check_id": "ingestion_days_ago"
+    }
+  ],
+  "interpretation": {
+    "file": "assert-coa-freshness.notes.json"
+  },
+  "recovery": "none",
+  "database": {
+    "class": "primary",
+    "min_migration": 261,
+    "assert_current_database": "postgres"
+  },
+  "counters": "none",
+  "config": {
+    "logic_variables": [
+      {
+        "name": "assert_coa_freshness_warn_max_days",
+        "min": 7,
+        "max": 180,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "assert_coa_freshness_fail_max_days",
+        "min": 14,
+        "max": 365,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa": 3
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "The generic runner (scripts/lib/step/index.js) emits the declared lock_held_elsewhere terminal on advisory-lock contention; the pre-conversion step returned bare with no step-level emit (:139).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "all_checks_passed",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "checks_passed": "string",
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      }
+    },
+    {
+      "id": "checks_passed_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "A WARN row stands (portal slow, or an empty table) and nothing FAILED, so selectTerminal picks this success terminal by the real status (COMPLETED_WITH_WARNINGS); checks_passed is 'all' only when errors and warnings are both empty, so a WARN run never carries it (the assert_data_bounds form, MQ-A4 (a)).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/index.js"
+        }
+      }
+    },
+    {
+      "id": "failed_portal_rot",
+      "kind": "fail_check",
+      "status": "completed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "Non-halting by design: an ingestion_days_ago FAIL (portal likely dead) reddens the row-derived verdict but the run completes, as the pre-conversion step did (:106-107 logged, never threw). Distinguishes from failed_check_error below.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/assert-coa-freshness.js"
+        }
+      }
+    },
+    {
+      "id": "failed_check_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "checks_failed": "int",
+        "checks_warned": "int",
+        "errors": "array",
+        "warnings": "array",
+        "audit_table": "object",
+        "config": "object"
+      },
+      "why": {
+        "text": "execution.on_check_error fail_step: the aggregate SELECT threw, so freshness could not be measured (\"I could not check\" never reads as healthy, Spec 30 §5.4.1).",
+        "liveness": {
+          "kind": "spec",
+          "ref": "docs/specs/01-pipeline/30_pipeline_architecture.md"
+        }
+      }
+    }
+  ]
+}

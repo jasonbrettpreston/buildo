@@ -210,7 +210,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'pending_closed_grace_days',    // WF3-E3
   'pre_permit_expiry_months',     // WF3-E4
   'pre_permit_stale_months',      // WF3-E4
-  'coa_freshness_warn_days',          // WF3-E5
+  'coa_freshness_warn_days',          // WF3-E5 (legacy name; retires at the assert_coa_freshness ③ cutover)
+  'assert_coa_freshness_warn_max_days', // WF3-E5 (step-owned copy, migration 270, R-DE (v))
   'scrape_early_phase_threshold_pct', // WF3-E6
   'scrape_stale_days',                // WF3-E6
   'calibration_min_sample_size',
@@ -429,7 +430,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'forecast_default_calibration_warn_pct',
   'forecast_default_calibration_fail_pct',
   // WF2 P6.5 — chain-honesty WARN/FAIL floors.
-  'coa_freshness_fail_days',                 // assert-coa-freshness 3-tier FAIL
+  'coa_freshness_fail_days',                 // assert-coa-freshness 3-tier FAIL (legacy name; retires at ③)
+  'assert_coa_freshness_fail_max_days',      // assert-coa-freshness 3-tier FAIL (step-owned copy, migration 270, R-DE (v))
   'coa_active_trades_warn_max',              // classify-coa-trades active fan-out WARN
   'permits_bylaw_max_fsi_null_warn_pct',     // enrich-permits bylaw NULL-rate floors
   'permits_bylaw_max_coverage_null_warn_pct',
