@@ -1,0 +1,49 @@
+{
+ "base": "a475e71e",
+ "file": "src/tests/steps/enrich_parcels/major-street.logic.test.ts",
+ "taken": "2026-10-19T19:58:24.115Z",
+ "failed": 10,
+ "passed": 0,
+ "tests": [
+  {
+   "title": "MS-1 frontage arm: the lot's primary frontage street name must match the Major Streets line, within $2",
+   "status": "failed"
+  },
+  {
+   "title": "MS-2 flank arm: a corner or through lot within $3 of a Major Streets line",
+   "status": "failed"
+  },
+  {
+   "title": "MS-3 the policy-road arm no longer uses the 5 m road_overlay_distance_m ($1); priority retail still does",
+   "status": "failed"
+  },
+  {
+   "title": "MS-4 the bbox prefilter precedes the distance test and covers the larger of the two distances",
+   "status": "failed"
+  },
+  {
+   "title": "MS-5 the scope CTE carries the three enrich_centreline columns the arms read",
+   "status": "failed"
+  },
+  {
+   "title": "MS-6 a stale policy-road layer still writes false, and every param is referenced (bind count stays 3)",
+   "status": "failed"
+  },
+  {
+   "title": "MS-7 runPass1 binds [road_overlay_distance_m, frontage_m, flank_m] from config",
+   "status": "failed"
+  },
+  {
+   "title": "MS-8 the four step-owned variables are seeded, declared and read",
+   "status": "failed"
+  },
+  {
+   "title": "MS-9 the residential-share plausibility bound: FAIL floor and WARN ceiling, limits from config",
+   "status": "failed"
+  },
+  {
+   "title": "MS-10 descriptor declares the new reads (frontage name, overlay road_name)",
+   "status": "failed"
+  }
+ ]
+}

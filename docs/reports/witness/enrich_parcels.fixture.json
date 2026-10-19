@@ -111,6 +111,7 @@
           "nearby_builds_summary",
           "neighbourhood_cost_premium",
           "neighbourhood_id",
+          "on_policy_road",
           "opt_aor_gfa_sqm",
           "opt_aor_storeys",
           "opt_aor_units",

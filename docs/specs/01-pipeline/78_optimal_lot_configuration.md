@@ -1502,6 +1502,7 @@ Unsure DeepSeek items left open for the keying lane: a3 (status for "clause exis
   - `scripts/enrich-parcels.descriptor.json`
   - `scripts/enrich-parcels.notes.json`
   - `scripts/lib/compute/enrich-parcels.js`
+  - `src/tests/steps/enrich_parcels/major-street.logic.test.ts`
   - `src/tests/steps/enrich_parcels/pending-scope-when.logic.test.ts`
   - `src/tests/steps/enrich_parcels/sixplex.logic.test.ts`
   - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`

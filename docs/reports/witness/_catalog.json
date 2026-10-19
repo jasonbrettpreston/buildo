@@ -1154,6 +1154,10 @@
       "id",
       "is_corner_lot"
     ],
+    "parcels_cohort_bak_20261019t2009z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
     "permit_history": [
       "changed_at",
       "field_name",

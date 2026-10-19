@@ -706,7 +706,7 @@ Each scenario lists the fields involved, the binding term, the plan's vectors th
 | `height` | — | — | 10 |
 | `corner_landscaping` | — | — | 60 |
 
-### 6.6 Major street (length caps; pending the `on_policy_road` fix)
+### 6.6 Major street (length caps; the `on_policy_road` fix landed 2026-10-19 — Spec 65 §2 step 7, KFM-1 below)
 *Fields:* NF-10 (RD/RS/RM 17.0 base; 19.0 townhouse / 25.0 apartment on a major street; RT only on a major street), V15/V16 RM townhouse side. `on_major_street` = `parcels.on_policy_road` (Spec 58 `zoning_policy_road_overlay`, G22 "Major Street means any street identified as "Major Streets" on the Policy Areas Overlay Map found in Section 995.10") — **near-dead today** (§8 KFM-1), so every planned major-street branch is inert until `.cursor/wf3_policy_road_overlay_distance_fix_active_task.md` lands. The fetched RS/RT/RM text also has a major-street setback clause (4) (front 3.0 m / 6.0 m by depth and averaging, rear 7.5 m, townhouse side 0.9 / 7.5 m, apartment side 2.4 / 5.5 / 7.5 m, corner 3.0 m — G9/G12/G15) and RT major-street height/storey minimums (G14 (1)(D), (2)(D)) that the plan does not model — **research-required**. As-built: no length cap at all.
 
 | # | Zone | Inputs | Field | Formula applied | Expected output |
@@ -2398,7 +2398,7 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
 
 ## 8. Known Failure Modes
 
-- **KFM-1 — `on_policy_road` is near-dead.** `road_overlay_distance_m` seeds at 5 m (§3.3) while the plan reports road centrelines ~10 m+ from lot lines and only 8 of 331,684 RD/RS/RT/RM parcels flagged (plan-reported; not re-measured here — this task had no DB access). Every major-street branch (NF-10, RM/RT (4) clauses) is inert until `.cursor/wf3_policy_road_overlay_distance_fix_active_task.md` lands.
+- **KFM-1 — `on_policy_road` is near-dead.** **RESOLVED 2026-10-19 (operator Q-MS-1/Q-MS-2/Q-MS-3):** the flag is re-derived from the frontage-street name plus proximity, or a corner/through lot within the flank distance (Spec 65 §2 step 7, migration 277); measured 21 of 440,093 residential lots before. The buffer-only plan below (`.cursor/wf3_policy_road_overlay_distance_fix_active_task.md`) is retired. *Original finding:* `road_overlay_distance_m` seeds at 5 m (§3.3) while the plan reports road centrelines ~10 m+ from lot lines and only 8 of 331,684 RD/RS/RT/RM parcels flagged (plan-reported; not re-measured here — this task had no DB access). Every major-street branch (NF-10, RM/RT (4) clauses) is inert until `.cursor/wf3_policy_road_overlay_distance_fix_active_task.md` lands.
 - **KFM-2 — zone-median coverage default on unregulated lots (R1).** As-built `coverage_cap` fills a NULL `bylaw_max_coverage_pct` with `COVERAGE_DEFAULTS`, although the by-law applies no coverage there (G7). It binds on typical lots (§6.1, §6.4): the V25 lot's as-built footprint is 297 m², so the plan's V25 "OLD ≈573.3 m²" is the box term, not the as-built headline.
 - **KFM-3 — height NULL without an overlay.** `max_build_height_m` passes `bylaw_max_height_m` through, NULL when no height overlay covers the lot, although the by-law default is 10.0 m (G6/G14; RM 10.0/12.0, G18). `height_implied` is then NULL and storeys fall to the uncapped pocket p50 (EF-5/EF-6/EF-12).
 - **KFM-4 — required minimum lot frontage vs measured frontage (plan NF-3, NF-4, NF-10, NF-11).** The by-law's RD/RS side tiers, the RD corner clause and the RD length/depth applicability key on "the required minimum lot frontage" (G1, G2, G3, G4, G9), which is the zone label's `f` value (G5; default 12.0 m in RD when no `f`) — Spec 58 `zoning_bylaw_areas.frontage_min_m` (CKAN `FRONTAGE`) → `parcels.bylaw_min_frontage_m`. The plan's formulas key on `frontage_m`. The landscaping and driveway tiers (L5–L7, L10, L15) do key on the actual lot frontage. **Operator decision; not fixed here.**
@@ -2473,6 +2473,7 @@ A Committee-of-Adjustment MaxBuild will derive from the §5 MaxBuild result, wit
   - `scripts/enrich-parcels.descriptor.json`
   - `scripts/enrich-parcels.notes.json`
   - `scripts/lib/compute/enrich-parcels.js`
+  - `src/tests/steps/enrich_parcels/major-street.logic.test.ts`
   - `src/tests/steps/enrich_parcels/pending-scope-when.logic.test.ts`
   - `src/tests/steps/enrich_parcels/sixplex.logic.test.ts`
   - `src/tests/steps/enrich_parcels/sql-verbatim.logic.test.ts`

@@ -32,7 +32,7 @@
   "road_overlay_distance_m": {
     "default": 5,
     "type": "number",
-    "description": "Distance (metres) for the LineString zoning-overlay spatial join (Policy Road, Priority Retail). SEEDED by Spec 58 load-zoning; CONSUMED by enrich-parcels.js (pilot 9 commit 9 cutover, 2026-09-08) via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg).",
+    "description": "Distance (metres) for the LineString zoning-overlay spatial join (Priority Retail only since 2026-10-19; the Policy Road / Major Streets layer uses enrich_parcels_major_street_frontage_m / _flank_m, operator Q-MS-1). SEEDED by Spec 58 load-zoning; CONSUMED by enrich-parcels.js (pilot 9 commit 9 cutover, 2026-09-08) via ST_DWithin(parcels.geom::geography, road.geom::geography, road_overlay_distance_m) — the ::geography cast is mandatory (F-C2), else SRID 4326 treats the value as degrees (~111km/deg).",
     "min": 0,
     "max": 100,
     "admin": {
@@ -5099,6 +5099,46 @@
     "min": 0,
     "max": 100,
     "description": "Pilot 9 commit 7b (2026-09-04, Ask 5 externalization, Spec 65 §3a DEC-4). The zoning_class-coverage WARN floor (>= this = WARN, below = FAIL) — was the bare literal `zonePct >= 90` at scripts/enrich-parcels.js:2109. Value preserved verbatim. CONSUMED by scripts/enrich-parcels.js; descriptor check parcels_with_zone_class_pct_fail.",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_parcels_major_street_frontage_m": {
+    "default": 20,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Major-street membership, frontage arm (operator ruling 2026-10-19 (Q-MS-1/Q-MS-2), Spec 65 §2 step 7, .cursor/major-street-audit-2026-10-19.md). A lot abuts a Major Street (800.50(457), parcels.on_policy_road) when its primary frontage street (enrich_centreline primary_frontage_street_name) has the same name as a Major Streets line (zoning_policy_road_overlay.road_name) within this many metres of the lot. 20 m = enrich_centreline_proximity_m: the lines are centrelines, about half a right-of-way (measured mode 10-15 m) from the lot line. Seeded by migration 277. CONSUMED by enrich_parcels (pass 1 zoning, ST_DWithin ::geography).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_parcels_major_street_flank_m": {
+    "default": 13,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Major-street membership, flank arm (operator ruling 2026-10-19 (Q-MS-1/Q-MS-2), Spec 65 §2 step 7, .cursor/major-street-audit-2026-10-19.md). A corner or through lot (is_corner_lot / is_through_lot) abuts a Major Street when it is within this many metres of a Major Streets line, whatever its frontage name (Q-MS-2: a side lot line on the street counts; 800.50 does not define \"abut\"). 13 m = enrich_centreline_abut_m. Seeded by migration 277. CONSUMED by enrich_parcels (pass 1 zoning).",
+    "admin": {
+      "group": "Source Ingestion"
+    }
+  },
+  "enrich_parcels_major_street_res_pct_fail_floor": {
+    "default": 2,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Major-street plausibility FAIL floor (operator ruling 2026-10-19 (Q-MS-1/Q-MS-2), Spec 65 §2 step 7, .cursor/major-street-audit-2026-10-19.md). The share (%) of residential base-zone lots (R, RD, RS, RT, RM) flagged on_policy_road must be at least this; below it the derivation has collapsed (the 5 m buffer gave 0.005 %; the audit measured ~7 %). Seeded by migration 277. CONSUMED by enrich_parcels via checks[].limit_from_config (major_street_residential_pct_fail).",
+    "admin": {
+      "group": "Data Quality Thresholds"
+    }
+  },
+  "enrich_parcels_major_street_res_pct_warn_ceiling": {
+    "default": 15,
+    "type": "number",
+    "min": 0,
+    "max": 100,
+    "description": "Major-street plausibility WARN ceiling (operator ruling 2026-10-19 (Q-MS-1/Q-MS-2), Spec 65 §2 step 7, .cursor/major-street-audit-2026-10-19.md). Above this share (%) of residential base-zone lots flagged on_policy_road the name or flank arm is over-matching (e.g. side-street lots near a corner). Seeded by migration 277. CONSUMED by enrich_parcels via checks[].limit_from_config (major_street_residential_pct_warn).",
     "admin": {
       "group": "Data Quality Thresholds"
     }

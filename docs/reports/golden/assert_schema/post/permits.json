@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/quality/assert-schema.js",
   "chain": "permits",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "a475e71e098d107fa5f21cb8285f952ae78d32e0",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -19,7 +19,7 @@
       "terminal": "all_checks_passed",
       "ledger_row": "chain_owned",
       "chain_run_id": null,
-      "code_sha": "15d79445291f7e4a61961d08a152c0c80d345751",
+      "code_sha": "a475e71e098d107fa5f21cb8285f952ae78d32e0",
       "pool_errors": 0,
       "checks_passed": "all",
       "checks_failed": 0,
@@ -73,7 +73,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 615,
+            "value": 693,
             "threshold": null,
             "status": "INFO"
           }
@@ -102,10 +102,10 @@
   "parse_errors": [],
   "verdict": "PASS",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=264 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for Building Permits...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — all 11 expected columns present (32 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — EST_CONST_COST type coercion verified\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"15d79445291f7e4a61961d08a152c0c80d345751\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":615,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 0.6s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=266 (floor 41)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching metadata for Building Permits...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — all 11 expected columns present (32 total)\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Building Permits — EST_CONST_COST type coercion verified\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"Fetching CSV headers for Parcels...\"}\n{\"level\":\"INFO\",\"tag\":\"[assert_schema]\",\"msg\":\"OK: Parcels — all 4 expected columns present (6 total)\"}\nPIPELINE_SUMMARY:{\"records_total\":null,\"records_new\":null,\"records_updated\":null,\"records_meta\":{\"config\":{\"assert_schema_type_sample_rows\":20,\"assert_schema_csv_header_bytes\":2048,\"assert_schema_geojson_probe_bytes\":8192},\"terminal\":\"all_checks_passed\",\"ledger_row\":\"chain_owned\",\"chain_run_id\":null,\"code_sha\":\"a475e71e098d107fa5f21cb8285f952ae78d32e0\",\"pool_errors\":0,\"checks_passed\":\"all\",\"checks_failed\":0,\"checks_warned\":0,\"errors\":[],\"warnings\":[],\"audit_table\":{\"phase\":1,\"name\":\"Schema Validation\",\"verdict\":\"PASS\",\"rows\":[{\"metric\":\"declared_logic_variables_present\",\"value\":{\"missing\":[]},\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permit_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"permit_cost_type_sample\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"parcel_columns\",\"value\":0,\"threshold\":\"viol == 0\",\"status\":\"PASS\",\"source\":\"check\",\"observed\":\"before_write\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":693,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{},\"writes\":{},\"external\":[\"ckan_datastore_api\",\"address_points_csv\",\"parcels_csv\",\"massing_zip\",\"ravine_zip\",\"heritage_register_zip\",\"heritage_hcd_zip\",\"centreline_zip\",\"neighbourhoods_geojson\"]}\n\n[assert_schema] completed in 0.7s\n",
   "stderr": "",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3420,
+  "pipeline_runs_max_id_before": 3590,
   "table_state": [],
   "tables_source": "trace",
   "table_row_ceiling": 100000,
@@ -209,7 +209,7 @@
     "parse_errors": [],
     "pipeline_runs": [],
     "stdout_lines": [
-      "{\"level\":\"INFO\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=264 (floor 41)\",\"tag\":\"[assert_schema]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"[assert_schema] target: assert_schema (descriptor.database) → database=postgres user=postgres migrations=266 (floor 41)\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"=== CQA Tier 1: Schema Validation ===\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Fetching metadata for Building Permits...\",\"tag\":\"[assert_schema]\"}",
       "{\"level\":\"INFO\",\"msg\":\"OK: Building Permits — all 11 expected columns present (32 total)\",\"tag\":\"[assert_schema]\"}",
@@ -228,11 +228,11 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3421,
+      "id": 3591,
       "recorded_by": "harness"
     }
   ],
-  "source_fingerprint": "1f2608b3e71cf24e61b2636a098cee8b94641f1ba952eea51c91a0ca5a0c70c6",
+  "source_fingerprint": "c6cb40735b9c1a1ea3b2b1e73d7dccd00bd907798134c48456178f4c54efad21",
   "fingerprint_files": [
     "scripts/lib/compute/assert-schema.js",
     "scripts/quality/assert-schema.descriptor.json",

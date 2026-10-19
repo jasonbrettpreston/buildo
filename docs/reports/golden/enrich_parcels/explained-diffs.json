@@ -232,6 +232,10 @@
       "why": "declared emit (descriptor emits[] key \"zone_class_pct\"): the converted compute returns it and the runner stamps it in records_meta; the legacy PRE did not report it (sources_run1: absent → 96.4)."
     },
     {
+      "key": "summary.records_meta.major_street_residential_pct",
+      "why": "New declared number emit (descriptor emits[] key \"major_street_residential_pct\"; operator ruling 2026-10-19 Q-MS-1/Q-MS-2, Spec 65 §2 step 7, migration 277): the share of residential base-zone lots (R, RD, RS, RT, RM) flagged on_policy_road, read by the major_street_residential_pct_fail / _warn bounds. The legacy PRE did not report it (sources_run1: absent → 7.2). Measured on this POST: 31,522 of 440,093 residential lots flagged (R 12,444, RD 12,470, RM 3,966, RS 1,860, RT 782), against 21 before the fix (the 5 m centreline buffer); 56,046 parcels flagged in all zones (was 136). The parcels content-hash / column diffs of the same run are the on_policy_road re-derivation and are covered by the table_state entries above. Evidence: .cursor/major-street-audit-2026-10-19.md; docs/reports/golden/enrich_parcels/major-street-recapture.md."
+    },
+    {
       "key": "summary.records_new",
       "why": "report L859/L871: records_new was NULL on every legacy/early run; the declared counter source makes it a literal 0 (this step INSERTs no parcel rows)."
     },

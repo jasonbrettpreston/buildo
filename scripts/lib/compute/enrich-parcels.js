@@ -141,7 +141,11 @@ const OVERLAY_LAYERS = [
   { key: 'height_overlay',           table: 'zoning_height_overlay',           kind: 'numeric' },
   { key: 'lot_coverage_overlay',     table: 'zoning_lot_coverage_overlay',     kind: 'numeric' },
   { key: 'policy_area_overlay',      table: 'zoning_policy_area_overlay',      kind: 'poly', col: 'in_policy_area' },
-  { key: 'policy_road_overlay',      table: 'zoning_policy_road_overlay',      kind: 'line', col: 'on_policy_road' },
+  // kind 'major_street' (operator 2026-10-19, Q-MS-1/Q-MS-2; .cursor/major-street-audit-2026-10-19.md): the
+  // by-law's "lot abutting a major street" (800.50(457)) — frontage-street NAME + proximity, or a corner/through
+  // lot within the flank distance. The Major Streets lines are centrelines, so the old 5 m buffer sat inside
+  // every right-of-way (21 of 440,093 residential lots flagged).
+  { key: 'policy_road_overlay',      table: 'zoning_policy_road_overlay',      kind: 'major_street', col: 'on_policy_road' },
   { key: 'rooming_house_overlay',    table: 'zoning_rooming_house_overlay',    kind: 'poly', col: 'in_rooming_house_overlay' },
   { key: 'parking_zone_overlay',     table: 'zoning_parking_zone_overlay',     kind: 'poly', col: 'in_parking_zone_overlay' },
   { key: 'building_setback_overlay', table: 'zoning_building_setback_overlay', kind: 'poly', col: 'in_building_setback_overlay' },
@@ -287,12 +291,26 @@ function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, zoningChanged, 
   // only ~80.5 km, so dividing by a value < 80500 guarantees the box is >= roadDist in EVERY direction).
   const mem = OVERLAY_LAYERS.filter((l) => l.col);
   const active = mem.filter((l) => !staleOverlays.has(l.key));
+  // The major-street arm ($2 frontage distance, $3 flank distance) — Spec 65 §2 step 7: a lot abuts a Major
+  // Street when its primary frontage street (enrich_centreline) carries the Major Streets line's name within $2,
+  // OR it is a corner/through lot within $3 of the line. The name test is against the NEARBY line, never the
+  // name alone: the Major Streets map covers only some sections of a road.
+  const joinOn = (l) => {
+    if (l.kind === 'line') {
+      return `o.geom && ST_Expand(s.geom, ($1 / ${bboxDivisor}.0)) AND ST_DWithin(s.geom::geography, o.geom::geography, $1)`;
+    }
+    if (l.kind === 'major_street') {
+      return `o.geom && ST_Expand(s.geom, (GREATEST($2, $3) / ${bboxDivisor}.0)) AND (
+    (upper(o.road_name) = upper(s.primary_frontage_street_name) AND ST_DWithin(s.geom::geography, o.geom::geography, $2))
+    OR ((s.is_corner_lot OR s.is_through_lot) AND ST_DWithin(s.geom::geography, o.geom::geography, $3))
+  )`;
+    }
+    return 'o.geom && s.geom AND ST_Intersects(s.geom, o.geom) AND NOT ST_Touches(s.geom, o.geom)';
+  };
   const memberCtes = active.map((l) =>
     `mem_${l.col} AS (
   SELECT DISTINCT s.parcel_id FROM scope s
-  JOIN ${l.table} o ON ${l.kind === 'line'
-      ? `o.geom && ST_Expand(s.geom, ($1 / ${bboxDivisor}.0)) AND ST_DWithin(s.geom::geography, o.geom::geography, $1)`
-      : 'o.geom && s.geom AND ST_Intersects(s.geom, o.geom) AND NOT ST_Touches(s.geom, o.geom)'}
+  JOIN ${l.table} o ON ${joinOn(l)}
 )`).join(',\n');
   const memberSelect = mem
     .map((l) => staleOverlays.has(l.key)
@@ -329,8 +347,12 @@ function buildEnrichmentSql({ scopeWhere = 'TRUE', full = false, zoningChanged, 
   const covJoin = covStale ? '' : 'LEFT JOIN cov_agg ca ON ca.parcel_id = s.parcel_id\n';
 
   return `
-WITH scope AS (
-  SELECT p.parcel_id, p.geom
+WITH run_params AS (
+  -- Every bind parameter is referenced here, so the bind count stays 3 whichever overlay layers are stale.
+  SELECT $1::float8 AS road_overlay_m, $2::float8 AS major_street_frontage_m, $3::float8 AS major_street_flank_m
+),
+scope AS (
+  SELECT p.parcel_id, p.geom, p.primary_frontage_street_name, p.is_corner_lot, p.is_through_lot
   FROM parcels p
   WHERE (${scopeWhere}) AND p.geom IS NOT NULL AND ${incremental}
 ),
@@ -452,8 +474,11 @@ async function runPass1(client, ctx, config) {
     throw new Error(`${TAG} runPass1: ctx.contract.zoning_change missing on a non-full run — readZoningContract must run first`);
   }
   const roadDist = Number(config.road_overlay_distance_m);
+  // Major-street arm (Spec 65 §2 step 7; operator 2026-10-19 Q-MS-1/Q-MS-2): $2 frontage-name distance, $3 corner/through flank distance.
+  const majorFrontageM = Number(config.enrich_parcels_major_street_frontage_m);
+  const majorFlankM = Number(config.enrich_parcels_major_street_flank_m);
   const bboxDivisor = Number(config.enrich_parcels_bbox_degree_divisor);
-  await ctx.tempTable({ name: 'parcel_zoning_enrich', selectSql: buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, zoningChanged: zoningChange ? zoningChange.changed : undefined, staleOverlays: ctx.staleOverlays, bboxDivisor }), params: [roadDist] });
+  await ctx.tempTable({ name: 'parcel_zoning_enrich', selectSql: buildEnrichmentSql({ scopeWhere: ctx.scopeWhere, full: ctx.full, zoningChanged: zoningChange ? zoningChange.changed : undefined, staleOverlays: ctx.staleOverlays, bboxDivisor }), params: [roadDist, majorFrontageM, majorFlankM] });
 
   const stats = await client.query(`
     SELECT
@@ -1910,6 +1935,14 @@ async function computePostPhase(pool, { passRaw, scopeHandoff }) {
   const optAorWithoutMaxGfa = await pool.query(
     'SELECT COUNT(*)::int AS n FROM parcels WHERE opt_aor_gfa_sqm IS NOT NULL AND max_buildable_gfa_sqm IS NULL',
   ).then((r) => r.rows[0].n);
+  // Major-street plausibility (Spec 65 §2 step 7; operator 2026-10-19 Q-MS-1): the share of residential base-zone
+  // lots (R, RD, RS, RT, RM) flagged on_policy_road. The 5 m buffer left it at 0.005 % (21 of 440,093); the audit
+  // measured ~7 %. Bounded by checks major_street_residential_pct_fail / _warn (limits from config).
+  const majorStreet = await pool.query(
+    `SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE on_policy_road)::int AS flagged
+       FROM parcels WHERE geom IS NOT NULL AND zoning_class IN ('R', 'RD', 'RS', 'RT', 'RM')`,
+  ).then((r) => r.rows[0]);
+  const majorStreetPct = majorStreet.n ? Math.round((1000 * majorStreet.flagged) / majorStreet.n) / 10 : 0;
 
   const zoning = passRaw.zoning || {};
   const maxBuild = passRaw.max_build || {};
@@ -1922,6 +1955,8 @@ async function computePostPhase(pool, { passRaw, scopeHandoff }) {
   return {
     matched: {
       zone_class_pct: zonePct,
+      major_street_residential_pct: majorStreetPct,
+      major_street_residential: { flagged: majorStreet.flagged, residential: majorStreet.n },
       opt_config_engine_errors: optCfg.errors || 0,
       opt_aor_without_max_gfa: optAorWithoutMaxGfa,
       parcels_enriched_count: zoning.updated || 0,
@@ -2169,6 +2204,14 @@ function parcels_with_zone_class_pct_warn(ctx) {
 
 function parcels_with_zone_class_pct_fail(ctx) {
   ctx.report('parcels_with_zone_class_pct_fail', { value: ctx.matched.zone_class_pct, detail: ctx.matched.zone_class_pct });
+}
+
+function major_street_residential_pct_fail(ctx) {
+  ctx.report('major_street_residential_pct_fail', { value: ctx.matched.major_street_residential_pct, detail: ctx.matched.major_street_residential });
+}
+
+function major_street_residential_pct_warn(ctx) {
+  ctx.report('major_street_residential_pct_warn', { value: ctx.matched.major_street_residential_pct, detail: ctx.matched.major_street_residential });
 }
 
 function opt_config_engine_errors(ctx) {
@@ -2428,6 +2471,8 @@ function enrich_parcels_duration_ms(ctx) {
 const CHECKS = {
   parcels_with_zone_class_pct_warn,
   parcels_with_zone_class_pct_fail,
+  major_street_residential_pct_fail,
+  major_street_residential_pct_warn,
   opt_config_engine_errors,
   opt_aor_without_max_gfa,
   pass5_post_commit_read_order,
@@ -2514,6 +2559,7 @@ async function compute(ctx) {
     records_meta: {
       duration_ms: ctx.matched.enrich_parcels_duration_ms,
       zone_class_pct: ctx.matched.zone_class_pct,
+      major_street_residential_pct: ctx.matched.major_street_residential_pct,
       total_parcels_scanned: ctx.matched.compute ? ctx.matched.compute.total_parcels_scanned : null,
       records_updated_aggregate: ctx.matched.compute ? ctx.matched.compute.records_updated_aggregate : null,
       parcels_enriched_count: ctx.matched.parcels_enriched_count,

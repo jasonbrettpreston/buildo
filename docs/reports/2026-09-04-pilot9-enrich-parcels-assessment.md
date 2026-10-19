@@ -1001,11 +1001,11 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=265 |
-| 2 | enrich_parcels | PASS | 48 declared, missing from seeds: none |
+| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=266 |
+| 2 | enrich_parcels | PASS | 52 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |
-| 8 | enrich_parcels | PASS | G-4: 48 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
+| 8 | enrich_parcels | PASS | G-4: 52 declared, 6 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover |
 | 20 | enrich_parcels | PASS | HB-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains an onProgress seam token AND a startHeartbeatTicker( call token — the periodic ticker covers every phase uniformly by construction once present, independent of any single phase's own boundary, but ticker start/stop lifecycle is not independently verified here |
 | 21 | enrich_parcels | PASS | CEIL-1: runner=runEnrichPhase: runner-level token presence (MED-6, not a per-phase proof): source contains a SET LOCAL statement_timeout/lock_timeout token pair AND a postClient-scoped SET statement_timeout token (EP-D16) — the per-phase claim itself is filed as its own followup |
 | 4 | (registry) | PASS | overlap: none |
@@ -1025,26 +1025,26 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 460 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 494 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
 | 32 | (registry) | PASS | COMPUTE-LITERALS (gate E): 1 finding(s), all ledger-allowed (1); ESTATE-LITERALS (gate E estate arm, R-EB): 0 finding(s) in scripts/analysis/gates, scripts/lib/step; tooling ratchet (PIN EXT-2) 128 finding(s) over 6 files, at or below the marks |
 | 41 | (registry) | PASS | RED-EVIDENCE (gate K): 0 step(s) without a committed red-evidence artifact; 0 orphan ledger row(s) |
-| 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 39 slug(s), every defect prefix unique |
+| 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 43 slug(s), every defect prefix unique |
 | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
 | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
 | 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 24.65 s <= 25.3 s; registry-input 24.41 s <= 27.5 s; measured 2026-10-18T18:40:16.223Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
-| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 531 emits.type check(s), 0 mismatches |
+| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 532 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
-| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 168 terminal(s) unwitnessed (no capture) |
-| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 39 converted/pending step(s) admin-verifiable (6 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
+| 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 169 terminal(s) unwitnessed (no capture) |
+| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (10 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
 
 ### Captures (item iv)
 - missing invocations (POST): none
 - missing invocations (PRE, GOLD-PRE): none
 - stale fingerprints: none
-- compare ran: true · diffs found: 706 · unexplained: 0
+- compare ran: true · diffs found: 712 · unexplained: 0
 
 ### Test suite (item iii)
 - SKIPPED or failed to run: --fast: vitest spawn skipped
@@ -1055,7 +1055,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 |---|---|---|---|
 | 1 | Nothing hidden | enforced-green | G-1 schema-baseline: schema-baseline clean |
 | 2 | Compute is just compute | not-run | §5.5 describe not evaluated — vitest did not run (--fast); shape scan is NOT a substitute for the §5.5 suite |
-| 3 | Tunables externalized | enforced-green | G-4: 48 declared, 4 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
+| 3 | Tunables externalized | enforced-green | G-4: 52 declared, 6 verdict-affecting, 0 violate on_invalid:fail with no deviations[] cover · P4/LW-D10/R-A not evaluated (vitest did not run) |
 | 4 | Compute rule declared | enforced-green | G-2: 5 preserved-in-compute row(s), 0 with no why/notes.json/checks[] grounding |
 | 5 | checks >= 1 | enforced-green |  |
 | 6 | Omission fails (20 categories) | enforced-green |  |
@@ -1066,7 +1066,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=127097B notes=11441B checks=38 rows records_meta=12545B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=131443B notes=11441B checks=40 rows records_meta=5595B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 1 · vacuous: 0
 

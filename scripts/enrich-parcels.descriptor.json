@@ -63,7 +63,9 @@
             "is_in_ravine_protection_area",
             "is_through_lot",
             "parcel_id",
-            "imagery_roof_footprint_sqm"
+            "imagery_roof_footprint_sqm",
+            "primary_frontage_street_name",
+            "on_policy_road"
           ]
         },
         {
@@ -132,7 +134,8 @@
         {
           "table": "zoning_policy_road_overlay",
           "columns": [
-            "geom"
+            "geom",
+            "road_name"
           ]
         },
         {
@@ -1698,6 +1701,48 @@
       }
     },
     {
+      "id": "major_street_residential_pct_fail",
+      "kind": "bound",
+      "expect": {
+        "of": "parcels.on_policy_road / parcels WHERE geom IS NOT NULL AND zoning_class IN (R, RD, RS, RT, RM), as a percentage"
+      },
+      "limit": "pct >= 2",
+      "limit_from_config": "enrich_parcels_major_street_res_pct_fail_floor",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Operator 2026-10-19 (Q-MS-1/Q-MS-2; .cursor/major-street-audit-2026-10-19.md): on_policy_road is the by-law's \"lot abutting a major street\" (800.50(457)). The 5 m buffer flagged 21 of 440,093 residential lots (0.005 %); the audit measured ~7 % (about 29,000 frontage lots plus corner/through flanks). FAIL floor 2 %: below it the derivation has collapsed again (the near-dead 5 m buffer class).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.on_policy_road"
+        }
+      }
+    },
+    {
+      "id": "major_street_residential_pct_warn",
+      "kind": "bound",
+      "expect": {
+        "of": "parcels.on_policy_road / parcels WHERE geom IS NOT NULL AND zoning_class IN (R, RD, RS, RT, RM), as a percentage"
+      },
+      "limit": "pct <= 15",
+      "limit_from_config": "enrich_parcels_major_street_res_pct_warn_ceiling",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Operator 2026-10-19 (Q-MS-1/Q-MS-2; .cursor/major-street-audit-2026-10-19.md): on_policy_road is the by-law's \"lot abutting a major street\" (800.50(457)). The 5 m buffer flagged 21 of 440,093 residential lots (0.005 %); the audit measured ~7 % (about 29,000 frontage lots plus corner/through flanks). WARN ceiling 15 %: above it the name or flank arm is over-matching (e.g. side-street lots near a corner).",
+        "liveness": {
+          "kind": "column",
+          "ref": "parcels.on_policy_road"
+        }
+      }
+    },
+    {
       "id": "opt_config_engine_errors",
       "kind": "bound",
       "expect": {
@@ -2672,6 +2717,11 @@
       "consumers": []
     },
     {
+      "key": "major_street_residential_pct",
+      "type": "number",
+      "consumers": []
+    },
+    {
       "key": "total_parcels_scanned",
       "type": "int",
       "consumers": []
@@ -2758,6 +2808,11 @@
       "what": "zoning-change scope vs the contract read (F-18, partially superseded by S1-P-8a — 2026-10-13): readZoningChange still reads every load_zoning ledger form and both success statuses, while readZoningContract's #12d layers read now goes through ctx.producer with DEFAULT (baseline) statuses and a required zoning_layers_loaded OBJECT — i.e. the newest completed / completed_with_warnings run that carries the key (a newer run that drops the key no longer wins), and the base !== true verdict is now the declared `records_meta.zoning_layers_loaded.base` op:true pin evaluated by the runner before any phase rather than a throw (#44-clean D7 alignment). ZONING_PRODUCER_FORMS is still re-derived by readZoningChange. Bounded today: runs 2189 (sources, legacy) and 2282 (standalone) both report all 10 zoning_layers_loaded = true, so the derived staleOverlays is empty either way; divergence needs a standalone load that flips a layer's loaded flag.",
       "measured": "pipeline_runs 2189 / 2282 records_meta.zoning_layers_loaded, measured 2026-10-06 (zoning-change-scope WF3 premise)",
       "check_id": "zoning_change_scope"
+    },
+    {
+      "what": "major-street membership vs the incremental scope (operator 2026-10-19, Q-MS-1/Q-MS-2; Spec 65 §2 step 7): on_policy_road now reads parcels.primary_frontage_street_name / is_corner_lot / is_through_lot, written upstream by enrich_centreline, but pass 1's incremental scope is the zoning-change scope (Spec 65 §2 step 6). A centreline re-enrichment alone (a changed frontage name or corner/through flag) therefore does not re-derive on_policy_road until the next zoning change or --full run. Bounded: the sources chain invokes enrich_parcels with --full, and enrich_centreline runs before enrich_parcels in that chain, so every chain run re-derives it.",
+      "measured": "scripts/manifest.json chains.sources (enrich_centreline precedes enrich_parcels; enrich_parcels chain_args --full); .cursor/major-street-audit-2026-10-19.md",
+      "check_id": "major_street_residential_pct_fail"
     }
   ],
   "interpretation": {
@@ -3099,6 +3154,30 @@
         "min": 1,
         "max": 60,
         "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_parcels_major_street_frontage_m",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_parcels_major_street_flank_m",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_parcels_major_street_res_pct_fail_floor",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "enrich_parcels_major_street_res_pct_warn_ceiling",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
       }
     ],
     "validation": "strict",
@@ -3199,6 +3278,22 @@
         "liveness": {
           "kind": "check",
           "ref": "parcels_with_zone_class_pct_fail"
+        }
+      }
+    },
+    {
+      "id": "failed_major_street_residential_pct",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "The major-street share FAIL floor (< 2 % of residential lots) fired: the on_policy_road derivation has collapsed. The write already happened (pass 1 committed with the shared transaction), so this is a fail_check, not a pre-write refusal.",
+        "liveness": {
+          "kind": "check",
+          "ref": "major_street_residential_pct_fail"
         }
       }
     },

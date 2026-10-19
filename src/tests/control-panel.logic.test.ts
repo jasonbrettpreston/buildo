@@ -155,6 +155,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // Pilot 9 commit 7b (Spec 65 §3a DEC-4) — the zoning_class-coverage PASS/WARN floors (95/90).
   'enrich_parcels_zone_class_pct_pass_floor',
   'enrich_parcels_zone_class_pct_warn_floor',
+  // Operator 2026-10-19 (Q-MS-1/Q-MS-2; Spec 65 §2 step 7; migration 277) — major-street membership distances and the residential-share bounds.
+  'enrich_parcels_major_street_frontage_m',
+  'enrich_parcels_major_street_flank_m',
+  'enrich_parcels_major_street_res_pct_fail_floor',
+  'enrich_parcels_major_street_res_pct_warn_ceiling',
   // Pilot 9 commit 7b — NEW: the pass-5 timeout bound (Ask 7). `enrich_parcels_comps_as_of_date`
   // (the comps clock-anchor override, Fold G3) was declared here too but REMOVED at commit
   // 7e/2 (2026-09-07): resolveConfig's invalidReason (scripts/lib/step/config.js:76-81) is

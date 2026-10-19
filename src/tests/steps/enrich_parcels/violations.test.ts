@@ -2527,7 +2527,8 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     // The three step-level COUNTs, answered with DISTINCT values so a swapped
     // assignment is visible rather than coincidentally equal.
     // stamp heal (2026-10-06): the FIRST count also carries the zoning_enriched_at NULL count (same scan, no 4th query).
-    const counts = [{ n: 1000, stamp_null: 71 }, { n: 966 }, { n: 7 }];
+    // + the 4th count: the major-street residential share (operator 2026-10-19 Q-MS-1, Spec 65 §2 step 7).
+    const counts = [{ n: 1000, stamp_null: 71 }, { n: 966 }, { n: 7 }, { n: 400, flagged: 28 }];
     let i = 0;
     const pool = guard.wrap({ query: async () => ({ rows: [counts[i++]!] }) });
     const passRaw = {
@@ -2546,6 +2547,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     // (1) The key SET is exactly the retired literal's domain half — no key added, none dropped — plus the three keys the stamp-heal and zoning-change-scope WF3s added (2026-10-06).
     // + 5 sixplex_* keys (McBylaw Phase 2 inputs A4) — a declared addition.
     // + pass3_scope_rows_spooled (step-0 follow-up 2026-10-18, operator y "runner-stamped emit", R-CY) — a declared int emit.
+    // + major_street_residential_pct / major_street_residential (operator 2026-10-19 Q-MS-1) — the plausibility bound's metric.
     expect(Object.keys(res.matched).sort()).toEqual([
       'pass3_scope_rows_spooled',
       'comp_candidate_pool', 'comp_zero_comps_count', 'comparable_builds_enriched_count',
@@ -2559,6 +2561,7 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
       'scope_recovery_batches', 'scope_recovery_recovered_count', 'scope_stamped_without_recompute_count',
       'sixplex_basis_counts', 'sixplex_enriched_count', 'sixplex_map_missing', 'sixplex_ran',
       'sixplex_skip_detail',
+      'major_street_residential', 'major_street_residential_pct',
       'zone_class_pct', 'zoning_change', 'zoning_fsi_source_nulled_count',
       'zoning_stamp_null_count', 'zoning_stamp_only_count',
     ].sort());
@@ -2567,6 +2570,8 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     expect(res.matched).toEqual({
       pass3_scope_rows_spooled: 0, // the runner's scopeHandoff.inserted; no hand-off in this ctx, so 0 (R-CY: compute only carries it)
       zone_class_pct: 96.6, // round(1000 * 966 / 1000) / 10 — the SECOND count over the FIRST
+      major_street_residential_pct: 7, // round(1000 * 28 / 400) / 10 — the FOURTH count
+      major_street_residential: { flagged: 28, residential: 400 },
       opt_config_engine_errors: 41,
       opt_aor_without_max_gfa: 7, // the THIRD count, straight through
       parcels_enriched_count: 11,
@@ -2606,18 +2611,20 @@ describe('execution.enrich_hooks / heartbeat + lock-timeout from config (batch-2
     // {1,2} u {2,3} u {4} u {5} u {6,7} = 7 ids, pass 4 deliberately excluded.
     expect(res.compute).toEqual({ total_parcels_scanned: 1000, records_new_aggregate: 0, records_updated_aggregate: 7 });
 
-    // (4) Rule 2 — the hook OBSERVES, it does not write. Three SELECTs, nothing else.
-    expect(i, 'exactly the three step-level COUNTs the retired region ran').toBe(3);
+    // (4) Rule 2 — the hook OBSERVES, it does not write. Four SELECTs, nothing else: the retired region's three
+    // step-level COUNTs plus the major-street share (operator 2026-10-19 Q-MS-1).
+    expect(i, 'exactly the three step-level COUNTs the retired region ran, plus the major-street share').toBe(4);
 
     // (5) The empty-table guard the retired expression carried survives the move:
     // a zero `parcels` total must render 0, never NaN (which would make the
     // zone_class_pct check unevaluable rather than failing).
     let j = 0;
-    const zeroCounts = [{ n: 0 }, { n: 0 }, { n: 0 }];
+    const zeroCounts = [{ n: 0 }, { n: 0 }, { n: 0 }, { n: 0, flagged: 0 }];
     const zeroPool = guard.wrap({ query: async () => ({ rows: [zeroCounts[j++]!] }) });
     const zeroRes = await ep.computePostPhase(zeroPool, { passRaw: {} });
     expect(zeroRes.matched.zone_class_pct).toBe(0);
     expect(Number.isNaN(zeroRes.matched.zone_class_pct as number)).toBe(false);
+    expect(zeroRes.matched.major_street_residential_pct).toBe(0);
   });
 
 });
@@ -2708,7 +2715,7 @@ describe('counters — the three declared sources resolve against the enrich cou
     const ep = require(path.join(REPO_ROOT, COMPUTE_REL)) as {
       computePostPhase: (pool: unknown, ctx: { passRaw: Record<string, unknown> }) => Promise<{ compute: Record<string, number> }>;
     };
-    const counts = [{ n: 486_530 }, { n: 470_000 }, { n: 0 }];
+    const counts = [{ n: 486_530 }, { n: 470_000 }, { n: 0 }, { n: 440_093, flagged: 30_000 }];
     let i = 0;
     const pool = guard.wrap({ query: async () => ({ rows: [counts[i++]!] }) });
     const res = await ep.computePostPhase(pool, {
@@ -2868,7 +2875,7 @@ describe('stamp heal (2026-10-06 HIGH) — L7 logic locks', () => {
     );
     expect(out.matched.zoning_stamp_null_count, 'RED today: the key is absent (undefined)').toBe(3);
     expect(out.matched.zoning_stamp_only_count, 'RED today: the key is absent (undefined)').toBe(7);
-    expect(calls.length, 'the post phase still issues exactly 3 queries — the stamp-null count rides the existing total-parcels scan (lens I3)').toBe(3);
+    expect(calls.length, 'the post phase issues exactly 4 queries — the stamp-null count rides the existing total-parcels scan (lens I3); the 4th is the major-street share (operator 2026-10-19 Q-MS-1)').toBe(4);
   });
 
   it('L7c — the two check fns report the declared shapes: zoning_stamp_null_count = {violations:n, detail:n}; zoning_stamp_only_count = {violations:0, detail:n} (FOLD DS-4)', () => {

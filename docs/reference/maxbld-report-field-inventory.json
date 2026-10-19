@@ -1547,7 +1547,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_buildable_gfa_sqm",
           "kind": "sql",
-          "line": 771,
+          "line": 796,
           "name": "max_buildable_gfa_sqm",
           "scope": "select",
           "spans": []
@@ -1561,7 +1561,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -1578,7 +1578,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -1597,7 +1597,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -1609,7 +1609,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -1626,7 +1626,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -1641,7 +1641,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -1656,7 +1656,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -1673,7 +1673,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -1690,7 +1690,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -1708,7 +1708,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_no_massing",
           "kind": "sql",
-          "line": 687,
+          "line": 712,
           "name": "heritage_no_massing",
           "scope": "env",
           "spans": [
@@ -1724,7 +1724,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -1739,7 +1739,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "massing.existing_footprint_sqm",
           "kind": "sql",
-          "line": 574,
+          "line": 599,
           "name": "existing_footprint_sqm",
           "scope": "massing",
           "spans": []
@@ -1756,7 +1756,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.ravine_sub_floor",
           "kind": "sql",
-          "line": 673,
+          "line": 698,
           "name": "ravine_sub_floor",
           "scope": "env",
           "spans": []
@@ -1770,7 +1770,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -1784,7 +1784,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -1805,7 +1805,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -1821,7 +1821,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -1833,7 +1833,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -1847,7 +1847,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -1861,7 +1861,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -1877,7 +1877,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -1897,7 +1897,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -1913,7 +1913,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -1927,7 +1927,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -1941,7 +1941,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -1959,7 +1959,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.stories_calc",
           "kind": "sql",
-          "line": 692,
+          "line": 717,
           "name": "stories_calc",
           "scope": "env",
           "spans": []
@@ -1973,7 +1973,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.pocket_p50",
           "kind": "sql",
-          "line": 664,
+          "line": 689,
           "name": "pocket_p50",
           "scope": "geo",
           "spans": []
@@ -1987,7 +1987,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.height_implied",
           "kind": "sql",
-          "line": 661,
+          "line": 686,
           "name": "height_implied",
           "scope": "geo",
           "spans": [
@@ -2004,7 +2004,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "gfa.gfa_box",
           "kind": "sql",
-          "line": 700,
+          "line": 725,
           "name": "gfa_box",
           "scope": "gfa",
           "spans": []
@@ -2024,7 +2024,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.footprint_calc",
           "kind": "sql",
-          "line": 678,
+          "line": 703,
           "name": "footprint_calc",
           "scope": "env",
           "spans": []
@@ -2039,7 +2039,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.coverage_cap",
           "kind": "sql",
-          "line": 658,
+          "line": 683,
           "name": "coverage_cap",
           "scope": "geo",
           "spans": [
@@ -2058,7 +2058,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.buffer_area",
           "kind": "sql",
-          "line": 651,
+          "line": 676,
           "name": "buffer_area",
           "scope": "geo",
           "spans": [
@@ -2074,7 +2074,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.ravine_red",
           "kind": "sql",
-          "line": 624,
+          "line": 649,
           "name": "ravine_red",
           "scope": "box",
           "spans": [
@@ -2091,7 +2091,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.box_area",
           "kind": "sql",
-          "line": 645,
+          "line": 670,
           "name": "box_area",
           "scope": "geo",
           "spans": [
@@ -2109,7 +2109,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "gfa.fsi_cap",
           "kind": "sql",
-          "line": 701,
+          "line": 726,
           "name": "fsi_cap",
           "scope": "gfa",
           "spans": []
@@ -2120,7 +2120,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -2130,7 +2130,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -2140,7 +2140,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -2150,9 +2150,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -2160,7 +2160,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -2170,7 +2170,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:mislinkTolNum",
           "kind": "js",
-          "line": 536,
+          "line": 561,
           "name": "mislinkTolNum",
           "note": null
         },
@@ -2180,7 +2180,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -2190,7 +2190,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -2202,7 +2202,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -2232,7 +2232,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -2252,7 +2252,7 @@
           "kind": "js",
           "line": 48,
           "name": "buildStoreyHeightCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:662"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:687"
         },
         {
           "expr": "",
@@ -2262,7 +2262,7 @@
           "kind": "js",
           "line": 203,
           "name": "buildCoverageCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:658"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:683"
         },
         {
           "expr": "SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`) .join('\\n')",
@@ -2542,10 +2542,10 @@
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -2716,7 +2716,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.(filter)",
           "kind": "sql",
-          "line": 1426,
+          "line": 1451,
           "name": "(filter)",
           "scope": "select",
           "spans": [
@@ -2734,7 +2734,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p50",
           "kind": "sql",
-          "line": 1395,
+          "line": 1420,
           "name": "storeys_p50",
           "scope": "select",
           "spans": []
@@ -2745,7 +2745,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:cfg.as_of_right.main_gfa_sqm",
           "kind": "js",
-          "line": 1494,
+          "line": 1519,
           "name": "cfg.as_of_right.main_gfa_sqm",
           "note": null
         },
@@ -2757,7 +2757,7 @@
           "kind": "js",
           "line": 249,
           "name": "computeOptimalConfig()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "buildTier(p, p50, !blocked)",
@@ -2795,9 +2795,9 @@
           "fn": "mapRowToEngineInput",
           "id": "mapRowToEngineInput:mapRowToEngineInput()",
           "kind": "js",
-          "line": 1430,
+          "line": 1455,
           "name": "mapRowToEngineInput()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "parcel || {}",
@@ -2927,7 +2927,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1419"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1444"
         }
       ],
       "column": "opt_aor_gfa_sqm",
@@ -3189,11 +3189,11 @@
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [],
@@ -3330,7 +3330,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_build_stories",
           "kind": "sql",
-          "line": 752,
+          "line": 777,
           "name": "max_build_stories",
           "scope": "select",
           "spans": []
@@ -3344,7 +3344,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -3361,7 +3361,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -3380,7 +3380,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -3392,7 +3392,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -3409,7 +3409,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -3424,7 +3424,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -3439,7 +3439,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -3456,7 +3456,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -3473,7 +3473,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -3491,7 +3491,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_no_massing",
           "kind": "sql",
-          "line": 687,
+          "line": 712,
           "name": "heritage_no_massing",
           "scope": "env",
           "spans": [
@@ -3507,7 +3507,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -3522,7 +3522,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "massing.existing_footprint_sqm",
           "kind": "sql",
-          "line": 574,
+          "line": 599,
           "name": "existing_footprint_sqm",
           "scope": "massing",
           "spans": []
@@ -3539,7 +3539,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.ravine_sub_floor",
           "kind": "sql",
-          "line": 673,
+          "line": 698,
           "name": "ravine_sub_floor",
           "scope": "env",
           "spans": []
@@ -3553,7 +3553,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -3567,7 +3567,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -3588,7 +3588,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -3604,7 +3604,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -3616,7 +3616,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -3630,7 +3630,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -3644,7 +3644,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -3660,7 +3660,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -3680,7 +3680,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -3696,7 +3696,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -3710,7 +3710,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -3724,7 +3724,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -3742,7 +3742,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.stories_calc",
           "kind": "sql",
-          "line": 692,
+          "line": 717,
           "name": "stories_calc",
           "scope": "env",
           "spans": []
@@ -3756,7 +3756,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.pocket_p50",
           "kind": "sql",
-          "line": 664,
+          "line": 689,
           "name": "pocket_p50",
           "scope": "geo",
           "spans": []
@@ -3770,7 +3770,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.height_implied",
           "kind": "sql",
-          "line": 661,
+          "line": 686,
           "name": "height_implied",
           "scope": "geo",
           "spans": [
@@ -3783,7 +3783,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -3793,7 +3793,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -3803,7 +3803,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -3813,9 +3813,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -3823,7 +3823,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -3833,7 +3833,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:mislinkTolNum",
           "kind": "js",
-          "line": 536,
+          "line": 561,
           "name": "mislinkTolNum",
           "note": null
         },
@@ -3843,7 +3843,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -3853,7 +3853,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -3865,7 +3865,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -3895,7 +3895,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -3915,7 +3915,7 @@
           "kind": "js",
           "line": 48,
           "name": "buildStoreyHeightCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:662"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:687"
         }
       ],
       "column": "max_build_stories",
@@ -4161,7 +4161,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2"
+        "scripts/lib/compute/enrich-parcels.js:657 2"
       ],
       "inputs": [
         {
@@ -4620,10 +4620,10 @@
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -5063,11 +5063,11 @@
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [
@@ -5192,7 +5192,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.envelope_constrained",
           "kind": "sql",
-          "line": 790,
+          "line": 815,
           "name": "envelope_constrained",
           "scope": "select",
           "spans": []
@@ -5206,7 +5206,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -5223,7 +5223,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -5242,7 +5242,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -5254,7 +5254,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -5271,7 +5271,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -5286,7 +5286,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -5301,7 +5301,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -5318,7 +5318,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -5335,7 +5335,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -5351,7 +5351,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -5365,7 +5365,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -5379,7 +5379,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -5400,7 +5400,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -5416,7 +5416,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -5428,7 +5428,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -5442,7 +5442,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -5456,7 +5456,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -5472,7 +5472,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -5492,7 +5492,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -5508,7 +5508,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -5522,7 +5522,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -5536,7 +5536,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -5555,7 +5555,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.buffer_area",
           "kind": "sql",
-          "line": 651,
+          "line": 676,
           "name": "buffer_area",
           "scope": "geo",
           "spans": [
@@ -5571,7 +5571,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.ravine_red",
           "kind": "sql",
-          "line": 624,
+          "line": 649,
           "name": "ravine_red",
           "scope": "box",
           "spans": [
@@ -5588,7 +5588,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.box_area",
           "kind": "sql",
-          "line": 645,
+          "line": 670,
           "name": "box_area",
           "scope": "geo",
           "spans": [
@@ -5602,7 +5602,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -5612,7 +5612,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -5622,7 +5622,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -5632,9 +5632,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -5642,7 +5642,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -5652,7 +5652,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -5662,7 +5662,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -5674,7 +5674,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -5704,7 +5704,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -5919,9 +5919,9 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2"
       ],
       "inputs": [
         {
@@ -6053,7 +6053,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.envelope_constraint_reason",
           "kind": "sql",
-          "line": 792,
+          "line": 817,
           "name": "envelope_constraint_reason",
           "scope": "select",
           "spans": [
@@ -6070,7 +6070,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -6087,7 +6087,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -6106,7 +6106,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -6118,7 +6118,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -6135,7 +6135,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -6150,7 +6150,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -6165,7 +6165,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -6182,7 +6182,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -6199,7 +6199,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -6217,7 +6217,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_no_massing",
           "kind": "sql",
-          "line": 687,
+          "line": 712,
           "name": "heritage_no_massing",
           "scope": "env",
           "spans": [
@@ -6233,7 +6233,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -6248,7 +6248,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "massing.existing_footprint_sqm",
           "kind": "sql",
-          "line": 574,
+          "line": 599,
           "name": "existing_footprint_sqm",
           "scope": "massing",
           "spans": []
@@ -6264,7 +6264,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_footprint_mislink",
           "kind": "sql",
-          "line": 689,
+          "line": 714,
           "name": "heritage_footprint_mislink",
           "scope": "env",
           "spans": [
@@ -6280,7 +6280,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -6294,7 +6294,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -6315,7 +6315,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -6331,7 +6331,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -6343,7 +6343,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -6357,7 +6357,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -6371,7 +6371,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -6387,7 +6387,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -6407,7 +6407,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -6423,7 +6423,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -6437,7 +6437,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -6451,7 +6451,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -6470,7 +6470,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.buffer_area",
           "kind": "sql",
-          "line": 651,
+          "line": 676,
           "name": "buffer_area",
           "scope": "geo",
           "spans": [
@@ -6486,7 +6486,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.ravine_red",
           "kind": "sql",
-          "line": 624,
+          "line": 649,
           "name": "ravine_red",
           "scope": "box",
           "spans": [
@@ -6503,7 +6503,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.box_area",
           "kind": "sql",
-          "line": 645,
+          "line": 670,
           "name": "box_area",
           "scope": "geo",
           "spans": [
@@ -6520,7 +6520,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.zoning_is_ambiguous",
           "kind": "sql",
-          "line": 543,
+          "line": 568,
           "name": "zoning_is_ambiguous",
           "scope": "scope",
           "spans": []
@@ -6531,7 +6531,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -6541,7 +6541,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -6551,7 +6551,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -6561,9 +6561,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -6571,7 +6571,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -6581,7 +6581,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:mislinkTolNum",
           "kind": "js",
-          "line": 536,
+          "line": 561,
           "name": "mislinkTolNum",
           "note": null
         },
@@ -6591,7 +6591,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -6601,7 +6601,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -6613,7 +6613,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -6643,7 +6643,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -6880,9 +6880,9 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2"
       ],
       "inputs": [
         {
@@ -7008,7 +7008,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comp_count",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comp_count",
           "scope": "update",
           "spans": []
@@ -7020,7 +7020,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.cnt",
           "kind": "sql",
-          "line": 1208,
+          "line": 1233,
           "name": "cnt",
           "scope": "agg",
           "spans": []
@@ -7111,7 +7111,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.(filter)",
           "kind": "sql",
-          "line": 1426,
+          "line": 1451,
           "name": "(filter)",
           "scope": "select",
           "spans": [
@@ -7129,7 +7129,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.nbn_sample_n",
           "kind": "sql",
-          "line": 1412,
+          "line": 1437,
           "name": "nbn_sample_n",
           "scope": "select",
           "spans": []
@@ -7143,7 +7143,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.used_citywide",
           "kind": "sql",
-          "line": 1393,
+          "line": 1418,
           "name": "used_citywide",
           "scope": "select",
           "spans": []
@@ -7155,7 +7155,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.norm_family",
           "kind": "sql",
-          "line": 1392,
+          "line": 1417,
           "name": "norm_family",
           "scope": "select",
           "spans": [
@@ -7171,7 +7171,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.window_start",
           "kind": "sql",
-          "line": 1410,
+          "line": 1435,
           "name": "window_start",
           "scope": "select",
           "spans": []
@@ -7185,7 +7185,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.window_end",
           "kind": "sql",
-          "line": 1411,
+          "line": 1436,
           "name": "window_end",
           "scope": "select",
           "spans": []
@@ -7199,7 +7199,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.new_builds_5yr",
           "kind": "sql",
-          "line": 1397,
+          "line": 1422,
           "name": "new_builds_5yr",
           "scope": "select",
           "spans": []
@@ -7213,7 +7213,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.additions_5yr",
           "kind": "sql",
-          "line": 1398,
+          "line": 1423,
           "name": "additions_5yr",
           "scope": "select",
           "spans": []
@@ -7227,7 +7227,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.renos_5yr",
           "kind": "sql",
-          "line": 1399,
+          "line": 1424,
           "name": "renos_5yr",
           "scope": "select",
           "spans": []
@@ -7241,7 +7241,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.suites_5yr",
           "kind": "sql",
-          "line": 1400,
+          "line": 1425,
           "name": "suites_5yr",
           "scope": "select",
           "spans": []
@@ -7255,7 +7255,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.demos_5yr",
           "kind": "sql",
-          "line": 1401,
+          "line": 1426,
           "name": "demos_5yr",
           "scope": "select",
           "spans": []
@@ -7269,7 +7269,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.realized_fsi_p50",
           "kind": "sql",
-          "line": 1402,
+          "line": 1427,
           "name": "realized_fsi_p50",
           "scope": "select",
           "spans": []
@@ -7283,7 +7283,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.build_ratio_p50",
           "kind": "sql",
-          "line": 1404,
+          "line": 1429,
           "name": "build_ratio_p50",
           "scope": "select",
           "spans": []
@@ -7297,7 +7297,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.existing_build_ratio_p25",
           "kind": "sql",
-          "line": 1405,
+          "line": 1430,
           "name": "existing_build_ratio_p25",
           "scope": "select",
           "spans": []
@@ -7311,7 +7311,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.existing_build_ratio_p50",
           "kind": "sql",
-          "line": 1406,
+          "line": 1431,
           "name": "existing_build_ratio_p50",
           "scope": "select",
           "spans": []
@@ -7325,7 +7325,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p50",
           "kind": "sql",
-          "line": 1395,
+          "line": 1420,
           "name": "storeys_p50",
           "scope": "select",
           "spans": []
@@ -7339,7 +7339,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p90",
           "kind": "sql",
-          "line": 1396,
+          "line": 1421,
           "name": "storeys_p90",
           "scope": "select",
           "spans": []
@@ -7353,7 +7353,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.coa_approved",
           "kind": "sql",
-          "line": 1407,
+          "line": 1432,
           "name": "coa_approved",
           "scope": "select",
           "spans": []
@@ -7367,7 +7367,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.coa_refused",
           "kind": "sql",
-          "line": 1408,
+          "line": 1433,
           "name": "coa_refused",
           "scope": "select",
           "spans": []
@@ -7381,7 +7381,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.coa_approval_rate",
           "kind": "sql",
-          "line": 1409,
+          "line": 1434,
           "name": "coa_approval_rate",
           "scope": "select",
           "spans": []
@@ -7392,7 +7392,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:nearby",
           "kind": "js",
-          "line": 1498,
+          "line": 1523,
           "name": "nearby",
           "note": null
         },
@@ -7402,9 +7402,9 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:buildNearbyBuildsSummary()",
           "kind": "js",
-          "line": 1467,
+          "line": 1492,
           "name": "buildNearbyBuildsSummary()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1498"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1523"
         },
         {
           "expr": "compFsi ?? pocketFsi",
@@ -7412,7 +7412,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:typicalFsi",
           "kind": "js",
-          "line": 1473,
+          "line": 1498,
           "name": "typicalFsi",
           "note": null
         },
@@ -7422,7 +7422,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:compFsi",
           "kind": "js",
-          "line": 1471,
+          "line": 1496,
           "name": "compFsi",
           "note": null
         },
@@ -7432,7 +7432,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:pocketFsi",
           "kind": "js",
-          "line": 1472,
+          "line": 1497,
           "name": "pocketFsi",
           "note": null
         },
@@ -7442,7 +7442,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:compFsiBasis",
           "kind": "js",
-          "line": 1474,
+          "line": 1499,
           "name": "compFsiBasis",
           "note": null
         },
@@ -7452,7 +7452,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:headline",
           "kind": "js",
-          "line": 1476,
+          "line": 1501,
           "name": "headline",
           "note": null
         },
@@ -7462,7 +7462,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:where",
           "kind": "js",
-          "line": 1469,
+          "line": 1494,
           "name": "where",
           "note": null
         },
@@ -7472,9 +7472,9 @@
           "fn": "pct",
           "id": "pct:pct()",
           "kind": "js",
-          "line": 1370,
+          "line": 1395,
           "name": "pct()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1476"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1501"
         },
         {
           "expr": "r.build_ratio_p50 != null ? `, ${Math.round(Number(r.build_ratio_p50) * 100)}% of the max-build footprint` : ''",
@@ -7482,7 +7482,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:ratio",
           "kind": "js",
-          "line": 1470,
+          "line": 1495,
           "name": "ratio",
           "note": null
         },
@@ -7492,7 +7492,7 @@
           "fn": "buildNearbyBuildsSummary",
           "id": "buildNearbyBuildsSummary:fsiClause",
           "kind": "js",
-          "line": 1475,
+          "line": 1500,
           "name": "fsiClause",
           "note": null
         },
@@ -7502,7 +7502,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:nearby.headline",
           "kind": "js",
-          "line": 1498,
+          "line": 1523,
           "name": "nearby.headline",
           "note": null
         },
@@ -7514,7 +7514,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1419"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1444"
         }
       ],
       "column": "nearby_builds_summary",
@@ -7549,10 +7549,10 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1215 0.5",
-        "scripts/lib/compute/enrich-parcels.js:1267 10",
-        "scripts/lib/compute/enrich-parcels.js:1370 100",
-        "scripts/lib/compute/enrich-parcels.js:1470 100"
+        "scripts/lib/compute/enrich-parcels.js:1240 0.5",
+        "scripts/lib/compute/enrich-parcels.js:1292 10",
+        "scripts/lib/compute/enrich-parcels.js:1395 100",
+        "scripts/lib/compute/enrich-parcels.js:1495 100"
       ],
       "inputs": [],
       "json_key": "headline",
@@ -7634,7 +7634,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comp_fsi_p50",
           "kind": "sql",
-          "line": 1199,
+          "line": 1224,
           "name": "comp_fsi_p50",
           "scope": "update",
           "spans": []
@@ -7649,7 +7649,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.fsi_p50",
           "kind": "sql",
-          "line": 1215,
+          "line": 1240,
           "name": "fsi_p50",
           "scope": "agg",
           "spans": [
@@ -7664,7 +7664,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -7682,7 +7682,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -7699,7 +7699,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.permit_fsi",
           "kind": "sql",
-          "line": 1161,
+          "line": 1186,
           "name": "permit_fsi",
           "scope": "select",
           "spans": []
@@ -7710,7 +7710,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:fsiMinPlausible",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "fsiMinPlausible",
           "note": null
         },
@@ -7720,7 +7720,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:fsiMaxPlausible",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "fsiMaxPlausible",
           "note": null
         },
@@ -7730,7 +7730,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -7740,7 +7740,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -7750,7 +7750,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -7768,8 +7768,8 @@
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1215 0.5",
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1240 0.5",
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -7877,7 +7877,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comp_dominant_build",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comp_dominant_build",
           "scope": "update",
           "spans": []
@@ -7891,7 +7891,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.dominant",
           "kind": "sql",
-          "line": 1209,
+          "line": 1234,
           "name": "dominant",
           "scope": "agg",
           "spans": []
@@ -7903,7 +7903,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -7921,7 +7921,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -7934,7 +7934,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -7944,7 +7944,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -7954,7 +7954,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -7970,7 +7970,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -8057,7 +8057,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -8071,7 +8071,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -8083,7 +8083,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -8101,7 +8101,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -8118,7 +8118,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.address",
           "kind": "sql",
-          "line": 1151,
+          "line": 1176,
           "name": "address",
           "scope": "select",
           "spans": []
@@ -8129,7 +8129,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -8139,7 +8139,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -8149,7 +8149,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -8166,7 +8166,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -8254,7 +8254,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -8268,7 +8268,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -8280,7 +8280,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -8298,7 +8298,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -8315,7 +8315,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.permit_fsi",
           "kind": "sql",
-          "line": 1161,
+          "line": 1186,
           "name": "permit_fsi",
           "scope": "select",
           "spans": []
@@ -8326,7 +8326,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -8336,7 +8336,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -8346,7 +8346,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -8363,7 +8363,7 @@
       "flags": [],
       "formatter": "formatFsi",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -8451,7 +8451,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -8465,7 +8465,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -8477,7 +8477,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -8495,7 +8495,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -8509,7 +8509,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.comp_family",
           "kind": "sql",
-          "line": 1155,
+          "line": 1180,
           "name": "comp_family",
           "scope": "select",
           "spans": [
@@ -8523,7 +8523,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -8533,7 +8533,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -8543,7 +8543,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         },
@@ -8555,7 +8555,7 @@
           "kind": "js",
           "line": 85,
           "name": "structureFamilyCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1155"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1180"
         },
         {
           "expr": "",
@@ -8565,7 +8565,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1155"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1180"
         }
       ],
       "column": "comparable_builds",
@@ -8579,7 +8579,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -8667,7 +8667,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -8681,7 +8681,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -8693,7 +8693,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -8711,7 +8711,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -8724,7 +8724,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -8734,7 +8734,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -8744,7 +8744,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -8760,7 +8760,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -8846,7 +8846,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -8860,7 +8860,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -8872,7 +8872,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -8890,7 +8890,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -8903,7 +8903,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -8913,7 +8913,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -8923,7 +8923,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -8939,7 +8939,7 @@
       "flags": [],
       "formatter": "formatSqft",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -9025,7 +9025,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -9039,7 +9039,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -9051,7 +9051,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -9069,7 +9069,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -9082,7 +9082,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -9092,7 +9092,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -9102,7 +9102,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -9118,7 +9118,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -9759,11 +9759,11 @@
       "flags": [],
       "formatter": "formatCurrency",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [
@@ -10527,11 +10527,11 @@
       "flags": [],
       "formatter": "formatCurrency",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [
@@ -11504,7 +11504,7 @@
       "flags": [],
       "formatter": "formatCurrency",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1019 2"
+        "scripts/lib/compute/enrich-parcels.js:1044 2"
       ],
       "inputs": [
         {
@@ -14886,10 +14886,10 @@
       "flags": [],
       "formatter": "formatCurrency",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -15605,10 +15605,10 @@
       "flags": [],
       "formatter": "formatCurrency",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -17768,7 +17768,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_buildable_gfa_sqm",
           "kind": "sql",
-          "line": 771,
+          "line": 796,
           "name": "max_buildable_gfa_sqm",
           "scope": "select",
           "spans": []
@@ -17782,7 +17782,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -17799,7 +17799,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -17818,7 +17818,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -17830,7 +17830,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -17847,7 +17847,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -17862,7 +17862,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -17877,7 +17877,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -17894,7 +17894,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -17911,7 +17911,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -17929,7 +17929,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_no_massing",
           "kind": "sql",
-          "line": 687,
+          "line": 712,
           "name": "heritage_no_massing",
           "scope": "env",
           "spans": [
@@ -17945,7 +17945,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -17960,7 +17960,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "massing.existing_footprint_sqm",
           "kind": "sql",
-          "line": 574,
+          "line": 599,
           "name": "existing_footprint_sqm",
           "scope": "massing",
           "spans": []
@@ -17977,7 +17977,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.ravine_sub_floor",
           "kind": "sql",
-          "line": 673,
+          "line": 698,
           "name": "ravine_sub_floor",
           "scope": "env",
           "spans": []
@@ -17991,7 +17991,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -18005,7 +18005,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -18026,7 +18026,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -18042,7 +18042,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -18054,7 +18054,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -18068,7 +18068,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -18082,7 +18082,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -18098,7 +18098,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -18118,7 +18118,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -18134,7 +18134,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -18148,7 +18148,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -18162,7 +18162,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -18180,7 +18180,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.stories_calc",
           "kind": "sql",
-          "line": 692,
+          "line": 717,
           "name": "stories_calc",
           "scope": "env",
           "spans": []
@@ -18194,7 +18194,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.pocket_p50",
           "kind": "sql",
-          "line": 664,
+          "line": 689,
           "name": "pocket_p50",
           "scope": "geo",
           "spans": []
@@ -18208,7 +18208,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.height_implied",
           "kind": "sql",
-          "line": 661,
+          "line": 686,
           "name": "height_implied",
           "scope": "geo",
           "spans": [
@@ -18225,7 +18225,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "gfa.gfa_box",
           "kind": "sql",
-          "line": 700,
+          "line": 725,
           "name": "gfa_box",
           "scope": "gfa",
           "spans": []
@@ -18245,7 +18245,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.footprint_calc",
           "kind": "sql",
-          "line": 678,
+          "line": 703,
           "name": "footprint_calc",
           "scope": "env",
           "spans": []
@@ -18260,7 +18260,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.coverage_cap",
           "kind": "sql",
-          "line": 658,
+          "line": 683,
           "name": "coverage_cap",
           "scope": "geo",
           "spans": [
@@ -18279,7 +18279,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.buffer_area",
           "kind": "sql",
-          "line": 651,
+          "line": 676,
           "name": "buffer_area",
           "scope": "geo",
           "spans": [
@@ -18295,7 +18295,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.ravine_red",
           "kind": "sql",
-          "line": 624,
+          "line": 649,
           "name": "ravine_red",
           "scope": "box",
           "spans": [
@@ -18312,7 +18312,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.box_area",
           "kind": "sql",
-          "line": 645,
+          "line": 670,
           "name": "box_area",
           "scope": "geo",
           "spans": [
@@ -18330,7 +18330,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "gfa.fsi_cap",
           "kind": "sql",
-          "line": 701,
+          "line": 726,
           "name": "fsi_cap",
           "scope": "gfa",
           "spans": []
@@ -18341,7 +18341,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -18351,7 +18351,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -18361,7 +18361,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -18371,9 +18371,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -18381,7 +18381,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -18391,7 +18391,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:mislinkTolNum",
           "kind": "js",
-          "line": 536,
+          "line": 561,
           "name": "mislinkTolNum",
           "note": null
         },
@@ -18401,7 +18401,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -18411,7 +18411,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -18423,7 +18423,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -18453,7 +18453,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -18473,7 +18473,7 @@
           "kind": "js",
           "line": 48,
           "name": "buildStoreyHeightCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:662"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:687"
         },
         {
           "expr": "",
@@ -18483,7 +18483,7 @@
           "kind": "js",
           "line": 203,
           "name": "buildCoverageCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:658"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:683"
         },
         {
           "expr": "SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`) .join('\\n')",
@@ -18764,10 +18764,10 @@
       "flags": [],
       "formatter": "formatGfa",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -18937,7 +18937,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_newbuild_coa_gfa_sqm",
           "kind": "sql",
-          "line": 1010,
+          "line": 1035,
           "name": "max_newbuild_coa_gfa_sqm",
           "scope": "select",
           "spans": [
@@ -18951,7 +18951,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 953,
+          "line": 978,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -18965,7 +18965,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:coaUplift",
           "kind": "js",
-          "line": 942,
+          "line": 967,
           "name": "coaUplift",
           "note": null
         },
@@ -18975,7 +18975,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:incremental",
           "kind": "js",
-          "line": 938,
+          "line": 963,
           "name": "incremental",
           "note": null
         }
@@ -19251,10 +19251,10 @@
       "flags": [],
       "formatter": "formatGfa",
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -19530,7 +19530,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 632,
+      "line": 657,
       "value": 2
     },
     {
@@ -19561,7 +19561,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 651,
+      "line": 676,
       "value": 2
     },
     {
@@ -19592,7 +19592,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 653,
+      "line": 678,
       "value": 2
     },
     {
@@ -19621,7 +19621,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 658,
+      "line": 683,
       "value": 100
     },
     {
@@ -19632,7 +19632,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 1019,
+      "line": 1044,
       "value": 2
     },
     {
@@ -19642,7 +19642,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 1210,
+      "line": 1235,
       "value": 0.5
     },
     {
@@ -19653,7 +19653,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 1215,
+      "line": 1240,
       "value": 0.5
     },
     {
@@ -19677,7 +19677,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "sql",
-      "line": 1267,
+      "line": 1292,
       "value": 10
     },
     {
@@ -19687,7 +19687,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "js",
-      "line": 1370,
+      "line": 1395,
       "value": 100
     },
     {
@@ -19704,7 +19704,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "js",
-      "line": 1437,
+      "line": 1462,
       "value": 100
     },
     {
@@ -19714,7 +19714,7 @@
       ],
       "file": "scripts/lib/compute/enrich-parcels.js",
       "lang": "js",
-      "line": 1470,
+      "line": 1495,
       "value": 100
     },
     {
@@ -19747,11 +19747,11 @@
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
-      "sha256": "0df1db1710e1a619"
+      "sha256": "b9a6e9b330abc39a"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "26c474567dd718e4"
+      "sha256": "8a8bd59057afff8a"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",
@@ -19787,7 +19787,7 @@
     },
     {
       "path": "scripts/lib/compute/enrich-parcels.js",
-      "sha256": "ca63e7b97692323a"
+      "sha256": "8e76004b9bef01de"
     },
     {
       "path": "scripts/lib/max-build.js",
@@ -19815,7 +19815,7 @@
     },
     {
       "path": "scripts/seeds/logic_variables.json",
-      "sha256": "e08511604f1c1edd"
+      "sha256": "657e14a5c120eff5"
     },
     {
       "path": "scripts/surfaces/_schema/report-fields.decl.json",
@@ -20638,7 +20638,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.cur_floor_gfa_sqm",
           "kind": "sql",
-          "line": 1018,
+          "line": 1043,
           "name": "cur_floor_gfa_sqm",
           "scope": "select",
           "spans": []
@@ -20653,7 +20653,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "g.eff_footprint",
           "kind": "sql",
-          "line": 1032,
+          "line": 1057,
           "name": "eff_footprint",
           "scope": "g",
           "spans": []
@@ -20668,7 +20668,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.mislink",
           "kind": "sql",
-          "line": 1028,
+          "line": 1053,
           "name": "mislink",
           "scope": "m",
           "spans": [
@@ -20682,7 +20682,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 953,
+          "line": 978,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -20696,7 +20696,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:mislinkTol",
           "kind": "js",
-          "line": 945,
+          "line": 970,
           "name": "mislinkTol",
           "note": null
         },
@@ -20706,7 +20706,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:incremental",
           "kind": "js",
-          "line": 938,
+          "line": 963,
           "name": "incremental",
           "note": null
         }
@@ -20861,7 +20861,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_buildable_footprint_sqm",
           "kind": "sql",
-          "line": 743,
+          "line": 768,
           "name": "max_buildable_footprint_sqm",
           "scope": "select",
           "spans": []
@@ -20875,7 +20875,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.emit",
           "kind": "sql",
-          "line": 623,
+          "line": 648,
           "name": "emit",
           "scope": "box",
           "spans": []
@@ -20892,7 +20892,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "tier.lot_size_confidence",
           "kind": "sql",
-          "line": 605,
+          "line": 630,
           "name": "lot_size_confidence",
           "scope": "tier",
           "spans": [
@@ -20911,7 +20911,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.best_area",
           "kind": "sql",
-          "line": 600,
+          "line": 625,
           "name": "best_area",
           "scope": "lot",
           "spans": []
@@ -20923,7 +20923,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -20940,7 +20940,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.geom_area",
           "kind": "sql",
-          "line": 581,
+          "line": 606,
           "name": "geom_area",
           "scope": "sb",
           "spans": []
@@ -20955,7 +20955,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.fxd_area",
           "kind": "sql",
-          "line": 582,
+          "line": 607,
           "name": "fxd_area",
           "scope": "sb",
           "spans": []
@@ -20970,7 +20970,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lg",
           "kind": "sql",
-          "line": 594,
+          "line": 619,
           "name": "pair_lg",
           "scope": "lot",
           "spans": [
@@ -20987,7 +20987,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_lf",
           "kind": "sql",
-          "line": 596,
+          "line": 621,
           "name": "pair_lf",
           "scope": "lot",
           "spans": [
@@ -21004,7 +21004,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "lot.pair_gf",
           "kind": "sql",
-          "line": 598,
+          "line": 623,
           "name": "pair_gf",
           "scope": "lot",
           "spans": [
@@ -21022,7 +21022,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.heritage_no_massing",
           "kind": "sql",
-          "line": 687,
+          "line": 712,
           "name": "heritage_no_massing",
           "scope": "env",
           "spans": [
@@ -21038,7 +21038,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_heritage_designated",
           "kind": "sql",
-          "line": 546,
+          "line": 571,
           "name": "is_heritage_designated",
           "scope": "scope",
           "spans": []
@@ -21053,7 +21053,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "massing.existing_footprint_sqm",
           "kind": "sql",
-          "line": 574,
+          "line": 599,
           "name": "existing_footprint_sqm",
           "scope": "massing",
           "spans": []
@@ -21073,7 +21073,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "env.footprint_calc",
           "kind": "sql",
-          "line": 678,
+          "line": 703,
           "name": "footprint_calc",
           "scope": "env",
           "spans": []
@@ -21087,7 +21087,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_in_ravine_protection_area",
           "kind": "sql",
-          "line": 545,
+          "line": 570,
           "name": "is_in_ravine_protection_area",
           "scope": "scope",
           "spans": []
@@ -21101,7 +21101,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.width_m",
           "kind": "sql",
-          "line": 643,
+          "line": 668,
           "name": "width_m",
           "scope": "geo",
           "spans": [
@@ -21122,7 +21122,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.width_raw",
           "kind": "sql",
-          "line": 629,
+          "line": 654,
           "name": "width_raw",
           "scope": "box",
           "spans": [
@@ -21138,7 +21138,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_corner_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_corner_lot",
           "scope": "scope",
           "spans": []
@@ -21150,7 +21150,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_count",
           "kind": "sql",
-          "line": 588,
+          "line": 613,
           "name": "side_count",
           "scope": "sb",
           "spans": [
@@ -21164,7 +21164,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.side_setback",
           "kind": "sql",
-          "line": 585,
+          "line": 610,
           "name": "side_setback",
           "scope": "sb",
           "spans": [
@@ -21178,7 +21178,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.flankage_setback",
           "kind": "sql",
-          "line": 587,
+          "line": 612,
           "name": "flankage_setback",
           "scope": "sb",
           "spans": [
@@ -21194,7 +21194,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.length_m",
           "kind": "sql",
-          "line": 644,
+          "line": 669,
           "name": "length_m",
           "scope": "geo",
           "spans": [
@@ -21214,7 +21214,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.length_raw",
           "kind": "sql",
-          "line": 632,
+          "line": 657,
           "name": "length_raw",
           "scope": "box",
           "spans": [
@@ -21230,7 +21230,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.is_through_lot",
           "kind": "sql",
-          "line": 544,
+          "line": 569,
           "name": "is_through_lot",
           "scope": "scope",
           "spans": []
@@ -21244,7 +21244,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.front_setback",
           "kind": "sql",
-          "line": 584,
+          "line": 609,
           "name": "front_setback",
           "scope": "sb",
           "spans": [
@@ -21258,7 +21258,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "sb.rear_setback",
           "kind": "sql",
-          "line": 586,
+          "line": 611,
           "name": "rear_setback",
           "scope": "sb",
           "spans": [
@@ -21275,7 +21275,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.coverage_cap",
           "kind": "sql",
-          "line": 658,
+          "line": 683,
           "name": "coverage_cap",
           "scope": "geo",
           "spans": [
@@ -21294,7 +21294,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.buffer_area",
           "kind": "sql",
-          "line": 651,
+          "line": 676,
           "name": "buffer_area",
           "scope": "geo",
           "spans": [
@@ -21310,7 +21310,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "box.ravine_red",
           "kind": "sql",
-          "line": 624,
+          "line": 649,
           "name": "ravine_red",
           "scope": "box",
           "spans": [
@@ -21327,7 +21327,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "geo.box_area",
           "kind": "sql",
-          "line": 645,
+          "line": 670,
           "name": "box_area",
           "scope": "geo",
           "spans": [
@@ -21341,7 +21341,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMinNum",
           "kind": "js",
-          "line": 520,
+          "line": 545,
           "name": "lotMinNum",
           "note": null
         },
@@ -21351,7 +21351,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:lotMaxNum",
           "kind": "js",
-          "line": 521,
+          "line": 546,
           "name": "lotMaxNum",
           "note": null
         },
@@ -21361,7 +21361,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -21371,9 +21371,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         },
         {
           "expr": "mb",
@@ -21381,7 +21381,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:tol",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "tol",
           "note": null
         },
@@ -21391,7 +21391,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:mislinkTolNum",
           "kind": "js",
-          "line": 536,
+          "line": 561,
           "name": "mislinkTolNum",
           "note": null
         },
@@ -21401,7 +21401,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:minDimNum",
           "kind": "js",
-          "line": 537,
+          "line": 562,
           "name": "minDimNum",
           "note": null
         },
@@ -21411,7 +21411,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:RAVINE_SETBACK_M",
           "kind": "js",
-          "line": 515,
+          "line": 540,
           "name": "RAVINE_SETBACK_M",
           "note": null
         },
@@ -21423,7 +21423,7 @@
           "kind": "js",
           "line": 174,
           "name": "buildSideCountCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:588"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:613"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p].side_count}`) .join('\\n')",
@@ -21453,7 +21453,7 @@
           "kind": "js",
           "line": 156,
           "name": "buildSetbackCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:585"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:610"
         },
         {
           "expr": "SETBACK_PREFIXES .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${SETBACK_DEFAULTS[p][dim].toFixed(2)}`) .join('\\n')",
@@ -21473,7 +21473,7 @@
           "kind": "js",
           "line": 203,
           "name": "buildCoverageCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:658"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:683"
         },
         {
           "expr": "SETBACK_PREFIXES .filter((p) => COVERAGE_DEFAULTS[p] != null) .map((p) => ` WHEN upper(${zoneCol}) LIKE '${p}%' THEN ${COVERAGE_DEFAULTS[p].toFixed(2)}`) .join('\\n')",
@@ -21733,10 +21733,10 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -21880,7 +21880,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.max_newbuild_coa_gfa_sqm",
           "kind": "sql",
-          "line": 1010,
+          "line": 1035,
           "name": "max_newbuild_coa_gfa_sqm",
           "scope": "select",
           "spans": [
@@ -21894,7 +21894,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 953,
+          "line": 978,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -21908,7 +21908,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:coaUplift",
           "kind": "js",
-          "line": 942,
+          "line": 967,
           "name": "coaUplift",
           "note": null
         },
@@ -21918,7 +21918,7 @@
           "fn": "buildExistingStructureSql",
           "id": "buildExistingStructureSql:incremental",
           "kind": "js",
-          "line": 938,
+          "line": 963,
           "name": "incremental",
           "note": null
         }
@@ -22194,10 +22194,10 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -22329,7 +22329,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.(filter)",
           "kind": "sql",
-          "line": 1426,
+          "line": 1451,
           "name": "(filter)",
           "scope": "select",
           "spans": [
@@ -22347,7 +22347,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p50",
           "kind": "sql",
-          "line": 1395,
+          "line": 1420,
           "name": "storeys_p50",
           "scope": "select",
           "spans": []
@@ -22358,7 +22358,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:cfg.as_of_right.main_storeys",
           "kind": "js",
-          "line": 1494,
+          "line": 1519,
           "name": "cfg.as_of_right.main_storeys",
           "note": null
         },
@@ -22370,7 +22370,7 @@
           "kind": "js",
           "line": 249,
           "name": "computeOptimalConfig()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "buildTier(p, p50, !blocked)",
@@ -22408,9 +22408,9 @@
           "fn": "mapRowToEngineInput",
           "id": "mapRowToEngineInput:mapRowToEngineInput()",
           "kind": "js",
-          "line": 1430,
+          "line": 1455,
           "name": "mapRowToEngineInput()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "parcel || {}",
@@ -22460,7 +22460,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1419"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1444"
         }
       ],
       "column": "opt_aor_storeys",
@@ -22720,10 +22720,10 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [],
@@ -22859,7 +22859,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.(filter)",
           "kind": "sql",
-          "line": 1426,
+          "line": 1451,
           "name": "(filter)",
           "scope": "select",
           "spans": [
@@ -22877,7 +22877,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p90",
           "kind": "sql",
-          "line": 1396,
+          "line": 1421,
           "name": "storeys_p90",
           "scope": "select",
           "spans": []
@@ -22891,7 +22891,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p50",
           "kind": "sql",
-          "line": 1395,
+          "line": 1420,
           "name": "storeys_p50",
           "scope": "select",
           "spans": []
@@ -22903,7 +22903,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.norm_family",
           "kind": "sql",
-          "line": 1392,
+          "line": 1417,
           "name": "norm_family",
           "scope": "select",
           "spans": [
@@ -22919,7 +22919,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.realized_fsi_p90",
           "kind": "sql",
-          "line": 1403,
+          "line": 1428,
           "name": "realized_fsi_p90",
           "scope": "select",
           "spans": []
@@ -22930,7 +22930,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:cfg.coa_upside.main_gfa_sqm",
           "kind": "js",
-          "line": 1494,
+          "line": 1519,
           "name": "cfg.coa_upside.main_gfa_sqm",
           "note": null
         },
@@ -22942,7 +22942,7 @@
           "kind": "js",
           "line": 249,
           "name": "computeOptimalConfig()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "buildTier({ ...p, fsiCap: coaFsiCap }, p90, !isHolding)",
@@ -22980,9 +22980,9 @@
           "fn": "mapRowToEngineInput",
           "id": "mapRowToEngineInput:mapRowToEngineInput()",
           "kind": "js",
-          "line": 1430,
+          "line": 1455,
           "name": "mapRowToEngineInput()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "parcel || {}",
@@ -23172,7 +23172,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1419"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1444"
         }
       ],
       "column": "opt_coa_gfa_sqm",
@@ -23438,11 +23438,11 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [],
@@ -23569,7 +23569,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.(filter)",
           "kind": "sql",
-          "line": 1426,
+          "line": 1451,
           "name": "(filter)",
           "scope": "select",
           "spans": [
@@ -23587,7 +23587,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p90",
           "kind": "sql",
-          "line": 1396,
+          "line": 1421,
           "name": "storeys_p90",
           "scope": "select",
           "spans": []
@@ -23601,7 +23601,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.storeys_p50",
           "kind": "sql",
-          "line": 1395,
+          "line": 1420,
           "name": "storeys_p50",
           "scope": "select",
           "spans": []
@@ -23613,7 +23613,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.norm_family",
           "kind": "sql",
-          "line": 1392,
+          "line": 1417,
           "name": "norm_family",
           "scope": "select",
           "spans": [
@@ -23629,7 +23629,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.realized_fsi_p90",
           "kind": "sql",
-          "line": 1403,
+          "line": 1428,
           "name": "realized_fsi_p90",
           "scope": "select",
           "spans": []
@@ -23640,7 +23640,7 @@
           "fn": "computeOptConfigRow",
           "id": "computeOptConfigRow:cfg.coa_upside.main_storeys",
           "kind": "js",
-          "line": 1494,
+          "line": 1519,
           "name": "cfg.coa_upside.main_storeys",
           "note": null
         },
@@ -23652,7 +23652,7 @@
           "kind": "js",
           "line": 249,
           "name": "computeOptimalConfig()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "buildTier({ ...p, fsiCap: coaFsiCap }, p90, !isHolding)",
@@ -23690,9 +23690,9 @@
           "fn": "mapRowToEngineInput",
           "id": "mapRowToEngineInput:mapRowToEngineInput()",
           "kind": "js",
-          "line": 1430,
+          "line": 1455,
           "name": "mapRowToEngineInput()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1494"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1519"
         },
         {
           "expr": "parcel || {}",
@@ -23912,7 +23912,7 @@
           "kind": "js",
           "line": 105,
           "name": "parcelFamilyFromZoningCaseSql()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:1419"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:1444"
         }
       ],
       "column": "opt_coa_storeys",
@@ -24178,11 +24178,11 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [],
@@ -26753,11 +26753,11 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [
@@ -27511,11 +27511,11 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1437 100",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100",
+        "scripts/lib/compute/enrich-parcels.js:1462 100",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100",
         "scripts/lib/optimal-config.js:260 2"
       ],
       "inputs": [
@@ -29818,7 +29818,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1019 2"
+        "scripts/lib/compute/enrich-parcels.js:1044 2"
       ],
       "inputs": [
         {
@@ -31874,10 +31874,10 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -32089,7 +32089,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comp_build_ratio_p50",
           "kind": "sql",
-          "line": 1199,
+          "line": 1224,
           "name": "comp_build_ratio_p50",
           "scope": "update",
           "spans": []
@@ -32103,7 +32103,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.br_p50",
           "kind": "sql",
-          "line": 1210,
+          "line": 1235,
           "name": "br_p50",
           "scope": "agg",
           "spans": [
@@ -32117,7 +32117,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -32135,7 +32135,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -32152,7 +32152,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.build_ratio",
           "kind": "sql",
-          "line": 1162,
+          "line": 1187,
           "name": "build_ratio",
           "scope": "select",
           "spans": []
@@ -32163,7 +32163,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:overCaptureClamp",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "overCaptureClamp",
           "note": null
         },
@@ -32173,7 +32173,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -32183,7 +32183,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -32193,7 +32193,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -32434,12 +32434,12 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1210 0.5",
-        "scripts/lib/compute/enrich-parcels.js:1267 10",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:1235 0.5",
+        "scripts/lib/compute/enrich-parcels.js:1292 10",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -32578,7 +32578,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.neighbourhood_cost_premium",
           "kind": "sql",
-          "line": 763,
+          "line": 788,
           "name": "neighbourhood_cost_premium",
           "scope": "select",
           "spans": [
@@ -32593,7 +32593,7 @@
           "kind": "js",
           "line": 217,
           "name": "buildPremiumCase()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:763"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:788"
         },
         {
           "expr": "tiers.map((t) => { const hi = (t.max === null || t.max === undefined) ? '' : ` AND ${incomeCol} < ${t.max}`; return ` WHEN ${incomeCol} >= ${t.min}${hi} THEN ${Number(t.multiplier).toFixed(2)}`; }).j…",
@@ -32699,7 +32699,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "select.neighbourhood_id",
           "kind": "sql",
-          "line": 762,
+          "line": 787,
           "name": "neighbourhood_id",
           "scope": "select",
           "spans": []
@@ -32711,7 +32711,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "scope.(filter)",
           "kind": "sql",
-          "line": 560,
+          "line": 585,
           "name": "(filter)",
           "scope": "scope",
           "spans": [
@@ -32725,7 +32725,7 @@
           "fn": "buildMaxBuildSql",
           "id": "buildMaxBuildSql:incremental",
           "kind": "js",
-          "line": 512,
+          "line": 537,
           "name": "incremental",
           "note": null
         },
@@ -32735,9 +32735,9 @@
           "fn": "buildMassingScopeWhere",
           "id": "buildMassingScopeWhere:buildMassingScopeWhere()",
           "kind": "js",
-          "line": 499,
+          "line": 524,
           "name": "buildMassingScopeWhere()",
-          "note": "called from scripts/lib/compute/enrich-parcels.js:514"
+          "note": "called from scripts/lib/compute/enrich-parcels.js:539"
         }
       ],
       "column": "neighbourhood_id",
@@ -32810,7 +32810,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -32824,7 +32824,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -32836,7 +32836,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -32854,7 +32854,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -32871,7 +32871,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "buildCompCandidatesSql:select.build_ratio",
           "kind": "sql",
-          "line": 1162,
+          "line": 1187,
           "name": "build_ratio",
           "scope": "select",
           "spans": []
@@ -32882,7 +32882,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -32892,7 +32892,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -32902,7 +32902,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -33143,11 +33143,11 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10",
-        "scripts/lib/compute/enrich-parcels.js:632 2",
-        "scripts/lib/compute/enrich-parcels.js:651 2",
-        "scripts/lib/compute/enrich-parcels.js:653 2",
-        "scripts/lib/compute/enrich-parcels.js:658 100"
+        "scripts/lib/compute/enrich-parcels.js:1292 10",
+        "scripts/lib/compute/enrich-parcels.js:657 2",
+        "scripts/lib/compute/enrich-parcels.js:676 2",
+        "scripts/lib/compute/enrich-parcels.js:678 2",
+        "scripts/lib/compute/enrich-parcels.js:683 100"
       ],
       "inputs": [
         {
@@ -33278,7 +33278,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -33292,7 +33292,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -33304,7 +33304,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -33322,7 +33322,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -33338,7 +33338,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.dist",
           "kind": "sql",
-          "line": 1238,
+          "line": 1263,
           "name": "dist",
           "scope": "near",
           "spans": []
@@ -33350,7 +33350,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "s.(filter)",
           "kind": "sql",
-          "line": 1225,
+          "line": 1250,
           "name": "(filter)",
           "scope": "s",
           "spans": [
@@ -33363,7 +33363,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -33373,7 +33373,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -33383,7 +33383,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -33400,7 +33400,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -33486,7 +33486,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -33500,7 +33500,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -33512,7 +33512,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -33530,7 +33530,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -33543,7 +33543,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -33553,7 +33553,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -33563,7 +33563,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -33580,7 +33580,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -33666,7 +33666,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -33680,7 +33680,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -33692,7 +33692,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -33710,7 +33710,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -33723,7 +33723,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -33733,7 +33733,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -33743,7 +33743,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -33760,7 +33760,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
@@ -33846,7 +33846,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "update.comparable_builds",
           "kind": "sql",
-          "line": 1198,
+          "line": 1223,
           "name": "comparable_builds",
           "scope": "update",
           "spans": []
@@ -33860,7 +33860,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "agg.comps",
           "kind": "sql",
-          "line": 1202,
+          "line": 1227,
           "name": "comps",
           "scope": "agg",
           "spans": []
@@ -33872,7 +33872,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "m.(filter)",
           "kind": "sql",
-          "line": 1256,
+          "line": 1281,
           "name": "(filter)",
           "scope": "m",
           "spans": [
@@ -33890,7 +33890,7 @@
           "file": "scripts/lib/compute/enrich-parcels.js",
           "id": "near.(filter)",
           "kind": "sql",
-          "line": 1242,
+          "line": 1267,
           "name": "(filter)",
           "scope": "near",
           "spans": [
@@ -33903,7 +33903,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:lotTol",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "lotTol",
           "note": null
         },
@@ -33913,7 +33913,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:topN",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "topN",
           "note": null
         },
@@ -33923,7 +33923,7 @@
           "fn": "buildComparableBuildsUpdateSql",
           "id": "buildComparableBuildsUpdateSql:knnOverfetch",
           "kind": "js",
-          "line": 1193,
+          "line": 1218,
           "name": "knnOverfetch",
           "note": null
         }
@@ -33940,7 +33940,7 @@
       "flags": [],
       "formatter": null,
       "inline_literals": [
-        "scripts/lib/compute/enrich-parcels.js:1267 10"
+        "scripts/lib/compute/enrich-parcels.js:1292 10"
       ],
       "inputs": [
         {
