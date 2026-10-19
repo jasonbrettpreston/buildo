@@ -20,6 +20,12 @@
 import path from 'node:path';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+import { runnerValues } from '../helpers/runner-variables';
+
+// Spec 124 R-EB (a) (RE-FREEZE #37): the phase-deadline re-cancel cadence (step_phase_recancel_max_ms /
+// _min_ms / _divisor) is runner-owned and handed in resolved by pipeline.step(); a direct runRecorderPhase
+// call must pass the resolved runner values too (seed defaults via the shared helper, never retyped).
+const RUNNER = runnerValues();
 
 const REPO_ROOT = path.resolve(__dirname, '../../../');
 
@@ -28,7 +34,7 @@ const stepLib = require(path.join(REPO_ROOT, 'scripts/lib/step/index.js')) as {
   runRecorderPhase: (args: {
     descriptor: unknown; pool: import('pg').Pool; compute: unknown; config: Record<string, unknown>;
     chainId: string; log: { info: (...args: unknown[]) => void; warn: (...args: unknown[]) => void; error: (...args: unknown[]) => void };
-    tag: string; preWriteGate: null; clockNow: () => Date;
+    tag: string; preWriteGate: null; clockNow: () => Date; runner: Record<string, number>;
   }) => Promise<{
     matched: {
       read_timings?: Array<{ key: string; elapsed_ms: number; row_count: number | null; phase: 'main' | 'optional'; cancelled?: boolean; cancel_kind?: string }>;
@@ -188,7 +194,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     });
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config: {}, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     const timings = result.matched!.read_timings!;
     expect(timings.map((t) => t.key)).toEqual(['alpha', 'beta', 'gamma']);
@@ -206,7 +212,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     const config = { test_stmt_timeout_min: 1, test_phase_deadline_min: 1 }; // 1 minute each — the read takes milliseconds
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     expect(result.matched!.read_timings![0]!.key).toBe('fast');
   });
@@ -222,7 +228,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     await expect(
       stepLib.runRecorderPhase({
         descriptor, pool, compute, config: tight, chainId: 'none', log: silentLog, tag: TAG,
-        preWriteGate: null, clockNow: () => new Date(),
+        preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
       }),
     ).rejects.toThrow(/slow_stmt[\s\S]*statement_timeout|statement_timeout[\s\S]*slow_stmt/);
 
@@ -233,7 +239,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     const computeFast = fakeCompute({ main: [{ key: 'slow_stmt', sql: 'SELECT pg_sleep(0.05)' }] });
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute: computeFast, config: loose, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     expect(result.matched!.read_timings![0]!.key).toBe('slow_stmt');
   }, 20000);
@@ -256,7 +262,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     await expect(
       stepLib.runRecorderPhase({
         descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-        preWriteGate: null, clockNow: () => new Date(),
+        preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
       }),
     ).rejects.toThrow(/phase_deadline/);
   }, 20000);
@@ -267,7 +273,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     await expect(
       stepLib.runRecorderPhase({
         descriptor, pool, compute, config: {}, chainId: 'none', log: silentLog, tag: TAG,
-        preWriteGate: null, clockNow: () => new Date(),
+        preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
       }),
     ).rejects.toThrow(/this_column_does_not_exist/);
   });
@@ -299,7 +305,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     const config = { test_opt_stmt_timeout_min: 0.01 }; // 600ms — the optional read sleeps 3s
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     // The step did NOT fail (no throw above) — carry-forward, not a step failure.
     expect(result.matched!.optional_failed).toEqual(['slow_optional']);
@@ -326,7 +332,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     const config = { test_opt_stmt_timeout_min2: 1, test_opt_phase_deadline_min2: 1 }; // 1 min each — instant read
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     expect(result.matched!.optional_failed).toEqual([]);
     const optEntry = result.matched!.read_timings!.find((t) => t.key === 'fast_optional')!;
@@ -343,7 +349,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     });
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config: {}, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     expect(result.matched!.optional_failed).toEqual(['broken_optional']);
     const optEntry = result.matched!.read_timings!.find((t) => t.key === 'broken_optional')!;
@@ -381,7 +387,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     const startedAt = Date.now();
     const result = await stepLib.runRecorderPhase({
       descriptor, pool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-      preWriteGate: null, clockNow: () => new Date(),
+      preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
     });
     const totalElapsedMs = Date.now() - startedAt;
     // The discriminating assertion: proves ONE shared budget, not two independent ones.
@@ -450,7 +456,7 @@ describe.skipIf(!dbAvailable())('runRecorderPhase — Peel 2 bounds against a RE
     try {
       const result = await stepLib.runRecorderPhase({
         descriptor, pool: clockPool, compute, config, chainId: 'none', log: silentLog, tag: TAG,
-        preWriteGate: null, clockNow: () => new Date(),
+        preWriteGate: null, clockNow: () => new Date(), runner: RUNNER,
       });
       expect(result.matched!.optional_failed).toEqual(['never_attempted_1', 'never_attempted_2']);
       // The CI failure mode: at 1ms the real cancel timer fired DURING the main read, so it

@@ -14,6 +14,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { PoolClient, Pool } from 'pg';
 import { dbAvailable, getTestPool } from './setup-testcontainer';
+import { runnerValues } from '../helpers/runner-variables';
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- exercising the real CJS executor
 const { runInvariants, runPlausibility } = require('../../../scripts/lib/step/plausibility.js');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -94,8 +95,10 @@ describe.skipIf(!dbAvailable())('R-C round-trip lock — invariants[]/plausibili
     ];
     expect(entries.length, 'link_massing must have migrated invariants/plausibility entries for this lock to prove anything').toBeGreaterThan(0);
 
-    const invariantsRun = await runInvariants(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null });
-    const plausibilityRun = await runPlausibility(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null });
+    // Spec 124 R-EB (a): step_post_check_concurrency is runner-owned and resolved by pipeline.step();
+    // a direct runInvariants/runPlausibility call passes the resolved value (seed default via the shared helper).
+    const invariantsRun = await runInvariants(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null, concurrency: runnerValues().step_post_check_concurrency });
+    const plausibilityRun = await runPlausibility(pool, LINK_MASSING_DESCRIPTOR, { frequency: 'every_run', when: null, concurrency: runnerValues().step_post_check_concurrency });
     const observations: Record<string, { value?: unknown; violations?: unknown; error?: unknown }> = {
       ...invariantsRun.observations,
       ...plausibilityRun.observations,
