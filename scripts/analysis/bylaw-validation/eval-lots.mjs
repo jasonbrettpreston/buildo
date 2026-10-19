@@ -13,7 +13,7 @@ const external = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/seeds/bylaw
 const ag = AG.checkAgree({ shards: AU.loadAuthored(ROOT), adjudications: I.adjudications, vocab: I.vocab });
 const index = AU.buildIndex(I.slice);
 const base = [...AG.agreedUnits(ag).values()].map(AU.withGeneratedFields);
-const units = base.map((u) => { let d = []; try { d = X.displacesOf(index, u.unit_id, I.vocab, external).targets.map((t) => t.id); } catch { d = []; } return { ...u, displaces: d }; });
+const units = base.map((u) => { let d = { targets: [], optional_variation: false }; try { d = X.displacesOf(index, u.unit_id, I.vocab, external); } catch { /* unresolved: no links */ } return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation === true }; });
 const enactments = {}; for (const p of I.snap.pages || []) Object.assign(enactments, E.enactedDatesFromText(p.normalized || ''));
 // exception authoring state (ruling (d)), as the review builder: authored when every unit of the exception is agreed / adjudicated
 const isExcReg = (r) => /^900\.\d+\.10\(/.test(r);

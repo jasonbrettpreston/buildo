@@ -76096,6 +76096,147 @@
       "rule": "Spec 69a M-205(1); Spec 78 P5.12 front_yard_averaging; M-75",
       "unit": "10.5.40.70(1)#(1)(B)",
       "value": "The front setback averages the neighbouring houses' setbacks, which are estimated; a survey may differ."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.70(4)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q1 (validation defect D2): this \"Despite 10.20.40.70(3)\" clause only permits an optional shift of 0.3 m between the two side yards and has no value of its own, so it keeps the (3) side yard (Spec 68 §7.5 rule 2) and the shift is disclosed side_yard_shift (closed form of the P5.12 template). Before, it dropped all of (3): 47,505 RD parcels answered no side yard.",
+      "rule": "Spec 68 §7.5 rule 2 (optional variation, operator y 2026-10-19 Q1); Spec 69a M-205(2), M-172; Spec 78 P5.12 side_yard_shift; M-75",
+      "unit": "10.20.40.70(4)#whole",
+      "value": "One side yard may be up to 0.3 m narrower if the other side yard is made wider by the same amount (lots needing 12.0 m to under 18.0 m of frontage); the side yard shown is the standard one."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.70(5)#(5)(A)/target",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(A)",
+      "value": "deep_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.70(5)#(5)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(A)",
+      "value": [
+        "deep_side_setback_m = 7.5 m @(5)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.70(5)#(5)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(A)",
+      "value": "On lots needing more than 18.0 m of frontage, any part of the house more than 17.0 m behind its front wall (or 19.0 m behind the required front setback) needs a 7.5 m side yard."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.70(5)#(5)(B)/target",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(B)",
+      "value": "deep_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.70(5)#(5)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(B)",
+      "value": [
+        "deep_side_setback_m = 7.5 m @(5)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.70(5)#(5)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Operator 2026-10-19 Q2 (validation defect D3), applying M-205(2) as written: \"RD 10.20.40.70(5) 7.5 m only for the part of the building beyond the lesser of 17.0 m from the front main wall or 19.0 m from the required front yard … not a whole-lot side yard\". Keyed to side_setback_m it displaced the (3) band for the whole side yard (1,486 RD parcels at 7.5 m; five 2017 CoA cases cite 2.4 m). It is its own measure, deep_side_setback_m, so the side setback answers the (3) band and the deep-portion yard is disclosed until P5.13 models depth (owed).",
+      "rule": "Spec 69a M-205(2); operator y 2026-10-19 Q2; Spec 78 P5.12 deep_side_setback, P5.13 (owed); M-75",
+      "unit": "10.20.40.70(5)#(5)(B)",
+      "value": "On lots needing more than 18.0 m of frontage, any part of the house more than 17.0 m behind its front wall (or 19.0 m behind the required front setback) needs a 7.5 m side yard."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(18)#(18)[SSP](C)/condition",
+      "kind": "correction",
+      "reason": "Validation defect D1 (2026-10-19), keyed under M-218 as the RD flat-roof clauses were: the clause reads \"The maximum height of a detached house with a flat roof is …\", so it binds only the flat-or-shallow roof form. Keyed with condition none it capped pitched roofs too (5,700 RD parcels; 11 St George's Rd, x28: 6.5 m where both readers give the 9.5 m HT). The roof form is the builder's choice (M-172(3) roof_type): form (a) takes this cap, form (b) keeps the zone height.",
+      "rule": "Spec 69a M-218, M-172(3), M-184; Spec 68 §6 condition; M-75",
+      "unit": "900.3.10(18)#(18)[SSP](C)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(21)#(21)[SSP](A)/condition",
+      "kind": "correction",
+      "reason": "Validation defect D1 (2026-10-19), keyed under M-218 as the RD flat-roof clauses were: the clause reads \"The maximum height of a detached house with a flat roof is …\", so it binds only the flat-or-shallow roof form. Keyed with condition none it capped pitched roofs too (5,700 RD parcels; 11 St George's Rd, x28: 6.5 m where both readers give the 9.5 m HT). The roof form is the builder's choice (M-172(3) roof_type): form (a) takes this cap, form (b) keeps the zone height.",
+      "rule": "Spec 69a M-218, M-172(3), M-184; Spec 68 §6 condition; M-75",
+      "unit": "900.3.10(21)#(21)[SSP](A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(28)#(28)[SSP](A)/condition",
+      "kind": "correction",
+      "reason": "Validation defect D1 (2026-10-19), keyed under M-218 as the RD flat-roof clauses were: the clause reads \"The maximum height of a detached house with a flat roof is …\", so it binds only the flat-or-shallow roof form. Keyed with condition none it capped pitched roofs too (5,700 RD parcels; 11 St George's Rd, x28: 6.5 m where both readers give the 9.5 m HT). The roof form is the builder's choice (M-172(3) roof_type): form (a) takes this cap, form (b) keeps the zone height.",
+      "rule": "Spec 69a M-218, M-172(3), M-184; Spec 68 §6 condition; M-75",
+      "unit": "900.3.10(28)#(28)[SSP](A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-900.3.10(37)#(37)[SSP](A)/condition",
+      "kind": "correction",
+      "reason": "Validation defect D1 (2026-10-19), keyed under M-218 as the RD flat-roof clauses were: the clause reads \"The maximum height of a detached house with a flat roof is …\", so it binds only the flat-or-shallow roof form. Keyed with condition none it capped pitched roofs too (5,700 RD parcels; 11 St George's Rd, x28: 6.5 m where both readers give the 9.5 m HT). The roof form is the builder's choice (M-172(3) roof_type): form (a) takes this cap, form (b) keeps the zone height.",
+      "rule": "Spec 69a M-218, M-172(3), M-184; Spec 68 §6 condition; M-75",
+      "unit": "900.3.10(37)#(37)[SSP](A)",
+      "value": {
+        "tokens": [
+          "flat_or_shallow_roof"
+        ]
+      }
     }
   ]
 }

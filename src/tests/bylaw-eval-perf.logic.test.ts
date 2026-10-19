@@ -108,6 +108,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-19 (Q-M218, M-223(3)): the corpus iterates every dsl_target, and upper_storey_setback_m is new;
     // its 140 cells are not_evaluated:no_candidate (the fixture units predate the step-back keying). With that target
     // left out the hash is the previous pin 2ed7dfff…d466 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('690439ff37def387fe8b88cee4ad766df0aeff2cc5b18a59d8569fe8b99f557c');
+    // re-pinned 2026-10-19 (validation fixes, operator Q2; Spec 69a M-205(2)): deep_side_setback_m is a new dsl_target, so
+    // the corpus gains its cells; with it left out the hash is the previous pin 690439ff…557c exactly, so no existing cell
+    // moved (the fixture units carry no displaces_optional, so the Q1 rule-2 change cannot reach them).
+    expect(h.digest('hex')).toBe('2e16556b359bfec4da4e15e4f7b49f39ed4ab409c2d31111ef18ae1ab3a0b491');
   }, 60_000);
 });

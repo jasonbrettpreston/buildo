@@ -160,7 +160,7 @@ One row per slicer `regulation_id` (`<article>(<n>)`, `<article>#article`, `800.
 | | **`condition`** | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | one or more `lot_condition` tokens (a list is a conjunction, §7.4) + DSL `if`, or "none"; a numeric `if` needs a band/threshold token; a token-only condition has no `if` |
 | | **`applies_to.part`** | A (⧉ until A1; narrowed, Spec 69 M-17 note 2026-10-07 (A1)) | `whole · named_addresses · lot_list · map_area`, with refs |
 | | `cross_refs[]` | G | resolved row or `external.json` `ref` ids |
-| | **`displaces[]`** | G | resolved ids from "Despite …" / "does not apply", and from "N percent of the requirements cited in (X)" (the clause sets (X) aside for the building types it names; operator y 2026-10-19, Spec 69a M-181 note). Derived only from that wording in the by-law text, never from a correction; irreflexive and acyclic |
+| | **`displaces[]`** | G | resolved ids from "Despite …" / "does not apply", and from "N percent of the requirements cited in (X)" (the clause sets (X) aside for the building types it names; operator y 2026-10-19, Spec 69a M-181 note). Derived only from that wording in the by-law text, never from a correction; irreflexive and acyclic. Generated beside it: `displaces_optional` — every trigger that names a target governs a sentence whose main verb is the permissive "may" (never "may not", never after an "is" / "are" stating a value); §7.5 rule 2 reads it (operator y 2026-10-19 Q1) |
 | | `include_ref` | G | INCLUDE units only; resolved to a row; expanded transitively with cycle check |
 | | `calculation_handling` | A (`not_modelled_reason`, `user_inputs`: ⧉ until A1, narrowed by Spec 69 M-17 note 2026-10-07 (A1)) + A (status — drafted once by keyer A, because it needs code knowledge keyer B must not have (Spec 69 M-17 note 2026-10-07); description, gaps) | `modelled · partially_modelled · not_modelled · informational` |
 | | `code_refs[]` | A | `table.column` · `module#dotted.member` (paths limited to `vocab.code_roots`; anything else fails closed) · logic variable, + `expects` on constants |
@@ -332,6 +332,9 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
   2. drop units named in an applicable DISAPPLY or in another applicable unit's displaces[]. A displacer
      with a target drops only units of its own target; an entry naming an argument path inside a unit
      drops only that argument (§7.4)                                                          (Spec 69 M-48)
+     An OPTIONAL VARIATION drops nothing: a PERMIT or UNUSUAL with no value of its own whose trigger
+     governs a permissive "may" sentence (generated displaces_optional) keeps the limit it names, and
+     its disclosure is attached ("may be reduced by 0.3 m", "may extend beyond … by 2.0 m")   (operator y 2026-10-19 Q1)
   3. an applicable unit whose displaces[] names a PROCEDURAL unit with non-empty ranks_layers[]
      is not outranked by the layers that unit ranks (read from ranks_layers[], never an id)   (Spec 69 M-38, RATIFIED 2026-10-06)
      - tie-break: it ranks just above the highest layer that rule ranks, so it beats a unit at that

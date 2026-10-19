@@ -428,7 +428,8 @@ export async function runGates(I) {
     // `layer`; effective() rule 2 reads `displaces[]`). The gate evaluates with the evaluator's displacement links, so a
     // "Despite …" unit is never dropped here (operator y 2026-10-19: V25 lost 10.20.40.20(3)(B) without them).
     const index = buildIndex(I.slice);
-    const evalUnits = agreedUnits.map(withGeneratedFields).map((u) => ({ ...u, displaces: displacesOf(index, u.unit_id, I.vocab, null).targets.map((t) => t.id) }));
+    // displaces_optional (G, Spec 68 §7.5 rule 2, operator 2026-10-19 Q1): the unit's trigger only permits an optional variation
+    const evalUnits = agreedUnits.map(withGeneratedFields).map((u) => { const d = displacesOf(index, u.unit_id, I.vocab, null); return { ...u, displaces: d.targets.map((t) => t.id), displaces_optional: d.optional_variation }; });
     const r = checkEval({ units: evalUnits, vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
     ctx.evalResult = r;
     const fx = evaluateSelfTest(ev);

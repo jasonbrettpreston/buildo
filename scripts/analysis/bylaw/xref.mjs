@@ -9,7 +9,14 @@
 // G-XREF, and the generator of `displaces[]` / `include_ref` (both G: computed from the slice, never keyed). PURE.
 //
 //   displacesOf(index, unitId, vocab, external?) → {targets:[{id, kind, citation, phrase}], unresolved:[{citation, phrase}],
-//                                                  self:[citation], internal:[id], triggers:[{phrase, at, clause_path, n}]}
+//                                                  self:[citation], internal:[id], triggers:[{phrase, at, clause_path, n, optional}],
+//                                                  optional_variation: boolean}
+//                                                  optional_variation (Spec 68 §7.5 rule 2, operator 2026-10-19 Q1): every
+//                                                  trigger that names a target governs a sentence whose verb is the
+//                                                  permissive "may" ("may be reduced", "may extend beyond", "may be
+//                                                  located" — never "may not", never after an "is" / "are" that states
+//                                                  a value). Derived only from that wording; the
+//                                                  evaluator reads it only for a unit with no value of its own.
 //   includeOf(index, unitId, external?)          → {citation, resolved:{ok, kind, id, reason?}} | null
 //   checkXref({slice, units, vocab, external, inScopeIds?, adjudications?})   → {status, pass, checked, violations, counts}
 //   groupRows(index, resolved, inScopeIds?)      → regulation ids a section / Article include_ref expands to (M-76 A2)
@@ -61,6 +68,10 @@ const GROUP = '\\([0-9A-Za-z]{1,7}\\)';
 const SEP = '\\s*(?:,\\s*(?:and\\s+|or\\s+|to\\s+)?|and|or|to)\\s*';
 const ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx'];
 
+/** Q1 (operator 2026-10-19, Spec 68 §7.5 rule 2): the permissive modal of an optional variation, and where its sentence ends. */
+const PERMISSIVE_MAY = /(?<![A-Za-z])may(?![A-Za-z])(?!\s+not(?![A-Za-z]))/;
+const SENTENCE_END = /;|:|\.(?=\s|$)/;
+const STATES_VALUE = /(?<![A-Za-z])(?:is|are)(?![A-Za-z])/;
 /** The gap before the first reference of a forward trigger's chain ("Despite the requirements of regulation X", A5). */
 // Spec 69a M-81 R6: `regulations?\s*` tolerates the City's missing space ("regulation10.5.60.20(2)", a counted
 // `ref_missing_space` source defect); "any regulation, prevailing section or prevailing by-law in article 900.2.10"
@@ -135,7 +146,7 @@ function resolveRelative(row, fromPath, syms) {
  */
 export function displacesOf(index, unitId, vocab, external = null) {
   const view = unitView(index, unitId);
-  const out = { targets: [], unresolved: [], self: [], internal: [], triggers: [] };
+  const out = { targets: [], unresolved: [], self: [], internal: [], triggers: [], optional_variation: false };
   if (!view) return out;
   const row = view.row;
   const t = row.verbatim;
@@ -226,11 +237,19 @@ export function displacesOf(index, unitId, vocab, external = null) {
           for (const r of (row.refs || []).filter((x) => x.start >= segFrom && x.end <= at)) add(r.citation, resolveCitation(index, r.citation, external), phrase);
           for (const x of relativeRefs(t.slice(segFrom, at))) for (const g of x.groups) add(`${row.regulation_id}#${g.map((s2) => `(${s2})`).join('')}`, relTarget(row, c.path, g), phrase);
         }
-        out.triggers.push({ phrase, at, clause_path: c.path, n: named, backward });
+        // the sentence the trigger governs: from the trigger to the clause's first ";", ":" or sentence-ending "." (Q1);
+        // its main verb is the permissive "may" — a sentence that first states a value ("… is 2.6 metres …, except that …
+        // may …") is a value clause, not an optional variation
+        const sentence = t.slice(at, cc.end).split(SENTENCE_END)[0];
+        const may = PERMISSIVE_MAY.exec(sentence);
+        const optional = !backward && Boolean(may) && !STATES_VALUE.test(sentence.slice(0, may.index));
+        out.triggers.push({ phrase, at, clause_path: c.path, n: named, backward, optional });
       }
     }
   }
   out.targets.sort((a, b) => cmpStr(a.id, b.id));
+  const naming = out.triggers.filter((x) => x.n > 0);
+  out.optional_variation = out.targets.length > 0 && naming.length > 0 && naming.every((x) => x.optional);
   return out;
 }
 
