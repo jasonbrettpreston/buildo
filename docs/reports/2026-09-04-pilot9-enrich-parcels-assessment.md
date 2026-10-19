@@ -1001,7 +1001,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=266 |
+| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=267 |
 | 2 | enrich_parcels | PASS | 52 declared, missing from seeds: none |
 | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_parcels | PASS | SPEC LINK header present=true |
@@ -1066,7 +1066,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): shape=enrich runner=runEnrichPhase: no staleness.ledgerGatedSkip/selectMode on this path (ENRICHER's own scope-defer archetype, Spec 122 §3.0b); calls staleness.detectInterruptedRetraction directly and folds interruptedRetraction.interrupted into the full/incremental decision before any pass runs · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=131443B notes=11441B checks=40 rows records_meta=5595B (newest post/ capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=131443B notes=11441B checks=40 rows records_meta=13118B (newest post/ capture) |
 
 **Enforced-green: 12/14** · not-run: 1 · vacuous: 0
 

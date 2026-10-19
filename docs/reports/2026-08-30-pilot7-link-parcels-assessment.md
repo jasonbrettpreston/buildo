@@ -2333,7 +2333,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_parcels | PASS | min_migration=12 <= migrations count=266 |
+| 1 | link_parcels | PASS | min_migration=12 <= migrations count=267 |
 | 2 | link_parcels | PASS | 8 declared, missing from seeds: none |
 | 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_parcels | PASS | SPEC LINK header present=true |

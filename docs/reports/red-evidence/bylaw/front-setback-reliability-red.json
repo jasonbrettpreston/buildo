@@ -1,0 +1,246 @@
+{
+ "suite": "src/tests/bylaw-front-setback-reliability.logic.test.ts",
+ "base": "a475e71e",
+ "run_on": "2026-10-19",
+ "note": "Front-setback reliability (operator ruling 2026-10-19; M-205(1) dated note; LC-57). Red against a475e71e plus a rule-less stub of scripts/analysis/bylaw/front-averaging.mjs (empty exclusion list; resolveFrontAveraging throws), so each case reaches its own assertion: no externalized switch, no applicability derivation, no needs-survey basis.",
+ "counts": {
+  "red": 16,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "LC-57 / M-205(1): the threshold is externalized and starts closed seeds fya_estimates_accepted = 0, fya_oracle_tol_m = 0.5, fya_oracle_min_within_tol_pct = 90, each shown in admin",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'default')"
+  },
+  {
+   "name": "LC-57 / M-205(1): the threshold is externalized and starts closed refuses a missing or non-0/1 switch instead of guessing",
+   "at_base": "red",
+   "reason": "AssertionError: expected [Function] to throw error matching /fya_estimates_accepted/ but got 'front averaging: no rule yet'"
+  },
+  {
+   "name": "threshold fails (today): averaging would apply → zone default, needs survey, averaging disclosed two neighbours, both estimated: zone_default_needs_survey with front_yard_needs_survey",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "threshold fails (today): averaging would apply → zone default, needs survey, averaging disclosed one neighbour: the same",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "threshold fails (today): averaging would apply → zone default, needs survey, averaging disclosed three or more qualifying neighbours (Q-B2 open): the same",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "averaging does not apply: zone default, no survey flag, no disclosure no qualifying neighbour (farther than 15.0 m, other street, not residential, no building)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "averaging does not apply: zone default, no survey flag, no disclosure 15.0 m exactly counts (\"15.0 metres or less\")",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "threshold passes (switch on): only fully estimated one/two-neighbour lots are averaged two estimated neighbours → their average, averaged_two, front_yard_averaging disclosed",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "threshold passes (switch on): only fully estimated one/two-neighbour lots are averaged one estimated neighbour → its setback, averaged_one",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "threshold passes (switch on): only fully estimated one/two-neighbour lots are averaged the closed exclusion list is the step's whole non-estimated vocabulary",
+   "at_base": "red",
+   "reason": "AssertionError: expected [] to deeply equal [ 'estimate_negative', …(4) ]"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) R: the front setback comes from 10.10.40.70(1), never from 10.5.40.70(1)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) RD: the front setback comes from 10.20.40.70(1), never from 10.5.40.70(1)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) RS: the front setback comes from 10.40.40.70(1), never from 10.5.40.70(1)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) RT: the front setback comes from 10.60.40.70(1), never from 10.5.40.70(1)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) RM: the front setback comes from 10.80.40.70(1), never from 10.5.40.70(1)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  },
+  {
+   "name": "the default used is the zone's own x.40.70(1) value (evaluator, production units) switch on, two estimated neighbours: the averaged value wins through 10.5.40.70(1)(B)",
+   "at_base": "red",
+   "reason": "Error: front averaging: no rule yet"
+  }
+ ],
+ "followups": [
+  {
+   "base": "79ff0d5d",
+   "run_on": "2026-10-19",
+   "note": "Operator y 2026-10-19: front_yard_needs_survey must also say the actual setback may be larger or smaller (≤ 45 words, LC-52). Red at 79ff0d5d: the template lacked the sentence; the word-count guard passed both sides.",
+   "counts": {
+    "red": 1,
+    "pass": 1
+   },
+   "cases": [
+    {
+     "name": "P5.12 front_yard_needs_survey wording (LC-52; operator 2026-10-19: the actual setback may be larger or smaller) names the averaging by-law, says the standard setback is shown, and that the actual one may be larger or smaller",
+     "at_base": "red",
+     "reason": "AssertionError: expected 'The by-law sets this lot\\'s front set…' to match /standard \\{X\\} m is shown/"
+    },
+    {
+     "name": "P5.12 front_yard_needs_survey wording (LC-52; operator 2026-10-19: the actual setback may be larger or smaller) stays within 45 words",
+     "at_base": "pass",
+     "reason": ""
+    }
+   ]
+  },
+  {
+   "base": "4321b6a7",
+   "run_on": "2026-10-19",
+   "note": "Revised operator ruling 2026-10-19 (replaces the all-or-nothing switch): max(averaged estimate + fya_porch_allowance_m, zone default), needs survey; excluded estimates keep the zone default with front_yard_not_measured. Red at 4321b6a7 with the suite rewritten for the revised rule; the closed exclusion list passed both sides.",
+   "counts": {
+    "red": 23,
+    "pass": 1
+   },
+   "cases": [
+    {
+     "name": "LC-58 / M-205(1): one admin setting, the porch allowance; the switch and oracle dials are gone seeds fya_porch_allowance_m = 1.0 m in admin group Source Ingestion",
+     "at_base": "red",
+     "reason": "TypeError: Cannot read properties of undefined (reading 'default')"
+    },
+    {
+     "name": "LC-58 / M-205(1): one admin setting, the porch allowance; the switch and oracle dials are gone no dead dial: fya_estimates_accepted, fya_oracle_tol_m and fya_oracle_min_within_tol_pct are not seeded",
+     "at_base": "red",
+     "reason": "AssertionError: expected { default: +0, type: 'number', …(4) } to be undefined"
+    },
+    {
+     "name": "LC-58 / M-205(1): one admin setting, the porch allowance; the switch and oracle dials are gone refuses a missing or invalid allowance and a missing zone default instead of guessing",
+     "at_base": "red",
+     "reason": "AssertionError: expected [Function] to throw error matching /fya_porch_allowance_m/ but got 'fya_estimates_accepted must be 0 or 1…'"
+    },
+    {
+     "name": "averaging applies: max(averaged estimate + porch allowance, zone default), needs survey estimate + allowance above the floor: 7.0 / 7.4 → 7.2 + 1.0 = 8.2 m",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "averaging applies: max(averaged estimate + porch allowance, zone default), needs survey estimate + allowance below the floor: 4.0 / 5.0 → 4.5 + 1.0 = 5.5, floor 6.0 m",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "averaging applies: max(averaged estimate + porch allowance, zone default), needs survey one neighbour: its estimate + allowance (averaged_one)",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "averaging applies: max(averaged estimate + porch allowance, zone default), needs survey the allowance setting changes the result",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey a qualifying neighbour with est_status no_building never feeds an average",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey a qualifying neighbour with est_status no_frontage_street never feeds an average",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey a qualifying neighbour with est_status street_not_found never feeds an average",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey a qualifying neighbour with est_status estimate_negative never feeds an average",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey a qualifying neighbour with est_status estimate_out_of_bounds never feeds an average",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey the closed exclusion list is the step's whole non-estimated vocabulary",
+     "at_base": "pass",
+     "reason": ""
+    },
+    {
+     "name": "excluded estimates and the ambiguous case keep the zone default, flagged needs survey three or more qualifying neighbours (Q-B2 open): the same",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "averaging does not apply: zone default, no survey flag, no disclosure no qualifying neighbour (farther than 15.0 m, other street, not residential, no building)",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "averaging does not apply: zone default, no survey flag, no disclosure 15.0 m exactly counts (\"15.0 metres or less\")",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback R: the zone default the resolver is given is 10.10.40.70(1)'s 6.0 m; excluded estimates take it",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback RD: the zone default the resolver is given is 10.20.40.70(1)'s 6.0 m; excluded estimates take it",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback RS: the zone default the resolver is given is 10.40.40.70(1)'s 6.0 m; excluded estimates take it",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback RT: the zone default the resolver is given is 10.60.40.70(1)'s 6.0 m; excluded estimates take it",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback RM: the zone default the resolver is given is 10.80.40.70(1)'s 6.0 m; excluded estimates take it",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "evaluator, production units: the resolved lot gives the same front setback averaging applies: the max-rule value wins through 10.5.40.70(1)(B), above and at the floor",
+     "at_base": "red",
+     "reason": "Error: fya_estimates_accepted must be 0 or 1 (got undefined)"
+    },
+    {
+     "name": "P5.12 wording (LC-52: plain, at most 45 words) front_yard_needs_survey: averaging by-law, outlines adjusted for porches, the larger of that and the standard, survey",
+     "at_base": "red",
+     "reason": "AssertionError: expected 'The by-law sets this lot\\'s front set…' to be 'The by-law sets this lot\\'s front set…' // Object.is equality"
+    },
+    {
+     "name": "P5.12 wording (LC-52: plain, at most 45 words) front_yard_not_measured: the operator-approved excluded-case sentence (actual may be larger or smaller)",
+     "at_base": "red",
+     "reason": "AssertionError: expected '' to be 'The by-law sets this lot\\'s front set…' // Object.is equality"
+    }
+   ]
+  }
+ ]
+}

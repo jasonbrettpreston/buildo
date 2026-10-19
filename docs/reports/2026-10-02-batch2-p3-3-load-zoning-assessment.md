@@ -810,7 +810,7 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_zoning | PASS | min_migration=227 <= migrations count=266 |
+| 1 | load_zoning | PASS | min_migration=227 <= migrations count=267 |
 | 2 | load_zoning | PASS | 15 declared, missing from seeds: none |
 | 3 | load_zoning | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_zoning | PASS | SPEC LINK header present=true |

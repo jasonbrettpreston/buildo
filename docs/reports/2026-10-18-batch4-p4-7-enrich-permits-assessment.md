@@ -259,7 +259,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because `docs/reports/generate
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | enrich_permits | PASS | min_migration=204 <= migrations count=266 |
+| 1 | enrich_permits | PASS | min_migration=204 <= migrations count=267 |
 | 2 | enrich_permits | PASS | 5 declared, missing from seeds: none |
 | 3 | enrich_permits | PASS | retired=0 overlap-with-declared=none |
 | 7 | enrich_permits | PASS | SPEC LINK header present=true |

@@ -606,7 +606,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=266 |
+| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=267 |
 | 2 | compute_parcel_cost_estimates | PASS | 20 declared, missing from seeds: none |
 | 3 | compute_parcel_cost_estimates | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_parcel_cost_estimates | PASS | SPEC LINK header present=true |

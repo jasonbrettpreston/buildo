@@ -9,14 +9,14 @@
 - authored rows read: 0 (pending 0) · heuristic rows read: 0
 - input `docs/specs/00-architecture/01_database_schema.md` sha256 `83c6c7f6d88b50c6`
 - input `scripts/lib/build-norms.js` sha256 `79277fd3c64dd57b`
-- input `scripts/lib/compute/enrich-parcels.js` sha256 `ca63e7b97692323a`
+- input `scripts/lib/compute/enrich-parcels.js` sha256 `8e76004b9bef01de`
 - input `scripts/lib/max-build.js` sha256 `b4d23240936fa986`
 - input `scripts/lib/optimal-config.js` sha256 `f23bdac70e822673`
 - input `scripts/lib/parcel-cost.js` sha256 `0d767c0bfc32c3e7`
 - input `scripts/lib/zoning-precedence.js` sha256 `e16e85624e597d70`
 - input `scripts/seeds/bylaw/external.json` sha256 `23ab08b99383271d`
 - input `scripts/seeds/bylaw/vocab.json` sha256 `5b37914ad0d233f4`
-- input `scripts/seeds/logic_variables.json` sha256 `e08511604f1c1edd`
+- input `scripts/seeds/logic_variables.json` sha256 `12ff1e434af6e53a`
 - input `src/lib/db/generated/schema.ts` sha256 `e3130fe6c10936be`
 
 ## Summary
@@ -45,7 +45,7 @@ None.
 `class` is the gate class (from row `code_refs` and `model_heuristic` rows). `proposed` is read from the code comments
 for the operator to confirm at S9 — it never sets the class: `by_law_cited` (the comment cites a clause) · `by_law_claimed_unsourced`
 (the comment or its section header claims a by-law source with no clause; the operator classifies, F-2) · `heuristic` with a
-proposed `heuristic_reason`. Inline disclosure: 294 numeric literals outside named constants and 27 decimal numbers
+proposed `heuristic_reason`. Inline disclosure: 298 numeric literals outside named constants and 27 decimal numbers
 inside string/SQL text are not classified (see blind spots).
 
 | # | Module | Member | Value | Line | Class | Proposed | Evidence | Logic variable |
@@ -200,7 +200,7 @@ inside string/SQL text are not classified (see blind spots).
 | Module | Named constants | Inline numeric literals | Decimals in string/SQL text |
 |---|---|---|---|
 | `scripts/lib/build-norms.js` | 6 | 0 | 0 |
-| `scripts/lib/compute/enrich-parcels.js` | 0 | 220 | 25 |
+| `scripts/lib/compute/enrich-parcels.js` | 0 | 224 | 25 |
 | `scripts/lib/max-build.js` | 105 | 14 | 2 |
 | `scripts/lib/optimal-config.js` | 20 | 44 | 0 |
 | `scripts/lib/parcel-cost.js` | 2 | 16 | 0 |

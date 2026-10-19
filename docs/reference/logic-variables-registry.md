@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (778) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (779) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 16 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **785** logic variables (778 numeric, 6 JSONB, 1 string).
+Total: **786** logic variables (779 numeric, 6 JSONB, 1 string).
 
 ---
 
@@ -273,6 +273,7 @@ Total: **785** logic variables (778 numeric, 6 JSONB, 1 string).
 | `forecast_excluded_trade_slugs` | JSONB | ["site-maintenance"] | — (migration-seeded) | `scripts/compute-trade-forecasts.js` | migration 210 | — (governed by GROUPS only) | Spec 80 P4 / Spec 85 §3 — trade slugs excluded from trade_forecasts as non-forecastable (no phase-anchored install window). Rows carrying these slugs are skipped WITHOUT incrementing unmapped_trades; counted as excluded_rows + listed in excluded_trade_slugs audit rows. JSONB array per mig 097 convention (variable_value sentinel 0, array in variable_value_json). CONSUMED by scripts/compute-trade-forecasts.js. |
 | `fya_est_max_m` | numeric | 30 | 5 – 200 | — | seed | group: Source Ingestion | McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: an estimated neighbour front setback above this (metres) is est_status estimate_out_of_bounds (research p99 17.41 m). CONSUMED by scripts/lib/compute/link-parcel-abutments.js. |
 | `fya_est_min_m` | numeric | 0 | 0 – 5 | — | seed | group: Source Ingestion | McBylaw Phase 2 inputs B (2026-10-08). link_parcel_abutments: an estimated neighbour front setback below this (metres) is est_status estimate_negative, never stored as a value (research: 4 of 378 negative). Bounds 0..5 (H6 QA ruling 2026-10-16, CA N3): never below 0, so a negative setback is never stamped estimated, and never above fya_est_max_m's floor of 5, so min <= max holds without a cross-check. CONSUMED by scripts/lib/compute/link-parcel-abutments.js. |
+| `fya_porch_allowance_m` | numeric | 1 | 0 – 3 | — | seed | group: Source Ingestion | Front-yard averaging porch allowance (operator ruling 2026-10-19; Spec 69a M-205(1) dated note; Spec 131 LC-58). Where 10.5.40.70(1) averaging applies, the front setback is max(averaged neighbour estimate + this allowance, the zone default of x.40.70(1)), always flagged needs survey. The neighbour estimates are measured to building outlines that take in porches and steps; against 219 CoA notices they sit at or below the examiner's figure 89 % of the time. At 1.0 m: mean error 1.39 m, 55 % within 1 m, 22 % below the examiner (6.0 m alone: 2.53 m, 64 %). CONSUMED by scripts/analysis/bylaw/front-averaging.mjs and scripts/analysis/bylaw-validation/front-setback-oracle.cjs. |
 | `garage_max_gfa_sqm` | numeric | 60 | 10 – 200 | — | seed | group: Spatial & Massing | Spec 65 §7 (Phase 3) — by-law cap on a detached garage footprint (m²). CONSUMED by enrich-parcels.js (max-build pass). |
 | `garage_min_footprint_sqm` | numeric | 18 | 5 – 200 | — | seed | group: Spatial & Massing | Spec 65 §7 (Phase 3) — minimum usable rear-yard footprint (m²) for a garage to fit (one car). CONSUMED by enrich-parcels.js (max-build pass). |
 | `garage_min_lot_sqm` | numeric | 230 | 100 – 2000 | — | seed | group: Spatial & Massing | Spec 65 §7 (Phase 3) — minimum lot area (m²) to consider an accessory garage. CONSUMED by enrich-parcels.js (max-build pass). |
@@ -808,4 +809,4 @@ Total: **785** logic variables (778 numeric, 6 JSONB, 1 string).
 
 ---
 
-*Generated from 769 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
+*Generated from 770 seed vars + 16 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*

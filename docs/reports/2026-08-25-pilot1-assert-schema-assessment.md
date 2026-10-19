@@ -472,7 +472,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=266 |
+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=267 |
 | 2 | assert_schema | PASS | 3 declared, missing from seeds: none |
 | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
 | 7 | assert_schema | PASS | SPEC LINK header present=true |

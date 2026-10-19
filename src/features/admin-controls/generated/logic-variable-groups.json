@@ -481,6 +481,7 @@
       "abut_street_search_deg",
       "fya_est_min_m",
       "fya_est_max_m",
+      "fya_porch_allowance_m",
       "abut_parcels_with_abutments_warn_pct",
       "parcels_maintenance_timeout_minutes",
       "refresh_snapshot_read_statement_timeout_minutes",

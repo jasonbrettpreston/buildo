@@ -147,7 +147,7 @@ The generated validation scorecard is appended at capture (H6 runbook step 3) by
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | load_bylaw_map_areas | PASS | min_migration=254 <= migrations count=266 |
+| 1 | load_bylaw_map_areas | PASS | min_migration=254 <= migrations count=267 |
 | 2 | load_bylaw_map_areas | PASS | 0 declared, missing from seeds: none |
 | 3 | load_bylaw_map_areas | PASS | retired=0 overlap-with-declared=none |
 | 7 | load_bylaw_map_areas | PASS | SPEC LINK header present=true |
