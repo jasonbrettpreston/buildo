@@ -1,0 +1,187 @@
+#!/usr/bin/env node
+/**
+ * CQA Phase 2: Scraper Network Health (Telemetry Validation)
+ *
+ * Reads scraper_telemetry from the latest completed `inspections` pipeline_run
+ * and validates operational health of the scraping infrastructure.
+ *
+ * Checks:
+ *   1. schema_drift_count == 0 (AIC API field names unchanged)
+ *   2. proxy_error_rate < 5% of permits_attempted
+ *   3. avg_latency_ms (p50) < 2000ms
+ *   4. consecutive_empty_hit == false (WAF didn't shadow-ban)
+ *   5. session_failures == 0
+ *
+ * Usage: node scripts/quality/assert-network-health.js
+ * Exit 0 on pass AND on threshold failures (non-halting per Spec 30 §5.4.1 —
+ * the FAIL audit row is the red channel, consumed by check-chain-verdict).
+ * Exit 1 only on exception-class failures ("I could not check", e.g. the
+ * logicVars validation throw below).
+ *
+ * SPEC LINK: docs/specs/01-pipeline/44_chain_deep_scrapes.md §4 (Network health)
+ */
+const { z } = require('zod');
+const pipeline = require('../lib/pipeline');
+const { loadMarketplaceConfigs, validateLogicVars } = require('../lib/config-loader');
+
+const LOGIC_VARS_SCHEMA = z.object({
+  scraper_error_rate_warn_pct:   z.coerce.number().finite().positive(),
+  scraper_latency_p50_warn_ms:   z.coerce.number().finite().positive(),
+  scraper_empty_streak_warn:     z.coerce.number().finite().positive().int(),
+}).passthrough();
+
+const ADVISORY_LOCK_ID = 105;
+
+pipeline.run('assert-network-health', async (pool) => {
+  const lockResult = await pipeline.withAdvisoryLock(pool, ADVISORY_LOCK_ID, async () => {
+  const { logicVars } = await loadMarketplaceConfigs(pool, 'assert-network-health');
+  const validation = validateLogicVars(logicVars, LOGIC_VARS_SCHEMA, 'assert-network-health');
+  if (!validation.valid) throw new Error(`logicVars validation failed: ${validation.errors.join('; ')}`);
+  const errorRateWarnPct   = logicVars.scraper_error_rate_warn_pct;
+  const latencyP50WarnMs   = logicVars.scraper_latency_p50_warn_ms;
+  const emptyStreakWarn    = logicVars.scraper_empty_streak_warn;
+
+  console.log('\n=== Phase 2: Scraper Network Health ===\n');
+
+  const errors = [];
+  const warnings = [];
+  const rows = [];
+
+  // Fetch latest inspections run with scraper_telemetry.
+  // No status filter — run-chain.js updates each step row to 'completed'
+  // before the next step runs, but removing the filter future-proofs against
+  // orchestrator timing changes.
+  const lastRun = await pool.query(
+    `SELECT records_meta, records_updated FROM pipeline_runs
+     WHERE (pipeline = 'inspections' OR pipeline LIKE '%:inspections')
+     ORDER BY started_at DESC LIMIT 1`
+  );
+
+  const row = lastRun.rows[0] || {};
+  const scTel = row.records_meta?.scraper_telemetry;
+
+  if (!scTel) {
+    console.log('  SKIP: No scraper_telemetry in latest inspections run');
+    rows.push({ metric: 'scraper_telemetry', value: null, threshold: null, status: 'SKIP' });
+    pipeline.emitSummary({
+      records_total: 0, records_new: null, records_updated: 0,
+      records_meta: {
+        audit_table: { phase: 2, name: 'Network Health', verdict: 'SKIP', rows },
+      },
+    });
+    pipeline.emitMeta(
+      { pipeline_runs: ['records_meta', 'status', 'pipeline'] },
+      {}
+    );
+    return;
+  }
+
+  // Check 1: Schema drift
+  const driftCount = (scTel.schema_drift || []).length;
+  if (driftCount > 0) {
+    // WARN not FAIL — missing inspectionProcesses is a known edge case (spec 38 §3.5),
+    // not actual API schema drift. The scraper handles it gracefully.
+    warnings.push(`AIC API schema drift: ${scTel.schema_drift.join('; ')}`);
+    rows.push({ metric: 'schema_drift_count', value: driftCount, threshold: '== 0', status: 'WARN' });
+    console.log(`  WARN: schema_drift_count = ${driftCount}`);
+  } else {
+    rows.push({ metric: 'schema_drift_count', value: 0, threshold: '== 0', status: 'PASS' });
+    console.log('  PASS: schema_drift_count = 0');
+  }
+
+  // Check 2: Proxy error rate
+  const attempted = scTel.permits_attempted || 0;
+  const proxyErrors = scTel.proxy_errors || 0;
+  const errorRate = attempted > 0 ? ((proxyErrors / attempted) * 100) : 0;
+  const errorRateStr = errorRate.toFixed(1) + '%';
+  if (attempted > 0 && errorRate >= errorRateWarnPct) {
+    errors.push(`Proxy error rate ${errorRateStr} (${proxyErrors}/${attempted})`);
+    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: `< ${errorRateWarnPct}%`, status: 'FAIL' });
+    console.error(`  FAIL: proxy_error_rate = ${errorRateStr}`);
+    if (scTel.error_categories) {
+      const breakdown = Object.entries(scTel.error_categories).map(([k, v]) => `${k}:${v}`).join(', ');
+      console.log(`        breakdown: ${breakdown}`);
+    }
+    if (scTel.last_error) {
+      console.log(`        last_error: ${scTel.last_error}`);
+    }
+  } else {
+    rows.push({ metric: 'proxy_error_rate', value: errorRateStr, threshold: `< ${errorRateWarnPct}%`, status: 'PASS' });
+    console.log(`  PASS: proxy_error_rate = ${errorRateStr}`);
+  }
+
+  // Check 3: Latency (p50)
+  const p50 = scTel.latency?.p50 ?? 0;
+  const maxLatency = scTel.latency?.max ?? 0;
+  if (p50 >= latencyP50WarnMs) {
+    warnings.push(`Latency p50 = ${p50}ms (threshold: <${latencyP50WarnMs}ms)`);
+    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: `< ${latencyP50WarnMs}`, status: 'WARN' });
+    console.log(`  WARN: avg_latency_ms (p50) = ${p50}ms`);
+  } else {
+    rows.push({ metric: 'avg_latency_ms', value: p50, threshold: `< ${latencyP50WarnMs}`, status: 'PASS' });
+    console.log(`  PASS: avg_latency_ms (p50) = ${p50}ms`);
+  }
+  rows.push({ metric: 'max_latency_ms', value: maxLatency, threshold: null, status: 'INFO' });
+  console.log(`  INFO: max_latency_ms = ${maxLatency}ms`);
+
+  // Check 4: Consecutive empty (WAF trap)
+  const emptyMax = scTel.consecutive_empty_max || 0;
+  const emptyHit = emptyMax >= emptyStreakWarn;
+  if (emptyHit) {
+    warnings.push(`WAF trap: ${emptyMax} consecutive empty responses`);
+    rows.push({ metric: 'consecutive_empty_hit', value: true, threshold: '== false', status: 'WARN' });
+    console.log(`  WARN: consecutive_empty_hit = true (${emptyMax} consecutive)`);
+  } else {
+    rows.push({ metric: 'consecutive_empty_hit', value: false, threshold: '== false', status: 'PASS' });
+    console.log(`  PASS: consecutive_empty_hit = false (max: ${emptyMax})`);
+  }
+
+  // Check 5: Session bootstraps (informational)
+  rows.push({ metric: 'session_bootstraps', value: scTel.session_bootstraps || 0, threshold: null, status: 'INFO' });
+  console.log(`  INFO: session_bootstraps = ${scTel.session_bootstraps || 0}`);
+
+  // Check 6: Session failures
+  const sessionFails = scTel.session_failures || 0;
+  if (sessionFails > 0) {
+    warnings.push(`${sessionFails} session failures`);
+    rows.push({ metric: 'session_failures', value: sessionFails, threshold: null, status: 'WARN' });
+    console.log(`  WARN: session_failures = ${sessionFails}`);
+  } else {
+    rows.push({ metric: 'session_failures', value: 0, threshold: null, status: 'PASS' });
+    console.log(`  PASS: session_failures = 0`);
+  }
+
+  // Check 7: Permits closed on portal (informational — stale Open Data feed)
+  const closed = scTel.permits_closed || 0;
+  if (closed > 0) {
+    rows.push({ metric: 'permits_closed', value: closed, threshold: null, status: 'INFO' });
+    console.log(`  INFO: permits_closed = ${closed} (progressed past Inspection on portal)`);
+  }
+
+  // Verdict
+  const verdict = errors.length > 0 ? 'FAIL' : warnings.length > 0 ? 'WARN' : 'PASS';
+  console.log(`\n=== Network Health: ${verdict} ===\n`);
+
+  pipeline.emitSummary({
+    records_total: 0, records_new: null, records_updated: 0,
+    records_meta: {
+      checks_passed: errors.length === 0 ? 'all' : undefined,
+      checks_failed: errors.length,
+      checks_warned: warnings.length,
+      audit_table: { phase: 2, name: 'Network Health', verdict, rows },
+    },
+  });
+  pipeline.emitMeta(
+    { pipeline_runs: ['records_meta', 'status', 'pipeline'] },
+    {}
+  );
+
+  // Spec 30 §5.4.1: the proxy_error_rate breach is threshold-derived and no longer
+  // halts — the FAIL audit row above is the red channel (check-chain-verdict reds on
+  // it). ACCEPTED COST, stated per the C4 criterion-(1) ruling: the 4 downstream
+  // steps this no longer strands will report on data the scrape failed to collect.
+  // The :36 logicVars throw stays fatal (exception class — "I could not check").
+  }); // withAdvisoryLock
+
+  if (!lockResult.acquired) return;
+});
