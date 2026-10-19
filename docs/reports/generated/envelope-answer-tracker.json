@@ -10,8 +10,8 @@
  "counts": {
   "answers": 511,
   "by_state": {
-   "INCORPORATED": 449,
-   "UNFIXED": 62
+   "INCORPORATED": 473,
+   "UNFIXED": 38
   },
   "by_verdict": {
    "disclose": 90,
@@ -24,22 +24,22 @@
   "by_disposition": {
    "disclosed_by": 90,
    "excluded": 163,
-   "fixed_by": 79,
+   "fixed_by": 77,
    "matches": 125,
    "resolved_by": 42,
-   "verified_by_lock": 12
+   "verified_by_lock": 14
   },
   "by_chapter": {
    "10.20": {
     "total": 61,
-    "INCORPORATED": 58,
-    "UNFIXED": 3,
+    "INCORPORATED": 61,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.40": {
     "total": 87,
-    "INCORPORATED": 81,
-    "UNFIXED": 6,
+    "INCORPORATED": 87,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.5": {
@@ -50,14 +50,14 @@
    },
    "10.60": {
     "total": 66,
-    "INCORPORATED": 62,
-    "UNFIXED": 4,
+    "INCORPORATED": 66,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "10.80": {
     "total": 77,
-    "INCORPORATED": 72,
-    "UNFIXED": 5,
+    "INCORPORATED": 77,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "150.10": {
@@ -68,14 +68,14 @@
    },
    "150.7": {
     "total": 95,
-    "INCORPORATED": 74,
-    "UNFIXED": 21,
+    "INCORPORATED": 78,
+    "UNFIXED": 17,
     "OPEN": 0
    },
    "150.8": {
     "total": 75,
-    "INCORPORATED": 58,
-    "UNFIXED": 17,
+    "INCORPORATED": 60,
+    "UNFIXED": 15,
     "OPEN": 0
    },
    "5.10": {
@@ -106,443 +106,6 @@
   "feeding_a_lineage_field": 173
  },
  "rows": [
-  {
-   "unit_id": "10.20.30.20(1)#(1)(C)",
-   "regulation_id": "10.20.30.20(1)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.20.40.1(4)#(4)(A)",
-   "regulation_id": "10.20.40.1(4)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "applies with this condition. - f the dwelling unit does not have an individual private driveway leading directly to the front of it - we need a disclosure here",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse unit width answered 5.0 m (no individual private driveway), 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.20.40.10(7)#(7)(B)",
-   "regulation_id": "10.20.40.10(7)",
-   "chapter": "10.20",
-   "verdict": "wrong",
-   "note": "dormers… don't want them to be considered main walls… Disclosure",
-   "source": "operator copy-paste 2026-10-18",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-185"
-   ],
-   "corrected_value": "Dormer walls within the 40 % width share are not main walls, so the maximum design places the dormers at that share.",
-   "disclosure_code": "dormers_at_max",
-   "question": "",
-   "fields": [
-    "gfa_pitched_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.30.20(1)#(1)(C)",
-   "regulation_id": "10.40.30.20(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseplex.",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-181"
-   ],
-   "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
-   "disclosure_code": "semi_house_two_lots",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.30.20(1)#(1)(D)",
-   "regulation_id": "10.40.30.20(1)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.10(2)#(2)(C)",
-   "regulation_id": "10.40.40.10(2)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "this is linked to an envelope measure.  we don't care about apartment buildings but townhouses I believe are still important. key this one similar to the last but focused on townhouses",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-190",
-    "M-214"
-   ],
-   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed.",
-   "disclosure_code": "major_street_forms_not_modelled",
-   "question": "",
-   "fields": [
-    "main_wall_limit_m",
-    "main_wall_pair",
-    "main_wall_status"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.10(5)#(5)(B)",
-   "regulation_id": "10.40.40.10(5)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "We are specifically looking at dormers here - need to investigate if this impacts build envelope. I would imagine you don't want them to count as main walls. ) Width of Dormers in a Roof ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-185"
-   ],
-   "corrected_value": "Dormer walls within the 40 % share are not main walls; the maximum design places dormers at that share.",
-   "disclosure_code": "dormers_at_max",
-   "question": "",
-   "fields": [
-    "gfa_pitched_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.80(2)#(2)(A)",
-   "regulation_id": "10.40.40.80(2)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "This refers to buildings on the same lot ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Building separation applies only when two or more buildings are on the lot; disclosed as a multi-building rule, not bound.",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.40.40.80(2)#(2)(B)",
-   "regulation_id": "10.40.40.80(2)",
-   "chapter": "10.40",
-   "verdict": "wrong",
-   "note": "This refers to buildings on the same lot ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Building separation disclosed as a multi-building rule (5.5 m / 11.0 m), not bound on a single-building lot.",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.30.10(1)#(1)(B)",
-   "regulation_id": "10.60.30.10(1)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detached houseplex the formal works.  Do need to removed the semi detached build type here.",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-181"
-   ],
-   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed).",
-   "disclosure_code": "semi_house_two_lots",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.40.80(2)#(2)(A)",
-   "regulation_id": "10.60.40.80(2)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Separation applies only to two or more buildings on the same lot; disclosed as a multi-building rule (the suite's own separation is 150.7/150.8.60.30(1)).",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.40.80(2)#(2)(B)",
-   "regulation_id": "10.60.40.80(2)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.60.40.80(2)#(2)(C)",
-   "regulation_id": "10.60.40.80(2)",
-   "chapter": "10.60",
-   "verdict": "wrong",
-   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "The 2.4 m side-main-wall separation is disclosed as part of the multi-building rule (two or more buildings on the lot).",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.30.20(1)#(1)(D)",
-   "regulation_id": "10.80.30.20(1)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwelling unit fronting directly on a street: (a) is 6.0 metres for each dwelling unit; and (b) may be reduced by 1.0 metre for each dwelling unit that does not have an individual private driveway leading directly to the front of it; and [ By-l",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187",
-    "M-176"
-   ],
-   "corrected_value": "Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
-   "disclosure_code": "townhouse_driveway_width",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.40.10(2)#(2)(A)",
-   "regulation_id": "10.80.40.10(2)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
-   "source": "operator copy-paste 2026-10-15",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-176",
-    "M-190"
-   ],
-   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "main_wall_limit_m",
-    "main_wall_pair",
-    "main_wall_status"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.40.10(2)#(2)(B)",
-   "regulation_id": "10.80.40.10(2)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
-   "source": "operator copy-paste 2026-10-15",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-176",
-    "M-190"
-   ],
-   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "main_wall_limit_m",
-    "main_wall_pair",
-    "main_wall_status"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.40.80(2)#(2)(A)",
-   "regulation_id": "10.80.40.80(2)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Separation is a two-or-more-buildings-on-the-lot rule; disclosed, not bound on a single-building lot.",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "10.80.40.80(2)#(2)(B)",
-   "regulation_id": "10.80.40.80(2)",
-   "chapter": "10.80",
-   "verdict": "wrong",
-   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
-   "source": "operator copy-paste 2026-10-16",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-187"
-   ],
-   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
-   "disclosure_code": "buildings_on_same_lot",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
   {
    "unit_id": "150.10.1(1)#whole",
    "regulation_id": "150.10.1(1)",
@@ -1116,103 +679,6 @@
    "reason": "ruled; keyed correction not applied yet"
   },
   {
-   "unit_id": "150.7.60.70(1)#(1)(A)",
-   "regulation_id": "150.7.60.70(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Lot Coverage Requirement for a Lot with a Garden Suite = (A) the area of the lot covered by all buildings and structures must not exceed 45 percent. Important",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-191"
-   ],
-   "corrected_value": "Lot coverage with a garden suite is the more permissive of 45 % of all buildings and the ancillary-coverage alternative (one max, not a min-combine).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_coverage_option"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.70(1)#(1)(B)",
-   "regulation_id": "150.7.60.70(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "1) Lot Coverage Requirement for a Lot with a Garden Suite = Not included. However, total of all ancillary building is. Disclosure B) the ancillary building containing a garden suite is not included in the overall calculation of lot coverage, and the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a garden suite, may not exceed 20 percent of the lot area; and (i) if a lot is in an area with a numerical value on the Lot Coverage Overlay Map, that numerical value is the permitted maximum lot coverage for the residential building as a percentage of the lot area; or (ii) if a lot is not in an area with a numerical value on the Lot Coverage Overlay Map, no lot coverage applies to the residential building on the lot. ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-179",
-    "M-191"
-   ],
-   "corrected_value": "The suite is outside lot coverage; all ancillary buildings together are capped at 20 % on their own ancillary-coverage target.",
-   "disclosure_code": "other_ancillary_buildings",
-   "question": "",
-   "fields": [
-    "suite_coverage_option"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.75.1(1)#(1)(A)",
-   "regulation_id": "150.7.75.1(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden suite and solar - Important A) must comply with the required minimum building setbacks for an ancillary building containing a garden suite; and",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-175"
-   ],
-   "corrected_value": "A solar device on the suite follows the suite's setbacks; it never limits the principal building.",
-   "disclosure_code": "rooftop_elements_exempt",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.75.1(1)#(1)(B)",
-   "regulation_id": "150.7.75.1(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - solar permitted on the roof - but it can't be more than 1.2 m above the permitted maximum height. ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-175"
-   ],
-   "corrected_value": "A solar device may rise at most 1.2 m above the suite's permitted height; accessory scope, not a principal limit.",
-   "disclosure_code": "rooftop_elements_exempt",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
    "unit_id": "150.8.20.1(2)#whole",
    "regulation_id": "150.8.20.1(2)",
    "chapter": "150.8",
@@ -1358,54 +824,6 @@
     "suite_openings_loss_sqm",
     "suite_side_setbacks_m"
    ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.21(1)#(1)(A)",
-   "regulation_id": "150.8.60.21(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Set back exemptions Ancillary buildings - exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is - if it meets this - than this A) the minimum rear yard setback for that lawfully existing ancillary building;",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-211",
-    "M-158"
-   ],
-   "corrected_value": "A lawfully existing smaller rear setback stands for the laneway suite (min template), answered with the caveat.",
-   "disclosure_code": "existing_ancillary_setbacks",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.21(1)#(1)(B)",
-   "regulation_id": "150.8.60.21(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Set back exemptions Ancillary buildings - Exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is: THAN B) the minimum side yard setback for that lawfully existing ancillary building. - you can use the footprint of the existing structure - you get grandfathered in.",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-211",
-    "M-158"
-   ],
-   "corrected_value": "A lawfully existing smaller side setback stands for the laneway suite (min template), answered with the caveat.",
-   "disclosure_code": "existing_ancillary_setbacks",
-   "question": "",
-   "fields": [],
    "locks": [],
    "owed": [],
    "checks": [
@@ -1869,6 +1287,30 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.20.30.20(1)#(1)(C)",
+   "regulation_id": "10.20.30.20(1)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "inimum Lot Frontage In the RD zone = 6m per dwelling  but 5m without a private driveway",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no individual private driveway), with 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.20.30.20(1)#(1)(C)/archetype~s1, COR-10.20.30.20(1)#(1)(C)/target~s1, COR-10.20.30.20(1)#(1)(C)/bound~s1, COR-10.20.30.20(1)#(1)(C)/numeric_expression~s1, COR-10.20.30.20(1)#(1)(C)/literals_not_expressed~s1, COR-10.20.30.20(1)#(1)(C)/condition, COR-10.20.30.20(1)#(1)(C)/application.lot_conditions, COR-10.20.30.20(1)#(1)(C)/application.evidence, COR-10.20.30.20(1)#(1)(C)/calculation_handling~s1, COR-10.20.30.20(1)#(1)(C)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.20.30.20(1)#(1)(D)",
    "regulation_id": "10.20.30.20(1)",
    "chapter": "10.20",
@@ -2207,6 +1649,30 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.20.40.1(4)#(4)(A)",
+   "regulation_id": "10.20.40.1(4)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "applies with this condition. - f the dwelling unit does not have an individual private driveway leading directly to the front of it - we need a disclosure here",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse unit width answered 5.0 m (no individual private driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.20.40.1(4)#(4)(A)/condition, COR-10.20.40.1(4)#(4)(A)/application.lot_conditions, COR-10.20.40.1(4)#(4)(A)/application.evidence, COR-10.20.40.1(4)#(4)(A)/calculation_handling, COR-10.20.40.1(4)#(4)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.20.40.1(4)#(4)(B)",
@@ -2913,6 +2379,31 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "10.20.40.10(7)#(7)(B)",
+   "regulation_id": "10.20.40.10(7)",
+   "chapter": "10.20",
+   "verdict": "wrong",
+   "note": "dormers… don't want them to be considered main walls… Disclosure",
+   "source": "operator copy-paste 2026-10-18",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls within the 40 % width share are not main walls, so the maximum design places the dormers at that share.",
+   "disclosure_code": "dormers_at_max",
+   "question": "",
+   "fields": [
+    "gfa_pitched_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.20.40.10(7)#(7)(B)/calculation_handling~s1, COR-10.20.40.10(7)#(7)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.20.40.10(8)#whole",
    "regulation_id": "10.20.40.10(8)",
    "chapter": "10.20",
@@ -3257,6 +2748,53 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(C)",
+   "regulation_id": "10.40.30.20(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "for this to apply to the detached house - it needs to be on two lots - we can't know that - discourse for that one.  It does work for the semi detached houseplex.",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex frontage is 50 % of the (A)/(B) value; a semi-detached house on two lots is a disclosed site fact.",
+   "disclosure_code": "semi_house_two_lots",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.30.20(1)#(1)(C)/archetype~s1, COR-10.40.30.20(1)#(1)(C)/target~s1, COR-10.40.30.20(1)#(1)(C)/bound~s1, COR-10.40.30.20(1)#(1)(C)/numeric_expression, COR-10.40.30.20(1)#(1)(C)/literals_not_expressed~s2, COR-10.40.30.20(1)#(1)(C)/application.building_types, COR-10.40.30.20(1)#(1)(C)/application.evidence, COR-10.40.30.20(1)#(1)(C)/calculation_handling, COR-10.40.30.20(1)#(1)(C)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.40.30.20(1)#(1)(D)",
+   "regulation_id": "10.40.30.20(1)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "townhouse fronting directly on the street condition on a major street =6m but 5m if the unit doesn't have a driveway",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.30.20(1)#(1)(D)/archetype~s1, COR-10.40.30.20(1)#(1)(D)/target~s1, COR-10.40.30.20(1)#(1)(D)/bound~s1, COR-10.40.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.40.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.40.30.20(1)#(1)(D)/condition, COR-10.40.30.20(1)#(1)(D)/application.lot_conditions, COR-10.40.30.20(1)#(1)(D)/application.evidence, COR-10.40.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.40.30.20(1)#(1)(D)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.30.20(1)#(1)(E)",
@@ -3958,6 +3496,34 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.40.40.10(2)#(2)(C)",
+   "regulation_id": "10.40.40.10(2)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "this is linked to an envelope measure.  we don't care about apartment buildings but townhouses I believe are still important. key this one similar to the last but focused on townhouses",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-190",
+    "M-214"
+   ],
+   "corrected_value": "The main-wall limit does not apply to a townhouse or apartment building on a major street (x.40.10(2)(C)); those forms are not modelled and are disclosed.",
+   "disclosure_code": "major_street_forms_not_modelled",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.40.10(2)#(2)(C)/calculation_handling, COR-10.40.40.10(2)#(2)(C)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.40.40.10(3)#(3)(A)",
    "regulation_id": "10.40.40.10(3)",
    "chapter": "10.40",
@@ -4113,6 +3679,31 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.40.40.10(5)#(5)(B)",
+   "regulation_id": "10.40.40.10(5)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "We are specifically looking at dormers here - need to investigate if this impacts build envelope. I would imagine you don't want them to count as main walls. ) Width of Dormers in a Roof ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-185"
+   ],
+   "corrected_value": "Dormer walls within the 40 % share are not main walls; the maximum design places dormers at that share.",
+   "disclosure_code": "dormers_at_max",
+   "question": "",
+   "fields": [
+    "gfa_pitched_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.40.10(5)#(5)(B)/calculation_handling, COR-10.40.40.10(5)#(5)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.40.40.10(6)#(6)(A)",
@@ -4875,6 +4466,52 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.40.40.80(2)#(2)(A)",
+   "regulation_id": "10.40.40.80(2)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "This refers to buildings on the same lot ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Building separation applies only when two or more buildings are on the lot; disclosed as a multi-building rule, not bound.",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.40.80(2)#(2)(A)/archetype, COR-10.40.40.80(2)#(2)(A)/target, COR-10.40.40.80(2)#(2)(A)/bound, COR-10.40.40.80(2)#(2)(A)/numeric_expression, COR-10.40.40.80(2)#(2)(A)/literals_not_expressed, COR-10.40.40.80(2)#(2)(A)/calculation_handling, COR-10.40.40.80(2)#(2)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.40.40.80(2)#(2)(B)",
+   "regulation_id": "10.40.40.80(2)",
+   "chapter": "10.40",
+   "verdict": "wrong",
+   "note": "This refers to buildings on the same lot ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Building separation disclosed as a multi-building rule (5.5 m / 11.0 m), not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.40.40.80(2)#(2)(B)/archetype, COR-10.40.40.80(2)#(2)(B)/target, COR-10.40.40.80(2)#(2)(B)/bound, COR-10.40.40.80(2)#(2)(B)/numeric_expression, COR-10.40.40.80(2)#(2)(B)/literals_not_expressed, COR-10.40.40.80(2)#(2)(B)/calculation_handling, COR-10.40.40.80(2)#(2)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.5.1.10(3)#(3)(A)",
    "regulation_id": "10.5.1.10(3)",
    "chapter": "10.5",
@@ -5255,6 +4892,29 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.60.30.10(1)#(1)(B)",
+   "regulation_id": "10.60.30.10(1)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "There are two things here - this only applied to a semi detached refers on two lots (which we can't account for) disclosure. However, for the single lot detached houseplex the formal works.  Do need to removed the semi detached build type here.",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-181"
+   ],
+   "corrected_value": "Semi-detached houseplex lot area is 50 % of the 'a' value; a semi-detached house on two lots is a disclosed site fact (semi build type removed).",
+   "disclosure_code": "semi_house_two_lots",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.30.10(1)#(1)(B)/application.building_types, COR-10.60.30.10(1)#(1)(B)/application.evidence, COR-10.60.30.10(1)#(1)(B)/calculation_handling, COR-10.60.30.10(1)#(1)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.60.30.10(1)#(1)(C)",
@@ -6476,6 +6136,75 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.60.40.80(2)#(2)(A)",
+   "regulation_id": "10.60.40.80(2)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation applies only to two or more buildings on the same lot; disclosed as a multi-building rule (the suite's own separation is 150.7/150.8.60.30(1)).",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.40.80(2)#(2)(A)/archetype, COR-10.60.40.80(2)#(2)(A)/target, COR-10.60.40.80(2)#(2)(A)/bound, COR-10.60.40.80(2)#(2)(A)/numeric_expression, COR-10.60.40.80(2)#(2)(A)/literals_not_expressed~s1, COR-10.60.40.80(2)#(2)(A)/calculation_handling, COR-10.60.40.80(2)#(2)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.60.40.80(2)#(2)(B)",
+   "regulation_id": "10.60.40.80(2)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.40.80(2)#(2)(B)/archetype, COR-10.60.40.80(2)#(2)(B)/target, COR-10.60.40.80(2)#(2)(B)/bound, COR-10.60.40.80(2)#(2)(B)/numeric_expression, COR-10.60.40.80(2)#(2)(B)/literals_not_expressed~s1, COR-10.60.40.80(2)#(2)(B)/calculation_handling, COR-10.60.40.80(2)#(2)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.60.40.80(2)#(2)(C)",
+   "regulation_id": "10.60.40.80(2)",
+   "chapter": "10.60",
+   "verdict": "wrong",
+   "note": "this only applies if two or more buildings are on the same lot.  which we can't determine. disclosure. actually this maybe important for lot configuration - ie the distance between the garden suite or laneway suite and the main home. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "The 2.4 m side-main-wall separation is disclosed as part of the multi-building rule (two or more buildings on the lot).",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.60.40.80(2)#(2)(C)/archetype, COR-10.60.40.80(2)#(2)(C)/target, COR-10.60.40.80(2)#(2)(C)/bound, COR-10.60.40.80(2)#(2)(C)/numeric_expression, COR-10.60.40.80(2)#(2)(C)/literals_not_expressed~s1, COR-10.60.40.80(2)#(2)(C)/calculation_handling, COR-10.60.40.80(2)#(2)(C)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.60.40.81(1)#whole",
    "regulation_id": "10.60.40.81(1)",
    "chapter": "10.60",
@@ -6836,6 +6565,30 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.80.30.20(1)#(1)(D)",
+   "regulation_id": "10.80.30.20(1)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "Minimum Lot Frontage In the RM zone: Townhouse - condition a lot abutting a major street, the required minimum lot frontage: (i) for a townhouse with every dwelling unit fronting directly on a street: (a) is 6.0 metres for each dwelling unit; and (b) may be reduced by 1.0 metre for each dwelling unit that does not have an individual private driveway leading directly to the front of it; and [ By-l",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187",
+    "M-176"
+   ],
+   "corrected_value": "Townhouse frontage on a major street 5.0 m per dwelling unit (no driveway), 6.0 m disclosed.",
+   "disclosure_code": "townhouse_driveway_width",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.30.20(1)#(1)(D)/archetype~s1, COR-10.80.30.20(1)#(1)(D)/target~s1, COR-10.80.30.20(1)#(1)(D)/bound~s1, COR-10.80.30.20(1)#(1)(D)/numeric_expression~s1, COR-10.80.30.20(1)#(1)(D)/literals_not_expressed~s1, COR-10.80.30.20(1)#(1)(D)/condition, COR-10.80.30.20(1)#(1)(D)/application.lot_conditions, COR-10.80.30.20(1)#(1)(D)/application.evidence, COR-10.80.30.20(1)#(1)(D)/calculation_handling~s1, COR-10.80.30.20(1)#(1)(D)/disclosure~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.30.20(1)#(1)(E)",
@@ -7428,6 +7181,62 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.80.40.10(2)#(2)(A)",
+   "regulation_id": "10.80.40.10(2)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
+   "source": "operator copy-paste 2026-10-15",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-176",
+    "M-190"
+   ],
+   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.40.10(2)#(2)(A)/calculation_handling~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.80.40.10(2)#(2)(B)",
+   "regulation_id": "10.80.40.10(2)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "Maximum Height of Specified Pairs of Main Walls - This is speaking to the shape of the building - we don't know the shape - this is just a disclosure note",
+   "source": "operator copy-paste 2026-10-15",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-176",
+    "M-190"
+   ],
+   "corrected_value": "Main-wall height is an envelope limit (max(7.0 m, height - 2.5 m)), not a disclosure only.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_wall_limit_m",
+    "main_wall_pair",
+    "main_wall_status"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.40.10(2)#(2)(B)/calculation_handling~s1"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.40.10(3)#(3)(A)",
@@ -8083,6 +7892,52 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.80.40.80(2)#(2)(A)",
+   "regulation_id": "10.80.40.80(2)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation is a two-or-more-buildings-on-the-lot rule; disclosed, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.40.80(2)#(2)(A)/archetype, COR-10.80.40.80(2)#(2)(A)/target, COR-10.80.40.80(2)#(2)(A)/bound, COR-10.80.40.80(2)#(2)(A)/numeric_expression, COR-10.80.40.80(2)#(2)(A)/literals_not_expressed, COR-10.80.40.80(2)#(2)(A)/calculation_handling, COR-10.80.40.80(2)#(2)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.80.40.80(2)#(2)(B)",
+   "regulation_id": "10.80.40.80(2)",
+   "chapter": "10.80",
+   "verdict": "wrong",
+   "note": "This is just for two or more buildings on the same lot.  No important for us. ",
+   "source": "operator copy-paste 2026-10-16",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-187"
+   ],
+   "corrected_value": "Separation disclosed as a multi-building rule, not bound on a single-building lot.",
+   "disclosure_code": "buildings_on_same_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.80.40.80(2)#(2)(B)/archetype, COR-10.80.40.80(2)#(2)(B)/target, COR-10.80.40.80(2)#(2)(B)/bound, COR-10.80.40.80(2)#(2)(B)/numeric_expression, COR-10.80.40.80(2)#(2)(B)/literals_not_expressed, COR-10.80.40.80(2)#(2)(B)/calculation_handling, COR-10.80.40.80(2)#(2)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "10.80.40.81(1)#whole",
@@ -9687,6 +9542,57 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "150.7.60.70(1)#(1)(A)",
+   "regulation_id": "150.7.60.70(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Lot Coverage Requirement for a Lot with a Garden Suite = (A) the area of the lot covered by all buildings and structures must not exceed 45 percent. Important",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-191"
+   ],
+   "corrected_value": "Lot coverage with a garden suite is the more permissive of 45 % of all buildings and the ancillary-coverage alternative (one max, not a min-combine).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_coverage_option"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-150.7.60.70(1)#(1)(A)/numeric_expression, COR-150.7.60.70(1)#(1)(A)/calculation_handling, COR-150.7.60.70(1)#(1)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.7.60.70(1)#(1)(B)",
+   "regulation_id": "150.7.60.70(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "1) Lot Coverage Requirement for a Lot with a Garden Suite = Not included. However, total of all ancillary building is. Disclosure B) the ancillary building containing a garden suite is not included in the overall calculation of lot coverage, and the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a garden suite, may not exceed 20 percent of the lot area; and (i) if a lot is in an area with a numerical value on the Lot Coverage Overlay Map, that numerical value is the permitted maximum lot coverage for the residential building as a percentage of the lot area; or (ii) if a lot is not in an area with a numerical value on the Lot Coverage Overlay Map, no lot coverage applies to the residential building on the lot. ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-179",
+    "M-191"
+   ],
+   "corrected_value": "The suite is outside lot coverage; all ancillary buildings together are capped at 20 % on their own ancillary-coverage target.",
+   "disclosure_code": "other_ancillary_buildings",
+   "question": "",
+   "fields": [
+    "suite_coverage_option"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-150.7.60.70(1)#(1)(B)/target, COR-150.7.60.70(1)#(1)(B)/numeric_expression, COR-150.7.60.70(1)#(1)(B)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "150.7.60.70(2)#row",
    "regulation_id": "150.7.60.70(2)",
    "chapter": "150.7",
@@ -9709,6 +9615,80 @@
    ],
    "state": "INCORPORATED",
    "reason": "row answer; P5.12 code"
+  },
+  {
+   "unit_id": "150.7.75.1(1)#(1)(A)",
+   "regulation_id": "150.7.75.1(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden suite and solar - Important A) must comply with the required minimum building setbacks for an ancillary building containing a garden suite; and",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A solar device on the suite follows the suite's setbacks; it never limits the principal building.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-unfixed-keying.logic.test.ts",
+     "describe": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1))",
+     "it": "${id}: applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+     "asserts": [
+      "energy_device",
+      "applies"
+     ],
+     "satisfies": [
+      "M-175"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-175"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.75.1(1)#(1)(B)",
+   "regulation_id": "150.7.75.1(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - solar permitted on the roof - but it can't be more than 1.2 m above the permitted maximum height. ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A solar device may rise at most 1.2 m above the suite's permitted height; accessory scope, not a principal limit.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-unfixed-keying.logic.test.ts",
+     "describe": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1))",
+     "it": "${id}: applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+     "asserts": [
+      "energy_device",
+      "applies"
+     ],
+     "satisfies": [
+      "M-175"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-175"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.7.75.1(2)@1075-2026#(2)",
@@ -10088,6 +10068,54 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.8.60.21(1)#(1)(A)",
+   "regulation_id": "150.8.60.21(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Set back exemptions Ancillary buildings - exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is - if it meets this - than this A) the minimum rear yard setback for that lawfully existing ancillary building;",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211",
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing smaller rear setback stands for the laneway suite (min template), answered with the caveat.",
+   "disclosure_code": "existing_ancillary_setbacks",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.21(1)#(1)(A)/calculation_handling, COR-150.8.60.21(1)#(1)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.8.60.21(1)#(1)(B)",
+   "regulation_id": "150.8.60.21(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Set back exemptions Ancillary buildings - Exception - If the lawful building setback of a lawfully existing ancillary building is less than the required minimum building setback for an ancillary building containing a laneway suite required by Clause 150.8.60.20, the required minimum building setback for a laneway suite in that lawfully existing ancillary building is: THAN B) the minimum side yard setback for that lawfully existing ancillary building. - you can use the footprint of the existing structure - you get grandfathered in.",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-211",
+    "M-158"
+   ],
+   "corrected_value": "A lawfully existing smaller side setback stands for the laneway suite (min template), answered with the caveat.",
+   "disclosure_code": "existing_ancillary_setbacks",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.21(1)#(1)(B)/calculation_handling, COR-150.8.60.21(1)#(1)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.30(2)#row",

@@ -342,7 +342,7 @@
     "derived_unit": { "m2/unit": "Layer 3 report targets only (avg_unit_gfa_sqm): m2 ÷ units; never a literal, dsl_target or Layer 1 unit (Spec 69 M-72 note)" }
   },
   "displacement_triggers": {
-    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of"],
+    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
   },
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],

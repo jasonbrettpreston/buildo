@@ -3230,24 +3230,52 @@
   {
    "unit_id": "150.7.75.1(1)#(1)(A)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-175"
    ],
    "corrected_value": "A solar device on the suite follows the suite's setbacks; it never limits the principal building.",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "findings B6; M-175 accessory scope"
+   "basis": "findings B6; M-175 accessory scope; unfixed lane 2026-10-19: M-175 applies() already sets the energy_device unit aside; named lock",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-unfixed-keying.logic.test.ts",
+     "describe": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1))",
+     "it": "${id}: applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+     "asserts": [
+      "energy_device",
+      "applies"
+     ],
+     "satisfies": [
+      "M-175"
+     ]
+    }
+   ]
   },
   {
    "unit_id": "150.7.75.1(1)#(1)(B)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
     "M-175"
    ],
    "corrected_value": "A solar device may rise at most 1.2 m above the suite's permitted height; accessory scope, not a principal limit.",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "findings B6; M-175"
+   "basis": "findings B6; M-175; unfixed lane 2026-10-19: M-175 applies() already sets the energy_device unit aside; named lock",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-unfixed-keying.logic.test.ts",
+     "describe": "M-175 — a solar energy device on a garden suite never limits the principal building (150.7.75.1(1))",
+     "it": "${id}: applies() sets it aside as an energy_device on a garden-suite lot, and never binds a house lot",
+     "asserts": [
+      "energy_device",
+      "applies"
+     ],
+     "satisfies": [
+      "M-175"
+     ]
+    }
+   ]
   },
   {
    "unit_id": "150.7.75.1(2)@1075-2026#(2)",

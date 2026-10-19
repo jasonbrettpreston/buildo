@@ -1168,10 +1168,6 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
-     },
-     {
-      "what": "M-218 roof-slope condition (no_candidate today)",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1254,12 +1250,7 @@
     "layer2_targets": [
      "upper_storey_setback_m"
     ],
-    "owed": [
-     {
-      "what": "M-218 roof-slope condition",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [

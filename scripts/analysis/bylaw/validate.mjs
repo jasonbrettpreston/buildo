@@ -41,7 +41,7 @@ import { checkTextSlice, LOCK_FILE, selfTest as standardizedSelfTest } from './s
 import { checkUniverse, readSpec69Rulings, universeInputs, selfTest as universeSelfTest } from './universe.mjs';
 import { checkFeedsTotality, checkVocab, evaluatorVocab, selfTest as vocabSelfTest } from './vocab.mjs';
 import { twinsFromUnits } from './twins.mjs';
-import { checkXref, selfTest as xrefSelfTest } from './xref.mjs';
+import { checkXref, displacesOf, selfTest as xrefSelfTest } from './xref.mjs';
 
 export const WORDS = Object.freeze(['STANDARDIZED', 'OBSERVABLE', 'ACCURATE', 'UNDERSTANDABLE', 'SCALABLE']);
 export const GATE_STATES = Object.freeze(['pass', 'fail', 'not_run']);
@@ -424,8 +424,12 @@ export async function runGates(I) {
 
   gates['G-EVAL'] = await runGate('G-EVAL', () => {
     const ev = evaluatorVocab(I.vocab);
-    // Spec 68 §6: `layer` / `regulation_id` are G — attached here, never keyed (loadCandidates reads `layer`)
-    const r = checkEval({ units: agreedUnits.map(withGeneratedFields), vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
+    // Spec 68 §6: `layer` / `regulation_id` / `displaces[]` are G — attached here, never keyed (loadCandidates reads
+    // `layer`; effective() rule 2 reads `displaces[]`). The gate evaluates with the evaluator's displacement links, so a
+    // "Despite …" unit is never dropped here (operator y 2026-10-19: V25 lost 10.20.40.20(3)(B) without them).
+    const index = buildIndex(I.slice);
+    const evalUnits = agreedUnits.map(withGeneratedFields).map((u) => ({ ...u, displaces: displacesOf(index, u.unit_id, I.vocab, null).targets.map((t) => t.id) }));
+    const r = checkEval({ units: evalUnits, vectors: I.vectors, vocab: ev, enactments: {}, absences: I.absences });
     ctx.evalResult = r;
     const fx = evaluateSelfTest(ev);
     return [fromCheck('expressions_and_vectors', r, { counts: r.counts }), fromCheck('precedence_fixtures', fx)];
