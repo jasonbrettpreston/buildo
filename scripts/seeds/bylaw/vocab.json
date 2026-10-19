@@ -89,6 +89,12 @@
     "height_projection_m": { "unit": "m", "aspect": "envelope", "concept": "a structure may exceed the permitted maximum height by (Spec 69a M-81 R5)", "patterns": ["may exceed the permitted maximum height", "above the permitted maximum height"] },
     "height_storeys": { "unit": "storeys", "aspect": "envelope", "concept": "maximum number of storeys", "patterns": ["storeys", "storey"] },
     "main_wall_height_m": { "unit": "m", "aspect": "envelope", "concept": "maximum height of the exterior portion of main walls", "patterns": ["main walls", "main wall height"] },
+    "upper_storey_setback_m": {
+      "unit": "m",
+      "aspect": "envelope",
+      "concept": "minimum distance the front and rear main walls above the main-wall height limit are set back from the front and rear main walls below (flat or shallow roof); only the storey above the limit is set back, the storeys below are unchanged (Spec 69a M-223(3), M-218; operator 2026-10-19 Q-M218)",
+      "patterns": ["additional front main walls and rear main walls"]
+    },
     "entrance_height_m": {
       "unit": "m",
       "aspect": "envelope",

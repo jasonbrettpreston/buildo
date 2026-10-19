@@ -1246,14 +1246,15 @@
    "keyed": {
     "units": [
      "10.10.40.10(11)#(11)(A)",
-     "10.10.40.10(12)#(12)(A)"
+     "10.10.40.10(12)#(12)(A)",
+     "10.20.40.10(4)#(4)(B)",
+     "10.40.40.10(6)#(6)(A)",
+     "10.80.40.10(6)#(6)(A)"
     ],
-    "layer2_targets": [],
+    "layer2_targets": [
+     "upper_storey_setback_m"
+    ],
     "owed": [
-     {
-      "what": "keying of upper_storey_setback_m (1.4 m) (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     },
      {
       "what": "M-218 roof-slope condition",
       "owner": "by-law keying/evaluator lane"
@@ -1269,7 +1270,7 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": "R added 2026-10-18 (M-200)"
+   "change": "R added 2026-10-18 (M-200); upper_storey_setback_m keyed 2026-10-19 (Q-M218, M-223(3))"
   },
   {
    "field": "storeys_flat",
@@ -1283,17 +1284,25 @@
    ],
    "computation": "form (a) storeys",
    "regulation_ids": [
-    "800.50(820)"
+    "800.50(820)",
+    "10.10.40.10(11)",
+    "10.10.40.10(12)",
+    "10.20.40.10(4)",
+    "10.40.40.10(6)",
+    "10.80.40.10(6)"
    ],
    "keyed": {
-    "units": [],
-    "layer2_targets": [],
-    "owed": [
-     {
-      "what": "keying of upper_storey_setback_m (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "units": [
+     "10.10.40.10(11)#(11)(A)",
+     "10.10.40.10(12)#(12)(A)",
+     "10.20.40.10(4)#(4)(B)",
+     "10.40.40.10(6)#(6)(A)",
+     "10.80.40.10(6)#(6)(A)"
+    ],
+    "layer2_targets": [
+     "upper_storey_setback_m"
+    ],
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [
@@ -1303,7 +1312,7 @@
    "null_when": "status ≠ permitted",
    "invariants": [],
    "persisted": true,
-   "change": null
+   "change": "upper_storey_setback_m keyed 2026-10-19 (Q-M218, M-223(3))"
   },
   {
    "field": "gfa_pitched_sqm",

@@ -2465,11 +2465,10 @@
    "verdict": "wrong",
    "disposition": "fixed_by",
    "fix_ids": [
-    "M-198",
     "M-219"
    ],
    "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the garden suite, excluding footings.",
-   "basis": "findings B1; M-198 suite setbacks, M-219 garden inherits principal setbacks; operator 2026-10-19 (evaluator round 2, 66a6cf0b)",
+   "basis": "findings B1; M-198 suite setbacks, M-219 garden inherits principal setbacks; operator 2026-10-19 (evaluator round 2, 66a6cf0b); M-198 owed to P5.13, operator 2026-10-19 (review page Q-T-150.7.60.20-1; Spec 131 LC-54)",
    "locks": [
     {
      "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
@@ -2483,6 +2482,13 @@
       "M-219"
      ],
      "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [
+    {
+     "id": "M-198",
+     "to": "P5.13",
+     "why": "M-198 needs lot-line facts (which line abuts a lane, a street or another lot's rear line) that the P5.13 step holds; the same form as 150.7.60.20(6)(C)"
     }
    ]
   },

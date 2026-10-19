@@ -105,6 +105,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-19 (M-183 + M-174(4) on (E)): no top-level status or value moved over this corpus; only the
     // M-50 per_type label of the houseplex cells (not_evaluated:no_candidate → not_applicable:<x.40.40(1)(C) /
     // x.40.10(3)(C) DISAPPLY>, 116 cells) and the M-60 "resolutions disagree" trace listings. Full per-cell diff vs c37dd492.
-    expect(h.digest('hex')).toBe('2ed7dfff34b5a85f5a6cb2677160bb11d2713b516992313f934a33cb4ad0d466');
+    // re-pinned 2026-10-19 (Q-M218, M-223(3)): the corpus iterates every dsl_target, and upper_storey_setback_m is new;
+    // its 140 cells are not_evaluated:no_candidate (the fixture units predate the step-back keying). With that target
+    // left out the hash is the previous pin 2ed7dfff…d466 exactly, so no existing cell moved.
+    expect(h.digest('hex')).toBe('690439ff37def387fe8b88cee4ad766df0aeff2cc5b18a59d8569fe8b99f557c');
   }, 60_000);
 });

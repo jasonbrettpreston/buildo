@@ -72530,6 +72530,553 @@
         "uses": [],
         "zones": []
       }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.10.40.10(11)#(11)(A)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(11)#(11)(A)/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": "upper_storey_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.10.40.10(11)#(11)(A)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(11)#(11)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": [
+        "upper_storey_setback_m = 1.4 m @(11)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(11)#(11)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the 1.4 m is now expressed (upper_storey_setback_m); the roof-slope thresholds stay used in application (the flat_or_shallow_roof token)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": [
+        {
+          "clause": "(11)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(11)",
+          "literal": "10.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(11)",
+          "literal": "50",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(11)(A)",
+          "literal": "1.4",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.10(11)#(11)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": {
+        "description": "With a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), main walls may rise above the main-wall height limit if the front and rear main walls above it are set back at least 1.4 m from the front and rear main walls below. Only the storey above the limit is set back; the storeys below are unchanged.",
+        "gaps": "The roof form is the builder's choice (flat_or_shallow_roof, M-172(3)); Layer 3 computes both roof forms and headlines the larger (M-184).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(11)#(11)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Spec 78 P5.12 flat_roof_setback, filled with the clause value (LC-52: closed, plain words)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(11)#(11)(A)",
+      "value": "The top storey is set back 1.4 m from the front and rear walls."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.10.40.10(12)#(12)(A)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(12)#(12)(A)/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": "upper_storey_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.10.40.10(12)#(12)(A)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(12)#(12)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": [
+        "upper_storey_setback_m = 1.4 m @(12)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(12)#(12)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the 1.4 m is now expressed (upper_storey_setback_m); the roof-slope thresholds stay used in application (the flat_or_shallow_roof token)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": [
+        {
+          "clause": "(12)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(12)",
+          "literal": "10.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(12)",
+          "literal": "50",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(12)(A)",
+          "literal": "1.4",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.10(12)#(12)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": {
+        "description": "With a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), main walls may rise above the main-wall height limit if the front and rear main walls above it are set back at least 1.4 m from the front and rear main walls below. Only the storey above the limit is set back; the storeys below are unchanged.",
+        "gaps": "The roof form is the builder's choice (flat_or_shallow_roof, M-172(3)); Layer 3 computes both roof forms and headlines the larger (M-184).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(12)#(12)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Spec 78 P5.12 flat_roof_setback, filled with the clause value (LC-52: closed, plain words)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.10.40.10(12)#(12)(A)",
+      "value": "The top storey is set back 1.4 m from the front and rear walls."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.20.40.10(4)#(4)(B)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(4)#(4)(B)/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": "upper_storey_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.20.40.10(4)#(4)(B)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(4)#(4)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": [
+        "upper_storey_setback_m = 1.4 m @(4)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(4)#(4)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the 1.4 m is now expressed (upper_storey_setback_m); the roof-slope thresholds stay used in application (the flat_or_shallow_roof token)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": [
+        {
+          "clause": "(4)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(4)",
+          "literal": "10.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(4)",
+          "literal": "50 percent",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.20.40.10(4)#(4)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": {
+        "description": "With a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), main walls may rise above the main-wall height limit if the front and rear main walls above it are set back at least 1.4 m from the front and rear main walls below. Only the storey above the limit is set back; the storeys below are unchanged.",
+        "gaps": "The roof form is the builder's choice (flat_or_shallow_roof, M-172(3)); Layer 3 computes both roof forms and headlines the larger (M-184).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.20.40.10(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Spec 78 P5.12 flat_roof_setback, filled with the clause value (LC-52: closed, plain words)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.20.40.10(4)#(4)(B)",
+      "value": "The top storey is set back 1.4 m from the front and rear walls."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.40.40.10(6)#(6)(A)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.10(6)#(6)(A)/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": "upper_storey_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.40.40.10(6)#(6)(A)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.10(6)#(6)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": [
+        "upper_storey_setback_m = 1.4 m @(6)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.10(6)#(6)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the 1.4 m is now expressed (upper_storey_setback_m); the roof-slope thresholds stay used in application (the flat_or_shallow_roof token)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": [
+        {
+          "clause": "(6)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(6)",
+          "literal": "10.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(6)",
+          "literal": "50 percent",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.40.40.10(6)#(6)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": {
+        "description": "With a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), main walls may rise above the main-wall height limit if the front and rear main walls above it are set back at least 1.4 m from the front and rear main walls below. Only the storey above the limit is set back; the storeys below are unchanged.",
+        "gaps": "The roof form is the builder's choice (flat_or_shallow_roof, M-172(3)); Layer 3 computes both roof forms and headlines the larger (M-184).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.10(6)#(6)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Spec 78 P5.12 flat_roof_setback, filled with the clause value (LC-52: closed, plain words)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.40.40.10(6)#(6)(A)",
+      "value": "The top storey is set back 1.4 m from the front and rear walls."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.80.40.10(6)#(6)(A)/archetype",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.10(6)#(6)(A)/target",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": "upper_storey_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.80.40.10(6)#(6)(A)/bound",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": "min"
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.10(6)#(6)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": [
+        "upper_storey_setback_m = 1.4 m @(6)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.10(6)#(6)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "the 1.4 m is now expressed (upper_storey_setback_m); the roof-slope thresholds stay used in application (the flat_or_shallow_roof token)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": [
+        {
+          "clause": "(6)",
+          "literal": "1.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(6)",
+          "literal": "10.0",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(6)",
+          "literal": "50 percent",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.80.40.10(6)#(6)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-M218: \"y — this only impacts the top storey\"): the clause permits main walls above the main-wall limit \"provided all the additional front main walls and rear main walls … are set back a minimum of 1.4 metres from the front main walls and rear main walls\" below. The step-back is the measure (vocab upper_storey_setback_m, M-223(3)); keyed as a target-less PERMIT it displaced the façade main-wall limit, so a flat roof answered no_candidate. Only the storey above the limit is set back; the storeys below keep the main-wall limit.",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": {
+        "description": "With a flat or shallow roof (slope under 1.0 vertical to 10.0 horizontal over more than 50 percent of the roof area), main walls may rise above the main-wall height limit if the front and rear main walls above it are set back at least 1.4 m from the front and rear main walls below. Only the storey above the limit is set back; the storeys below are unchanged.",
+        "gaps": "The roof form is the builder's choice (flat_or_shallow_roof, M-172(3)); Layer 3 computes both roof forms and headlines the larger (M-184).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.80.40.10(6)#(6)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Spec 78 P5.12 flat_roof_setback, filled with the clause value (LC-52: closed, plain words)",
+      "rule": "Spec 69a M-218 (dated note 2026-10-19, Q-M218), M-223(3), M-184(a); Spec 131 LC-54; M-75",
+      "unit": "10.80.40.10(6)#(6)(A)",
+      "value": "The top storey is set back 1.4 m from the front and rear walls."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.60.70(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-other-building: y): the disapplication is conditional on the coverage of ALL buildings on the lot (\"does not exceed 45 percent of the lot area\"); one-building evaluation cannot test it, so it is a disclosure until the two-building suite step exists (M-177(1), P2-10). Spec 78 P5.12 ancillary_coverage_all_buildings.",
+      "rule": "Spec 69a M-177(1); Spec 131 LC-54; Spec 78 P5.12 ancillary_coverage_all_buildings; M-75",
+      "unit": "10.5.60.70(1)#(1)(C)",
+      "value": "If all buildings on the lot together cover no more than 45 % of it, the limit on ancillary building coverage does not apply to a lot with a houseplex or a secondary suite."
+    },
+    {
+      "adjudicated_on": "2026-10-19",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.60.70(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "operator 2026-10-19 (review page Q-other-building: y): the disapplication is conditional on the coverage of ALL buildings on the lot (\"does not exceed 45 percent of the lot area\"); one-building evaluation cannot test it, so it is a disclosure until the two-building suite step exists (M-177(1), P2-10). Spec 78 P5.12 ancillary_coverage_all_buildings.",
+      "rule": "Spec 69a M-177(1); Spec 131 LC-54; Spec 78 P5.12 ancillary_coverage_all_buildings; M-75",
+      "unit": "10.10.60.70(1)#(1)(C)",
+      "value": "If all buildings on the lot together cover no more than 45 % of it, the limit on ancillary building coverage does not apply to a lot with a houseplex or a secondary suite."
     }
   ]
 }

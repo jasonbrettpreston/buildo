@@ -10,8 +10,8 @@
  "counts": {
   "answers": 511,
   "by_state": {
-   "INCORPORATED": 448,
-   "UNFIXED": 63
+   "INCORPORATED": 449,
+   "UNFIXED": 62
   },
   "by_verdict": {
    "disclose": 90,
@@ -68,8 +68,8 @@
    },
    "150.7": {
     "total": 95,
-    "INCORPORATED": 73,
-    "UNFIXED": 22,
+    "INCORPORATED": 74,
+    "UNFIXED": 21,
     "OPEN": 0
    },
    "150.8": {
@@ -711,46 +711,6 @@
    ],
    "state": "UNFIXED",
    "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(1)#whole",
-   "regulation_id": "150.7.60.20(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - Setbacks = the required minimum ancillary building setbacks apply to all parts of an ancillary building containing a garden suite above-ground and below-ground, excluding footings. [ By-law: 101-2022 ] Critical",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198",
-    "M-219"
-   ],
-   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the garden suite, excluding footings.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [
-    {
-     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
-     "describe": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings",
-     "it": "${zone} ${bt}: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
-     "asserts": [
-      "'garden_suite'",
-      "touched(eff(lot(zone, bt), t))"
-     ],
-     "satisfies": [
-      "M-219"
-     ],
-     "pin": "wf2/p4-integrate-3@0f2766c4"
-    }
-   ],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix",
-    "verified by named lock: M-219",
-    "unsatisfied: M-198"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: M-198 not yet applied"
   },
   {
    "unit_id": "150.7.60.20(2)#(2)(A)",
@@ -2788,7 +2748,8 @@
    "question": "",
    "fields": [
     "gfa_flat_sqm",
-    "main_wall_limit_m"
+    "main_wall_limit_m",
+    "storeys_flat"
    ],
    "locks": [
     {
@@ -2847,7 +2808,8 @@
    "question": "",
    "fields": [
     "gfa_flat_sqm",
-    "main_wall_limit_m"
+    "main_wall_limit_m",
+    "storeys_flat"
    ],
    "locks": [],
    "owed": [],
@@ -2871,7 +2833,8 @@
    "question": "",
    "fields": [
     "gfa_flat_sqm",
-    "main_wall_limit_m"
+    "main_wall_limit_m",
+    "storeys_flat"
    ],
    "locks": [],
    "owed": [],
@@ -4167,7 +4130,8 @@
    "disclosure_code": "flat_roof_setback",
    "question": "",
    "fields": [
-    "gfa_flat_sqm"
+    "gfa_flat_sqm",
+    "storeys_flat"
    ],
    "locks": [],
    "owed": [],
@@ -7604,7 +7568,8 @@
    "disclosure_code": "",
    "question": "",
    "fields": [
-    "gfa_flat_sqm"
+    "gfa_flat_sqm",
+    "storeys_flat"
    ],
    "locks": [],
    "owed": [],
@@ -8357,6 +8322,51 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.7.60.20(1)#whole",
+   "regulation_id": "150.7.60.20(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - Setbacks = the required minimum ancillary building setbacks apply to all parts of an ancillary building containing a garden suite above-ground and below-ground, excluding footings. [ By-law: 101-2022 ] Critical",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-219"
+   ],
+   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the garden suite, excluding footings.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+     "describe": "M-219 — Article x.40 (and 10.5.40) never answers for a suite; Article 10.5.60 answers only for ancillary buildings",
+     "it": "${zone} ${bt}: no 10.x.40 / 10.5.40 unit decides a setback, length or separation",
+     "asserts": [
+      "'garden_suite'",
+      "touched(eff(lot(zone, bt), t))"
+     ],
+     "satisfies": [
+      "M-219"
+     ],
+     "pin": "wf2/p4-integrate-3@0f2766c4"
+    }
+   ],
+   "owed": [
+    {
+     "id": "M-198",
+     "to": "P5.13",
+     "why": "M-198 needs lot-line facts (which line abuts a lane, a street or another lot's rear line) that the P5.13 step holds; the same form as 150.7.60.20(6)(C)"
+    }
+   ],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-219",
+    "owed M-198 → P5.13"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock; owed elsewhere: M-198 → P5.13"
   },
   {
    "unit_id": "150.7.60.20(2)#(2)(C)",

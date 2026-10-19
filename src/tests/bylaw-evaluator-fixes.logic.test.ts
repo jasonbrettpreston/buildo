@@ -1,6 +1,7 @@
 // SPEC LINK: docs/specs/01-pipeline/68_mcbylaw_standard.md §6 (conditions), §7.5 (precedence rules 1, 2, 7), §7.6 (applies());
 //            docs/specs/01-pipeline/69a_mcbylaw_register.md M-159 (a unit governs only its own subject), M-174(2)/(5),
-//            M-182, M-197, M-198(5), M-202(3)/(4), M-205(3), M-209, M-215(2), M-216, M-217..M-222, M-224, M-225
+//            M-182, M-197, M-198(5), M-202(3)/(4), M-205(3), M-209, M-215(2), M-216, M-217..M-222, M-223(3), M-224, M-225;
+//            operator 2026-10-19 review-page rulings Q-M218 / Q-M197 / Q-other-building (Spec 131 LC-54)
 //
 // By-law evaluator-fix lane (operator item 6, 2026-10-18): the reality-check evaluator defects M-217..M-222 and the
 // review leaks, each fixed once by provision family across the parallel residential chapters, never per zone.
@@ -78,12 +79,68 @@ describe('M-218 — the flat-or-shallow-roof clauses are a design choice; the x.
     it(`${zone}: an undecided roof form is undecided, never a silent permit`, () => {
       const l = lot(zone, 'detached_house');
       delete l.flags.flat_or_shallow_roof;
-      expect(eff(l, 'main_wall_height_m').reason).toBe('condition_unknown:flat_or_shallow_roof');
+      // the flat-roof clauses shape only the storey above the main-wall limit (operator 2026-10-19, Q-M218): the undecided
+      // roof form leaves the step-back undecided (RD (4)(A) also sets the main walls, decided here only where both forms agree, M-60)
+      expect(eff(l, 'upper_storey_setback_m').reason).toBe('condition_unknown:flat_or_shallow_roof');
     });
   }
   it('the six flat-roof units test flat_or_shallow_roof', () => {
     for (const id of ['10.10.40.10(11)#(11)(A)', '10.10.40.10(12)#(12)(A)', '10.20.40.10(4)#(4)(A)', '10.20.40.10(4)#(4)(B)', '10.40.40.10(6)#(6)(A)', '10.80.40.10(6)#(6)(A)']) {
       expect(unitOf(id).condition).toEqual({ tokens: ['flat_or_shallow_roof'] });
+    }
+  });
+});
+
+describe('Q-M218 flat roof (operator 2026-10-19) — the façade keeps its main-wall limit; only the storey above it is set back 1.4 m (M-218, M-223(3))', () => {
+  const STEPBACK: Record<string, string[]> = {
+    R: ['10.10.40.10(11)#(11)(A)', '10.10.40.10(12)#(12)(A)'], RD: ['10.20.40.10(4)#(4)(B)'], RS: ['10.40.40.10(6)#(6)(A)'], RM: ['10.80.40.10(6)#(6)(A)'],
+  };
+  it('the vocab names the measure upper_storey_setback_m (M-223(3))', () => {
+    expect(I.vocab.dsl_target.upper_storey_setback_m).toMatchObject({ unit: 'm', aspect: 'envelope' });
+  });
+  for (const zone of ['R', 'RD', 'RS', 'RM']) {
+    it(`${zone} flat roof: the façade height is the main-wall limit and the storey above it is set back 1.4 m`, () => {
+      const l = lot(zone, 'detached_house', { flags: { flat_or_shallow_roof: true } });
+      const walls = eff(l, 'main_wall_height_m');
+      expect([walls.status, walls.value]).toEqual(['value', 7.5]);
+      expect(walls.winner).toMatch(zone === 'RD' ? /^10\.20\.40\.10\(4\)#\(4\)\(A\)$/ : /^10\.(10|40|80)\.40\.10\(2\)#/);
+      const step = eff(l, 'upper_storey_setback_m');
+      expect([step.status, step.value]).toEqual(['value', 1.4]);
+      expect(STEPBACK[zone]).toContain(step.winner);
+    });
+    it(`${zone} pitched roof: no step-back applies and the main-wall limit is unchanged`, () => {
+      const l = lot(zone, 'detached_house');
+      expect(eff(l, 'upper_storey_setback_m').value ?? null).toBe(null);
+      expect(eff(l, 'main_wall_height_m').value).toBe(7.5);
+    });
+  }
+  it('the five step-back units are keyed LIMIT upper_storey_setback_m min 1.4 m with the flat-roof condition', () => {
+    for (const id of Object.values(STEPBACK).flat()) {
+      const u = unitOf(id);
+      expect([id, u.archetype, u.target, u.bound, u.condition]).toEqual([id, 'LIMIT', 'upper_storey_setback_m', 'min', { tokens: ['flat_or_shallow_roof'] }]);
+      expect(u.numeric_expression[0]).toMatch(/^upper_storey_setback_m = 1\.4 m @/);
+    }
+  });
+});
+
+describe('Q-M197 (operator 2026-10-19: n, disclose) — no windows is assumed; the two lot facts of the windows arms are disclosed, never read', () => {
+  it('each windows arm discloses the lot fact it also needs (rear: abuts a residential lot; side: does not abut a street)', () => {
+    expect(unitOf('150.7.60.20(2)#(2)(C)').disclosure).toMatch(/rear lot line abuts a residential lot/);
+    expect(unitOf('150.7.60.20(5)#(5)(A)').disclosure).toMatch(/side lot line that does not abut a street/);
+  });
+  it('the lot facts do not change the no-windows answer (a guard: already right at 920e9b6a)', () => {
+    for (const zone of ZONES) {
+      const plain = lot(zone, 'garden_suite');
+      const facts = lot(zone, 'garden_suite', { flags: { side_yard_abuts_street: true, flanking_lot: true } });
+      for (const t of ['rear_setback_m', 'side_setback_m']) expect([zone, t, eff(facts, t).value]).toEqual([zone, t, eff(plain, t).value]);
+    }
+  });
+});
+
+describe('Q-other-building (operator 2026-10-19: y) — the 45 % all-buildings test of 10.5 / 10.10.60.70(1)(C) is disclosed until the two-building step (M-177(1), P2-10)', () => {
+  it('both units carry the closed P5.12 ancillary_coverage_all_buildings sentence', () => {
+    for (const id of ['10.5.60.70(1)#(1)(C)', '10.10.60.70(1)#(1)(C)']) {
+      expect([id, unitOf(id).disclosure]).toEqual([id, 'If all buildings on the lot together cover no more than 45 % of it, the limit on ancillary building coverage does not apply to a lot with a houseplex or a secondary suite.']);
     }
   });
 });
