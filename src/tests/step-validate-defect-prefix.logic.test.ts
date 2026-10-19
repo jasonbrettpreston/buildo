@@ -85,7 +85,10 @@ describe('step-validate.mjs — defect-prefix overrides + collision check (G6, S
     // enrich_permits -> EPM (phase-4 wave 4 ①, 2026-10-18): its initials EP collide with enrich_parcels (EP-D*).
     expect(defectPrefixFor('enrich_permits')).toBe('EPM');
     expect(defectPrefixFor('enrich_parcels')).toBe('EP');
-    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM' });
+    // assert_staleness -> AST (C6-1 ①, 2026-10-19): its initials AS collide with assert_schema (AS-D*).
+    expect(defectPrefixFor('assert_staleness')).toBe('AST');
+    expect(defectPrefixFor('assert_schema')).toBe('AS');
+    expect(DEFECT_PREFIX_OVERRIDES).toEqual({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM', assert_staleness: 'AST' });
   });
 
   it('RED direction — the live overrides were removed: load_wsib/link_wsib collide on LW, blocked, naming both slugs and the override fix', async () => {

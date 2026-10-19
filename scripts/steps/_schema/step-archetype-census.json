@@ -502,10 +502,11 @@
     },
     {
       "slug": "assert_staleness",
+      "owner_specs": ["docs/specs/01-pipeline/44_chain_deep_scrapes.md"],
       "file": "scripts/quality/assert-staleness.js",
       "archetype": "ASSERT",
-      "batch": "C6",
-      "reason": "ARCH-CENSUS C6 (2026-10-19), derived from the legacy script (R-AO). Counts stale inspection targets from permits (scripts/quality/assert-staleness.js:70) and permit_freshness (:120) against logic-variable thresholds (:145); HALTING — throws on FAIL (:174); no write statement. Precedent assert_parcel_sanity (halting ASSERT)."
+      "batch": "pending",
+      "reason": "ARCH-CENSUS C6 (2026-10-19) declared ASSERT; C6-1 conversion IN FLIGHT (commit ①, 2026-10-19) — archetype re-derived from the code at PH-0 (R-AO), confirmed ASSERT: two read-only SELECTs over permits x permit_inspections (scripts/quality/assert-staleness.js:66-75, :106-122), a three-tier stale-count gate that halts on FAIL (:142-154, :174; the mig-121 fence kept by 4d5df9e7), no write (emitMeta writes {} :169-172). Precedent assert_parcel_sanity (halting ASSERT)."
     },
     {
       "slug": "update_tracked_projects",

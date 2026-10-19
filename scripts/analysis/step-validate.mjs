@@ -919,7 +919,7 @@ export function checkCutoverPrereqs(convertedSlugs, items, descriptorsBySlug = {
  * enrich_permits -> EPM (phase-4 wave 4 commit ①, 2026-10-18): its initials `EP` collide with the converted
  * `enrich_parcels` (`EP-D*`); the enrich_permits rows are `EPM-D*`.
  */
-export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM' });
+export const DEFECT_PREFIX_OVERRIDES = Object.freeze({ load_wsib: 'WS', link_parcel_abutments: 'LAB', enrich_ravines: 'RV', permits: 'PM', coa: 'COA', enrich_permits: 'EPM', assert_staleness: 'AST' });
 
 /** The estate's initials convention (AS/LR/LM/LW/LPA) — one letter per underscore-separated word, uppercased. */
 export function defectPrefixFor(slug, overrides = DEFECT_PREFIX_OVERRIDES) {
