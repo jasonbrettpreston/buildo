@@ -591,6 +591,19 @@
       "commit": "69c1a1ef",
       "classification": "HISTORICAL",
       "evidence": "Spec 68 budget split (operator 2026-10-18); dated change notes."
+    },
+    {
+      "id": "M31",
+      "from_spec": "124",
+      "anchor": "| R-CQ | **Host capacity on the Mac mini (24 GB, 12 cores; operator 2026-10-15): the heavy lane is retired; three serialisations stay, each for correctness, not memory.** (a) Dev-DB writers run one at a time (captures, cutovers, recapture nights, `step-validate --write`, migrations, chain runs): they share the DB and before-images. (b) Full suites run one at a time per machine: they share the engine ledger dir (measured: a second concurrent suite failed a fence test that passes alone). (c) Landings onto the programme branch run one at a time; commits in separate worktrees run concurrently (Spec 08 §C.6.4). Nothing else waits. Forks: pre-push 8, pre-commit 4 (`related` and J2), never above 10. Memory floor before (a) or (b): `memory_pressure -Q` free ≥ 25 %, else poll ≤ 30 min, then park. Measured: two consecutive 8-fork suites 68 s each, ≥ 62 % free, 0 swapouts (PC at 2 forks: 17.5 min); \"≥ 4 GB free\" reads ≈ 0.1 GB on macOS by design. | R-BV | `hooks-composition` (8/4, >10 tamper), `step-validate-vitest-fork-cap`, `host-memory.logic` + `ai-env-check` Host memory line |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B13 — Register rows R-CQ…R-CW (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-19",
+      "line_count": 7,
+      "classification": "REGISTER",
+      "evidence": "w4-rulings-5 (operator 2026-10-19: P4-SWAP and drafts A/B/C, cite or create a ruling, McDonald's Airtight V3): Spec 124 was at 379/380 lines with ~180 B of arm (iv) headroom and owes R-EQ…R-ES. Rows R-CQ…R-CW (the next contiguous block after M27; R-CX stays, it is spec124-register-locks.logic's first V3-final row) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.",
+      "content_sha256": "13923d8e3d5e0e910a800ca8b9b8a64ab5ddfedf624864d2e1dbc005ca3d5837",
+      "moved_at": "2026-10-20",
+      "commit": "2ddeb47e"
     }
   ]
 }
