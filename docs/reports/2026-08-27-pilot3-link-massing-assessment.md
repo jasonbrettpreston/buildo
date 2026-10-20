@@ -216,7 +216,9 @@ Discoverer ≠ adjudicator on every row (§7.1). Locks land in `src/tests/steps/
 
 **Count:** 26 rows · 17 fence SHAs named (`b16c036d` `e99f6753` `7a0fc5a0` `fc038790` `45906c31` `5bb31faf` `06320b39` `b36d0596` `82e33ad2` `3cc93feb` `0d5edf40` `c1ef0b73` `d324ab27` `2f3d0e4e` `9099a63c` `6a41143c` `7c75e92e`) · 1 `INTENT-UNKNOWN` (the value 50 → tunable T4) · **26 rows RULED by the operator (2026-08-27, §7.1 — "Approve all as proposed"; the `knowingly-retired` rows also under the A-8 override) · 0 rows PROPOSED**. Discoverer ≠ adjudicator on every row.
 
-### 2.5 Line accounting (Spec 120 §14.5 Gate 4c — 740 lines, 100%, no overlap)
+## 2.5 Line accounting (Spec 120 §14.5 Gate 4c — 740 lines, 100%, no overlap)
+
+_Its own section, not part of the PH-3 Intent Ledger: Spec 123 §7 (R-PACE-1, `123_step_opt_assessment_validation.md:360`) lists line accounting as its own report section beside the PH-3 intent ledger, and it is scored at the §14.5 differential (Gate 4c, Spec 121 `:1057`), not at G3. Heading level raised from `###` on 2026-10-20; no content changed._
 
 Categories: `runner-owned | validator-owned | descriptor-encoded | compute | dead (proved) | duplicate`. Measured against the working tree = `HEAD:scripts/link-massing.js` (**740 lines**; untouched since `2f3d0e4e`). Under rulings A-1 (`runLinkPhase`) and A-2 (`buildMatchSql`): *runner-owned* = the library's read / staleness / ordered-write / emit phases; *validator-owned* = declared checks evaluated by `verdict.js`; *compute* = pure classifiers + the SQL-text builder. `dead (proved)` is claimed ONLY for the JS path, and the proof is observational, not by reading: 0 of 11 audited runs since `7c75e92e` took it, live detection reads true/true, and the operator retired it (A-8) — Gate 4f is satisfied by measurement + ruling, not by inspection. Blank lines fold into the adjacent range.
 
@@ -526,9 +528,9 @@ Plan `.cursor/wf2_link_massing_nonzero_close_active_task.md` (operator-approved 
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=98 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=92 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=82 vocab-hit rows=43 |
+| G3 | 1 | 2 | table rows=45 vocab-hit rows=43 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |

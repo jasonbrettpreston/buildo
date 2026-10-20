@@ -205,7 +205,9 @@ Closed vocabulary: `preserved-in-runner | preserved-in-validator | preserved-in-
 
 No row is `unknown`; 100% dispositioned. The `knowingly-retired` row names a human approver (operator) and a retirement point (peel 8b), and is not retired by this pass.
 
-### 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 606 lines, 100%, no overlap)
+## 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 606 lines, 100%, no overlap)
+
+_Its own section, not part of the PH-3 Intent Ledger: Spec 123 §7 (R-PACE-1, `123_step_opt_assessment_validation.md:360`) lists line accounting as its own report section beside the PH-3 intent ledger, and it is scored at the §14.5 differential (Gate 4c, Spec 121 `:1057`), not at G3. Heading level raised from `###` on 2026-10-20; no content changed._
 
 Categories: `runner-owned | validator-owned | descriptor-encoded | compute | dead (proved) | duplicate`. Measured against `git show HEAD:scripts/quality/assert-schema.js` (606 lines; the working tree already carries the uncommitted commit-7 frozen shape). No range is claimed `dead (proved)` — nothing was instrumented this session, and reading is not proof (Gate 4f). Blank lines are folded into the adjacent range.
 
@@ -456,9 +458,9 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=51 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=50 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=31 vocab-hit rows=12 |
+| G3 | 1 | 2 | table rows=13 vocab-hit rows=12 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
