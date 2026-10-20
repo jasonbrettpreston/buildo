@@ -27,4 +27,16 @@ Spec 124 ruling) was flagged as expected. No report text was changed.
 
 ## Integration actions taken on the verify findings
 
-(Filled in by the merge and fix commits.)
+- **Merges.** `wf1/bylaw-fix-2` @ `5a26c383` (merge `e3d94582`) and `wf2/v3-cite-1` @ `18574feb` (merge
+  `7e9a83cb`), each `--no-ff` with the hooks; both clean, as verify-15 checks 14 and 15 previewed.
+- **verify-15 N2 (CHAT-9 amends M-102 / M-106).** 69a M-239's conflict check and its Amends cell now name M-102
+  (69a:183, *"or mixed bound directions or measures in one unit — the unit is UNUSUAL"*) and M-106 (69a:190, *"A unit
+  whose statements bound `encroachment_m` (max) and `encroachment_clearance_m` (min, …) mixes bound directions, which
+  one unit `bound` cannot carry"*). In plain words: the eight x.40.10(2) units now put a max (`main_wall_height_m`) and
+  a min (the share) on one LIMIT unit, which M-102 and M-106 had made UNUSUAL; M-239 amends them for targets that
+  declare their own bound. Only the six M-239 targets declare one (`vocab.json` `dsl_target.<t>.bound`: the two share
+  tiers `min`, the four attic thresholds `exact`); `encroachment_clearance_m` declares none, so the M-106 pair is
+  untouched. Authority: the operator's CHAT-9 words in
+  `docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json` (*"the operator approves the target
+  shape"*). No code, data or test changed: the shape was already applied at `06f7fb6d`; only the row's record of what it
+  amends was incomplete.
