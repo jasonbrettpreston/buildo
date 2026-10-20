@@ -2,6 +2,8 @@
 //            docs/specs/01-pipeline/69a_mcbylaw_register.md M-159 (a unit governs only its own subject), M-174(2)/(5),
 //            M-182, M-197, M-198(5), M-202(3)/(4), M-205(3), M-209, M-215(2), M-216, M-217..M-222, M-223(3), M-224, M-225;
 //            operator 2026-10-19 review-page rulings Q-M218 / Q-M197 / Q-other-building (Spec 131 LC-54)
+//            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.15 INV-18 / INV-19 (named describes; scenario plan R-13,
+//            operator APPROVED 2026-10-20)
 //
 // By-law evaluator-fix lane (operator item 6, 2026-10-18): the reality-check evaluator defects M-217..M-222 and the
 // review leaks, each fixed once by provision family across the parallel residential chapters, never per zone.
@@ -442,5 +444,76 @@ describe('the R default FSI (review of the round-2 knock-on, 2026-10-19)', () =>
     const r = eff(l, 'fsi');
     expect([r.status, r.value, r.winner]).toEqual(['value', 0.6, '10.10.40.40(1)#(1)(B)']);
     expect(unitOf('10.10.40.40(1)#(1)(B)').condition).toEqual({ tokens: ['label_value'], if: 'not labelled(d)' });
+  });
+});
+
+// Spec 78 P5.15 INV-18 / INV-19 as named locks (scenario plan R-13, operator APPROVED 2026-10-20: "Add INV-18 /
+// INV-19 as named describe titles in the existing lock file"). Red evidence: the same assertions over the tree at
+// 7a782801^ (before the evaluator-fix lane) fail — 100 non-residential applied cells, 50 label_value_absent:u, 50
+// main-wall no_candidate; and at a0d5b41e^ 10.5.80.1(2)(A) decides every garden-suite separation.
+const NONRES_CHAPTERS = new Set(Object.entries<Json>(I.vocab.zone_category_chapter).filter(([k, v]) => k !== '$comment' && Array.isArray(v.zones) && !v.zones.length).map(([k]) => k));
+const PRINCIPAL = ['detached_house', 'semi_detached_house', 'detached_houseplex'];
+const SUITES = ['garden_suite', 'laneway_suite'];
+const P53 = ['fsi', 'height_m', 'height_storeys', 'main_wall_height_m', 'lot_coverage_pct', 'building_length_m', 'building_depth_m', 'front_setback_m', 'rear_setback_m', 'side_setback_m', 'separation_m', 'dwelling_units_max'];
+const SUITE_TARGETS = ['separation_m', 'height_m', 'height_storeys', 'gfa_m2', 'building_length_m', 'building_width_m', 'front_setback_m', 'rear_setback_m', 'side_setback_m', 'ancillary_coverage_pct'];
+
+describe('INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225)', () => {
+  it('M-217: on R / RD / RS / RT / RM, for every class, roof form and P5.3 target, every applied unit is from a residential or citywide chapter', () => {
+    expect([...NONRES_CHAPTERS].sort()).toEqual(['100', '15', '30', '40', '50', '60', '80', '90']);
+    for (const zone of ZONES) for (const bt of [...PRINCIPAL, ...SUITES]) for (const flat of [false, true]) for (const t of P53) {
+      const ids = touched(eff(lot(zone, bt, { flags: { flat_or_shallow_roof: flat } }), t));
+      expect([zone, bt, flat, t, ids.filter((id) => NONRES_CHAPTERS.has(id.split('.')[0] ?? ''))]).toEqual([zone, bt, flat, t, []]);
+    }
+  });
+  it('M-217 / M-159: no place-of-worship unit (Section 150.50) decides a house or suite target — the interior floor area leak 150.50.20.1(1)', () => {
+    for (const zone of ZONES) for (const bt of [...PRINCIPAL, ...SUITES]) for (const flags of [{}, { has_secondary_suite: true }]) {
+      for (const t of ['interior_floor_area_m2', 'height_m', 'height_projection_m', 'front_soft_landscaping_pct', 'landscaping_strip_width_m', 'driveway_width_m']) {
+        expect([zone, bt, t, touched(eff(lot(zone, bt, { flags }), t)).filter((id) => id.startsWith('150.50.'))]).toEqual([zone, bt, t, []]);
+      }
+    }
+    for (const id of ['150.50.20.1(1)#(1)(B)', '150.50.20.1(1)#(1)(C)']) expect([id, unitOf(id).application.building_types]).toEqual([id, ['non_residential_building']]);
+  });
+  it('M-225: no parking-scoped unit, and never 10.5.80.1(2), decides a garden- or laneway-suite target', () => {
+    const parking = new Set(resolved.filter((u) => (u.application?.uses ?? []).some((x: unknown) => x === 'parking_space')).map((u) => u.unit_id));
+    for (const zone of ZONES) for (const bt of SUITES) for (const vars of [{}, { proposed_height_m: 6.3, distance_to_residential_m: 7.5 }]) for (const t of SUITE_TARGETS) {
+      const ids = touched(eff(lot(zone, bt, { vars }), t));
+      expect([zone, bt, t, ids.filter((id) => parking.has(id) || id.startsWith('10.5.80.1(2)'))]).toEqual([zone, bt, t, []]);
+    }
+  });
+});
+
+describe('INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220)', () => {
+  it('M-218: a pitched-roof house in R / RD / RS / RM reads its x.40.10 main-wall limit, never not_evaluated:no_candidate', () => {
+    for (const zone of ['R', 'RD', 'RS', 'RM']) for (const bt of ['detached_house', 'semi_detached_house']) {
+      const r = eff(lot(zone, bt), 'main_wall_height_m');
+      const z = { R: '10', RD: '20', RS: '40', RM: '80' }[zone];
+      expect([zone, bt, r.status, String(r.winner).startsWith(`10.${z}.40.10(`)]).toEqual([zone, bt, 'value', true]);
+    }
+  });
+  it('M-220: a lot whose label has no u is never label_value_absent:u — dwelling_units_max is unregulated', () => {
+    for (const zone of ZONES) for (const bt of PRINCIPAL) {
+      const r = eff(lot(zone, bt), 'dwelling_units_max');
+      expect([zone, bt, r.reason ?? null, r.value]).toEqual([zone, bt, null, 'unregulated']);
+    }
+  });
+});
+
+describe('INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 "Also", OWED; a ratchet that only shrinks)', () => {
+  it('the open cells are exactly these (R coverage and length; RD semi depth; RT length, depth and main wall; RM houseplex length, depth and main wall)', () => {
+    const open: string[] = [];
+    for (const zone of ZONES) for (const bt of PRINCIPAL) for (const t of ['lot_coverage_pct', 'building_length_m', 'building_depth_m', 'main_wall_height_m']) {
+      const r = eff(lot(zone, bt), t);
+      if (r.status === 'not_evaluated' && r.reason === 'no_candidate') open.push(`${zone} ${bt} ${t}`);
+    }
+    expect(open).toEqual([
+      'R detached_house lot_coverage_pct', 'R detached_house building_length_m',
+      'R semi_detached_house lot_coverage_pct', 'R semi_detached_house building_length_m',
+      'R detached_houseplex lot_coverage_pct', 'R detached_houseplex building_length_m',
+      'RD semi_detached_house building_depth_m',
+      'RT detached_house building_length_m', 'RT detached_house building_depth_m', 'RT detached_house main_wall_height_m',
+      'RT semi_detached_house building_length_m', 'RT semi_detached_house building_depth_m', 'RT semi_detached_house main_wall_height_m',
+      'RT detached_houseplex building_length_m', 'RT detached_houseplex building_depth_m', 'RT detached_houseplex main_wall_height_m',
+      'RM detached_houseplex building_length_m', 'RM detached_houseplex building_depth_m', 'RM detached_houseplex main_wall_height_m',
+    ]);
   });
 });

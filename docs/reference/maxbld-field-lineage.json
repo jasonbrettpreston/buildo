@@ -223,12 +223,12 @@
   {
    "id": "INV-18",
    "statement": "No applied unit comes from a non-residential chapter (M-159(1); would have caught M-217) and no excluded-use unit (M-225) enters a suite target.",
-   "runs_at": "test (by-law evaluator lane) + step guard on the Layer 2 rows"
+   "runs_at": "test `bylaw-evaluator-fixes.logic.test.ts` › \"INV-18 — …\" (by-law evaluator lane, green 2026-10-20) + step guard on the Layer 2 rows"
   },
   {
    "id": "INV-19",
    "statement": "No `not_evaluated:no_candidate` on a target whose article does not exist in that zone (R coverage, R/RT length, RT/RM-houseplex depth, main walls with the roof-slope condition) — those are `unregulated` / `not_applicable` (M-218, M-220).",
-   "runs_at": "test (by-law evaluator lane) + step check"
+   "runs_at": "test `bylaw-evaluator-fixes.logic.test.ts` › \"INV-19 — …\" (M-218 and the M-220 label arm, green 2026-10-20) and › \"INV-19 open arm …\" (the absent-article cells, a ratchet; OWED) + step check"
   },
   {
    "id": "INV-20",
@@ -546,10 +546,6 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
-     },
-     {
-      "what": "M-217 zone-category scope (houseplex FSI leak)",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -875,6 +871,10 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "INV-19 open arm: `not_evaluated:no_candidate` where the article does not exist (R coverage / length, RT length / depth / main wall, RM houseplex; M-220 \"Also\"; ruling drafted 2026-10-20)",
+      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -926,6 +926,10 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "INV-19 open arm: `not_evaluated:no_candidate` where the article does not exist (R coverage / length, RT length / depth / main wall, RM houseplex; M-220 \"Also\"; ruling drafted 2026-10-20)",
+      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1030,10 +1034,6 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
-     },
-     {
-      "what": "M-217 Chapter 40 map-gate leak on RD houseplex height",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1080,10 +1080,6 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
-     },
-     {
-      "what": "M-217 storeys leak (40.10.40.10(7))",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1172,6 +1168,10 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
+     },
+     {
+      "what": "INV-19 open arm: `not_evaluated:no_candidate` where the article does not exist (R coverage / length, RT length / depth / main wall, RM houseplex; M-220 \"Also\"; ruling drafted 2026-10-20)",
+      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1548,6 +1548,10 @@
      {
       "what": "one closed field-status set (vocab `layer3.field_status` ≠ §5a part 3, M-223(2)); `not_applicable` seat (M-183)",
       "owner": "by-law keying/evaluator lane"
+     },
+     {
+      "what": "INV-19 open arm: `not_evaluated:no_candidate` where the article does not exist (R coverage / length, RT length / depth / main wall, RM houseplex; M-220 \"Also\"; ruling drafted 2026-10-20)",
+      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1734,10 +1738,6 @@
      {
       "what": "Layer 2 resolution rows for the P5.3 targets, per class (D-1)",
       "owner": "Layer 2 step (Spec 68 §11 Phase 2)"
-     },
-     {
-      "what": "M-220 no-u → not_evaluated",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -1920,10 +1920,6 @@
      {
       "what": "suite classes and the applies() suite match (M-182, M-177)",
       "owner": "P2-10 / by-law keying/evaluator lane"
-     },
-     {
-      "what": "M-221 secondary-suite release unkeyed; M-217 interior_floor_area_m2 leak (150.50.20.1(1))",
-      "owner": "by-law keying/evaluator lane"
      }
     ]
    },
@@ -2262,7 +2258,7 @@
    "scenarios": [
     "suite"
    ],
-   "computation": "4.0 / 7.5; Coxwell in the held polygon 5.0 (M-224); never from Layer 2 until M-225 is fixed",
+   "computation": "4.0 / 7.5; Coxwell in the held polygon 5.0 (M-224); from Layer 2 (M-225 fixed a0d5b41e; INV-18)",
    "regulation_ids": [
     "150.7.60.30(1)",
     "150.8.60.30(1)"
@@ -2276,10 +2272,6 @@
      {
       "what": "suite classes and the applies() suite match (M-182, M-177)",
       "owner": "P2-10 / by-law keying/evaluator lane"
-     },
-     {
-      "what": "M-222 Coxwell map gate; M-225 10.5.80.1(2)(A) leak (being fixed)",
-      "owner": "by-law keying/evaluator lane"
      },
      {
       "what": "Coxwell polygon in bylaw_map_areas (M-193, M-224)",
@@ -2331,10 +2323,6 @@
      {
       "what": "suite classes and the applies() suite match (M-182, M-177)",
       "owner": "P2-10 / by-law keying/evaluator lane"
-     },
-     {
-      "what": "M-219 principal setbacks applied to the suite",
-      "owner": "by-law keying/evaluator lane"
      },
      {
       "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
@@ -2389,6 +2377,10 @@
      {
       "what": "lot-line classification + per-edge lane_abutting_length_m (M-209; P5.14 ML-1)",
       "owner": "Spec 130 lane / enrich_centreline WF3"
+     },
+     {
+      "what": "M-219 remainder: 150.8.60.20(3)(C) is keyed as a whole-building 1.5 m side setback on a lane lot, so Layer 2 answers 1.5 m where (3)(D) gives 1.0 m below 4.0 m (M-198(4) step-back; ruling drafted 2026-10-20)",
+      "owner": "by-law keying/evaluator lane"
      }
     ]
    },

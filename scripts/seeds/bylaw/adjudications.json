@@ -77703,6 +77703,247 @@
       "rule": "Spec 69a M-177(1), M-179(1); M-75",
       "unit": "150.8.60.70(1)#(1)(B)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.40.10(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.40.10(1)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.40.11(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.40.11(1)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(A)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(2)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(A)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": {
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(B)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(B)",
+      "value": {
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(C)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(C)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "dwelling_unit": "dwelling unit if",
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.40.10(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.40.10(1)#whole/application.building_types) carries its clause evidence, \"a place of worship building\" (verbatim, 150.50.40.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.40.10(1)#whole",
+      "value": {
+        "non_residential_building": "a place of worship building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.40.11(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.40.11(1)#whole/application.building_types) carries its clause evidence, \"lawfully existing place of worship\" (verbatim, 150.50.40.11(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.40.11(1)#whole",
+      "value": {
+        "lawfully_existing": "lawfully existing place",
+        "non_residential_building": "lawfully existing place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(A)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(A)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(B)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(B)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(C)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(C)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(2)#whole/application.building_types) carries its clause evidence, \"A lot with a place of worship\" (verbatim, 150.50.50.10(2)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(2)#whole",
+      "value": {
+        "non_residential_building": "A lot with a place of worship"
+      }
     }
   ]
 }
