@@ -53,3 +53,7 @@ first integrate commit with this index; none had to wait for the merge that intr
   move their lock refs to `bylaw-evaluator-fixes.logic` and `report-schema.logic`, whose SPEC LINK headers now name
   R-HF / R-HM (handbook-rule-map arm (e)). `generate-step-handbook --write` leaves Spec 132 byte-identical; `--check`
   up to date.
+- **Plan v2 §3.6 (pre-commit arms).** `report-schema.mjs --check` joins `.husky/pre-commit` after `decision-log --check`
+  (16 chain-era arms; `hooks-composition` `toHaveLength(16)`). The golden-lots `--check` arm is not wired (operator's
+  call; it already runs in the suite). `precommit-budget.json` re-measured: docs-only 21.95 s ≤ 25.3 s, registry-input
+  22.11 s ≤ 27.5 s; report-schema 0.11 s, decision-log 0.10 s.
