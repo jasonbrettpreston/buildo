@@ -37,3 +37,9 @@ first integrate commit with this index; none had to wait for the merge that intr
   commit `f5a5200f` (pre-commit `vitest related` runs the golden test). Before 158 PROVEN / 16 FAILS / 935 OWED / 16 NOT-EX;
   after 174 / 0 / 935 / 16 (n 1125). `docs/reports/2026-10-20-bylaw-e2e-verification.md` counts and finding status
   (E2E-F-03, F-04, F-06 fixed by `28b959c2`; F-05 by `cf4e57a4`) updated in the next commit.
+- **Plan v2 §3.2 (report-schema × lineage, verify F2).** The seed gains one rule: a `pending:lineage_queue:<field>` row
+  takes `lineage:<field>` and the lineage type once the lineage has the field, and a queued card takes `lineage:scenario`
+  once the lineage has its code (15 fields, cards RE / RF). `seed --write` then `report-schema --write`; both `--check`
+  clean, RS-9 PASS. The sample's `suite_coa_status` value is `not_evaluated:coa_factor_unfitted:suite` (Q-4);
+  "precedent_estimate" there is the field's trust tier. R-RS → R-HM in both generators, citing
+  `2026-10-20-chat-batch-a#CHAT-4`; the R-HM row says RS-0…RS-11. **CHAT-11 not imported** (PIN: see the lane report).

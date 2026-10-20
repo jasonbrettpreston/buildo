@@ -80,7 +80,7 @@ export type ReportV2Scenarios = {
   cards: Array<{
     /** Livable attic outside GFA — lineage:attic_outside_gfa_sqm (m²) */
     attic_outside_gfa_sqm: number | null;
-    /** Avg unit size — pending:lineage_queue:avg_unit_gfa_sqm (m²) */
+    /** Avg unit size — lineage:avg_unit_gfa_sqm (m²) */
     avg_unit_gfa_sqm: number | null;
     /** Livable basement (not GFA) — lineage:basement_livable_sqm (m²) */
     basement_livable_sqm: number | null;
@@ -99,11 +99,11 @@ export type ReportV2Scenarios = {
       coa_increment_sqm: number | null;
       /** CoA status — lineage:coa_status */
       coa_status: string | null;
-      /** Rear suite CoA floor area — pending:lineage_queue:suite_coa_gfa_sqm (m²) */
+      /** Rear suite CoA floor area — lineage:suite_coa_gfa_sqm (m²) */
       suite_coa_gfa_sqm: number | null;
-      /** Rear suite CoA extra — pending:lineage_queue:suite_coa_increment_sqm (m²) */
+      /** Rear suite CoA extra — lineage:suite_coa_increment_sqm (m²) */
       suite_coa_increment_sqm: number | null;
-      /** Rear suite CoA status — pending:lineage_queue:suite_coa_status */
+      /** Rear suite CoA status — lineage:suite_coa_status */
       suite_coa_status: string | null;
     };
     cost_estimate: {
@@ -118,7 +118,7 @@ export type ReportV2Scenarios = {
     };
     /** Coverage status — lineage:coverage_status */
     coverage_status: string | null;
-    /** Template slot values — pending:lineage_queue:disclosure_params */
+    /** Template slot values — lineage:disclosure_params */
     disclosure_params: unknown;
     disclosure_texts: Array<{
       /** Disclosure code — presentation:disclosure_texts */
@@ -136,9 +136,9 @@ export type ReportV2Scenarios = {
     display_label: string | null;
     /** Units — lineage:dwelling_units */
     dwelling_units: number | null;
-    /** Per-field citations — pending:lineage_queue:field_citations */
+    /** Per-field citations — lineage:field_citations */
     field_citations: unknown;
-    /** Per-field status — pending:lineage_queue:field_status */
+    /** Per-field status — lineage:field_status */
     field_status: unknown;
     /** Per-field trust tier — presentation:field_trust */
     field_trust: unknown;
@@ -215,13 +215,13 @@ export type ReportV2Scenarios = {
       comparable_builds_same_form: Array<Record<string, unknown>> | null;
       /** Neighbourhood CoA approval rate — lineage:nbhd_coa_approval_rate */
       nbhd_coa_approval_rate: number | null;
-      /** Neighbourhood CoA approved — pending:lineage_queue:nbhd_coa_approved */
+      /** Neighbourhood CoA approved — lineage:nbhd_coa_approved */
       nbhd_coa_approved: number | null;
-      /** Neighbourhood CoA refused — pending:lineage_queue:nbhd_coa_refused */
+      /** Neighbourhood CoA refused — lineage:nbhd_coa_refused */
       nbhd_coa_refused: number | null;
-      /** Neighbourhood CoA total — pending:lineage_queue:nbhd_coa_total */
+      /** Neighbourhood CoA total — lineage:nbhd_coa_total */
       nbhd_coa_total: number | null;
-      /** Nearby-CoA comp count — pending:lineage_queue:nearby_coa_builds_count */
+      /** Nearby-CoA comp count — lineage:nearby_coa_builds_count */
       nearby_coa_builds_count: number | null;
       /** Nearby CoA builds, same form (per card) — lineage:nearby_coa_builds_gfa_sqm (m²) */
       nearby_coa_builds_gfa_sqm: number | null;
@@ -232,7 +232,7 @@ export type ReportV2Scenarios = {
     roof_form_headline: "flat_setback" | "pitched_attic" | null;
     /** Trust level — lineage:row_trust_level */
     row_trust_level: "high" | "disclosed" | "low" | "not_evaluated" | null;
-    /** Collapsed into — pending:lineage_queue:same_as_scenario */
+    /** Collapsed into — lineage:same_as_scenario */
     same_as_scenario: string | null;
     /** Scenario code — lineage:scenario */
     scenario: string | null;
@@ -311,7 +311,7 @@ export type ReportV2Scenarios = {
     /** Low confidence — lineage:existing_low_confidence */
     existing_low_confidence: boolean | null;
     /** Source — lineage:existing_source */
-    existing_source: "estimated" | null;
+    existing_source: "estimated" | "user_entered" | null;
     /** Existing storeys — lineage:existing_storeys */
     existing_storeys: number | null;
     /** Existing width — lineage:existing_width_m (m) */
@@ -352,9 +352,9 @@ export type ReportV2Scenarios = {
   /** Lot-level disclosures — pending:spec_owed:N11 */
   lot_disclosures: DisclosureCode[] | null;
   lot_form: {
-    /** How the lot form was detected — pending:lineage_queue:lot_form_basis */
+    /** How the lot form was detected — lineage:lot_form_basis */
     lot_form_basis: string | null;
-    /** Lot form detected — pending:lineage_queue:lot_form_detected */
+    /** Lot form detected — lineage:lot_form_detected */
     lot_form_detected: "semi_half" | "detached" | null;
     /** Lot form used for this report — pending:spec_owed:APP-RENO */
     lot_form_effective: "semi_half" | "detached" | null;
@@ -368,7 +368,7 @@ export type ReportV2Scenarios = {
     addition_back_gfa_sqm: number | null;
     /** Addition up (GFA) — lineage:addition_up_gfa_sqm (m²) */
     addition_up_gfa_sqm: number | null;
-    /** Basement finish livable area — pending:lineage_queue:basement_finish_livable_sqm (m²) */
+    /** Basement finish livable area — lineage:basement_finish_livable_sqm (m²) */
     basement_finish_livable_sqm: number | null;
     /** Basement livable gain — lineage:basement_livable_gain_sqm (m²) */
     basement_livable_gain_sqm: number | null;

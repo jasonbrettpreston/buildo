@@ -596,7 +596,7 @@
                 },
                 {
                   "code": "coa_calibrated_not_law",
-                  "text": "The Committee of Adjustment (CoA) figure is estimated from past approved builds of this form; it is not a by-law limit. It covers the main building only; a rear suite has no CoA figure.",
+                  "text": "The Committee of Adjustment (CoA) figure is estimated from past approved builds of this form; it is not a by-law limit. The rear suite's CoA figure is shown separately once its builds are calibrated.",
                   "importance": "normal",
                   "mandatory": false
                 }
@@ -614,6 +614,7 @@
               "field_trust": {
                 "binding_constraint": "bylaw_derived",
                 "coa_status": "precedent_estimate",
+                "suite_coa_status": "precedent_estimate",
                 "dwelling_units": "bylaw_derived",
                 "is_headline": "bylaw_derived",
                 "main_gfa_sqm": "bylaw_derived",

@@ -248,10 +248,11 @@
               },
               "avg_unit_gfa_sqm": {
                 "description": "Avg unit size",
-                "x-source": "pending:lineage_queue:avg_unit_gfa_sqm",
+                "x-source": "lineage:avg_unit_gfa_sqm",
                 "x-status": "proposed",
                 "x-render": "rendered",
                 "x-unit": "m²",
+                "x-trust-tier": "bylaw_derived",
                 "type": [
                   "number",
                   "null"
@@ -365,10 +366,11 @@
                   },
                   "suite_coa_gfa_sqm": {
                     "description": "Rear suite CoA floor area",
-                    "x-source": "pending:lineage_queue:suite_coa_gfa_sqm",
+                    "x-source": "lineage:suite_coa_gfa_sqm",
                     "x-status": "new",
                     "x-render": "rendered",
                     "x-unit": "m²",
+                    "x-trust-tier": "precedent_estimate",
                     "type": [
                       "number",
                       "null"
@@ -376,10 +378,11 @@
                   },
                   "suite_coa_increment_sqm": {
                     "description": "Rear suite CoA extra",
-                    "x-source": "pending:lineage_queue:suite_coa_increment_sqm",
+                    "x-source": "lineage:suite_coa_increment_sqm",
                     "x-status": "new",
                     "x-render": "rendered",
                     "x-unit": "m²",
+                    "x-trust-tier": "precedent_estimate",
                     "type": [
                       "number",
                       "null"
@@ -387,9 +390,10 @@
                   },
                   "suite_coa_status": {
                     "description": "Rear suite CoA status",
-                    "x-source": "pending:lineage_queue:suite_coa_status",
+                    "x-source": "lineage:suite_coa_status",
                     "x-status": "new",
                     "x-render": "rendered",
+                    "x-trust-tier": "precedent_estimate",
                     "type": [
                       "string",
                       "null"
@@ -465,9 +469,10 @@
               },
               "disclosure_params": {
                 "description": "Template slot values",
-                "x-source": "pending:lineage_queue:disclosure_params",
+                "x-source": "lineage:disclosure_params",
                 "x-status": "proposed",
-                "x-render": "rendered"
+                "x-render": "rendered",
+                "x-trust-tier": "bylaw_derived"
               },
               "disclosure_texts": {
                 "type": "array",
@@ -558,15 +563,17 @@
               },
               "field_citations": {
                 "description": "Per-field citations",
-                "x-source": "pending:lineage_queue:field_citations",
+                "x-source": "lineage:field_citations",
                 "x-status": "proposed",
-                "x-render": "rendered"
+                "x-render": "rendered",
+                "x-trust-tier": "bylaw_derived"
               },
               "field_status": {
                 "description": "Per-field status",
-                "x-source": "pending:lineage_queue:field_status",
+                "x-source": "lineage:field_status",
                 "x-status": "proposed",
-                "x-render": "rendered"
+                "x-render": "rendered",
+                "x-trust-tier": "bylaw_derived"
               },
               "field_trust": {
                 "description": "Per-field trust tier",
@@ -1013,9 +1020,10 @@
                   },
                   "nbhd_coa_approved": {
                     "description": "Neighbourhood CoA approved",
-                    "x-source": "pending:lineage_queue:nbhd_coa_approved",
+                    "x-source": "lineage:nbhd_coa_approved",
                     "x-status": "proposed",
                     "x-render": "rendered",
+                    "x-trust-tier": "observed",
                     "type": [
                       "integer",
                       "null"
@@ -1023,9 +1031,10 @@
                   },
                   "nbhd_coa_refused": {
                     "description": "Neighbourhood CoA refused",
-                    "x-source": "pending:lineage_queue:nbhd_coa_refused",
+                    "x-source": "lineage:nbhd_coa_refused",
                     "x-status": "proposed",
                     "x-render": "rendered",
+                    "x-trust-tier": "observed",
                     "type": [
                       "integer",
                       "null"
@@ -1033,9 +1042,10 @@
                   },
                   "nbhd_coa_total": {
                     "description": "Neighbourhood CoA total",
-                    "x-source": "pending:lineage_queue:nbhd_coa_total",
+                    "x-source": "lineage:nbhd_coa_total",
                     "x-status": "proposed",
                     "x-render": "rendered",
+                    "x-trust-tier": "observed",
                     "type": [
                       "integer",
                       "null"
@@ -1043,9 +1053,10 @@
                   },
                   "nearby_coa_builds_count": {
                     "description": "Nearby-CoA comp count",
-                    "x-source": "pending:lineage_queue:nearby_coa_builds_count",
+                    "x-source": "lineage:nearby_coa_builds_count",
                     "x-status": "proposed",
                     "x-render": "rendered",
+                    "x-trust-tier": "observed",
                     "type": [
                       "integer",
                       "null"
@@ -1104,9 +1115,10 @@
               },
               "same_as_scenario": {
                 "description": "Collapsed into",
-                "x-source": "pending:lineage_queue:same_as_scenario",
+                "x-source": "lineage:same_as_scenario",
                 "x-status": "proposed",
                 "x-render": "rendered",
+                "x-trust-tier": "metadata",
                 "type": [
                   "string",
                   "null"
@@ -1559,6 +1571,7 @@
               "x-trust-tier": "metadata",
               "enum": [
                 "estimated",
+                "user_entered",
                 null
               ]
             },
@@ -1784,9 +1797,10 @@
           "properties": {
             "lot_form_basis": {
               "description": "How the lot form was detected",
-              "x-source": "pending:lineage_queue:lot_form_basis",
+              "x-source": "lineage:lot_form_basis",
               "x-status": "new",
               "x-render": "rendered",
+              "x-trust-tier": "metadata",
               "type": [
                 "string",
                 "null"
@@ -1794,9 +1808,10 @@
             },
             "lot_form_detected": {
               "description": "Lot form detected",
-              "x-source": "pending:lineage_queue:lot_form_detected",
+              "x-source": "lineage:lot_form_detected",
               "x-status": "new",
               "x-render": "rendered",
+              "x-trust-tier": "estimate",
               "enum": [
                 "semi_half",
                 "detached",
@@ -1890,10 +1905,11 @@
               },
               "basement_finish_livable_sqm": {
                 "description": "Basement finish livable area",
-                "x-source": "pending:lineage_queue:basement_finish_livable_sqm",
+                "x-source": "lineage:basement_finish_livable_sqm",
                 "x-status": "new",
                 "x-render": "rendered",
                 "x-unit": "m²",
+                "x-trust-tier": "user_input",
                 "type": [
                   "number",
                   "null"
@@ -2269,7 +2285,7 @@
       "mandatory": false
     },
     "coa_calibrated_not_law": {
-      "template": "The Committee of Adjustment (CoA) figure is estimated from past approved builds of this form; it is not a by-law limit. It covers the main building only; a rear suite has no CoA figure.",
+      "template": "The Committee of Adjustment (CoA) figure is estimated from past approved builds of this form; it is not a by-law limit. The rear suite's CoA figure is shown separately once its builds are calibrated.",
       "slots": [],
       "importance": "normal",
       "mandatory": false
@@ -2329,7 +2345,7 @@
       "mandatory": false
     },
     "existing_estimated": {
-      "template": "Existing-house dimensions are estimated from aerial massing; storeys are estimated.",
+      "template": "Existing-house dimensions are estimated from aerial massing; the number of storeys is your entry.",
       "slots": [],
       "importance": "normal",
       "mandatory": false

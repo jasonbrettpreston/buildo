@@ -1,7 +1,7 @@
-// SPEC LINK: R-RS (operator CHAT-4, 2026-10-20 — "A product report surface has one field declaration; every field names
-//            exactly one source; a generator --check gates names, types, presentation and pending states; its outputs are
-//            generated, never hand-edited"; scratchpad/chat-decisions/2026-10-20-batch-a.json; register row: lane
-//            layer2-spec), docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers).
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HM (drafted as R-RS; operator CHAT-4, 2026-10-20 —
+//            "A product report surface has one field declaration; every field names exactly one source; a generator
+//            --check gates names, types, presentation and pending states; its outputs are generated, never hand-edited";
+//            docs/reports/decisions/2026-10-20-chat-batch-a.json, `2026-10-20-chat-batch-a#CHAT-4`), docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers).
 //
 // SEED of the MaxBLD lot report v2 declaration. Transfers, mechanically and reproducibly from the repo:
 //   report-v2-seed/schema-v2-proposal.json            the reviewed field list (report-schema review, 2026-10-20)
@@ -166,9 +166,9 @@ const H = {
   'card|cost_estimate {total, per_sqm, area_priced_sqm, basis}': (s, r) => [['total', 'Cost of this scenario', ['number', '$']], ['per_sqm', 'Cost per m²', ['number', '$/m²']], ['area_priced_sqm', 'Area priced', ['number', 'm²']], ['basis', 'Cost basis', ['text']]].forEach(([n, l, t], i) => auto(s, r, { path: `scenarios.cards[].cost_estimate.${n}`, label: l, type: t, source: pend.q('Q-11'), note: i ? '' : r[4] })),
   'card|illustrations[] {asset_id, kind, caption, alt}': () => log.push('card illustrations[] object row → declared member by member in the images section'),
   // coa
-  'coa|suite_coa_gfa_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_gfa_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Queued for lineage.' }),
-  'coa|suite_coa_increment_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_increment_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Queued for lineage.' }),
-  'coa|suite_coa_status': (s, r) => auto(s, r, { source: pend.lq('suite_coa_status'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). Queued for lineage.' }),
+  'coa|suite_coa_gfa_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_gfa_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
+  'coa|suite_coa_increment_sqm': (s, r) => auto(s, r, { source: pend.lq('suite_coa_increment_sqm'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
+  'coa|suite_coa_status': (s, r) => auto(s, r, { source: pend.lq('suite_coa_status'), note: 'Q-4 (decided 2026-10-20): KEEP the rear-suite CoA (amends Spec 131 LC-49 / P5.10a); shown as not_evaluated:coa_factor_unfitted:suite until a suite cohort is calibrated (S78 §6.4 rule 2: never borrowed). In the lineage (Spec 78 P5.10a, bylaw-fix-1 report v2 lineage queue).' }),
   // disclosures
   'disclosures|disclosure_texts[] {code, text, importance, mandatory}': (s, r) => [['code', 'Disclosure code', ['text']], ['text', 'Disclosure text', ['text']], ['importance', 'Importance', ['text']], ['mandatory', 'Mandatory', ['boolean']]].forEach(([n, l, t], i) => auto(s, r, { path: `scenarios.cards[].disclosure_texts[].${n}`, label: l, type: t, source: 'presentation:disclosure_texts', note: i ? '' : r[4] })),
   'disclosures|disclosure_params {code: {X, A, Hw, …}}': (s, r) => auto(s, r, { name: 'disclosure_params', path: 'scenarios.cards[].disclosure_params', source: pend.lq('disclosure_params') }),
@@ -329,9 +329,31 @@ ui.fields.push(
   { path: 'ui.street_view', name: 'street_view', label: 'Street View photo block (display rules)', type: 'jsonb', status: 'new', source: 'presentation:street_view', render: 'rendered', note: 'Q-9 (decided): caption, attribution template, placement' },
   { path: 'ui.ad_placements', name: 'ad_placements', label: 'Sponsored placements', type: 'jsonb', status: 'new', source: 'presentation:ad_placements', render: 'rendered', note: 'Q-7/Q-8 (decided): first-party ads, two slots, never inside a card, always "Sponsored"' },
 );
-for (const c of cards) if (c.code === 'RE') { c.source = 'pending:lineage_queue:scenario:RE'; c.status = 'new'; c.note = 'Q-6 (decided): keep the house and build out to the full renovation envelope (renovation_envelope_gfa_sqm − existing GFA); a separate card from RA (a targeted addition up or back sized by the owner). Needs the P5.1 scenario code + lineage rows.'; }
+// ---- lineage queue → lineage (R-HM; RS-5: "lineage now has X — switch the source to lineage:"). A row queued for the
+// lineage takes `lineage:<field>` (and the lineage's own type / unit) once docs/reference/maxbld-field-lineage.json has
+// the field; a queued card takes `lineage:scenario` once the lineage has its scenario code. Applied after the rulings so
+// the switch is one rule, not a per-row edit; the lineage is written only by the by-law fix lane.
+const LIN_CODES = LIN.scenario_codes || {};
+const landed = (f) => {
+  const m = /^pending:lineage_queue:(.+)$/.exec(f.source || '');
+  if (!m || !LINF.has(m[1])) return;
+  if (f.name !== m[1]) throw new Error(`lineage queue ${f.path}: payload key ${f.name} ≠ lineage field ${m[1]}`);
+  const [type, unit] = linType(m[1]);
+  const was = f.source; f.source = `lineage:${m[1]}`; f.type = type;
+  if (unit) f.unit = unit; else delete f.unit;
+  log.push(`lineage landed: ${f.path} ${was} → ${f.source}`);
+};
+for (const sec of out) for (const f of sec.fields) landed(f);
+const cardLanded = (c) => {
+  const m = /^pending:lineage_queue:scenario:(.+)$/.exec(c.source || '');
+  if (!m || !(m[1] in LIN_CODES)) return;
+  if (LIN_CODES[m[1]] !== c.scenario) throw new Error(`card ${c.code}: lineage scenario ${LIN_CODES[m[1]]} ≠ ${c.scenario}`);
+  log.push(`lineage landed: card ${c.code} ${c.source} → lineage:scenario`); c.source = 'lineage:scenario';
+};
+for (const c of cards) if (c.code === 'RE') { c.source = 'pending:lineage_queue:scenario:RE'; c.status = 'new'; c.note = 'Q-6 (decided): keep the house and build out to the full renovation envelope (renovation_envelope_gfa_sqm − existing GFA); a separate card from RA (a targeted addition up or back sized by the owner). In P5.1 and the lineage (bylaw-fix-1 report v2 lineage queue).'; }
   else if (c.code === 'RA') c.note = 'Q-6 (decided): a targeted addition up or back, sized by the owner';
-  else if (c.code === 'RF') c.note = 'gap 4 (approved 2026-10-20): needs existing_basement = true and the owner basement_height_m; needs the P5.1 scenario code + lineage rows';
+  else if (c.code === 'RF') c.note = 'gap 4 (approved 2026-10-20): needs existing_basement = true and the owner basement_height_m; in P5.1 and the lineage (bylaw-fix-1 report v2 lineage queue)';
+for (const c of cards) cardLanded(c);
 
 // not_in_report: lineage fields not declared anywhere
 const declared = new Set();
@@ -400,7 +422,7 @@ const SAMPLES = [
 ];
 const decl = {
   $schema: './report-v2.decl.schema.json',
-  $comment: 'THE single declaration of the MaxBLD lot report v2 (sections → fields, each with exactly one source). Input of scripts/analysis/report-schema.mjs (--check validates gates RS-0..RS-11 and output drift; --write renders docs/reference/maxbld-report-v2-*). GENERATED by scripts/surfaces/_schema/seed-report-v2.mjs --write from report-v2-seed/ (the reviewed proposal + the operator ruling export); change the seed rules or inputs, never this file by hand, and never the generated outputs. SPEC LINK: R-RS (operator CHAT-4, 2026-10-20: one field declaration per report surface, one source per field, a --check generator, generated outputs; scratchpad/chat-decisions/2026-10-20-batch-a.json; register row by lane layer2-spec), docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers), R-27 (one home, generated tables), R-17 (SLOT disclosure); docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (closed disclosure codes).',
+  $comment: 'THE single declaration of the MaxBLD lot report v2 (sections → fields, each with exactly one source). Input of scripts/analysis/report-schema.mjs (--check validates gates RS-0..RS-11 and output drift; --write renders docs/reference/maxbld-report-v2-*). GENERATED by scripts/surfaces/_schema/seed-report-v2.mjs --write from report-v2-seed/ (the reviewed proposal + the operator ruling export); change the seed rules or inputs, never this file by hand, and never the generated outputs. SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HM (drafted as R-RS; operator CHAT-4, 2026-10-20: one field declaration per report surface, one source per field, a --check generator, generated outputs; docs/reports/decisions/2026-10-20-chat-batch-a.json, 2026-10-20-chat-batch-a#CHAT-4), docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers), R-27 (one home, generated tables), R-17 (SLOT disclosure); docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (closed disclosure codes).',
   version: 1,
   provenance: { seed: 'scripts/surfaces/_schema/seed-report-v2.mjs', proposal: { path: 'scripts/surfaces/_schema/report-v2-seed/schema-v2-proposal.json', version: P.version, sha256_16: sha(proposalText) }, review: 'scratchpad/report-review/REVIEW.md §6', seeded: '2026-10-20' },
   inputs: {

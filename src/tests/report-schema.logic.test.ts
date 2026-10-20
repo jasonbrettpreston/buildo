@@ -89,8 +89,11 @@ describe('RS-4 presentation keys both ways', () => {
 
 describe('RS-5 pending rows', () => {
   it('FAILs a lineage_queue row once lineage has the field (stale pending)', () => {
+    // The lineage has avg_unit_gfa_sqm (bylaw-fix-1's lineage queue, f5f82087), so the committed row reads lineage:.
+    // Put it back on the queue: a queued row whose lineage field exists is a stale pending.
     const inp = fresh();
-    inp.lineage.fields.push({ field: 'avg_unit_gfa_sqm', type: 'numeric m²', scenarios: ['H'], trust_tier: 'bylaw_derived' });
+    expect(inp.lineage.fields.some((f: Json) => f.field === 'avg_unit_gfa_sqm')).toBe(true);
+    field(inp, 'scenarios.cards[].avg_unit_gfa_sqm').source = 'pending:lineage_queue:avg_unit_gfa_sqm';
     const g = gate(inp, 'RS-5');
     expect(g.state).toBe('FAIL');
     expect(g.failing.join('\n')).toContain('avg_unit_gfa_sqm');
