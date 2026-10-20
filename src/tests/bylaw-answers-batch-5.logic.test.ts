@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/69a_mcbylaw_register.md M-31, M-158, M-169(2) and (4), M-175, M-192, M-196, M-208, M-211,
-//            M-212, M-213, M-214 (cited); M-226, M-227 (PROPOSED, drafted here for the operator);
+//            M-212, M-213, M-214 (cited); M-228, M-229 (RULED 2026-10-20, operator "1 & 2 y"; drafted here);
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (rooftop_elements_exempt, shoreline_hazard,
 //            setback_encroachments, decks_platforms_not_modelled, lawfully_existing_relief, vacant_existing_lot,
 //            heritage_designated, suite_soft_landscaping, forms_deferred)
@@ -50,16 +50,16 @@ const T = {
   "STAIRS": "Exterior stairs may project into a setback if they run no more than 1.5 m for each 1.0 m of rise, are no wider than 2.0 m and stay at least 0.6 m from the lot line; this is a design detail and is not modelled.",
   "RAMP": "An uncovered ramp may project into a setback if it is no steeper than 1 in 15, each sloped part is no wider than 1.5 m and it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
   "LIFT": "A lift of up to 3.0 m² that rises no higher than the first floor may project into a setback if it stays at least 0.6 m from the lot line; this is a design detail and is not modelled.",
-  "CLAD100": "On a lot with 100 or more dwelling units, added cladding (with the vents, pipes or equipment beneath it) may project up to 0.9 m into a setback; this is a design detail and is not modelled.",
   "DORMER_SB": "No wall of a roof dormer may be closer to a lot line than the required setback; the maximum design keeps dormers inside the setbacks.",
   "LANE_SOFT60": "On a lot with a frontage of 6.0 m or less, 60 % of the area between the house's rear walls and the laneway suite's front wall must be soft landscaping; this is shown, and it does not shrink the suite.",
   "HERITAGE": "On a heritage-designated property, work that needs a Heritage Permit must follow the permit's limits on bulk, massing, form and location; the zone's building rules do not stop work that complies with the permit.",
   "SHORE_SB_A": "If TRCA has determined a shoreline hazard limit or stable top-of-bank crosses the lot: buildings must be set back at least 10 m from it, except an ancillary building on a residential lot.",
-  "SHORE_SB_B": "If TRCA has determined a shoreline hazard limit or stable top-of-bank crosses the lot: buildings must be set back at least 10 m from it, except conservation works, public utilities and transportation uses.",
   "SHORE_SB_EX": "If an existing building lawfully sits less than 10 m from a shoreline hazard limit or stable top-of-bank on the lot, it may stay, and may be altered or replaced if no point of its main walls gets closer.",
   "SHORE_SEP_A": "If TRCA has determined a shoreline hazard limit or stable top-of-bank on a nearby lot: buildings must be at least 10 m from it, except an ancillary building on a residential lot.",
-  "SHORE_SEP_B": "If TRCA has determined a shoreline hazard limit or stable top-of-bank on a nearby lot: buildings must be at least 10 m from it, except conservation works, public utilities and transportation uses.",
   "SHORE_SEP_EX": "If an existing building lawfully sits less than 10 m from a shoreline hazard limit or stable top-of-bank on another lot, it may stay, and may be altered or replaced if no point of its main walls gets closer.",
+  "THROUGH_RESERVE": "On a through lot, a street line separated from the street by a 0.3 m reserve cannot be chosen as the front lot line; no reserve is known for this lot, so none is taken.",
+  "THROUGH_FRONT": "This is a through lot; the front lot line is taken on the street the neighbouring lots face (the lot's address street). If the City sets the other street line as the front, the front and rear setbacks swap.",
+  "MECH_ATTIC": "Up to the lesser of 5% of the permitted floor-area total (GFA) or 20 m² of a counted attic is taken as mechanical-equipment space and left out of the GFA; this is achieved if that attic space holds the building's mechanical equipment.",
 };
 
 const ROOF: [string, keyof typeof T][] = [
@@ -82,7 +82,7 @@ describe('M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed
 
 const ENC: [string, keyof typeof T][] = [
   ['10.5.40.60(3)#(3)(A)', 'STAIRS'], ['10.5.40.60(3)#(3)(B)', 'RAMP'], ['10.5.40.60(3)#(3)(C)', 'LIFT'],
-  ['10.5.40.60(4)#(4)(B)', 'CLAD100'], ['10.5.40.60(7)#(7)(A)', 'DORMER_SB'],
+  ['10.5.40.60(7)#(7)(A)', 'DORMER_SB'],
 ];
 describe('M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence', () => {
   for (const [id, k] of ENC) {
@@ -93,8 +93,8 @@ describe('M-169(4) — the rest of the 10.5.40.60 encroachments carry their setb
 });
 
 const SHORE: [string, keyof typeof T][] = [
-  ['5.10.40.70(6)#(6)(A)', 'SHORE_SB_A'], ['5.10.40.70(6)#(6)(B)', 'SHORE_SB_B'], ['5.10.40.70(7)#whole', 'SHORE_SB_EX'],
-  ['5.10.40.80(1)#(1)(A)', 'SHORE_SEP_A'], ['5.10.40.80(1)#(1)(B)', 'SHORE_SEP_B'], ['5.10.40.80(2)#whole', 'SHORE_SEP_EX'],
+  ['5.10.40.70(6)#(6)(A)', 'SHORE_SB_A'], ['5.10.40.70(7)#whole', 'SHORE_SB_EX'],
+  ['5.10.40.80(1)#(1)(A)', 'SHORE_SEP_A'], ['5.10.40.80(2)#whole', 'SHORE_SEP_EX'],
 ];
 describe('M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard)', () => {
   for (const [id, k] of SHORE) {
@@ -144,4 +144,33 @@ describe('M-31 — 10.5.40.1(1) is the procedural scope of Article 10.5.40', () 
     expect(u.calculation_handling.status).toBe('informational');
     expect(u.calculation_handling.description).toMatch(/excluding ancillary buildings or structures, which are governed by Article 10\.5\.60/);
   });
+});
+
+describe('M-228 — a through lot takes its front lot line on the street the neighbouring lots face (10.5.30.20(1)(A)/(B))', () => {
+  it('M-228: 10.5.30.20(1)(A) / (B) carry the reserve and front-line sentences and name M-228', () => {
+    expect(unitOf('10.5.30.20(1)#(1)(A)').disclosure).toBe(T.THROUGH_RESERVE);
+    expect(unitOf('10.5.30.20(1)#(1)(B)').disclosure).toBe(T.THROUGH_FRONT);
+    for (const id of ['10.5.30.20(1)#(1)(A)', '10.5.30.20(1)#(1)(B)']) expect(unitOf(id).calculation_handling.gaps).toMatch(/M-228/);
+  });
+  it('M-228: P5.12 carries through_lot_front_line', () => {
+    expect(code('through_lot_front_line')).toMatch(/the front lot line is taken on \{street\}, the street the neighbouring lots face/);
+  });
+});
+
+describe('M-229 — the mechanical attic area is left out of GFA by default (10.5.40.40(2); amends M-171)', () => {
+  it('M-229: 10.5.40.40(2) carries the achieved-if sentence and names M-229', () => {
+    expect(unitOf('10.5.40.40(2)#whole').disclosure).toBe(T.MECH_ATTIC);
+    expect(unitOf('10.5.40.40(2)#whole').calculation_handling.gaps).toMatch(/M-229 .*min\(5 % × permitted maximum GFA, 20 m²\)/);
+  });
+  it('M-229: P5.12 carries mechanical_attic_excluded', () => {
+    expect(code('mechanical_attic_excluded')).toMatch(/achieved if that space holds the mechanical equipment/);
+  });
+});
+
+describe('PIN NONRES — non-residential arms answered "disclose" are pinned out of scope, no disclosure applied', () => {
+  for (const id of ['5.10.40.70(6)#(6)(B)', '5.10.40.80(1)#(1)(B)', '10.5.40.60(4)#(4)(B)']) {
+    it(`${id} carries no disclosure (PIN NONRES)`, () => {
+      expect(unitOf(id).disclosure).toBe('none');
+    });
+  }
 });

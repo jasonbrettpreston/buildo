@@ -76990,17 +76990,6 @@
       "adjudicated_on": "2026-10-20",
       "adjudicator": "operator",
       "field": "disclosure",
-      "id": "COR-10.5.40.60(4)#(4)(B)/disclosure",
-      "kind": "correction",
-      "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 10.5.40.60(4) (disclose): cladding on a lot with 100 or more units (outside the MaxBLD building types; disclosed as answered). M-169(4): encroachment permissions are disclosed, never evaluated (as (6)(A), (8)(E), batch 4).",
-      "rule": "Spec 69a M-169(4); Spec 78 P5.12 setback_encroachments; M-75",
-      "unit": "10.5.40.60(4)#(4)(B)",
-      "value": "On a lot with 100 or more dwelling units, added cladding (with the vents, pipes or equipment beneath it) may project up to 0.9 m into a setback; this is a design detail and is not modelled."
-    },
-    {
-      "adjudicated_on": "2026-10-20",
-      "adjudicator": "operator",
-      "field": "disclosure",
       "id": "COR-10.5.40.60(7)#(7)(A)/disclosure",
       "kind": "correction",
       "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 10.5.40.60(7) (disclose): dormer walls no closer than the setback. M-169(4): encroachment permissions are disclosed, never evaluated (as (6)(A), (8)(E), batch 4).",
@@ -77045,17 +77034,6 @@
       "adjudicated_on": "2026-10-20",
       "adjudicator": "operator",
       "field": "disclosure",
-      "id": "COR-5.10.40.70(6)#(6)(B)/disclosure",
-      "kind": "correction",
-      "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 5.10.40.70(6) \"Shoreline Hazards\" (disclose). M-169(2): shoreline_or_top_of_bank is a site fact no data decides (the TRCA line is not held), taken as not holding and disclosed; M-212(3) is the FSI twin.",
-      "rule": "Spec 69a M-169(2), M-212(3); Spec 78 P5.12 shoreline_hazard (now names the 10 m setback); M-75",
-      "unit": "5.10.40.70(6)#(6)(B)",
-      "value": "If TRCA has determined a shoreline hazard limit or stable top-of-bank crosses the lot: buildings must be set back at least 10 m from it, except conservation works, public utilities and transportation uses."
-    },
-    {
-      "adjudicated_on": "2026-10-20",
-      "adjudicator": "operator",
-      "field": "disclosure",
       "id": "COR-5.10.40.70(7)#whole/disclosure",
       "kind": "correction",
       "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 5.10.40.70(7) \"Shoreline Hazards\" (disclose). M-169(2): shoreline_or_top_of_bank is a site fact no data decides (the TRCA line is not held), taken as not holding and disclosed; M-212(3) is the FSI twin.",
@@ -77078,23 +77056,98 @@
       "adjudicated_on": "2026-10-20",
       "adjudicator": "operator",
       "field": "disclosure",
-      "id": "COR-5.10.40.80(1)#(1)(B)/disclosure",
-      "kind": "correction",
-      "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 5.10.40.80(1) \"Shoreline Hazards\" (disclose). M-169(2): shoreline_or_top_of_bank is a site fact no data decides (the TRCA line is not held), taken as not holding and disclosed; M-212(3) is the FSI twin.",
-      "rule": "Spec 69a M-169(2), M-212(3); Spec 78 P5.12 shoreline_hazard (now names the 10 m setback); M-75",
-      "unit": "5.10.40.80(1)#(1)(B)",
-      "value": "If TRCA has determined a shoreline hazard limit or stable top-of-bank on a nearby lot: buildings must be at least 10 m from it, except conservation works, public utilities and transportation uses."
-    },
-    {
-      "adjudicated_on": "2026-10-20",
-      "adjudicator": "operator",
-      "field": "disclosure",
       "id": "COR-5.10.40.80(2)#whole/disclosure",
       "kind": "correction",
       "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 5.10.40.80(2) \"Shoreline Hazards\" (disclose). M-169(2): shoreline_or_top_of_bank is a site fact no data decides (the TRCA line is not held), taken as not holding and disclosed; M-212(3) is the FSI twin.",
       "rule": "Spec 69a M-169(2), M-212(3); Spec 78 P5.12 shoreline_hazard (now names the 10 m setback); M-75",
       "unit": "5.10.40.80(2)#whole",
       "value": "If an existing building lawfully sits less than 10 m from a shoreline hazard limit or stable top-of-bank on another lot, it may stay, and may be altered or replaced if no point of its main walls gets closer."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.30.20(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.30.20(1)(A)/(B) \"Through Lots - we fall for this ... It needs to match the adjacent lot\". M-228: the front lot line is the street line the adjacent lots front on, read as the lot's address street; the 0.3 m reserve is taken as not separating (M-169(1)); disclosed through_lot_front_line.",
+      "rule": "Spec 69a M-228 (RULED 2026-10-20); Spec 78 P5.12 through_lot_front_line; M-75",
+      "unit": "10.5.30.20(1)#(1)(A)",
+      "value": "On a through lot, a street line separated from the street by a 0.3 m reserve cannot be chosen as the front lot line; no reserve is known for this lot, so none is taken."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.30.20(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.30.20(1)(A)/(B) \"Through Lots - we fall for this ... It needs to match the adjacent lot\". M-228: the front lot line is the street line the adjacent lots front on, read as the lot's address street; the 0.3 m reserve is taken as not separating (M-169(1)); disclosed through_lot_front_line.",
+      "rule": "Spec 69a M-228 (RULED 2026-10-20); Spec 78 P5.12 through_lot_front_line; M-75",
+      "unit": "10.5.30.20(1)#(1)(A)",
+      "value": {
+        "description": "On a through lot, any lot line separating the lot from a street may be selected as the front lot line if it is not separated from the street by a 0.3 metre reserve.",
+        "gaps": "The tool does not hold street reserve data. M-228 (operator 2026-10-20): the 0.3 m reserve is a site fact not held, taken as not separating (M-169(1)), so either street line qualifies under (A); the designation itself follows (B).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.30.20(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.30.20(1)(A)/(B) \"Through Lots - we fall for this ... It needs to match the adjacent lot\". M-228: the front lot line is the street line the adjacent lots front on, read as the lot's address street; the 0.3 m reserve is taken as not separating (M-169(1)); disclosed through_lot_front_line.",
+      "rule": "Spec 69a M-228 (RULED 2026-10-20); Spec 78 P5.12 through_lot_front_line; M-75",
+      "unit": "10.5.30.20(1)#(1)(B)",
+      "value": "This is a through lot; the front lot line is taken on the street the neighbouring lots face (the lot's address street). If the City sets the other street line as the front, the front and rear setbacks swap."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.30.20(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.30.20(1)(A)/(B) \"Through Lots - we fall for this ... It needs to match the adjacent lot\". M-228: the front lot line is the street line the adjacent lots front on, read as the lot's address street; the 0.3 m reserve is taken as not separating (M-169(1)); disclosed through_lot_front_line.",
+      "rule": "Spec 69a M-228 (RULED 2026-10-20); Spec 78 P5.12 through_lot_front_line; M-75",
+      "unit": "10.5.30.20(1)#(1)(B)",
+      "value": {
+        "description": "On a through lot, any lot line separating the lot from a street may be selected as the front lot line if it abuts a street where an adjacent lot has its front lot line on the same street.",
+        "gaps": "The tool does not hold which street each adjacent lot fronts. M-228 (operator 2026-10-20): the front lot line is the street line on which the adjacent lots front, read as the lot's address street (parcels.primary_frontage_street_name); the opposite street line is the rear lot line; applied in the Layer 3 lot-line classification (Spec 78 P5.5), disclosed through_lot_front_line.",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.5.40.40(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.40.40(2) \"Every build has this - this should be factored in our GFA's - the default is 5% of the max GFA ... as long as it doesn't exceed 20 sq meters\". M-229 applies it by default with an achieved-if disclosure.",
+      "rule": "Spec 69a M-229 (RULED 2026-10-20; amends M-171); Spec 78 P5.12 mechanical_attic_excluded; M-75",
+      "unit": "10.5.40.40(2)#whole",
+      "value": "Up to the lesser of 5% of the permitted floor-area total (GFA) or 20 m² of a counted attic is taken as mechanical-equipment space and left out of the GFA; this is achieved if that attic space holds the building's mechanical equipment."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(2)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Operator ruling 2026-10-20 (\"1 & 2 y\") on review answers batch 5: 10.5.40.40(2) \"Every build has this - this should be factored in our GFA's - the default is 5% of the max GFA ... as long as it doesn't exceed 20 sq meters\". M-229 applies it by default with an achieved-if disclosure.",
+      "rule": "Spec 69a M-229 (RULED 2026-10-20; amends M-171); Spec 78 P5.12 mechanical_attic_excluded; M-75",
+      "unit": "10.5.40.40(2)#whole",
+      "value": {
+        "description": "Exclusion rule: attic area meeting 10.5.40.40(1) that is used for mechanical equipment is excluded from GFA if it is no more than 5% of the permitted maximum GFA, up to 20 m2.",
+        "gaps": "Depends on attic use and geometry. M-229 (operator 2026-10-20, amends M-171): applied by default in the maximum design where the counted attic passes 10.5.40.40(1): min(5 % × permitted maximum GFA, 20 m²) is left out of GFA as mechanical-equipment space (a design choice taken as met, M-172(3); as M-210 for suites), disclosed achieved-if mechanical_attic_excluded; the scenario step applies it (Spec 78 P5.13, owed) and the 5 % / 20 m² are clause literals (keying owed).",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "roof_type"
+        ]
+      }
     }
   ]
 }

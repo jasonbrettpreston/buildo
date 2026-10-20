@@ -11,8 +11,7 @@
   "answers": 729,
   "by_state": {
    "INCORPORATED": 688,
-   "OPEN": 3,
-   "UNFIXED": 38
+   "UNFIXED": 41
   },
   "by_verdict": {
    "disclose": 165,
@@ -51,9 +50,9 @@
    },
    "10.5": {
     "total": 113,
-    "INCORPORATED": 110,
-    "UNFIXED": 0,
-    "OPEN": 3
+    "INCORPORATED": 112,
+    "UNFIXED": 1,
+    "OPEN": 0
    },
    "10.60": {
     "total": 66,
@@ -87,8 +86,8 @@
    },
    "5.10": {
     "total": 23,
-    "INCORPORATED": 23,
-    "UNFIXED": 0,
+    "INCORPORATED": 21,
+    "UNFIXED": 2,
     "OPEN": 0
    },
    "600.60": {
@@ -114,73 +113,28 @@
  },
  "rows": [
   {
-   "unit_id": "10.5.30.20(1)#(1)(A)",
-   "regulation_id": "10.5.30.20(1)",
+   "unit_id": "10.5.40.60(4)#(4)(B)",
+   "regulation_id": "10.5.40.60(4)",
    "chapter": "10.5",
-   "verdict": "wrong",
-   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;",
+   "verdict": "disclose",
+   "note": "Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important",
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "fixed_by",
+   "disposition": "disclosed_by",
    "fix_ids": [
-    "M-226"
+    "M-169"
    ],
-   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
-   "disclosure_code": "",
-   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
+   "corrected_value": "The cladding allowance on a lot with 100 or more dwelling units is outside the MaxBLD building types — PIN NONRES-3: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
    "fields": [],
    "locks": [],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix"
+    "P5.12 code setback_encroachments",
+    "unit carries no disclosure"
    ],
-   "state": "OPEN",
-   "reason": "fix rests on rows awaiting the operator (M-226)"
-  },
-  {
-   "unit_id": "10.5.30.20(1)#(1)(B)",
-   "regulation_id": "10.5.30.20(1)",
-   "chapter": "10.5",
-   "verdict": "wrong",
-   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;if: (B) the lot line abuts a street where an adjacent lot has its front lot line on the same street; . It needs to match the adjacent lot.  ",
-   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-226"
-   ],
-   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
-   "disclosure_code": "",
-   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "OPEN",
-   "reason": "fix rests on rows awaiting the operator (M-226)"
-  },
-  {
-   "unit_id": "10.5.40.40(2)#whole",
-   "regulation_id": "10.5.40.40(2)",
-   "chapter": "10.5",
-   "verdict": "wrong",
-   "note": "Exclusion:  the area used for a mechanical room is excluded from the GFA. Every build has this - this should be factored in our GFA's - the default is 5% of the max GFA can be allocated to this as long as it doesn't exceed 20 sq meters.  Every building has this. this should be a factor",
-   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-227"
-   ],
-   "corrected_value": "Every build has mechanical equipment: an attic area that passes the 10.5.40.40(1) test and holds mechanical equipment is left out of GFA up to the lesser of 5 % of the permitted maximum GFA or 20 m², applied by default. PROPOSED (M-227, operator ruling owed): M-171 today discloses GFA deductions, never applies them.",
-   "disclosure_code": "gfa_deductions_not_applied",
-   "question": "Q-mechanical-attic (draft M-227): apply 10.5.40.40(2) by default — where the maximum design has an attic counted in GFA, leave up to the lesser of 5 % of the permitted maximum GFA or 20 m² of it out of GFA as mechanical-equipment area (achieved-if disclosure), amending M-171 for this one deduction as M-210 does for suites? Recommendation: y.",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "OPEN",
-   "reason": "fix rests on rows awaiting the operator (M-227)"
+   "state": "UNFIXED",
+   "reason": "P5.12 code ruled; keyed unit has no disclosure yet"
   },
   {
    "unit_id": "150.10.1(1)#whole",
@@ -1131,6 +1085,56 @@
    ],
    "state": "UNFIXED",
    "reason": "ruled; keyed correction not applied yet"
+  },
+  {
+   "unit_id": "5.10.40.70(6)#(6)(B)",
+   "regulation_id": "5.10.40.70(6)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries no disclosure"
+   ],
+   "state": "UNFIXED",
+   "reason": "P5.12 code ruled; keyed unit has no disclosure yet"
+  },
+  {
+   "unit_id": "5.10.40.80(1)#(1)(B)",
+   "regulation_id": "5.10.40.80(1)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards - seperation distance - lots on shoreline",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-19: \"our focus is residential this is beyond the scope at this point\"; operator 2026-10-20: \"y pin them\").",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries no disclosure"
+   ],
+   "state": "UNFIXED",
+   "reason": "P5.12 code ruled; keyed unit has no disclosure yet"
   },
   {
    "unit_id": "10.10.30.10(1)#(1)(A)",
@@ -7007,6 +7011,52 @@
    "reason": "resolved by a RATIFIED ruling"
   },
   {
+   "unit_id": "10.5.30.20(1)#(1)(A)",
+   "regulation_id": "10.5.30.20(1)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-228"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots front (10.5.30.20(1)(B)), read as the lot's address street; the 0.3 m reserve of (A) is taken as not separating (M-169(1)); the opposite street line is the rear lot line; disclosed through_lot_front_line.",
+   "disclosure_code": "through_lot_front_line",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.30.20(1)#(1)(A)/disclosure, COR-10.5.30.20(1)#(1)(A)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(B)",
+   "regulation_id": "10.5.30.20(1)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;if: (B) the lot line abuts a street where an adjacent lot has its front lot line on the same street; . It needs to match the adjacent lot.  ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-228"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots front (10.5.30.20(1)(B)), read as the lot's address street; the 0.3 m reserve of (A) is taken as not separating (M-169(1)); the opposite street line is the rear lot line; disclosed through_lot_front_line.",
+   "disclosure_code": "through_lot_front_line",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.30.20(1)#(1)(B)/disclosure, COR-10.5.30.20(1)#(1)(B)/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.5.30.20(1)#(1)(C)",
    "regulation_id": "10.5.30.20(1)",
    "chapter": "10.5",
@@ -8075,6 +8125,29 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "10.5.40.40(2)#whole",
+   "regulation_id": "10.5.40.40(2)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Exclusion:  the area used for a mechanical room is excluded from the GFA. Every build has this - this should be factored in our GFA's - the default is 5% of the max GFA can be allocated to this as long as it doesn't exceed 20 sq meters.  Every building has this. this should be a factor",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-229"
+   ],
+   "corrected_value": "Applied by default: where the maximum design has an attic counted in GFA (passes 10.5.40.40(1)), the lesser of 5 % of the permitted maximum GFA or 20 m² of it is left out of GFA as mechanical-equipment space, disclosed achieved-if (mechanical_attic_excluded).",
+   "disclosure_code": "mechanical_attic_excluded",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.40(2)#whole/disclosure, COR-10.5.40.40(2)#whole/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "10.5.40.40(3)#(3)(A)",
    "regulation_id": "10.5.40.40(3)",
    "chapter": "10.5",
@@ -8640,30 +8713,6 @@
    "chapter": "10.5",
    "verdict": "disclose",
    "note": "",
-   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169"
-   ],
-   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
-   "disclosure_code": "setback_encroachments",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code setback_encroachments",
-    "unit carries a disclosure"
-   ],
-   "state": "INCORPORATED",
-   "reason": "keyed disclosure + P5.12 code"
-  },
-  {
-   "unit_id": "10.5.40.60(4)#(4)(B)",
-   "regulation_id": "10.5.40.60(4)",
-   "chapter": "10.5",
-   "verdict": "disclose",
-   "note": "Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important",
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "disposition": "disclosed_by",
    "fix_ids": [
@@ -16198,31 +16247,6 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
-   "unit_id": "5.10.40.70(6)#(6)(B)",
-   "regulation_id": "5.10.40.70(6)",
-   "chapter": "5.10",
-   "verdict": "disclose",
-   "note": "Shoreline Hazards",
-   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169",
-    "M-212"
-   ],
-   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
-   "disclosure_code": "shoreline_hazard",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code shoreline_hazard",
-    "unit carries a disclosure"
-   ],
-   "state": "INCORPORATED",
-   "reason": "keyed disclosure + P5.12 code"
-  },
-  {
    "unit_id": "5.10.40.70(7)#whole",
    "regulation_id": "5.10.40.70(7)",
    "chapter": "5.10",
@@ -16253,31 +16277,6 @@
    "chapter": "5.10",
    "verdict": "disclose",
    "note": "Shoreline Hazards - seperation distance ",
-   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
-   "disposition": "disclosed_by",
-   "fix_ids": [
-    "M-169",
-    "M-212"
-   ],
-   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
-   "disclosure_code": "shoreline_hazard",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "P5.12 code shoreline_hazard",
-    "unit carries a disclosure"
-   ],
-   "state": "INCORPORATED",
-   "reason": "keyed disclosure + P5.12 code"
-  },
-  {
-   "unit_id": "5.10.40.80(1)#(1)(B)",
-   "regulation_id": "5.10.40.80(1)",
-   "chapter": "5.10",
-   "verdict": "disclose",
-   "note": "Shoreline Hazards - seperation distance - lots on shoreline",
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "disposition": "disclosed_by",
    "fix_ids": [
