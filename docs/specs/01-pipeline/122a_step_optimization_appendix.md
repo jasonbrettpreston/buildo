@@ -4,7 +4,7 @@
 line exists only so `scripts/generate-system-map.mjs`'s `/^\*\*Status:\*\*\s*(.+)$/m` match does not silently
 default this file to `'Done'`, added 2026-09-10).
 
-> Sibling of `docs/specs/01-pipeline/122_pipeline_step_optimization.md` (Spec 122). Created 2026-08-28 per the operator's intelligibility ruling: Spec 122 was growing unreadable, so appendix-grade material — superseded drafts, long evidence tables, generated revision logs, the historical ratification checklist — moved HERE, never deleted. Each section below states which Spec 122 location it was moved from; each original Spec 122 location keeps a one-line pointer back.
+> **Role: historical.** Superseded drafts, evidence and revision logs: it decides nothing and may introduce no rule id (Spec 124 R-GW, R-GX); a new rule goes to the Spec 124 register. Sibling of `docs/specs/01-pipeline/122_pipeline_step_optimization.md` (Spec 122). Created 2026-08-28 per the operator's intelligibility ruling: Spec 122 was growing unreadable, so appendix-grade material — superseded drafts, long evidence tables, generated revision logs, the historical ratification checklist — moved HERE, never deleted. Each section below states which Spec 122 location it was moved from; each original Spec 122 location keeps a one-line pointer back.
 
 **Governance:** this file carries no rulings of its own and decides nothing. Spec 122's dated `R-A..R-F` block and its R1–R6/V1–V7 tables remain the live rulings; where anything below conflicts with current Spec 122 text, Spec 122 governs (it is the live standard; this is history).
 

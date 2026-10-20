@@ -5,7 +5,7 @@
   "description": "Declared data consumed by scripts/analysis/spec-split-check.mjs (Spec 124 §4 R-I(4); Spec 122 §10.3). --refresh is the only sanctioned writer of moves[].content_sha256/moved_at/commit.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract_version", "budgets", "reader_guards", "known_dangling", "moves"],
+  "required": ["contract_version", "budgets", "generated_size_caps", "role_banner_pending", "historical_rule_ids", "reader_guards", "known_dangling", "moves"],
   "properties": {
     "contract_version": { "const": 1 },
     "budgets": {
@@ -41,6 +41,31 @@
           "declared": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
         }
       }
+    },
+    "generated_size_caps": {
+      "description": "Spec 124 R-GU: a GENERATED spec has no hand-written budget (budgets) but a fixed size cap; raising one is a reviewed hand-edit with its why.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["max_lines", "max_bytes", "why"],
+        "properties": {
+          "max_lines": { "type": "integer", "minimum": 1 },
+          "max_bytes": { "type": "integer", "minimum": 1 },
+          "why": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "role_banner_pending": {
+      "description": "Spec 124 R-GX: specs (repo-relative paths under docs/specs) that do not yet carry a role banner. Closed and shrink-only: a spec that gains a banner leaves the list.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^docs/specs/.+\\.md$" }
+    },
+    "historical_rule_ids": {
+      "description": "Spec 124 R-GX: per historical-role spec, the rule ids it carried when its banner landed (rule-map ids sourced to it plus register-shaped rows). Shrink-only; a new id is RED.",
+      "type": "object",
+      "additionalProperties": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
     },
     "moves": {
       "type": "array",

@@ -1,6 +1,6 @@
 # Step handbook: what the integrate lane must do
 
-Hand-written (not generated). Scope: `scripts/steps/_schema/rule-map.json`, `docs/handbook/step-standard.md` and their lock `src/tests/handbook-rule-map.logic.test.ts`. Written by lane handbook-fix under operator y 2026-10-20 (consolidation 1-4), from verify-12 check 6 and N6.
+Hand-written (not generated). Scope: `scripts/steps/_schema/rule-map.json`, the handbook it generates (Spec 132, `docs/specs/01-pipeline/132_step_standard_handbook.md`, since Spec 124 R-GU; `docs/handbook/step-standard.md` is now a pointer) and their lock `src/tests/handbook-rule-map.logic.test.ts`. Written by lane handbook-fix under operator y 2026-10-20 (consolidation 1-4), from verify-12 check 6 and N6.
 
 The rule map is locked in both directions. When another branch adds register rows or defect ids, the lock goes red **by design** until the same integrate commit updates the map. Do every step below in that one commit.
 
@@ -48,7 +48,7 @@ node scripts/generate-step-handbook.mjs --check
 The generator also checks the hand-written §1, §5 and glossary against the code. If an integrated branch renames a runner function, a phase, a flag or a file that the handbook names, `--write` fails and names the fact. Fix the text in `scripts/generate-step-handbook.mjs` (`SECTION_1`, `DIAGNOSIS`, `MESSAGES`, `GLOSSARY`, `SYMBOL_HOME`, `FLAG_HOME`, `RUN_ORDER`). Tables 1a and 1b regenerate by themselves.
 
 Still owed to a later ruling lane, and not tracked by any lock:
-- The register row recording decision 2 (the register is the authority; Specs 119–123 are historical design records; see `meta.precedence`).
+- ~~The register row recording decision 2 (the register is the authority; Specs 119–123 are historical design records; see `meta.precedence`).~~ Recorded as amended by Spec 124 R-GV (wf2/spec-132, 2026-10-20): the 124 register governs on policy, Spec 122 (the standard, no longer a historical record) on the schema and behaviour. Rulings on the role of Specs 120, 121 and 123 are still with the operator.
 - Correcting the stale Spec 124 §3 Rule 7 cell, which still names the deleted `outputs.publish` (verify-12 E6).
 
 ## Status after `wf2/p4-integrate-12` (2026-10-20)
@@ -58,3 +58,9 @@ Still owed to a later ruling lane, and not tracked by any lock:
 - tooling-fix-1: done. R-GP…R-GT mapped and locked.
 - `unenforced[]` stayed at 67 (ceiling 67): the W4A entries moved to their register rows; nothing was added.
 - Also owed to a ruling lane: 124a R-CR's cell still says averaging is `not_evaluated` until Q-B1; Spec 130:93, Spec 131 LC-58 and Spec 69a M-205(1) superseded that on 2026-10-19 (verify-12d N5). Handbook line link.4 now says so.
+
+## Status after `wf2/spec-132` (2026-10-20)
+
+- The handbook is Spec 132 (R-GU): `HANDBOOK_REL` in `scripts/analysis/gates/rule-map.mjs` and the generator write `docs/specs/01-pipeline/132_step_standard_handbook.md`. Cite a line as `Spec 132 §<line id> (R-xx)`; `spec-split-check --check` arm (iii-b) resolves it against `rule-map.json`.
+- R-GU…R-GX map to line x-rulings.3, locked by `src/tests/spec132-handbook-roles.logic.test.ts`.
+- Every spec carries one role banner or is on `role_banner_pending` in `docs/specs/01-pipeline/122_split_manifest.json` (R-GW, R-GX; arm vii). A new spec needs a banner. A historical spec adds no rule id beyond its `historical_rule_ids` baseline.

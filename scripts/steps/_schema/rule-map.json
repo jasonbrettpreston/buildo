@@ -3,22 +3,21 @@
   "$comment": [
     "Handbook rule map (lane handbook-1, operator y 2026-10-20 consolidation 1-4). One entry per Spec 124 register id (read by extractRegisterRulingIds, the reader R-EY (9) and spec-split-check arm (iii) use) and per other standard id from the consolidate-1 inventory; each maps to exactly one handbook line.",
     "Merges alias old ids onto one line; ids are never renumbered or deleted. Status lives here, not in byte-frozen register prose.",
-    "Locked by src/tests/handbook-rule-map.logic.test.ts; rendered by node scripts/generate-step-handbook.mjs --write into docs/handbook/step-standard.md."
+    "Locked by src/tests/handbook-rule-map.logic.test.ts; rendered by node scripts/generate-step-handbook.mjs --write into docs/specs/01-pipeline/132_step_standard_handbook.md (Spec 132 — Step Standard Handbook, Spec 124 R-GU; docs/handbook/step-standard.md is a pointer)."
   ],
   "contract_version": 1,
   "meta": {
     "decided": "operator y 2026-10-20 consolidation 1-4",
-    "authority": "Spec 124 register (docs/specs/01-pipeline/124_step_standard_policy.md §5 and the 124a LIVE REGISTER sections)",
-    "reading_surface": "docs/handbook/step-standard.md (generated from this file, locked)",
+    "authority": "Spec 124 register (policy) + Spec 122 (schema)",
+    "reading_surface": "Spec 132 — Step Standard Handbook, docs/specs/01-pipeline/132_step_standard_handbook.md (generated from this file, locked; Spec 124 R-GU)",
     "historical_design_records": [
       "Spec 119",
       "Spec 120",
       "Spec 121",
-      "Spec 122",
       "Spec 122a",
       "Spec 123"
     ],
-    "precedence": "The Spec 124 register is the authority; the handbook is the reading surface; Specs 119–123 are historical design records (decision 2). The register row recording this is owed to the later ruling lane.",
+    "precedence": "The Spec 124 register governs on policy and Spec 122 on the schema and behaviour (R-GV, operator y 2026-10-20, which flips Spec 124's transition clause); Spec 132, generated from this file, is the reading surface (R-GU); Specs 119, 120, 121, 122a and 123 are historical design records (decision 2). Spec 122a carries the historical role banner (R-GW); the role banners of 120, 121 and 123 await operator rulings.",
     "spec121_m_items": "Spec 121 M1–M14 are retired as a set (decision 4); still-true items map to live handbook lines; Spec 121 text is unchanged.",
     "pending_integration": {
       "rules": [],
@@ -686,6 +685,12 @@
       "section": "x-rulings",
       "text": "Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.",
       "why": "The cheapest enforced answer wins, and lessons are kept where a machine reads them."
+    },
+    {
+      "id": "x-rulings.3",
+      "section": "x-rulings",
+      "text": "Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.",
+      "why": "Each question has one home, and a reader knows from the first lines what a spec may decide."
     },
     {
       "id": "x-verify.1",
@@ -4604,6 +4609,62 @@
         "ref": "src/tests/ledger-status-form.logic.test.ts"
       },
       "statement": "A conversion retires an INGESTOR's local acquisition override (env var, argv path, data/ cache) by declared deviation; the declared external is the only source.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GU",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "The step handbook is Spec 132 — Step Standard Handbook, generated from rule-map.json and the runner code; cite it as Spec 132 §<line id> (R-xx); it has a size cap, not a hand-written line budget.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GV",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Standard + policy pairs (steps 122 + 124, by-laws 68 + 69/69a, lot configuration 78 + 131): the 124 register governs on policy, Spec 122 on the schema and behaviour.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GW",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Every spec in docs/specs carries one role banner: authority register, standard, design, historical or generated handbook.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GX",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Lock: every spec has a role banner (or is on the closed, shrink-only pending list), and a historical spec introduces no new rule id (spec-split-check arm vii).",
       "source": {
         "register": true
       }

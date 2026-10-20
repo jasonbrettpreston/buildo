@@ -2,7 +2,7 @@
 //
 // Handbook rule map lock. scripts/steps/_schema/rule-map.json maps every Spec 124 register id (read by
 // extractRegisterRulingIds, the reader R-EY (9) and spec-split-check arm (iii) use) and every other
-// step-standard id to exactly one line of docs/handbook/step-standard.md. RED when: a register id has no
+// step-standard id to exactly one line of Spec 132 (docs/specs/01-pipeline/132_step_standard_handbook.md, Spec 124 R-GU). RED when: a register id has no
 // mapping (a new register row must add its rule-map entry in the same commit); an in-force rule maps to no
 // live handbook line; a mapped id, `by` target or enforcement ref does not resolve; or an in-force rule has no
 // enforcement and is not on the `unenforced` list. The `unenforced` list only shrinks: its length is capped

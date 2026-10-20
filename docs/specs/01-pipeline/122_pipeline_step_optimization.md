@@ -2,7 +2,7 @@
 
 > ## ✅ Status: ACTIVE — ratified by operator 2026-08-29 after pilots 1–5
 >
-> Promoted from the prior `⛔ UNRATIFIED DRAFT — NOT REGISTERED` banner by explicit operator ruling (2026-08-29, R-R,
+> **Role: standard.** The standard half of the step standard pair: the live descriptor schema and runner/validator behaviour; on those this spec governs, on policy the Spec 124 register does (Spec 124 R-GV, R-GW); Spec 132 is the generated reading surface (R-GU). Promoted from the prior `⛔ UNRATIFIED DRAFT — NOT REGISTERED` banner by explicit operator ruling (2026-08-29, R-R,
 > the same commit that ratifies Spec 123): five conversion pilots had shipped at ratification time, and the operator's
 > own words — *"it should be standard and enforced"* — are the ratification. Registered in `docs/specs/00_system_map.md`
 > (confirmed present since `d455383b`). The Specs 120/121 false-ratification incident this banner used to guard

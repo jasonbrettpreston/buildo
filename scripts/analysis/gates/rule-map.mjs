@@ -1,7 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-DF, R-AM, R-BA (operator y 2026-10-20 consolidation 1-4)
 //
 // The rule map (scripts/steps/_schema/rule-map.json) ties every Spec 124 register id and every other
-// step-standard id to exactly one line of the handbook (docs/handbook/step-standard.md). The register
+// step-standard id to exactly one line of the handbook, Spec 132 (docs/specs/01-pipeline/132_step_standard_handbook.md;
+// Spec 124 R-GU, operator y 2026-10-20; docs/handbook/step-standard.md is now a pointer). The register
 // stays the authority; the handbook is the reading surface. This module is the one reader: the lock
 // (src/tests/handbook-rule-map.logic.test.ts), the generator (scripts/generate-step-handbook.mjs) and
 // step-validate's unenforced-rule print all read through it.
@@ -17,7 +18,7 @@ import { extractRegisterRulingIds } from '../spec-split-check.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 export const RULE_MAP_REL = 'scripts/steps/_schema/rule-map.json';
-export const HANDBOOK_REL = 'docs/handbook/step-standard.md';
+export const HANDBOOK_REL = 'docs/specs/01-pipeline/132_step_standard_handbook.md';
 export const SPEC_124_REL = 'docs/specs/01-pipeline/124_step_standard_policy.md';
 export const SPEC_124A_REL = 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md';
 export const DEFECT_LEDGER_REL = 'docs/reports/defect-ledger.md';

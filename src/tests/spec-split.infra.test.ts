@@ -42,6 +42,8 @@ const SPEC_FILES: Record<string, string> = {
   '68a': '68a_mcbylaw_standard_appendix.md',
   // Lot Configuration Policy (2026-10-18): the policy half of Spec 78, arm (iv) budget.
   '131': '131_lot_configuration_policy.md',
+  // Spec 132 — Step Standard Handbook (Spec 124 R-GU, 2026-10-20): generated; arm (iv-b) size cap and arm (v) shape check.
+  '132': '132_step_standard_handbook.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {
