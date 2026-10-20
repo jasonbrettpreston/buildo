@@ -1,0 +1,360 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-coa.js",
+  "chain": "coa",
+  "source_fingerprint": "0e8c8923655b930628e72a4946f8ec20d0be29063f68956ea90dc0898e11c408",
+  "git_head": "bed070af8a76a0cbb917c3e1195c86733d427709",
+  "header": {
+    "processes": 1,
+    "calls": 28,
+    "distinct": 20,
+    "utility": 9,
+    "tracer_self_ms": 7.587,
+    "wall_ms": 1950
+  },
+  "statements": [
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "coa:coa",
+            "coa"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "295268ea529014a0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "pg_stat_user_tables": [
+          "n_dead_tup",
+          "n_live_tup",
+          "relname"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4b8516e33bbd1e35",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "data_hash"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "address",
+          "applicant",
+          "application_number",
+          "data_hash",
+          "decision",
+          "decision_date",
+          "description",
+          "first_seen_at",
+          "hearing_date",
+          "last_seen_at",
+          "status",
+          "street_name",
+          "street_name_normalized",
+          "street_num",
+          "sub_type",
+          "ward",
+          "zoning_designation"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4dd414506c24dbc0",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_index",
+        "pg_namespace"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "504ef25008758990",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 805,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "54dbd8fadfdf89e0",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 2689,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "last_seen_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "last_seen_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 4,
+      "rowCount": 4,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "86812768251ae751",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "hearing_date",
+          "last_seen_at"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 17,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 3,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "dc2155bbf3d02d8f",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "columns"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f36afc5158390bc1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 2689,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "29950:2",
+      "write_fingerprints": [
+        "4b8516e33bbd1e35",
+        "54dbd8fadfdf89e0"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "address",
+        "applicant",
+        "application_number",
+        "data_hash",
+        "decision",
+        "decision_date",
+        "description",
+        "first_seen_at",
+        "hearing_date",
+        "last_seen_at",
+        "status",
+        "street_name",
+        "street_name_normalized",
+        "street_num",
+        "sub_type",
+        "ward",
+        "zoning_designation"
+      ],
+      "pg_stat_user_tables": [
+        "n_dead_tup",
+        "n_live_tup",
+        "relname"
+      ]
+    },
+    "writes": {
+      "coa_applications": [
+        "address",
+        "applicant",
+        "application_number",
+        "data_hash",
+        "decision",
+        "decision_date",
+        "description",
+        "first_seen_at",
+        "hearing_date",
+        "last_seen_at",
+        "status",
+        "street_name",
+        "street_name_normalized",
+        "street_num",
+        "sub_type",
+        "ward",
+        "zoning_designation"
+      ]
+    }
+  },
+  "errors": []
+}

@@ -2,7 +2,7 @@
 <!-- Source of truth: scripts/steps/_schema/step.schema.json (operator ruling R2). -->
 <!-- Regenerate: node scripts/violations/schema-to-vocab.mjs docs/reports/generated/122-vocabulary.md -->
 
-# The step contract — 20 categories, 530 declarable fields
+# The step contract — 20 categories, 531 declarable fields
 
 **Contract version 1 · status `v0-unfrozen-until-C3`.** The schema is canonical; this document is generated from it. Editing this file changes nothing.
 
@@ -16,7 +16,7 @@
 |---:|---|---:|---:|---:|
 | 1 | `identity` | 15 | 2 | 0 |
 | 2 | `inputs` | 39 | 9 | 0 |
-| 3 | `outputs` | 116 | 31 | 1 |
+| 3 | `outputs` | 117 | 31 | 1 |
 | 4 | `staleness` | 36 | 9 | 0 |
 | 5 | `guards` | 22 | 7 | 0 |
 | 6 | `execution` | 88 | 16 | 0 |
@@ -299,8 +299,9 @@ Grandfathered, never legal for a new step: an existing step must be able to decl
 | `invalidates[].set_null_unless` | object {column, equals} | — |
 | `invalidates[].set_null_unless.column` | string `^[a-z_][a-z0-9_]*$` | † |
 | `invalidates[].set_null_unless.equals` | OPEN | † |
-| `write_inventory` | object {statements, why, by_mode} | † |
+| `write_inventory` | object {statements, derived_statements, why, by_mode} | † |
 | `write_inventory.statements` | integer >= 0 | † |
+| `write_inventory.derived_statements` | integer >= 0 | — |
 | `write_inventory.why` | object {text, liveness} | — |
 | `write_inventory.why.text` | string | † |
 | `write_inventory.why.liveness` | `none` \| object {kind, ref} | † |

@@ -608,3 +608,31 @@ Operator decision (2026-10-20): y to the lane night-p4-c draft "fit-to-width per
 | ACCURATE | Red first (6/7 RED, plus the live overflow). The fitted value has the column's width at most, ends in the suffix, and so differs from a full-width value that does not (the `--run` unmoved check still refuses a void perturbation). |
 | SIMPLE | One expression and one read; unbounded columns render exactly as before. |
 | EXTERNALIZED | No threshold: the width is the catalog's; the suffix is the operator's flag. |
+
+## Appendix §B22 — Conflict check and V3 admission table for R-HA (night-p4-c, 2026-10-20; provisional numbering)
+
+Operator decision (2026-10-20): y to the lane night-p4-c draft "#44 (b)/(c) for an R-DY derived target". Provisional id R-HA (R-GU…R-GX taken by spec132-move; the Layer 2 spec lane takes the next ids after R-GX) and provisional section / RE-FREEZE numbers; all may be renumbered at integration with no change of content. Red case: the four coa POST traces of Night P4 (2026-10-20), committed verbatim as `src/tests/fixtures/witness-derived-coa/`, failed `FAIL:WITNESS:coa:b:lifecycle_status_history` and `c:statements`; red-first lock `docs/reports/red-evidence/r-ha/red-witness-derived.json` (3/6 RED before the code).
+
+**Conflict check.**
+
+| Ruling | Citation | Verdict |
+|---|---|---|
+| #44 (b) | `witness.mjs` grammar "written tables must EQUAL declared write tables" | Amended for a derived target only: per trace ⊆ plus every primary; the derived target moves to a slug-level "at least one fresh trace" requirement, so it is still witnessed. |
+| R-BK / R-DB (#44 (c)) | `schema-homes.mjs` `writeInventoryForMode`; by_mode per resolved mode | Extended: `derived_statements` adds a range on top of the mode's count; by_mode is unchanged and still selects the base count. |
+| R-DY | 124:240 "(e) A derived target is never a primary" | Applied: the relaxation keys on `writes[i].derive` only; a primary target stays required in every writing trace. |
+| R-ET | 124:261 the derived-status bracket | Applied: the bracket's capture is the trace that witnesses the derived target. |
+| R-DI / LDG-10 | 124a register: #44 HARD for pending and converted | No conflict: the rows stay FAIL-hard; only their condition changes. |
+| Rule 1 / G-1 schema ratchet | `generate-schema-baseline.mjs` (x-ruling on a new field) | Applied: the field carries `x-ruling` (rungs tried: one exact integer, by_mode, a runner-derived count). |
+| Template freeze / RE-FREEZE | `generate-template-freeze.mjs` R-E | Applied: `template-freeze.json` refreshed and Spec 122 §8 amended in the same commit (RE-FREEZE #38, provisional). `scripts/lib/step/**` untouched: no `lib_fingerprint` move, so the bundled RE-FREEZE night (124a §B17) is not affected. |
+
+**R-HA — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One witness gate; the derived set comes from the existing `writes[i].derive` declaration; one schema field beside `statements`/`by_mode`. |
+| OBSERVABLE | Two closed FAIL strings (`b:derived-unwitnessed:<t>`, `c:statements:<lo>..<hi>!=<n>`) in the #44 output; lock `witness-derived-target.logic` (6 tests over the real coa traces). |
+| RECORDED | Spec 124 §5 R-HA and Spec 122 §8 RE-FREEZE #38, dated 2026-10-20; this section. |
+| SCALABLE | Every R-DY derived target (coa now, permits next) by declaration; no slug branch. |
+| ACCURATE | Red first on the four real traces; exact bounds; a derived target no fresh trace wrote still fails. |
+| SIMPLE | One helper (`derivedWriteTables`), one branch in (b), one range in (c), one slug-level loop. |
+| EXTERNALIZED | The counts are declared descriptor data, not literals. |
