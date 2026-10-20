@@ -478,9 +478,11 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   'archetype_cost_enabled',
   'model_range_pct',
   'fallback_range_pct',
-  // phase-4 wave 4 commit ② (migration 272): link_coa_to_parcels. The copies
-  // (link_coa_to_parcels_conf_tier1a/1b, …_unmatched_threshold_pct) sit beside
+  // phase-4 wave 4 commit ② (migrations 271 / 272): classify_coa_scope and link_coa_to_parcels. The copies
+  // (classify_coa_scope_unmapped_max_pct, link_coa_to_parcels_conf_tier1a/1b, …_unmatched_threshold_pct) sit beside
   // legacy keys that stay until the cutover retires the legacy shell.
+  'classify_coa_scope_unmapped_max_pct',
+  'classify_coa_scope_batch_size',
   'link_coa_to_parcels_conf_tier1a',
   'link_coa_to_parcels_conf_tier1b',
   'link_coa_to_parcels_unmatched_threshold_pct',

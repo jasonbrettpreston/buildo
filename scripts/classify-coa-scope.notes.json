@@ -1,0 +1,51 @@
+{
+  "$comment": [
+    "Spec 120 §3.4 — the INTERPRETATION file for classify_coa_scope, capped at 12 prose entries (notes-cap.mjs).",
+    "Phase-4 wave 4, compressed form (R-PACE-1) commit ②, landed at stage compute_ported (W4A-R6, Spec 124 R-EF): the legacy shell scripts/classify-coa-scope.js stays the live step until ③."
+  ],
+  "contract_version": 1,
+  "read_this_way": [
+    {
+      "what": "Classifies each pending CoA from its description with the shipped dual-path classifier (scripts/lib/coa-scope-classifier.js and its TS twin, Spec 84 §7; unchanged by the conversion) and writes the four classifier columns, scope_source 'description' and the run-clock watermark scope_classified_at. Only the I/O moved: the runner owns the cursor, the per-batch transaction, the clock and the verdict.",
+      "measured": {
+        "value": "Parity pinned by src/tests/steps/classify_coa_scope/violations.test.ts L1-L13 (the frozen legacy text, executed) and compute-parity.logic.test.ts (the compute's rows and counters equal the legacy oracle's on the same input).",
+        "date": "2026-10-19",
+        "query": "n/a (code read)"
+      }
+    },
+    {
+      "what": "The pending set is a watermark comparison (W4A-R4 (a), the §6.3 pin): scope_classified_at IS NULL OR scope_classified_at < last_seen_at. The coa root (scripts/load-coa.js:565-582) touches last_seen_at for every fed key, not only when data_hash changes, so every CoA in each feed is re-classified even when its description did not change; R-DZ keeps that touch, so the converted step does the same (parity). The legacy comment claiming last_seen_at moves 'only on a data_hash change' was stale and is corrected in this commit (CCS-D1; wave-4 plan recommendation 15).",
+      "measured": {
+        "value": "33,280 of 33,949 CoAs pending on 2026-10-18, after the H6 --full coa runs touched last_seen_at on every row (assessment §1.4).",
+        "date": "2026-10-18",
+        "query": "SELECT count(*) FROM coa_applications WHERE description <> '' AND (scope_classified_at IS NULL OR scope_classified_at < last_seen_at)"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The watermark advances on every classified row, all-NULL outputs included (b3373342): the target is unguarded as legacy (guard \"none\", Spec 124 §2 Rule 9 / V7, grandfathered in the Q-CE2 / Q-W4G-1 form), so the rows written are exactly the legacy unguarded UPDATE's and the cursor never re-fetches an unchanged row forever. The drafted LG-9-hatch guard (the run clock inside an is_distinct_from guard) was not admitted: no precedent, and a guard naming the run clock cannot filter (124a §B14)."
+    },
+    {
+      "what": "unmapped_scope_pct is the one declared decision (the Day-1 WARN, inclusive bound from classify_coa_scope_unmapped_max_pct); scope_classified_pct, which repeated the same decision in legacy, is INFO (CCS-D6)."
+    }
+  ],
+  "fences": [
+    {
+      "const": "no IS DISTINCT FROM guard on the coa_applications flush UPDATE",
+      "value": "outputs.writes[0].write_discipline.guard is \"none\" (grandfathered); the compute statement has no IS DISTINCT FROM (violations D2c)",
+      "incident": "A classifier-columns-only guard skipped all-NULL rows, scope_classified_at never advanced, and the cursor re-fetched those CoAs on every run (WF3 r5-3 BUG).",
+      "commit": "b3373342",
+      "lock_test": "src/tests/steps/classify_coa_scope/violations.test.ts"
+    }
+  ],
+  "constants": [
+    {
+      "what": "'description' is the scope_source provenance tag (the only source this step classifies from), a vocabulary constant, not a tunable."
+    }
+  ],
+  "counts": {
+    "open_blind_spots": 0,
+    "unpromoted_suspicious_if": 0
+  }
+}

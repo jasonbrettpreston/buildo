@@ -157,11 +157,11 @@ pipeline.run('classify-coa-scope', async (pool) => {
     // Idempotency filter (R8 spec-drift correction): Spec 42 §6.8 row 666 says
     // "(scope_classified_at IS NULL OR scope_classified_at < load_at)" but the
     // actual coa_applications column is `last_seen_at` — `load_at` was a
-    // spec-text placeholder that never materialized as a column. The semantics
-    // work the same way: load-coa.js bumps `last_seen_at` to RUN_AT ONLY when
-    // `data_hash IS DISTINCT FROM EXCLUDED.data_hash` (i.e., the source row's
-    // content changed). So `scope_classified_at < last_seen_at` correctly fires
-    // re-classification after CKAN description amendments.
+    // spec-text placeholder that never materialized as a column. CCS-D1
+    // (corrected 2026-10-19, wave-4 plan recommendation 15): load-coa.js touches
+    // `last_seen_at` for every fed key, not just a changed one (load-coa.js:565-582),
+    // so `scope_classified_at < last_seen_at` re-classifies every CoA in each feed;
+    // a CKAN description amendment is picked up the same way.
     const sourceStream = pipeline.streamQuery(
       pool,
       `SELECT id, description, status, decision

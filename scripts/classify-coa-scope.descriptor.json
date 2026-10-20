@@ -1,0 +1,322 @@
+{
+  "identity": {
+    "name": "classify_coa_scope",
+    "display_name": "CoA Scope Classification",
+    "owner": "data",
+    "description": "Single-phase ENRICHER over its own input table: streams every pending CoA (never classified, or touched by the coa root after its last classification) through the shipped description-keyword classifier (scripts/lib/coa-scope-classifier.js, Spec 42 §6.6.D; Spec 84 §7 dual path) and writes coa_type_class, project_type, scope_tags, structure_type, scope_classified_at (the run clock) and scope_source ('description') back onto coa_applications, one explicit-VALUES UPDATE per batch, each its own short transaction (the compute_parcel_cost_estimates post_commit form).",
+    "lock": 4202,
+    "why_lock": {
+      "text": "Spec 42 §6.8 Phase D allocation, ported from the legacy `const ADVISORY_LOCK_ID = 4202` (classify-coa-scope.js:37); recorded in src/tests/pipeline-advisory-lock.infra.test.ts.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "42",
+    "spec_version": "1.0",
+    "archetype": "ENRICHER",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "coa" },
+        { "step": "link_coa" }
+      ],
+      "tables": [
+        { "table": "coa_applications", "columns": ["id", "description", "status", "decision", "last_seen_at", "scope_classified_at"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "warn"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "coa_applications",
+        "key": ["id"],
+        "columns": [
+          { "name": "coa_type_class", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "project_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "scope_tags", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "structure_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "scope_classified_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" },
+          { "name": "scope_source", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "derived_recompute",
+          "guard": "none",
+          "guard_why": {
+            "text": "Spec 124 §2 Rule 9 / V7 (grandfathered.json), the Q-CE2 / Q-W4G-1 form (operator y 2026-10-18 / 2026-10-19; 124a §B14): every streamed CoA advances its classification and the scope_classified_at watermark unconditionally, exactly as the legacy unguarded UPDATE did (classify-coa-scope.js:133-144, pinned L5/L8), or the pending cursor re-fetches an unchanged or all-NULL row on every run forever (the defect b3373342 fixed). The narrowing is the cursor (the pending set buildSourceSql streams), never a value guard: a guard naming the run clock could never filter.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_parcel_addresses / refresh_snapshot / classify_coa_trades precedent): guard is \"none\", so guard_columns is never consulted to build an IS DISTINCT FROM clause, and scope_classified_at (source run_at) is never a change guard on this target.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "description IS NOT NULL AND description <> '' AND (scope_classified_at IS NULL OR scope_classified_at < last_seen_at) — the pending set the stream selects (W4A-R4 (a), the §6.3 watermark pin on the coa root's last_seen_at)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun_why": {
+            "text": "A second run straight after the first streams nothing: every row the first run classified now has scope_classified_at = that run's clock, which is not below last_seen_at until the coa root touches the row again.",
+            "liveness": { "kind": "check", "ref": "coa_processed" }
+          },
+          "txn_scope": "none"
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "coa_applications",
+        "column": "scope_classified_at",
+        "when": "the coa root (scripts/load-coa.js) moves coa_applications.last_seen_at past a CoA's scope_classified_at — it touches last_seen_at for every fed key (load-coa.js:565-582; R-DZ keeps that touch), so every CoA in each feed becomes pending again; link_coa's tier UPDATEs also set last_seen_at on a CoA they link (scripts/link-coa.js:242, :332), which re-arms it the same way (#44 (e) derives link_coa as an upstream). W4A-R4 (a): the §6.3 watermark pin (staleness.pins row on coa). This is the step's OWN row, the one execution.phases[0].invalidator_ref indexes (claim #54); #44 (i) resolves it by Spec 124 R-ER arm (ii) (own column, own pin on the coa root's same-table stamp). The coa root's producer-side row (the link_massing form, resolved by this step's pin, R-DO arm (i)) is owed at the coa root's ②.",
+        "by": "pin"
+      }
+    ],
+    "write_inventory": {
+      "statements": 1,
+      "why": {
+        "text": "One statement shape: the explicit-VALUES UPDATE per flush (batch size classify_coa_scope_batch_size), each its own short transaction via ctx.flushBatch. No retraction (a CoA whose description becomes empty keeps its last classification — the legacy behaviour, CCS-D3 kept at parity per wave-4 plan recommendation 12).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/coa-scope-classifier.js"],
+    "logic_version": "none",
+    "on_fingerprint_change": "none",
+    "pins": [
+      {
+        "step": "coa",
+        "stamp": "coa_applications.last_seen_at",
+        "why": {
+          "text": "W4A-R4 (a), operator y 2026-10-18: the §6.3 watermark pin. The pending predicate scope_classified_at IS NULL OR scope_classified_at < last_seen_at compares this step's watermark with the coa root's touch stamp (buildSourceSql) — the enrich_parcels pins[0] precedent on link_massing. It also resolves this step's own by:\"pin\" invalidates row (Spec 124 R-ER arm (ii)).",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+        }
+      }
+    ]
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "coa_applications has RLS enabled with ZERO policies (assessment §1.4, read-only DB, Spec 114 Class B). Under a non-bypass role the UPDATE affects 0 rows with no error, the counters read 0 and the verdict reads PASS. The bypass is the precondition, checked before the first read (Spec 124 R-CT; trap 2).",
+          "liveness": { "kind": "table", "ref": "coa_applications" }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "enrich",
+    "heartbeat_minutes_from_config": "none",
+    "lock_timeout_ms_from_config": "none",
+    "enrich_hooks": {
+      "post_phase": "computePostPhase"
+    },
+    "phases": [
+      {
+        "name": "classify",
+        "order": 1,
+        "txn": "post_commit",
+        "writes_ref": 0,
+        "scope": "incremental",
+        "invalidator_ref": 0,
+        "timeout_minutes_from_config": "none"
+      }
+    ],
+    "txn_scope": "none",
+    "statement_timeout": "none",
+    "step_timeout": "30m",
+    "batch": 1000,
+    "on_row_error": "fail_fast",
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a counter the classify pass already measured in the same run; a check that throws is a compute defect and must redden the run.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "maintenance": "none",
+    "invocation": {
+      "coa": { "argv": [], "env": { "PIPELINE_CHAIN": "coa" } }
+    }
+  },
+  "checks": [
+    { "id": "coa_processed", "kind": "field_coverage", "expect": { "reports": "COUNT of pending CoAs streamed and classified this run" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (legacy INFO row coa_processed).", "liveness": { "kind": "column", "ref": "coa_applications.scope_classified_at" } } },
+    { "id": "scope_classified", "kind": "field_coverage", "expect": { "reports": "COUNT of processed CoAs whose description fired at least one scope tag" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (legacy INFO row scope_classified).", "liveness": { "kind": "column", "ref": "coa_applications.scope_tags" } } },
+    { "id": "unmapped_scope_pct", "kind": "bound", "expect": { "of": "percent of this run's processed CoAs whose description fired no scope tag (scope_tags NULL); 0 when nothing was processed" }, "limit": "pct <= 10", "limit_from_config": "classify_coa_scope_unmapped_max_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "The legacy unmapped_scope_count row (classify-coa-scope.js:226): the Day-1 WARN, never FAIL (Spec 42 §6.5 step 5), inclusive bound, the unrounded share compared as legacy did. CCS-D6: the legacy step rendered the SAME decision twice (this row and scope_classified_pct); it is declared once here and the library compares (R-BZ G7). Renamed from unmapped_scope_count because the value is a percentage (declared row-name diff).", "liveness": { "kind": "column", "ref": "coa_applications.scope_tags" } } },
+    { "id": "scope_classified_pct", "kind": "field_coverage", "expect": { "reports": "percent of this run's processed CoAs with at least one scope tag" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "CCS-D6 declared deviation: the legacy row carried a derived copy of unmapped_scope_pct's bound (>= 100 - t) and the same PASS/WARN decision; it stays visible as INFO, the decision lives on unmapped_scope_pct only.", "liveness": { "kind": "check", "ref": "unmapped_scope_pct" } } },
+    { "id": "no_class", "kind": "field_coverage", "expect": { "reports": "COUNT of processed CoAs with no coa_type_class" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "coa_applications.coa_type_class" } } },
+    { "id": "coa_type_class_null_pct", "kind": "field_coverage", "expect": { "reports": "percent of processed CoAs with no coa_type_class (land-only operations carry no use class by design)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "P12-C3 (c53f60a8), ported by name: INFO, not a gate.", "liveness": { "kind": "column", "ref": "coa_applications.coa_type_class" } } },
+    { "id": "no_project_type", "kind": "field_coverage", "expect": { "reports": "COUNT of processed CoAs with no project_type" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "coa_applications.project_type" } } },
+    { "id": "structure_type_classified_pct", "kind": "field_coverage", "expect": { "reports": "percent of processed CoAs with a structure_type (Spec 83 §3.A archetype)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "b02e2366, ported by name: step-level visibility; the gated coverage row lives in assert_global_coverage (Spec 49).", "liveness": { "kind": "column", "ref": "coa_applications.structure_type" } } },
+    { "id": "project_type_distribution", "kind": "field_coverage", "expect": { "reports": "processed CoAs per project_type, keys from the closed Spec 42 §6.6.D vocabulary ('(null)' for none); only keys that occurred" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name. The keys are the classifier's closed vocabulary (coa-scope-classifier.js:18-21), so the full counts are also flat emits (project_type_<key>_count, R-DE (iv)).", "liveness": { "kind": "column", "ref": "coa_applications.project_type" } } },
+    { "id": "coa_type_class_distribution", "kind": "field_coverage", "expect": { "reports": "processed CoAs per coa_type_class, keys from the closed Spec 42 §6.6.D vocabulary ('(null)' for none); only keys that occurred" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name; the full counts are flat emits (coa_type_class_<key>_count, R-DE (iv)).", "liveness": { "kind": "column", "ref": "coa_applications.coa_type_class" } } }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    { "key": "duration_ms", "type": "int", "consumers": [] },
+    { "key": "coa_processed", "type": "int", "consumers": [] },
+    { "key": "scope_classified", "type": "int", "consumers": [] },
+    { "key": "unmapped_scope", "type": "int", "consumers": [] },
+    { "key": "no_class", "type": "int", "consumers": [] },
+    { "key": "no_project_type", "type": "int", "consumers": [] },
+    { "key": "structure_typed", "type": "int", "consumers": [] },
+    { "key": "project_type_newconstruction_count", "type": "int", "consumers": [] },
+    { "key": "project_type_addition_count", "type": "int", "consumers": [] },
+    { "key": "project_type_alteration_count", "type": "int", "consumers": [] },
+    { "key": "project_type_demolition_count", "type": "int", "consumers": [] },
+    { "key": "project_type_severance_count", "type": "int", "consumers": [] },
+    { "key": "project_type_mixed_count", "type": "int", "consumers": [] },
+    { "key": "project_type_null_count", "type": "int", "consumers": [] },
+    { "key": "coa_type_class_residential_count", "type": "int", "consumers": [] },
+    { "key": "coa_type_class_commercial_count", "type": "int", "consumers": [] },
+    { "key": "coa_type_class_institutional_count", "type": "int", "consumers": [] },
+    { "key": "coa_type_class_mixed_count", "type": "int", "consumers": [] },
+    { "key": "coa_type_class_null_count", "type": "int", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "the legacy records_meta project_type_distribution / coa_type_class_distribution objects and its audit_table phase 42",
+      "why": {
+        "text": "R-DE (iv) (124:238, 'Emits are flat'): the two object keys become fixed-key int emits over the classifier's closed vocabulary (project_type_<key>_count, coa_type_class_<key>_count; a grep found no reader of the object keys outside the step's own files), and the distributions stay visible as the INFO audit rows. audit_table.phase follows sharing.varies_by_chain.phase (6, the chain index) — the fleet standard (O1 ruling, compute_parcel_cost_estimates deviations[0]).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+      },
+      "adjudicated_by": "Spec 124 R-DE (iv); O1 ruling (2026-09-21) fleet-standard phase index",
+      "date": "2026-10-19"
+    },
+    {
+      "from": "the legacy step reading its own clocks (getDbTimestamp, Date.now) and loading its config inside the step (CCS-D7, CCS-D2)",
+      "why": {
+        "text": "The run clock and duration are the runner's (scope_classified_at = the runner's DB-clock run_at); the config is the declared config.logic_variables, hoisted above the lock (the legacy fail-fast hoist, pinned L1/L3). The threshold reads the step-owned copy classify_coa_scope_unmapped_max_pct (migration 271, W4A-R1 copy form); the legacy name stays until ③ because the legacy shell reads it.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" }
+      },
+      "adjudicated_by": "W4A-R1 / W4A-R6 (operator y 2026-10-18); Spec 124 R-DE (v), R-EF",
+      "date": "2026-10-19"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "A CoA whose description later becomes empty leaves the pending set with its last classification (no retraction) — the legacy behaviour, kept at parity (wave-4 plan recommendation 12: legacy defects are declared, not fixed inside the conversion).",
+      "measured": "classify-coa-scope.js:165-174 (the description filter); assessment §1.1 'Retraction: none'",
+      "check_id": "none"
+    },
+    {
+      "what": "Because the coa root touches last_seen_at for every fed key, each feed re-classifies every CoA it carries even when its description did not change (33,280 pending measured 2026-10-18 after the H6 --full runs). The classifier is deterministic, so the values do not move; scope_classified_at does, which re-triggers classify_coa_trades' cursor for the same CoAs (parity, wave-4 plan §B.2.4 note 1).",
+      "measured": "assessment §1.4 (33,280 pending; 2026-07-17 run 2,527 updated)",
+      "check_id": "coa_processed"
+    }
+  ],
+  "interpretation": { "file": "classify-coa-scope.notes.json" },
+  "recovery": {
+    "reset": "UPDATE coa_applications SET scope_classified_at = NULL WHERE description IS NOT NULL AND description <> '' — the next run re-classifies every CoA with a description (idempotent: the classifier is deterministic).",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "none",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "No shared transaction (execution.txn_scope none): each ctx.flushBatch is its own short transaction, so a run killed mid-stream leaves earlier batches committed and every unflushed CoA still pending under the cursor; the next run picks them up with no special recovery branch.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/classify-coa-scope.js" }
+    },
+    "before_image": "generated"
+  },
+  "database": { "class": "primary", "min_migration": 133, "assert_current_database": "postgres" },
+  "counters": {
+    "records_total": {
+      "source": "matched.compute.coa_processed",
+      "why": {
+        "text": "The legacy records_total = processed (classify-coa-scope.js:246): the CoAs streamed this run. matched.compute.<name> is the ENRICHER counter root.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    "records_new": {
+      "source": "matched.compute.records_new_aggregate",
+      "why": {
+        "text": "The step INSERTs nothing (the sole write is an UPDATE); a declared finite 0, the fleet-standard ENRICHER form (compute_parcel_cost_estimates counters.records_new).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "why": {
+        "text": "The legacy records_updated = the SUM of UPDATE rowCounts (WF3 BUG-1, pinned L8). ctx.flushBatch is never seam-owned, so written.e1.updated is filled from the pass's own returned {updated, scanned} (the compute_parcel_cost_estimates form).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "classify_coa_scope_unmapped_max_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "classify_coa_scope_batch_size", "min": 1, "max": 13106, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": { "coa": 6 }, "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "classified",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The classify phase ran and unmapped_scope_pct met its bound.", "liveness": { "kind": "check", "ref": "unmapped_scope_pct" } }
+    },
+    {
+      "id": "classified_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The phase ran and the unmapped share is above classify_coa_scope_unmapped_max_pct (the Day-1 WARN). Row-derived.", "liveness": { "kind": "check", "ref": "unmapped_scope_pct" } }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 4202 held elsewhere: nothing streams, writes or emits beyond the row-derived SKIP summary (pinned L4).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "The rls_bypass_or_policy precondition on coa_applications is not met (R-CT), checked before the first read.", "liveness": { "kind": "table", "ref": "coa_applications" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "A declared logic variable resolved absent or outside its [min, max] under on_invalid fail — above the lock (hoisted_above_gate), the legacy 'logicVars validation failed' refusal (pinned L3).", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    },
+    {
+      "id": "failed_write_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "terminal": "string" },
+      "why": { "text": "A batch UPDATE threw (on_row_error fail_fast, on_batch_error fail_step): that batch rolls back, earlier batches stay committed, the rows stay pending for the next run.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    }
+  ]
+}

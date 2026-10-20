@@ -237,6 +237,8 @@ const GROUP_ORDER = [
     "label": "CoA Scope & Trades",
     "keys": [
       "coa_scope_unmapped_threshold_pct",
+      "classify_coa_scope_unmapped_max_pct",
+      "classify_coa_scope_batch_size",
       "coa_trades_unmapped_threshold_pct",
       "coa_active_trades_warn_max",
       "classify_coa_trades_unmapped_threshold_pct",

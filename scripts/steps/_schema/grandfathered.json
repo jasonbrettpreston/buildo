@@ -156,6 +156,16 @@
       "date": "2026-10-19",
       "lock_test": "src/tests/steps/classify_coa_trades/violations.test.ts"
     },
+    "classify_coa_scope": {
+      "paths": {
+        "outputs.writes[].write_discipline.guard": "none"
+      },
+      "why": "outputs.writes[0] coa_applications (derived_recompute, the one target): the explicit-VALUES UPDATE writes every streamed CoA's classification and its scope_classified_at watermark unconditionally, exactly as the legacy unguarded UPDATE (classify-coa-scope.js:133-144, pinned L5/L8). The stream IS the pending set (scope_classified_at IS NULL OR < last_seen_at), so the narrowing is the cursor; a change guard would leave an unchanged or all-NULL row's watermark behind and the cursor would re-fetch it every run (the b3373342 defect). The Q-CE2 (compute_coa_cost_estimates cost_classified_at) / Q-W4G-1 (classify_coa_trades trade_classified_at) form; Draft A's LG-9-hatch guard was not admitted (Spec 124 124a §B14: no precedent, a guard naming the run clock cannot filter).",
+      "commit": "wf2/p4-w4-rulings-5 classify_coa_scope ② (2026-10-19)",
+      "adjudicated_by": "operator y 2026-10-19 (w4-rulings-5 instruction: comply with an existing ruling — Spec 124 §2 Rule 9 / V7, Q-CE2 / Q-W4G-1 precedent)",
+      "date": "2026-10-19",
+      "lock_test": "src/tests/steps/classify_coa_scope/violations.test.ts"
+    },
     "compute_coa_cost_estimates": {
       "paths": {
         "outputs.writes[].write_discipline.guard": "none"

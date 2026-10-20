@@ -7,14 +7,14 @@ bounds, numeric-vs-JSONB, description, and the pipeline scripts that consume it.
 Values are operator-tunable at runtime via the Spec 86 Control Panel; the
 defaults below are the seed / migration baselines.
 
-- **Numeric vars** (801) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
+- **Numeric vars** (803) live in `scripts/seeds/logic_variables.json` (the parity-tested surface re-exported as `LOGIC_VAR_DEFAULTS` in `src/lib/admin/control-panel.ts`), except the 14 seeded via migrations only (last column notes the migration).
 - **JSONB vars** (6) carry non-numeric values in `logic_variables.variable_value_json`; they are migration-seeded (never in the seed JSON — a JSONB value cannot live in the numeric `variable_value` column) and read directly (config-loader passes object JSON through untouched).
 - **Consuming scripts** are derived from each script's local `LOGIC_VARS_SCHEMA = z.object({...})` Zod union. A blank cell means no static consumer was found; some consumers read **computed keys** (e.g. `assert-lifecycle-phase-distribution.js` builds `lifecycle_band_${…}` at runtime) invisible to a static scan — those are named in the seed JSON's `CONSUMED by …` annotation, surfaced in the Description.
 - **Admin** is the declared `admin` field on each seed key (WF2 "Admin Tunable Coverage" / "ADMIN-1 ratchet to zero"): `group: <label>` means the key renders in `GlobalConfigCard`'s GROUPS under that label; `hidden: <reason>` means it does not render there, with `reason` ∈ `derived | internal | deprecated | migration-only` — the closed enum's transitional `unclassified` marker was RETIRED once programme-backlog item `ADMIN-1` reached 0 (every key now carries a real group or a reviewed hidden reason; declaring `unclassified` is now a structural error, not merely ratcheted). Migration-only / JSONB vars are absent from the seed file, so this column reads "— (governed by GROUPS only)" for them — their admin visibility is unchanged and ungoverned by this declaration.
 
 **Cross-refs:** Spec 40 (`docs/specs/01-pipeline/40_pipeline_system.md`, config-loader / logicVars contract) · Spec 86 (`docs/specs/02-web-admin/86_control_panel.md`, the Control Panel that edits these).
 
-Total: **808** logic variables (801 numeric, 6 JSONB, 1 string).
+Total: **810** logic variables (803 numeric, 6 JSONB, 1 string).
 
 ---
 
@@ -66,6 +66,8 @@ Total: **808** logic variables (801 numeric, 6 JSONB, 1 string).
 | `calibration_min_sample_size` | numeric | 5 | 1 – 100 | — | seed | group: Coverage & Quality | Minimum number of historical leads required before trade calibration data is trusted |
 | `car_footprint_sqm` | numeric | 18.5 | 10 – 40 | — | seed | group: Spatial & Massing | Spec 65 §7 (Phase 3) — one parking-stall footprint incl. clearance (m²); garage_capacity_cars = floor(max_garage_gfa / this). CONSUMED by enrich-parcels.js (max-build pass). |
 | `centreline_propagation_coverage_min` | numeric | 0.9 | 0 – 1 | — | seed | group: Coverage & Quality | §8e L24c (Spec 62) — minimum fraction of valid-geom parcels that must carry centreline_dataset_version_when_enriched before enrich-permits.js propagates is_corner_lot/is_through_lot/primary_frontage_street_name onto permits + coa. Below this, §8d is treated as only partially run and propagation HALTs (would otherwise mark most leads false/false/NULL). 0.9 sits below the ~3% zero-intersection floor so a healthy ~97% run never false-HALTs. CONSUMED by scripts/enrich-permits.js (assertCentrelineEnriched). |
+| `classify_coa_scope_batch_size` | numeric | 1000 | 1 – 13106 | — | seed | group: CoA Scope & Trades | classify_coa_scope: CoAs classified per UPDATE batch (each batch its own short transaction) and per cursor fetch. Formerly Math.min(1000, Math.floor(65535 / 5)) (classify-coa-scope.js:49-50, CCS-D3); 5 binds per row + 1, so 13,106 rows is the 65,535-parameter ceiling (runner R-CU). Seeded by migration 271 (phase-4 wave 4, classify_coa_scope commit ②, McDonald's Airtight V3; Spec 124 R-DE (i)/(v), R-DF EXTERNALIZED), byte-identical to the former literal. CONSUMED by classify_coa_scope. |
+| `classify_coa_scope_unmapped_max_pct` | numeric | 10 | 0 – 100 | — | seed | group: CoA Scope & Trades | classify_coa_scope (Spec 42 §6.5 step 5): the largest percent of a run's processed CoAs whose description fires no scope tag that still reads PASS; above it unmapped_scope_pct WARNs (the Day-1 WARN, never FAIL). Inclusive. Copied from coa_scope_unmapped_threshold_pct by migration 271 (phase-4 wave 4, classify_coa_scope commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by classify_coa_scope via checks[].limit_from_config. |
 | `classify_coa_trades_active_trades_warn_max` | numeric | 18 | 1 – 35 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (R-DE (v); CCT-D8; migration 274): WARN ceiling on mean ALL-ACTIVE trades per CoA. Seeded from coa_active_trades_warn_max (retires at ③). |
 | `classify_coa_trades_batch_size` | numeric | 1000 | 1 – 1000 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (Spec 124 R-DE (i); CCT-D4; migration 274): MATERIALIZER keyset batch size for classify_coa_trades — source CoAs per transaction. 1000 = the former Math.min(1000, …) cap. Not verdict-affecting. |
 | `classify_coa_trades_eligible_min_count` | numeric | 1 | 1 – 1 | — | seed | group: CoA Scope & Trades | McDonald's Airtight V3 (R-CV definitional form; migration 274): the fewest CoAs a run must process before coa_eligible stops WARNing (an empty cursor WARNs, legacy :460-465, pinned L16). Pinned min = max: the check states it. CONSUMED by classify_coa_trades (checks[].limit_from_config). |
@@ -831,4 +833,4 @@ Total: **808** logic variables (801 numeric, 6 JSONB, 1 string).
 
 ---
 
-*Generated from 794 seed vars + 14 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*
+*Generated from 796 seed vars + 14 migration-only vars + 60 consumer-mapped keys across 2 script dirs.*

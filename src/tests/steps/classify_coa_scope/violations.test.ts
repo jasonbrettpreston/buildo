@@ -15,6 +15,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 
 import { loadLegacy, type LegacyOracle, type LegacyOpts, type SourceRow } from './fixtures/legacy-harness';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -192,8 +193,11 @@ describe('classify_coa_scope ① — legacy oracle pins C: audit, summary, meta 
   });
 });
 
-// PART 2 — the converted claims D1–D9 (`it.fails` at ①). Each is RED as a NAMED MISSING ARTIFACT or a named
-// legacy fact the conversion removes, never as a TS/import error. They flip to `it` at ② (D1–D8) and ③ (D9).
+// PART 2 — the converted claims D1–D9. Commit ② (2026-10-19) lands at stage compute_ported (W4A-R6, operator y
+// 2026-10-18; Spec 124 R-EF): descriptor, compute, notes and migration 271 (a value-carrying COPY of the unmapped
+// threshold). The legacy shell stays the live step until ③, exactly as the assert_coa_freshness ② (ffec8296) and the
+// enrich_permits / enrich_coa_zoning ② (a9011b83): so the frozen-shell half of D1 (D1b) and the retirement half of D3
+// (D3b) split out and flip at ③ with the shell swap; D9 flips at ③.
 interface Check { id: string; limit: string; limit_from_config?: string; severity: string }
 interface Descriptor {
   identity: { name: string; archetype: string; spec: string; lock: number };
@@ -207,18 +211,21 @@ function loadDescriptor(): Descriptor {
   return JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
 }
 
-describe('classify_coa_scope ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype ENRICHER, shape "enrich", lock 4202, spec "42"; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+describe('classify_coa_scope — converted claims (D1/D2/D3a/D4–D7 GREEN at ②; D1b/D3b/D9 at ③)', () => {
+  it('D1 — identity: descriptor exists, archetype ENRICHER, shape "enrich", lock 4202, spec "42"; notes exist (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'classify_coa_scope', archetype: 'ENRICHER', spec: '42', lock: LOCK_ID });
     expect(d.execution.shape).toBe('enrich');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at ③)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
   });
 
-  it.fails('D2 — one write target coa_applications with exactly the six legacy columns, and an rls_bypass_or_policy requirement (R-CT; RLS on, 0 policies) (flips at ②)', () => {
+  it('D2 — one write target coa_applications with exactly the six legacy columns, and an rls_bypass_or_policy requirement (R-CT; RLS on, 0 policies) (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.outputs.writes.map((w) => w.table)).toEqual(['coa_applications']);
     expect(d.outputs.writes[0]?.columns.map((c) => c.name).sort()).toEqual(['coa_type_class', 'project_type', 'scope_classified_at', 'scope_source', 'scope_tags', 'structure_type']);
@@ -226,20 +233,45 @@ describe('classify_coa_scope ① — converted claims (RED at ①; flip to `it` 
     expect(req).toEqual(['coa_applications']);
   });
 
-  it.fails('D3 — R-DE (v) + EXTERNALIZED: classify_coa_scope_unmapped_max_pct and classify_coa_scope_batch_size are step-owned variables; coa_scope_unmapped_threshold_pct is retired (flips at ②)', () => {
+  // Fence b3373342 (notes.json fences[0]) + Spec 124 §2 Rule 9 / V7 (124a §B14, Draft A second part): the target is
+  // unguarded as legacy, grandfathered, and the compute's statement carries no IS DISTINCT FROM.
+  it('D2c — guard "none" in the grandfathered V7 form (Q-CE2 / Q-W4G-1); the flush statement has no IS DISTINCT FROM (fence b3373342)', () => {
+    const raw = JSON.parse(readText(DESCRIPTOR_REL)) as { outputs: { writes: { write_discipline: { guard: string; guard_why?: unknown } }[] } };
+    expect(raw.outputs.writes[0]?.write_discipline.guard).toBe('none');
+    expect(raw.outputs.writes[0]?.write_discipline.guard_why).toBeTruthy();
+    const gf = JSON.parse(readText('scripts/steps/_schema/grandfathered.json')) as { steps: Record<string, { paths: Record<string, string>; lock_test: string }> };
+    expect(gf.steps.classify_coa_scope?.paths['outputs.writes[].write_discipline.guard']).toBe('none');
+    expect(gf.steps.classify_coa_scope?.lock_test).toBe('src/tests/steps/classify_coa_scope/violations.test.ts');
+    expect(readText(COMPUTE_REL)).not.toMatch(/IS DISTINCT FROM/);
+  });
+
+  // Spec 124 R-ER: the step's own by:"pin" row (claim #54's invalidator_ref target) resolves by #44 (i) arm (ii).
+  it('D2d — R-ER: #44 (i) resolves the real descriptor\'s own by:"pin" row with no reader pinning this step', async () => {
+    const w = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/analysis/gates/witness.mjs')).href)) as {
+      invalidationItems: (slug: string, d: unknown, fleet: { invalidated: Set<string>; pinReaders: Record<string, string[]> }) => string[];
+    };
+    expect(w.invalidationItems('classify_coa_scope', JSON.parse(readText(DESCRIPTOR_REL)), { invalidated: new Set(), pinReaders: {} })).toEqual([]);
+  });
+
+  it('D3a — R-DE (v) + EXTERNALIZED: classify_coa_scope_unmapped_max_pct and classify_coa_scope_batch_size are step-owned variables (flipped at ②)', () => {
     const c = loadDescriptor().config;
     const names = c.logic_variables.map((v) => v.name);
     expect(names).toContain('classify_coa_scope_unmapped_max_pct');
     expect(names).toContain('classify_coa_scope_batch_size');
+    expect(names).not.toContain('coa_scope_unmapped_threshold_pct');
+  });
+
+  it.fails('D3b — coa_scope_unmapped_threshold_pct is retired (config.retired; deleted by the ③ migration) (flips at ③)', () => {
+    const c = loadDescriptor().config;
     expect((c.retired ?? []).map((v) => v.name)).toEqual(['coa_scope_unmapped_threshold_pct']);
   });
 
-  it.fails('D4 — the verdict is declared: unmapped_scope_pct is "pct <= 10" from classify_coa_scope_unmapped_max_pct, WARN (the library compares, compute no longer decides) (flips at ②)', () => {
+  it('D4 — the verdict is declared: unmapped_scope_pct is "pct <= 10" from classify_coa_scope_unmapped_max_pct, WARN (the library compares, compute no longer decides) (flipped at ②)', () => {
     const byId = new Map(loadDescriptor().checks.map((c) => [c.id, c]));
     expect(byId.get('unmapped_scope_pct')).toMatchObject({ limit: 'pct <= 10', limit_from_config: 'classify_coa_scope_unmapped_max_pct', severity: 'WARN' });
   });
 
-  it.fails('D5 — compute is pure (R-BZ): runner seams ctx.stream / ctx.flushBatch only; no clock, txn, lock, config loader or batch literal (flips at ②)', () => {
+  it('D5 — compute is pure (R-BZ): runner seams ctx.stream / ctx.flushBatch only; no clock, txn, lock, config loader or batch literal (flipped at ②)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).toMatch(/ctx\.stream\(/);
     expect(c).toMatch(/ctx\.flushBatch\(/);
@@ -247,14 +279,14 @@ describe('classify_coa_scope ① — converted claims (RED at ①; flip to `it` 
     expect(c).not.toMatch(/\b65535\b|Math\.min\(\s*1000/);
   });
 
-  it.fails('D6 — the stale last_seen_at claim is gone: no file says it moves "ONLY when" data_hash changes; notes.json records the R-DW every-fed-key touch (flips at ②)', () => {
+  it('D6 — the stale last_seen_at claim is gone: no file says it moves "ONLY when" data_hash changes; notes.json records the R-DW every-fed-key touch (flipped at ②)', () => {
     for (const rel of [SHELL_REL, COMPUTE_REL]) expect(readText(rel)).not.toMatch(/ONLY when/);
     const notes = readText(NOTES_REL);
     expect(notes).toMatch(/last_seen_at/);
     expect(notes).toMatch(/every fed key/);
   });
 
-  it.fails('D7 — R-DL: PIPELINE_TABLE_MAP maps classify_coa_scope to its declared write table; manifest supports_full is false (no --full path) (flips at ②)', () => {
+  it('D7 — R-DL: PIPELINE_TABLE_MAP maps classify_coa_scope to its declared write table; manifest supports_full is false (no --full path) (flipped at ②)', () => {
     expect(readText('src/lib/admin/funnel.ts')).toMatch(/classify_coa_scope: 'coa_applications'/);
     const m = JSON.parse(readText('scripts/manifest.json')) as { scripts: Record<string, { supports_full?: boolean }> };
     expect(m.scripts.classify_coa_scope?.supports_full).toBe(false);

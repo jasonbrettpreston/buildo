@@ -19,6 +19,20 @@
       "legacy_name": "coa_freshness_warn_days",
       "reason": "assert_coa_freshness still runs its legacy script, which reads coa_freshness_warn_days; this value is used from the step's cutover (stage compute_ported)."
     },
+    "classify_coa_scope_batch_size": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_scope",
+      "legacy_name": null,
+      "reason": "classify_coa_scope still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
+    },
+    "classify_coa_scope_unmapped_max_pct": {
+      "badge": "takes_effect_at_cutover",
+      "label": "Takes effect at cutover",
+      "step": "classify_coa_scope",
+      "legacy_name": "coa_scope_unmapped_threshold_pct",
+      "reason": "classify_coa_scope still runs its legacy script, which reads coa_scope_unmapped_threshold_pct; this value is used from the step's cutover (stage compute_ported)."
+    },
     "classify_coa_trades_active_trades_warn_max": {
       "badge": "takes_effect_at_cutover",
       "label": "Takes effect at cutover",

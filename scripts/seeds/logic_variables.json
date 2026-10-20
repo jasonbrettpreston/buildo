@@ -1159,6 +1159,26 @@
       "group": "CoA Scope & Trades"
     }
   },
+  "classify_coa_scope_unmapped_max_pct": {
+    "default": 10,
+    "type": "number",
+    "description": "classify_coa_scope (Spec 42 §6.5 step 5): the largest percent of a run's processed CoAs whose description fires no scope tag that still reads PASS; above it unmapped_scope_pct WARNs (the Day-1 WARN, never FAIL). Inclusive. Copied from coa_scope_unmapped_threshold_pct by migration 271 (phase-4 wave 4, classify_coa_scope commit ②, McDonald's Airtight V3; Spec 124 R-DE (v) step-owned names, R-DF EXTERNALIZED), value preserved (the legacy key stays until the ③ cutover retires the legacy shell that reads it). CONSUMED by classify_coa_scope via checks[].limit_from_config.",
+    "min": 0,
+    "max": 100,
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
+  "classify_coa_scope_batch_size": {
+    "default": 1000,
+    "type": "number",
+    "description": "classify_coa_scope: CoAs classified per UPDATE batch (each batch its own short transaction) and per cursor fetch. Formerly Math.min(1000, Math.floor(65535 / 5)) (classify-coa-scope.js:49-50, CCS-D3); 5 binds per row + 1, so 13,106 rows is the 65,535-parameter ceiling (runner R-CU). Seeded by migration 271 (phase-4 wave 4, classify_coa_scope commit ②, McDonald's Airtight V3; Spec 124 R-DE (i)/(v), R-DF EXTERNALIZED), byte-identical to the former literal. CONSUMED by classify_coa_scope.",
+    "min": 1,
+    "max": 13106,
+    "admin": {
+      "group": "CoA Scope & Trades"
+    }
+  },
   "coa_trades_unmapped_threshold_pct": {
     "default": 20,
     "type": "number",
