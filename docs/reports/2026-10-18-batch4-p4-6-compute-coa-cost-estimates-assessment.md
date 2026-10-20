@@ -262,7 +262,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the 
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=11 |
 | G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
-| G3 | 1 | 2 | table rows=12 vocab-hit rows=10 |
+| G3 | 1 | 2 | table rows=11 vocab-hit rows=10 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 10 ledger row(s), 0 without CLOSED/PIN () |
@@ -276,7 +276,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the 
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=272 |
+| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=273 |
 | 2 | compute_coa_cost_estimates | PASS | 21 declared, missing from seeds: none |
 | 3 | compute_coa_cost_estimates | PASS | retired=0 overlap-with-declared=none |
 | 7 | compute_coa_cost_estimates | PASS | SPEC LINK header present=true |

@@ -263,7 +263,7 @@ Red evidence is in `docs/reports/red-evidence/permits/pre2-artifacts-missing.jso
 | G0 | 0 | 1 | boundary-section=true spec-line=false |
 | G1 | 0 | 1 | PH-3 section found=true sha-count=0 |
 | G2 | 0 | 1 | no generated churn×complexity row for this slug, no PH-2/churn×complexity section, and ASSESSMENT-INCOMPLETE not claimed either |
-| G3 | 1 | 2 | table rows=10 vocab-hit rows=0 |
+| G3 | 1 | 2 | table rows=9 vocab-hit rows=0 |
 | G4 | 0 | 2 | risk-class row with chance+impact found=false |
 | G5 | 0 | 1 | db=false clock=false network=false argv/env=false |
 | G6 | 3 | 3 | 9 ledger row(s), 0 without CLOSED/PIN () |

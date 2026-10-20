@@ -7718,6 +7718,16 @@
       "hidden": "internal"
     }
   },
+  "gate_v3_hard_gate_enabled": {
+    "default": 0,
+    "type": "number",
+    "min": 0,
+    "max": 0,
+    "description": "McDonald's Airtight V3 (operator y 2026-10-20; Spec 124 R-EY E3): the V3 hard gate switch. 1 = every converted step must read standard=V3 in step-validate (a closed exception list in scripts/analysis/gates/v3-label.mjs HARD_GATE_EXCEPTIONS holds exactly refresh_snapshot, expiring when permits reaches ③); 0 = off, the gate only prints the converted steps that would fail. Built OFF; the operator turns it on once the backfill lanes land. Pinned min = max = default (R-CV form): read file-only by scripts/analysis/gates/variables.mjs gateVariable(), never tunable from admin; turning it on is a reviewed seed + migration commit. CONSUMED by scripts/analysis/gates/v3-label.mjs.",
+    "admin": {
+      "hidden": "internal"
+    }
+  },
   "step_maintenance_default_timeout_minutes": {
     "default": 15,
     "type": "number",

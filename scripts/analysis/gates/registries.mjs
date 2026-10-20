@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConvertedJson } from './converted-set.mjs';
+import { tableDataRows } from './markdown-table.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
@@ -244,12 +245,11 @@ export function loadConvertedSlugs(repoRoot = REPO_ROOT) {
  */
 export function defectDefinitionRows(text) {
   const rows = [];
-  const lines = String(text || '').split('\n');
-  for (let i = 0; i < lines.length; i += 1) {
-    if (!lines[i].startsWith('|')) continue;
-    const cells = lines[i].split('|');
+  // R-FA: read through the one table-row reader, so a header or separator row is never a definition.
+  for (const { text: raw, line } of tableDataRows(text)) {
+    const cells = raw.split('|');
     const m = DEFECT_ID_RE.exec((cells[1] || '').trim().replace(/^\*\*|\*\*$/g, ''));
-    if (m) rows.push({ id: m[1], status: (cells[5] || '').trim(), line: i + 1 });
+    if (m) rows.push({ id: m[1], status: (cells[5] || '').trim(), line });
   }
   return rows;
 }

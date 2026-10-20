@@ -101,30 +101,68 @@ export function purityRowFreeze(ledgerRows) {
 }
 
 /**
- * The standard a step speaks (Spec 124 R-DT, McDonald's Airtight V3, operator y 2026-10-18):
- * `standard: V3` means the WHOLE V3 package, so it is `'V3'` only when ALL hold —
- *   (1) no purity row names the step's compute module (R-BZ/R-CA; the frozen 2026-10-11 set);
- *   (2) no ledger row of ANY gate names the step (its slug or its compute module base — gate E
- *       rows key on the module, the other gates on the slug), so no ledger allowance (R-BC (b));
- *   (3) no hard stop on the step (`hardStop === false`, the caller's scorecard + #44 answer);
- *   (4) no stage-gated red (`stageGated` falsy): a pending stage that EXCLUDES a gate from the
- *       hard stop (STAGE_HARDSTOP_EXCLUSIONS) while that gate is actually red — e.g. a
- *       `shape_clean_pending_recapture` step whose G8 / #38 captures are not current — is not
- *       the whole package, so it reads V2 though `hardStop` is false (R-DT, output panel round 2 N1).
- * Otherwise `'V2'`. Fail closed: a caller that cannot say `hardStop: false` reads V2.
+ * The standard a step speaks (Spec 124 R-DT, amended by R-EY — McDonald's Airtight V3, operator y
+ * 2026-10-20: "the label V3 should only apply if all the standards are met, compute purity, gates
+ * standardized, cross step, registry."). `standard: V3` holds only when ALL NINE conditions hold:
+ *   (1) compute purity — no purity row names the step's compute module (R-BZ/R-CA);
+ *   (2) no gate-ledger allowance — no ledger row of ANY gate names the step (slug or compute module
+ *       base; gate E rows key on the module, the other gates on the slug) (R-BC (b));
+ *   (3) cross-step — `crossStep` is `[]`: the #44 witness answered PASS with nothing attributed;
+ *   (4) registry — `registry` is `[]`: no failing fast/registry invariant blocks the step;
+ *   (5) no stage-gated red — `stageGated` is `[]`/false (R-DT N1);
+ *   (6) gates standardized — `gates` is `[]`: every G0–G8 at its max and no other scorecard hard stop;
+ *   (7) the five words — `fiveWord` is `[]`: every word PASS with zero deferred (R-BA);
+ *   (8) programme — `programme` is `[]`: no unmet cutover_prereq programme item names the step (the
+ *       `checkCutoverPrereqs` predicate the ③ cutover already applies, `applies_when` honoured);
+ *   (9) cited exceptions — `exceptions` is `[]`: every grandfathered / deviation / per-step disposition
+ *       exception naming the step cites a resolving register rule id (gates/v3-label.mjs).
+ * Signals (3)/(4)/(6)/(7)/(8)/(9) are arrays of failure details built by step-validate's `standardSignals`.
+ * Fail closed: a signal the caller did not answer (not an array) is a failure ("not evaluated"), and
+ * `hardStop !== false` with no failure attributed elsewhere is a failure too.
  * @param {string} moduleBase
  * @param {Array<object>} ledgerRows
- * @param {{slug?: string|null, hardStop?: boolean, stageGated?: boolean}} [opts]
- * @returns {'V2'|'V3'}
+ * @param {{slug?: string|null, hardStop?: boolean, stageGated?: boolean|string[], crossStep?: string[],
+ *   registry?: string[], gates?: string[], fiveWord?: string[], programme?: string[], exceptions?: string[]}} [opts]
+ * @returns {string[]} one entry per failing condition, `"<n> <details>"`, in condition order; [] ⇒ V3
  */
-export function standardFor(moduleBase, ledgerRows, { slug = null, hardStop, stageGated = false } = {}) {
+/** The nine R-EY conditions in order; a condition's printed number is its position here (1-based). */
+export const V3_CONDITIONS = Object.freeze(['purity', 'ledger', 'crossStep', 'registry', 'stageGated', 'gates', 'fiveWord', 'programme', 'exceptions']);
+const condNo = (name) => V3_CONDITIONS.indexOf(name) + 1;
+
+export function standardFailures(moduleBase, ledgerRows, opts = {}) {
+  const { slug = null, hardStop, stageGated = false } = opts;
   const rows = Array.isArray(ledgerRows) ? ledgerRows : [];
   const names = new Set([moduleBase, slug].filter((n) => typeof n === 'string' && n.length > 0));
-  if (rows.some((row) => isPurityRow(row) && row.step === moduleBase)) return 'V2';
-  if (rows.some((row) => row && names.has(row.step))) return 'V2';
-  if (hardStop !== false) return 'V2';
-  if (stageGated) return 'V2';
-  return 'V3';
+  const out = [];
+  const listed = (name, v) => {
+    if (!Array.isArray(v)) out.push(`${condNo(name)} not evaluated`);
+    else if (v.length > 0) out.push(`${condNo(name)} ${v.join(', ')}`);
+  };
+  const purity = rows.filter((row) => isPurityRow(row) && row.step === moduleBase);
+  if (purity.length) out.push(`${condNo('purity')} purity ${purity.length} row(s)`);
+  const ledger = rows.filter((row) => row && names.has(row.step) && !(isPurityRow(row) && row.step === moduleBase));
+  if (ledger.length) out.push(`${condNo('ledger')} ledger ${[...new Set(ledger.map((r) => r.gate))].sort().join('/')}${ledger.length > 1 ? ` (${ledger.length} rows)` : ''}`);
+  listed('crossStep', opts.crossStep);
+  listed('registry', opts.registry);
+  if (Array.isArray(stageGated)) listed('stageGated', stageGated);
+  else if (stageGated) out.push(`${condNo('stageGated')} stage-gated red`);
+  listed('gates', opts.gates);
+  listed('fiveWord', opts.fiveWord);
+  listed('programme', opts.programme);
+  listed('exceptions', opts.exceptions);
+  if (hardStop !== false && out.length === 0) out.push(hardStop === true ? 'hard-stop (unattributed)' : 'hard-stop not answered');
+  return out;
+}
+
+/** `'V3'` iff `standardFailures` is empty, else `'V2'` (R-DT, R-EY). */
+export function standardFor(moduleBase, ledgerRows, opts = {}) {
+  return standardFailures(moduleBase, ledgerRows, opts).length === 0 ? 'V3' : 'V2';
+}
+
+/** The printed `standard=` value (R-EY, observable): `V3`, or `V2 (fails: <n> <details>; …)`. */
+export function standardLabel(moduleBase, ledgerRows, opts = {}) {
+  const fails = standardFailures(moduleBase, ledgerRows, opts);
+  return fails.length === 0 ? 'V3' : `V2 (fails: ${fails.join('; ')})`;
 }
 
 /** Proposed dispositions for the orchestrator's `--list` output. */

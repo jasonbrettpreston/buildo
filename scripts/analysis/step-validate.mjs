@@ -274,7 +274,9 @@ import { checkLogicVersion, loadLogicVersionFleet, selfTest as logicVersionSelfT
 import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRecordsMetaSelfTest } from './gates/terminals-records-meta.mjs';
 import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistrationSelfTest } from './gates/admin-registration.mjs';
 import { checkVariableEffect, loadVariableEffect, EFFECT_REL } from './gates/variable-effect.mjs';
-import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, standardLabel, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
+import { tableDataRows } from './gates/markdown-table.mjs';
+import { exceptionsSignal, loadRatchet, ratchetFindings, cutoverFindings, hardGateFindings, hardGateEnabled } from './gates/v3-label.mjs';
 import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
 import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
 import { checkPrecommitBudget, selfTest as precommitBudgetSelfTest } from './precommit-budget.mjs';
@@ -351,7 +353,7 @@ const LEDGER_STATUS_VOCAB = /\b(CLOSED|PIN)\b/i;
 // CLI
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const out = { fast: false, write: false, all: false, staged: false, step: null, selfTestOnly: false };
+  const out = { fast: false, write: false, all: false, staged: false, step: null, selfTestOnly: false, v3Json: null };
   for (const a of argv) {
     if (a === '--all') out.all = true;
     else if (a === '--staged') out.staged = true;
@@ -359,10 +361,11 @@ function parseArgs(argv) {
     else if (a === '--fast') out.fast = true;
     else if (a === '--self-test-only') out.selfTestOnly = true;
     else if (a.startsWith('--step=')) out.step = a.slice('--step='.length);
+    else if (a.startsWith('--v3-json=')) out.v3Json = a.slice('--v3-json='.length); // R-EY: the E1 generator's input
     else throw new Error(`unrecognised argument: ${a}`);
   }
   if (!out.all && !out.staged && !out.step && !out.selfTestOnly) {
-    throw new Error('usage: --step=<slug> | --all | --staged [--write] [--fast]');
+    throw new Error('usage: --step=<slug> | --all | --staged [--write] [--fast] [--v3-json=<path>]');
   }
   return out;
 }
@@ -626,10 +629,7 @@ export function parseChurnTable(text) {
   const windowMatch = /window_end:\s*`([0-9a-f]{40})`/.exec(text);
   const windowEnd = windowMatch ? windowMatch[1] : null;
   const bySlug = new Map();
-  for (const raw of text.split('\n')) {
-    const line = raw.trim();
-    if (!line.startsWith('|')) continue;
-    if (/^\|[-\s|:]+\|$/.test(line)) continue; // separator row
+  for (const { text: line } of tableDataRows(text)) { // R-FA: header + separator rows are never data rows
     const cells = splitTableRow(line);
     const [, slug, , , , , , quadrantRaw] = cells;
     if (!slug || slug === 'slug') continue; // header row guard
@@ -2838,7 +2838,7 @@ function parseDefectLedgerRow(line, expectedPrefix) {
 /** G6's ledger reader: every defect-ledger.md row under `row.prefix` (the slug's defectPrefixFor, overrides included). Exported for src/tests/step-validate-defect-prefix.logic.test.ts. */
 export function defectLedgerRowsFor(row) {
   const text = readFileSync(DEFECT_LEDGER_PATH, 'utf8');
-  const lines = text.split('\n').filter((l) => l.startsWith('| ') && l.slice(2).trim().startsWith(`${row.prefix}-D`));
+  const lines = tableDataRows(text).map((r) => r.text).filter((l) => l.startsWith('| ') && l.slice(2).trim().startsWith(`${row.prefix}-D`)); // R-FA
   return lines.map((l) => parseDefectLedgerRow(l, row.prefix));
 }
 
@@ -2901,10 +2901,10 @@ function scoreG2(row, report, churnFindings) {
   const stated = /ASSESSMENT-INCOMPLETE[\s\S]{0,300}?(because|why|reason|time-box|saturation)/i.test(report);
   return { max: 1, score: stated ? 1 : 0, detail: `no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=${stated}` };
 }
-function scoreG3(report) {
+export function scoreG3(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
   if (!phSection) return { max: 2, score: 0, detail: 'no PH-3/Intent Ledger section found' };
-  const rows = phSection.split('\n').filter((l) => l.trim().startsWith('|') && !/^\|[-\s|]+\|$/.test(l.trim()));
+  const rows = tableDataRows(phSection).map((r) => r.text); // R-FA: header + separator rows are never data rows
   const vocabHitRows = rows.filter((r) => DISPOSITION_VOCAB.some((v) => r.toLowerCase().includes(v)));
   const score = rows.length > 0 && vocabHitRows.length > 0 ? (vocabHitRows.length === rows.length ? 2 : 1) : phSection ? 1 : 0;
   return { max: 2, score, detail: `table rows=${rows.length} vocab-hit rows=${vocabHitRows.length}` };
@@ -2926,10 +2926,10 @@ function scoreG3(report) {
  * appearing in the SAME row. A row that says only the disposition, with no
  * grounding of where the rule lives, is exactly the failure mode G-2 names.
  */
-function checkPreservedInComputeHasWhy(report) {
+export function checkPreservedInComputeHasWhy(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
   if (!phSection) return { pass: true, detail: 'no PH-3 section — vacuously nothing to check', violations: [] };
-  const rows = phSection.split('\n').filter((l) => l.trim().startsWith('|') && !/^\|[-\s|]+\|$/.test(l.trim()));
+  const rows = tableDataRows(phSection).map((r) => r.text); // R-FA: header + separator rows are never data rows
   const preservedRows = rows.filter((r) => r.toLowerCase().includes('preserved-in-compute'));
   const violations = preservedRows.filter((r) => !/\bwhy\b|notes\.json|checks\[\]/i.test(r));
   return {
@@ -3273,16 +3273,63 @@ export function stageGatedReds({ g, g9, matrix = [], excl, registryFails = [], s
 }
 
 /**
- * The call-site decision for `standardFor` (R-DT): the scorecard's hard stop OR a #44 hard stop /
- * compute-attributed FAIL ⇒ `hardStop`; a non-empty `sc.stageGated` ⇒ `stageGated`. Pure, so the
- * printed `standard=` label is locked at the call site, not only inside `standardFor`.
- * @param {{hardStop:boolean, stageGated?: string[]}} sc @param {{hardStop?:boolean, attributed?: string[]}|null} witness44
- * @returns {{hardStop: boolean, stageGated: boolean}}
+ * The call-site decision for `standardFor` / `standardLabel` (R-DT, amended by R-EY 2026-10-20): every
+ * one of the eight V3 conditions the scorecard, #44 and the programme answer, as a failure-detail array
+ * (`[]` = the condition holds). Pure, so the printed `standard=` label is locked at the call site.
+ *   hardStop   — the scorecard's hard stop OR a #44 hard stop / compute-attributed FAIL (kept, fail closed);
+ *   crossStep  — (3) #44 answered PASS with nothing attributed; a null witness is "not evaluated";
+ *   registry   — (4) `sc.invariantFails`, the failing invariants that block this step;
+ *   stageGated — (5) `sc.stageGated`;
+ *   gates      — (6) every G0–G8 below its max, plus any scorecard hard-stop reason other than the
+ *                fast-invariant one (that is (4)) and the G-gate ones already listed (G9, Rule rows, F);
+ *   fiveWord   — (7) every word not PASS, or PASS with deferred items;
+ *   programme  — (8) every unmet cutover_prereq item naming the slug — `checkCutoverPrereqs`, the ③
+ *                cutover's own predicate (`applies_when` honoured over `extra.descriptor`);
+ *   exceptions — (9) `extra.exceptions` as given (gates/v3-label.mjs `exceptionsSignal`); absent ⇒ not evaluated.
+ * @param {{hardStop:boolean, hardStopReasons?: string[], stageGated?: string[], g?: Record<string,{score:number,max:number}>,
+ *   invariantFails?: string[]}} sc
+ * @param {{answer?: string, hardStop?:boolean, attributed?: string[]}|null} witness44
+ * @param {{slug?: string, fiveWord?: Record<string,{status:string, deferred:number}>|null, programmeItems?: Array<object>,
+ *   descriptor?: object, exceptions?: string[]}} [extra]
  */
-export function standardSignals(sc, witness44) {
+export function standardSignals(sc, witness44, extra = {}) {
+  const slug = extra.slug;
+  const crossStep = [];
+  if (!witness44) crossStep.push('#44 not evaluated');
+  else {
+    if (witness44.answer !== 'PASS') crossStep.push(`#44 ${String(witness44.answer || 'no answer').split(':')[0]}`);
+    const attributed = witness44.attributed || [];
+    if (attributed.length > 0) crossStep.push(`#44 attributed ${attributed.length}`);
+  }
+  let gates;
+  if (sc.g && typeof sc.g === 'object') {
+    gates = Object.keys(sc.g).filter((k) => /^G[0-8]$/.test(k)).sort()
+      .filter((k) => sc.g[k].score < sc.g[k].max).map((k) => `${k} ${sc.g[k].score}/${sc.g[k].max}`);
+    for (const r of sc.hardStopReasons || []) {
+      if (r === 'fast invariant' || /^G[0-8]$/.test(r)) continue;
+      gates.push(r.startsWith('F(score-floor)') ? 'F(score-floor)' : r.replace(/ \(unpinned enforced-red\)$/, ''));
+    }
+  }
+  let fiveWord;
+  if (extra.fiveWord && typeof extra.fiveWord === 'object') {
+    fiveWord = [];
+    for (const [word, v] of Object.entries(extra.fiveWord)) {
+      if (v.status !== 'PASS') fiveWord.push(`${word} ${v.status}`);
+      else if (v.deferred > 0) fiveWord.push(`${word} ${v.deferred} deferred`);
+    }
+  }
+  const programme = Array.isArray(extra.programmeItems) && typeof slug === 'string'
+    ? checkCutoverPrereqs([slug], extra.programmeItems, extra.descriptor ? { [slug]: extra.descriptor } : {}).map((v) => v.id)
+    : undefined;
   return {
     hardStop: Boolean(sc.hardStop || (witness44 && (witness44.hardStop || (witness44.attributed || []).length > 0))),
-    stageGated: Array.isArray(sc.stageGated) && sc.stageGated.length > 0,
+    stageGated: Array.isArray(sc.stageGated) ? [...sc.stageGated] : false,
+    crossStep,
+    registry: Array.isArray(sc.invariantFails) ? [...sc.invariantFails] : undefined,
+    gates,
+    fiveWord,
+    programme,
+    exceptions: Array.isArray(extra.exceptions) ? [...extra.exceptions] : undefined,
   };
 }
 
@@ -3318,11 +3365,14 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
   // implicated slug) keeps its existing "any registry fail matters to everyone"
   // semantics. See `registryFailureBlocks` — the one shared definition, also
   // used by main()'s fleet-wide `registryHardStopFails`.
-  const invariantsFail = invariantResults.some((r) => {
+  // R-EY (4): the failing invariants that block this step, by id — the one list both the hard stop and
+  // the V3 label's registry condition read.
+  const invariantFails = invariantResults.filter((r) => {
     if (!r.pass && r.slug === row.slug) return true;
     if (!r.pass && r.slug === '(registry)') return registryFailureBlocks(r, row.slug) && !stageExcludesRegistry(r.id, row.pendingStage);
     return false;
-  });
+  }).map((r) => `#${r.id}`);
+  const invariantsFail = invariantFails.length > 0;
   // R-K amendment: `row.pendingStage` is undefined for every converted step
   // and for a pending step with no declared stage — `stageExclusions`
   // returns empty sets for both, so `aggregateHardStop` below is byte-for-
@@ -3367,6 +3417,7 @@ function computeScorecard(row, report, descriptorInfo, shape, captureFindings, i
     hardStop: agg.hardStop,
     hardStopReasons: agg.hardStopReasons,
     stageGated,
+    invariantFails,
     descriptorOk: descriptorInfo.ok,
     matrix: annotatedMatrix,
   };
@@ -6240,6 +6291,8 @@ async function main() {
   const summaries = [];
   // #50 LDG-10 (Spec 124 R-DI): every evaluated slug's #44 rows, for the sources-chain status line below.
   const witnessRowsBySlug = {};
+  // Spec 124 R-EY: slug -> {standard, stage, label} for every evaluated row (E1/E2/E3 and --v3-json read it).
+  const labelBySlug = new Map();
 
   for (const row of targets) {
     const descriptorInfo = checkDescriptor(row);
@@ -6267,7 +6320,13 @@ async function main() {
     // printed table from reading as a silent pass.
     const block = renderScorecard(row, sc, sc.matrix, captureFindings, vitestResult, invariantResults, fiveWord);
 
-    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardFor(path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows, { slug: row.slug, ...standardSignals(sc, witness44) })}${sc.stageGated.length ? ` (stage-gated red: ${sc.stageGated.join(', ')})` : ''}\n\`\`\`\n`);
+    // Spec 124 R-EY: the nine conditions, answered once; the printed label and E1/E2/E3 read the same answer.
+    const exceptions9 = exceptionsSignal(row.slug, descriptorInfo.descriptor || null, REPO_ROOT);
+    const labelArgs = [path.basename(harness.computePathFor(row.relFile) || '', '.js'), loadLedger(REPO_ROOT).rows, { slug: row.slug, ...standardSignals(sc, witness44, { slug: row.slug, fiveWord, programmeItems: programmeItemsAll, descriptor: descriptorInfo.descriptor, exceptions: exceptions9.fails }) }];
+    const standardText = standardLabel(...labelArgs);
+    labelBySlug.set(row.slug, { standard: standardFor(...labelArgs), stage: row.stage, label: standardText });
+    console.log(`\n\`\`\`\n[step-validate] ${row.slug} (${row.stage}) — ${sc.total}/${sc.maxTotal}, hard-stop=${sc.hardStop}${sc.hardStop ? ` (${sc.hardStopReasons.join(', ')})` : ''}, standard=${standardText}\n\`\`\`\n`);
+    if (exceptions9.uncited.length) console.log(`[step-validate] R-EY (9) ${row.slug}: ${exceptions9.uncited.length}/${exceptions9.total} exception entr${exceptions9.total === 1 ? 'y' : 'ies'} cite no register rule id: ${exceptions9.uncited.map((e) => `${e.source}:${e.key}`).join(' | ')}`);
     console.log(block);
 
     if (witness44) {
@@ -6388,6 +6447,25 @@ async function main() {
     for (const r of registryFails) {
       const gates = Array.isArray(r.blockedSlugs) && !registryHardStopFails.includes(r) ? ' (informational — does not name a slug in this run)' : '';
       console.log(`  #${r.id}: ${r.detail}${gates}`);
+    }
+  }
+
+  // Spec 124 R-EY enforcement over this run's labels. E1 (ratchet) and E2 (cutover gate) are on; E3 (hard gate)
+  // is behind the pinned switch `gate_v3_hard_gate_enabled` (0 = off) and its closed exception list.
+  {
+    const labels = new Map([...labelBySlug].map(([slug, l]) => [slug, l.standard]));
+    const ratchet = loadRatchet(REPO_ROOT);
+    const e1 = ratchetFindings(labels, ratchet);
+    const e2 = cutoverFindings(targets, labels, ratchet);
+    const e3on = hardGateEnabled();
+    const e3 = hardGateFindings({ enabled: e3on, rows: targets, labels, registry });
+    const v3n = [...labels.values()].filter((v) => v === 'V3').length;
+    console.log(`[step-validate] R-EY: ${v3n}/${labels.size} evaluated step(s) read V3; E1 ratchet ${e1.length ? 'FAIL' : 'PASS'} (${ratchet && Array.isArray(ratchet.v3) ? ratchet.v3.length : 0} listed); E2 cutover ${e2.length ? 'FAIL' : 'PASS'}; E3 hard gate ${e3on ? 'ON' : 'OFF'}${e3.wouldFail.length ? ` — ${e3.wouldFail.length} converted step(s) read V2${e3on ? '' : ' (would fail when on)'}: ${e3.wouldFail.join(', ')}` : ''}`);
+    for (const f of [...e1, ...e2, ...e3.findings]) console.error(`[step-validate] HARD STOP: ${f}`);
+    if (e1.length || e2.length || e3.findings.length) anyHardStop = true;
+    if (opts.v3Json) {
+      writeFileSync(opts.v3Json, `${JSON.stringify(Object.fromEntries([...labelBySlug].map(([slug, l]) => [slug, { standard: l.standard, stage: l.stage }])), null, 2)}\n`);
+      console.log(`[step-validate] R-EY: labels written to ${opts.v3Json} (feed: node scripts/analysis/gates/v3-label.mjs --write <file>)`);
     }
   }
 
