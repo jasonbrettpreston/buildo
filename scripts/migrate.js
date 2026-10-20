@@ -17,8 +17,13 @@
  *   --force       re-run all files, ignoring schema_migrations
  *   --dry-run     print what would run, don't execute
  *   --verify      exit non-zero if any checksum differs from what was applied
+ *   --only=<n,…>  R-EU: apply ONLY the listed migration numbers, through the same
+ *                 per-file transaction and schema_migrations row; refuses (nothing runs) when a listed file
+ *                 depends on an unapplied, unlisted earlier file (scripts/lib/migrate-select.js); prints the
+ *                 held files; skips the logic_variables seed loader (it would insert the held files' keys).
+ *                 Combines with --dry-run; refuses with --force / --verify.
  *
- * Usage: node scripts/migrate.js [--force] [--dry-run] [--verify]
+ * Usage: node scripts/migrate.js [--force] [--dry-run] [--verify] [--only=<n,…>]
  * Requires DATABASE_URL or PG_* environment variables.
  *
  * WF3 2026-04-10: added tracking after two consecutive sessions uncovered
@@ -39,6 +44,8 @@ const crypto = require('crypto');
 // `DATABASE_URL || PG_* || localhost:5432/buildo` chain (which silently applied
 // migrations to the pre-cutover DB when nothing was set).
 const { createResolvedPool } = require('./lib/resolve-db');
+// R-EU: the pure --only selection.
+const { parseOnly, onlyFlagRefusal, selectOnly } = require('./lib/migrate-select');
 
 const TRACKING_TABLE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -89,6 +96,13 @@ async function run() {
   const force = process.argv.includes('--force');
   const dryRun = process.argv.includes('--dry-run');
   const verifyOnly = process.argv.includes('--verify');
+  // --only is validated BEFORE any connection: a mistyped list costs seconds and touches no database.
+  const onlyArg = process.argv.find((a) => a === '--only' || a.startsWith('--only='));
+  const only = onlyArg === undefined ? null : parseOnly(onlyArg.startsWith('--only=') ? onlyArg.slice('--only='.length) : true);
+  if (only !== null) {
+    const refusal = onlyFlagRefusal({ force, verify: verifyOnly });
+    if (refusal) throw new Error(refusal);
+  }
 
   // Spec 122 §P0 (WF3 2026-08-23) — the target now comes from the ONE shared
   // resolver. Behaviour PRESERVED: the env precedence is unchanged
@@ -189,9 +203,25 @@ async function run() {
     return;
   }
 
+  // R-EU: narrow the apply loop to the selection; any refusal stops before the first file.
+  let selected = files;
+  if (only !== null) {
+    const pick = selectOnly({
+      files, applied, only, checksum: sha256,
+      readSql: (f) => fs.readFileSync(path.join(migrationsDir, f), 'utf-8'),
+    });
+    console.log(`--only=${only.join(',')}: run [${pick.run.join(', ')}] · already applied [${pick.skip.join(', ')}] · HELD, not applied [${pick.held.join(', ')}]`);
+    if (!pick.ok) {
+      for (const r of pick.refusals) console.error(`  REFUSED: ${r}`);
+      await pool.end();
+      process.exit(1);
+    }
+    selected = [...pick.run, ...pick.skip];
+  }
+
   let ranCount = 0;
   let skippedCount = 0;
-  for (const file of files) {
+  for (const file of selected) {
     const filePath = path.join(migrationsDir, file);
     const sql = fs.readFileSync(filePath, 'utf-8');
     const checksum = sha256(sql);
@@ -291,7 +321,12 @@ async function run() {
   // Apply logic variable seeds after all migrations complete.
   // ON CONFLICT DO NOTHING: operator-tuned values in the DB are never overwritten.
   // Skipped on --dry-run and --verify (no mutations in those modes).
-  if (!dryRun && !verifyOnly) {
+  // R-EU: never under --only — logic_variables.json carries the HELD files' keys too, so the
+  // loader would seed exactly what the operator held back. The listed files seed their own keys.
+  if (only !== null) {
+    console.log('--only: logic_variables seed loader SKIPPED (it would insert the held migrations\' keys)');
+  }
+  if (!dryRun && !verifyOnly && only === null) {
     const applyLogicVariables = require('./seeds/apply-logic-variables');
     await applyLogicVariables(pool);
   }
