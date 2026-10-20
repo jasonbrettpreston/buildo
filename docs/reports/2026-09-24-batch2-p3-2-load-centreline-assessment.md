@@ -311,12 +311,10 @@ the orchestrator ruling (transcribed).
 
 **Introducing commits (brief-author `git log -S`, 2026-09-24):**
 
-| Commit | Date | Scope | Constructs it introduced |
-|---|---|---|---|
-| `f6047e89` | 2026-06-06 | initial loader | F-C1 dual mode; L7 `0.5`; L8 `0.05`; `VALIDATION_CHUNK`; F13 `REQUIRED_DBF_FIELDS`; `UNKNOWN_FEATURE_SENTINEL`; `PIPELINE_NAME`; lock 63; `centrelineMinFeatureCount` (dead); `centreline_head_error` WARN-proceed; `INCLUDING CONSTRAINTS` (F-S11) |
-| `3bf05d2b` | 2026-06-08 | live-smoke hardening | stream-to-disk md5; 3-attempt retry; 600000 ms timeout |
-| `346626ae` | 2026-06-08 | local override | `CENTRELINE_LOCAL_ZIP` |
-| `0b230472` | 2026-08-10 | Phase B B1 | `readPriorRunMeta`; tier-2 `contentHashDecision`; DS4 `buildSkipReEmitMeta`; `contentHashInNoValidatorsBail:true` (inert — the tier-1 call passes no hash) |
+- `f6047e89` (2026-06-06, initial loader) — F-C1 dual mode; L7 `0.5`; L8 `0.05`; `VALIDATION_CHUNK`; F13 `REQUIRED_DBF_FIELDS`; `UNKNOWN_FEATURE_SENTINEL`; `PIPELINE_NAME`; lock 63; `centrelineMinFeatureCount` (dead); `centreline_head_error` WARN-proceed; `INCLUDING CONSTRAINTS` (F-S11)
+- `3bf05d2b` (2026-06-08, live-smoke hardening) — stream-to-disk md5; 3-attempt retry; 600000 ms timeout
+- `346626ae` (2026-06-08, local override) — `CENTRELINE_LOCAL_ZIP`
+- `0b230472` (2026-08-10, Phase B B1) — `readPriorRunMeta`; tier-2 `contentHashDecision`; DS4 `buildSkipReEmitMeta`; `contentHashInNoValidatorsBail:true` (inert — the tier-1 call passes no hash)
 
 | # | Construct [READ] | Introduced (`git log -S`) | Intent | Disposition | Adjudicator |
 |---|---|---|---|---|---|
@@ -616,7 +614,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 1 | 2 | table rows=31 vocab-hit rows=25 |
+| G3 | 1 | 2 | table rows=26 vocab-hit rows=25 |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |
