@@ -280,3 +280,47 @@ Moved from Spec 124 — w4-rulings-5 (operator 2026-10-19: P4-SWAP and drafts A/
 | R-CU | **One upsert statement binds at most 65,535 parameters (the PostgreSQL protocol limit; operator 2026-10-16, H6 step 5).** INGESTOR: `execution.batch` = floor(65,535 / bound columns), generator-locked (fleet form). A key-batched target whose rows fan out per key (LINK): the declared `execution.batch` keeps the MEASURED worst batch (rows × bound columns) under the limit, the measurement recorded in the owner spec, until the library splits a batch by `maxRowsPerInsert` (the `executeWrite` form; V3 lane C2). Found: link_parcel_abutments at batch 1000 = 67,400 parameters (`bind message has 1864 parameter formats`); batch 250 measured 25.8 K. | Rule 5 | measured per step (Spec 130); library split owed (V3 lane C2) |
 | R-CV | **Unit constants used by compute are logic variables, never literals (operator 2026-10-14, lane H Q1 + H-Q1; amended McDonald's Airtight V3 2026-10-17: a definitional window named by its metric, e.g. refresh_snapshot's 24 h / 7 d / 30 d windows, is pinned min = max the same way, migration 263).** Metres per degree of latitude, square metres ↔ square feet and metres ↔ feet are seeded logic variables with min = max (migration 262), read through `ctx.config` like any tunable, so a gate-E literal finding cannot hide a unit constant; the dead `SOURCE_CRS` constant is deleted. A future unit constant follows the same form. | Amends R-BZ (gate E literals); R-BC(b) | migration 262; gate E #32 (no literal finding on load_parcels / assert_schema) |
 | R-CW | **A pin may test the producer run's terminal status: op `not_failed` (operator 2026-10-14, CP-S1 #12c).** The closed pin-op set gains one value, `not_failed`, valid only on stamp `pipeline_runs.status`. The schema forbids `equals` and requires `statuses` (a verdict read declares its terminal set, S1-P). It reads the pin's declared run through the existing pin read (declared `statuses`, newest by `completed_at`, warn-skip excluded; no new read field). It is FAIL when that run's status is `failed`, and MISSING/ERROR like every pin. A FAIL row halts before any phase (`measureProducerPins`, Rule 10). Replaces enrich_parcels' #12c compute throw ("latest load_zoning run FAILED"). RE-FREEZE #35. | Amends: R-CB (S1-P pin vocabulary); R-BZ G8 | `step-producer.logic`, `enrich-parcels-contract-pins.logic` |
+
+## Appendix §B14 — V3 admission tables for R-EQ, R-ER, R-ES and the drafts not admitted (w4-rulings-5, 2026-10-19)
+
+Operator instruction (2026-10-19, verbatim): "P4-Swap - as long as this is in compliance with a ruling then proceed or create new ruling. A,B and C as long as they are in compliance and you can show a ruling - if not create a ruling. Everything needs to be standardized as per McDonald's Airtight V3." Each row below answers R-DF's seven questions. Decision for every admitted row: operator y 2026-10-19 (authorized: create ruling where none exists). Red-first evidence (vitest JSON, red then green): `docs/reports/red-evidence/w4-rulings-5/`.
+
+**R-EQ — P4-SWAP (shell swap before ③, after its upstreams).** Existing permission searched: W4A-R6 (operator y 2026-10-18, `.cursor/v3-runner-standardization-trace-2026-10-18.md`:34: "It lands at `compute_ported` (the lane B enrich pair precedent), then `runner_wired` at the shell swap before P4") permits the stage move but states no ordering; R-EF / R-K define the stages. The prerequisites are new, so this row codifies them.
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One form: the declared R-K stage `runner_wired` (vocabulary since pilot 9), the W4A-R6 precedent; no new stage, no new field. |
+| OBSERVABLE | Fast invariant #54 SWAP-ORDER prints PASS/FAIL per run with the violating `step (stage) ← upstream: why`, registry-scoped with `blockedSlugs`; the same-night POSTs are G8 (not excluded at `runner_wired`). |
+| RECORDED | Spec 124 §5 R-EQ, dated 2026-10-19, with the operator's decision. |
+| SCALABLE | Every archetype: any pending step at `runner_wired` / `shape_clean` / `shape_clean_pending_recapture`. Exceptions: none (closed, empty). |
+| ACCURATE | `stageExclusions` (`step-validate.mjs`) keeps G8 hard at `runner_wired`; upstreams are the declared `inputs.reads.steps` (#44 (e) proves them equal to the derivation). Lock `swap-order.logic`: red (module absent, `r-eq-red.json`) → green (`r-eq-green.json`); real-tree projections refuse classify_coa_trades swapped over a red_suite or compute_ported classify_coa_scope, and assert_coa_freshness over the unconverted link_coa. |
+| SIMPLE | One pure gate file plus one invariant block; ③, converted[] registration and the legacy-name retirement (D2b/D7) are untouched and stay EP-PIN-D17's. |
+| EXTERNALIZED | No threshold, window, limit or count: every answer is exact zero-tolerance. |
+
+**R-ER — #44 (i) arm (ii), a reader-side `by:"pin"` row (Draft A, first part).** Existing permission searched: R-DO resolves `by:"pin"` only by "a reader pinning that step"; W4A-R4 (a) puts the pin row on the producer; claim #54 (`step.schema.json` ENRICHER x-profile) requires the incremental pass's `invalidator_ref` to index the step's OWN `outputs.invalidates[]`. No rule resolves the reader's own row, so this row adds the arm.
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The schema's own `by:"pin"` text ("a staleness.pins[] row … compares it") read from the reader's side, and the enrich_parcels form (`execution.phases[1].invalidator_ref` → its own invalidates[2] for the same `linked_at > massing_enriched_at` watermark). The producer row (W4A-R4 (a), link_massing form) is still owed at the producer's ②. |
+| OBSERVABLE | `FAIL:WITNESS:<slug>:i:unresolved:pin:<t>.<c>` under `#44 WITNESS` when neither arm holds; the witness `selfTest` carries both directions. |
+| RECORDED | Spec 124 §5 R-ER, dated 2026-10-19. |
+| SCALABLE | Every archetype that declares a `by:"pin"` row; no slug list. |
+| ACCURATE | `scripts/analysis/gates/witness.mjs` `invalidationItems`; arm (ii) needs the column written by the step on the same table and a pin on ANOTHER step whose stamp is on that table. Lock `witness-reader-pin.logic`: red `r-er-red.json` (the classify_coa_scope shape unresolved) → green `r-er-green.json`; the four negative cases stay red. |
+| SIMPLE | One predicate in one function; no schema change (the enum is frozen). |
+| EXTERNALIZED | Exact zero-tolerance; no number. |
+
+**Draft A, second part — `scope_classified_at` inside an `is_distinct_from` guard via the LG-9 hatch: NOT admitted; the existing V7 form applies.** The drafted form (run clock inside a value guard, `guard_columns_why`) has no precedent in the fleet (measured 2026-10-19: every run-clock column inside an effective guard sits on a `guard:"none"` target) and declares a guard that cannot filter (the clock is DISTINCT FROM its stored value on every row), which would step around Rule 9's grandfather requirement. It fails STANDARDIZED and ACCURATE. The compliant form is Spec 124 §2 Rule 9 / V7 (`guard:"none"`, `guard_why`, a `grandfathered.json` entry), the Q-CE2 (compute_coa_cost_estimates `cost_classified_at`, operator y 2026-10-18) and Q-W4G-1 (classify_coa_trades `trade_classified_at`, operator y 2026-10-19) precedent: a pending-set cursor whose watermark advances on every streamed row, as the legacy unguarded UPDATE did. classify_coa_scope ② lands in that form. Refusing the hatch inside a value guard mechanically is a `validate.js` change (a library RE-FREEZE): PIN LG9-VALUE-GUARD.
+
+**R-ES — #44 (h) copy window (Draft C).** Existing permission searched: R-K / W4A-R6 stage-gate the capture-derived registry gates (#30/#31/#38-#40) and R-EF gate F; none covers #44 (h) h:undeclared (R-DI), which reads the --staged overlay as converted. So this row adds the rule.
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The one "awaiting captures" predicate `stageAwaitsCaptures` (R-EF), the same one gate F and the registry gates use; no second signal. |
+| OBSERVABLE | `[step-validate] #44 (h) OWED <reader>: h:owed:<writer>.<t>.<c>` printed per run; it becomes `FAIL:WITNESS:<reader>:h:undeclared:…` once the producer's stage stops awaiting captures. |
+| RECORDED | Spec 124 §5 R-ES, dated 2026-10-19. |
+| SCALABLE | Every producer/reader pair; keyed on the declared stage only. Exceptions: none. |
+| ACCURATE | `buildWitnessFleet` / `owedPinItems` (`witness.mjs`), wired in `step-validate.mjs` `witnessFleet()` for --all and --staged alike. Lock `witness-h-copy-window.logic`: red `r-es-red.json` → green `r-es-green.json`, over the real enrich_parcels descriptor at every stage, overlaid and not. |
+| SIMPLE | One derivation moved into a pure function; #44 (i)'s inputs unchanged. |
+| EXTERNALIZED | Exact zero-tolerance; no number. |
+
+**Draft B — `classifyMatches` `counters` / `match.extra_counters` (R-EG amendment): NOT admitted in this lane.** The change is to `runLinkPhase` (`scripts/lib/step/**`), a library RE-FREEZE: `computeLibFingerprint` (`scripts/analysis/gates/captures.mjs`) hashes every library file, so every converted step's POST captures turn `mismatch` at gate G #39 until a fleet replay night. No capture runs in this lane, so its ACCURATE lock cannot be green on the committed tree, and SIMPLE puts it with the next RE-FREEZE. link_coa_to_parcels keeps LCTP-D11 declared (its legacy shell emits both counters until ③). PIN DRAFT-B-REFREEZE.
