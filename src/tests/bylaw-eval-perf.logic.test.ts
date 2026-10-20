@@ -117,6 +117,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-20 (CHAT-7 / M-198(4), bylaw fix lane 2): upper_side_setback_m is a new dsl_target; its 140 cells
     // are not_evaluated:no_candidate (the fixture units predate the keying). With it left out the hash is the previous pin
     // 8c8eca03…a8b6 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('e957100cb282644e7690542f94bf093f8a8369a0b0697ac27dfef94369c4f5fc');
+    // re-pinned 2026-10-20 (CHAT-8 / M-237, rule 7a; ABS-2 / M-186, bylaw fix lane 2): the only cells that move are the 40 RT
+    // main_wall_height_m cells, not_evaluated:no_candidate → unregulated by absence (ABS-2); a per-cell diff with
+    // vocab.absence_ignore and ABS-2 left out reproduces the previous pin e957100c…f5fc exactly.
+    expect(h.digest('hex')).toBe('459ee9f14901dab897900a6a228621a3d4250bd0f254a15cc702ab3688f6e931');
   }, 60_000);
 });

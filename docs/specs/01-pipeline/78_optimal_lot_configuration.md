@@ -1459,7 +1459,7 @@ Reviews folded: the reality check (`.cursor/maxbld-review-rc-2026-10-18.md`: 70 
 
 | # | Finding | Disposition | Where |
 |---|---|---|---|
-| F-1 | Layer 2 cannot produce the inputs today (no resolution table; leaks) | OWED: Layer 2 step; the evaluator defects M-217..M-222 are fixed (7a782801; INV-18 green 2026-10-20) except the M-220 absent-article arm (operator CHAT-8 approved 2026-10-20, applied by its own commit); the M-219 150.8.60.20(3)(C) remainder is keyed (CHAT-7, 69a M-236) | D-1; 69a M-217..M-221 (dated note 2026-10-20); G-HT-1/2 |
+| F-1 | Layer 2 cannot produce the inputs today (no resolution table; leaks) | OWED: Layer 2 step; the evaluator defects M-217..M-222 are fixed (7a782801; INV-18 green 2026-10-20) except 16 cells of the M-220 absent-article arm (operator CHAT-8, 69a M-237: the rule 7a change and RT main wall applied 2026-10-20; the 16 wait on a drafted rule 7a v2 ruling); the M-219 150.8.60.20(3)(C) remainder is keyed (CHAT-7, 69a M-236) | D-1; 69a M-217..M-221 (dated note 2026-10-20); G-HT-1/2 |
 | F-2 | R has a flat-roof set-back storey (10.10.40.10(11)/(12)) | **fixed** (M-184(a)/M-190/P5.2 item 5/P5.10 corrected) | 69a M-200; P5.2 item 5; `gfa_flat_sqm` |
 | F-3 | Flat-roof PERMITs displace the main-wall LIMITs unconditionally (roof-slope condition unkeyed) | **fixed** (7a782801; the `flat_or_shallow_roof` token; INV-19 M-218 arm green 2026-10-20) | 69a M-218; INV-19 |
 | F-4 | Coxwell 5.0 m unreachable under 150.7.60.40(1)(A) | **ruled** (operator: generous reading) | 69a M-224 (amends M-193); O-5; P5.5 |

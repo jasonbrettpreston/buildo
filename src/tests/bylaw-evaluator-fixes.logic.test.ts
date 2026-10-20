@@ -500,7 +500,7 @@ describe('INV-19 — no not_evaluated where the zone regulates the main wall (M-
 });
 
 describe('INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 "Also", OWED; a ratchet that only shrinks)', () => {
-  it('the open cells are exactly these (R coverage and length; RD semi depth; RT length, depth and main wall; RM houseplex length, depth and main wall)', () => {
+  it('the open cells are exactly these (R coverage and length; RD semi depth; RT length and depth; RM houseplex length, depth and main wall)', () => {
     const open: string[] = [];
     for (const zone of ZONES) for (const bt of PRINCIPAL) for (const t of ['lot_coverage_pct', 'building_length_m', 'building_depth_m', 'main_wall_height_m']) {
       const r = eff(lot(zone, bt), t);
@@ -511,9 +511,10 @@ describe('INV-19 open arm — where the article does not exist the answer is sti
       'R semi_detached_house lot_coverage_pct', 'R semi_detached_house building_length_m',
       'R detached_houseplex lot_coverage_pct', 'R detached_houseplex building_length_m',
       'RD semi_detached_house building_depth_m',
-      'RT detached_house building_length_m', 'RT detached_house building_depth_m', 'RT detached_house main_wall_height_m',
-      'RT semi_detached_house building_length_m', 'RT semi_detached_house building_depth_m', 'RT semi_detached_house main_wall_height_m',
-      'RT detached_houseplex building_length_m', 'RT detached_houseplex building_depth_m', 'RT detached_houseplex main_wall_height_m',
+      // CHAT-8 / ABS-2 (bylaw fix lane 2, 2026-10-20): the three RT main_wall_height_m cells left (unregulated by absence, M-186)
+      'RT detached_house building_length_m', 'RT detached_house building_depth_m',
+      'RT semi_detached_house building_length_m', 'RT semi_detached_house building_depth_m',
+      'RT detached_houseplex building_length_m', 'RT detached_houseplex building_depth_m',
       'RM detached_houseplex building_length_m', 'RM detached_houseplex building_depth_m', 'RM detached_houseplex main_wall_height_m',
     ]);
   });

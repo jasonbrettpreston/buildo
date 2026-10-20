@@ -103,6 +103,9 @@ export function makeContext(vocab, extra = {}) {
     // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
     // disclosure says so), never not_evaluated:map_area_not_held on every lot.
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
+    // M-237 (operator chat 2026-10-20 CHAT-8): rule 7a ignores a unit that carries the target only for a lawfully existing
+    // building or only for an ancillary building / suite / accessory structure (declared in vocab.absence_ignore).
+    absenceIgnore: vocab.absence_ignore || null,
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
@@ -389,6 +392,22 @@ function rankedLayers(rl) {
 }
 
 // ---------------------------------------------------------------- applicability
+// M-237 (operator chat 2026-10-20 CHAT-8; Spec 68 §7.5 rule 7a): a unit that carries the target only for a lawfully
+// existing building (a declared lot condition in its condition or lot_conditions), only for the ancillary building / suite
+// classes (every building type declared), or only for an accessory structure (M-159(2)) never limits a new principal
+// building, so it does not block unregulated-by-absence. Declared data (vocab.absence_ignore), no id or zone in code.
+function absenceIgnored(u, C) {
+  const ig = C.absenceIgnore;
+  if (!ig) return false;
+  const app = u.application || {};
+  const conds = new Set([...tokensOf(u.condition), ...(app.lot_conditions || []).map((x) => (x && typeof x === 'object' ? x.token : x))]);
+  if ((ig.lot_conditions || []).some((t) => conds.has(t))) return true;
+  const types = (app.building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
+  if (types.length && types.every((t) => (ig.building_types || []).includes(t))) return true;
+  if (ig.accessory_structure_uses === true && (app.uses || []).some((x) => C.accessoryUses && C.accessoryUses.has(x && typeof x === 'object' ? x.token : x))) return true;
+  return false;
+}
+
 // condition.if string → its parsed AST (or the DslError it throws), parsed once per string, not once per applies()
 // call; the AST is only read (as the PARSED statement ASTs are). Perf only, outputs unchanged.
 const PARSED_COND = new Map();
@@ -939,7 +958,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     // any layer carries the target, keyed or pending.
     const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
     if (abs) {
-      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length));
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && !absenceIgnored(u, C));
       if (!any.length) {
         return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
           evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },

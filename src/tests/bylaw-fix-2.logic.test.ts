@@ -188,3 +188,24 @@ describe('CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m 
     }
   });
 });
+
+// CHAT-8 (operator chat 2026-10-20, approve: "Let rule 7a treat a target as unregulated by absence when only
+// lawfully-existing or ancillary-only units carry it; then confirm absence for R/RT length, RT depth and main wall (M-186),
+// RM houseplex (M-204 not_applicable); R coverage and RD semi depth per the 19-cell ratchet list"). Spec 68 §7.5 rule 7a /
+// M-54 note: absence needs no by-law unit for the target; a unit that applies only to a lawfully existing building or
+// only to an ancillary building / suite / accessory structure never limits a new principal building, so it no longer
+// blocks. M-186: RT has no main-wall rule (10.60.40.10 holds only (1) height and (2) storeys) → ABS-2.
+describe('CHAT-8 / rule 7a / M-186 — lawfully-existing-only and ancillary-only units no longer block absence; RT main wall is unregulated', () => {
+  it('vocab declares what rule 7a ignores (lawfully_existing; the ancillary and garden / laneway suite classes; accessory-structure uses)', () => {
+    expect(I.vocab.absence_ignore).toMatchObject({ lot_conditions: ['lawfully_existing'], building_types: ['ancillary_building', 'garden_suite', 'laneway_suite'], accessory_structure_uses: true });
+  });
+  it('RT: a house, semi or houseplex main wall answers unregulated by absence (ABS-2, M-186)', () => {
+    for (const bt of ['detached_house', 'semi_detached_house', 'detached_houseplex']) {
+      const r = eff(lot('RT', bt), 'main_wall_height_m');
+      expect([bt, r.status, r.value, r.evidence?.kind, r.evidence?.ruling]).toEqual([bt, 'value', 'unregulated', 'absence', 'ABS-2']);
+    }
+  });
+  it('a principal-building unit for the target still blocks absence: RD / RS main walls keep their x.40.10(2) limit', () => {
+    for (const zone of ['R', 'RD', 'RS']) expect([zone, eff(lot(zone, 'detached_house'), 'main_wall_height_m').value]).toEqual([zone, 7.5]);
+  });
+});

@@ -524,6 +524,12 @@
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
   },
+  "absence_ignore": {
+    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building.",
+    "lot_conditions": ["lawfully_existing"],
+    "building_types": ["ancillary_building", "garden_suite", "laneway_suite"],
+    "accessory_structure_uses": true
+  },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",
     "swimming_pool": { "disclosure": "rules for a swimming pool on this lot are not part of this answer" },

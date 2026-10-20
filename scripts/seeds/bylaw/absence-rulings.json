@@ -27,6 +27,41 @@
       "statement": "no principal-building lot coverage regulation in 569-2013 Ch.10.10 for the R zone; only the ancillary cap 10.10.60.70",
       "target": "lot_coverage_pct",
       "zone": "R"
+    },
+    {
+      "absent_phrases": [
+        "10.60.40.10(3)",
+        "Maximum Height of Specified Pairs of Main Walls"
+      ],
+      "accounted_occurrences": [
+        "(i) above, if the lawful building setback of a lawfully existing building is greater than 6.0 metres, the main pedestrian entrance may be located in the front main wall that is closest to the lot line abutting the major street",
+        "(i) 2.4 metres for all portions of the main wall that do not have primary windows",
+        "(ii) 5.5 metres for portions of the main wall that have primary windows",
+        "(ii) above, 7.5 metres for all portions of the main wall exceeding a building length of 25",
+        "(1) Distance Between Main Walls of the Same Residential Building In the RT zone, if a residential building has main walls where a line projected outward at a right angle from one of the main walls intercepts another main wall of the same building, the required minimum above-ground separation distance between those main walls is: (A) 5.5 metres if there are no openings to dwelling units in one or more of those main walls",
+        "(B) 11.0 metres if each main wall has an opening to a dwelling unit",
+        "(2) Distance Between Residential Buildings on the Same Lot In the RT zone, if two or more residential buildings are on the same lot, the required minimum above-ground separation distance between the main walls of the respective buildings is: (A) 5.5 metres if there are no openings to dwelling units in the front or rear main wall of one or more of the buildings",
+        "(B) 11.0 metres if each front or rear main wall has an opening to a dwelling unit",
+        "(C) 2.4 metres between side main walls of two residential buildings",
+        "(1) Permitted Separation Between Main Walls for Lawfully Existing Buildings In the RT zone, if the lawful separation distance between the main walls of lawfully existing buildings on the same lot, or between main walls of the same lawfully existing building, is less than the required minimum separation distance between main walls required by this By-law, that lawful separation distance is the minimum separation distance for those lawful main walls of those lawfully existing buildings",
+        "(2) Additions to Lawfully Existing Buildings In the RT zone, any addition or extension to a lawfully existing building referred to in regulation 10.60.40.81(1) must comply with the required minimum separation distance between main walls in regulations 10",
+        "(B) the vehicle entrance to the parking space is in the front main wall of the building"
+      ],
+      "checked_page": "ch10_60",
+      "evidence_kind": "absence",
+      "expert_sample": true,
+      "id": "ABS-2",
+      "occurrence_patterns": [
+        "main wall"
+      ],
+      "present_phrases": [
+        "10.60.40.10 Height",
+        "(2) Maximum Number of Storeys"
+      ],
+      "ruling": "Spec 69a M-186 (operator y 2026-10-18); M-237 (operator chat 2026-10-20 CHAT-8)",
+      "statement": "no main-wall height regulation in 569-2013 Ch.10.60 for the RT zone: 10.60.40.10 holds only (1) height and (2) storeys; every other main-wall phrase on the page is a setback, separation, entrance or parking rule",
+      "target": "main_wall_height_m",
+      "zone": "RT"
     }
   ]
 }
