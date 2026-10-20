@@ -267,55 +267,66 @@ describe('link_coa_to_parcels ① — legacy oracle pins C: retraction, audit an
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
-// PART 2 — the converted claims D1–D9 (`it.fails` at ①). Each is RED as a NAMED MISSING ARTIFACT or a
-// named registry state; ② / ③ flip each to `it` in the commit that lands it.
+// PART 2 — the converted claims D1–D9. Commit ② (2026-10-19) lands at stage compute_ported (W4A-R6, operator y
+// 2026-10-18; Spec 124 R-EF): descriptor, compute, notes and migration 272 (value-carrying COPIES of the legacy
+// variables). The legacy shell stays the live step until ③ (the assert_coa_freshness ② ffec8296 form), so the
+// frozen-shell half of D1 (D1b) flips at ③ with the shell swap, as does D9. D6 was re-stated at ②: the ghost batch
+// literal is retired, not seeded — the converted step sweeps vanished leads with ONE statement after the loop
+// (Spec 124 R-EG (5), 124:265), so no batch exists to tune; the assessment's literal ledger left exactly that to ②
+// (§7: "or retired if link_full_retraction runs set-based; decided at ②"). D3/D4 read the scope where the schema
+// declares it, outputs.writes[].write_discipline.scope (step.schema.json definitions.write is additionalProperties
+// false; the ① draft read a write-level `scope` the schema has no slot for).
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 type Descriptor = {
   identity: { name: string; archetype: string; lock: number; spec: string };
   execution?: { shape?: string };
-  outputs: { writes: Array<{ table: string; scope?: string; write_discipline?: { class?: string } }>; invalidates?: Array<{ table: string; column: string }> };
+  outputs: { writes: Array<{ table: string; write_discipline?: { class?: string; scope?: string } }>; invalidates?: Array<{ table: string; column: string }> };
   staleness?: { mode_select?: string };
   guards?: { requires?: Array<{ kind: string; name: string }> };
   inputs?: { config?: Array<{ key?: string; name?: string }> } & Record<string, unknown>;
 };
 
-describe('link_coa_to_parcels ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype LINK, lock 4201, spec "42"; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+describe('link_coa_to_parcels — converted claims (D1/D2–D7 GREEN at ②; D1b/D9 at ③)', () => {
+  it('D1 — identity: descriptor exists, archetype LINK, lock 4201, spec "42" (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.identity).toMatchObject({ name: 'link_coa_to_parcels', archetype: 'LINK', lock: LOCK_ID, spec: '42' });
+    expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at ③)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toMatch(/pipeline\.step\(/);
     expect(shell).not.toMatch(/pipeline\.run\(/);
   });
 
-  it.fails('D2 — RULED re-check every run (O4 row 7 copy, operator 2026-10-18): staleness.mode_select "none", a parcel_linked_at invalidator, and no parcel_linked_at IS NULL filter in compute (flips at ②)', () => {
+  it('D2 — RULED re-check every run (O4 row 7 copy, operator 2026-10-18): staleness.mode_select "none", a parcel_linked_at invalidator, and no parcel_linked_at IS NULL filter in compute (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.staleness?.mode_select).toBe('none');
     expect((d.outputs.invalidates ?? []).some((i) => i.table === 'coa_applications' && i.column === 'parcel_linked_at')).toBe(true);
     expect(readText(COMPUTE_REL)).not.toMatch(/parcel_linked_at IS NULL/);
   });
 
-  it.fails('D3 — lead_parcels: every write and retraction is scoped lead_id LIKE \'coa:%\' (the permit mirror trigger co-writes the table) with a per-lead retraction of departed parcels; both targets carry rls_bypass_or_policy (flips at ②)', () => {
+  it('D3 — lead_parcels: every write and retraction is scoped lead_id LIKE \'coa:%\' (the permit mirror trigger co-writes the table) with a per-lead retraction of departed parcels; both targets carry rls_bypass_or_policy (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     const lp = d.outputs.writes.filter((w) => w.table === 'lead_parcels');
     expect(lp.length).toBeGreaterThan(0);
-    expect(lp.every((w) => (w.scope ?? '').includes("lead_id LIKE 'coa:%'"))).toBe(true);
+    expect(lp.every((w) => (w.write_discipline?.scope ?? '').includes("lead_id LIKE 'coa:%'"))).toBe(true);
     expect(lp.some((w) => w.write_discipline?.class === 'link_full_retraction')).toBe(true);
     const rls = (d.guards?.requires ?? []).filter((r) => r.kind === 'rls_bypass_or_policy').map((r) => r.name).sort();
     expect(rls).toEqual(['coa_applications', 'lead_parcels']);
   });
 
-  it.fails('D4 — the coa_applications back-fill fires only for a CoA whose parcel link CHANGED this run, so link_coa\'s permit-inherited lat/lng (26,723 rows measured) is never ping-ponged (flips at ②)', () => {
+  it('D4 — the coa_applications back-fill fires only for a CoA whose parcel link CHANGED this run, so link_coa\'s permit-inherited lat/lng (26,723 rows measured) is never ping-ponged (flipped at ②)', () => {
     const notes = readText(NOTES_REL);
     expect(notes).toMatch(/link_coa/);
     expect(notes).toMatch(/changed this run/);
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     const bf = d.outputs.writes.filter((w) => w.table === 'coa_applications');
     expect(bf.length).toBe(1);
-    expect(bf[0]?.scope ?? '').toMatch(/link changed/);
+    expect(bf[0]?.write_discipline?.scope ?? '').toMatch(/link changed/);
   });
 
-  it.fails('D5 — RULED retirements: no SAVEPOINT anywhere, no Turf and no JS point-in-polygon in compute (R-W), and guards.requires extension postgis (flips at ②)', () => {
+  it('D5 — RULED retirements: no SAVEPOINT anywhere, no Turf and no JS point-in-polygon in compute (R-W), and guards.requires extension postgis (flipped at ②)', () => {
     const src = readText(COMPUTE_REL);
     expect(src).not.toMatch(/SAVEPOINT/);
     expect(src).not.toMatch(/@turf|pointInGeoJSON|haversine/);
@@ -323,17 +334,19 @@ describe('link_coa_to_parcels ① — converted claims (RED at ①; flip to `it`
     expect((d.guards?.requires ?? []).some((r) => r.kind === 'extension' && r.name === 'postgis')).toBe(true);
   });
 
-  it.fails('D6 — EXTERNALIZED (R-DF): no ?? 0.95 / ?? 0.80 fallback, and the 95 % neighbourhood floor, the 1 % centroid ceiling and the 1000 ghost batch are registered link_coa_to_parcels_* variables seeded by migration (flips at ②)', () => {
+  it('D6 — EXTERNALIZED (R-DF): no ?? 0.95 / ?? 0.80 fallback, no 1000 / 0.95 literal; the 95 % neighbourhood floor and the 1 % centroid ceiling are registered link_coa_to_parcels_* variables seeded by migration 272, and the ghost batch is retired with the batched sweep (flipped at ②)', () => {
     const src = readText(COMPUTE_REL);
     expect(src).not.toMatch(/\?\?\s*0\.(95|80?)\b/);
     expect(src).not.toMatch(/\b1000\b|0\.95\b/);
     const seeds = readText('scripts/seeds/logic_variables.json');
-    for (const k of ['link_coa_to_parcels_neighbourhood_coverage_min_pct', 'link_coa_to_parcels_centroid_outside_max_pct', 'link_coa_to_parcels_ghost_batch_size']) {
+    for (const k of ['link_coa_to_parcels_neighbourhood_coverage_min_pct', 'link_coa_to_parcels_centroid_outside_max_pct']) {
       expect(seeds).toContain(k);
     }
+    expect(seeds).not.toContain('link_coa_to_parcels_ghost_batch_size');
+    expect(readText('migrations/272_link_coa_to_parcels_logic_variables.sql')).toContain('link_coa_to_parcels_centroid_outside_max_pct');
   });
 
-  it.fails('D7 — compute is pure (R-BZ): no Date.now, no .query(, no withTransaction / withAdvisoryLock, no pipeline require (flips at ②)', () => {
+  it('D7 — compute is pure (R-BZ): no Date.now, no .query(, no withTransaction / withAdvisoryLock, no pipeline require (flipped at ②)', () => {
     const src = readText(COMPUTE_REL);
     expect(src).not.toMatch(/Date\.now\(|\.query\(|withTransaction|withAdvisoryLock|require\(['"]\.\.\/pipeline['"]\)/);
   });

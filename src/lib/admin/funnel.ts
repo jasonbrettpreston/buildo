@@ -896,6 +896,7 @@ export const PIPELINE_TABLE_MAP: Record<string, string> = {
   backfill_realtor_permit_trades: 'permit_trades',
   compute_cost_estimates: 'cost_estimates',
   classify_coa_trades: 'lead_trades', compute_coa_cost_estimates: 'cost_estimates',
+  link_coa_to_parcels: 'lead_parcels', classify_coa_scope: 'coa_applications',
   compute_parcel_cost_estimates: 'parcels',
   compute_timing_calibration_v2: 'phase_calibration',
   compute_phase_calibration: 'phase_stay_calibration',

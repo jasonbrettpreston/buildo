@@ -147,6 +147,9 @@
  *      G8 diff-explanation channel is `explained-diffs.json` only (R-DA) —
  *      `checkCaptures(`'s own diff loop applies the per-key decision live. `scripts/analysis/gates/captures.mjs` owns all
  *      three answer sets
+ *   54. SWAP-ORDER (Spec 124 R-EQ, P4-SWAP, operator y 2026-10-19): a pending step
+ *      at runner_wired / shape_clean* has every declared upstream converted or swapped
+ *      (`scripts/analysis/gates/swap-order.mjs`)
  *   53. VARIABLE-EFFECT (Spec 124 R-EO, operator Q6 y 2026-10-19): the admin
  *      in-effect badge file (src/features/admin-controls/generated/
  *      logic-variable-effect.json) equals the derivation in
@@ -260,7 +263,7 @@ function effectiveCrossStepLedger() {
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
 import { checkClosedBounds, loadConvertedDescriptors, loadVocabularyContext, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
-import { setAsConverted } from './gates/converted-set.mjs';
+import { setAsConverted, readConvertedJson } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
 import { checkConsumerRegistry, selfTest as consumerRegistrySelfTest } from './gates/consumer-registry.mjs';
@@ -289,33 +292,30 @@ import {
 import { loadLedger, matchLedger } from './gates/ledger.mjs';
 import { checkRedEvidence, selfTest as redEvidenceSelfTest } from './gates/red-evidence.mjs';
 import { loadNetNew, headDoc, NET_NEW_TAG, selfTest as netNewSelfTest } from './gates/net-new.mjs';
-import { evaluateWitness, ownMeasurementSql, selfTest as witnessSelfTest } from './gates/witness.mjs';
+import { evaluateWitness, ownMeasurementSql, buildWitnessFleet, selfTest as witnessSelfTest } from './gates/witness.mjs';
+import { checkSwapOrder, loadSwapOrderInput, selfTest as swapOrderSelfTest } from './gates/swap-order.mjs';
 import { ldg10Status, selfTest as ldg10SelfTest } from './gates/ldg10.mjs';
 import { buildRunnerFingerprints, sqlFingerprinter } from './gates/witness-runner-set.mjs';
 
-// R-DO #44 (i) + R-DI h:undeclared: the converted fleet's declared invalidators, pin readers and run_at watermark
-// writers, computed once per process (file-only).
+// R-DO #44 (i) + R-DI h:undeclared + R-ES copy window: the #44 fleet (declared invalidators, pin readers, run_at
+// watermark writers and the pins OWED on producers still awaiting captures), computed once per process (file-only).
+// One derivation for --all and --staged: buildWitnessFleet sees every converted descriptor and every pending entry
+// with a descriptor at its declared stage; `member` = in this run's converted view (the --staged / --step overlay).
 let WITNESS_FLEET = null;
 function witnessFleet() {
   if (WITNESS_FLEET) return WITNESS_FLEET;
-  const invalidated = new Set();
-  const pinReaders = {};
-  const watermarks = {};
-  for (const d of loadConvertedDescriptors(REPO_ROOT)) {
-    const slug = d && d.identity && d.identity.name;
-    for (const r of d && d.outputs && Array.isArray(d.outputs.invalidates) ? d.outputs.invalidates : []) {
-      if (r && typeof r.table === 'string' && typeof r.column === 'string') invalidated.add(`${r.table}.${r.column}`);
-    }
-    for (const pin of d && d.staleness && Array.isArray(d.staleness.pins) ? d.staleness.pins : []) {
-      if (pin && typeof pin.step === 'string' && slug) (pinReaders[pin.step] = pinReaders[pin.step] || []).push(slug);
-    }
-    for (const w of d && d.outputs && Array.isArray(d.outputs.writes) ? d.outputs.writes : []) {
-      for (const c of Array.isArray(w && w.columns) ? w.columns : []) {
-        if (c && c.source === 'run_at' && typeof c.name === 'string' && slug) (watermarks[`${w.table}.${c.name}`] = watermarks[`${w.table}.${c.name}`] || []).push(slug);
-      }
-    }
+  const descriptorOf = (relFile) => JSON.parse(readFileSync(path.join(REPO_ROOT, String(relFile).replace(/\.(js|py)$/, '') + '.descriptor.json'), 'utf8'));
+  const raw = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/converted.json'), 'utf8'));
+  const stageOf = new Map((raw.pending || []).map((p) => [typeof p === 'string' ? p : p.file, typeof p === 'string' ? null : p.stage || null]));
+  const view = readConvertedJson(REPO_ROOT);
+  const members = new Set(Array.isArray(view.converted) ? view.converted : []);
+  const entries = [...members].map((relFile) => ({ descriptor: descriptorOf(relFile), stage: stageOf.get(relFile) || null, member: true }));
+  for (const [relFile, stage] of stageOf) {
+    if (members.has(relFile) || !stage) continue;
+    const rel = String(relFile).replace(/\.(js|py)$/, '') + '.descriptor.json';
+    if (existsSync(path.join(REPO_ROOT, rel))) entries.push({ descriptor: descriptorOf(relFile), stage, member: false });
   }
-  WITNESS_FLEET = { invalidated, pinReaders, watermarks };
+  WITNESS_FLEET = buildWitnessFleet(entries, stageAwaitsCaptures);
   return WITNESS_FLEET;
 }
 import { checkOwnerSpecDiff, readCommitChangeSet, convertedFilesOf } from './gates/owner-spec-diff.mjs';
@@ -2620,6 +2620,15 @@ function fastInvariants(rows, converted, pending, puritySites = []) {
     const committed53 = existsSync(path.join(REPO_ROOT, EFFECT_REL)) ? JSON.parse(readFileSync(path.join(REPO_ROOT, EFFECT_REL), 'utf8')) : { entries: {} };
     const effect53 = checkVariableEffect(loadVariableEffect(REPO_ROOT), committed53);
     results.push({ id: 53, slug: '(registry)', pass: effect53.pass, blockedSlugs: effect53.blockedSlugs, detail: effect53.detail });
+  }
+
+  // 54. SWAP-ORDER (Spec 124 R-EQ, P4-SWAP, operator y 2026-10-19; codifies W4A-R6's "runner_wired at the shell swap
+  // before P4") — a pending step at a shell-swapped stage (runner_wired / shape_clean*) has every declared upstream
+  // (inputs.reads.steps) converted or itself swapped: past ② and not awaiting captures (stageAwaitsCaptures, R-EF).
+  // Its own same-night POSTs are G8's (runner_wired does not exclude G8). File-only (R-DJ (2)); exact, no allowlist.
+  {
+    const swap54 = checkSwapOrder(loadSwapOrderInput(REPO_ROOT), stageAwaitsCaptures);
+    results.push({ id: 54, slug: '(registry)', pass: swap54.pass, blockedSlugs: swap54.blockedSlugs, detail: `SWAP-ORDER (R-EQ): ${swap54.detail}` });
   }
 
   return results;
@@ -6162,6 +6171,7 @@ async function main() {
   selfTest();
   { const w = witnessSelfTest(); if (!w.ok) throw new Error(`self-test FAILED (#44 WITNESS): ${w.detail}`); }
   { const l = ldg10SelfTest(); if (!l.ok) throw new Error(`self-test FAILED (#50 LDG-10): ${l.detail}`); }
+  { const so = swapOrderSelfTest(); if (!so.ok) throw new Error(`self-test FAILED (#54 SWAP-ORDER): ${so.detail}`); }
   if (opts.selfTestOnly) {
     console.log('[step-validate] self-test PASSED');
     return;
@@ -6262,6 +6272,8 @@ async function main() {
 
     if (witness44) {
       console.log(`[step-validate] #44 WITNESS ${row.slug} (${row.stage}): ${witness44.answer}`);
+      // R-ES: a pin owed on a producer still awaiting captures (never a FAIL; it becomes h:undeclared at the producer's swap).
+      for (const item of witness44.owed || []) console.log(`[step-validate] #44 (h) OWED ${row.slug}: ${item} — R-ES: due in the producer's swap commit (R-EQ) with this step's recapture`);
       if (witness44.rows.length > 1) {
         for (const r of witness44.rows.slice(0, 20)) console.log(`  - ${r}`);
         if (witness44.rows.length > 20) console.log(`  … +${witness44.rows.length - 20} more`);

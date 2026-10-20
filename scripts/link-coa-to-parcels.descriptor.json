@@ -1,0 +1,410 @@
+{
+  "identity": {
+    "name": "link_coa_to_parcels",
+    "display_name": "CoA Parcel Linking",
+    "owner": "data",
+    "description": "LINK (the second runLinkPhase family, Spec 124 R-EG): re-matches every eligible CoA (a lead and a normalized street name) to a parcel on every run through the address cascade — the address-points bridge, then the parcels-table exact, then name-only when the street number is blank — and keeps lead_parcels' coa: rows in step with it: a guarded upsert of each CoA's link, a per-batch keyed retraction of (lead, parcel) pairs no longer derived, and one sweep of rows whose CoA vanished. A CoA whose link changed this run gets its parcel's centroid coordinates, the neighbourhood containing that centroid and parcel_linked_at on coa_applications; no other CoA is written (operator rulings 2026-10-18, wave-4 plan question 10).",
+    "lock": 4201,
+    "why_lock": {
+      "text": "Spec 42 §6.8 Phase D allocation, ported from the legacy `const ADVISORY_LOCK_ID = 4201` (link-coa-to-parcels.js:48); recorded in src/tests/pipeline-advisory-lock.infra.test.ts.",
+      "liveness": { "kind": "file", "ref": "src/tests/pipeline-advisory-lock.infra.test.ts" }
+    },
+    "spec": "42",
+    "spec_version": "1.0",
+    "archetype": "LINK",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [
+        { "step": "coa" }
+      ],
+      "tables": [
+        { "table": "coa_applications", "columns": ["id", "lead_id", "street_num", "street_name", "street_name_normalized", "latitude", "longitude", "neighbourhood_id", "parcel_linked_at"] },
+        { "table": "parcels", "columns": ["id", "addr_num_normalized", "street_name_normalized", "street_type_normalized", "centroid_lat", "centroid_lng", "geom"] },
+        { "table": "address_points", "columns": ["address_point_id", "addr_num_normalized", "linear_name_normalized", "street_type_normalized", "address_class_desc", "maint_stage", "address_status", "retired_at"] },
+        { "table": "parcel_address_points", "columns": ["parcel_id", "address_point_id"] },
+        { "table": "neighbourhoods", "columns": ["id", "geom"] },
+        { "table": "lead_parcels", "columns": ["lead_id", "parcel_id", "match_type", "confidence", "matched_at"] }
+      ],
+      "externals": []
+    },
+    "expect_nonempty": false,
+    "on_missing": "warn"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "lead_parcels",
+        "key": ["lead_id", "parcel_id"],
+        "key_sql_type": "TEXT",
+        "columns": [
+          { "name": "lead_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "match_type", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "confidence", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "matched_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": ["match_type", "confidence"],
+          "scope": "lead_id LIKE 'coa:%' AND NOT EXISTS (SELECT 1 FROM coa_applications ca WHERE ca.lead_id = lead_parcels.lead_id)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "The legacy guarded upsert (link-coa-to-parcels.js:458-470, pinned L11): ON CONFLICT (lead_id, parcel_id), rewritten only when match_type or confidence moved; matched_at is the run clock and is never a guard (LG-9), so matched_at = this run's clock means exactly 'this link was inserted or changed this run' — the signal the back-fill (writes[2]) keys on. The scope is the vanished-lead sweep's (retract \"departed\", Spec 124 R-EG (5)): after the loop, ONE statement deletes the coa: rows whose CoA no longer exists and whose lead no row of this run derived — the legacy ghost cleanup (:585-600, LCTP-D6), now one statement instead of a LIMIT 1000 loop; every lead_parcels write and retraction carries lead_id LIKE 'coa:%' because the permit mirror trigger trg_mirror_permit_parcels_to_lead_parcels (migrations/144_*.sql:66) co-writes the table with permit: rows (LCTP-D9).",
+            "liveness": { "kind": "table", "ref": "lead_parcels" }
+          }
+        },
+        "retract": "departed"
+      },
+      {
+        "table": "lead_parcels",
+        "key": ["lead_id", "parcel_id"],
+        "columns": [
+          { "name": "lead_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" }
+        ],
+        "write_discipline": {
+          "class": "link_full_retraction",
+          "guard": "none",
+          "guard_why": {
+            "text": "LG-24 precedent (link_parcels writes[1], link_massing writes[2]): no IS DISTINCT FROM guard applies to a DELETE. The scope IS the guard: the statement touches only coa: rows of THIS batch's leads whose (lead_id, parcel_id) is not among the pairs this batch just derived (the compute's NOT_DERIVED fragment, shared with the before-image SELECT so the two cannot drift). The target itself is operator-ruled: wave-4 plan question 10 (y 2026-10-18), ruling 1 — 'link_full_retraction of departed (lead, parcel) pairs'. Grandfathered in scripts/steps/_schema/grandfathered.json.",
+            "liveness": { "kind": "table", "ref": "lead_parcels" }
+          },
+          "guard_columns": "all_declared",
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, moot here (the link_massing writes[2] form): guard is \"none\", so guard_columns is never consulted, and no run-clock column is declared on this target.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+          },
+          "scope": "lead_id = ANY(this batch's leads) AND lead_id LIKE 'coa:%' AND (lead_id, parcel_id) NOT IN (this batch's derived pairs)",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "batch",
+          "why": {
+            "text": "Ruling 1 (LCTP-D3/D6): re-check every run means a CoA whose match moved to another parcel, or that no longer matches any parcel, loses the old pair — the legacy write-once step kept it forever (pinned L11). Fires after the guarded upsert and the back-fill, inside the same batch transaction (runner executeKeyedLinkWrites); its rows are read once first (stale_link_select_sql) for the R-M / LG-17 before-image and for the leads that lost a pair. Counted on written.e2 (deleted). The empty-source guards (parcels, address_points, parcel_address_points) stop the run before any write when a matching input is empty, so an empty input can never read as 'every link departed'.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "coa_applications",
+        "key": ["id"],
+        "columns": [
+          { "name": "latitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "longitude", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "neighbourhood_id", "vocabulary": "none", "written": "step", "bind": "value", "source": "compute" },
+          { "name": "parcel_linked_at", "vocabulary": "none", "written": "step", "bind": "value", "source": "run_at" }
+        ],
+        "write_discipline": {
+          "class": "set_based_scoped",
+          "set_source": "compute",
+          "guard": "is_distinct_from",
+          "guard_columns": ["latitude", "longitude", "neighbourhood_id", "parcel_linked_at"],
+          "guard_columns_why": {
+            "text": "LG-9 escape hatch, declared on purpose: the legacy back-fill guarded the same four columns, parcel_linked_at (= the run clock) included (link-coa-to-parcels.js:532-546, pinned L12), so every CoA the statement reaches is written and its marker moves. The narrowing is the scope (only a CoA whose link changed this run), not the value guard; with the clock in the guard the statement writes exactly the rows the scope selects, which is the marker's 'link changed at' meaning that enrich_parcels reads (scripts/lib/compute/enrich-parcels.js:1122-1123).",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+          },
+          "scope": "id of a CoA in this batch whose link changed this run: it lost a (lead, parcel) pair, or its lead_parcels row was inserted or rewritten at this run's clock",
+          "expected_change_ratio": "none",
+          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun_why": {
+            "text": "A second run over an unchanged corpus derives the same links: the upsert guard leaves matched_at alone and no pair departs, so no CoA is in scope and the back-fill writes 0 rows.",
+            "liveness": { "kind": "check", "ref": "coa_backfilled" }
+          },
+          "txn_scope": "batch",
+          "why": {
+            "text": "Ruling 1 (LCTP-D7, operator y 2026-10-18): the coa_applications back-fill (latitude, longitude, neighbourhood_id, parcel_linked_at = the run clock) fires ONLY for a CoA whose link changed this run. link_coa writes the same coordinates from the linked permit (scripts/link-coa.js:660-680; 26,723 of 29,627 parcel-linked CoAs carry them, assessment §1.4), so an unconditional back-fill under re-check-every-run would rewrite them on every run and the two steps would fight. The neighbourhood is the one whose polygon contains the parcel centroid (ST_Contains, PostGIS only — the Turf path is retired, R-W, LCTP-D5; NULL when none, never -1); a CoA that lost its link and gained none keeps its coordinates and neighbourhood (no parcel to take them from; the legacy step never cleared them) and only its marker moves. The R-EG (4) link-change statement, bound to lost_keys, batch_keys, run_at; set_source compute (LG-22). Counted on written.e3.",
+            "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [
+      {
+        "table": "coa_applications",
+        "column": "parcel_linked_at",
+        "when": "Ruling 1 (the link_parcels O4 row 7 copy, operator y 2026-10-18): every eligible CoA is re-matched on every run (staleness.mode_select none), so a CoA whose parcel or address changes is re-linked by the next run and its marker moves then; there is no write-once filter left to go stale (LCTP-D3). The same re-derive keeps lead_parcels' coa: rows current: changed links are rewritten (guarded upsert), pairs no longer derived are retracted per batch, and rows of vanished CoAs are swept (R-EG (5)).",
+        "by": "full_rescan"
+      }
+    ],
+    "write_inventory": {
+      "statements": 4,
+      "why": {
+        "text": "Three write statements per batch inside ONE batch transaction (runner executeKeyedLinkWrites): the guarded upsert (e1), the link-change back-fill on coa_applications (e3) and the keyed DELETE of pairs no longer derived (e2); the back-fill and the delete are issued every batch (an empty set writes nothing). Plus ONE vanished-lead sweep after the loop (e1 retract departed, R-EG (5)), before-imaged. The match queries, the cumulative coverage query and the stale-pair SELECT are reads.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": [{ "signal": "always", "position": "pre_compute" }],
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": ["scripts/lib/coa-link-sql.js", "scripts/lib/address-normalizers.js"],
+    "logic_version": "none",
+    "on_fingerprint_change": "none"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "extension",
+        "name": "postgis",
+        "on_missing": "fail",
+        "why": {
+          "text": "Ruling 3 (LCTP-D5, R-W 124a:137): the neighbourhood lookup, the centroid-outside-polygon count and the bridge's parcel-area tie-break are PostGIS; the Turf / JS point-in-polygon fallback is retired, so a database without PostGIS fails before any read instead of taking a second code path (link_parcels precedent, scripts/link-parcels.descriptor.json).",
+          "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "lead_parcels",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on lead_parcels with 0 policies (assessment §1.4, read-only DB): under a non-bypass role every write affects 0 rows with no error and the counters read 0 (Spec 124 R-CT; trap 2).",
+          "liveness": { "kind": "table", "ref": "lead_parcels" }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "relrowsecurity = true on coa_applications with 0 policies (assessment §1.4): the back-fill would affect 0 rows with no error (Spec 124 R-CT; trap 2).",
+          "liveness": { "kind": "table", "ref": "coa_applications" }
+        }
+      }
+    ],
+    "srid": 4326,
+    "empty_source": ["parcels", "address_points", "parcel_address_points"],
+    "schema_drift": "none"
+  },
+  "execution": {
+    "shape": "link",
+    "txn_scope": "batch",
+    "statement_timeout": "none",
+    "step_timeout": "60m",
+    "batch": 1000,
+    "on_row_error": "fail_fast",
+    "on_row_error_why": {
+      "text": "Ruling 2 (LCTP-D4, operator y 2026-10-18; a declared deviation, R-BD): per-row SAVEPOINT isolation is retired. The runner owns the batch transaction; one bad row fails the batch and the step, with its key in the error. 0 per_row_errors in the last legacy runs (1497, 1547).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a counter or a coverage scalar the runner already measured in the same run; a check that throws is a compute defect and must redden the run.",
+      "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+    },
+    "on_degrade": "none",
+    "network": "none",
+    "invocation": {
+      "coa": { "argv": [], "env": { "PIPELINE_CHAIN": "coa" } }
+    },
+    "maintenance": "none"
+  },
+  "checks": [
+    { "id": "coa_corpus_total", "kind": "field_coverage", "expect": { "reports": "COUNT of CoAs with a lead id (the whole coa_applications entity)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Spec 48 corpus coverage (54eb0f04), ported by name.", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+    { "id": "coa_corpus_linked_count", "kind": "field_coverage", "expect": { "reports": "COUNT of distinct coa: leads with a lead_parcels row" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "table", "ref": "lead_parcels" } } },
+    { "id": "coa_corpus_unlinked_pct", "kind": "bound", "expect": { "of": "percent of the CoA corpus with no parcel link (the complement of the legacy coa_corpus_linked_pct, whose floor was 100 minus the threshold)" }, "limit": "pct <= 10", "limit_from_config": "link_coa_to_parcels_unmatched_threshold_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "The legacy verdict-driving corpus row (coa_corpus_linked_pct, :180) WARNed below 100 − coa_unmatched_threshold_pct. A declared bound cannot be 100 − x, so the same decision is stated on the complement (unlinked <= x) against the step-owned copy of the same variable (migration 272); the row renders the linked share beside it. Day-1 WARN, never FAIL (Spec 42 §6.5 step 9).", "liveness": { "kind": "table", "ref": "lead_parcels" } } },
+    { "id": "coa_corpus_missing_normalized_count", "kind": "field_coverage", "expect": { "reports": "COUNT of CoAs with a raw street_name but no street_name_normalized (unlinkable)" }, "limit": "viol == 0", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported (legacy WARN when > 0, :183): the root-cause backlog of unlinkable CoAs.", "liveness": { "kind": "column", "ref": "coa_applications.street_name_normalized" } } },
+    { "id": "coa_processed", "kind": "field_coverage", "expect": { "reports": "COUNT of eligible CoAs re-matched this run (every eligible CoA, every run)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name. Its meaning moves with ruling 1: the legacy counted the never-stamped CoAs only; re-check every run walks every eligible CoA (declared diff).", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+    { "id": "tier_1a_exact", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by tier 1a (the bridge plus the parcels-table exact)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (plan v4 fold F17: rolls up the bridge and the parcels-table exact).", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
+    { "id": "tier_1a_via_bridge", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by the address-points bridge (match_type address_points_exact)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (fold F17 bridge subset).", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
+    { "id": "tier_1b_name_only", "kind": "field_coverage", "expect": { "reports": "eligible CoAs linked by name only (no street number)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name.", "liveness": { "kind": "column", "ref": "lead_parcels.match_type" } } },
+    { "id": "no_address_data", "kind": "field_coverage", "expect": { "reports": "CoAs with a lead id and no street_name_normalized (outside the eligible set)" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name; the legacy pre-pass counted (and stamped) the never-stamped ones, re-check every run counts them all and stamps none (ruling 1: a never-linked CoA keeps parcel_linked_at unset).", "liveness": { "kind": "column", "ref": "coa_applications.street_name_normalized" } } },
+    { "id": "no_parcel_match", "kind": "field_coverage", "expect": { "reports": "eligible CoAs the cascade matched to no parcel this run" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (the runner's no-match counter, R-EG (1)).", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+    { "id": "unmatched_coa_pct", "kind": "bound", "expect": { "of": "percent of this run's eligible CoAs that matched no parcel" }, "limit": "pct <= 10", "limit_from_config": "link_coa_to_parcels_unmatched_threshold_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "The legacy unmatched_coa_count / coa_parcels_linked_pct pair (:631-632) rendered ONE decision twice (unmatched% <= threshold); it is declared once, as a percentage, against the step-owned copy of the variable (migration 272). Day-1 WARN, never FAIL. The population is the eligible set: CoAs with no normalized street are counted in no_address_data and the corpus check, not here (declared diff: the legacy slice also counted the pre-pass rows).", "liveness": { "kind": "table", "ref": "coa_applications" } } },
+    { "id": "coa_neighbourhood_coverage_pct", "kind": "bound", "expect": { "of": "percent of parcel-linked eligible CoAs carrying a neighbourhood_id; INFO when none is linked" }, "limit": "pct >= 95", "limit_from_config": "link_coa_to_parcels_neighbourhood_coverage_min_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "The legacy literal 95% floor (:637, LCTP-D2) is the variable link_coa_to_parcels_neighbourhood_coverage_min_pct (migration 272), inclusive as before. Measured over the linked eligible CoAs after the run (the legacy measured this run's matches; under re-check every run those are the same CoAs).", "liveness": { "kind": "column", "ref": "coa_applications.neighbourhood_id" } } },
+    { "id": "coa_geocoded_pct", "kind": "field_coverage", "expect": { "reports": "percent of parcel-linked eligible CoAs carrying coordinates" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name (INFO). Measured over the linked eligible CoAs after the run.", "liveness": { "kind": "column", "ref": "coa_applications.latitude" } } },
+    { "id": "centroid_outside_polygon_count", "kind": "bound", "expect": { "of": "percent of parcel-linked eligible CoAs whose parcel centroid lies outside its own parcel polygon (L-shaped lots); the row shows the count" }, "limit": "pct <= 1", "limit_from_config": "link_coa_to_parcels_centroid_outside_max_pct", "severity": "WARN", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Plan-review fix #2 (a07f4af3), ported: the literal 1% ceiling (:639, LCTP-D2) is the variable link_coa_to_parcels_centroid_outside_max_pct (migration 272). If it fires, the follow-up is an ST_PointOnSurface upgrade (legacy header).", "liveness": { "kind": "column", "ref": "parcels.centroid_lat" } } },
+    { "id": "links_retracted", "kind": "field_coverage", "expect": { "reports": "coa: (lead, parcel) pairs retracted this run because the cascade no longer derives them" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "New with ruling 1 (writes[1]): the departed-pair retraction the write-once legacy never had (LCTP-D6).", "liveness": { "kind": "table", "ref": "lead_parcels" } } },
+    { "id": "ghost_orphans_cleaned", "kind": "field_coverage", "expect": { "reports": "coa: lead_parcels rows deleted because their CoA no longer exists" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ported by name: the legacy ghost cleanup (:585-600), now the R-EG (5) vanished-lead sweep.", "liveness": { "kind": "table", "ref": "lead_parcels" } } },
+    { "id": "coa_backfilled", "kind": "field_coverage", "expect": { "reports": "CoAs whose coordinates / neighbourhood / parcel_linked_at were written because their link changed this run" }, "limit": "viol == 0", "severity": "INFO", "blocking": false, "when": "post", "chains": ["coa"], "accept_until": "none", "why": { "text": "Ruling 1 (LCTP-D7): the back-fill count, 0 on a run where no link moved.", "liveness": { "kind": "column", "ref": "coa_applications.parcel_linked_at" } } }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": { "force_full": "none", "force_run": "none", "dry_run": "none" },
+  "emits": [
+    { "key": "duration_ms", "type": "int", "consumers": [] },
+    { "key": "coa_corpus_total", "type": "int", "consumers": [] },
+    { "key": "coa_corpus_linked_count", "type": "int", "consumers": [] },
+    { "key": "coa_corpus_unlinked_count", "type": "int", "consumers": [] },
+    { "key": "coa_corpus_missing_normalized_count", "type": "int", "consumers": [] },
+    { "key": "coa_processed", "type": "int", "consumers": [] },
+    { "key": "tier_1a_exact", "type": "int", "consumers": [] },
+    { "key": "tier_1a_via_bridge", "type": "int", "consumers": [] },
+    { "key": "tier_1b_name_only", "type": "int", "consumers": [] },
+    { "key": "no_address_data", "type": "int", "consumers": [] },
+    { "key": "no_parcel_match", "type": "int", "consumers": [] },
+    { "key": "neighbourhood_matched", "type": "int", "consumers": [] },
+    { "key": "centroid_outside_polygon", "type": "int", "consumers": [] },
+    { "key": "links_inserted", "type": "int", "consumers": [] },
+    { "key": "links_updated", "type": "int", "consumers": [] },
+    { "key": "links_retracted", "type": "int", "consumers": [] },
+    { "key": "ghost_deleted", "type": "int", "consumers": [] },
+    { "key": "coa_backfilled", "type": "int", "consumers": [] }
+  ],
+  "deviations": [
+    {
+      "from": "write-once eligibility (parcel_linked_at IS NULL), the no-match marker stamp and the unconditional per-match back-fill (link-coa-to-parcels.js:249-252, :322-328, :341-358, :532-556)",
+      "why": {
+        "text": "Ruling 1 (LCTP-D3/D6/D7): every eligible CoA is re-matched every run; departed pairs and vanished leads are retracted; coa_applications is written only for a CoA whose link changed this run, so a never-linked no-match CoA keeps parcel_linked_at unset and the 3,773 already-stamped no-match CoAs keep their stamp until their link changes. Declared consumer effect: assert_global_coverage's coa_step4_parcel_linked_at population stops growing with no-match CoAs.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+      },
+      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 1)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "per-row SAVEPOINT isolation with the per_row_errors WARN row (:363-370, :559-569)",
+      "why": {
+        "text": "Ruling 2 (LCTP-D4): set-based fail_fast; the runner owns the batch transaction and one bad row fails the step with its key in the error. The per_row_errors row is retired with the mechanism.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      },
+      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 2)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the PostGIS / Turf dual path and the ?? 0.95 / ?? 0.80 confidence fallbacks (:194-245, :500-523)",
+      "why": {
+        "text": "Ruling 3 (LCTP-D5, R-W): PostGIS only, guarded by guards.requires postgis. LCTP-D1: the confidences are required step-owned variables (migration 272), no literal fallback.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+      },
+      "adjudicated_by": "Operator y 2026-10-18, wave-4 plan question 10 (assessment §12 ruling 3); Spec 124 R-W, R-DF",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the legacy audit rows coa_corpus_linked_pct (>= 100 − t), coa_parcels_linked_pct + unmatched_coa_count (one decision rendered twice), the NO_NEW_WORK lane (phase 11), and the tier_1a_type_confirmed / tier_1a_type_tolerant per-run counters",
+      "why": {
+        "text": "The corpus floor is stated on its complement (coa_corpus_unlinked_pct <= t; a bound cannot be 100 − x); the slice decision is declared once (unmatched_coa_pct). There is no no-work lane: every eligible CoA is walked every run, and audit_table.phase follows sharing.varies_by_chain.phase (4, the chain index; LCTP-D8, the O1 fleet standard). The two bridge type counters are NOT carried at ②: the runLinkPhase contract (Spec 124 R-EG (1)) accumulates exactly the six LINK counters and the two pass counters per batch, and the type-confirmation bit is not persisted anywhere a post-write read could count it. While the step sits at compute_ported the legacy shell is live and still emits both; a new-rule draft (an additive per-batch counter export on the match plan, R-EG amendment) is with the operator, and ③ waits on it.",
+        "liveness": { "kind": "file", "ref": "scripts/lib/compute/link-coa-to-parcels.js" }
+      },
+      "adjudicated_by": "Spec 124 R-EG (1) (the counter contract); O1 ruling (2026-09-21) phase index; the type counters await the operator (new-rule draft, link_coa_to_parcels ②)",
+      "date": "2026-10-19"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "lead_parcels is co-written by the trigger trg_mirror_permit_parcels_to_lead_parcels on permit_parcels (migrations/144_*.sql:66; 245,270 permit: rows), i.e. by converted link_parcels. This step never touches a permit: row (every statement is scoped lead_id LIKE 'coa:%'), but the table has two writers (LCTP-D9; R-BC (c) for coa owes the writer declaration).",
+      "measured": "assessment §1.4 (pg_trigger; lead_parcels coa: 29,627 / permit: 245,270)",
+      "check_id": "none"
+    },
+    {
+      "what": "The first converted run re-matches every eligible CoA (about 33,800): the 3,773 stamped-but-unlinked CoAs are the upper bound for new links, and departed-pair retractions are unknown until the night-P4 POST measures them.",
+      "measured": "assessment §5.1 / §R (LOW-CONFIDENCE)",
+      "check_id": "links_retracted"
+    }
+  ],
+  "interpretation": { "file": "link-coa-to-parcels.notes.json" },
+  "recovery": {
+    "reset": "Re-run the step: every run re-derives every eligible CoA's link, rewrites only the links that changed, retracts the pairs no longer derived and sweeps vanished leads, so a plain re-run IS the repair. TRUNCATE is never correct (the table carries permit: rows).",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "Every run re-derives every eligible CoA (staleness.mode_select none), so there is no incremental mode for a crash to be followed by; each batch's upsert, back-fill and keyed delete commit together, and a run killed mid-loop leaves earlier batches committed and the next run's full re-derive repairs the rest (the link_massing form).",
+      "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+    },
+    "before_image": "generated"
+  },
+  "database": { "class": "primary", "min_migration": 257, "assert_current_database": "postgres" },
+  "counters": {
+    "records_total": {
+      "source": "matched.coa_processed",
+      "why": {
+        "text": "The legacy records_total = processed (:652): the eligible CoAs walked this run (the runner's R-EG (1) processed counter).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" }
+      }
+    },
+    "records_new": {
+      "source": "written.e1.inserted",
+      "why": {
+        "text": "New lead_parcels links inserted this run (the legacy reported 0; declared diff — the runner counts inserts and updates apart).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    },
+    "records_updated": {
+      "source": "written.e1.updated",
+      "why": {
+        "text": "Existing links whose match_type or confidence moved (the legacy reported every match; declared diff).",
+        "liveness": { "kind": "file", "ref": "scripts/lib/step/write.js" }
+      }
+    }
+  },
+  "config": {
+    "logic_variables": [
+      { "name": "link_coa_to_parcels_conf_tier1a", "min": 0.01, "max": 1, "on_invalid": "fail" },
+      { "name": "link_coa_to_parcels_conf_tier1b", "min": 0.01, "max": 1, "on_invalid": "fail" },
+      { "name": "link_coa_to_parcels_unmatched_threshold_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_coa_to_parcels_neighbourhood_coverage_min_pct", "min": 0, "max": 100, "on_invalid": "fail" },
+      { "name": "link_coa_to_parcels_centroid_outside_max_pct", "min": 0, "max": 100, "on_invalid": "fail" }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true,
+    "retired": []
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": { "checks": "none", "phase": { "coa": 4 }, "audit_table": "one", "scope": "none" },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "linked",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "Every eligible CoA was re-matched and every bound held.", "liveness": { "kind": "check", "ref": "unmatched_coa_pct" } }
+    },
+    {
+      "id": "linked_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": { "duration_ms": "int", "audit_table": "object", "terminal": "string" },
+      "why": { "text": "The run completed and a WARN bound (unlinked corpus, unmatched share, neighbourhood coverage, centroid outside polygon, missing normalized names) fired. Row-derived.", "liveness": { "kind": "check", "ref": "coa_corpus_unlinked_pct" } }
+    },
+    {
+      "id": "failed_empty_source_guard",
+      "kind": "fail_check",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "parcels, address_points or parcel_address_points is empty: the run stops before any write, so an empty input never reads as every link having departed.", "liveness": { "kind": "table", "ref": "parcels" } }
+    },
+    {
+      "id": "failed_missing_precondition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "PostGIS is missing (ruling 3) or an rls_bypass_or_policy precondition is not met (R-CT).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "failed_config_out_of_bounds",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A declared logic variable resolved absent or outside its [min, max] under on_invalid fail, above the lock (the legacy zod refusal, pinned L1).", "liveness": { "kind": "file", "ref": "scripts/lib/step/config.js" } }
+    },
+    {
+      "id": "failed_write_error",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": { "audit_table": "object", "terminal": "string" },
+      "why": { "text": "A batch statement threw (ruling 2, fail_fast): the batch transaction rolls back whole, earlier batches stay committed, and the error names the failing statement.", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": { "skipped": "bool", "reason": "string" },
+      "why": { "text": "Advisory lock 4201 held elsewhere: no SQL inside the lock and a row-derived SKIP summary (pinned L17).", "liveness": { "kind": "file", "ref": "scripts/lib/step/index.js" } }
+    }
+  ]
+}

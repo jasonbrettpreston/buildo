@@ -303,7 +303,11 @@ export function pinItems(descriptor, runsTouched, producerSummaries) {
  * absent → not evaluated.
  *   i:fill-once:<table>.<column>       — a write_once_backfill target fills the column once and NO converted descriptor
  *                                        declares an invalidator for it (the §6.4a centroid gap class);
- *   i:unresolved:pin:<table>.<column>  — this step's `by:"pin"` invalidator has no reader pinning this step;
+ *   i:unresolved:pin:<table>.<column>  — this step's `by:"pin"` invalidator resolves by neither arm: (i) a reader pins
+ *                                        this step (R-DO; the link_massing → enrich_parcels form), nor (ii) the row is this
+ *                                        step's OWN column (it writes it, same table) and its own staleness.pins[] names
+ *                                        another step whose stamp is a column of that same table — the §6.3 watermark read
+ *                                        from the reader's side (Spec 124 R-ER, operator y 2026-10-19; classify_coa_scope);
  *   i:unresolved:trigger:<table>.<column> — this step's `by:"trigger"` invalidator has no guards.requires trigger
  *                                        on that table (the runner's precondition probe, cloud:pre declared_guards_present).
  * Exact zero-tolerance; no allowlist.
@@ -323,10 +327,17 @@ export function invalidationItems(slug, descriptor, fleet) {
   const triggers = (descriptor && descriptor.guards && Array.isArray(descriptor.guards.requires) ? descriptor.guards.requires : [])
     .filter((g) => g && g.kind === 'trigger' && typeof g.name === 'string');
   const readers = fleet.pinReaders && Array.isArray(fleet.pinReaders[slug]) ? fleet.pinReaders[slug] : [];
+  // R-ER arm (ii): the tables whose columns this step's own pins compare (a pin on another step only).
+  const ownPinTables = new Set((descriptor && descriptor.staleness && Array.isArray(descriptor.staleness.pins) ? descriptor.staleness.pins : [])
+    .filter((pin) => pin && typeof pin.step === 'string' && pin.step !== slug && typeof pin.stamp === 'string' && pin.stamp.includes('.'))
+    .map((pin) => pin.stamp.slice(0, pin.stamp.indexOf('.'))));
+  const writesOwn = (table, column) => (Array.isArray(outputs.writes) ? outputs.writes : []).some((w) => w && w.table === table
+    && (Array.isArray(w.columns) ? w.columns : []).some((c) => (c && typeof c === 'object' ? c.name : c) === column));
   for (const row of Array.isArray(outputs.invalidates) ? outputs.invalidates : []) {
     if (!row || typeof row.table !== 'string' || typeof row.column !== 'string') continue;
     const label = `${row.table}.${row.column}`;
-    if (row.by === 'pin' && readers.length === 0) out.push(`i:unresolved:pin:${label}`);
+    const readerSide = ownPinTables.has(row.table) && writesOwn(row.table, row.column);
+    if (row.by === 'pin' && readers.length === 0 && !readerSide) out.push(`i:unresolved:pin:${label}`);
     if (row.by === 'trigger' && !triggers.some((g) => g.name.startsWith(`${row.table}.`))) out.push(`i:unresolved:trigger:${label}`);
   }
   return [...new Set(out)].sort();
@@ -342,6 +353,21 @@ export function invalidationItems(slug, descriptor, fleet) {
  */
 export function undeclaredPinItems(slug, descriptor, fleet) {
   if (!fleet || !fleet.watermarks || typeof fleet.watermarks !== 'object') return [];
+  return unpinnedWatermarkReads(slug, descriptor, fleet.watermarks, 'h:undeclared');
+}
+
+/**
+ * #44 (h) copy window (Spec 124 R-ES, operator y 2026-10-19). PURE. The same derivation as h:undeclared over
+ * `fleet.owedWatermarks` — the run_at columns of PENDING producers whose declared stage awaits captures (the legacy
+ * shell is still the live writer, W4A-R6 / R-EF). `h:owed:<writer>.<table>.<column>` never fails: it is printed,
+ * and it becomes h:undeclared when the writer's stage stops awaiting captures (the R-EQ swap, or ③).
+ */
+export function owedPinItems(slug, descriptor, fleet) {
+  if (!fleet || !fleet.owedWatermarks || typeof fleet.owedWatermarks !== 'object') return [];
+  return unpinnedWatermarkReads(slug, descriptor, fleet.owedWatermarks, 'h:owed');
+}
+
+function unpinnedWatermarkReads(slug, descriptor, watermarks, prefix) {
   const archetype = descriptor && descriptor.identity ? descriptor.identity.archetype : null;
   if (archetype === 'ASSERT' || archetype === 'RECORDER') return [];
   const outputs = descriptor && descriptor.outputs ? descriptor.outputs : {};
@@ -361,12 +387,50 @@ export function undeclaredPinItems(slug, descriptor, fleet) {
     for (const col of Array.isArray(r && r.columns) ? r.columns : []) {
       const key = `${r.table}.${col}`;
       if (selfWritten.has(key)) continue;
-      for (const writer of Array.isArray(fleet.watermarks[key]) ? fleet.watermarks[key] : []) {
-        if (writer !== slug && !pinned.has(writer)) out.push(`h:undeclared:${writer}.${key}`);
+      for (const writer of Array.isArray(watermarks[key]) ? watermarks[key] : []) {
+        if (writer !== slug && !pinned.has(writer)) out.push(`${prefix}:${writer}.${key}`);
       }
     }
   }
   return [...new Set(out)].sort();
+}
+
+/**
+ * THE #44 fleet derivation (R-DO (i), R-DI h:undeclared, R-ES copy window). PURE; step-validate builds the entries
+ * once per process, the same for --all and --staged.
+ * @param {Array<{descriptor: object, stage: string|null, member: boolean}>} entries — every converted descriptor
+ *   (stage null) and every pending entry with a descriptor (its declared stage); `member` = in this run's converted
+ *   view (converted, or overlaid by --staged / --step).
+ * @param {(stage: string) => boolean} awaitsCaptures — step-validate's stageAwaitsCaptures (R-EF), injected.
+ * invalidated / pinReaders: members only (unchanged). watermarks: a run_at column of a converted step, or of a
+ * pending step whose stage does NOT await captures (it is the live writer: R-EQ swap); owedWatermarks: a run_at
+ * column of a pending step whose stage awaits captures (R-ES), member or not.
+ */
+export function buildWitnessFleet(entries, awaitsCaptures) {
+  const invalidated = new Set();
+  const pinReaders = {};
+  const watermarks = {};
+  const owedWatermarks = {};
+  const push = (map, key, slug) => { (map[key] = map[key] || []).push(slug); };
+  for (const e of Array.isArray(entries) ? entries : []) {
+    const d = e && e.descriptor;
+    const slug = d && d.identity && d.identity.name;
+    if (e.member) {
+      for (const r of d && d.outputs && Array.isArray(d.outputs.invalidates) ? d.outputs.invalidates : []) {
+        if (r && typeof r.table === 'string' && typeof r.column === 'string') invalidated.add(`${r.table}.${r.column}`);
+      }
+      for (const pin of d && d.staleness && Array.isArray(d.staleness.pins) ? d.staleness.pins : []) {
+        if (pin && typeof pin.step === 'string' && slug) push(pinReaders, pin.step, slug);
+      }
+    }
+    const owed = typeof e.stage === 'string' && awaitsCaptures(e.stage);
+    for (const w of d && d.outputs && Array.isArray(d.outputs.writes) ? d.outputs.writes : []) {
+      for (const c of Array.isArray(w && w.columns) ? w.columns : []) {
+        if (c && c.source === 'run_at' && typeof c.name === 'string' && slug) push(owed ? owedWatermarks : watermarks, `${w.table}.${c.name}`, slug);
+      }
+    }
+  }
+  return { invalidated, pinReaders, watermarks, owedWatermarks };
 }
 
 /** (d) declared → observed compatibility, per the contract's table. */
@@ -1028,6 +1092,8 @@ export function evaluateWitness({
     // as for a pending one — the witnessed ledger is the effective ledger only when every FAIL stops.
     hardStop: (status === 'pending' || status === 'converted') && unique.some((r) => r.startsWith(FAIL_PREFIX)),
     attributed: [...new Set(attributed)].sort(),
+    // R-ES: pins owed on producers still awaiting captures — printed by step-validate, never a row, never a FAIL.
+    owed: owedPinItems(slug, descriptor, fleet),
   };
 }
 
@@ -1108,7 +1174,10 @@ export function selfTest() {
     && undeclaredPinItems('r', { ...hu, staleness: { pins: [{ step: 'w', stamp: 'records_meta.x' }] } }, { watermarks: { 'p.stamp': ['w'] } }).length === 0
     && undeclaredPinItems('r', { ...hu, identity: { archetype: 'ASSERT' } }, { watermarks: { 'p.stamp': ['w'] } }).length === 0;
   const iok = huok && invalidationItems('s', onceDesc, { invalidated: new Set(), pinReaders: {} }).includes('i:fill-once:t.c')
-    && invalidationItems('s', onceDesc, { invalidated: new Set(['t.c']), pinReaders: {} }).length === 0;
+    && invalidationItems('s', onceDesc, { invalidated: new Set(['t.c']), pinReaders: {} }).length === 0
+    // R-ER arm (ii): an own column re-armed by this step's own pin on a producer stamp of the same table resolves.
+    && invalidationItems('s', { staleness: { pins: [{ step: 'p', stamp: 't.seen' }] }, outputs: { writes: [{ table: 't', columns: [{ name: 'w' }] }], invalidates: [{ table: 't', column: 'w', by: 'pin' }] } }, { invalidated: new Set(), pinReaders: {} }).length === 0
+    && invalidationItems('s', { staleness: { pins: [] }, outputs: { writes: [{ table: 't', columns: [{ name: 'w' }] }], invalidates: [{ table: 't', column: 'w', by: 'pin' }] } }, { invalidated: new Set(), pinReaders: {} }).includes('i:unresolved:pin:t.w');
   const ok = green.rows.length === 0
     && g13ok
     && g7ok
