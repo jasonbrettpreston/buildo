@@ -110,6 +110,7 @@ describe('resolveStepSelection — `--from` is a contiguous tail in MANIFEST ord
   });
 });
 
+// rule-map: R-AQ (partial) — --only/--from partial-run mechanism; "one acceptance set" not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('resolveStepSelection — `--only` is an explicit set, still in MANIFEST order', () => {
   it('ORDER IS THE MANIFEST\'S, NEVER THE ORDER TYPED — the load-bearing rule (step order is a dependency order)', () => {
     const r = runChain.resolveStepSelection({ steps: CHAIN, only: 'refresh_snapshot,massing' });

@@ -263,6 +263,7 @@ function effectiveCrossStepLedger() {
 // lookup. Imported, never re-implemented: the row shape and the match live in
 // ledger.mjs so every gate in the standard shares them.
 import { checkClosedBounds, loadConvertedDescriptors, loadVocabularyContext, selfTest as closedBoundsSelfTest } from './gates/closed-bounds.mjs';
+import { loadRuleMap, unenforcedReportLine } from './gates/rule-map.mjs';
 import { setAsConverted, readConvertedJson } from './gates/converted-set.mjs';
 import { checkOnInvalidClosed, selfTest as onInvalidSelfTest } from './gates/on-invalid.mjs';
 import { checkEmitsEquiv, loadEmitsFleet, selfTest as emitsEquivSelfTest } from './gates/emits-equiv.mjs';
@@ -6399,6 +6400,9 @@ async function main() {
   // so it adds no hard stop; it is the one place the sources ledger's completeness is answered, with every
   // pending clause (cloud proof, unruled checks) named — never a PASS by absence.
   if (opts.all) {
+    // Operator y 2026-10-20 consolidation 1-4 (observe-1): the standing count of in-force step-standard rules no machine
+    // fully checks (scripts/steps/_schema/rule-map.json unenforced[], shrink-only). A report line, never a hard stop.
+    console.log(unenforcedReportLine(loadRuleMap(REPO_ROOT)));
     const manifest50 = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/manifest.json'), 'utf8'));
     const census50 = JSON.parse(readFileSync(path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.json'), 'utf8'));
     const sourcesSlugs = (manifest50.chains && manifest50.chains.sources) || [];

@@ -1,0 +1,5368 @@
+{
+  "$schema": "./rule-map.schema.json",
+  "$comment": [
+    "Handbook rule map (lane handbook-1, operator y 2026-10-20 consolidation 1-4). One entry per Spec 124 register id (read by extractRegisterRulingIds, the reader R-EY (9) and spec-split-check arm (iii) use) and per other standard id from the consolidate-1 inventory; each maps to exactly one handbook line.",
+    "Merges alias old ids onto one line; ids are never renumbered or deleted. Status lives here, not in byte-frozen register prose.",
+    "Locked by src/tests/handbook-rule-map.logic.test.ts; rendered by node scripts/generate-step-handbook.mjs --write into docs/handbook/step-standard.md."
+  ],
+  "contract_version": 1,
+  "meta": {
+    "decided": "operator y 2026-10-20 consolidation 1-4",
+    "authority": "Spec 124 register (docs/specs/01-pipeline/124_step_standard_policy.md §5 and the 124a LIVE REGISTER sections)",
+    "reading_surface": "docs/handbook/step-standard.md (generated from this file, locked)",
+    "historical_design_records": [
+      "Spec 119",
+      "Spec 120",
+      "Spec 121",
+      "Spec 122",
+      "Spec 122a",
+      "Spec 123"
+    ],
+    "precedence": "The Spec 124 register is the authority; the handbook is the reading surface; Specs 119–123 are historical design records (decision 2). The register row recording this is owed to the later ruling lane.",
+    "spec121_m_items": "Spec 121 M1–M14 are retired as a set (decision 4); still-true items map to live handbook lines; Spec 121 text is unchanged.",
+    "pending_integration": {
+      "rules": [],
+      "defects": [],
+      "branch": "none pending (wf2/rulings-7 @ b348e360 landed in wf2/p4-integrate-11)",
+      "note": "Empty. A future branch that cites ids before they land lists them here; the lock requires each to NOT yet resolve. On landing, the integrator follows docs/handbook/INTEGRATION.md in the same commit. Emptied at wf2/p4-integrate-12 (R-EW, R-EX, COA-D13, COA-D14 resolve on the integrated tree)."
+    },
+    "register_rows_owed": {
+      "ids": [
+        "W4A-R1",
+        "W4A-R2",
+        "W4A-R3",
+        "W4A-R4",
+        "W4A-R5",
+        "W4A-R6"
+      ],
+      "lane": "backfill-9 (operator decision 3)",
+      "note": "When their rows land, add each new register id with its handbook_line and point the W4A id at it via by + status_reason; steps in docs/handbook/INTEGRATION.md."
+    }
+  },
+  "statuses": {
+    "active": "in force as written",
+    "amended-by": "in force; read with the rows in by",
+    "superseded": "replaced by the rows in by; kept so citations resolve",
+    "one-off": "in force for one step; a worked example under its archetype",
+    "process": "governs the work, not a step's runtime",
+    "historical": "not in force; kept so citations resolve"
+  },
+  "merges": [
+    {
+      "id": "MERGE-1",
+      "name": "EXTERNALIZED",
+      "line": "core.8",
+      "ids": [
+        "R-A",
+        "R-G",
+        "R-AU",
+        "R-AW",
+        "R-CV",
+        "R-DR",
+        "R-EB",
+        "Rule-3",
+        "Rule-3-addendum-R-AU",
+        "P4",
+        "GAP-G-4",
+        "W4A-R1",
+        "W4A-R3",
+        "Q-C3"
+      ]
+    },
+    {
+      "id": "MERGE-2",
+      "name": "Compute is pure",
+      "line": "core.9",
+      "ids": [
+        "R-W",
+        "R-BZ",
+        "R-CA",
+        "R-CE",
+        "R-CF",
+        "R-CM",
+        "R-CX",
+        "R-CY",
+        "R-DC",
+        "Rule-2",
+        "Rule-2-addendum-R-W",
+        "A2",
+        "P2",
+        "K3"
+      ]
+    },
+    {
+      "id": "MERGE-3",
+      "name": "Declared == witnessed",
+      "line": "core.14",
+      "ids": [
+        "R-BF",
+        "R-BG",
+        "R-BJ",
+        "R-BK",
+        "R-BL",
+        "R-BM",
+        "R-BW",
+        "R-CB",
+        "R-CW",
+        "R-DB",
+        "R-DG",
+        "R-DI",
+        "R-DO",
+        "R-EA",
+        "R-ER",
+        "R-ES",
+        "W4A-R4"
+      ]
+    },
+    {
+      "id": "MERGE-4",
+      "name": "Captures are reproducible and every diff is explained",
+      "line": [
+        "x-captures.1",
+        "x-captures.2",
+        "x-captures.3",
+        "x-captures.4"
+      ],
+      "ids": [
+        "R-C",
+        "R-AC",
+        "R-AI",
+        "R-AS",
+        "R-BD",
+        "R-BQ",
+        "R-BR",
+        "R-CZ",
+        "R-DA",
+        "R-DN",
+        "R-DP",
+        "R-DQ",
+        "R-EL",
+        "R-ET",
+        "K4",
+        "G8"
+      ]
+    },
+    {
+      "id": "MERGE-5",
+      "name": "The V3 label",
+      "line": "x-v3.1",
+      "ids": [
+        "R-BA",
+        "R-CN",
+        "R-DT",
+        "R-EY",
+        "STD-VERSIONS"
+      ]
+    },
+    {
+      "id": "MERGE-6",
+      "name": "Lifecycle stage is declared data",
+      "line": [
+        "x-stages.1",
+        "x-stages.2",
+        "x-stages.3"
+      ],
+      "ids": [
+        "R-K",
+        "R-K.1",
+        "R-CS",
+        "R-DK",
+        "R-DU",
+        "R-EF",
+        "R-EQ",
+        "M5",
+        "R-K.2",
+        "W4A-R6",
+        "Q-R-EQ-1"
+      ]
+    },
+    {
+      "id": "MERGE-7",
+      "name": "Truthful crash posture",
+      "line": [
+        "core.13",
+        "link.1"
+      ],
+      "ids": [
+        "R-B",
+        "R-L",
+        "R-M",
+        "Rule-12"
+      ]
+    },
+    {
+      "id": "MERGE-8",
+      "name": "Verdict and severity",
+      "line": "core.6",
+      "ids": [
+        "R-H",
+        "R-Q",
+        "R-AD",
+        "R-CL",
+        "Rule-10",
+        "Rule-10-addendum-R-H",
+        "GAP-G-5",
+        "W4A-R2"
+      ]
+    },
+    {
+      "id": "MERGE-9",
+      "name": "Skips are observable and safe",
+      "line": [
+        "core.11",
+        "ingestor.2",
+        "enricher.1"
+      ],
+      "ids": [
+        "R-P",
+        "R-U",
+        "R-AR",
+        "R-AR.1",
+        "R-BU",
+        "R-DD",
+        "R-EP",
+        "Q-W4G-3"
+      ]
+    },
+    {
+      "id": "MERGE-10",
+      "name": "Hook placement and host",
+      "line": "x-tooling.1",
+      "ids": [
+        "R-AG",
+        "R-BV",
+        "R-CQ",
+        "R-DH",
+        "R-DJ",
+        "R-DS",
+        "R-EC",
+        "R-EU"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": "core",
+      "title": "Every step",
+      "intro": "What every step declares and does, whatever its archetype."
+    },
+    {
+      "id": "ingestor",
+      "title": "INGESTOR",
+      "archetype": "INGESTOR",
+      "intro": "Acquires an outside source and writes it into its own tables."
+    },
+    {
+      "id": "link",
+      "title": "LINK",
+      "archetype": "LINK",
+      "intro": "Joins two populations and writes the link rows or columns."
+    },
+    {
+      "id": "matcher",
+      "title": "MATCHER",
+      "archetype": "MATCHER",
+      "intro": "A LINK whose join is a fuzzy, tiered match. Everything under LINK applies except the phase: a MATCHER declares shape `cascade` and runs `runCascadePhase`, not `runLinkPhase`."
+    },
+    {
+      "id": "enricher",
+      "title": "ENRICHER",
+      "archetype": "ENRICHER",
+      "intro": "Adds derived columns to rows another step owns, in scoped passes."
+    },
+    {
+      "id": "materializer",
+      "title": "MATERIALIZER",
+      "archetype": "MATERIALIZER",
+      "intro": "Rebuilds a derived table from tables other steps own."
+    },
+    {
+      "id": "backfill",
+      "title": "BACKFILL",
+      "archetype": "BACKFILL",
+      "intro": "Fills historical rows in batches."
+    },
+    {
+      "id": "assert",
+      "title": "ASSERT",
+      "archetype": "ASSERT",
+      "intro": "Measures data quality and writes nothing but its own run row."
+    },
+    {
+      "id": "recorder",
+      "title": "RECORDER",
+      "archetype": "RECORDER",
+      "intro": "Records a snapshot it exists to publish."
+    },
+    {
+      "id": "effector",
+      "title": "EFFECTOR",
+      "archetype": "EFFECTOR",
+      "intro": "Acts on the outside world (sends, calls, notifies). Census only until its first RE-FREEZE; not yet in the step.schema.json enum."
+    },
+    {
+      "id": "runner",
+      "title": "RUNNER (a home, not an archetype)",
+      "archetype": "RUNNER",
+      "intro": "Concerns the runner owns for every step."
+    },
+    {
+      "id": "x-stages",
+      "title": "Lifecycle stages",
+      "intro": "How a step moves from legacy script to converted."
+    },
+    {
+      "id": "x-captures",
+      "title": "Captures, goldens and proof",
+      "intro": "How a conversion proves it changed nothing it did not mean to."
+    },
+    {
+      "id": "x-crossstep",
+      "title": "Cross-step order",
+      "intro": "How steps that share tables are ordered and checked."
+    },
+    {
+      "id": "x-validate",
+      "title": "step-validate and the scorecard",
+      "intro": "The one command that grades a step."
+    },
+    {
+      "id": "x-v3",
+      "title": "The V3 label",
+      "intro": "What `standard=V3` means and how it is enforced."
+    },
+    {
+      "id": "x-rulings",
+      "title": "Rulings protocol and the resolution ladder",
+      "intro": "What to do when the standard does not answer your question."
+    },
+    {
+      "id": "x-verify",
+      "title": "Verification before integration and acceptance",
+      "intro": "What must be independently checked before work lands."
+    },
+    {
+      "id": "x-tooling",
+      "title": "Tooling, hooks and commit form",
+      "intro": "How the repo machinery runs."
+    },
+    {
+      "id": "history",
+      "title": "History (not in force)",
+      "intro": "Ids kept only so old citations resolve. Nothing here is a rule you must follow."
+    }
+  ],
+  "lines": [
+    {
+      "id": "core.1",
+      "section": "core",
+      "text": "A step is three files: a descriptor (data only), a compute module and a thin shell that exports `pipeline.step(descriptor, compute)`. File names are hyphenated and need not match the slug; §1 table 1b lists every step's real paths. `scripts/steps/_schema/step.schema.json` is the vocabulary; prose never adds a field. Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code (Rule 1).",
+      "why": "One place says what a step is, and the schema, not a reviewer, decides what is valid."
+    },
+    {
+      "id": "core.2",
+      "section": "core",
+      "text": "All 20 categories are present and every field is answered; write `\"none\"` (with a why where the schema asks) instead of leaving a field out. Declare at least one check.",
+      "why": "An omitted field cannot be told apart from a forgotten one; \"none\" is a decision someone made."
+    },
+    {
+      "id": "core.3",
+      "section": "core",
+      "text": "Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).",
+      "why": "Shared names let one library, one gate and one admin page read every step the same way."
+    },
+    {
+      "id": "core.4",
+      "section": "core",
+      "text": "Take the archetype from the code: PH-0 derives it, and the census (`step-archetype-census.json`) must agree with the descriptor (#25). The archetype selects the required and forbidden categories. A step whose only write is a snapshot it exists to record is a RECORDER, not an ASSERT with a hidden write.",
+      "why": "The archetype drives which fields are required, so a wrong label silently drops checks."
+    },
+    {
+      "id": "core.5",
+      "section": "core",
+      "text": "Where a machine can derive a descriptor value, it is gated rather than trusted: `mode_select` per archetype and emit types that match the captures (#47).",
+      "why": "A value the machine can check should never be the author's word alone."
+    },
+    {
+      "id": "core.6",
+      "section": "core",
+      "text": "The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.",
+      "why": "A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page."
+    },
+    {
+      "id": "core.7",
+      "section": "core",
+      "text": "A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).",
+      "why": "Nothing about a step's behaviour may live only in code."
+    },
+    {
+      "id": "core.8",
+      "section": "core",
+      "text": "EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.",
+      "why": "The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change."
+    },
+    {
+      "id": "core.9",
+      "section": "core",
+      "text": "Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.",
+      "why": "Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database."
+    },
+    {
+      "id": "core.10",
+      "section": "core",
+      "text": "Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.",
+      "why": "A hand-built ctx in a test can pass while the real run reads zeros."
+    },
+    {
+      "id": "core.11",
+      "section": "core",
+      "text": "Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:\"pre\"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.",
+      "why": "A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window."
+    },
+    {
+      "id": "core.12",
+      "section": "core",
+      "text": "Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.",
+      "why": "Write safety differs per table; a per-step answer is wrong for at least one target."
+    },
+    {
+      "id": "core.13",
+      "section": "core",
+      "text": "A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.",
+      "why": "A run killed half-way must never leave a half-retracted table that the next run calls unchanged."
+    },
+    {
+      "id": "core.14",
+      "section": "core",
+      "text": "Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.",
+      "why": "The cross-step ledger is only true if it is measured, never re-typed."
+    },
+    {
+      "id": "core.15",
+      "section": "core",
+      "text": "Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.",
+      "why": "A field that looks enforced but has no executor is a promise nobody keeps."
+    },
+    {
+      "id": "core.16",
+      "section": "core",
+      "text": "The step is admin-verifiable: its registry, description, table-map and telemetry entries are derived from the descriptor (#51); range badges come from declared check bounds; each logic variable shows whether it is in effect (#53).",
+      "why": "The operator checks a step's output on the admin page, so the page must be derived, not hand-kept."
+    },
+    {
+      "id": "core.17",
+      "section": "core",
+      "text": "A priced or modelled output declares the population it is for, as a query bound on the producing step.",
+      "why": "A number without its population cannot be checked or compared."
+    },
+    {
+      "id": "core.18",
+      "section": "core",
+      "text": "Overrides are honest: `override.dry_run` is `\"none\"` unless the step honours it, and per-invocation row caps (`--limit=N`) are retired by deviation.",
+      "why": "A dry run that writes, or a cap that hides rows, makes the run report false."
+    },
+    {
+      "id": "ingestor.1",
+      "section": "ingestor",
+      "text": "Phases run acquire → validate → write → score. Every \"before X\" guarantee in the owner spec becomes a `pre_write` check carrying an `order_guarantee` whose anchor is a literal sentence of that spec.",
+      "why": "A FAIL reported after rows are already written is a guarantee broken."
+    },
+    {
+      "id": "ingestor.2",
+      "section": "ingestor",
+      "text": "A source-version skip is taken only when the target is non-empty.",
+      "why": "Skipping on an unchanged hash over an empty table leaves it empty for good."
+    },
+    {
+      "id": "ingestor.3",
+      "section": "ingestor",
+      "text": "Primaries: a `ckan_datastore` primary is first-class (null geometry, targetless, union groups, per-member truth); a PDF document set is an acquisition format.",
+      "why": "Each source form gets one library path instead of a per-step reader."
+    },
+    {
+      "id": "ingestor.4",
+      "section": "ingestor",
+      "text": "Derived secondary targets are written from a runner-owned prior-state read inside the primary transaction; one may be non-fatal (`on_error: warn_row`) with a declared zero-bound WARN check.",
+      "why": "The derived write stays atomic with its source and a failure still shows up as a row."
+    },
+    {
+      "id": "ingestor.5",
+      "section": "ingestor",
+      "text": "A `written:\"seen\"` column is a runner-clock column touched for every fed key and excluded from the guard; its target declares `idempotent_rerun: \"declared_drift\"`, and the rerun proof passes only when rewritten == touched exactly.",
+      "why": "The touch rewrites rows on every run by design, so `zero_writes` would be a false claim."
+    },
+    {
+      "id": "ingestor.6",
+      "section": "ingestor",
+      "text": "Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.",
+      "why": "Shows how the general rules were applied where they were first needed."
+    },
+    {
+      "id": "link.1",
+      "section": "link",
+      "text": "`mode_select` is `tri_state`, or `none` with a `full_rescan` invalidator (the mode gate itself is R-BH (i), on core.5). Crash posture is `force_full_on_next_run`, and an autonomous FULL run happens only on a chain whose `chain_args` declare `--full`.",
+      "why": "A destructive rescan must be chosen on purpose, never by accident after a crash."
+    },
+    {
+      "id": "link.2",
+      "section": "link",
+      "text": "`runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`). §1 table 1a lists which step uses which.",
+      "why": "One library path, not a copy per link step."
+    },
+    {
+      "id": "link.3",
+      "section": "link",
+      "text": "Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).",
+      "why": "Shows the rules applied where they were first needed."
+    },
+    {
+      "id": "link.4",
+      "section": "link",
+      "text": "Open operator question Q-B1: the neighbour front-setback estimate (`front_setback_est_m`; owed to the Spec 130 lane). Until it is answered, averaging stays `not_evaluated`, and a reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as \"no neighbours\". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1.",
+      "why": "An unanswered question stays visible on its own line, next to the rule that raised it."
+    },
+    {
+      "id": "matcher.1",
+      "section": "matcher",
+      "text": "Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.",
+      "why": "A matcher graded against itself always passes."
+    },
+    {
+      "id": "enricher.1",
+      "section": "enricher",
+      "text": "No Layer-1 skip: a legacy skip gate moves into the write scope as a declared deviation, or, if it has no runner home and no lineage column, is knowingly retired.",
+      "why": "An ENRICHER that skips whole runs hides rows that changed upstream."
+    },
+    {
+      "id": "enricher.2",
+      "section": "enricher",
+      "text": "`runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run.",
+      "why": "Writes stay behind the runner seam, and counters are not double-counted."
+    },
+    {
+      "id": "enricher.3",
+      "section": "enricher",
+      "text": "`execution.maintenance` may declare a dead-tuple-ratio dynamic-target arm, measured once and shared.",
+      "why": "Vacuum decisions follow the table's real state, from one measurement."
+    },
+    {
+      "id": "materializer.1",
+      "section": "materializer",
+      "text": "`recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions); batch size comes from config.",
+      "why": "Rebuilds must be resumable, and JS rows must not bring their own I/O."
+    },
+    {
+      "id": "backfill.1",
+      "section": "backfill",
+      "text": "Batch size comes from config. A one-time backfill leaves its chain once a measured run inserts 0 rows (backfill_realtor_permit_trades).",
+      "why": "A finished backfill should stop costing a chain slot."
+    },
+    {
+      "id": "assert.1",
+      "section": "assert",
+      "text": "`outputs`, `recovery` and `counters` are none. Compute may read `ctx.pool` read-only over declared relations (R-CA (i), on core.9, corrects older text that says no pool is reachable); vocabulary-coverage reads use a runner-owned READ ONLY snapshot.",
+      "why": "An ASSERT measures; it must not change what it measures."
+    },
+    {
+      "id": "assert.2",
+      "section": "assert",
+      "text": "Worked example: assert_schema checks at chain start that every declared logic variable has a DB row.",
+      "why": "A missing variable is caught before any step reads it."
+    },
+    {
+      "id": "recorder.1",
+      "section": "recorder",
+      "text": "A RECORDER's `outputs` is an object (never `none`) and its snapshot write is declared in `outputs.writes[]`. Either `runRecorderPhase` executes it (shape `recorder`), or the step declares no shape and compute returns a `write_plan` that the runner executes after compute (`runWritePlan`, R-CD). (`outputs.publish` was deleted at a RE-FREEZE; Spec 124 §3's Rule 7 table still names it.)",
+      "why": "The snapshot is the step's purpose, so it is declared, not hidden."
+    },
+    {
+      "id": "effector.1",
+      "section": "effector",
+      "text": "Four gates: a kill switch or injected transport, an exactly-once ledger, captured intended effects, and a dry run. Outside calls are replayed from recorded responses.",
+      "why": "An effect on the outside world cannot be rolled back, so it must be switchable, counted once and rehearsable."
+    },
+    {
+      "id": "runner.1",
+      "section": "runner",
+      "text": "Reconcile runs as a step at the head of the sources chain. A slug whose concern the runner owns (`reconcile`, `observe_chain`) is a declared `runner_owned` exemption, not a conversion; a step is retired, not converted, only under a closed predicate.",
+      "why": "Every chained slug has exactly one honest status."
+    },
+    {
+      "id": "runner.2",
+      "section": "runner",
+      "text": "Seam validation and chain-end synthesis derive from declared step edges; a chain step row's status is derived from its verdict (PASS → completed, WARN → completed_with_warnings, a covered FAIL → completed_with_errors); a hard-coded `'completed'` is retired.",
+      "why": "A chain that says completed after a FAIL is lying."
+    },
+    {
+      "id": "x-stages.1",
+      "section": "x-stages",
+      "text": "A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.",
+      "why": "Progress is visible and a half-built step is graded for what it is."
+    },
+    {
+      "id": "x-stages.2",
+      "section": "x-stages",
+      "text": "The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.",
+      "why": "A downstream step never runs on a converted shell before its producer."
+    },
+    {
+      "id": "x-stages.3",
+      "section": "x-stages",
+      "text": "A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: \"none\"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.",
+      "why": "There is nothing older to compare against."
+    },
+    {
+      "id": "x-stages.4",
+      "section": "x-stages",
+      "text": "A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.",
+      "why": "Specs and registries stay in step with the code without anyone remembering to update them."
+    },
+    {
+      "id": "x-captures.1",
+      "section": "x-captures",
+      "text": "Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs.",
+      "why": "A capture nobody can retake proves nothing."
+    },
+    {
+      "id": "x-captures.2",
+      "section": "x-captures",
+      "text": "A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.",
+      "why": "A rerun that writes nothing proves nothing about a guarded write path."
+    },
+    {
+      "id": "x-captures.3",
+      "section": "x-captures",
+      "text": "The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.",
+      "why": "A commit message saying \"diff is fine\" is not evidence."
+    },
+    {
+      "id": "x-captures.4",
+      "section": "x-captures",
+      "text": "A step that calls a paid or outside API is captured and replayed from committed recorded responses.",
+      "why": "Tests and captures must not spend money or depend on someone else's uptime."
+    },
+    {
+      "id": "x-captures.5",
+      "section": "x-captures",
+      "text": "A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.",
+      "why": "A test that cannot fail, or that reads output that never arrived, proves nothing."
+    },
+    {
+      "id": "x-crossstep.1",
+      "section": "x-crossstep",
+      "text": "A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.",
+      "why": "The ledger stays strict for converted steps without blocking on legacy ones."
+    },
+    {
+      "id": "x-validate.1",
+      "section": "x-validate",
+      "text": "One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.",
+      "why": "One integrated answer, the same at the desk and in the hook."
+    },
+    {
+      "id": "x-validate.2",
+      "section": "x-validate",
+      "text": "The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.",
+      "why": "The assessment is graded by machine, the same for every step."
+    },
+    {
+      "id": "x-v3.1",
+      "section": "x-v3",
+      "text": "`standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`.",
+      "why": "One list replaces the older \"five words\", \"six parts\" and \"four conditions\"; the label means the same thing everywhere."
+    },
+    {
+      "id": "x-rulings.1",
+      "section": "x-rulings",
+      "text": "When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.",
+      "why": "A rule without a lock is not a rule, and the person who found a problem does not get to rule on it."
+    },
+    {
+      "id": "x-rulings.2",
+      "section": "x-rulings",
+      "text": "Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.",
+      "why": "The cheapest enforced answer wins, and lessons are kept where a machine reads them."
+    },
+    {
+      "id": "x-verify.1",
+      "section": "x-verify",
+      "text": "Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).",
+      "why": "Self-reported results are not evidence; an independent re-check is."
+    },
+    {
+      "id": "x-verify.2",
+      "section": "x-verify",
+      "text": "Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.",
+      "why": "Acceptance grades the code that will ship, once, with nothing waved through."
+    },
+    {
+      "id": "x-tooling.1",
+      "section": "x-tooling",
+      "text": "Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.",
+      "why": "Commits stay fast and safe on the shared host; slow and DB work runs where it belongs."
+    },
+    {
+      "id": "x-tooling.2",
+      "section": "x-tooling",
+      "text": "Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.",
+      "why": "Ceremony is spent where an archetype is still new."
+    },
+    {
+      "id": "x-tooling.3",
+      "section": "x-tooling",
+      "text": "Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.",
+      "why": "Promises that live only in prose get forgotten."
+    },
+    {
+      "id": "x-tooling.4",
+      "section": "x-tooling",
+      "text": "This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.",
+      "why": "Spec 120's test, kept from Spec 121 M2."
+    },
+    {
+      "id": "history.1",
+      "section": "history",
+      "text": "Spec 122 programme decisions about how the programme was run (re-architecture delivered incrementally, parallel tracks, vertical-slice library, per-step re-verification at PH-0, the P0 categories adjudication).",
+      "why": "Done; kept for the record."
+    },
+    {
+      "id": "history.2",
+      "section": "history",
+      "text": "Spec 121 M1–M14 cadence items, retired as a set (operator y 2026-10-20, decision 4). The ones that still hold map to live lines above (M2, M4, M5, M7, M9, M10, M14); these do not hold or were never built: runner core ≤ ~1,500 lines, migrating scripts per contract change, a 5-minute golden run, TMMi levels, the 40-open-items cap, UNPROVEN.txt, and re-audit under a lower method version.",
+      "why": "Kept so old citations resolve."
+    },
+    {
+      "id": "history.3",
+      "section": "history",
+      "text": "Ids reserved or referenced but never written as rules.",
+      "why": "Kept so old citations resolve."
+    },
+    {
+      "id": "history.4",
+      "section": "history",
+      "text": "Operator questions answered and closed for one step each (guard `none` with a grandfathered entry).",
+      "why": "Kept so old citations resolve."
+    }
+  ],
+  "rules": [
+    {
+      "id": "Rule-1",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Behaviour is descriptor data, a declared check, a shape rule or (last resort) a new schema field — never only code.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**1. Nothing about a step's behaviour may live o"
+      }
+    },
+    {
+      "id": "A1",
+      "kind": "spec122-decision",
+      "status": "active",
+      "handbook_line": "core.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "The descriptor is a data-only <slug>.descriptor.json beside the step.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| **A1** | The descriptor is a **data-only s"
+      }
+    },
+    {
+      "id": "R2",
+      "kind": "spec122-programme",
+      "status": "active",
+      "handbook_line": "core.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "step.schema.json is the canonical vocabulary, not prose.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R2** | **The schema is the canonical voc"
+      }
+    },
+    {
+      "id": "P1",
+      "kind": "spec122-policy",
+      "status": "superseded",
+      "by": [
+        "Rule-1"
+      ],
+      "handbook_line": "core.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Moved to Spec 124 Rule 1.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| P1 — nothing hidden, order of preference"
+      }
+    },
+    {
+      "id": "GAP-G-1",
+      "kind": "gap",
+      "status": "historical",
+      "handbook_line": "core.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A new schema field must carry x-ruling {rungs_tried, why}.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "✅ **GAP G-1 CLOSED (2026-08-29).** The *preferen"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R-Y",
+      "kind": "register-ruling",
+      "status": "historical",
+      "handbook_line": "core.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/template-freeze.infra.test.ts"
+      },
+      "statement": "Kill criterion K1 (21st category) is retired because the schema makes it impossible.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "Rule-5",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "Every step declares at least one check.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**5. `checks` may never be `\"none\"` — every step"
+      }
+    },
+    {
+      "id": "Rule-6",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "All 20 categories are present and every field answered; \"none\" must be written.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**6. Every category is present, and every field"
+      }
+    },
+    {
+      "id": "K1",
+      "kind": "spec122-kill",
+      "status": "superseded",
+      "by": [
+        "R-Y"
+      ],
+      "handbook_line": "core.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Retired by R-Y.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "s~~ — **K1 RETIRED (operator ruling A2, 2026-09-"
+      }
+    },
+    {
+      "id": "R-DE",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "W4A-R3"
+      ],
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "Cross-step vocabulary is the majority form: batch, spec_version, terminal ids, flat emits, <slug>_<name> variables, empty_source, notes keys.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "V1",
+      "kind": "spec122-vocab",
+      "status": "active",
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #25"
+      },
+      "statement": "identity.archetype uses full words.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V1** | `identity.archetype` | **full wor"
+      },
+      "aliases": [
+        "SPEC122A-V1"
+      ]
+    },
+    {
+      "id": "V2",
+      "kind": "spec122-vocab",
+      "status": "active",
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      },
+      "statement": "identity.lock is unique across manifest, one-time and backfill scripts.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V2** | `identity.lock` | **unique across"
+      },
+      "aliases": [
+        "SPEC122A-V2"
+      ]
+    },
+    {
+      "id": "V3",
+      "kind": "spec122-vocab",
+      "status": "active",
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "guards.schema_drift is none/propagate/pause; warn dropped. (Name collides with \"V3\" the standard.)",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V3** | `guards.schema_drift` | **`none \\"
+      },
+      "aliases": [
+        "SPEC122A-V3"
+      ],
+      "mention_by_alias_only": true
+    },
+    {
+      "id": "V4",
+      "kind": "spec122-vocab",
+      "status": "historical",
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "outputs.replay append_unsafe stays in the enum but is banned for new steps.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V4** | `outputs.replay` | **`append_unsa"
+      },
+      "status_reason": "active -> historical: outputs.writes[].replay (append_unsafe) was deleted at the Phase 3 RE-FREEZE; step-schema.logic \"V4 — SUPERSEDED\" locks the deletion",
+      "aliases": [
+        "SPEC122A-V4"
+      ]
+    },
+    {
+      "id": "V5",
+      "kind": "spec122-vocab",
+      "status": "active",
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "staleness is scope/trigger axes; pending dissolved.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V5** | `staleness.pending` | **dissolved"
+      },
+      "aliases": [
+        "SPEC122A-V5"
+      ]
+    },
+    {
+      "id": "V6",
+      "kind": "spec122-vocab",
+      "status": "amended-by",
+      "by": [
+        "R-DE"
+      ],
+      "handbook_line": "core.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/s4-empty-source-guard-real-descriptors.logic.test.ts"
+      },
+      "statement": "guards.empty_source is <table> or [<table>,…] or none.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V6** | `guards.empty_source` | **typed f"
+      },
+      "aliases": [
+        "SPEC122A-V6"
+      ]
+    },
+    {
+      "id": "R-AE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.4",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #25"
+      },
+      "statement": "A step whose only write is a snapshot it exists to record is RECORDER, not ASSERT with a hidden write.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/census-legacy-citation.infra.test.ts"
+      },
+      "statement": "A step's archetype is provisional until PH-0 derives it from code; census and descriptor must agree.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Rule-7",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-AE",
+        "R-AO",
+        "R-EI"
+      ],
+      "handbook_line": "core.4",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #25"
+      },
+      "statement": "The archetype decides which categories are required or forbidden.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**7. A step's archetype determines which categor"
+      }
+    },
+    {
+      "id": "R-BH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.5",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-mode-emits-type.infra.test.ts"
+      },
+      "statement": "A descriptor value a machine can derive is gated (mode_select by archetype, emit types match captures).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-H",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "A permanently non-zero metric is WARN with a declared retighten condition; INFO only for a purely descriptive counter.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "R-Q",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "checks_failed counts FAIL rows only and checks_warned WARN rows only.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "R-AD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "checks[] may declare warn_limit/warn_limit_from_config for three-tier PASS/WARN/FAIL in one row.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "R-CL",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/cost-meta-no-logic-variables.logic.test.ts"
+      },
+      "statement": "A uniqueness invariant over a read table is a checks[] row (or a cited key), not a compute throw.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "Rule-10",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-H",
+        "R-Q",
+        "R-CC"
+      ],
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "The verdict is always derived from the declared checks' rows, never a parallel boolean or literal.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**10. The verdict is always derived from the dec"
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "Rule-10-addendum-R-H",
+      "kind": "addendum",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Same as R-H.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "> **R-H addendum (2026-08-28).** Rule 10 gov"
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "GAP-G-5",
+      "kind": "gap",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "No check distinguishes a purely descriptive INFO from INFO chosen to avoid a red.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "⚠ **GAP G-5** — no check yet distinguishes \"pure"
+      },
+      "merge": "MERGE-8"
+    },
+    {
+      "id": "W4A-R2",
+      "kind": "draft-outside-register",
+      "status": "active",
+      "handbook_line": "core.6",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Exclusive legacy ceilings become an inclusive ceiling_max declared deviation.",
+      "source": {
+        "file": "docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md",
+        "anchor": "ation), W4A-R2 (inclusive ceiling), W4A-R3 (`pip"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)",
+      "merge": "MERGE-8",
+      "status_reason": "inventory UNCERTAIN (draft) -> active: steps already declare it (inclusive ceiling_max deviations, R-DC precedent); register row owed to backfill-9"
+    },
+    {
+      "id": "Rule-4",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.7",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/g3-ledger-tables.logic.test.ts"
+      },
+      "statement": "A rule kept in compute must still be written down, as a check's why, not a comment.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**4. A rule kept in compute rather than declared"
+      }
+    },
+    {
+      "id": "P5",
+      "kind": "spec122-policy",
+      "status": "superseded",
+      "by": [
+        "Rule-4"
+      ],
+      "handbook_line": "core.7",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Moved to Spec 124 Rule 4.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| P5 — fence dispositions follow P1 | move"
+      }
+    },
+    {
+      "id": "GAP-G-2",
+      "kind": "gap",
+      "status": "historical",
+      "handbook_line": "core.7",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/g3-ledger-tables.logic.test.ts"
+      },
+      "statement": "Every preserved-in-compute Intent Ledger row names where its rule is written.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "✅ **GAP G-2 CLOSED (2026-08-29), narrowed honest"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R-A",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EO"
+      ],
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #3"
+      },
+      "statement": "Retiring a tunable is a declaration in config.retired[], never deleting its live logic_variables row.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-G",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #29"
+      },
+      "statement": "A missing logic_variables row always fails; on_invalid is fail for verdict/write-affecting variables, default/clamp otherwise with a why.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-AU",
+      "kind": "register-ruling",
+      "status": "historical",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "Pricing data is not a scalar tunable (interim); closed 2026-09-23 when the admin editor landed.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R-AW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/logic-var-parity.logic.test.ts"
+      },
+      "statement": "A model constant ratified elsewhere becomes a logic variable with its existing value as default.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-CV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #32"
+      },
+      "statement": "Unit constants and definitional windows are pinned logic variables (min = max), never literals.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-DR",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EB"
+      ],
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "The P4 hidden-variable check counts only a step's own consumption of tunables.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-EB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-estate-literals.infra.test.ts"
+      },
+      "statement": "EXTERNALIZED applies to runner and gate code: no numeric literals outside closed categories; runner/gate numbers are pinned variables.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "Rule-3",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-G",
+        "R-AU",
+        "R-CV",
+        "R-DF",
+        "R-EB"
+      ],
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #29"
+      },
+      "statement": "Every threshold/size/window/timeout/limit/rate is a logic variable resolved through ctx.config; missing row fails.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**3. Every threshold, sample size, byte window,"
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "Rule-3-addendum-R-AU",
+      "kind": "addendum",
+      "status": "historical",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "Same as R-AU; closed 2026-09-23.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "> **R-AU addendum (2026-09-21, operator-adju"
+      },
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "P4",
+      "kind": "spec122-policy",
+      "status": "superseded",
+      "by": [
+        "Rule-3"
+      ],
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Moved to Spec 124 Rule 3 (R-G split).",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| P4 — every tunable externalized to admin"
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "GAP-G-4",
+      "kind": "gap",
+      "status": "historical",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #29"
+      },
+      "statement": "Verdict- and write-affecting variables require on_invalid fail.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "✅ **GAP G-4 CLOSED for the VERDICT half (2026-08"
+      },
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "W4A-R1",
+      "kind": "draft-outside-register",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "Rename shared-named variables into <slug>_* by migration, values carried, old names retired.",
+      "source": {
+        "file": "docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md",
+        "anchor": "ion):** W4A-R1 (rename into `<slug>_*` by migrat"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)",
+      "merge": "MERGE-1",
+      "status_reason": "inventory UNCERTAIN (draft outside the register) -> active: applied fleet-wide through R-DE (v) renames and locked by r-de-vocabulary.logic; its register row is owed to backfill-9 (meta.register_rows_owed)"
+    },
+    {
+      "id": "W4A-R3",
+      "kind": "draft-outside-register",
+      "status": "active",
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "A name read by 2+ steps keeps its name only on the closed SHARED_LOGIC_VARIABLES map.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "wave-4 W4A-R3 + Q-C3, operator y: a name read b"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)",
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "Q-C3",
+      "kind": "operator-question",
+      "status": "superseded",
+      "by": [
+        "R-DE"
+      ],
+      "handbook_line": "core.8",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/r-de-vocabulary.logic.test.ts"
+      },
+      "statement": "Folded into R-DE (v) with W4A-R3.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "4A-R3 + Q-C3, operator y: a name read by two or"
+      },
+      "merge": "MERGE-1"
+    },
+    {
+      "id": "R-W",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Compute never branches on PostGIS availability; require the extension through guards.requires.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-BZ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-CN",
+        "R-CV",
+        "R-CY",
+        "R-CD",
+        "R-DY"
+      ],
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #32"
+      },
+      "statement": "Compute purity is a closed answer: codes G0-G13; new conversions need zero findings.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #32"
+      },
+      "statement": "ASSERT compute may read ctx.pool read-only; ENRICHER pass writes are interim and move behind the write seam.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/aeh-clock-date.logic.test.ts"
+      },
+      "statement": "Calendar dates derive from ctx.clock in the pipeline_timezone zone, never CURRENT_DATE/NOW().",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/refresh-snapshot-query-consolidation.logic.test.ts"
+      },
+      "statement": "A session GUC a read depends on is declared in execution.read_gucs; the runner sets it.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/config-meta.logic.test.ts"
+      },
+      "statement": "ctx.config.$meta is a read-only map of logic-variable stamps; compute never reads logic_variables SQL.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/purity-s5-catalog-srid.logic.test.ts"
+      },
+      "statement": "Catalog facts (SRID, column facts) are runner-owned probes via guards.requires/ctx.catalog, never compute SQL.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-CY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/purity-r-cy-runner-seam.logic.test.ts"
+      },
+      "statement": "Runner seams: config+clock to buildReads, ctx.withinLimit for emits restating checks, descriptor passed in.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-DC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-compute-purity.infra.test.ts"
+      },
+      "statement": "A config value aliased inside a check body is a G7 (compute-decides) operand.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "Rule-2",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-W",
+        "R-BZ",
+        "R-CA"
+      ],
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #32"
+      },
+      "statement": "Compute holds domain logic only: no gating, ledger, lock, emission, logging, env read or policy.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**2. Compute contains domain logic only — no gat"
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "Rule-2-addendum-R-W",
+      "kind": "addendum",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Same as R-W (duplicate text in Rule 2 and register row).",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "> **R-W addendum (2026-08-30).** Compute MUS"
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "A2",
+      "kind": "spec122-decision",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "The escape-hatch ban is enforced by a mandatory ast-grep shape rule, not review.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| **A2** | The escape-hatch ban (claim #128)"
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "P2",
+      "kind": "spec122-policy",
+      "status": "superseded",
+      "by": [
+        "Rule-2"
+      ],
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Moved to Spec 124 Rule 2.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| P2 — compute is JUST compute | moved to"
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "K3",
+      "kind": "spec122-kill",
+      "status": "active",
+      "handbook_line": "core.9",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #32"
+      },
+      "statement": "If a step leaks runner concepts into compute, stop and redesign.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| A procedural step **leaks runner concepts** in"
+      },
+      "merge": "MERGE-2"
+    },
+    {
+      "id": "R-EW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.10",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/coa/dispatch.logic.test.ts"
+      },
+      "statement": "Compute reads the ctx shape its descriptor's real dispatch builds; compute locks build ctx through that dispatch.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-P",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-BU"
+      ],
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A step that can gated-skip declares at least one when:\"pre\" check so the skip is observable.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-U",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "Chain runs correlate by an explicit propagated chain_run_id, not a time window.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-BU",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A step that can scope-defer also declares a when:\"pre\" check and a deferred_to_full terminal.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-EP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/classify_coa_trades/r-ep-detail.logic.test.ts"
+      },
+      "statement": "Dynamic-keyed telemetry rides a declared check row's detail, capped by a logic variable; never an emit.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "Q-W4G-3",
+      "kind": "operator-question",
+      "status": "superseded",
+      "by": [
+        "R-EP"
+      ],
+      "handbook_line": "core.11",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Answered by R-EP.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "d under Q-W4G-3).** Telemetry whose keys are not"
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-CT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/coa/violations.test.ts"
+      },
+      "statement": "Every write target on an RLS-enabled table declares guards.requires rls_bypass_or_policy.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CU",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "hook",
+        "ref": ".husky/pre-commit"
+      },
+      "statement": "One upsert binds at most 65,535 parameters; batch size keeps the measured worst case under it.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Rule-8",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "Discipline class, guard and scope are declared per write target, never per step.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**8. A write target's discipline class, guard, a"
+      }
+    },
+    {
+      "id": "Rule-9",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "A banned write shape ships only with a dated, SHA-anchored grandfathered.json entry naming the approver.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**9. A banned write shape (an unguarded set-base"
+      }
+    },
+    {
+      "id": "V7",
+      "kind": "spec122-vocab",
+      "status": "active",
+      "handbook_line": "core.12",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-schema.logic.test.ts"
+      },
+      "statement": "Write discipline is mechanic ⊥ guard ⊥ scope ⊥ retract; guard none requires why and is grandfathered-only for new steps.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **V7** | `outputs.writes[].write_disciplin"
+      },
+      "aliases": [
+        "SPEC122A-V7"
+      ]
+    },
+    {
+      "id": "R-B",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-M"
+      ],
+      "handbook_line": "core.13",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "A destructive-retraction write target declares a truthful crash posture and the runner forces FULL after an interrupted run.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-7"
+    },
+    {
+      "id": "R-M",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-CO"
+      ],
+      "handbook_line": "core.13",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "A destructive retraction declares recovery.before_image and the library writes the before-image before retracting.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-7"
+    },
+    {
+      "id": "Rule-12",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-B",
+        "R-M"
+      ],
+      "handbook_line": "core.13",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A destructive full retraction declares a truthful crash-recovery posture; none only with a why.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**12. A write target with a destructive full ret"
+      },
+      "merge": "MERGE-7"
+    },
+    {
+      "id": "R-BF",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-BG",
+        "R-DF",
+        "R-DI"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "V2: every registry and cross-step ledger row is generated or witnessed; declared == observed.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BG",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-BW",
+        "R-CB",
+        "R-BZ",
+        "R-DO"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/sql-witness-gate.logic.test.ts"
+      },
+      "statement": "#44 observes what a step really does; it changes only by a register row plus Operator-Ruling trailer.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BJ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DB",
+        "R-DG"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-schema-homes.infra.test.ts"
+      },
+      "statement": "Check SQL reads are declared in checks[].reads, separate from acquisition reads.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BK",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DB"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-schema-homes.infra.test.ts"
+      },
+      "statement": "write_inventory.by_mode declares per-mode statement counts.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BL",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EA",
+        "R-DO",
+        "R-DG",
+        "R-DI"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-h.logic.test.ts"
+      },
+      "statement": "Version pins and invalidators are declared (staleness.pins, invalidates[].by closed) and witnessed.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/fleet2-full-rescan-evidence.logic.test.ts"
+      },
+      "statement": "full_rescan invalidation is armed only when declared scope and a witnessed write both hold.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-BW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/sql-witness-resolve-dmlcte.logic.test.ts"
+      },
+      "statement": "The witness resolver counts reads/writes inside WITH and RETURNING exactly as executed.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-CB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-reader.logic.test.ts"
+      },
+      "statement": "Prior-run baselines accept completed/completed_with_warnings only; seam/order reads accept every finished status.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-CW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-producer.logic.test.ts"
+      },
+      "statement": "A pin may test the producer run's terminal status with op not_failed.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-DB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-by-mode.logic.test.ts"
+      },
+      "statement": "R-BJ/R-BK are enforced by #44 (a)/(c); #46 is report-only.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-DG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-upstreams.logic.test.ts"
+      },
+      "statement": "#44 accounting: self-written columns give no producer edge; check-SQL and emit reads are measurement reads.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-DI",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EE",
+        "R-ES"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ldg10-gate.logic.test.ts"
+      },
+      "statement": "LDG-10 is proven from witnessed traces (#44 hard for converted steps), never re-emitted declarations.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-DO",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-ER",
+        "R-EA"
+      ],
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-i.logic.test.ts"
+      },
+      "statement": "#44 (i): every invalidation resolves (fill-once, pin, trigger).",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-EA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/write-set-null-unless.logic.test.ts"
+      },
+      "statement": "invalidates[].by set_null_unless is a value-conditional clear generated by the codegen.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-ER",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-reader-pin.logic.test.ts"
+      },
+      "statement": "#44 (i) resolves a reader-side by:\"pin\" row for the step's own column.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "R-ES",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-h-copy-window.logic.test.ts"
+      },
+      "statement": "A pin on a producer still awaiting captures prints OWED, not FAIL.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
+    },
+    {
+      "id": "W4A-R4",
+      "kind": "draft-outside-register",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "The producer declares its by:\"pin\" invalidates row at its ②.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "its ② (W4A-R4 (a)). First member: classify_coa_"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)",
+      "merge": "MERGE-3",
+      "status_reason": "inventory UNCERTAIN (cited by R-ER as live) -> active: R-ER, an in-force register row, depends on it; register row owed to backfill-9"
+    },
+    {
+      "id": "Q-B1",
+      "kind": "operator-question",
+      "status": "active",
+      "handbook_line": "link.4",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Averaging stays not_evaluated until Q-B1 is answered.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "` until Q-B1). Closes when a library keyed-delet"
+      },
+      "status_reason": "inventory UNCERTAIN (open) -> active: the question is unanswered, but its interim constraint (averaging stays not_evaluated, 124a R-CR row) is in force until it is answered"
+    },
+    {
+      "id": "R-X",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.15",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/write-class-disposition.infra.test.ts"
+      },
+      "statement": "A frozen enum value with no live executor carries a disposition row (implemented/executor_by_runner/banned_for_new/retire).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.15",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/execution-budget-disposition.infra.test.ts"
+      },
+      "statement": "Each execution.* duration is executed (named executor) or descriptive, never inert-looking-enforced.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.15",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/execution-posture-disposition.infra.test.ts"
+      },
+      "statement": "An execution.* posture enum is executed only with a named executor or check; tolerant postures cite their bounding check.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "M4",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "core.15",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Fields go active -> deprecated -> removed.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M4** | **Deprecation lifecycle** `active"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "status_reason": "inventory UNCERTAIN -> historical: Spec 121 M1–M14 retired as a set (decision 4)",
+      "aliases": [
+        "SPEC121-M4"
+      ]
+    },
+    {
+      "id": "R-DL",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DV",
+        "R-DW"
+      ],
+      "handbook_line": "core.16",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/admin-step-registration.logic.test.ts"
+      },
+      "statement": "Every converted or pending step is admin-verifiable: registry, description, table map and telemetry entries derived from the descriptor.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.16",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/admin-step-registration.logic.test.ts"
+      },
+      "statement": "R-DL's descriptor-derived arms skip a pending row whose descriptor file is absent; slug arms still apply.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DW",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.16",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/admin-step-registration.logic.test.ts"
+      },
+      "statement": "Admin range badges derive from each step's declared check bounds; the margin is a logic variable.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.16",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/variable-effect.logic.test.ts"
+      },
+      "statement": "Admin shows whether each declared logic variable is in effect (badge with reason).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.17",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/compute_parcel_cost_estimates/violations.test.ts"
+      },
+      "statement": "A priced or modelled output declares the population it is for as a bound on its producing step.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.17",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A step with no legacy predecessor declares its population as a query; R-AS is N/A with a reason.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AV",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.18",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "An ENRICHER declares override.dry_run none unless honoured; a legacy dry-run is a declared deviation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.18",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "A per-invocation row cap (--limit=N) is retired by standard, declared as a deviation.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Rule-11",
+      "kind": "spec124-rule",
+      "status": "active",
+      "handbook_line": "ingestor.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A ruling that reorders phases re-derives every \"before X\" guarantee in the step's governing spec.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**11. A ruling that reorders a step's phases mus"
+      }
+    },
+    {
+      "id": "GAP-G-3",
+      "kind": "gap",
+      "status": "active",
+      "handbook_line": "ingestor.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Nothing forces a pre_write check+order_guarantee to be authored when a spec states a before-X guarantee.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "⚠ **GAP G-3** — the DECLARED half above is real"
+      }
+    },
+    {
+      "id": "R-DD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-skip-empty-target.logic.test.ts"
+      },
+      "statement": "A source-version skip is taken only when the target is non-empty.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-BY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ingest-prereq-pdf-acquire.logic.test.ts"
+      },
+      "statement": "PDF document-set is an INGESTOR acquisition format (RE-FREEZE #32; detail 122a §A24).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ingest-ckan-primary.logic.test.ts"
+      },
+      "statement": "A ckan_datastore primary is a first-class INGESTOR primary (null geometry, targetless, union groups, per-member truth).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DM",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ingest-on-error-warn-row.logic.test.ts"
+      },
+      "statement": "A derived secondary write may be non-fatal (on_error warn_row) with a declared zero-bound WARN check.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DY",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-ET",
+        "R-EV"
+      ],
+      "handbook_line": "ingestor.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ingest-derived-target.logic.test.ts"
+      },
+      "statement": "An INGESTOR may write derived secondary targets from a runner-owned prior-state read in the primary transaction.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DZ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EX"
+      ],
+      "handbook_line": "ingestor.5",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ingest-seen-touch.logic.test.ts"
+      },
+      "statement": "written:\"seen\" is a runner-clock column touched for every fed key, excluded from the guard.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EX",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "ingestor.5",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/capture-rerun-proof.logic.test.ts"
+      },
+      "statement": "A target with a seen column declares declared_drift and the rerun proof measures rewritten == touched exactly.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BS",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "lock-db",
+        "ref": "src/tests/db/migration-251-geom-tolerance.db.test.ts"
+      },
+      "statement": "A parcel geometry change invalidates only beyond a logic-variable tolerance.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-BX",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-materiality.logic.test.ts"
+      },
+      "statement": "The parcels loader replaces geometry only on a material change against the stored shape.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-EN",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "close_stale_permits folds into load_permits' declared retraction.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-EV",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "ingestor.6",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/coa/compute.logic.test.ts"
+      },
+      "statement": "A conversion may make a change-detection hash timezone-independent at the cost of one measured re-upsert.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (coa)"
+    },
+    {
+      "id": "R-L",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "link.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "An autonomous full (destructive) run is allowed only on chains whose manifest chain_args declare --full.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-7"
+    },
+    {
+      "id": "R-EG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "link.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/link-phase-general.logic.test.ts"
+      },
+      "statement": "runLinkPhase serves a second LINK family; every arm opt-in by declaration.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-N",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "link.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A link-rate floor's denominator is the entity population, not the source-row count.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-CR",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "link.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/migration-255-parcel-abutments.infra.test.ts"
+      },
+      "statement": "A full_rescan LINK may keep its junction current with a material-geometry AFTER DELETE trigger, declared as guards.requires trigger.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (link_parcel_abutments)"
+    },
+    {
+      "id": "R-O",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "matcher.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A matcher's accuracy is a sampled precision/recall against a before-image, never a self-consistent predicate.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "ENRICHER has no Layer-1 skip; a legacy skip gate is ported into the write scope and declared as a deviation.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-AR.1",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "A legacy run-ledger gate with no runner home and no lineage column is knowingly retired, never replaced by an invented migration.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-9"
+    },
+    {
+      "id": "R-AK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "runEnrichPhase is generic: hooks are optional step-level declarations and intervals come from config.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "A target's updated counters belong to whichever mechanism actually wrote the rows this run.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/purity-s3-exec-seam.logic.test.ts"
+      },
+      "statement": "Scope-ledger hygiene DELETEs are library-owned ledger statements on a declared target.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CJ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/purity-s3-exec-seam.logic.test.ts"
+      },
+      "statement": "A guard-suppressed hygiene action emits one WARN row naming the guard's answer.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/purity-s3-exec-seam.logic.test.ts"
+      },
+      "statement": "ENRICHER pass DML runs through ctx.exec(writesRef, sql, params).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CG",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "enricher.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/maintenance-dynamic-arm.logic.test.ts"
+      },
+      "statement": "execution.maintenance may declare a dead-tuple-ratio dynamic-target arm; one shared measurement.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "materializer.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/materialize-rows.logic.test.ts"
+      },
+      "statement": "A MATERIALIZER may compute rows in JS (materialize_form rows); the runner owns reads, writes, transactions.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Q-MZ",
+      "kind": "operator-question",
+      "status": "superseded",
+      "by": [
+        "R-EH"
+      ],
+      "handbook_line": "materializer.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/materialize-rows.logic.test.ts"
+      },
+      "statement": "Answered by R-EH.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "wave-4 Q-MZ; draft `.cursor/v3-materializer-for"
+      }
+    },
+    {
+      "id": "R-EM",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "backfill.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "A one-time backfill leaves its chain once a measured run inserts 0 rows.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-CH",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-CX"
+      ],
+      "handbook_line": "assert.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/read-snapshot.logic.test.ts"
+      },
+      "statement": "A vocab-coverage read is a runner-owned READ ONLY snapshot.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-D",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "assert.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/steps/assert_schema/violations.test.ts"
+      },
+      "statement": "assert_schema checks at chain start that every declared logic variable has a DB row.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (assert_schema)"
+    },
+    {
+      "id": "R-CD",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DM"
+      ],
+      "handbook_line": "recorder.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/rcd-write-plan.logic.test.ts"
+      },
+      "statement": "An ASSERT's snapshot upsert is a compute-returned plan the runner executes.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "effector.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "EFFECTOR is a ninth archetype (switch, exactly-once ledger, captured effects, dry run).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AP",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EJ",
+        "R-EK"
+      ],
+      "handbook_line": "runner.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/conversion-roadmap.infra.test.ts"
+      },
+      "statement": "A slug whose concern the runner owns is a declared runner_owned exemption, not a conversion.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EJ",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "runner.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "observe_chain is a runner_owned exemption.",
+      "source": {
+        "register": true
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-EK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "runner.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "A step is retired (not converted) only under a closed predicate.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "A3",
+      "kind": "spec122-decision",
+      "status": "active",
+      "handbook_line": "runner.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/conversion-roadmap.infra.test.ts"
+      },
+      "statement": "Reconcile runs as a step at the head of the sources chain.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| **A3** | Step-0 reconcile becomes a **`rec"
+      }
+    },
+    {
+      "id": "R-V",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "runner.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-seam.logic.test.ts"
+      },
+      "statement": "Seam validation and chain-end synthesis derive from declared step edges; validate_only invariants run once at chain end.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "runner.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/run-chain-status.logic.test.ts"
+      },
+      "statement": "A chain step row's status is derived from its verdict; literal 'completed' is retired.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Q-S1-a",
+      "kind": "operator-question",
+      "status": "one-off",
+      "handbook_line": "runner.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-reader.logic.test.ts"
+      },
+      "statement": "Downstream of a completed_with_warnings/errors upstream RUNs (keep).",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "-10-12, Q-S1-a — the cost is extra downstream ru"
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-K",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-K.1"
+      ],
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #5"
+      },
+      "statement": "A not-yet-converted step's red tests are declared in converted.json pending[], never a code skip; cutover flips them.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-K.1",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DU",
+        "R-DV",
+        "R-EF"
+      ],
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "pending entries carry a stage; the declared stage decides which gates are hard-stopped.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-DU",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-validate-staged-rdu.logic.test.ts"
+      },
+      "statement": "A pending row with no descriptor file does not block whole-registry pre-commit selection.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-EF",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EQ"
+      ],
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-score-floor.infra.test.ts"
+      },
+      "statement": "stageAwaitsCaptures is the one predicate; gate F does not score a step below floor for captures it cannot have.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "M5",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "by": [
+        "R-K"
+      ],
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "One temporary entry per unconverted step, deleted on conversion.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M5** | **`amnesty.json` as the conversio"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "merge": "MERGE-6",
+      "status_reason": "inventory superseded-by R-K -> historical: Spec 121 M1–M14 retired as a set (decision 4); R-K is the live successor",
+      "aliases": [
+        "SPEC121-M5"
+      ]
+    },
+    {
+      "id": "R-K.2",
+      "kind": "sub-row",
+      "status": "active",
+      "handbook_line": "x-stages.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Pilot 9 commit 8 P1 amendment, no row of its own.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "rows. **R-K.2 amendment (pilot 9 commit 8 P1, 20"
+      },
+      "note": "lives inside R-K.1",
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-EQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/swap-order.logic.test.ts"
+      },
+      "statement": "A pending step may swap its legacy shell before ③ once every upstream is past ②.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "W4A-R6",
+      "kind": "draft-outside-register",
+      "status": "amended-by",
+      "by": [
+        "R-EF",
+        "R-EQ"
+      ],
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #54"
+      },
+      "statement": "A pending step lands ② at compute_ported with the legacy shell live until ③ (text in untracked .cursor/v3-runner-standardization-trace-2026-10-18.md:34 per 124a:288).",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "-EF | **W4A-R6 amended: gate F's score floor tak"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)",
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "Q-R-EQ-1",
+      "kind": "operator-question",
+      "status": "active",
+      "handbook_line": "x-stages.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/swap-order.logic.test.ts"
+      },
+      "statement": "Strict: an unregistered/unknown upstream fails, no exceptions (PIN LINKCOA-ORDER).",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "-10-20, Q-R-EQ-1, operator y to strict: \"an unre"
+      },
+      "note": "operator answer recorded as a note on R-EQ",
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-CS",
+      "kind": "register-ruling",
+      "status": "superseded",
+      "by": [
+        "R-DK"
+      ],
+      "handbook_line": "x-stages.3",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #22"
+      },
+      "statement": "A net-new step stays in pending[] until a net-new PRE-reference rule exists.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-DK",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-stages.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-validate-net-new.logic.test.ts"
+      },
+      "statement": "A net-new step (legacy none, full evidence set) has no PRE; its G8 reference is its committed POST.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-6"
+    },
+    {
+      "id": "R-AF",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-stages.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/system-map.infra.test.ts"
+      },
+      "statement": "Every spec that names a chained step classifies it in exactly one Operating Boundaries list.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AN",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-stages.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/conversion-roadmap.infra.test.ts"
+      },
+      "statement": "Fleet counts are derived from registries, never retyped into tests.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BB",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-stages.4",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #43"
+      },
+      "statement": "A cutover must stage every owner spec named in the system map or declare spec_diff N-A.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BE",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-stages.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/generate-target-files.infra.test.ts"
+      },
+      "statement": "A step's Target Files are generated into its owner spec, never hand-listed.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AC",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #22"
+      },
+      "statement": "Assessment for step N+1 may run in a worktree while step N commits; one committer; PRE captures committed before re-runs.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-AI",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Capture pairs follow declared chain variance; all-\"none\" collapses to one chain plus standalone.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-BQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/capture-ledger.logic.test.ts"
+      },
+      "statement": "Every harness-spawned run is ledgered as captured, never a baseline.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-CZ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DN",
+        "R-DP",
+        "R-DQ",
+        "R-ET"
+      ],
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/capture-replay.logic.test.ts"
+      },
+      "statement": "A capture is reproducible from committed data alone; retakes are generated by --replay-all.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-DQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/replay-order.logic.test.ts"
+      },
+      "statement": "--replay-all retakes bracket captures after plain/env captures.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-AS",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DQ"
+      ],
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-rulings.logic.test.ts"
+      },
+      "statement": "When a guard includes the step's own stamp, prove value equivalence with a committed perturbation cohort.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-BD",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gold-pre-retired-input.logic.test.ts"
+      },
+      "statement": "A PRE capture taken with a retired input argv stands in only under a closed predicate.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-BR",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DN"
+      ],
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-captures.infra.test.ts"
+      },
+      "statement": "A cohort target may close gate G(1) by a declared int emit count_path.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-DN",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-ET"
+      ],
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/cohort-count-path.logic.test.ts"
+      },
+      "statement": "A cohort bracket may prove one table's writes through gate G's count_path.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-DP",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-ET"
+      ],
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/cohort-delete-reinsert.logic.test.ts"
+      },
+      "statement": "An INSERT-only step proves #38 by a delete-and-reinsert bracket.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-ET",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/cohort-derived-status.logic.test.ts"
+      },
+      "statement": "A derived target proves #38 by a derived-status bracket.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-C",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-AS"
+      ],
+      "handbook_line": "x-captures.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/golden-fingerprint.infra.test.ts"
+      },
+      "statement": "The golden differential is a mechanical fingerprint gate, never a commit-message claim.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-DA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-captures.infra.test.ts"
+      },
+      "statement": "A G8 diff is explained only in explained-diffs.json.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "K4",
+      "kind": "spec122-kill",
+      "status": "active",
+      "handbook_line": "x-captures.3",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G8"
+      },
+      "statement": "An unexplainable differential stops the programme.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| An **unexplainable differential** |"
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "G8",
+      "kind": "spec123-gate",
+      "status": "amended-by",
+      "by": [
+        "R-C",
+        "R-DA",
+        "R-DK"
+      ],
+      "handbook_line": "x-captures.3",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G8"
+      },
+      "statement": "Zero unexplained diffs; each explained diff cites a Defect Ledger id; fingerprints match.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G8** | Differential | **zero unexplained"
+      },
+      "merge": "MERGE-4",
+      "aliases": [
+        "SCORECARD-G8"
+      ]
+    },
+    {
+      "id": "R-EL",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/c6-rulings.infra.test.ts"
+      },
+      "statement": "A step calling a paid/outside API is captured and replayed from committed recorded responses.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-E",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-captures.5",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G7"
+      },
+      "statement": "A class-A behaviour is proven by a both-directions red-first lock; mutation testing is not a gate.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.5",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/before-image-test-isolation.infra.test.ts"
+      },
+      "statement": "Tests write before-images into a per-file sandbox, never the real golden tree.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-CP",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-captures.5",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-score-floor.infra.test.ts"
+      },
+      "statement": "A live test proves its child process completed before asserting on its output.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "G7",
+      "kind": "spec123-gate",
+      "status": "amended-by",
+      "by": [
+        "R-E"
+      ],
+      "handbook_line": "x-captures.5",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #41"
+      },
+      "statement": "Every class-A behaviour has a both-directions lock proven red then green.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G7** | Test adequacy | every class-A beh"
+      },
+      "aliases": [
+        "SCORECARD-G7"
+      ]
+    },
+    {
+      "id": "M7",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "by": [
+        "R-E"
+      ],
+      "handbook_line": "x-captures.5",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Nightly mutation run over validator and generator.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M7** | **Mutation run**, scoped to valid"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "status_reason": "inventory superseded-by R-E -> historical: Spec 121 M1–M14 retired as a set (decision 4); R-E is the live successor",
+      "aliases": [
+        "SPEC121-M7"
+      ]
+    },
+    {
+      "id": "R-BN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-crossstep.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chain-order-derived.logic.test.ts"
+      },
+      "statement": "A same-statement write guard is not a chain-order edge.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BO",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-crossstep.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chain-order-derived.logic.test.ts"
+      },
+      "statement": "ORDER rows with neither endpoint converted are counted (ceiling, shrink-only), not hard.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BP",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EE",
+        "R-DI"
+      ],
+      "handbook_line": "x-crossstep.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ldg10-gate.logic.test.ts"
+      },
+      "statement": "An unproduced read is counted, not hard, while its table's inserter is unconverted.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-EE",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-crossstep.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-consumer-registry.infra.test.ts"
+      },
+      "statement": "Gate D reads one converted-set view; an unproduced read is hard only when no unconverted writer has the table.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-R",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-validate.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Validation is one integrated command (step-validate) enforced at hooks, never a separate track (Rule 13).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "Rule-13",
+      "kind": "spec124-rule",
+      "status": "amended-by",
+      "by": [
+        "R-R",
+        "R-T",
+        "R-BA",
+        "R-AG"
+      ],
+      "handbook_line": "x-validate.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "One command (step-validate) generates the scorecard and policy matrix for every converted step and is enforced at hooks.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**13. A step validates itself — the Spec 123 §6"
+      }
+    },
+    {
+      "id": "Rule-13-addendum-R-T",
+      "kind": "addendum",
+      "status": "active",
+      "handbook_line": "x-validate.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "The validator validates DATA; the scorecard validates PROCESS; rows carry source check/invariant/plausibility.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "undary (R-T addendum, filed 2026-08-29, BUILT 20"
+      }
+    },
+    {
+      "id": "R-F",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G9"
+      },
+      "statement": "Every conversion's assessment report carries a §R Reflection section feeding the promotion criterion.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-FA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/table-header-rows.logic.test.ts"
+      },
+      "statement": "Markdown table header/separator rows are never counted as data rows by any scorer.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "G0",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G0"
+      },
+      "statement": "Every written table/column, audit row, exit code and stdout enumerated; owner spec from system map first.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G0** | Boundary freeze | every table/col"
+      },
+      "aliases": [
+        "SCORECARD-G0"
+      ]
+    },
+    {
+      "id": "G1",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G1"
+      },
+      "statement": "Churn, fix density, fence density, coupling computed.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G1** | Archaeology | churn + fix density"
+      },
+      "aliases": [
+        "SCORECARD-G1"
+      ]
+    },
+    {
+      "id": "G2",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G2"
+      },
+      "statement": "Churn x complexity plot with top-right quadrant named.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G2** | Structure | churn×complexity plot"
+      },
+      "aliases": [
+        "SCORECARD-G2"
+      ]
+    },
+    {
+      "id": "G3",
+      "kind": "spec123-gate",
+      "status": "amended-by",
+      "by": [
+        "R-FA"
+      ],
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G3"
+      },
+      "statement": "Every top-right/fence construct has a recovered why or INTENT-UNKNOWN.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G3** | Intent Ledger | 100% of top-right"
+      },
+      "aliases": [
+        "SCORECARD-G3"
+      ]
+    },
+    {
+      "id": "G4",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G4"
+      },
+      "statement": "A/B/C with chance and impact factors.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G4** | Risk class | A/B/C **with chance"
+      },
+      "aliases": [
+        "SCORECARD-G4"
+      ]
+    },
+    {
+      "id": "G5",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G5"
+      },
+      "statement": "DB, clock, network, argv/env each have a named seam.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G5** | Seam map | DB, clock, network, ar"
+      },
+      "aliases": [
+        "SCORECARD-G5"
+      ]
+    },
+    {
+      "id": "G6",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G6"
+      },
+      "statement": "Every behaviour classified; every DEFECT has a ledger id.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G6** | Classification | every behaviour"
+      },
+      "aliases": [
+        "SCORECARD-G6"
+      ]
+    },
+    {
+      "id": "G9",
+      "kind": "spec123-gate",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G9"
+      },
+      "statement": "§R Reflection present and DEFERRED items carried forward.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "| **G9** | Reflection | `§R Reflection` sect"
+      },
+      "aliases": [
+        "SCORECARD-G9"
+      ]
+    },
+    {
+      "id": "SHIP-BAR",
+      "kind": "spec123-gate",
+      "status": "amended-by",
+      "by": [
+        "R-EY"
+      ],
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #37"
+      },
+      "statement": "Ship at 14/17 or more with G6, G7, G8 full; a zero in G6-G8 is a hard stop.",
+      "source": {
+        "file": "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
+        "anchor": "> **Ship at ≥14/17 with G6, G7 and G8 full. Any"
+      }
+    },
+    {
+      "id": "R-FB",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-validate.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/g3-ledger-tables.logic.test.ts"
+      },
+      "statement": "G3 scores only intent-ledger tables (a header naming a Disposition column); other PH-3 tables are evidence, not scored.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BA",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-BZ",
+        "R-DF",
+        "R-EY",
+        "R-BC"
+      ],
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-five-words.infra.test.ts"
+      },
+      "statement": "\"McDonald's Airtight\": every standard item is a machine-checked PASS/FAIL line in five words (gates A-K), hard from commit ①.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-5"
+    },
+    {
+      "id": "R-CN",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-key-file.logic.test.ts"
+      },
+      "statement": "A gate-E ledger row names the file it allows.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-5"
+    },
+    {
+      "id": "R-DT",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EY"
+      ],
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-compute-literals.infra.test.ts"
+      },
+      "statement": "standard: V3 means the whole package (zero purity, zero ledger, no hard stop, no stage-gated red).",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-5"
+    },
+    {
+      "id": "R-EY",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-validate-standard-label.logic.test.ts"
+      },
+      "statement": "standard=V3 only when all nine conditions hold, fail closed; E1 ratchet and E2 cutover gate enforce it.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-5"
+    },
+    {
+      "id": "STD-VERSIONS",
+      "kind": "standard",
+      "status": "amended-by",
+      "by": [
+        "R-EY"
+      ],
+      "handbook_line": "x-v3.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-validate-standard-label.logic.test.ts"
+      },
+      "statement": "V1 pilot form (historical), V2 McDonald's Airtight, V3 final = V2 + six-part package; label per R-EY nine conditions.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Standard versions (operator 2026-10-11).** A s"
+      },
+      "merge": "MERGE-5"
+    },
+    {
+      "id": "R-I",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec-split.infra.test.ts"
+      },
+      "statement": "Four pilot practices promoted to policy: phase-order re-derivation, grandfather ledger, discoverer!=adjudicator, verified document moves.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-J",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Spec 124 is the standalone home of step policy and its register is authoritative.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AA",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec-split.infra.test.ts"
+      },
+      "statement": "Spec content moves are manifest-declared, tool-performed and gated both directions.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AM",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec-split.infra.test.ts"
+      },
+      "statement": "A cited register id must resolve to a real register row or be declared known_dangling.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-DF",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-locks.logic.test.ts"
+      },
+      "statement": "V3 is the final standard; a ruling is admitted only when it answers the seven questions and names a lock.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "P4-1",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Discover an ambiguity and propose a disposition using the closed Intent Ledger vocabulary.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "1. An agent pass (or a reviewer) **discovers** t"
+      }
+    },
+    {
+      "id": "P4-2",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A different party adjudicates, never the pass that discovered it; named and dated.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "2. **A different party adjudicates — never the p"
+      }
+    },
+    {
+      "id": "P4-3",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-locks.logic.test.ts"
+      },
+      "statement": "The ruling is recorded in the register with id, statement and what it amends.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "3. The ruling is recorded in **§5's Register of"
+      }
+    },
+    {
+      "id": "P4-4",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec124-register-locks.logic.test.ts"
+      },
+      "statement": "The same commit adds a both-directions test proving the ruling.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "4. **A rule without a lock is not yet a rule** —"
+      }
+    },
+    {
+      "id": "P4-5",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #43"
+      },
+      "statement": "A generic change amends the spec in the same commit as the lock.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "5. If the ruling changes what §2 says genericall"
+      }
+    },
+    {
+      "id": "P4-6",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A pilot-local defect becomes a register ruling only when expected to recur in another archetype.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "6. **Promotion criterion — pilot-local → estate-"
+      }
+    },
+    {
+      "id": "P4-7",
+      "kind": "protocol",
+      "status": "process",
+      "handbook_line": "x-rulings.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec-split.infra.test.ts"
+      },
+      "statement": "A document move is verified by a line-set diff before commit.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "7. **A document move or consolidation this proto"
+      }
+    },
+    {
+      "id": "L7-0",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Ground the problem by query/grep/read; cite the owner spec from the system map.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 0 — Ground it.** Execute the query, grep,"
+      }
+    },
+    {
+      "id": "L7-1",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate G6"
+      },
+      "statement": "Classify CONTRACT / INCIDENTAL / DEFECT.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 1 — Classify.** CONTRACT (a downstream co"
+      }
+    },
+    {
+      "id": "L7-2",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Resolve at the first fitting rung: descriptor, declared check, logic variable, library change, compute change.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 2 — Resolve, stopping at the first rung t"
+      }
+    },
+    {
+      "id": "L7-3",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "If no rung fits or two conflict, go to the ruling protocol.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 3 — If no rung fits, or two rungs conflic"
+      }
+    },
+    {
+      "id": "L7-4",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #41"
+      },
+      "statement": "Add a both-directions test and re-run the golden capture.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 4 — Lock it.** A both-directions test, re"
+      }
+    },
+    {
+      "id": "L7-5",
+      "kind": "ladder",
+      "status": "process",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #36"
+      },
+      "statement": "Record a Defect Ledger id and a §R Reflection entry when it may recur.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "**Step 5 — Record.** A Defect Ledger id (`<STEP-"
+      }
+    },
+    {
+      "id": "M9",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Log reviewer findings the checklist did not prompt.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M9** | **Escape rate** — reviewer findin"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M9"
+      ]
+    },
+    {
+      "id": "M10",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "x-rulings.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Route every learning to the most enforced artifact.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M10** | **Routing ladder** — every learn"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M10"
+      ]
+    },
+    {
+      "id": "R-EZ",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-verify.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/integrate-verification.logic.test.ts"
+      },
+      "statement": "An integrate-N branch needs an independent read-only verification report cited in every commit.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "M14",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "x-verify.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A fresh agent authors a reversion patch for a random claim. (Id collides with spec-move id M14 at 124:37.)",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M14** | **Unseen-agent audit** — a fresh"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M14"
+      ]
+    },
+    {
+      "id": "R-AB",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-AQ",
+        "R-AQ.1"
+      ],
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chain-sources-workflow.infra.test.ts"
+      },
+      "statement": "One chain-sources cloud run per archetype batch proves that batch's slugs.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AL",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/chain-sources-workflow.infra.test.ts"
+      },
+      "statement": "A cloud acceptance run is pinned to a named commit sha.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AQ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-AQ.1",
+        "R-BC"
+      ],
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/run-chain-selection.logic.test.ts"
+      },
+      "statement": "Batch acceptance is a partial chain run; the full chain is proven once; ceilings are not raised (resize instead).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AQ.1",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-ED"
+      ],
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/programme-backlog.infra.test.ts"
+      },
+      "statement": "No cloud dispatch until every sources step converts; one end-of-sources acceptance set.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-BC",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DI",
+        "R-DJ",
+        "R-EY"
+      ],
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/gate-chain-status.infra.test.ts"
+      },
+      "statement": "A chain is complete only when converted, no ledger rows, LDG-10 complete, cloud accepted, tooling integrated.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-ED",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-verify.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/programme-backlog.infra.test.ts"
+      },
+      "statement": "EP-PIN-D17 blocks every post-sources legacy slug in C6 or pending, regardless of status.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AG",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-BV",
+        "R-CQ",
+        "R-DH",
+        "R-DJ"
+      ],
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "Full Vitest at pre-push; pre-commit runs only cheap staged gates; DB tests only under test:db.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-BV",
+      "kind": "register-ruling",
+      "status": "superseded",
+      "by": [
+        "R-CQ"
+      ],
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "Pre-push full suite runs at two forks, never above two.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-CQ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-EC"
+      ],
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "Mac mini host rules: three serialisations (DB writers, full suites, landings); fork caps 8/4/10; memory floor.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-DH",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "A test needing Postgres is *.db.test.ts and runs only under test:db.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-DJ",
+      "kind": "register-ruling",
+      "status": "amended-by",
+      "by": [
+        "R-DU",
+        "R-EC"
+      ],
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "Every chain generator --check runs at pre-commit; registry inputs select the whole registry; pre-commit stays file-only.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-DS",
+      "kind": "register-ruling",
+      "status": "one-off",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "The sources prove-red corpus subtracts only converted files in the sources chain.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10",
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
+    },
+    {
+      "id": "R-EC",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/hooks-composition.infra.test.ts"
+      },
+      "statement": "The pre-commit time budget is a pinned tooling variable, measured per stage and checked by #52.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-EU",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/migrate-only.logic.test.ts"
+      },
+      "statement": "migrate.js --only applies chosen migrations in order with fail-closed dependency checks.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-10"
+    },
+    {
+      "id": "R-PACE-1",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-tooling.2",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate #23"
+      },
+      "statement": "After two full-form conversions of an archetype, later ones may land in three commits.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-AH",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-tooling.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-conformance.infra.test.ts"
+      },
+      "statement": "Compressed form is the default once eligible; full form needs a stated reason.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-T",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/programme-backlog.infra.test.ts"
+      },
+      "statement": "Cross-cutting programme promises are declared data in programme-items.json, generated and gated.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-Z",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/template-freeze.infra.test.ts"
+      },
+      "statement": "A programme-gate precondition is locked both directions, never a printed count.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "P3",
+      "kind": "spec122-policy",
+      "status": "process",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "check",
+        "ref": "step-validate measureP3Footprint"
+      },
+      "statement": "A proposal to add a box states its measured read/write cost at production scale; the operator rules.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "4 §6. **P3 — Disk I/O is a balance that is ADJUD"
+      }
+    },
+    {
+      "id": "K2",
+      "kind": "spec122-kill",
+      "status": "active",
+      "handbook_line": "x-tooling.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "If any per-step override is needed, stop and redesign.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+        "anchor": "| Any **per-step override** is needed |"
+      }
+    },
+    {
+      "id": "M2",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "x-tooling.4",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "A stranger adds a working step in 30 minutes from docs alone (quarterly).",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M2** | **Onboarding: a stranger adds a w"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M2"
+      ]
+    },
+    {
+      "id": "R1",
+      "kind": "spec122-programme",
+      "status": "historical",
+      "handbook_line": "history.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "This is a re-architecture of the non-compute lifecycle, delivered incrementally.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R1** | **This is a re-architecture of th"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R3",
+      "kind": "spec122-programme",
+      "status": "historical",
+      "handbook_line": "history.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Library build and conversions run in parallel.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R3** | **The P-track and S-track run in"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R4",
+      "kind": "spec122-programme",
+      "status": "historical",
+      "handbook_line": "history.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Grow the library pilot by pilot.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R4** | **S2 is a vertical slice, not a m"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R5",
+      "kind": "spec122-programme",
+      "status": "historical",
+      "handbook_line": "history.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Write classes are re-derived per step at PH-0.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R5** | **Per-step re-verification folds"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "R6",
+      "kind": "spec122-programme",
+      "status": "historical",
+      "handbook_line": "history.1",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Missing P0 categories went through categories-vs-fields adjudication.",
+      "source": {
+        "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+        "anchor": "| **R6** | **The six missing P0 categories g"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "M1",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Runner core stays under about 1,500 lines.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M1** | **Runner core ≤ ~1,500 lines** |"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M1"
+      ]
+    },
+    {
+      "id": "M3",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Any runner contract change ships a migrating script.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M3** | **Codemod-first** — any runner co"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M3"
+      ]
+    },
+    {
+      "id": "M6",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "All steps' golden synthetic run under 5 minutes in CI.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M6** | **Golden synthetic run, all steps"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M6"
+      ]
+    },
+    {
+      "id": "M8",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Publish a TMMi level per chain.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M8** | **TMMi level per chain**, publish"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M8"
+      ]
+    },
+    {
+      "id": "M11",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Exceeding 40 open register items blocks the next conversion.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M11** | **Register WIP limit (40 open)**"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M11"
+      ]
+    },
+    {
+      "id": "M12",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Severity/Lesson-routing commits append to UNPROVEN.txt.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M12** | **Fence harvest** — `Severity:`/"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M12"
+      ]
+    },
+    {
+      "id": "M13",
+      "kind": "spec121-cadence",
+      "status": "historical",
+      "handbook_line": "history.2",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Re-audit every conversion under a lower MAJOR method version.",
+      "source": {
+        "file": "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
+        "anchor": "| **M13** | **Re-audit queue** on a MAJOR me"
+      },
+      "retired_as_set": "spec121-M1-M14",
+      "aliases": [
+        "SPEC121-M13"
+      ]
+    },
+    {
+      "id": "R-S",
+      "kind": "reserved",
+      "status": "historical",
+      "handbook_line": "history.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec-split.infra.test.ts"
+      },
+      "statement": "Promised but never landed; recorded as never-written, not filled.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": ".2 — **`R-S` has NO row** (cited twice as a prom"
+      }
+    },
+    {
+      "id": "R-BI",
+      "kind": "reserved",
+      "status": "historical",
+      "handbook_line": "history.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Reserved, never written.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "anchor": "er M21; R-BI was reserved and never written) sta"
+      }
+    },
+    {
+      "id": "W4A-R5",
+      "kind": "draft-outside-register",
+      "status": "historical",
+      "handbook_line": "history.3",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "UNCERTAIN — only a red-evidence file name references it.",
+      "source": {
+        "file": "docs/reports/red-evidence/runner-lane/w4a-r5-step-ctx-keys.json",
+        "anchor": "iteral (W4A-R5)\"],\"fullName\":\"LW-D11 — STEP_CTX_"
+      },
+      "register_row_owed": "lane backfill-9 (operator decision 3)"
+    },
+    {
+      "id": "Q-W4G-1",
+      "kind": "operator-question",
+      "status": "historical",
+      "handbook_line": "history.4",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Guard none with grandfathered entry for classify_coa_trades.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "18) and Q-W4G-1 (classify_coa_trades `trade_clas"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    },
+    {
+      "id": "Q-CE2",
+      "kind": "operator-question",
+      "status": "historical",
+      "handbook_line": "history.4",
+      "enforcement": {
+        "kind": "none",
+        "ref": null
+      },
+      "statement": "Guard none with grandfathered entry for compute_coa_cost_estimates.",
+      "source": {
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+        "anchor": "y), the Q-CE2 (compute_coa_cost_estimates `cost_"
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
+    }
+  ],
+  "unenforced": [
+    {
+      "id": "R-H",
+      "class": "partial",
+      "reason": "partial: skip-row WARN locked (skipRecordsMeta); the INFO-vs-WARN choice itself is unchecked (GAP G-5, 124:137)"
+    },
+    {
+      "id": "R-J",
+      "class": "none",
+      "reason": "no machine check: document governance"
+    },
+    {
+      "id": "R-N",
+      "class": "none",
+      "reason": "no lock named (commit e01cad11)"
+    },
+    {
+      "id": "R-O",
+      "class": "none",
+      "reason": "no machine check: assessment-report narrative only"
+    },
+    {
+      "id": "R-AB",
+      "class": "partial",
+      "reason": "partial: chain-sources-workflow.infra warns that an unpinned run is \"NOT valid as an R-AB acceptance run\"; acceptance-set completeness unchecked"
+    },
+    {
+      "id": "R-BT",
+      "class": "none",
+      "reason": "no lock: \"no lock yet — PLANNED with the step\" (124a:237)"
+    },
+    {
+      "id": "R-BY",
+      "class": "partial",
+      "reason": "partial: ingest-prereq-pdf-acquire.logic (not named in row)"
+    },
+    {
+      "id": "R-CJ",
+      "class": "partial",
+      "reason": "partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row)"
+    },
+    {
+      "id": "R-CT",
+      "class": "partial",
+      "reason": "partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1)"
+    },
+    {
+      "id": "R-CU",
+      "class": "partial",
+      "reason": "partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2)"
+    },
+    {
+      "id": "R-DF",
+      "class": "partial",
+      "reason": "partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists"
+    },
+    {
+      "id": "R-EL",
+      "class": "partial",
+      "reason": "partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED)"
+    },
+    {
+      "id": "R-EW",
+      "class": "partial",
+      "reason": "partial: src/tests/steps/coa/dispatch.logic.test.ts locks (i) for coa only; (ii) every other converted step's compute lock built through the real dispatch is not asserted (older hand-built locks on the closed list PIN R-EW-LOCKS)"
+    },
+    {
+      "id": "R-EX",
+      "class": "partial",
+      "reason": "partial: src/tests/capture-rerun-proof.logic.test.ts locks the seen_drift proof (rewritten == touched, row delta 0, projected hash) and the zero_writes FAIL; no static check that every seen-column target declares declared_drift (caught only when the POST proof runs)"
+    },
+    {
+      "id": "Rule-11",
+      "class": "partial",
+      "reason": "partial: checkOrderGuaranteesCited (declared half only; GAP G-3 open)"
+    },
+    {
+      "id": "Rule-10-addendum-R-H",
+      "class": "none",
+      "reason": "no machine check for INFO-vs-WARN (GAP G-5)"
+    },
+    {
+      "id": "P4-1",
+      "class": "none",
+      "reason": "no machine check: procedural"
+    },
+    {
+      "id": "P4-2",
+      "class": "none",
+      "reason": "no machine check except R-EZ commit-msg citation for integrate branches"
+    },
+    {
+      "id": "P4-4",
+      "class": "partial",
+      "reason": "partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only)"
+    },
+    {
+      "id": "P4-6",
+      "class": "none",
+      "reason": "no machine check: G9 checks the Reflection section exists"
+    },
+    {
+      "id": "L7-0",
+      "class": "none",
+      "reason": "no machine check found (consolidate-1 inventory)"
+    },
+    {
+      "id": "L7-3",
+      "class": "none",
+      "reason": "no machine check found (consolidate-1 inventory)"
+    },
+    {
+      "id": "R1",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "R3",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "R4",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "R5",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "R6",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "K1",
+      "class": "none",
+      "reason": "superseded: not in force; listed so the count reconciles with the 2026-10-20 inventory (none (retired))"
+    },
+    {
+      "id": "K2",
+      "class": "none",
+      "reason": "no machine check: programme stop criterion; UNCERTAIN who checks"
+    },
+    {
+      "id": "M2",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none (row says UNTESTABLE))"
+    },
+    {
+      "id": "M3",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M4",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M5",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (converted.json (UNCERTAIN equivalence); its successor R-K is a step-validate check)"
+    },
+    {
+      "id": "M6",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M7",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none (mutation not a gate))"
+    },
+    {
+      "id": "M8",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M9",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M10",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M11",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M12",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M13",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "M14",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none found)"
+    },
+    {
+      "id": "GAP-G-3",
+      "class": "none",
+      "reason": "no machine check: completeness half open"
+    },
+    {
+      "id": "GAP-G-5",
+      "class": "none",
+      "reason": "no machine check: author judgment"
+    },
+    {
+      "id": "R-BI",
+      "class": "none",
+      "reason": "historical: not in force; listed so the count reconciles with the 2026-10-20 inventory (none)"
+    },
+    {
+      "id": "W4A-R2",
+      "class": "none",
+      "reason": "no machine check beyond step deviation"
+    },
+    {
+      "id": "Q-B1",
+      "class": "none",
+      "reason": "no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row"
+    },
+    {
+      "id": "Rule-1",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only)"
+    },
+    {
+      "id": "Rule-5",
+      "class": "partial",
+      "reason": "partial: step-schema.logic — checks may never be \"none\" (checks:[] minItems not fixture-tested)"
+    },
+    {
+      "id": "V6",
+      "class": "partial",
+      "reason": "partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested)"
+    },
+    {
+      "id": "R-AW",
+      "class": "partial",
+      "reason": "partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check"
+    },
+    {
+      "id": "W4A-R1",
+      "class": "partial",
+      "reason": "partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted"
+    },
+    {
+      "id": "R-CF",
+      "class": "partial",
+      "reason": "partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted"
+    },
+    {
+      "id": "Rule-8",
+      "class": "partial",
+      "reason": "partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested"
+    },
+    {
+      "id": "W4A-R4",
+      "class": "none",
+      "reason": "no machine check: no test asserts that a producer declares its by:\"pin\" row (only the reader side, R-DO/R-ER) (verify-12 N1 re-audit)"
+    },
+    {
+      "id": "R-AY",
+      "class": "partial",
+      "reason": "partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide"
+    },
+    {
+      "id": "R-EV",
+      "class": "partial",
+      "reason": "partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted"
+    },
+    {
+      "id": "R-CR",
+      "class": "partial",
+      "reason": "partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted"
+    },
+    {
+      "id": "R-CI",
+      "class": "partial",
+      "reason": "partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted"
+    },
+    {
+      "id": "R-AI",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes"
+    },
+    {
+      "id": "R-CP",
+      "class": "partial",
+      "reason": "partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it"
+    },
+    {
+      "id": "Rule-13",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — scorecard block staleness only"
+    },
+    {
+      "id": "Rule-13-addendum-R-T",
+      "class": "partial",
+      "reason": "partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted"
+    },
+    {
+      "id": "P4-3",
+      "class": "partial",
+      "reason": "partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked"
+    },
+    {
+      "id": "L7-2",
+      "class": "none",
+      "reason": "no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit)"
+    },
+    {
+      "id": "R-AQ",
+      "class": "partial",
+      "reason": "partial: run-chain-selection.logic — --only/--from partial-run mechanism; \"one acceptance set\" not asserted"
+    },
+    {
+      "id": "R-AH",
+      "class": "partial",
+      "reason": "partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes"
+    }
+  ]
+}

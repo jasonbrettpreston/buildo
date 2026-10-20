@@ -130,6 +130,7 @@ describe('G1–G8 — compute purity (Rule 2 / §5.5: compute MEASURES only)', (
   //              helper) has a site with that code on that line;
   //   (b) GREEN — the clean twin is silent (zero sites).
   // ---------------------------------------------------------------------------
+  // rule-map: R-DC — bad fixture's check-body config alias fires PURITY-G7 (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('T5a: the bad fixture + its closure fire exactly the tagged codes/lines', async () => {
     const sites = await purityMod.scanPurity({
       repoRoot: REPO_ROOT,

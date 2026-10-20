@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://buildo.local/schemas/rule-map.schema.json",
+  "title": "Step-standard rule map — every register/standard id to exactly one handbook line",
+  "description": "Operator y 2026-10-20 consolidation 1-4. The Spec 124 register is the authority; docs/handbook/step-standard.md is the reading surface, generated from this file by scripts/generate-step-handbook.mjs. Locked by src/tests/handbook-rule-map.logic.test.ts.",
+  "x-contract-version": 1,
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "$comment", "contract_version", "meta", "statuses", "merges", "sections", "lines", "rules", "unenforced"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "$comment": { "type": "array", "items": { "type": "string" } },
+    "contract_version": { "const": 1 },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decided", "authority", "reading_surface", "historical_design_records", "precedence", "spec121_m_items", "pending_integration", "register_rows_owed"],
+      "properties": {
+        "decided": { "type": "string" },
+        "authority": { "type": "string" },
+        "reading_surface": { "type": "string" },
+        "historical_design_records": { "type": "array", "items": { "type": "string" } },
+        "precedence": { "type": "string" },
+        "spec121_m_items": { "type": "string" },
+        "pending_integration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rules", "defects", "branch", "note"],
+          "properties": {
+            "rules": { "type": "array", "items": { "type": "string" } },
+            "defects": { "type": "array", "items": { "type": "string" } },
+            "branch": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        },
+        "register_rows_owed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ids", "lane", "note"],
+          "properties": {
+            "ids": { "type": "array", "items": { "type": "string" } },
+            "lane": { "type": "string" },
+            "note": { "type": "string" }
+          }
+        }
+      }
+    },
+    "statuses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "amended-by", "superseded", "one-off", "process", "historical"],
+      "properties": {
+        "active": { "type": "string" },
+        "amended-by": { "type": "string" },
+        "superseded": { "type": "string" },
+        "one-off": { "type": "string" },
+        "process": { "type": "string" },
+        "historical": { "type": "string" }
+      }
+    },
+    "merges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "line", "ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^MERGE-[0-9]+$" },
+          "name": { "type": "string" },
+          "line": { "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" }, "minItems": 1 }] },
+          "ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "intro"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "archetype": { "type": "string" },
+          "intro": { "type": "string" }
+        }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "section", "text", "why"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+\\.[0-9]+$" },
+          "section": { "type": "string" },
+          "text": { "type": "string", "minLength": 1 },
+          "why": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "status", "handbook_line", "enforcement", "statement", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "status": { "enum": ["active", "amended-by", "superseded", "one-off", "process", "historical"] },
+          "by": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "handbook_line": { "type": "string" },
+          "enforcement": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "ref"],
+            "properties": {
+              "kind": { "enum": ["check", "lock", "lock-db", "hook", "none"] },
+              "ref": { "type": ["string", "null"] }
+            }
+          },
+          "statement": { "type": "string" },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "register": { "const": true },
+              "pending_integration": { "type": "string" },
+              "file": { "type": "string" },
+              "anchor": { "type": "string", "minLength": 8 }
+            }
+          },
+          "retired_as_set": { "const": "spec121-M1-M14" },
+          "register_row_owed": { "type": "string" },
+          "note": { "type": "string" },
+          "status_reason": { "type": "string", "minLength": 20 },
+          "aliases": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9-]*$" }, "minItems": 1 },
+          "mention_by_alias_only": { "const": true },
+          "merge": { "type": "string", "pattern": "^MERGE-[0-9]+$" }
+        },
+        "allOf": [
+          { "if": { "properties": { "status": { "enum": ["amended-by", "superseded"] } } }, "then": { "required": ["by"] } }
+        ]
+      }
+    },
+    "unenforced": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "class", "reason"],
+        "properties": {
+          "id": { "type": "string" },
+          "class": { "enum": ["none", "partial"] },
+          "reason": { "type": "string", "minLength": 8 }
+        }
+      }
+    }
+  }
+}

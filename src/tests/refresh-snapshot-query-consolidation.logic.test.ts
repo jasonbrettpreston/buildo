@@ -104,6 +104,7 @@ describe('refresh-snapshot compute — WF3 F1 query-consolidation shape lock (Sp
     expect(params).toEqual([mod.ACTIVE_PERMIT_STATUSES]);
   });
 
+  // rule-map: R-CF (partial) — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('③ tradeByType runs under session-scoped enable_indexscan=off — DECLARED in the descriptor\'s execution.read_gucs (R-CF), issued by the runner; compute returns NO guc and holds no SET/RESET text', () => {
     const reads = mod.buildReads({ snapshot_coa_conf_high: 0.8, coa_match_conf_medium: 0.5 }, RUN_AT);
     const step = reads.main.find((s: { key: string }) => s.key === 'tradeByType');

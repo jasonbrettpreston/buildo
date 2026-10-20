@@ -82,6 +82,7 @@ describe('chainOrderViolations — fixture (proven both directions)', () => {
   });
 });
 
+// rule-map: R-BN — same-statement write guard is not an ORDER row (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('chainOrderViolations — L-A same-statement write guard (from the trace, both directions)', () => {
   const G: { inchain: Inchain } = {
     inchain: {
@@ -296,6 +297,7 @@ describe('MQ-C1 — retired snapshot producers (derived from manifest.scripts)',
   });
 });
 
+// rule-map: R-BO — ORDER rows with both ends unconverted counted, not hard (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('MQ-C3 — ORDER-UNWITNESSED derived arm (fixture, both directions)', () => {
   const swapped = { k: ['b', 'a', 'c'] };
   it('U1: producer and reader both unconverted → ORDER-UNWITNESSED, not a hard row', () => {

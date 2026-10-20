@@ -323,6 +323,7 @@ describe('gate G — nonzero captures, lib-fingerprint freshness, explained diff
   // THAT table, so the step-level counters can no longer falsely attribute a
   // write. Optional: a target without it keeps the legacy summary-counter rule.
   // -------------------------------------------------------------------------
+  // rule-map: R-BR — cohort count_path per-target attribution (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   describe('T7: cohort count_path — per-target attribution', () => {
     const TWO = ['parcel_buildings', 'parcels'];
     const descE = (emits: Array<{ key: string; type: string }>): Record<string, unknown> => ({

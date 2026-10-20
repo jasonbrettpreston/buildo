@@ -739,6 +739,7 @@ describe('§5.5 compute shape — dispatch table ≡ declared checks', () => {
     });
   }
 
+  // rule-map: Rule-1, Rule-2-addendum-R-W — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only); compute-no-postgis-branch fires on the bad fixture (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('RED — every compute-shape rule FIRES on the known-bad fixture (Spec 121 §12b.6)', () => {
     const fired = new Set(runShapeRule([BAD_COMPUTE_FIXTURE], COMPUTE_RULE).map((v) => v.rule));
     expect([...fired].sort(), `${BAD_COMPUTE_FIXTURE} did not trip every rule`).toEqual([...COMPUTE_RULE_IDS].sort());
@@ -2223,6 +2224,7 @@ function gateDecisionFindings(relFile: string, subject: { hasSkipGatedTerminal: 
   return [];
 }
 
+// rule-map: R-P — a gated-skip step declares a when:"pre" check (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('LPA-D4 — any step that can gated-skip declares at least one when:"pre" check', () => {
   it('at least one converted step declares a skip_gated terminal (else the battery is vacuous)', () => {
     const any = CONVERTED.some((f) => gateDecisionFor(f).hasSkipGatedTerminal);
@@ -2294,6 +2296,7 @@ function deferDecisionFindings(
   return out;
 }
 
+// rule-map: R-BU — a scope-defer step declares a pre check and a deferred_to_full terminal (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('LPA-D4 (scope-defer) — any step that can scope-defer declares a when:"pre" check AND a deferred_to_full terminal', () => {
   it('at least one converted step declares execution.enrich_hooks.defer_scope (else the battery is vacuous)', () => {
     const any = CONVERTED.some((f) => deferDecisionFor(f).hasDeferHook);
@@ -2319,6 +2322,7 @@ describe('LPA-D4 (scope-defer) — any step that can scope-defer declares a when
 // 6. The real loop — empty today, one entry per landed pilot
 // ---------------------------------------------------------------------------
 
+// rule-map: A1 — conformanceFindings: every converted step has its sibling descriptor and no unknown sibling (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('§5.2 conformance — every converted step', () => {
   it(`the enforcement scope is ${CONVERTED.length} of ${ALL_STEP_FILES.length} manifest step files`, () => {
     // A named, always-present test so the scope is visible in the reporter output
@@ -2417,6 +2421,7 @@ describe('database.min_migration — COUNT floor, never a filename number (LW-D8
 // vitest results (Rules 2/3/11/12) and are deliberately NOT compared here —
 // their currency is `--all --write`'s job (Spec 123 §7 commit 9), not a
 // vitest-internal lock that would have to recurse into itself to check them.
+// rule-map: Rule-13 (partial) — scorecard block staleness only (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('R-R / Rule 13 — the generated scorecard block is not stale (vitest-independent sections)', () => {
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
   const MARKER = '## Validation scorecard (generated)';
@@ -2632,6 +2637,7 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
     expect(TEST_DB_SCRIPT).toBe(`cross-env BUILDO_TEST_DB=1 vitest run ${DB_SUFFIX} --no-file-parallelism`);
   });
 
+  // rule-map: R-DH — every test opening getTestPool is a *.db.test.ts (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('B5 — every test that opens the Postgres harness (getTestPool) is a *.db.test.ts, so the suffix rule owns the whole tier', () => {
     const offTier = walkTs('src/tests')
       .filter((t) => /\.test\.tsx?$/.test(t) && !t.endsWith(DB_SUFFIX))
@@ -2760,6 +2766,7 @@ describe('VAL-9 / R-AG — the validator harvests only the tier `npm run test` o
     expect(src, 'runVitest() no longer spawns plan.argv — the derived exclusions would be built and then ignored').toMatch(/spawnSync\(\s*process\.execPath\s*,\s*\[\s*vitestEntry\(\)\s*,\s*\.\.\.plan\.argv\s*\]/);
   });
 
+  // rule-map: R-AI, R-AH (partial) — indirect: step-validate self-test (expectedCaptureChains fixtures) passes; indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('`--self-test-only` passes — the RED/GREEN in-memory proofs for deriveVitestExclusions/vitestSpawnArgs (no-exclude RED, three-spelling GREEN, purity, live non-vacuity, live tier-ownership) all fire correctly', () => {
     const run = memo.spawnSync('node', [STEP_VALIDATE, '--self-test-only'], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 120_000 });
     expect(run.status, `self-test did not pass; stdout=${run.stdout}\nstderr=${run.stderr}`).toBe(0);
@@ -2821,6 +2828,7 @@ describe('C1 — `scripts["test:db"]` is Windows-runnable (no bare NAME=value en
 // 2026-09-09, Spec 124 §2 Rule 10 rung b), end-to-end against the live
 // corpus (not a fixture).
 // ---------------------------------------------------------------------------
+// rule-map: Rule-10 — verdict is row-derived from exactly one place (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdictSingleSource)', () => {
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
@@ -2899,6 +2907,7 @@ describe('Rule 10 — verdict is row-derived from exactly one place (checkVerdic
 // the disk-reading path against all three real descriptors that carry a
 // when:"pre_write" check.
 // ---------------------------------------------------------------------------
+// rule-map: Rule-11 (partial) — declared half (checkOrderGuaranteesCited); completeness half GAP G-3 open (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaranteesCited)', () => {
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
@@ -2962,6 +2971,7 @@ describe('Rule 11 — phase-order re-derivation, declared half (checkOrderGuaran
 // src/tests/db/step-crash-posture.db.test.ts (BUILDO_TEST_DB=1) — this suite
 // covers the STATIC half only.
 // ---------------------------------------------------------------------------
+// rule-map: Rule-12 — checkInterruptedPostureTruthful self-test and live steps (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostureTruthful)', () => {
   const STEP_VALIDATE = path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs');
 
@@ -3025,6 +3035,7 @@ describe('Rule 12 — truthful crash posture, static half (checkInterruptedPostu
 // x-ruling, checked by shelling generate-schema-baseline.mjs --check (the
 // "shell the generator's own --check" pattern, Spec 123 SS4.5).
 // ---------------------------------------------------------------------------
+// rule-map: GAP-G-1 — a new schema field without x-ruling fails the schema-baseline ratchet (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('G-1 — new schema fields require x-ruling (schema-baseline ratchet)', () => {
   const GENERATOR = path.join(REPO_ROOT, 'scripts/steps/_schema/generate-schema-baseline.mjs');
   const REAL_SCHEMA = path.join(REPO_ROOT, 'scripts/steps/_schema/step.schema.json');

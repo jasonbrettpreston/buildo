@@ -262,6 +262,7 @@ describe('Spec 124 §5 R-AR / R-AR.1 / R-AS / R-AU / R-AV (operator-adjudicated 
     });
   });
 
+  // rule-map: Rule-3-addendum-R-AU — same lock as R-AU (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   describe('R-AU — CLOSED 2026-09-23 (batch-2 row 2.5): pricing DATA is admin-editable, not a declared non-admin surface', () => {
     const tokens = ['archetype_cost_rates', 'PARCEL_COST_LINES'];
     const CPCE_DESCRIPTOR = path.join(REPO_ROOT, 'scripts', 'compute-parcel-cost-estimates.descriptor.json');

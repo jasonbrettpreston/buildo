@@ -86,6 +86,7 @@ describe('migration 255 — parcel_abutments linkage', () => {
     );
   });
 
+  // rule-map: R-CR (partial) — trigger installed; guards.requires declaration not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('installs the AFTER UPDATE OF geom invalidation trigger over the material-change predicate', () => {
     const trigger =
       /CREATE\s+TRIGGER\s+trg_parcels_abutments_invalidation\s+AFTER\s+UPDATE\s+OF\s+geom\s+ON\s+parcels\s+FOR\s+EACH\s+ROW\s+WHEN\s*\(\s*public\.parcels_geom_materially_changed\s*\(\s*OLD\.geom\s*,\s*NEW\.geom\s*\)\s*\)\s+EXECUTE\s+FUNCTION\s+trg_parcels_invalidate_abutments\s*\(\s*\)/i;

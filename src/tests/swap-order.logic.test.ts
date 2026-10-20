@@ -68,6 +68,7 @@ describe('R-EQ — #54 SWAP-ORDER: no shell swap before its upstreams', () => {
     expect(both.blockedSlugs).not.toContain('classify_coa_trades');
   });
 
+  // rule-map: Q-R-EQ-1 — #54 fails a runner_wired step whose upstream is unregistered (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('RED: an upstream that is neither converted nor pending (unconverted legacy) has neither swapped nor been captured', async () => {
     const { checkSwapOrder, loadSwapOrderInput } = await loadSwap();
     const { stageAwaitsCaptures } = await loadSv();

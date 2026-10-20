@@ -659,6 +659,7 @@ describe('compute_parcel_cost_estimates — CPCE peel O3 (refuted): stream/flush
 // 18,529 parcels). The NEW form excludes them from the stream entirely, and the WIDENED
 // writes[1] retraction (the SAME target CPCE-D2 built, never a second code path per FOLD-I1)
 // NULLs any of them still carrying a stale menu from before this bound existed.
+// rule-map: R-AY (partial) — founding step's population bound only; not required fleet-wide (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('compute_parcel_cost_estimates — S0.2: product-scope bound (Spec 88 §2.1, FOLD-I1/FOLD-RC2)', () => {
   it('buildSourceSql excludes out-of-model parcels (max_buildable_gfa_sqm IS NULL) and oversized-existing parcels (cur_floor_gfa_sqm > bound)', () => {
     const { buildSourceSql, buildZoneSql } = loadCompute();

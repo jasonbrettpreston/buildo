@@ -296,6 +296,7 @@ describe('Pipeline Advisory Lock Compliance (§47 §R2)', () => {
     }
   });
 
+  // rule-map: V2 — advisory lock ids are unique across all scripts incl. one-time/backfill (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('all ADVISORY_LOCK_IDs are unique across all JS scripts (incl. one-time/backfill)', () => {
     const seen = new Map<number, string>();
     const duplicates: string[] = [];

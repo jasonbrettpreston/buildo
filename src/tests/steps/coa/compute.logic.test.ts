@@ -142,6 +142,7 @@ describe('coa ② — the generated write plans the descriptor declares (runner-
 });
 
 describe('coa ② compute — the declared changes', () => {
+  // rule-map: R-EV (partial) — TZ-independent data_hash; admission conditions (a)-(d) not asserted (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('COA-D11: data_hash takes dates in the UTC-midnight ISO form, independent of the process TZ (legacy Date.parse read FINALDATE in local time)', () => {
     const r = shape(rec({ FINALDATE: '2018-03-02T00:00:00' }));
     const crypto = req('crypto') as typeof import('crypto');

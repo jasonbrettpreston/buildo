@@ -130,6 +130,7 @@ type GateEy = {
   standardFor: (m: string, rows: unknown[], opts?: Signals) => string;
 };
 
+// rule-map: STD-VERSIONS — V3 label only when all nine conditions hold (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
 describe('R-EY — V3 only when all nine conditions hold; the label names the failing ones', () => {
   const ge = gateE as unknown as GateEy;
   const svy = () => sv as unknown as SvEy;

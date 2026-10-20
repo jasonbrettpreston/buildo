@@ -356,6 +356,7 @@ describe('coa — converted claims (D1–D6 GREEN at ②; D1b and D8 at ③)', (
     expect(readText(COMPUTE_REL)).not.toMatch(/https?:\/\//);
   });
 
+  // rule-map: R-CT (partial) — per-step: coa write targets carry rls_bypass_or_policy; no fleet gate (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   it('D3 — both write targets declared, each with an rls_bypass_or_policy requirement (R-CT; both tables have RLS on) (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.outputs.writes.map((w) => w.table).sort()).toEqual(['coa_applications', 'lifecycle_status_history']);

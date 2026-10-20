@@ -192,6 +192,7 @@ describe.skipIf(!dbAvailable())('migration 251 — parcels geometry change is ju
   const MP1 = `MULTIPOLYGON(((${X0} ${Y0},${X1} ${Y0},${X1} ${Y1},${X0} ${Y1},${X0} ${Y0})))`;
   const MP2 = `MULTIPOLYGON(((${X0} ${Y0},${X1} ${Y0},${X1} ${Y1},${X0} ${Y1},${X0} ${Y0})),((${X0 + 1} ${Y0},${X1 + 1} ${Y0},${X1 + 1} ${Y1},${X0 + 1} ${Y1},${X0 + 1} ${Y0})))`;
 
+  // rule-map: R-BS — geometry tolerance predicate (DB test, npm run test:db only) (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
   describe('L0 — the predicate exists and its tolerance row is seeded (red before migration 251)', () => {
     it('public.parcels_geom_materially_changed(geometry, geometry) is registered', async () => {
       const { rows } = await pool!.query(
