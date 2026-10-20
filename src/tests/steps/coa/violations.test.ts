@@ -321,8 +321,9 @@ describe('coa ① — legacy oracle pins D: audit, meta, lock (GREEN today)', ()
 });
 
 // PART 2 — the converted claims D1–D8 (`it.fails` at ①). Each is RED as a NAMED MISSING ARTIFACT or a
-// named legacy fact the conversion removes, never as a TS/import error. They flip to `it` at ② (D1–D7)
-// and ③ (D8).
+// named legacy fact the conversion removes, never as a TS/import error. ② (stage compute_ported, W4A-R6 /
+// Spec 124 R-EF) flips D1–D6; the frozen-shell half of D1 splits out as D1b, which flips at ③ with D8,
+// because the legacy shell stays the live step until the cutover (the assert_coa_freshness D1/D1b form).
 interface Descriptor {
   identity: { name: string; archetype: string; spec: string; lock: number };
   execution: { shape: string };
@@ -335,38 +336,46 @@ function loadDescriptor(): Descriptor {
   return JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
 }
 
-describe('coa ① — converted claims (RED at ①; flip to `it` at ② / ③)', () => {
-  it.fails('D1 — identity and frozen shell: descriptor exists, archetype INGESTOR, lock 95, spec "51", shape "ingest"; shell is pipeline.step(), not pipeline.run() (flips at ②)', () => {
+describe('coa — converted claims (D1–D6 GREEN at ②; D1b and D8 at ③)', () => {
+  it('D1 — identity: descriptor exists, archetype INGESTOR, lock 95, spec "51", shape "ingest"; notes exist (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'coa', archetype: 'INGESTOR', spec: '51', lock: LOCK_ID });
     expect(d.execution.shape).toBe('ingest');
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
+  });
+
+  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at ③; the legacy shell stays live at compute_ported, W4A-R6 / R-EF)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
   });
 
-  it.fails('D2 — two CKAN externals (Active, Closed) with declared urls; no http(s) literal in compute (G10) (flips at ②)', () => {
+  it('D2 — two CKAN externals (Active, Closed) with declared urls; no http(s) literal in compute (G10) (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.inputs.reads.externals.map((e) => e.id).sort()).toEqual(['coa_active', 'coa_closed']);
     expect(readText(COMPUTE_REL)).not.toMatch(/https?:\/\//);
   });
 
-  it.fails('D3 — both write targets declared, each with an rls_bypass_or_policy requirement (R-CT; both tables have RLS on) (flips at ②)', () => {
+  it('D3 — both write targets declared, each with an rls_bypass_or_policy requirement (R-CT; both tables have RLS on) (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.outputs.writes.map((w) => w.table).sort()).toEqual(['coa_applications', 'lifecycle_status_history']);
     const req = (d.guards.requires ?? []).filter((r) => r.kind === 'rls_bypass_or_policy').map((r) => r.name).sort();
     expect(req).toEqual(['coa_applications', 'lifecycle_status_history']);
   });
 
-  it.fails('D4 — every legacy literal is a registered logic variable (R-DF EXTERNALIZED): batch, page size, retries, backoff, skip-rate and staleness bounds (flips at ②)', () => {
+  // Amended at ② (Spec 124 R-DY (d), 124:257, operator y 2026-10-18 — "no per-batch transaction form (`coa_batch_size`
+  // is not seeded)"): the legacy BATCH_SIZE 500 retires with the per-batch transaction, so it is asserted ABSENT.
+  it('D4 — every carried legacy literal is a registered logic variable (R-DF EXTERNALIZED): page size, retries, backoff, skip-rate and staleness bounds; coa_batch_size is not (R-DY (d)) (flipped at ②)', () => {
     const names = loadDescriptor().config.logic_variables.map((v) => v.name);
-    for (const n of ['coa_batch_size', 'coa_page_size', 'coa_download_retries', 'coa_download_retry_backoff_ms', 'coa_skip_rate_max_pct', 'coa_max_days_stale_warn']) {
+    for (const n of ['coa_page_size', 'coa_download_retries', 'coa_download_retry_backoff_ms', 'coa_skip_rate_max_pct', 'coa_max_days_stale_warn']) {
       expect(names).toContain(n);
     }
+    expect(names).not.toContain('coa_batch_size');
+    const seeds = JSON.parse(readText('scripts/seeds/logic_variables.json')) as Record<string, unknown>;
+    for (const n of names) expect(seeds[n], `${n} is seeded`).toBeDefined();
   });
 
-  it.fails('D5 — compute is pure (R-BZ): no Date.now, no VACUUM, no SAVEPOINT, no direct .query DML, no NOW()/INTERVAL literal (flips at ②)', () => {
+  it('D5 — compute is pure (R-BZ): no Date.now, no VACUUM, no SAVEPOINT, no direct .query DML, no NOW()/INTERVAL literal (flipped at ②)', () => {
     const c = readText(COMPUTE_REL);
     expect(c).not.toMatch(/Date\.now\(/);
     expect(c).not.toMatch(/VACUUM|SAVEPOINT/);
@@ -374,7 +383,7 @@ describe('coa ① — converted claims (RED at ①; flip to `it` at ② / ③)',
     expect(c).not.toMatch(/NOW\(\)|INTERVAL '/);
   });
 
-  it.fails('D6 — dates bind as ::date (never ::timestamptz into a DATE column), so the stored date does not depend on the session TimeZone (flips at ②)', () => {
+  it('D6 — dates bind as ::date (never ::timestamptz into a DATE column), so the stored date does not depend on the session TimeZone (flipped at ②)', () => {
     expect(readText(COMPUTE_REL)).not.toMatch(/timestamptz\[\]\)\s*,?\s*--?\s*(hearing|decision)|unnest\(\$\d+::timestamptz\[\]\)/);
   });
 

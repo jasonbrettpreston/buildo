@@ -267,7 +267,12 @@ const GROUP_ORDER = [
       "coa_cost_gt_threshold_warn_max",
       "coa_fsi_gt_threshold",
       "coa_gfa_over_lot_multiple",
-      "coa_gfa_over_lot_warn_max"
+      "coa_gfa_over_lot_warn_max",
+      "coa_page_size",
+      "coa_download_retries",
+      "coa_download_retry_backoff_ms",
+      "coa_skip_rate_max_pct",
+      "coa_max_days_stale_warn"
     ]
   },
   {
@@ -423,6 +428,7 @@ const GROUP_ORDER = [
       "parcels_dead_tuple_ratio_warn_max",
       "building_footprints_dead_tuple_ratio_warn_max",
       "neighbourhoods_dead_tuple_ratio_warn_max",
+      "coa_applications_dead_tuple_ratio_warn_max",
       "parcels_null_address_pct_max",
       "mislink_footprint_lot_tol",
       "coa_bylaw_max_fsi_null_warn_pct",

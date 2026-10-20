@@ -79,7 +79,7 @@ const adminRegistrationViolations = gate.adminRegistrationViolations as (steps: 
  * shrink-only). A step leaves this list in the commit that gives it a descriptor.
  */
 const UNCONVERTED_RANGE_GRANDFATHER = Object.freeze([
-  'permits', 'coa', 'builders', 'link_coa', 'enrich_wsib_builders', 'enrich_named_builders',
+  'permits', 'builders', 'link_coa', 'enrich_wsib_builders', 'enrich_named_builders',
   'enrich_wsib_registry', 'link_similar', 'create_pre_permits', 'classify_scope', 'classify_permits',
   'inspections',
 ]);

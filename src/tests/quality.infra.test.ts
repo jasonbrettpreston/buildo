@@ -1060,12 +1060,14 @@ describe('Telemetry & Last Run labelling with expected behavior ranges', () => {
     expect(typeof funnel.STEP_EXPECTED_RANGES).toBe('object');
     // The unconverted steps that have telemetry_tables in manifest. Spec 124 R-DW: the converted
     // ones (address_points … assert_engine_health) carry NO entry — their badges are their audit_table
-    // check rows; admin-step-registration.logic fails a converted slug that carries one.
+    // check rows; admin-step-registration.logic fails a converted slug that carries one. coa left at its ②
+    // (2026-10-19): R-DW (124:282) — a pending step whose descriptor exists carries no entry.
     const telemetrySteps = [
-      'permits', 'coa', 'builders', 'link_coa',
+      'permits', 'builders', 'link_coa',
       'enrich_wsib_builders', 'enrich_named_builders', 'classify_scope',
       'classify_permits', 'link_similar',
     ];
+    expect(funnel.STEP_EXPECTED_RANGES.coa, 'coa (descriptor at ②) must carry no hand-written range (R-DW)').toBeUndefined();
     for (const slug of telemetrySteps) {
       expect(funnel.STEP_EXPECTED_RANGES[slug], `Missing expected range for ${slug}`).toBeDefined();
       expect(funnel!.STEP_EXPECTED_RANGES[slug]!.behavior, `Missing behavior note for ${slug}`).toBeTruthy();

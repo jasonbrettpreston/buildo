@@ -806,12 +806,6 @@ export const STEP_EXPECTED_RANGES: Record<string, ExpectedRanges> = {
     mutations: { permits: { ins: [0, 500], upd: [0, 500], del: [0, 0] } },
     row_delta: { permits: [0, 500] },
   },
-  coa: {
-    behavior: 'Incremental CoA fetch (last 90 days). On steady-state days, 0 new records. On update days, typically 0-100 new applications.',
-    summary: { records_total: [0, 200], records_new: [0, 200], records_updated: [0, 50] },
-    mutations: { coa_applications: { ins: [0, 200], upd: [0, 200], del: [0, 0] } },
-    row_delta: { coa_applications: [0, 200] },
-  },
   builders: {
     behavior: 'Extracts entity names from permit applicant/builder fields. Steady-state: 0 new entities unless new permits arrived.',
     summary: { records_total: [3500, 4000], records_new: [0, 50], records_updated: [0, 20] },
