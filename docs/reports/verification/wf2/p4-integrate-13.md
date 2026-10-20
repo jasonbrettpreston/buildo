@@ -48,3 +48,8 @@ first integrate commit with this index; none had to wait for the merge that intr
   routing drops `owed`; `decision-log --check` clean, 25 rows / 50 citations / 0 owed. The two R-HK real-tree tests
   assert CHAT-5 → M-230 cited. The 69a 2026-10-20 dated note records the F-04 townhouse side-yard knock-on on 27 R
   golden lots (N2).
+- **Plan v2 §3.4 (R-HF / R-HM register cells, rule map).** R-HF's OWED cell cites bylaw-fix-1 `284596a4` (INV-18 /
+  INV-19 describes, red evidence `inv18-inv19-red.json`); R-HM's lock is `report-schema.logic`. The rule-map entries
+  move their lock refs to `bylaw-evaluator-fixes.logic` and `report-schema.logic`, whose SPEC LINK headers now name
+  R-HF / R-HM (handbook-rule-map arm (e)). `generate-step-handbook --write` leaves Spec 132 byte-identical; `--check`
+  up to date.

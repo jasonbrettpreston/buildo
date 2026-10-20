@@ -1,4 +1,6 @@
-// SPEC LINK: docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers),
+// SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HM (drafted as R-RS: one field declaration per report
+//            surface; this file is its lock, and runs report-schema.mjs --check and seed-report-v2.mjs --check);
+//            docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers),
 //            R-27 (one home; tables generated from it), R-17 + R-34 (a SLOT declares a FAIL, blocking disclosure);
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.12 (closed disclosure codes) + §6.6 (display rules);
 //            docs/reference/maxbld-field-lineage.json (the lineage the report names must match).

@@ -4751,9 +4751,9 @@
       "handbook_line": "x-rulings.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+        "ref": "src/tests/bylaw-evaluator-fixes.logic.test.ts"
       },
-      "statement": "The stale M-217..M-222 / M-225 owed entries close through named locks INV-18 / INV-19 as describe titles (owed to the by-law fix lane).",
+      "statement": "The stale M-217..M-222 / M-225 owed entries close through named locks INV-18 / INV-19 as describe titles (landed by the by-law fix lane, 284596a4).",
       "source": {
         "register": true
       }
@@ -4849,9 +4849,9 @@
       "handbook_line": "x-rulings.4",
       "enforcement": {
         "kind": "lock",
-        "ref": "src/tests/decision-log.logic.test.ts"
+        "ref": "src/tests/report-schema.logic.test.ts"
       },
-      "statement": "R-RS: a product report surface has one field declaration; every field names one source; a generator --check gates it (lock owed with wf2/report-schema).",
+      "statement": "R-RS: a product report surface has one field declaration; every field names one source; a generator --check gates it (report-schema.mjs --check).",
       "source": {
         "register": true
       }

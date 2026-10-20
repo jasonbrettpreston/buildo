@@ -3,7 +3,8 @@
 //            M-182, M-197, M-198(5), M-202(3)/(4), M-205(3), M-209, M-215(2), M-216, M-217..M-222, M-223(3), M-224, M-225;
 //            operator 2026-10-19 review-page rulings Q-M218 / Q-M197 / Q-other-building (Spec 131 LC-54)
 //            docs/specs/01-pipeline/78_optimal_lot_configuration.md P5.15 INV-18 / INV-19 (named describes; scenario plan R-13,
-//            operator APPROVED 2026-10-20)
+//            operator APPROVED 2026-10-20); docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HF (the INV-18 / INV-19
+//            describes below are R-HF's lock)
 //
 // By-law evaluator-fix lane (operator item 6, 2026-10-18): the reality-check evaluator defects M-217..M-222 and the
 // review leaks, each fixed once by provision family across the parallel residential chapters, never per zone.
