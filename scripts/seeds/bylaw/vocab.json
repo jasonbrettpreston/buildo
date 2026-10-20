@@ -95,6 +95,12 @@
       "concept": "minimum distance the front and rear main walls above the main-wall height limit are set back from the front and rear main walls below (flat or shallow roof); only the storey above the limit is set back, the storeys below are unchanged (Spec 69a M-223(3), M-218; operator 2026-10-19 Q-M218)",
       "patterns": ["additional front main walls and rear main walls"]
     },
+    "roof_slope_max": {
+      "unit": "ratio",
+      "aspect": "envelope",
+      "concept": "maximum roof slope, vertical units per horizontal unit, of the roof the unit applies to (R 10.10.40.10(4): a roof above the second storey or higher on a detached house; Spec 69a M-223(3), Spec 78 O-7)",
+      "patterns": ["may not have a slope greater than"]
+    },
     "entrance_height_m": {
       "unit": "m",
       "aspect": "envelope",

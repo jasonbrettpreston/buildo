@@ -111,6 +111,9 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-19 (validation fixes, operator Q2; Spec 69a M-205(2)): deep_side_setback_m is a new dsl_target, so
     // the corpus gains its cells; with it left out the hash is the previous pin 690439ff…557c exactly, so no existing cell
     // moved (the fixture units carry no displaces_optional, so the Q1 rule-2 change cannot reach them).
-    expect(h.digest('hex')).toBe('2e16556b359bfec4da4e15e4f7b49f39ed4ab409c2d31111ef18ae1ab3a0b491');
+    // re-pinned 2026-10-20 (O-7 / M-223(3), bylaw fix lane): roof_slope_max is a new dsl_target; its 140 cells are
+    // not_evaluated:no_candidate (the fixture units predate the keying). With it left out the hash is the previous pin
+    // 2e16556b…b491 exactly, so no existing cell moved.
+    expect(h.digest('hex')).toBe('8c8eca03a35c68dd22295e3027b38d2f67d62c0b066bdea7492c1144bf9aa8b6');
   }, 60_000);
 });

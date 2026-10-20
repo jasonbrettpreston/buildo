@@ -1329,13 +1329,16 @@
     "10.80.40.10(5)"
    ],
    "keyed": {
-    "units": [],
+    "units": [
+     "10.10.40.10(4)#whole"
+    ],
     "layer2_targets": [
-     "element_width_pct"
+     "element_width_pct",
+     "roof_slope_max"
     ],
     "owed": [
      {
-      "what": "keying of roof_slope_max, the attic test (O-7; vocab target owed, M-223(3))",
+      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
       "owner": "by-law keying/evaluator lane"
      }
     ]

@@ -1,0 +1,14 @@
+{
+ "suite": "src/tests/bylaw-o7-keying.logic.test.ts",
+ "base": "32cd7aab",
+ "run_on": "2026-10-20",
+ "note": "O-7 / M-223(3) roof_slope_max, run on the working tree at 32cd7aab before the vocab target and the 7 M-75 corrections were added.",
+ "counts": { "red": 3, "pass": 2 },
+ "cases": [
+  { "name": "G-AGREE holds with the O-7 corrections (no orphan) no violation", "at_base": "pass", "reason": null },
+  { "name": "O-7 / M-223(3) — R roof slope 10.10.40.10(4) is keyed as roof_slope_max roof_slope_max is a vocab dsl_target in ratio (vertical per horizontal)", "at_base": "red", "reason": "no dsl_target roof_slope_max" },
+  { "name": "O-7 / M-223(3) — R roof slope 10.10.40.10(4) is keyed as roof_slope_max the unit is a LIMIT max on a detached house in R, its two literals in the expression", "at_base": "red", "reason": "UNUSUAL, target none" },
+  { "name": "O-7 / M-223(3) — R roof slope 10.10.40.10(4) is keyed as roof_slope_max an R detached house answers roof_slope_max = 5.0 / 3.0 from 10.10.40.10(4)", "at_base": "red", "reason": "not_evaluated (unknown target)" },
+  { "name": "O-7 / M-223(3) — R roof slope 10.10.40.10(4) is keyed as roof_slope_max scoped per class: no other R class and no other zone takes the R detached-house cap", "at_base": "pass", "reason": null }
+ ]
+}
