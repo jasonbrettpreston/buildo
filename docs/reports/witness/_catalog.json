@@ -653,6 +653,13 @@
       "matched_at",
       "parcel_id"
     ],
+    "lead_parcels_cohort_bak_20261020t1827z": [
+      "confidence",
+      "lead_id",
+      "match_type",
+      "matched_at",
+      "parcel_id"
+    ],
     "lead_products": [
       "classified_at",
       "confidence",
@@ -1190,6 +1197,10 @@
       "is_corner_lot"
     ],
     "parcels_cohort_bak_20261019t2009z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
+    "parcels_cohort_bak_20261020t1841z": [
       "id",
       "max_buildable_footprint_sqm"
     ],

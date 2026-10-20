@@ -37,6 +37,9 @@
           "step": "enrich_centreline"
         },
         {
+          "step": "link_coa_to_parcels"
+        },
+        {
           "step": "load_zoning"
         },
         {
@@ -1373,6 +1376,17 @@
     "logic_version": "none",
     "on_fingerprint_change": "run",
     "pins": [
+      {
+        "step": "link_coa_to_parcels",
+        "stamp": "coa_applications.parcel_linked_at",
+        "why": {
+          "text": "Spec 124 R-ES (owed since link_coa_to_parcels ② declared parcel_linked_at source run_at; due at its R-EQ shell swap, Night P4 2026-10-20): the incremental decision scope (buildDecisionScopeWhere) re-enriches a parcel when a CoA's ca.parcel_linked_at > COALESCE(p.massing_enriched_at, p.zoning_enriched_at, 'epoch'), reading the marker as 'this CoA's link moved at' — the stamp link_coa_to_parcels writes only for a CoA whose link changed this run (its Ruling 1).",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/compute/enrich-parcels.js"
+          }
+        }
+      },
       {
         "step": "link_massing",
         "stamp": "parcel_buildings.linked_at",

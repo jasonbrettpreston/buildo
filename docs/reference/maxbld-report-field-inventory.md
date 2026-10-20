@@ -2028,8 +2028,8 @@ none
 
 - `docs/reports/witness/compute_parcel_cost_estimates/post/sources.trace.json` sha256 `1844a47e9b8a7862`
 - `docs/reports/witness/compute_parcel_cost_estimates/post/standalone.trace.json` sha256 `823da11eb9ba7e00`
-- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `b9a6e9b330abc39a`
-- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `8a8bd59057afff8a`
+- `docs/reports/witness/enrich_parcels/post/none_incremental.trace.json` sha256 `bb7337a6aaa9a488`
+- `docs/reports/witness/enrich_parcels/post/sources_run1.trace.json` sha256 `ab446058c4d0743a`
 - `migrations/205_archetype_cost_rates.sql` sha256 `9d8da50c991f1258`
 - `migrations/248_parcel_cost_lines.sql` sha256 `9f3caeb84373ef43`
 - `mobile/app/(app)/parcel-tool/[parcelId].tsx` sha256 `efb91c277ebc0f32`

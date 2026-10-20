@@ -286,14 +286,16 @@ type Descriptor = {
   inputs?: { config?: Array<{ key?: string; name?: string }> } & Record<string, unknown>;
 };
 
-describe('link_coa_to_parcels — converted claims (D1/D2–D7 GREEN at ②; D1b/D9 at ③)', () => {
+describe('link_coa_to_parcels — converted claims (D1/D2–D7 GREEN at ②; D1b at the R-EQ swap; D9 at ③)', () => {
   it('D1 — identity: descriptor exists, archetype LINK, lock 4201, spec "42" (flipped at ②)', () => {
     const d = readJson<Descriptor>(DESCRIPTOR_REL);
     expect(d.identity).toMatchObject({ name: 'link_coa_to_parcels', archetype: 'LINK', lock: LOCK_ID, spec: '42' });
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
   });
 
-  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at ③)', () => {
+  // FLIPPED at the Night P4 shell swap (Spec 124 R-EQ, operator y 2026-10-19: "A step whose ② landed at `compute_ported` moves to
+  // `runner_wired` in its swap commit"): the frozen shell is the live writer from runner_wired; D9 (converted[]) stays at ③.
+  it('D1b — frozen shell: pipeline.step(), not pipeline.run() (flipped at the R-EQ shell swap, stage runner_wired)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toMatch(/pipeline\.step\(/);
     expect(shell).not.toMatch(/pipeline\.run\(/);

@@ -2,15 +2,15 @@
   "trace_version": 1,
   "step": "scripts/link-coa-to-parcels.js",
   "chain": "none",
-  "source_fingerprint": null,
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "source_fingerprint": "7d4a79e0bd5d398ec3334670b7adb805b44d9b06eef0f8bf90cc33c9d200771d",
+  "git_head": "42c9d3d50d4465dd74c1cb5fea9d277281aaa4da",
   "header": {
     "processes": 1,
     "calls": 12,
     "distinct": 11,
     "utility": 5,
-    "tracer_self_ms": 0.675,
-    "wall_ms": 185
+    "tracer_self_ms": 0.912,
+    "wall_ms": 195
   },
   "statements": [
     {
@@ -36,7 +36,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 760,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [

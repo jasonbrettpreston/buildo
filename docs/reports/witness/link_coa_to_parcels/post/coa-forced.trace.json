@@ -1,0 +1,795 @@
+{
+  "trace_version": 1,
+  "step": "scripts/link-coa-to-parcels.js",
+  "chain": "coa",
+  "source_fingerprint": "50bb4b92ba8efaac00ab30ccacab3c22f5ecc4967fbf1b5284910b3cced541f8",
+  "git_head": "42c9d3d50d4465dd74c1cb5fea9d277281aaa4da",
+  "header": {
+    "processes": 1,
+    "calls": 297,
+    "distinct": 26,
+    "utility": 75,
+    "tracer_self_ms": 229.914,
+    "wall_ms": 4786
+  },
+  "statements": [
+    {
+      "fingerprint": "006765ea7f75e416",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "id",
+          "latitude",
+          "lead_id",
+          "longitude",
+          "neighbourhood_id",
+          "street_name",
+          "street_name_normalized"
+        ],
+        "lead_parcels": [
+          "lead_id",
+          "match_type",
+          "parcel_id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "geom",
+          "id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "0069ecf0edd07b31",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "lead_id"
+        ],
+        "lead_parcels": [
+          "confidence",
+          "lead_id",
+          "match_type",
+          "matched_at",
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "107ed6b6df1704a1",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pipeline_runs"
+      ],
+      "error": null,
+      "text": "SELECT id, records_meta FROM pipeline_runs WHERE pipeline = ANY($1::text[]) AND status = ANY($2::text[]) AND NOT COALESCE(records_meta->'audit_table'->'rows' @> '[{\"metric\":\"write_skipped_pre_write_warn\"}]'::jsonb, false) ORDER BY started_at DESC, id DESC LIMIT $3",
+      "params": [
+        [
+          [
+            "coa:link_coa_to_parcels",
+            "link_coa_to_parcels",
+            "link-coa-to-parcels"
+          ],
+          [
+            "completed",
+            "completed_with_warnings"
+          ],
+          1
+        ]
+      ]
+    },
+    {
+      "fingerprint": "323161b2e5c4176e",
+      "kind": "write",
+      "count": 34,
+      "rowCount": 50,
+      "reads": {
+        "coa_applications": [
+          "id",
+          "latitude",
+          "lead_id",
+          "longitude",
+          "neighbourhood_id",
+          "parcel_linked_at"
+        ],
+        "lead_parcels": [
+          "lead_id",
+          "matched_at",
+          "parcel_id"
+        ],
+        "neighbourhoods": [
+          "geom",
+          "id"
+        ],
+        "parcels": [
+          "centroid_lat",
+          "centroid_lng",
+          "id"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "latitude",
+          "longitude",
+          "neighbourhood_id",
+          "parcel_linked_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "3af57a03a54f7cfe",
+      "kind": "read",
+      "count": 35,
+      "rowCount": 33857,
+      "reads": {
+        "coa_applications": [
+          "lead_id",
+          "street_name",
+          "street_name_normalized",
+          "street_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "496ad3c4b49c7a10",
+      "kind": "write",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "lead_id"
+        ],
+        "lead_parcels": [
+          "lead_id"
+        ]
+      },
+      "writes": {
+        "lead_parcels": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "4ff8b919ef3670ef",
+      "kind": "write",
+      "count": 34,
+      "rowCount": 50,
+      "reads": {
+        "lead_parcels": [
+          "confidence",
+          "match_type"
+        ]
+      },
+      "writes": {
+        "lead_parcels": [
+          "confidence",
+          "lead_id",
+          "match_type",
+          "matched_at",
+          "parcel_id"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "5426100388d8d81a",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 805,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5459ad2be5bf706c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "56985cbee4dfe3a3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_extension"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "5eebf4a9ff6d7782",
+      "kind": "read",
+      "count": 2,
+      "rowCount": 2,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "pg_class",
+        "pg_policy",
+        "pg_roles"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "6652815a6eb5fa63",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "schema_migrations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 36,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7d064bd140f81130",
+      "kind": "read",
+      "count": 34,
+      "rowCount": 0,
+      "reads": {
+        "lead_parcels": [
+          "confidence",
+          "lead_id",
+          "match_type",
+          "matched_at",
+          "parcel_id"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "89fec6cbb7400f32",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 16,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "logic_variables"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "8b2a51f8ecf35a41",
+      "kind": "write",
+      "count": 34,
+      "rowCount": 0,
+      "reads": {
+        "lead_parcels": [
+          "lead_id",
+          "parcel_id"
+        ]
+      },
+      "writes": {
+        "lead_parcels": []
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "aac73c68679db309",
+      "kind": "read",
+      "count": 34,
+      "rowCount": 31762,
+      "reads": {
+        "address_points": [
+          "addr_num_normalized",
+          "address_class_desc",
+          "address_point_id",
+          "address_status",
+          "linear_name_normalized",
+          "maint_stage",
+          "retired_at",
+          "street_type_normalized"
+        ],
+        "parcel_address_points": [
+          "address_point_id",
+          "parcel_id"
+        ],
+        "parcels": [
+          "addr_num_normalized",
+          "centroid_lat",
+          "centroid_lng",
+          "geom",
+          "id",
+          "street_name_normalized",
+          "street_type_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "afd4d45d41748e8c",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 35,
+      "reads": {},
+      "writes": {},
+      "excluded": [
+        "trade_configurations"
+      ],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 36,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "ba1127d5dfc28ea3",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "lead_id",
+          "street_name_normalized"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c0df9f04cf51caeb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcel_address_points": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c658fddde99a6b15",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "parcels": []
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "e3a1b518a3399ed4",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "323161b2e5c4176e",
+        "4ff8b919ef3670ef",
+        "8b2a51f8ecf35a41"
+      ]
+    },
+    {
+      "client": "74141:2",
+      "write_fingerprints": [
+        "496ad3c4b49c7a10"
+      ]
+    }
+  ],
+  "autocommit_writes": [],
+  "touched": {
+    "reads": {
+      "address_points": [
+        "addr_num_normalized",
+        "address_class_desc",
+        "address_point_id",
+        "address_status",
+        "linear_name_normalized",
+        "maint_stage",
+        "retired_at",
+        "street_type_normalized"
+      ],
+      "coa_applications": [
+        "id",
+        "latitude",
+        "lead_id",
+        "longitude",
+        "neighbourhood_id",
+        "parcel_linked_at",
+        "street_name",
+        "street_name_normalized",
+        "street_num"
+      ],
+      "lead_parcels": [
+        "confidence",
+        "lead_id",
+        "match_type",
+        "matched_at",
+        "parcel_id"
+      ],
+      "neighbourhoods": [
+        "geom",
+        "id"
+      ],
+      "parcel_address_points": [
+        "address_point_id",
+        "parcel_id"
+      ],
+      "parcels": [
+        "addr_num_normalized",
+        "centroid_lat",
+        "centroid_lng",
+        "geom",
+        "id",
+        "street_name_normalized",
+        "street_type_normalized"
+      ]
+    },
+    "writes": {
+      "coa_applications": [
+        "latitude",
+        "longitude",
+        "neighbourhood_id",
+        "parcel_linked_at"
+      ],
+      "lead_parcels": [
+        "confidence",
+        "lead_id",
+        "match_type",
+        "matched_at",
+        "parcel_id"
+      ]
+    }
+  },
+  "errors": []
+}
