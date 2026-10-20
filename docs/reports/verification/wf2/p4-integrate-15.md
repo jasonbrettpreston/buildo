@@ -40,3 +40,20 @@ Spec 124 ruling) was flagged as expected. No report text was changed.
   `docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json` (*"the operator approves the target
   shape"*). No code, data or test changed: the shape was already applied at `06f7fb6d`; only the row's record of what it
   amends was incomplete.
+- **verify-15 N3 (Spec 68 §7.5 text behind the register).** Each change quotes the register row's Amends text as its
+  authority; no code, data or test changed (the behaviour landed at `20582cea` / `06f7fb6d`).
+  - *Rule 7a and its hardening line* — M-237 (69a:384) Amends: *"Amends Spec 68 §7.5 rule 7a as approved."* Rule 7a's
+    heading now reads `(Spec 69 M-54 note 2026-10-07; M-237)`, and the hardening line (Spec 68:379) reads *"no by-law
+    unit (keyed or pending; `vocab.absence_ignore` units aside, M-237) for the target"*, M-237's own words: *"rule 7a's
+    "no by-law unit … for the target" skips a unit … declared as `vocab.absence_ignore`"*.
+  - *Rule 4* — M-239 (69a:386) Amends: *"Spec 68 §7.5 rule 4 (a declared target bound)"*. Rule 4 now reads *"with the
+    same bound direction (a target's declared bound governs, M-239)"*, M-239's conflict check: *"a declared target bound
+    is the unit's bound for that target"*.
+  - *Spec 69 M-76 A10 pointer* — M-239 Amends *"M-76 A10 (threshold DEFINE lists)"*, so M-76's status cell (69a:154)
+    now ends *"(A10) AMENDED 2026-10-20 by M-239 (…; operator CHAT-9)"*. Spec 69's header: *"Amended only by adding rows
+    (or appending a dated note to a row)"*; a dated-note row would shift every 69a line after 154 by one and stale the
+    live cite *"69a:223"* in the M-207 dated note (69a:345), so the pointer rides in the status cell, as bylaw-fix-2 did for M-219,
+    M-220 and M-223 (69a's header: *"the status column of each row below is authoritative"*). The status still starts
+    `RATIFIED`, so `readSpec69Rulings` reads it unchanged.
+  - *Budget* — Spec 68 is 103,123 bytes / 530 lines against the arm (iv) ceiling of 103,163 bytes / 589 lines
+    (`measured_at` 93,785 × 1.1); `spec-split-check --check` reports "budgets held". 40 bytes of headroom remain.

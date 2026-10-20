@@ -340,7 +340,7 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
      - tie-break: it ranks just above the highest layer that rule ranks, so it beats a unit at that
        layer outright; rule 4a (most restrictive) never runs between them                      (Spec 69 M-49)
   4. otherwise the highest layer wins: provincial > exception > overlay > base               (900.1.10(3); Spec 69 M-34)
-     - a higher-layer unit replaces only lower-layer units with the same bound direction; a
+     - a higher-layer unit replaces only lower-layer units with the same bound direction (a target's declared bound governs, M-239); a
      different direction is additional. A provincial unit whose regulation says a by-law prevails
      (O. Reg. 299/19 ss.4(2), 5(2)) only restrains a lower-layer unit, per its `limits_bylaw`, so the result
      is the more permissive of the two; it is never ADDITIONAL under rule 6 — with no lower-layer unit the
@@ -353,7 +353,7 @@ effective(lot, target, candidates) =      (the loader builds candidates per rule
   7. no candidate remains => "not evaluated" (never a silent default)
   result: {value | not_evaluated | conflict, applied[], winner, trace}
 
-  7a. unregulated BY ABSENCE (Spec 69 M-54 note 2026-10-07): when no candidate of any layer exists for the target
+  7a. unregulated BY ABSENCE (Spec 69 M-54 note 2026-10-07; M-237): when no candidate of any layer exists for the target
      and the lot's exception (if any) is captured, a cited `absence-rulings.json` entry (zone, target, stated absence,
      checked against the pinned page) gives `unregulated` with evidence kind `absence` — never a clause — flagged for
      the M-29 expert sample; first entry ABS-1: R-zone principal-building coverage (no 10.10.30.40; only 10.10.60.70)
@@ -376,7 +376,7 @@ building type unknown (lot.building_type NULL) and a candidate's applicability d
 - *Rule 2, argument level:* a same-target displacer naming an argument takes that argument's place in the host expression, and the rewritten unit carries the higher of the two layers; this is the reading under which the §7.4 example gives 12.0 m (HT 12.0), and the code implements it.
 - *Rule 4, provincial:* a provincial unit (only from `external.json`, scope resolved through `vocab.provincial_scope`) restrains a more restrictive by-law value of its own bound direction per `limits_bylaw`; it is never additional and never switches rule 7a off.
 - *Rule 4a:* `unlimited` and `unregulated` at one layer report `unlimited`; ties go to the first unit in the declared total order (layer, `unit_id`, content).
-- *Rule 7a:* absence needs the lot's exception and its INCLUDE closure authored for the target and no by-law unit (keyed or pending) for the target; else `not_evaluated:exception_not_authored:<exception>` or `no_candidate`. Every ruling is executed against its page, case-insensitive and structural.
+- *Rule 7a:* absence needs the lot's exception and its INCLUDE closure authored for the target and no by-law unit (keyed or pending; `vocab.absence_ignore` units aside, M-237) for the target; else `not_evaluated:exception_not_authored:<exception>` or `no_candidate`. Every ruling is executed against its page, case-insensitive and structural.
 - *Undecided applicability:* every combination of undecided units (at most 8) is resolved; a value only if all agree (M-50 generalised), else `not_evaluated` with the declared-priority reason. Every result lists `inputs[]`, the lot inputs read (conditions included).
 - ~~*Held:* PERMIT vs PROHIBIT at the same rank stays `conflict` for an operator ruling.~~ **Ruled 2026-10-07 (a):** PROHIBIT wins; the result names both clauses and carries `expert_sample: true`.
 
