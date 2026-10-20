@@ -4970,14 +4970,27 @@
   {
    "unit_id": "150.7.60.20(6)#(6)(A)",
    "verdict": "wrong",
-   "disposition": "fixed_by",
+   "disposition": "verified_by_lock",
    "fix_ids": [
-    "M-198",
-    "M-193"
+    "M-198"
    ],
    "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
    "disclosure_code": "suite_lot_fact_unknown",
-   "basis": "findings B1 + M-198; M-193 (under review) for the Coxwell clause; suite keying lane 2026-10-20: the M-198 reading is tested in src/tests/bylaw-suite-owed.logic.test.ts (\"M-198(2): 150.7.60.20(6)(A) …\"); no lock is named while M-193 (the Coxwell map area, 150.7.60.30(1)(C)) is cited — it is not a ruling on this corner-lot clause and awaits the operator (drop as a mis-citation, recommended)"
+   "basis": "findings B1 + M-198; suite keying lane 2026-10-20: the M-198 reading is tested in src/tests/bylaw-suite-owed.logic.test.ts. M-193 (the Coxwell map area, 150.7.60.30(1)(C)) is dropped as a mis-citation: operator chat 2026-10-20 batch B, CHAT-6 (\"Drop the M-193 (Coxwell map area) mis-citation so the row closes as M-198 owed to P5.13, like (6)(C)\"; \"y to all\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json). The Layer 2 part (the 1.5 m floor keyed, the neighbour-average arm disclosed) is the named lock below; the M-198(2) larger-of with the averaged arm is Layer 3, owed to P5.13 as on (6)(C) (not listed under owed[] because the tracker forbids one id as both fix id and owed)",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198(2): 150.7.60.20(6)(A) a corner lot keys the 1.5 m floor; the averaging needs the neighbour and is disclosed",
+     "asserts": [
+      "'150.7.60.20(6)#(6)(A)'",
+      "side_setback_street_m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ]
   },
   {
    "unit_id": "150.7.60.20(6)#(6)(B)",

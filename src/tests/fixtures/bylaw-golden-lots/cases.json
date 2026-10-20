@@ -4,8 +4,8 @@
  "tracker_counts": {
   "answers": 788,
   "by_state": {
-   "INCORPORATED": 784,
-   "UNFIXED": 4
+   "INCORPORATED": 785,
+   "UNFIXED": 3
   },
   "by_verdict": {
    "disclose": 186,
@@ -18,10 +18,10 @@
   "by_disposition": {
    "disclosed_by": 186,
    "excluded": 236,
-   "fixed_by": 84,
+   "fixed_by": 83,
    "matches": 187,
    "resolved_by": 52,
-   "verified_by_lock": 43
+   "verified_by_lock": 44
   },
   "by_chapter": {
    "10.10": {
@@ -68,8 +68,8 @@
    },
    "150.7": {
     "total": 96,
-    "INCORPORATED": 95,
-    "UNFIXED": 1,
+    "INCORPORATED": 96,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "150.8": {
@@ -186,321 +186,6 @@
    "class": "NOT_EXERCISABLE",
    "reason": "pinned out of scope (PIN SCOPE-100UNITS-1, operator 2026-10-20 \"y pin them\"): no disclosure is applied by ruling",
    "checks": []
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(A)",
-   "family": "150.7.60.20 Setbacks",
-   "verdict": "wrong",
-   "disposition": "fixed_by",
-   "tracker_state": "UNFIXED",
-   "fix_ids": [
-    "M-198",
-    "M-193"
-   ],
-   "disclosure_code": "suite_lot_fact_unknown",
-   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
-   "zone": "R",
-   "class": "OWED",
-   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
-   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
-   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
-   "checks": [
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5396831",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    },
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5410438",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner+lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    }
-   ],
-   "lineage": {
-    "field": "disclosures",
-    "owed": [
-     "P5.12 codes in vocab.json — step commit ①"
-    ],
-    "regulation_ids": 0
-   }
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(A)",
-   "family": "150.7.60.20 Setbacks",
-   "verdict": "wrong",
-   "disposition": "fixed_by",
-   "tracker_state": "UNFIXED",
-   "fix_ids": [
-    "M-198",
-    "M-193"
-   ],
-   "disclosure_code": "suite_lot_fact_unknown",
-   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
-   "zone": "RD",
-   "class": "OWED",
-   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
-   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
-   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
-   "checks": [
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5144129",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner+ravine): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    },
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5294858",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    }
-   ],
-   "lineage": {
-    "field": "disclosures",
-    "owed": [
-     "P5.12 codes in vocab.json — step commit ①"
-    ],
-    "regulation_ids": 0
-   }
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(A)",
-   "family": "150.7.60.20 Setbacks",
-   "verdict": "wrong",
-   "disposition": "fixed_by",
-   "tracker_state": "UNFIXED",
-   "fix_ids": [
-    "M-198",
-    "M-193"
-   ],
-   "disclosure_code": "suite_lot_fact_unknown",
-   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
-   "zone": "RS",
-   "class": "OWED",
-   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
-   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
-   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
-   "checks": [
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5355534",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    },
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5429544",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    }
-   ],
-   "lineage": {
-    "field": "disclosures",
-    "owed": [
-     "P5.12 codes in vocab.json — step commit ①"
-    ],
-    "regulation_ids": 0
-   }
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(A)",
-   "family": "150.7.60.20 Setbacks",
-   "verdict": "wrong",
-   "disposition": "fixed_by",
-   "tracker_state": "UNFIXED",
-   "fix_ids": [
-    "M-198",
-    "M-193"
-   ],
-   "disclosure_code": "suite_lot_fact_unknown",
-   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
-   "zone": "RT",
-   "class": "OWED",
-   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
-   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
-   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
-   "checks": [
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5048860",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    },
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5091429",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    }
-   ],
-   "lineage": {
-    "field": "disclosures",
-    "owed": [
-     "P5.12 codes in vocab.json — step commit ①"
-    ],
-    "regulation_ids": 0
-   }
-  },
-  {
-   "unit_id": "150.7.60.20(6)#(6)(A)",
-   "family": "150.7.60.20 Setbacks",
-   "verdict": "wrong",
-   "disposition": "fixed_by",
-   "tracker_state": "UNFIXED",
-   "fix_ids": [
-    "M-198",
-    "M-193"
-   ],
-   "disclosure_code": "suite_lot_fact_unknown",
-   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
-   "zone": "RM",
-   "class": "OWED",
-   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
-   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
-   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
-   "checks": [
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5104096",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    },
-    {
-     "kind": "reach",
-     "unit": "150.7.60.20(6)#(6)(A)",
-     "lot": "5170783",
-     "scenario": {
-      "building_type": "garden_suite"
-     },
-     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
-     "initial": {
-      "pass": true,
-      "observed": {
-       "candidate": true,
-       "applies": null,
-       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
-       "disclosures": []
-      }
-     }
-    }
-   ],
-   "lineage": {
-    "field": "disclosures",
-    "owed": [
-     "P5.12 codes in vocab.json — step commit ①"
-    ],
-    "regulation_ids": 0
-   }
   },
   {
    "unit_id": "5.10.40.70(6)#(6)(B)",
@@ -38349,6 +38034,316 @@
      }
     }
    ]
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "family": "150.7.60.20 Setbacks",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "tracker_state": "INCORPORATED",
+   "fix_ids": [
+    "M-198"
+   ],
+   "disclosure_code": "suite_lot_fact_unknown",
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "zone": "R",
+   "class": "OWED",
+   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
+   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
+   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
+   "checks": [
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5396831",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5410438",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner+lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    }
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "family": "150.7.60.20 Setbacks",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "tracker_state": "INCORPORATED",
+   "fix_ids": [
+    "M-198"
+   ],
+   "disclosure_code": "suite_lot_fact_unknown",
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "zone": "RD",
+   "class": "OWED",
+   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
+   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
+   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
+   "checks": [
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5144129",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner+ravine): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5294858",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    }
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "family": "150.7.60.20 Setbacks",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "tracker_state": "INCORPORATED",
+   "fix_ids": [
+    "M-198"
+   ],
+   "disclosure_code": "suite_lot_fact_unknown",
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "zone": "RS",
+   "class": "OWED",
+   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
+   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
+   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
+   "checks": [
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5355534",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (lane_corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5429544",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    }
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "family": "150.7.60.20 Setbacks",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "tracker_state": "INCORPORATED",
+   "fix_ids": [
+    "M-198"
+   ],
+   "disclosure_code": "suite_lot_fact_unknown",
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "zone": "RT",
+   "class": "OWED",
+   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
+   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
+   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
+   "checks": [
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5048860",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5091429",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    }
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
+  },
+  {
+   "unit_id": "150.7.60.20(6)#(6)(A)",
+   "family": "150.7.60.20 Setbacks",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "tracker_state": "INCORPORATED",
+   "fix_ids": [
+    "M-198"
+   ],
+   "disclosure_code": "suite_lot_fact_unknown",
+   "corrected_value": "On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held.",
+   "zone": "RM",
+   "class": "OWED",
+   "owed_field": "disclosures (undetermined site fact adjacent_lot_fronts_flanking_street, vocab undetermined_condition_disclosure)",
+   "keyed_disclosure": "On a corner lot next to a house facing your side street, a garden suite's street-side setback is an average of the neighbour's front setback and your house's side setback (at least 1.5 m); we only check the 1.5 m floor.",
+   "reason": "the unit reaches the lot and carries its keyed disclosure; the lot-level emission belongs to compute_maxbld_scenarios (①, not built)",
+   "checks": [
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5104096",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "reach",
+     "unit": "150.7.60.20(6)#(6)(A)",
+     "lot": "5170783",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "rationale": "category-matched affected lot (corner): applies undecided (condition_unknown:adjacent_lot_fronts_flanking_street)",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": null,
+       "why": "condition_unknown:adjacent_lot_fronts_flanking_street",
+       "disclosures": []
+      }
+     }
+    }
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
   },
   {
    "unit_id": "150.7.60.20(6)#(6)(B)",

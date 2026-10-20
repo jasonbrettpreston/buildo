@@ -6,9 +6,9 @@
 
 ## Counts
 
-- Answers: **788** — INCORPORATED **784**, UNFIXED **4**, OPEN **0**.
+- Answers: **788** — INCORPORATED **785**, UNFIXED **3**, OPEN **0**.
 - By verdict: disclose 186 · matches 187 · no_application 236 · null 13 · unsure 35 · wrong 131.
-- By disposition: disclosed_by 186 · excluded 236 · fixed_by 84 · matches 187 · resolved_by 52 · verified_by_lock 43.
+- By disposition: disclosed_by 186 · excluded 236 · fixed_by 83 · matches 187 · resolved_by 52 · verified_by_lock 44.
 - Answers whose provision feeds a P5.10 lineage field: 267.
 
 | Chapter | Answers | Incorporated | Unfixed | Open |
@@ -20,7 +20,7 @@
 | 10.60 | 66 | 66 | 0 | 0 |
 | 10.80 | 81 | 81 | 0 | 0 |
 | 150.10 | 8 | 8 | 0 | 0 |
-| 150.7 | 96 | 95 | 1 | 0 |
+| 150.7 | 96 | 96 | 0 | 0 |
 | 150.8 | 80 | 80 | 0 | 0 |
 | 5.10 | 23 | 21 | 2 | 0 |
 | 600.60 | 1 | 1 | 0 | 0 |
@@ -32,16 +32,15 @@
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
 
-## UNFIXED (4)
+## UNFIXED (3)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
 | `10.5.40.60(4)#(4)(B)` | disclose | disclosed_by | M-169, `setback_encroachments` | The cladding allowance on a lot with 100 or more dwelling units is residential but outside the MaxBLD building types — PIN SCOPE-100UNITS-1 (renamed from NONRES-3, verify-12f N1, 2026-10-20): out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN SCOPE-100UNITS-1): answer kept, no disclosure applied | — | Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important |
-| `150.7.60.20(6)#(6)(A)` | wrong | fixed_by | M-198, M-193, `suite_lot_fact_unknown` | On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held. | ruled; keyed correction not applied yet | `suite_side_setbacks_m` | Garden Suite on Corner Lot - Side Yard Setback Minimum- can't be less than 1.5M but is average of the front yard setback of the residential building on the adja |
 | `5.10.40.70(6)#(6)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-setback exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-1: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN NONRES-1): answer kept, no disclosure applied | — | Shoreline Hazards |
 | `5.10.40.80(1)#(1)(B)` | disclose | disclosed_by | M-169, M-212, `shoreline_hazard` | The shoreline-separation exemption for conservation works, public utilities and transportation uses is a non-residential use — PIN NONRES-2: out of scope, the operator's answer is kept and no disclosure is applied (operator 2026-10-20 "y pin them", on the three arms named to the operator (recorded in Spec 69a, M-169 dated note, review answers batch 5)). | pinned out of scope (PIN NONRES-2): answer kept, no disclosure applied | — | Shoreline Hazards - seperation distance - lots on shoreline |
 
-## INCORPORATED (784)
+## INCORPORATED (785)
 
 | Unit | Verdict | Disposition | Fix ids / code | Corrected value or question | Why this state | Feeds fields | Operator note |
 |---|---|---|---|---|---|---|---|
@@ -622,6 +621,7 @@
 | `150.7.60.20(4)#(4)(B)` | disclose | disclosed_by | M-172, M-216, `suite_parking_variants` | With a parking space and rear-street access the rear setback is 6.0 m; disclosed as the trade-off. | keyed disclosure + P5.12 code | — | arden Suite containing a Parking Space on Through Lot - The required minimum rear yard setback for an ancillary building containing a garden suite and a parking |
 | `150.7.60.20(5)#(5)(A)` | wrong | fixed_by | M-197, M-198, `suite_openings_setback` | Openings in the suite side wall are taken as absent (design choice), so the greater side setback arm is disclosed, not bound. Lock (M-197, M-198): `src/tests/bylaw-suite-owed.logic.test.ts` › M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed › M-198: 150.7.60.20(5)(A) the with-openings side arm is disclosed with its lot fact and never read | every cited ruling applied (keyed correction or named lock) | `suite_openings_loss_sqm`, `suite_side_setbacks_m` | Garden Suite - Side Yard Setback - if it doesn't abut a street and you have doors and windows etc - setback is the greater of 1.5 meters of 10% of the lot front |
 | `150.7.60.20(5)#(5)(B)` | wrong | verified_by_lock | M-198 | Garden-suite side setback is the greater of 0.6 m and 10 % of frontage, capped at 3.0 m. Lock (M-198): `src/tests/bylaw-suite-owed.logic.test.ts` › M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed › M-198: 150.7.60.20(5)(B) the side setback is the greater of 0.6 m or 10 % of the frontage, at most 3.0 m | verified by named lock | `suite_openings_loss_sqm`, `suite_side_setbacks_m` | Garden Suite - Side Yard Setback is the greater of .6M or 10% of lot frontage to a mx of 3m |
+| `150.7.60.20(6)#(6)(A)` | wrong | verified_by_lock | M-198, `suite_lot_fact_unknown` | On a corner lot the side setback is the 1.5 m floor or an average needing the neighbour's front setback; that fact is not held. Lock (M-198): `src/tests/bylaw-suite-owed.logic.test.ts` › M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed › M-198(2): 150.7.60.20(6)(A) a corner lot keys the 1.5 m floor; the averaging needs the neighbour and is disclosed | verified by named lock | `suite_side_setbacks_m` | Garden Suite on Corner Lot - Side Yard Setback Minimum- can't be less than 1.5M but is average of the front yard setback of the residential building on the adja |
 | `150.7.60.20(6)#(6)(B)` | wrong | fixed_by | M-216, M-172, `suite_parking_variants` | A 6.0 m side setback applies only if the suite has a parking space on a corner lot; max build takes no parking, so it is disclosed. | every cited ruling applied (keyed correction or named lock) | `suite_side_setbacks_m` | Garden Suite on Corner Lot - Side Yard Setback Minimum= condition if the garden suite contains a parking spot - the required minimum side yard setback is the gr |
 | `150.7.60.20(6)#(6)(C)` | wrong | fixed_by | M-179 | The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite. Owed: M-198 → P5.13 (M-198(2) is Layer 3 and needs the principal building's side yard) | every cited ruling applied (keyed correction or named lock); owed elsewhere: M-198 → P5.13 | `suite_side_setbacks_m` | Garden Suite on Corner Lot - Side Yard Setback Minimum =1.5m . Critical - this is the default |
 | `150.7.60.21(1)#(1)(A)` | wrong | verified_by_lock | M-158, M-198, `lawfully_existing_relief` | A lawfully existing smaller rear setback stands for the garden suite (min template), answered with the caveat. Lock (M-158, M-198): `src/tests/bylaw-suite-owed.logic.test.ts` › M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed › M-158 / M-198: 150.7.60.21(1)(A) and (B) a new build answers the 150.7.60.20 minimum; the lawfully existing setback is the caveat | verified by named lock | — | Setback Exemptions Garden Suite - existing lawful buildings   |
