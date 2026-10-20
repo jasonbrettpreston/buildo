@@ -43,3 +43,8 @@ first integrate commit with this index; none had to wait for the merge that intr
   clean, RS-9 PASS. The sample's `suite_coa_status` value is `not_evaluated:coa_factor_unfitted:suite` (Q-4);
   "precedent_estimate" there is the field's trust tier. R-RS → R-HM in both generators, citing
   `2026-10-20-chat-batch-a#CHAT-4`; the R-HM row says RS-0…RS-11. **CHAT-11 not imported** (PIN: see the lane report).
+- **Plan v2 §3.3 / §3.5 (CHAT-5 routing; verify-13b N2, N3, N4).** M-230 cites `2026-10-20-chat-batch-a#CHAT-5`
+  (the committed log, not the scratchpad path, N4) and says (B)'s 25.0 m follows by the same correction (N3); CHAT-5's
+  routing drops `owed`; `decision-log --check` clean, 25 rows / 50 citations / 0 owed. The two R-HK real-tree tests
+  assert CHAT-5 → M-230 cited. The 69a 2026-10-20 dated note records the F-04 townhouse side-yard knock-on on 27 R
+  golden lots (N2).

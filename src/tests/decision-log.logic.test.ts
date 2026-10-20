@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-HK (operator decision logs and their register rows);
-//            R-HM (R-RS, CHAT-4) is recorded through these logs; its own lock (report-schema.logic) lands with wf2/report-schema
+//            R-HM (R-RS, CHAT-4) is recorded through these logs; its own lock is report-schema.logic (landed at integrate-13)
 //
 // R-HK: every operator ruling is committed verbatim as a decision log under docs/reports/decisions/, and every approved
 // decision is recorded by a register row that cites `<log stem>#<decision id>`. scripts/analysis/decision-log.mjs
@@ -296,9 +296,12 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
   it('the chat logs: batch A (CHAT-1…5, "push failed 1 test y to 1-4") and the Spec 132 rulings (R-GU…R-GX)', () => {
     const batch = byStem.get('2026-10-20-chat-batch-a') as { source: { operator_quote: string }; routing: Record<string, { row: string; owed?: string }> };
     expect(batch.source.operator_quote).toBe('push failed 1 test y to 1-4');
-    // CHAT-2 → R-HL, CHAT-3 → R-HK (confirmed), CHAT-4 → R-HM (R-RS); CHAT-5 is owed by wf1/bylaw-fix-1 (its Spec 69a M-230).
+    // CHAT-2 → R-HL, CHAT-3 → R-HK (confirmed), CHAT-4 → R-HM (R-RS); CHAT-5 → Spec 69a M-230, which wf1/bylaw-fix-1
+    // landed (integrate-13), so the routing no longer says owed and the row cites the decision.
     expect(Object.fromEntries(Object.entries(batch.routing).map(([k, v]) => [k, v.row]))).toEqual({ 'CHAT-1': 'LC-62', 'CHAT-2': 'R-HL', 'CHAT-3': 'R-HK', 'CHAT-4': 'R-HM', 'CHAT-5': 'M-230' });
-    expect(batch.routing['CHAT-5']!.owed).toMatch(/^wf1\/bylaw-fix-1/);
+    expect(batch.routing['CHAT-5']!.owed).toBeUndefined();
+    const m230 = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/69a_mcbylaw_register.md'), 'utf8').split('\n').find((l) => /^\|\s*\*{0,2}M-230\*{0,2}\s*\|/.test(l));
+    expect(m230).toContain('`2026-10-20-chat-batch-a#CHAT-5`');
     const s132 = byStem.get('2026-10-20-spec132-rulings') as { decisions: Array<{ id: string; operator_quote: string }> };
     expect(s132.decisions.map((d) => [d.id, d.operator_quote])).toEqual([['HANDBOOK', 'y to both'], ['ROLES', 'y to this revised version']]);
   });
@@ -307,6 +310,6 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
     expect(r.decisions).toBe(24);
-    expect(r.owed).toBe(1);
+    expect(r.owed).toBe(0);
   });
 });

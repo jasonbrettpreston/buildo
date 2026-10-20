@@ -32,8 +32,7 @@
     },
     "CHAT-5": {
       "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
-      "row": "M-230",
-      "owed": "wf1/bylaw-fix-1 (cf4e57a4: Spec 69a M-230, E2E-F-05)"
+      "row": "M-230"
     }
   },
   "amendments": {},
