@@ -1,0 +1,7 @@
+{
+  "decision": "drop",
+  "note": "Operator in chat 2026-10-20: \"maybe we dont even show our renovation data on the semi's and just require user input to solve that problem. as per the issue that it maynot be a semi - include a way for the user to tell us if it isnt so we can show the whole picture if it s a detached instead.\" → On a half-semi lot: no estimated existing-house figures at all; the renovation cards require the owner's input before showing numbers. Add a user correction 'this is not a semi (it's detached)' that switches the lot to the full report (all new-build cards). Supersedes the halve-the-footprint recommendation.",
+  "recorded_by": "claude from chat",
+  "ref": "Q-2",
+  "updated_at": "2026-10-20T19:10:00.000Z"
+}

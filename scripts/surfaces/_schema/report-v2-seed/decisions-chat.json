@@ -1,0 +1,6 @@
+{
+  "$comment": "Operator decisions given in chat AFTER the Report Schema Rulings page export, relayed verbatim by the coordinator to lane report-schema. Overlay on answers/report_decisions/*.json; a chat entry wins over the export for the same ref and is flagged in the register.",
+  "decisions": {
+    "Q-7": { "decision": "keep", "note": "Operator \"y to Q7\" (2026-10-20): Spec 100 will be amended to whitelist identity (zone label, frontage/depth, map outline), street_view and offers. Offers are first-party targeted ads in a separate top-level list, always labelled Sponsored. Rows move to the consumer/presentation source, marked pending:spec100_amendment until the Spec 100 amendment (app lane) lands.", "recorded_by": "coordinator relay of operator chat", "updated_at": "2026-10-20" }
+  }
+}

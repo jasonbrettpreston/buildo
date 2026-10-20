@@ -1,0 +1,7 @@
+{
+  "decision": "keep",
+  "note": "Operator in chat 2026-10-20: \"does the COA grant variances to these suites if so then we should keep it\". Measured (local dev DB, read-only): 1,129 CoA applications mention a garden suite (607) or laneway suite (522) since 2018-11-21; 865 approved, 132 refused. So keep the rear-suite CoA: amend LC-49, shown as not evaluated until calibrated.",
+  "recorded_by": "claude from chat",
+  "ref": "Q-4",
+  "updated_at": "2026-10-20T19:00:00.000Z"
+}

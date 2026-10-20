@@ -3,11 +3,11 @@
   "source": {
     "page": "Report Schema Rulings (artifact)",
     "questions": {
-      "export": "scratchpad/report-rulings/entries.json",
+      "export": "scripts/surfaces/_schema/report-v2-seed/entries.json",
       "sha256_16": "52069fe7439ed653"
     },
     "decisions": {
-      "export": "scratchpad/report-rulings/answers/report_decisions/*.json",
+      "export": "scripts/surfaces/_schema/report-v2-seed/answers/report_decisions/*.json",
       "files": 11,
       "sha256_16": "aeed9a02af6ce7ef"
     },
@@ -35,6 +35,12 @@
         "recorded_by": "claude from chat",
         "updated_at": "2026-10-20T19:00:00.000Z",
         "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.show_card_kinds": [
+          "renovation"
+        ],
+        "lot_form_rules.semi_half.headline": null
       }
     },
     {
@@ -50,6 +56,11 @@
         "recorded_by": "claude from chat",
         "updated_at": "2026-10-20T19:10:00.000Z",
         "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.existing_estimates": "hidden",
+        "lot_form_rules.semi_half.renovation_cards": "require_owner_input",
+        "lot_form_rules.semi_half.correction.value": "detached"
       }
     },
     {
@@ -65,6 +76,9 @@
         "recorded_by": "claude from chat",
         "updated_at": "2026-10-20T19:00:00.000Z",
         "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.suite_add_on": false
       }
     },
     {

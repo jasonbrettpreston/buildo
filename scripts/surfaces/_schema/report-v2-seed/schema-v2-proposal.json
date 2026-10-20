@@ -1,0 +1,1331 @@
+{
+ "version": "v2-proposal-2026-10-20",
+ "row_shape": [
+  "label",
+  "field",
+  "unit",
+  "status",
+  "note"
+ ],
+ "statuses": [
+  "live",
+  "planned",
+  "new",
+  "proposed"
+ ],
+ "cards": [
+  {
+   "scenario": "detached_house",
+   "title": "MaxBLD Detached House",
+   "code": "D",
+   "status": "planned",
+   "note": "on a semi_half lot: needs the attached half removed (S78:731); hidden from headline or flagged (proposed)"
+  },
+  {
+   "scenario": "house_with_secondary_suite",
+   "title": "MaxBLD Detached House + Secondary Suite",
+   "code": "2",
+   "status": "planned"
+  },
+  {
+   "scenario": "detached_houseplex",
+   "title": "MaxBLD Houseplex — 4 units / 6 units (label by eligibility)",
+   "code": "H",
+   "status": "planned",
+   "note": "one row; dwelling_units = 4, or 6 inside the sixplex map area (gap 1, approved)"
+  },
+  {
+   "scenario": "semi_detached_houseplex",
+   "title": "MaxBLD Semi Houseplex (only where the lot is half a semi)",
+   "code": "S",
+   "status": "planned"
+  },
+  {
+   "scenario": "renovation_addition",
+   "title": "Addition (back / up)",
+   "code": "RA",
+   "status": "planned"
+  },
+  {
+   "scenario": "renovation_envelope_expansion",
+   "title": "Expand to the full envelope",
+   "code": "RE",
+   "status": "new",
+   "note": "gap 3; not in P5.1 closed set — needs P5.1 + lineage + LC row"
+  },
+  {
+   "scenario": "renovation_interior",
+   "title": "Gut job (envelope unchanged)",
+   "code": "RI",
+   "status": "planned"
+  },
+  {
+   "scenario": "renovation_basement",
+   "title": "Basement underpinning",
+   "code": "RB",
+   "status": "planned"
+  },
+  {
+   "scenario": "renovation_basement_finish",
+   "title": "Basement renovation (no underpinning)",
+   "code": "RF",
+   "status": "new",
+   "note": "gap 4; needs existing_basement = true and a basement height input"
+  }
+ ],
+ "sections": [
+  {
+   "id": "identity",
+   "title": "Lot identity and map (header)",
+   "path": "match.* / parcel.lot.*",
+   "rows": [
+    [
+     "Address",
+     "match.address",
+     "text",
+     "live",
+     "[parcelId].tsx:83"
+    ],
+    [
+     "Municipal parcel id",
+     "parcel.parcelId",
+     "text",
+     "live",
+     "S-001 whitelist"
+    ],
+    [
+     "Zone label",
+     "parcel.lot.zone_label",
+     "text",
+     "proposed",
+     "parcels.zoning_zn_string, e.g. \"RM (f18.0; a665; u4)\" — Spec 100 §3.2 whitelist extension"
+    ],
+    [
+     "Zone (plain words)",
+     "parcel.lot.zone_class_label",
+     "text",
+     "proposed",
+     "presentation map R/RD/RS/RT/RM → \"Residential Detached\" …"
+    ],
+    [
+     "Exception number",
+     "parcel.lot.exception_number",
+     "text",
+     "proposed",
+     "parcels.exception_number; pairs with exception_not_authored"
+    ],
+    [
+     "Frontage",
+     "parcel.lot.frontage_m",
+     "m",
+     "proposed",
+     "parcels.frontage_m (rectangle approximation, ML-6)"
+    ],
+    [
+     "Depth",
+     "parcel.lot.depth_m",
+     "m",
+     "proposed",
+     "parcels.depth_m"
+    ],
+    [
+     "Irregular lot",
+     "parcel.lot.is_irregular",
+     "boolean",
+     "proposed",
+     "parcels.is_irregular"
+    ],
+    [
+     "Corner / through lot",
+     "parcel.lot.is_corner_lot · is_through_lot",
+     "boolean",
+     "proposed",
+     "parcels"
+    ],
+    [
+     "Abuts a lane",
+     "parcel.lot.abuts_laneway",
+     "boolean",
+     "proposed",
+     "never the laneway test (M-209)"
+    ],
+    [
+     "Map pin",
+     "parcel.lot.centroid_lat · centroid_lng",
+     "deg",
+     "proposed",
+     "Spec 100 §8 map fast-follow names this exact extension"
+    ],
+    [
+     "Lot outline",
+     "parcel.lot.outline_geojson",
+     "GeoJSON",
+     "proposed",
+     "simplified parcels.geom; Spec 100 §3.2 currently excludes geometry"
+    ],
+    [
+     "Overlays",
+     "parcel.lot.overlays[]",
+     "text[]",
+     "proposed",
+     "sixplex area (in_sixplex_area/sixplex_membership_basis), heritage, ravine, holding, major street, Coxwell (when held), lot-coverage overlay value"
+    ],
+    [
+     "Half of a semi",
+     "parcel.lot.semi_half",
+     "boolean",
+     "proposed",
+     "O-4 derived input; fidelity `differs` (ML-4)"
+    ],
+    [
+     "Neighbourhood",
+     "parcel.lot.neighbourhood_name",
+     "text",
+     "proposed",
+     "neighbourhoods via parcels.neighbourhood_id"
+    ]
+   ]
+  },
+  {
+   "id": "headline",
+   "title": "Headline (one per lot)",
+   "path": "scenarios.headline.*",
+   "rows": [
+    [
+     "Headline scenario",
+     "scenarios.headline.scenario",
+     "text",
+     "proposed",
+     "from the is_headline row; null when nothing permitted"
+    ],
+    [
+     "Headline closed reason",
+     "scenarios.headline.closed_reason",
+     "text",
+     "proposed",
+     "§6.6 rules 5/8: e.g. \"not buildable as of right\" + clauses, never blank"
+    ],
+    [
+     "Counts",
+     "scenarios.counts {permitted, not_permitted, not_buildable, not_evaluated, collapsed}",
+     "integers",
+     "proposed",
+     "§6.1 \"counters\"; §6.6 rule 1 counted, never displayed"
+    ],
+    [
+     "Legacy headline in use",
+     "scenarios.headline.source",
+     "text",
+     "proposed",
+     "\"legacy_areas\" until the shadow passes (R-11), then \"scenarios\""
+    ],
+    [
+     "Computed at",
+     "scenarios.computed_at",
+     "timestamp",
+     "proposed",
+     "lineage computed_at"
+    ]
+   ]
+  },
+  {
+   "id": "lot",
+   "title": "Today's legacy headline (kept until the shadow passes, R-11)",
+   "path": "parcel.areas.* / scenarios.lot",
+   "rows": [
+    [
+     "Lot size",
+     "parcel.areas.lot_size_sqm",
+     "m²",
+     "live",
+     ""
+    ],
+    [
+     "Today's max buildable GFA",
+     "parcel.areas.max_buildable_gfa_sqm",
+     "m²",
+     "live",
+     "replaced by the scenario headline after shadow validation"
+    ],
+    [
+     "Today's as-of-right GFA",
+     "parcel.areas.opt_aor_gfa_sqm",
+     "m²",
+     "live",
+     ""
+    ],
+    [
+     "Today's max storeys / FSI / CoA FSI",
+     "parcel.areas.max_build_stories · max_build_fsi · coa_fsi",
+     "",
+     "live",
+     ""
+    ],
+    [
+     "Gates on this lot",
+     "gate_flags",
+     "text[]",
+     "planned",
+     "holding_zone · heritage_designated · ravine_protection · shoreline_hazard …"
+    ]
+   ]
+  },
+  {
+   "id": "card",
+   "title": "Max build card (one per new-build scenario)",
+   "path": "scenarios.cards[i].*",
+   "rows": [
+    [
+     "Card title",
+     "display_label",
+     "text",
+     "proposed",
+     "PRESENTATION registry (not lineage): label template per scenario × dwelling_units, e.g. \"Houseplex — 6 units\""
+    ],
+    [
+     "Status",
+     "scenario_status",
+     "text",
+     "planned",
+     "permitted · not_permitted:<clause> · not_buildable · not_evaluated:<reason>"
+    ],
+    [
+     "Best option on this lot",
+     "is_headline",
+     "boolean",
+     "planned",
+     "largest total_gfa_sqm among permitted AND buildable new-build rows; tie → catalogue order (lineage :421). Shown as the headline only after the shadow passes (R-11); before that, a labelled \"largest option\" badge. PROPOSED: exclude/flag rows with requires_attached_half_removed (semi lots)"
+    ],
+    [
+     "Total floor area",
+     "total_gfa_sqm",
+     "m²",
+     "planned",
+     "main building + rear suite"
+    ],
+    [
+     "Main building floor area",
+     "main_gfa_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Footprint",
+     "main_footprint_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Storeys",
+     "main_storeys",
+     "integer",
+     "planned",
+     "houseplex: not capped"
+    ],
+    [
+     "Height",
+     "main_height_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "Units",
+     "dwelling_units",
+     "integer",
+     "planned",
+     "D 1 · suite 2 · houseplex 4 or 6"
+    ],
+    [
+     "Max bedrooms",
+     "max_bedrooms",
+     "integer",
+     "planned",
+     "houseplex rows"
+    ],
+    [
+     "Roof form used",
+     "roof_form_headline",
+     "text",
+     "planned",
+     "flat or pitched, whichever builds more"
+    ],
+    [
+     "Livable attic outside GFA",
+     "attic_outside_gfa_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Livable basement (not GFA)",
+     "basement_livable_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "What limits it",
+     "binding_constraint",
+     "text",
+     "planned",
+     "e.g. fsi, coverage, rear_setback"
+    ],
+    [
+     "Gain vs plain detached",
+     "gain_vs_detached_gfa_sqm",
+     "m²",
+     "planned",
+     "houseplex and suite rows"
+    ],
+    [
+     "Why it gains",
+     "gain_reasons",
+     "text[]",
+     "planned",
+     "e.g. fsi_not_applicable, coverage_45"
+    ],
+    [
+     "Front setback",
+     "main_front_setback_m",
+     "m",
+     "planned",
+     "estimate (neighbour averaging)"
+    ],
+    [
+     "Side setbacks",
+     "main_side_setbacks_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "Rear setback",
+     "main_rear_setback_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "FSI / coverage / storeys / height status",
+     "fsi_status · coverage_status · storeys_status · height_status",
+     "text",
+     "planned",
+     "applies:<value> or not_applicable:<clause>"
+    ],
+    [
+     "Disclosures",
+     "disclosures",
+     "text[]",
+     "planned",
+     "closed P5.12 codes; rendered via disclosure_texts (see Disclosures section)"
+    ],
+    [
+     "Trust level",
+     "row_trust_level",
+     "text",
+     "planned",
+     "computed, never asserted"
+    ],
+    [
+     "Scenario code",
+     "scenario",
+     "text",
+     "planned",
+     "closed P5.1 set"
+    ],
+    [
+     "Collapsed into",
+     "same_as_scenario",
+     "text",
+     "proposed",
+     "§6.6 rule 1 \"same as <scenario>\"; not in lineage"
+    ],
+    [
+     "Status reason (plain words)",
+     "status_text",
+     "text",
+     "proposed",
+     "PRESENTATION: closed reason → sentence (vocab), for not_* states in admin / headline fallback"
+    ],
+    [
+     "Avg unit size",
+     "avg_unit_gfa_sqm",
+     "m²",
+     "proposed",
+     "§6.1 Totals / §6.6 rule 3; not in lineage — derive from unit_breakdown"
+    ],
+    [
+     "Unit rows",
+     "unit_breakdown",
+     "jsonb [{floor, interior_area_sqm, in_gfa}]",
+     "planned",
+     "lineage :1767"
+    ],
+    [
+     "Main GFA with / without suite",
+     "main_gfa_with_suite_sqm · main_gfa_without_suite_sqm",
+     "m²",
+     "planned",
+     "lineage"
+    ],
+    [
+     "Gain (footprint, storeys)",
+     "gain_vs_detached_footprint_sqm · gain_vs_detached_storeys",
+     "m² · int",
+     "planned",
+     "lineage"
+    ],
+    [
+     "Host / suite interior (house + suite)",
+     "host_interior_sqm · suite_interior_sqm",
+     "m²",
+     "planned",
+     "row 2 only"
+    ],
+    [
+     "Flat vs pitched",
+     "gfa_flat_sqm · gfa_pitched_sqm · storeys_flat · storeys_pitched",
+     "m² · int",
+     "planned",
+     "payload-only; feeds roof_form_alternate"
+    ],
+    [
+     "Main-wall limit",
+     "main_wall_limit_m · main_wall_pair · main_wall_status",
+     "m · text",
+     "planned",
+     "law-applied expander"
+    ],
+    [
+     "Depth / length caps",
+     "main_depth_cap_m · main_length_cap_m",
+     "m",
+     "planned",
+     "law-applied expander"
+    ],
+    [
+     "Lane setback",
+     "main_lane_centreline_setback_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "Front setback basis",
+     "main_front_setback_basis",
+     "text",
+     "planned",
+     "drives front_yard_needs_survey"
+    ],
+    [
+     "Clauses applied",
+     "cited_clauses",
+     "text[]",
+     "planned",
+     "row-level only; §6.6 rule 4 wants per-number citations"
+    ],
+    [
+     "Per-field citations",
+     "field_citations {field: [clause]}",
+     "jsonb",
+     "proposed",
+     "§6.6 rule 4 \"every number carries its citation and amendment status\"; lineage has no per-field cite column"
+    ],
+    [
+     "Per-field status",
+     "field_status {field: computed|unregulated|unlimited|not_applicable}",
+     "jsonb",
+     "proposed",
+     "§6.6 rule 1 shows a value only by its field status; only 5 *_status fields exist in lineage"
+    ],
+    [
+     "Per-field trust tier",
+     "field_trust {field: tier}",
+     "jsonb",
+     "proposed",
+     "static from lineage trust_tier (O-17) — emit in the generated schema, not per row"
+    ],
+    [
+     "Trust checks",
+     "trust_checks",
+     "jsonb",
+     "planned",
+     "admin only"
+    ],
+    [
+     "Trust label (plain words)",
+     "trust_label",
+     "text",
+     "proposed",
+     "PRESENTATION: high → \"By-law derived\", disclosed → \"By-law derived, see notes\", low → \"Estimate\", CoA → \"Precedent estimate\""
+    ],
+    [
+     "Needs the attached half removed",
+     "requires_attached_half_removed",
+     "boolean",
+     "proposed",
+     "semi lots: D/2/H rows (S78:731); today only implied by a disclosure whose text does not say it"
+    ],
+    [
+     "Cost of this scenario",
+     "cost_estimate {total, per_sqm, area_priced_sqm, basis}",
+     "$",
+     "proposed",
+     "Spec 88 per-scenario line (NOT built; §6.10 puts cost out of Phase 3 scope; M-67 lines unchanged)"
+    ],
+    [
+     "Illustrations",
+     "illustrations[] {asset_id, kind, caption, alt}",
+     "object[]",
+     "proposed",
+     "PRESENTATION registry key scenario × roof_form_headline × suite_type (× semi)"
+    ]
+   ]
+  },
+  {
+   "id": "suite",
+   "title": "Rear suite (on every card)",
+   "path": "scenarios.cards[i].suite.*",
+   "rows": [
+    [
+     "Suite type",
+     "suite_type",
+     "text",
+     "planned",
+     "none · garden · laneway"
+    ],
+    [
+     "Suite floor area",
+     "suite_gfa_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Suite footprint",
+     "suite_footprint_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Suite height",
+     "suite_height_m",
+     "m",
+     "planned",
+     "4.0 or 6.3 by separation"
+    ],
+    [
+     "Separation from house",
+     "suite_separation_m",
+     "m",
+     "planned",
+     "4.0 / 7.5"
+    ],
+    [
+     "Suite rear setback",
+     "suite_rear_setback_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "Suite side setbacks",
+     "suite_side_setbacks_m",
+     "m",
+     "planned",
+     ""
+    ],
+    [
+     "What limits the suite",
+     "suite_binding",
+     "text",
+     "planned",
+     ""
+    ],
+    [
+     "Area lost if windows are added",
+     "suite_openings_loss_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "Laneway arm",
+     "suite_lane_arm",
+     "text",
+     "planned",
+     "rear · side · cumulative"
+    ],
+    [
+     "Coverage option",
+     "suite_coverage_option",
+     "text",
+     "planned",
+     "A · B · laneway"
+    ],
+    [
+     "Soft landscaping required",
+     "suite_soft_landscaping_sqm",
+     "m²",
+     "planned",
+     "disclosure"
+    ],
+    [
+     "Main depth chosen",
+     "main_depth_chosen_m",
+     "m",
+     "planned",
+     "payload-only"
+    ]
+   ]
+  },
+  {
+   "id": "coa",
+   "title": "CoA version (on every new-build card)",
+   "path": "scenarios.cards[i].coa.*",
+   "rows": [
+    [
+     "CoA floor area",
+     "coa_gfa_sqm",
+     "m²",
+     "planned",
+     "precedent estimate, not law"
+    ],
+    [
+     "Extra over as-of-right",
+     "coa_increment_sqm",
+     "m²",
+     "planned",
+     ""
+    ],
+    [
+     "CoA status",
+     "coa_status",
+     "text",
+     "planned",
+     "applies · not_evaluated:coa_factor_unfitted"
+    ],
+    [
+     "CoA form",
+     "coa_form",
+     "text",
+     "planned",
+     "single · single_suite · multiplex"
+    ],
+    [
+     "CoA factor",
+     "coa_factor",
+     "jsonb {lv_id, value, version, fit_basis}",
+     "planned",
+     "payload-only / admin (PLAN §4)"
+    ],
+    [
+     "Rear suite CoA floor area",
+     "suite_coa_gfa_sqm",
+     "m²",
+     "new",
+     "approved 2026-10-20 (gap 2) — CONFLICTS with RULED LC-49 / P5.10a (\"CoA not applicable to the rear suite\"); needs an LC-49 amendment + lineage rows; until a suite fit cohort exists status = not_evaluated:coa_factor_unfitted:suite"
+    ],
+    [
+     "Rear suite CoA extra",
+     "suite_coa_increment_sqm",
+     "m²",
+     "new",
+     "approved 2026-10-20 (gap 2) — CONFLICTS with RULED LC-49 / P5.10a (\"CoA not applicable to the rear suite\"); needs an LC-49 amendment + lineage rows; until a suite fit cohort exists status = not_evaluated:coa_factor_unfitted:suite"
+    ],
+    [
+     "Rear suite CoA status",
+     "suite_coa_status",
+     "text",
+     "new",
+     "approved 2026-10-20 (gap 2) — CONFLICTS with RULED LC-49 / P5.10a (\"CoA not applicable to the rear suite\"); needs an LC-49 amendment + lineage rows; until a suite fit cohort exists status = not_evaluated:coa_factor_unfitted:suite"
+    ]
+   ]
+  },
+  {
+   "id": "disclosures",
+   "title": "Disclosures, gates and trust (text, not only codes)",
+   "path": "scenarios.disclosure_texts / scenarios.cards[i].disclosures",
+   "rows": [
+    [
+     "Disclosure text",
+     "disclosure_texts[] {code, text, importance, mandatory}",
+     "object[]",
+     "proposed",
+     "filled server-side from the P5.12 templates (today only in Spec 78 prose, parsed by maxbld-trace-lib.mjs:183); needs a machine registry (vocab.json at ①) + slot values per row"
+    ],
+    [
+     "Template slot values",
+     "disclosure_params {code: {X, A, Hw, …}}",
+     "jsonb",
+     "proposed",
+     "templates have {X}/{A}/{Hw} slots; lineage disclosures is text[] codes only"
+    ],
+    [
+     "Gate flags",
+     "gate_flags",
+     "text[]",
+     "planned",
+     "holding_zone · exception_not_authored · heritage_designated · ravine_protection · shoreline_hazard · triangular_lot · irregular_lot_approximation"
+    ],
+    [
+     "Lot-level disclosures",
+     "scenarios.lot_disclosures[]",
+     "text[]",
+     "proposed",
+     "codes on every row (major_street_forms_not_modelled, semi_detached_house_not_modelled, forms_deferred, established_grade) shown once, not per card"
+    ],
+    [
+     "Row trust level",
+     "row_trust_level",
+     "text",
+     "planned",
+     "high · disclosed · low · not_evaluated"
+    ]
+   ]
+  },
+  {
+   "id": "existing",
+   "title": "Existing house (input to all renovations)",
+   "path": "scenarios.existing.*",
+   "rows": [
+    [
+     "Existing storeys",
+     "existing_storeys",
+     "integer",
+     "planned",
+     "USER INPUT"
+    ],
+    [
+     "Existing basement",
+     "existing_basement",
+     "boolean",
+     "planned",
+     "USER INPUT (lineage :2859 boolean)"
+    ],
+    [
+     "Existing width",
+     "existing_width_m",
+     "m",
+     "planned",
+     "estimate"
+    ],
+    [
+     "Existing depth",
+     "existing_depth_m",
+     "m",
+     "planned",
+     "estimate"
+    ],
+    [
+     "Existing footprint",
+     "existing_footprint_sqm",
+     "m²",
+     "planned",
+     "estimate"
+    ],
+    [
+     "Confidence in estimate",
+     "existing_confidence · existing_low_confidence",
+     "number [0,1] · boolean",
+     "planned",
+     ""
+    ],
+    [
+     "Source",
+     "existing_source",
+     "text",
+     "planned",
+     "estimated · user_entered (P5.6; lineage :2952 says `estimated` — draft said \"estimate\")"
+    ],
+    [
+     "Owner input: width × depth",
+     "owner_input.width_m · depth_m",
+     "m",
+     "proposed",
+     "APP-RENO; overrides the estimate for this user only (O-12, P5.7)"
+    ],
+    [
+     "Owner input: storeys",
+     "owner_input.storeys",
+     "integer",
+     "proposed",
+     "required for up/back/attic/units (O-13)"
+    ],
+    [
+     "Owner input: basement",
+     "owner_input.basement_present · basement_height_m",
+     "boolean · m",
+     "proposed",
+     "basement_height_m new — needed for \"finish without underpinning\" (gap 4)"
+    ],
+    [
+     "Share consent",
+     "owner_input.consent_version",
+     "text",
+     "proposed",
+     "P5.8 opt-in store"
+    ],
+    [
+     "Footprint is the whole semi",
+     "existing_footprint_shared",
+     "boolean",
+     "proposed",
+     "semi_half: the primary footprint is the whole building; today confidence is halved, not the area (P5.6)"
+    ]
+   ]
+  },
+  {
+   "id": "reno",
+   "title": "Renovations (IN the report — operator 2026-10-20, amends R-12)",
+   "path": "scenarios.renovations[i] (scenario code)",
+   "rows": [
+    [
+     "Addition (back / up)",
+     "renovation_addition",
+     "scenario",
+     "planned",
+     "fields: addition_up_gfa_sqm, addition_back_footprint_sqm, addition_back_gfa_sqm, total_gfa_sqm"
+    ],
+    [
+     "Expanding the envelope",
+     "renovation_envelope_expansion",
+     "scenario",
+     "new",
+     "approved 2026-10-20 (gap 3); fields: renovation_envelope_gfa_sqm, renovation_envelope_footprint_sqm, total_gfa_sqm"
+    ],
+    [
+     "Basement underpinning",
+     "renovation_basement",
+     "scenario",
+     "planned",
+     "fields: basement_livable_gain_sqm"
+    ],
+    [
+     "Basement renovation (no underpinning)",
+     "renovation_basement_finish",
+     "scenario",
+     "new",
+     "approved 2026-10-20 (gap 4); field: basement_finish_livable_sqm"
+    ],
+    [
+     "Gut job (envelope unchanged)",
+     "renovation_interior",
+     "scenario",
+     "planned",
+     "fields: interior_attic_gfa_sqm, interior_units_gain"
+    ],
+    [
+     "Renovation status",
+     "scenario_status",
+     "text",
+     "planned",
+     "not_evaluated:no_existing_house / needs_user_input:existing_storeys → render the owner-input prompt, not a blank"
+    ],
+    [
+     "Renovation envelope",
+     "renovation_envelope_gfa_sqm · renovation_envelope_footprint_sqm",
+     "m²",
+     "planned",
+     "ALREADY in lineage (:3000, :3023) on RA/RI/RB — gap 3 needs a definition that differs from this"
+    ],
+    [
+     "Up / back addition",
+     "addition_up_gfa_sqm · addition_back_footprint_sqm · addition_back_gfa_sqm",
+     "m²",
+     "planned",
+     "up/back GFA need user storeys"
+    ],
+    [
+     "Attic conversion / unit gain",
+     "interior_attic_gfa_sqm · interior_units_gain",
+     "m² · int",
+     "planned",
+     "need user storeys"
+    ],
+    [
+     "Basement livable gain",
+     "basement_livable_gain_sqm",
+     "m²",
+     "planned",
+     "computable from the estimate"
+    ],
+    [
+     "Renovation class",
+     "building_class",
+     "text",
+     "planned",
+     "semi_detached_house where semi_half (P5.1 ¹)"
+    ],
+    [
+     "Cost of this renovation",
+     "cost_estimate",
+     "$",
+     "proposed",
+     "today: menu lines addition / gut / basement / basement_underpin priced off whole-building footprint"
+    ]
+   ]
+  },
+  {
+   "id": "street_view",
+   "title": "House photo (Google Street View)",
+   "path": "parcel.street_view.*",
+   "rows": [
+    [
+     "Photo state",
+     "street_view.status",
+     "text",
+     "proposed",
+     "available · no_imagery · disabled (kill switch) · quota"
+    ],
+    [
+     "Panorama id",
+     "street_view.pano_id",
+     "text",
+     "proposed",
+     "from the Street View metadata call; cacheable per archive Spec 74:166"
+    ],
+    [
+     "Camera",
+     "street_view.heading · pitch · fov",
+     "deg",
+     "proposed",
+     "heading = bearing pano → parcel centroid (server)"
+    ],
+    [
+     "Image URL",
+     "street_view.image_url",
+     "url",
+     "proposed",
+     "signed Static API URL built server-side; bytes never stored"
+    ],
+    [
+     "Imagery date",
+     "street_view.captured_at",
+     "YYYY-MM",
+     "proposed",
+     "metadata `date`; show \"Photo: Google, <date>\""
+    ],
+    [
+     "Attribution",
+     "street_view.attribution",
+     "text",
+     "proposed",
+     "required Google attribution; do not crop the image logo"
+    ]
+   ]
+  },
+  {
+   "id": "images",
+   "title": "Scenario structure images (browse carousel)",
+   "path": "presentation registry → scenarios.cards[i].illustrations[]",
+   "rows": [
+    [
+     "Illustration asset",
+     "illustrations[].asset_id",
+     "text",
+     "proposed",
+     "static asset keyed scenario × roof_form_headline × suite_type × semi variant"
+    ],
+    [
+     "Kind",
+     "illustrations[].kind",
+     "text",
+     "proposed",
+     "illustration · massing_diagram (later, drawn client-side from the card numbers) · street_view (reno only)"
+    ],
+    [
+     "Caption / alt",
+     "illustrations[].caption · alt",
+     "text",
+     "proposed",
+     "\"Illustrative — not this lot\" for static art"
+    ]
+   ]
+  },
+  {
+   "id": "market",
+   "title": "Market and neighbourhood context",
+   "path": "parcel.neighbourhood.* / scenarios.cards[i].market.*",
+   "rows": [
+    [
+     "Comparable builds (lot)",
+     "parcel.neighbourhood.compStats.compCount",
+     "integer",
+     "live",
+     ""
+    ],
+    [
+     "Typical FSI p50 (lot)",
+     "parcel.neighbourhood.compStats.compFsiP50",
+     "number",
+     "live",
+     ""
+    ],
+    [
+     "Dominant build",
+     "parcel.neighbourhood.compStats.compDominantBuild",
+     "text",
+     "live",
+     ""
+    ],
+    [
+     "Nearby builds headline",
+     "parcel.neighbourhood.summary.headline",
+     "text",
+     "live",
+     ""
+    ],
+    [
+     "Comparable list",
+     "parcel.neighbourhood.comparableBuilds[] {address, permit_fsi, structure_family, work_type, permit_gfa_sqm, coa_decision}",
+     "object[]",
+     "live",
+     ""
+    ],
+    [
+     "Comparables for this build type (per card)",
+     "comp_count_same_form · comp_fsi_p50_same_form · comparable_builds_same_form[]",
+     "int · number · object[]",
+     "new",
+     "approved 2026-10-20 (gap 5)"
+    ],
+    [
+     "Nearby CoA builds, same form (per card)",
+     "nearby_coa_builds_gfa_sqm",
+     "m²",
+     "planned",
+     "≥ 5 builds ≤ 3 km"
+    ],
+    [
+     "Neighbourhood CoA approval rate",
+     "nbhd_coa_approval_rate",
+     "number (fraction, by reference)",
+     "planned",
+     "by reference"
+    ],
+    [
+     "CoA applications nearby",
+     "parcel.neighbourhood.coaProjects[] {applicationNumber, address, status, decision, decisionDate, hearingDate, description, projectType}",
+     "object[]",
+     "live",
+     "rendered today at [parcelId].tsx:206-224 — missing from the draft"
+    ],
+    [
+     "Neighbourhood CoA counts",
+     "nbhd_coa_approved · nbhd_coa_refused · nbhd_coa_total",
+     "integer",
+     "proposed",
+     "P5.10a by reference (neighbourhood_build_norms)"
+    ],
+    [
+     "Nearby-CoA comp count",
+     "nearby_coa_builds_count",
+     "integer",
+     "proposed",
+     "§6.4 / LC-51 \"with its comp count\" — no lineage field"
+    ],
+    [
+     "New CoA ruling nearby",
+     "new_nearby_coa_ruling",
+     "boolean|null",
+     "proposed",
+     "S-072 lots[].newNearbyCoaRuling: unproduced (RF-2); null renders \"—\", never \"no\""
+    ],
+    [
+     "Same-form comps (per card)",
+     "comp_fsi_p50_same_form · comparable_builds_same_form[]",
+     "number · object[]",
+     "new",
+     "approved gap 5; needs a lineage row and a structure_family → scenario map"
+    ]
+   ]
+  },
+  {
+   "id": "cost",
+   "title": "Cost menu (today) + per-scenario cost (proposed)",
+   "path": "parcel.costMenu.menu.*",
+   "rows": [
+    [
+     "New build (max)",
+     "parcel.costMenu.menu.max_build.total",
+     "$",
+     "live",
+     "not yet per scenario (Spec 88)"
+    ],
+    [
+     "New build (CoA)",
+     "parcel.costMenu.menu.coa_build.total",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Addition",
+     "parcel.costMenu.menu.addition.total",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Gut renovation",
+     "parcel.costMenu.menu.gut.total",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Garden suite",
+     "parcel.costMenu.menu.garden_suite.total",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Laneway suite",
+     "parcel.costMenu.menu.laneway_suite.total",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Basement finish (per m²)",
+     "parcel.costMenu.menu.basement.per_sqm",
+     "$/m²",
+     "live",
+     ""
+    ],
+    [
+     "Basement underpin (per m²)",
+     "parcel.costMenu.menu.basement_underpin.per_sqm",
+     "$/m²",
+     "live",
+     ""
+    ],
+    [
+     "Garage · Solar · Kitchen · Bath",
+     "…garage.total · solar_max.total · solar_coa.total · kitchen.per_sqm · bath.per_sqm",
+     "$",
+     "live",
+     ""
+    ],
+    [
+     "Line fit / absent",
+     "menu.<line>.fits · absent",
+     "state",
+     "live",
+     "Spec 100 §2.3 absent ≠ fits:false"
+    ],
+    [
+     "Priced area",
+     "menu.<line>.area",
+     "m²",
+     "live",
+     "§6.6 rule 6: CoA line states the area it priced"
+    ],
+    [
+     "Basis label",
+     "maxBuildBasisLabel(areas)",
+     "text",
+     "live",
+     "\"maximum envelope\" fallback (Spec 100 §2.4)"
+    ]
+   ]
+  },
+  {
+   "id": "ads",
+   "title": "Sponsored slots (presentation config, not lot data)",
+   "path": "surface descriptor offers{} + parcel.offers[] at render",
+   "rows": [
+    [
+     "Slot id / placement",
+     "offers[].placement_key",
+     "text",
+     "proposed",
+     "closed vocabulary (Spec 126 placements table); today only detail_footer"
+    ],
+    [
+     "Sponsored label",
+     "offers[].disclosure_label",
+     "text",
+     "proposed",
+     "\"Sponsored\" — required, FAIL if absent (Spec 128 R-17)"
+    ],
+    [
+     "Advertiser",
+     "offers[].advertiser_name",
+     "text",
+     "proposed",
+     "advertisers.name"
+    ],
+    [
+     "Creative",
+     "offers[].title · body · image_url · cta_label · cta_url",
+     "text",
+     "proposed",
+     "offers row"
+    ],
+    [
+     "Targeting context",
+     "offers[].targeting_context {scenario, building_class, zone_class, has_suite, renovation}",
+     "jsonb",
+     "proposed",
+     "server-side match only; no user identity sent to advertisers"
+    ],
+    [
+     "Offer id (impression)",
+     "offers[].offer_id",
+     "text",
+     "proposed",
+     "usage_events offer_impression (Spec 126 §7)"
+    ]
+   ]
+  },
+  {
+   "id": "states",
+   "title": "Empty / not permitted / not evaluated states and formatting",
+   "path": "presentation registry",
+   "rows": [
+    [
+     "Units toggle",
+     "format.area_unit",
+     "m² | ft²",
+     "proposed",
+     "today the screen mixes formatSqm (lot) and formatSqft (GFA) — [parcelId].tsx:128-130"
+    ],
+    [
+     "Value formatters",
+     "format.{area, length, fsi, currency, percent}",
+     "",
+     "proposed",
+     "parcelCostFormat.ts (§6.6 rule 6 \"formats unchanged\")"
+    ],
+    [
+     "Hidden rows",
+     "not_permitted · not_applicable · not_buildable",
+     "",
+     "proposed",
+     "§6.6 rules 1, 8: counted, never shown as cards"
+    ],
+    [
+     "Shown states",
+     "not_evaluated:<reason> on headline; needs_user_input on renovations",
+     "",
+     "proposed",
+     "§6.6 rule 5"
+    ],
+    [
+     "Null value",
+     "\"—\"",
+     "",
+     "proposed",
+     "never 0 / \"no\" (S-072 null rule)"
+    ]
+   ]
+  }
+ ]
+}

@@ -1,4 +1,7 @@
-// SPEC LINK: docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers: the
+// SPEC LINK: R-RS (operator CHAT-4, 2026-10-20: "A product report surface has one field declaration; every field names
+//            exactly one source; a generator --check gates names, types, presentation and pending states; its outputs are
+//            generated, never hand-edited" — scratchpad/chat-decisions/2026-10-20-batch-a.json; register row: lane layer2-spec),
+//            docs/specs/02-web-admin/128_surface_standard_policy.md R-21 (one descriptor set, three renderers: the
 //            prototype, the API and the app read ONE declaration), R-27 (one home; every table derived from it is
 //            generated), R-17 + R-34 (a SLOT declares a FAIL, blocking disclosure); docs/specs/01-pipeline/
 //            78_optimal_lot_configuration.md P5.12 (closed disclosure codes, parsed like maxbld-trace-lib.mjs
@@ -21,7 +24,7 @@
 // Gates (REVIEW §6.2): RS-0 declaration shape · RS-1 lineage names + types · RS-2 consumer whitelist · RS-3 parcels
 // columns · RS-4 presentation both ways · RS-5 pending (WARN; FAIL once the ruling is decided or the source exists) ·
 // RS-6 disclosure codes ⊆ P5.12 · RS-7 §6.6 + decided lot-form rules hold in the samples · RS-8 sponsored slots ·
-// RS-9 every lineage field declared or listed not_in_report. Deterministic; no DB, no network, executes no repo code.
+// RS-9 every lineage field declared or listed not_in_report · RS-11 every decided ruling's pinned registry values hold. Deterministic; no DB, no network, executes no repo code.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -109,7 +112,7 @@ const parseSource = (s) => {
   const m = /^(lineage|consumer|parcels|presentation|pending):(.+)$/.exec(s || '');
   if (!m) return null;
   if (m[1] !== 'pending') return { kind: m[1], ref: m[2] };
-  const p = /^(operator_ruling|lineage_queue|spec_owed|spec100_amendment):(.+)$/.exec(m[2]);
+  const p = /^(operator_ruling|operator_confirm|lineage_queue|spec_owed|spec100_amendment):(.+)$/.exec(m[2]);
   return p ? { kind: 'pending', reason: p[1], ref: p[2] } : { kind: 'pending', reason: null, ref: m[2] };
 };
 const allFields = (decl) => decl.sections.flatMap((s) => s.fields.map((f) => ({ ...f, section: s.id })));
@@ -214,7 +217,17 @@ export function evaluate(inputs) {
   const pendingCheck = (where, s, target) => {
     const p = parseSource(s);
     if (!p || p.kind !== 'pending') return;
-    if (!p.reason) { bad5.push(`${where}: pending reason "${p.ref}" is not operator_ruling | lineage_queue | spec_owed | spec100_amendment`); return; }
+    if (!p.reason) { bad5.push(`${where}: pending reason "${p.ref}" is not operator_ruling | operator_confirm | lineage_queue | spec_owed | spec100_amendment`); return; }
+    if (p.reason === 'operator_confirm') {
+      const m = /^(Q-[0-9]+)-scope$/.exec(p.ref);
+      const r = m && rulingById.get(m[1]);
+      const t = target && parseSource(target);
+      if (!r) bad5.push(`${where}: operator_confirm ${p.ref} names no ruling in the register`);
+      else if (r.status !== 'decided') bad5.push(`${where}: operator_confirm ${p.ref}: ${m[1]} is not decided — use operator_ruling`);
+      else if (t && t.kind === 'consumer' && whitelisted(t.ref)) bad5.push(`${where}: the S-001 whitelist now has ${t.ref} — the scope was settled; switch the source`);
+      else warn5.push(`${where}: waits on the operator confirming ${p.ref}`);
+      return;
+    }
     if (p.reason === 'spec100_amendment') {
       const r = rulingById.get(p.ref);
       const t = target && parseSource(target);
@@ -364,6 +377,20 @@ export function evaluate(inputs) {
   }
   for (const f of lin.keys()) if (!refd.has(f) && !nir.has(f)) bad9.push(`lineage ${f}: neither declared nor listed not_in_report`);
   gate('RS-9', 'every lineage field is declared in the report or listed not_in_report with a reason', bad9);
+
+  // RS-11 decided rulings pin their checkable consequence in the registry (Q-1/Q-2/Q-3 lot-form rules)
+  const bad11 = [];
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  for (const r of rulings.rulings) {
+    if (!r.pins) continue;
+    if (r.status !== 'decided') { bad11.push(`${r.ref}: pins on a ruling that is ${r.status}`); continue; }
+    for (const [p, want] of Object.entries(r.pins)) {
+      const got = getPath(presentation, p);
+      if (!same(got, want)) bad11.push(`${r.ref}: presentation ${p} = ${JSON.stringify(got)}, the ruling pins ${JSON.stringify(want)}`);
+    }
+  }
+  for (const ref of ['Q-1', 'Q-2', 'Q-3']) { const r = rulingById.get(ref); if (r && r.status === 'decided' && !r.pins) bad11.push(`${ref}: decided but pins nothing`); }
+  gate('RS-11', 'every decided ruling that pins registry values (Q-1/Q-2/Q-3 semi_half rules) still holds them', bad11);
 
   return { gates, templates };
 }
@@ -601,6 +628,8 @@ export function render(inputs, ev) {
   L.push('# MaxBLD lot report v2 — schema (generated — do not edit)');
   L.push('');
   L.push(`> GENERATED by \`${GENERATOR}\` from \`${DECL_PATH}\`, \`${decl.inputs.presentation}\`, \`${decl.inputs.rulings}\`, \`${decl.inputs.lineage}\` and Spec 78 P5.12. Do not edit. Regenerate with \`node ${GENERATOR} --write\`; \`--check\` fails on drift or a gate FAIL. Machine forms: \`${decl.outputs.json_schema}\`, \`${decl.outputs.types}\`, \`${decl.outputs.sample}\`, \`${decl.outputs.lineage_queue}\`.`);
+  L.push('');
+  L.push('Rule: R-RS (operator CHAT-4, 2026-10-20; scratchpad/chat-decisions/2026-10-20-batch-a.json; register row by lane layer2-spec) — one field declaration per report surface, one source per field, checked by this generator; outputs generated, never hand-edited.');
   L.push('');
   L.push('Every field has exactly one source: `lineage:` (docs/reference/maxbld-field-lineage.json), `consumer:` (the S-001 / Spec 100 §3.2 whitelist), `parcels:` (a column, only after a Spec 100 amendment), `presentation:` (report-presentation.json) or `pending:` (an open operator ruling, a lineage row queued for the by-law fix lane, or an owed spec).');
   L.push('');
