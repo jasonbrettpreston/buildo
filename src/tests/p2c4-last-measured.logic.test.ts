@@ -340,4 +340,47 @@ describe('step-validate --write → measured-validate.json (R1 writer)', () => {
       expect(body, `runDataValidatorsForWrite must contain ${s}`).toContain(s);
     }
   });
+
+  // MV-DRIFT (tooling-fix-1, operator y 2026-10-20; Spec 124 R-GP): a --write whose measured VALUES are
+  // unchanged leaves measured-validate.json byte-identical — only metadata (at/commit/cost_ms/sample_n)
+  // would differ, and that churn re-dirtied the file and the descriptor generated from it on every run.
+  // RED before the fix because … the fold re-stamps every executed entry whatever its value.
+  const foldOf = async (): Promise<Fold> => {
+    const sv = (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/step-validate.mjs')).href)) as { foldValidateOnlyMeasured: Fold };
+    return sv.foldValidateOnlyMeasured;
+  };
+  const writeOf = (doc: unknown): string => `${JSON.stringify(doc, null, 2)}\n`;
+  const vo = (id: string, value: unknown, duration_ms: number) => ({ id, source: 'invariant', frequency: 'validate_only', status: 'ok', value, duration_ms });
+
+  it('M14 RED-first — two --write runs with unchanged values: the second folds nothing and the bytes are identical', async () => {
+    const fold = await foldOf();
+    const first = fold(null, [vo('vo_a', 61571, 3314), vo('vo_b', 0, 10314)], { at: AT, commit: 'aaaaaaa' });
+    const text1 = writeOf(first.doc);
+    const second = fold(JSON.parse(text1), [vo('vo_a', 61571, 2999), vo('vo_b', 0, 9001)], { at: '2026-10-20T02:04:28.378Z', commit: 'bbbbbbb' });
+    expect(Object.keys(second.measured)).toEqual([]);
+    expect(writeOf(second.doc)).toBe(text1);
+  });
+
+  it('M15 — a changed value DOES rewrite that entry (new at/commit/cost_ms, sample_n + 1); an unchanged sibling keeps its bytes', async () => {
+    const fold = await foldOf();
+    const first = fold(null, [vo('vo_a', 61571, 3314), vo('vo_b', 0, 10314)], { at: AT, commit: 'aaaaaaa' });
+    const at2 = '2026-10-20T02:04:28.378Z';
+    const second = fold(JSON.parse(writeOf(first.doc)), [vo('vo_a', 61572, 2999), vo('vo_b', 0, 9001)], { at: at2, commit: 'bbbbbbb' });
+    expect(Object.keys(second.measured)).toEqual(['vo_a']);
+    expect(second.doc.entries.vo_a).toMatchObject({ value: 61572, cost_ms: 2999, at: at2, commit: 'bbbbbbb', sample_n: 2 });
+    expect(second.doc.entries.vo_b).toEqual(first.doc.entries.vo_b);
+    // A value that changes TYPE but not JSON-equality (none here) is the same value; null -> 0 is a change.
+    const third = fold(second.doc, [vo('vo_b', null, 1)], { at: at2, commit: 'ccccccc' });
+    expect(Object.keys(third.measured)).toEqual(['vo_b']);
+  });
+
+  it('M16 wiring (structural lock) — the writer writes only when the fold reports a changed entry', () => {
+    const src = readFileSync(join(process.cwd(), 'scripts/analysis/step-validate.mjs'), 'utf8');
+    const start = src.indexOf('async function runDataValidatorsForWrite(');
+    const body = src.slice(start, src.indexOf('\n}\n', start));
+    const guard = body.indexOf('if (slug && n > 0)');
+    expect(guard).toBeGreaterThan(-1);
+    expect(body.indexOf('writeFileSync(sidecarPath', guard)).toBeGreaterThan(guard);
+    expect(body.split('writeFileSync(sidecarPath').length - 1).toBe(1);
+  });
 });

@@ -5970,15 +5970,28 @@ function getDataValidatorPool() {
  * finite `duration_ms`): an every_run entry never does (its source is the capture sidecar), an
  * errored or untimed one is not a measurement. `sample_n` follows capture-step-golden.js
  * `mergeMeasured` (latest wins per entry, +1 per fold).
- * @returns {{measured: Record<string, object>, doc: {entries: Record<string, object>}}}
+ *
+ * Spec 124 R-GP (MV-DRIFT, operator y 2026-10-20): an entry whose measured `value` equals the
+ * stored one (JSON equality) is NOT folded — re-running only re-times it, and its metadata
+ * (`at`/`commit`/`cost_ms`/`sample_n`) stays that of the measurement that last CHANGED the
+ * value, so an unchanged `--write` leaves the file (and every descriptor generated from it)
+ * byte-identical. `unchanged` lists the entries executed but not folded.
+ * @returns {{measured: Record<string, object>, unchanged: string[], doc: {entries: Record<string, object>}}}
  */
 export function foldValidateOnlyMeasured(existing, results, { at, commit }) {
+  const prior = (existing && existing.entries && typeof existing.entries === 'object') ? existing.entries : {};
   const measured = {};
+  const unchanged = [];
   for (const r of results || []) {
     if (!r || r.frequency !== 'validate_only' || r.status !== 'ok' || !Number.isFinite(r.duration_ms)) continue;
+    const was = Object.prototype.hasOwnProperty.call(prior, r.id) ? prior[r.id] : undefined;
+    if (was && Object.prototype.hasOwnProperty.call(was, 'value') && JSON.stringify(was.value) === JSON.stringify(r.value)) {
+      unchanged.push(r.id);
+      continue;
+    }
     measured[r.id] = { value: r.value, cost_ms: r.duration_ms, at, commit, run_id: null, chain: null, event: 'step_validate_write' };
   }
-  return { measured, doc: harness.mergeMeasured(existing, measured) };
+  return { measured, unchanged, doc: harness.mergeMeasured(existing, measured) };
 }
 
 /**
@@ -6019,7 +6032,7 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
   // second input generate-last-measured.mjs writes their descriptor last_measured from.
   {
     const slug = d.identity && d.identity.name;
-    const { measured, doc } = foldValidateOnlyMeasured(
+    const { measured, unchanged, doc } = foldValidateOnlyMeasured(
       slug && existsSync(path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured-validate.json'))
         ? JSON.parse(readFileSync(path.join(REPO_ROOT, 'docs/reports/golden', slug, 'measured-validate.json'), 'utf8'))
         : null,
@@ -6032,6 +6045,9 @@ async function runDataValidatorsForWrite(row, descriptorInfo) {
       mkdirSync(path.dirname(sidecarPath), { recursive: true });
       writeFileSync(sidecarPath, JSON.stringify(doc, null, 2) + '\n');
       console.log(`[step-validate] ${row.slug}: measured ${n} validate_only entr${n === 1 ? 'y' : 'ies'} -> ${path.relative(REPO_ROOT, sidecarPath)}`);
+    }
+    if (slug && unchanged.length > 0) {
+      console.log(`[step-validate] ${row.slug}: ${unchanged.length} validate_only value(s) unchanged [${unchanged.join(', ')}] — measured-validate.json entry left as is (R-GP)`);
     }
   }
   // GATE H (Spec 124 Rule 13; Spec 121 §12b.6) — the policy matrix never counts
