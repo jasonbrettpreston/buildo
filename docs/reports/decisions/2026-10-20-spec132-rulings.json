@@ -1,0 +1,45 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-spec132-rulings/chat.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-spec132-rulings",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y to both; y to this revised version",
+    "record": "operator chat 2026-10-20, as recorded in the operator queue (~/Buildo/.cursor/QUEUE.md, the two \"Operator y (2026-10-20)\" lines, copied verbatim as the recommendations) with the operator quotes recorded verbatim in Spec 124a §B25",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-spec132-rulings/chat.json"
+    }
+  },
+  "decision_vocab": {
+    "y": "approve"
+  },
+  "routing": {
+    "HANDBOOK": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-GU"
+    },
+    "ROLES": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-GV"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "HANDBOOK",
+      "question": "Spec 132 = Step Standard Handbook; Spec 133 = By-law Handbook",
+      "recommendation": "Operator y (2026-10-20): Spec 132 = Step Standard Handbook (generated reading spec; authority Spec 124 register); Spec 133 = By-law Handbook (generated from provision-family register; authority M-/LC-rows). Exempt from line budget, size check kept. Cite as 'Spec 132 §<line id> (R-xx)'.",
+      "decision": "y",
+      "decided_at": "2026-10-20",
+      "operator_quote": "y to both"
+    },
+    {
+      "id": "ROLES",
+      "question": "Revised spec roles (standard + policy pairs)",
+      "recommendation": "Operator y (2026-10-20) revised spec roles: pairs 122/124, 68/69+69a, 78/131 (policy register governs on policy, standard on schema/behaviour — 124:11 clause to be flipped); 132 generated from 122+124, 133 from 68+69/69a+78+131; 122a historical; 121/123 procedure text + Spec 120 banner → rulings at the 132 move; Spec 119 out of scope.",
+      "decision": "y",
+      "decided_at": "2026-10-20",
+      "operator_quote": "y to this revised version"
+    }
+  ]
+}

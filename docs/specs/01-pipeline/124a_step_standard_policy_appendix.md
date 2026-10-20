@@ -918,15 +918,15 @@ Moved from Spec 124 — layer2-spec (wf2/layer2-spec, 2026-10-20): recording the
 
 ## Appendix §B27 — Conflict checks and V3 admission tables for R-GY, R-HB…R-HK (Layer 2 spec, spec roles and decision logs, wf2/layer2-spec, 2026-10-20)
 
-Operator decisions (2026-10-20), transferred by generator, never hand-copied (R-HK): the review page https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw, 14 decisions all approved ("keep"), committed verbatim as `docs/reports/decisions/2026-10-20-scenario-build-rulings.json` (R-12 later amended in chat: "your rigth we want the renovation section"); and the chat "y" to the three spec-role recommendations of lane spec132-move, committed as `docs/reports/decisions/2026-10-20-spec-roles-rulings.json`. `node scripts/analysis/decision-log.mjs --write` emitted the 17 row skeletons; the step-side rows are R-GY, R-HB…R-HJ here, the by-law-side rows are Spec 69a M-230…M-233 and Spec 131 LC-60…LC-62, and `--check` proves every approved decision has its routed row. R-HK records the mechanism itself. R-GY and R-HB…R-HK are provisional (the next free ids after R-GX, skipping R-GZ and R-HA, which lane night-p4-c holds) and are renumbered at integration if taken.
+Operator decisions (2026-10-20), transferred by generator, never hand-copied (R-HK): the review page https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw, 14 decisions all approved ("keep"), committed verbatim as `docs/reports/decisions/2026-10-20-scenario-build-rulings.json` (R-12 later amended in chat: "your rigth we want the renovation section"); and the chat "y" to the three spec-role recommendations of lane spec132-move, committed as `docs/reports/decisions/2026-10-20-spec-roles-rulings.json`. `node scripts/analysis/decision-log.mjs --write` emitted the 17 row skeletons; the step-side rows are R-GY, R-HB…R-HJ here, the by-law-side rows are Spec 69a M-231…M-234 and Spec 131 LC-60…LC-62, and `--check` proves every approved decision has its routed row. R-HK records the mechanism itself. R-GY and R-HB…R-HK are provisional (the next free ids after R-GX, skipping R-GZ and R-HA, which lane night-p4-c holds) and are renumbered at integration if taken.
 
 **Conflict check (existing text, cited).**
 
 | Rule | Where | Quote | Verdict |
 |---|---|---|---|
-| Plan owner spec | `docs/reports/2026-10-20-plan-mcbylaw-phase2-v2.md`:4, :20 | "a new owner spec (Spec 72)"; "72 is free and earmarked" | Superseded by R-GY: Spec 72 was never created; the orchestrator assigned 134 (QUEUE 2026-10-20, "Spec 134 resolve_bylaws"). The plan is kept verbatim as history. |
+| Plan owner spec | `docs/reports/2026-10-20-plan-mcbylaw-phase2-v2.md`:4, :20 | "a new owner spec (Spec 72)"; "72 is free and earmarked" | Superseded by R-GY: Spec 72 was never created. The approved recommendation left the number to the operator; the coordinator wrote in chat "I'll number it Spec 134 unless you'd prefer another" and the operator did not object (corrected 2026-10-20, verify-13 N3). The plan is kept verbatim as history. |
 | Spec 68 budget | `122_split_manifest.json` `budgets["68"]`; plan :312 | "Spec 68 §11 one-line pointer (Spec 68 is over budget, F-C)" | Supports R-GY: Spec 68 §11 gains one pointer line (102,797 / 103,163 B), the contract lives in Spec 134. |
-| Spec 68 §11 Phase 2 | Spec 68:469 | "a converted pipeline step that runs `effective()` per parcel × target × structure" | No conflict: Spec 134 is that step's contract; the v1 scope narrowing is the by-law-side ruling M-230. |
+| Spec 68 §11 Phase 2 | Spec 68:469 | "a converted pipeline step that runs `effective()` per parcel × target × structure" | No conflict: Spec 134 is that step's contract; the v1 scope narrowing is the by-law-side ruling M-234. |
 | Plan archetype | plan :45 | "`resolve_bylaws`: Layer 2. Archetype ENRICHER (provisional, R-AO)" | Conflict, resolved by R-HB as the operator ruled (MATERIALIZER). |
 | R-AO | 124a:169 | "A step's archetype is PROVISIONAL until PH-0 re-derives it from the CODE" | No conflict: R-HB names the intended archetype; #25 still checks it against the code at conversion. |
 | R-EH | 124a:810 | "A MATERIALIZER may compute its rows in JavaScript; the runner owns every read, write and transaction" | Supports R-HB: the form Spec 134 §7 uses. |
@@ -1067,3 +1067,46 @@ Operator decisions (2026-10-20), transferred by generator, never hand-copied (R-
 | EXTERNALIZED | No threshold: exact coverage. |
 
 - **Integration note.** If integration renumbers R-GY or R-HB…R-HK, the decision logs' `routing`, `rule-map.json`, Spec 134 and the locks move with them; `decision-log.mjs --check` and `spec-split-check --check` name every site left behind.
+
+---
+
+## Appendix §B28 — verify-13 fixes: rows narrowed to what was ruled, the batch-A chat decisions, R-HL and R-HM (wf2/layer2-spec, 2026-10-20)
+
+Operator decisions (2026-10-20, verbatim, "push failed 1 test y to 1-4"), committed as the chat record `docs/reports/decisions/raw/2026-10-20-chat-batch-a/2026-10-20-batch-a.json` and imported by `decision-log.mjs --import --chat` into `2026-10-20-chat-batch-a.json`: CHAT-1 (Spec 131 LC-62's render form), CHAT-2 (R-HL), CHAT-3 (R-HK confirmed), CHAT-4 (R-HM, drafted as R-RS), CHAT-5 (E2E-F-05; its row is Spec 69a M-230 on wf1/bylaw-fix-1 at cf4e57a4, routed `owed` until it lands here). The Spec 132 rulings R-GU…R-GX now cite `2026-10-20-spec132-rulings`, imported from a chat record of the two operator-queue lines and the quotes this appendix's §B25 records. Independent verification verify-13 (R-EZ) narrowed four rows to what the operator approved: R-HG covers the scenario step's ① (N6) only; R-HB rules the archetype, and the rows form and reset posture are Spec 134 design defaults; Spec 69a M-233 / M-234 no longer name logic variables (Spec 134 proposes them); R-GY records how 134 was chosen. The by-law-side M-230 draft became M-234, because wf1/bylaw-fix-1 took M-230 for CHAT-5.
+
+**Conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-HD | Spec 124 R-HD row | "the step does not read `parcel_abutments` (written later in the chain); neighbour-dependent readings stay with the scenario step" | Supports R-HL, which the operator now rules directly. |
+| Scenario plan owed item | scratchpad scenario plan §1.4 (LIN owed entry) | "wiring `front-averaging.mjs` (on read) into the Layer 2 lot flags" | Superseded by R-HL: averaging stays with `compute_maxbld_scenarios`. |
+| Spec 131 LC-58 | Spec 131 LC-58 | "Front averaging, floored and adjusted for porches" | No conflict: LC-58 says how averaging is computed; R-HL says which step computes it. |
+| R-BF | 124a:216 | "every step-registry and cross-step-ledger row generated or witnessed, never hand-kept" | Supports R-HM: a report surface's outputs are generated from one declaration. |
+| R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-HM; whether `report-schema.mjs --check` joins the hook is the integrator's call (wf2/report-schema: "Not wired into pre-commit"). |
+| Spec 69a M-69 | Spec 69a M-69 | the report-field inventory is the denominator, drift-locked | No conflict: R-HM's declaration is the v2 surface's; M-69's inventory stays the legacy report's denominator until the takeover. |
+
+**R-HL — front-yard averaging stays in the scenario step.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One home for a neighbour-dependent reading: the step that runs after `link_parcel_abutments`. |
+| OBSERVABLE | `spec134-resolve-bylaws.logic` (Spec 134 §2 and §11); LDG-10 / gate D would flag a Layer 2 read of `parcel_abutments` at ①. |
+| RECORDED | `2026-10-20-chat-batch-a#CHAT-2`; this row. |
+| SCALABLE | Every lot where averaging applies, in one step. |
+| ACCURATE | Chain order measured: `enrich_parcels` 22, `link_parcel_abutments` 24 (`scripts/manifest.json`). |
+| SIMPLE | No move of `resolve_bylaws`; no new Layer 2 input. |
+| EXTERNALIZED | The averaging numbers stay LC-58's logic variables. |
+
+**R-HM — R-RS: one declaration per report surface.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One declaration file per product report surface; every field names one source. |
+| OBSERVABLE | `report-schema.mjs --check` RS-0…RS-9 on wf2/report-schema (OWED here until integration); `decision-log.logic` records the ruling. |
+| RECORDED | `2026-10-20-chat-batch-a#CHAT-4`; this row. |
+| SCALABLE | Every product report surface, the v2 maxbld report first. |
+| ACCURATE | wf2/report-schema @ 326eca17: 228 fields, 15 sections, 19 red-first tests (its own record). |
+| SIMPLE | One declaration and one generator per surface. |
+| EXTERNALIZED | Names, types, presentation and pending states live in the declaration, not code. |
+
+**R-HK, confirmed.** CHAT-3 confirms R-HK as drafted. The verify-13 tooling gaps are closed in the same change: an amended decision's routed row must carry the amendment quote; a routed decision cited by a row in another register is RED; each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/` (a hand edit is RED); `--import` takes a page export, a chat record (`--chat`) or a rulings memo (`--rulings-md`), which replaces the scratchpad script that built the spec-roles log. Red first: `docs/reports/red-evidence/decision-log/verify13-arms-red.json` (7 of 21 failing before the change) and `verify13-check-red.txt` (the committed logs had no raw record).

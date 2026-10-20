@@ -694,7 +694,7 @@
     {
       "id": "x-rulings.4",
       "section": "x-rulings",
-      "text": "Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan.",
+      "text": "Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).",
       "why": "A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed."
     },
     {
@@ -4697,7 +4697,7 @@
         "kind": "lock",
         "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
       },
-      "statement": "resolve_bylaws is a MATERIALIZER (rows form, R-EH), not the plan's provisional ENRICHER; PH-0 still re-derives it (R-AO).",
+      "statement": "resolve_bylaws is a MATERIALIZER, not the plan's provisional ENRICHER; PH-0 still re-derives it (R-AO). Its rows form and reset posture are Spec 134 design defaults, not ruled.",
       "source": {
         "register": true
       }
@@ -4767,7 +4767,7 @@
         "kind": "lock",
         "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
       },
-      "statement": "Before scheduling commit ① of a new by-law step, the orchestrator confirms the 18 runner rulings binding it are built.",
+      "statement": "Before scheduling the scenario step's commit ① (node N6), the orchestrator confirms the 18 runner rulings binding it are built.",
       "source": {
         "register": true
       }
@@ -4823,7 +4823,35 @@
         "kind": "lock",
         "ref": "src/tests/decision-log.logic.test.ts"
       },
-      "statement": "Operator decisions are committed verbatim as decision logs; every approved decision is a register row citing <log stem>#<id>; decision-log --check proves coverage at pre-commit.",
+      "statement": "Operator decisions are committed verbatim as decision logs re-derived from committed raw records; every approved decision is a register row citing <log stem>#<id>; decision-log --check proves coverage at pre-commit (operator confirmed, CHAT-3).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HL",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "Front-yard averaging stays in the scenario step; resolve_bylaws keeps its R-HD place and does not read parcel_abutments.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HM",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "R-RS: a product report surface has one field declaration; every field names one source; a generator --check gates it (lock owed with wf2/report-schema).",
       "source": {
         "register": true
       }

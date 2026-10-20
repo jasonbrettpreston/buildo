@@ -1,13 +1,84 @@
 {
-  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Question, recommendation and decision are the review page export, verbatim. `decision_vocab`, `routing` (the register and row that record each decision) and `amendments` are added by the lane and are not the page text.",
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Question, recommendation and decision are the review page export, verbatim. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
   "log_id": "2026-10-20-scenario-build-rulings",
   "source": {
     "kind": "page",
     "title": "Scenario Build Rulings",
-    "url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    "url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw",
+    "raw": {
+      "form": "page",
+      "answers": "docs/reports/decisions/raw/2026-10-20-scenario-build-rulings/answers",
+      "entries": "docs/reports/decisions/raw/2026-10-20-scenario-build-rulings/entries.json"
+    }
   },
   "decision_vocab": {
     "keep": "approve"
+  },
+  "routing": {
+    "R-1": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-234"
+    },
+    "R-2": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-GY"
+    },
+    "R-3": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HB"
+    },
+    "R-4": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-231"
+    },
+    "R-5": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-232"
+    },
+    "R-6": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-233"
+    },
+    "R-7": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HC"
+    },
+    "R-8": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HD"
+    },
+    "R-9": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-60"
+    },
+    "R-10": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HE"
+    },
+    "R-11": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-61"
+    },
+    "R-12": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-62"
+    },
+    "R-13": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HF"
+    },
+    "R-14": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HG"
+    }
+  },
+  "amendments": {
+    "R-12": {
+      "text": "The renovation section is wanted in v1. The approved recommendation's \"Do not render renovation rows in v1 except the existing_storeys_needed prompt\" is withdrawn; drafting the APP-RENO spec in parallel stands. How the section renders before the APP-RENO input exists is not settled by this amendment.",
+      "operator_quote": "your rigth we want the renovation section",
+      "decided_at": "2026-10-20",
+      "source": "chat"
+    }
   },
   "decisions": [
     {
@@ -220,71 +291,5 @@
       "decided_at": "2026-10-20T17:36:52.222Z",
       "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
     }
-  ],
-  "routing": {
-    "R-1": {
-      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
-      "row": "M-230"
-    },
-    "R-2": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-GY"
-    },
-    "R-3": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HB"
-    },
-    "R-4": {
-      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
-      "row": "M-231"
-    },
-    "R-5": {
-      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
-      "row": "M-232"
-    },
-    "R-6": {
-      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
-      "row": "M-233"
-    },
-    "R-7": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HC"
-    },
-    "R-8": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HD"
-    },
-    "R-9": {
-      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-      "row": "LC-60"
-    },
-    "R-10": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HE"
-    },
-    "R-11": {
-      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-      "row": "LC-61"
-    },
-    "R-12": {
-      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
-      "row": "LC-62"
-    },
-    "R-13": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HF"
-    },
-    "R-14": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HG"
-    }
-  },
-  "amendments": {
-    "R-12": {
-      "text": "The renovation section is wanted in v1. The approved recommendation's \"Do not render renovation rows in v1 except the existing_storeys_needed prompt\" is withdrawn; drafting the APP-RENO spec in parallel stands. How the section renders before the APP-RENO input exists is not settled by this amendment.",
-      "operator_quote": "your rigth we want the renovation section",
-      "decided_at": "2026-10-20",
-      "source": "chat"
-    }
-  }
+  ]
 }

@@ -14,7 +14,7 @@
 
 Spec 68 §11 (68:469) defines Layer 2 as *"a converted pipeline step that runs `effective()` per parcel × target × structure and records candidates, winner, why the others lost (the §7.5 rule), status … and the inputs used"*. Layer 3 reads **only** this layer (68:470; Spec 78 §Phase-5 D-1: *"Commit ① waits for Layer 2 rows for the P5.3 targets, per class. There is no in-process `effective()` shortcut."*). `resolve_bylaws` is that step.
 
-**v1 is narrowed to what the scenario step needs** (Spec 69a M-230; `2026-10-20-scenario-build-rulings#R-1`):
+**v1 is narrowed to what the scenario step needs** (Spec 69a M-234; `2026-10-20-scenario-build-rulings#R-1`):
 
 | In v1 | Not in v1 (off the critical path) |
 |---|---|
@@ -31,9 +31,9 @@ Spec 68 §11 (68:469) defines Layer 2 as *"a converted pipeline step that runs `
 - **The evaluator.** `scripts/analysis/bylaw/evaluate.mjs` is imported, never forked: `effective()` and `permitted()` per cell × target × structure × class. The evaluator stays pure (68 §7.6). No Layer 2 code reads provision rows except through these two functions; a Layer 2 reading of a unit is a defect (the same rule Spec 78 D-1 applies one layer up).
 - **Layer 1 version.** `table_version` = content hash of `docs/reference/bylaw-provisions.json`; `evaluator_version` = content hash of `evaluate.mjs` + `dsl.mjs` (P2:184). Both are stamped on every row and are outside the write guard (§3).
 - **The lot vector** (one narrow scan of `parcels`, never an UPDATE of it): zone string, exception number, label letters (the R-LABEL parser, P2:204: an unparsed label gives the lot gate `label_unparsed`), `zoning_is_ambiguous`, lot metrics, the Spec 78 P5.3 lot columns, and `bylaw_map_areas` membership. `inputs_hash` covers exactly the dependency closure of the candidate units (P2:185, L14). **A missing input is never defaulted** (`inputs_defaulted = 0`, I10).
-- **Not an input at v1: `parcel_abutments`.** The step runs before `link_parcel_abutments` (§7, Spec 124 R-HD), so reading that table would read the previous run's rows (a cross-step order defect). Neighbour-dependent readings (front-yard averaging, 10.5.40.70(1)) are applied downstream by `compute_maxbld_scenarios`, which runs after both. This departs from the scenario plan's owed item "wiring `front-averaging.mjs` into the Layer 2 lot flags" (§11).
+- **Not an input at v1: `parcel_abutments`.** The step runs before `link_parcel_abutments` (§7, Spec 124 R-HD), so reading that table would read the previous run's rows (a cross-step order defect). Neighbour-dependent readings (front-yard averaging, 10.5.40.70(1)) are applied downstream by `compute_maxbld_scenarios`, which runs after both. This replaces the scenario plan's owed item "wiring `front-averaging.mjs` into the Layer 2 lot flags": the operator ruled that averaging stays in the scenario step (Spec 124 R-HL; `2026-10-20-chat-batch-a#CHAT-2`).
 - **The class catalogue.** Each class is a fixed input vector (`building_type`, `has_secondary_suite`, `has_garden_suite`, `has_laneway_suite`, `house_units`, `ancillary_units`), declared in `scripts/seeds/bylaw/vocab.json` `scenario_class_units` (M-160) and pinned by sha in the skip predicate. A class whose vector changes no candidate's applicability for a target is recorded `collapsed_into:<class>` (P2 §S.1).
-- **Population.** In-scope residential parcels, declared as a query over the logic variable `resolve_bylaws_population_zone_classes` with a reset arm (Spec 124 R-AY, R-BT; Spec 132 §core.17 (R-AY)); never a literal or an id list.
+- **Population.** In-scope residential parcels, declared as a query over a logic variable (design default name `resolve_bylaws_population_zone_classes`, not ruled) with a reset arm (Spec 124 R-AY, R-BT; Spec 132 §core.17 (R-AY)); never a literal or an id list.
 
 ## 3. Outputs and the row shape
 
@@ -71,12 +71,12 @@ The step writes only its own tables. Storage follows Spec 78 §6.8's **lean** fo
 
 **Rule** (Spec 69a M-233; `2026-10-20-scenario-build-rulings#R-6`): v1 resolves **principal + garden suite + laneway suite** (Phase 5 needs the suites); the ancillary (non-suite) structure is out. Storage is **measured, not assumed**: at P2-0 (round 0) and again at the first POST capture. **Spec 78 §6.8's kill line stays:** Layer 2 + Layer 3-a ≤ 10 % of the DB (≈ 1.2 GB on the 12 GB local DB). Baselines to beat: 380 MB at one structure, 1.03 GB projected at three (1.84 GB risk), 2.52 GB for the trial's full trace per structure (Spec 78 §6.8), plus ≈ 2.6 M scenario rows (Spec 78 O-6).
 
-- The budget is a logic variable, `resolve_bylaws_storage_budget_mb`, seeded from the P2-0 measurement (`on_invalid: fail`), and a POST check compares the tables' measured size with it. Over budget at the first capture ⇒ the lean split (§3) is re-cut before ③, never a silent growth.
+- **Design default (proposed here, not ruled):** the budget is a logic variable, `resolve_bylaws_storage_budget_mb`, seeded from the P2-0 measurement (`on_invalid: fail`), and a POST check compares the tables' measured size with it. Over budget at the first capture ⇒ the lean split (§3) is re-cut before ③, never a silent growth.
 - The step's `execution.budget` (runtime) is seeded from P2-0 too (Spec 124 R-AJ).
 
 ## 7. Step shape
 
-- **Archetype MATERIALIZER** (Spec 124 R-HB; `2026-10-20-scenario-build-rulings#R-3`), not P2's provisional ENRICHER (P2:45): it writes only its own derived tables. `execution.materialize_form: "rows"` (rows computed in JS; the runner owns reads, writes and transactions; Spec 124 R-EH; Spec 132 §materializer.1 (R-EH)); `recovery.reset` truncates its tables; batch size from config. The census archetype is provisional until PH-0 re-derives it from the code (R-AO, fast invariant #25).
+- **Archetype MATERIALIZER** (Spec 124 R-HB; `2026-10-20-scenario-build-rulings#R-3`), not P2's provisional ENRICHER (P2:45): it writes only its own derived tables. **Design defaults (not ruled by R-HB):** `execution.materialize_form: "rows"` (rows computed in JS; the runner owns reads, writes and transactions; Spec 124 R-EH; Spec 132 §materializer.1 (R-EH)); `recovery.reset` truncates its tables; batch size from config. The census archetype is provisional until PH-0 re-derives it from the code (R-AO, fast invariant #25).
 - **Chain placement** (Spec 124 R-HD; `2026-10-20-scenario-build-rulings#R-8`): `sources`, after `enrich_parcels` (phase 22) and before `link_parcel_abutments` (phase 24) and `compute_maxbld_scenarios` (Spec 78 §Phase-5: *"after the Layer 2 resolution step (D-1)"*). Its phase number is assigned at ③.
 - **Run mode, v1:** full rescan (`mode_select: "none"` with a `full_rescan` invalidator, the Spec 130 posture). The skip predicate (`when: "pre"`) is the conjunction of the upstream `staleness.pins` stamps, `table_version`, `vocab.version`, `evaluator_version`, the population-variable hash and the class-catalogue sha (P2:227); a skip is a run row with `records_meta.skipped = true`. Incremental re-resolution is later work (§1).
 - **Guards:** `bylaw-provisions.json` present at a `table_version` the run records; every logic variable present (`declared_logic_variables_present`).
@@ -110,7 +110,7 @@ The step is born V3: `standard=V3` prints only when all nine R-EY conditions hol
 | (6) Reproducible captures | no PRE; POST capture with the bracket `--op=delete_reinsert` keyed `parcel_id` (R-DP); rerun writes 0 rows; red evidence (gate K); replay order R-DQ | `scripts/analysis/gates/net-new.mjs`; `cohort-delete-reinsert.logic` |
 
 - **Admin-visible** (Spec 124 R-DL; Spec 132 §core.16 (R-DL)): the operator verifies the rows in the admin parcel lookup (the P2-11 trace path: candidates, winner, `dropped_by`, inputs, citation or absence ruling) before any consumer reads them.
-- **Runner rulings** (Spec 124 R-HG; `2026-10-20-scenario-build-rulings#R-14`): before scheduling ① of either new step, the orchestrator confirms in `programme-items.json` and the R-DV, R-EB and R-EC rows that the 18 runner rulings binding ① (Spec 78 P5.11) are built.
+- **Runner rulings** (Spec 124 R-HG; `2026-10-20-scenario-build-rulings#R-14`): before scheduling the scenario step's ① (node N6, which reads this step's rows), the orchestrator confirms in `programme-items.json` and the R-DV, R-EB and R-EC rows that the 18 runner rulings binding it (Spec 78 P5.11) are built. The ruling does not cover this step's own ①.
 
 ## 9. Stages, red-first tests and the round-0 measurement plan
 
@@ -158,8 +158,7 @@ The step is born V3: `standard=V3` prints only when all nine R-EY conditions hol
 
 - **The physical table split** (§3): the lean three-table form vs P2's two tables (P2:58-59) is fixed at ① from the P2-0 bytes-per-row measurement; the logical row shape does not change.
 - **`undecided` before M-60 lands:** the evaluator returns `not_evaluated` for disagreeing worlds today (P2 is silent on the mapping); `layer2-map.json` maps it until the status exists, and the map's lock then moves it.
-- **Front-yard averaging and the chain order:** the operator placed the step before `link_parcel_abutments` (R-8), while the scenario plan owed "wiring `front-averaging.mjs` (on read) into the Layer 2 lot flags" to this step. v1 resolves it by leaving averaging to the scenario step (§2); if the operator wants the averaged front setback inside Layer 2, the step must move after `link_parcel_abutments`, which is a new ruling.
-- **Renovation inputs:** Spec 131 LC-62 records the operator's amendment ("we want the renovation section"); Layer 2 serves the renovation class (`semi_detached_house` / `detached_house`) unchanged, and how the app renders the section before APP-RENO is that row's open item, not this step's.
+- Settled 2026-10-20: front-yard averaging stays in the scenario step (Spec 124 R-HL); the renovation section's render form is Spec 131 LC-62 (`2026-10-20-chat-batch-a#CHAT-1`). Layer 2 serves the renovation class (`semi_detached_house` / `detached_house`) unchanged.
 
 ## Operating Boundaries
 
@@ -172,5 +171,5 @@ The step is born V3: `standard=V3` prints only when all nine R-EY conditions hol
 - The `enrich_parcels`, `link_parcel_abutments` and `compute_maxbld_scenarios` steps (Specs 65, 130, 78): read or followed, never edited by this step.
 
 ### Cross-Spec Dependencies
-- **Relies on:** Spec 68 (§5a McBylaws Airtight, §7.5–§7.6 precedence and the evaluator, §11 Layer 2 / Layer 3), Spec 69 / 69a (M-25, M-53, M-54, M-60, M-160, M-177, M-230…M-233), Specs 122 / 124 (the step standard; R-DF, R-DK, R-DL, R-EH, R-EY, R-GY, R-HB…R-HG, R-HK), Spec 47 (advisory lock). Spec 130 (`link_parcel_abutments`) runs after this step and is not read by it.
+- **Relies on:** Spec 68 (§5a McBylaws Airtight, §7.5–§7.6 precedence and the evaluator, §11 Layer 2 / Layer 3), Spec 69 / 69a (M-25, M-53, M-54, M-60, M-160, M-177, M-231…M-234), Specs 122 / 124 (the step standard; R-DF, R-DK, R-DL, R-EH, R-EY, R-GY, R-HB…R-HG, R-HK, R-HL), Spec 47 (advisory lock). Spec 130 (`link_parcel_abutments`) runs after this step and is not read by it.
 - **Consumed by:** Spec 78 §Phase-5 (`compute_maxbld_scenarios`, D-1) and Spec 131 (LC-60…LC-62); the admin parcel lookup; Spec 100 through the R-HE whitelist.

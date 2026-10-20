@@ -1,0 +1,1 @@
+[decision-log] clean — 4 log(s), 24 decision(s), 24 register row(s), 49 citation(s), 1 owed by another lane; every approved decision has a register row or is owed, and every log matches its raw record

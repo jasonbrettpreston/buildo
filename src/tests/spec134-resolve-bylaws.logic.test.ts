@@ -1,6 +1,6 @@
 // SPEC LINK: docs/specs/01-pipeline/134_resolve_bylaws.md (the resolve_bylaws contract);
 //            docs/specs/01-pipeline/124_step_standard_policy.md §5 R-GY, R-HB, R-HC, R-HD, R-HE, R-HF, R-HG;
-//            docs/specs/01-pipeline/69a_mcbylaw_register.md M-230…M-233
+//            docs/specs/01-pipeline/69a_mcbylaw_register.md M-231…M-234
 //
 // The operator's 2026-10-20 scenario-build rulings (docs/reports/decisions/2026-10-20-scenario-build-rulings.json)
 // for the Layer 2 step, locked as spec text until the step is built (Spec 134 §9: commit ① adds the step's own
@@ -99,6 +99,14 @@ describe('R-HD — chain placement: sources, after enrich_parcels, before link_p
   });
 });
 
+describe('R-HL — front-yard averaging stays in the scenario step (operator CHAT-2)', () => {
+  it('Spec 134 leaves averaging to compute_maxbld_scenarios, cites R-HL, and no longer lists it as open', () => {
+    const text = spec();
+    expect(section(text, '2. Inputs')).toContain('the operator ruled that averaging stays in the scenario step (Spec 124 R-HL;');
+    expect(section(text, '11. Open questions')).not.toContain('Front-yard averaging and the chain order');
+  });
+});
+
 describe('R-HE, R-HF, R-HG — the consumer contract, the named locks and the runner-rulings check are in the contract', () => {
   it('R-HE: the app reads scenario data only through the amended Spec 100 contract', () => {
     const s10 = section(spec(), '10. Consumers');
@@ -110,15 +118,18 @@ describe('R-HE, R-HF, R-HG — the consumer contract, the named locks and the ru
     expect(fs.existsSync(path.join(REPO_ROOT, 'src/tests/bylaw-evaluator-fixes.logic.test.ts'))).toBe(true);
   });
 
-  it('R-HG: commit ① is scheduled only after the 18 runner rulings are confirmed built', () => {
-    expect(section(spec(), '8. Born V3')).toContain('**Runner rulings** (Spec 124 R-HG');
+  it('R-HG: the scenario step\'s ① (node N6), and only it, is scheduled after the 18 runner rulings are confirmed built', () => {
+    const s8 = section(spec(), '8. Born V3');
+    expect(s8).toContain('**Runner rulings** (Spec 124 R-HG');
+    expect(s8).toContain("before scheduling the scenario step's ① (node N6");
+    expect(s8).toContain("The ruling does not cover this step's own ①.");
   });
 });
 
-describe('M-230…M-233 — the by-law-side rulings Spec 134 applies', () => {
-  it('M-230: the v1 scope (classes, base + authored exceptions, full rescan)', () => {
+describe('M-231…M-234 — the by-law-side rulings Spec 134 applies', () => {
+  it('M-234: the v1 scope (classes, base + authored exceptions, full rescan)', () => {
     const s1 = section(spec(), '1. Goal and the v1 scope');
-    expect(s1).toContain('Spec 69a M-230');
+    expect(s1).toContain('Spec 69a M-234');
     for (const cls of ['`detached_house`', '`detached_houseplex`', '`semi_detached_houseplex`', '`semi_detached_house`', '`garden_suite`', '`laneway_suite`']) expect(s1).toContain(cls);
     expect(s1).toContain('v1 is a full rescan');
   });

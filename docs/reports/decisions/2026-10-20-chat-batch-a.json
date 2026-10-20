@@ -1,0 +1,77 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-chat-batch-a/2026-10-20-batch-a.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-chat-batch-a",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "push failed 1 test y to 1-4",
+    "record": "operator chat 2026-10-20",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-chat-batch-a/2026-10-20-batch-a.json"
+    }
+  },
+  "decision_vocab": {
+    "approve": "approve"
+  },
+  "routing": {
+    "CHAT-1": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-62"
+    },
+    "CHAT-2": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HL"
+    },
+    "CHAT-3": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HK"
+    },
+    "CHAT-4": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HM"
+    },
+    "CHAT-5": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-230",
+      "owed": "wf1/bylaw-fix-1 (cf4e57a4: Spec 69a M-230, E2E-F-05)"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "CHAT-1",
+      "question": "LC-62 renovation section before owner input (R-12 as amended)",
+      "recommendation": "On non-semi lots show the renovation figures that don't need owner input, labelled as estimates (existing footprint, how much it could grow back, basement area); ask for storeys only where a figure depends on them (addition up, attic). On half-semi lots no estimates at all (Q-2).",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-2",
+      "question": "Front-yard averaging placement vs R-8 chain order",
+      "recommendation": "Keep front-yard averaging in the scenario step (compute_maxbld_scenarios), as Spec 134 has it; do not move resolve_bylaws later in the chain.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-3",
+      "question": "R-HK decision-log mechanism",
+      "recommendation": "Confirm R-HK: operator decisions are transferred via tracked decision logs + generator + pre-commit coverage lock (decision-log --check).",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-4",
+      "question": "R-RS report surface declaration rule",
+      "recommendation": "A product report surface has one field declaration; every field names exactly one source; a generator --check gates names, types, presentation and pending states; its outputs are generated, never hand-edited.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "CHAT-5",
+      "question": "E2E-F-05 RS 10.40.40.20(4)(A) mis-citation",
+      "recommendation": "Read 'Despite regulation 10.20.40.20(1)' as RS's own 10.40.40.20(1), as intended, so 19.0 m applies for a townhouse on a major street, with a disclosure noting the by-law's mis-citation.",
+      "decision": "approve",
+      "decided_at": "2026-10-20"
+    }
+  ]
+}

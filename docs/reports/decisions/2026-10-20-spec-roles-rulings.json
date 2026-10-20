@@ -1,13 +1,35 @@
 {
-  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). The operator approved the three spec-role recommendations of the spec132-move lane (RULINGS-NEEDED.md, wf2/spec-132, 2026-10-20) in chat with \"y\"; for Spec 123 that is option (a). Question and recommendation text are copied verbatim from that file (the question is its section heading plus the summary table's Today cell); `routing` is added by the lane.",
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). The operator approved the memo docs/reports/decisions/raw/2026-10-20-spec-roles-rulings/RULINGS-NEEDED.md in chat (\"y\"); each recommendation is that file's text, verbatim (the question is the section heading plus the summary table's Today cell). `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
   "log_id": "2026-10-20-spec-roles-rulings",
   "source": {
     "kind": "chat",
     "operator_quote": "y",
-    "document": "RULINGS-NEEDED.md (lane spec132-move, branch wf2/spec-132, 2026-10-20): \"Rulings needed: roles of Specs 120, 121 and 123\""
+    "raw": {
+      "form": "rulings-md",
+      "file": "docs/reports/decisions/raw/2026-10-20-spec-roles-rulings/RULINGS-NEEDED.md",
+      "decided_at": "2026-10-20"
+    }
   },
   "decision_vocab": {
     "y": "approve"
+  },
+  "routing": {
+    "SPEC-120": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HH"
+    },
+    "SPEC-121": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HI"
+    },
+    "SPEC-123": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HJ"
+    }
+  },
+  "amendments": {},
+  "options": {
+    "SPEC-123": "(a): make Spec 123 a standard (the recommended option)"
   },
   "decisions": [
     {
@@ -35,23 +57,7 @@
       "summary_recommendation": "(a) standard (procedure), 123:12 rewritten, removed from `historical_design_records`; or (b) move §6, then historical",
       "must_go_with": "Spec 121 ruling",
       "decision": "y",
-      "decided_at": "2026-10-20",
-      "approved_option": "(a)"
+      "decided_at": "2026-10-20"
     }
-  ],
-  "routing": {
-    "SPEC-120": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HH"
-    },
-    "SPEC-121": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HI"
-    },
-    "SPEC-123": {
-      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
-      "row": "R-HJ"
-    }
-  },
-  "amendments": {}
+  ]
 }

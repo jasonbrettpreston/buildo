@@ -52,8 +52,8 @@
     "134": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 176,
-        "bytes": 25102,
+        "lines": 175,
+        "bytes": 24962,
         "commit": "new spec, wf2/layer2-spec 2026-10-20 (Spec 124 R-GY; the Spec 131 form)"
       }
     }

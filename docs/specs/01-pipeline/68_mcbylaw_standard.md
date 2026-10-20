@@ -471,7 +471,7 @@ Each stage has one owner, one artifact and one gate, and is independently revert
 
 **Future improvements (beyond Phase 2):** the Ch.900 tail. Of 339,125 excepted residential lots (2,893 zone + exception pairs), the 515 exceptions with ≥ 100 direct lots (Phase 2 waves, Spec 69 M-15) cover 300,616 lots (88.6 %); the other 2,378 exceptions cover 38,509 lots (11.4 %) and, until authored, resolve as `not_evaluated:exception_not_authored` (counted, never silently base-resolved) *[measured, `census.json` adoption-1]*. Future work authors that tail in descending lot-count order until every excepted lot resolves.
 
-**Layer 2 step (2026-10-20):** `resolve_bylaws` is specified in Spec 134 (`134_resolve_bylaws.md`); its v1 scope is Spec 69a M-230 (Spec 124 R-GY).
+**Layer 2 step (2026-10-20):** `resolve_bylaws` is specified in Spec 134 (`134_resolve_bylaws.md`); its v1 scope is Spec 69a M-234 (Spec 124 R-GY).
 
 Held until Phase 3 (Spec 69 M-25): F-1..F-5 (plan). **Carve-out:** E1 (dominant-label zoning parameters) is zoning *application* under Spec 69 M-42, approved 2026-10-06 and run as its own WF3; it also removes the STAND_SET-as-setback path from residential parcels (Spec 67 KFM-14). E2 (label FSI) is deferred to Phase 3.
 
