@@ -5,7 +5,8 @@
 // OBSERVABLE (it names an existing lock file in backticks). This lock reads every
 // Spec 124 §5 register row from R-CX on — the first row written under V3-final — and
 // fails a row that carries no "McDonald's Airtight V3" label or whose backticked
-// tokens name no file in the repo.
+// tokens name no file in the repo. A row moved to a 124a LIVE REGISTER section for the
+// byte budget (M32 on, Spec 124 §4 R-I(4)) stays in force and stays under this lock.
 
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
@@ -13,6 +14,8 @@ import * as path from 'node:path';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
 const SPEC_124 = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_standard_policy.md');
+const SPEC_124A = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
+const LIVE_REGISTER_HEADING = /^## .*\(moved from Spec 124 §5\).*LIVE REGISTER/;
 const FIRST_V3_FINAL_ROW = 'R-CX';
 const LOCK_DIRS = ['src/tests', 'scripts'];
 
@@ -48,10 +51,21 @@ function namesExistingFile(token: string, files: string[]): boolean {
 
 type RegisterRow = { id: string; text: string };
 
+// Spec 124's own lines, then the rows under 124a's LIVE REGISTER headings (the moved register blocks).
+function registerLines(): string[] {
+  const own = fs.readFileSync(SPEC_124, 'utf8').split('\n');
+  const moved: string[] = [];
+  let live = false;
+  for (const line of fs.readFileSync(SPEC_124A, 'utf8').split('\n')) {
+    if (/^#{1,2} /.test(line)) live = LIVE_REGISTER_HEADING.test(line);
+    else if (live) moved.push(line);
+  }
+  return [...own, ...moved];
+}
+
 function v3FinalRows(): RegisterRow[] {
-  const lines = fs.readFileSync(SPEC_124, 'utf8').split('\n');
   const rows: RegisterRow[] = [];
-  for (const line of lines) {
+  for (const line of registerLines()) {
     const m = /^\| (R-[A-Z]{2}) \|/.exec(line);
     const id = m?.[1];
     if (id && idOrder(id, FIRST_V3_FINAL_ROW) >= 0) rows.push({ id, text: line });
@@ -66,6 +80,11 @@ describe('Spec 124 §5 R-DF — every V3-final register row is labelled and name
   it('finds the V3-final rows (R-CX on)', () => {
     expect(rows.map((r) => r.id)).toContain(FIRST_V3_FINAL_ROW);
     expect(rows.map((r) => r.id)).toContain('R-DF');
+  });
+
+  it('keeps the rows moved to 124a (M32: R-CY…R-DE) under the lock', () => {
+    const ids = rows.map((r) => r.id);
+    for (const id of ['R-CY', 'R-CZ', 'R-DA', 'R-DB', 'R-DC', 'R-DD', 'R-DE']) expect(ids).toContain(id);
   });
 
   it("each row carries the McDonald's Airtight V3 label", () => {

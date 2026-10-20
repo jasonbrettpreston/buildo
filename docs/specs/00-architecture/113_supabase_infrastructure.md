@@ -282,6 +282,8 @@ on the target — Phase 0.3 IS the PG17-compatibility test this query gates.
 stack, cloud project, and (historically) Cloud SQL. It tracks applied migrations via
 `schema_migrations` checksums, is forward-only, and runs unmodified against Supabase.
 
+**Selective apply (Spec 124 R-EU, operator y 2026-10-20):** `node scripts/migrate.js --only=<n,…>` applies only the listed migration files, through this same engine, per-file transaction and `schema_migrations` row; it refuses before any file runs when a listed file depends on an unapplied, unlisted earlier file (`scripts/lib/migrate-select.js`), and skips the logic_variables seed loader. It amends the apply path only; migrate.js stays the only schema authority. A hand `psql -f` writes no `schema_migrations` row, so it still breaks this section.
+
 **The Supabase CLI's schema-mutating commands are FORBIDDEN against any Buildo-managed schema:**
 `supabase db push`, `supabase db reset`, `supabase db remote commit`. The Supabase CLI's role is
 limited to **local stack lifecycle only** (`supabase start`/`stop`/`status`) — never schema

@@ -604,6 +604,19 @@
       "content_sha256": "13923d8e3d5e0e910a800ca8b9b8a64ab5ddfedf624864d2e1dbc005ca3d5837",
       "moved_at": "2026-10-20",
       "commit": "2ddeb47e"
+    },
+    {
+      "id": "M32",
+      "from_spec": "124",
+      "anchor": "| R-CY | **Runner seams for the last CP-PLANA rows (McDonald's Airtight V3, operator y 2026-10-17).** (i) `runRecorderPhase` passes `compute.buildReads(config, clockNow)` the resolved config and the run clock (folds R-CE). (ii) A §9 emit that restates a declared check's outcome (`drift_check_passed`, `mass_delete_check_passed`, a cascade arm chosen by a check) is decided by that check's own declared bound through `ctx.withinLimit(checkId, value)` (`verdict.js` `makeWithinLimit`, resolved as `checkRow` resolves it); compute passes only the measured value, per lane where the emit is per lane, and never compares `ctx.config` (G7); an undeclared id throws. (iii) The descriptor travels in: `ctx.descriptor`, and `descriptor` on the `shapeRecord`/`buildLookup` seams, so no compute requires its descriptor (G12). Closes 8 CP-PLANA rows; no schema change. | Amends R-BZ G7/G12; folds R-CE | `purity-r-cy-runner-seam.logic`; `step-conformance.infra`; `step-library.logic` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B16 — Register rows R-CY…R-DE (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 7,
+      "classification": "REGISTER",
+      "evidence": "rulings-6 (operator 2026-10-20: R-ET, R-EU, COA-D11, Q-R-EQ-1, McDonald's Airtight V3): Spec 124 was at 379/380 lines and owes R-ET…R-EV. Rows R-CY…R-DE stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.",
+      "content_sha256": "3697b9aa42bb16a8b1546e470516e2ebdb2d16a9af3d6918f40c34cecb2bbe36",
+      "moved_at": "2026-10-20",
+      "commit": "cd7a649e"
     }
   ]
 }
