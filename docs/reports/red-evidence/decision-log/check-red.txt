@@ -1,0 +1,18 @@
+[decision-log] RED — 17 problem(s):
+  2026-10-20-scenario-build-rulings#R-1: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-2: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-3: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-4: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-5: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-6: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-7: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-8: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-9: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-10: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-11: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-12: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-13: approved 2026-10-20, but no register row cites it
+  2026-10-20-scenario-build-rulings#R-14: approved 2026-10-20, but no register row cites it
+  2026-10-20-spec-roles-rulings#SPEC-120: approved 2026-10-20, but no register row cites it
+  2026-10-20-spec-roles-rulings#SPEC-121: approved 2026-10-20, but no register row cites it
+  2026-10-20-spec-roles-rulings#SPEC-123: approved 2026-10-20, but no register row cites it

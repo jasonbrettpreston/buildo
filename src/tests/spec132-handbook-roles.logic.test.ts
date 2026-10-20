@@ -145,6 +145,46 @@ describe('R-GW — one role banner per spec', () => {
   });
 });
 
+describe('R-HH, R-HI, R-HJ — the roles of Specs 120, 121 and 123 (operator "y" 2026-10-20)', () => {
+  const SPEC_120_REL = 'docs/specs/01-pipeline/120_pipeline_step_runner.md';
+  const SPEC_121_REL = 'docs/specs/01-pipeline/121_assessment_and_verification_methodology.md';
+  const SPEC_123_REL = 'docs/specs/01-pipeline/123_step_opt_assessment_validation.md';
+
+  it('R-HH: Spec 120 is historical: one banner, the incident as a dated note, Status HISTORICAL, an empty baseline', () => {
+    const text = read(SPEC_120_REL);
+    expect(ck.extractRoleBanners(text)).toEqual(['historical']);
+    expect(text).toMatch(/^\*\*Status:\*\* HISTORICAL/m);
+    expect(text).not.toContain('NOT RATIFIED — the line that stood here was false');
+    expect(text).toContain('*Dated note 2026-10-20 (Spec 124 R-HH; operator "y"):*');
+    expect(text).toContain('"the specs are good ratify"');
+    expect(text).toContain('✅ RATIFIED 2026-08-22 — registered by operator authorization');
+    expect(manifest().historical_rule_ids[SPEC_120_REL]).toEqual([]);
+  });
+
+  it('R-HI: Spec 121 is historical with the retired M1–M14 as its baseline', () => {
+    const text = read(SPEC_121_REL);
+    expect(ck.extractRoleBanners(text)).toEqual(['historical']);
+    expect(text).toMatch(/^\*\*Status:\*\* HISTORICAL/m);
+    expect(text).toContain('(Spec 124 R-HI; operator "y")');
+    expect([...manifest().historical_rule_ids[SPEC_121_REL]!].sort()).toEqual(Array.from({ length: 14 }, (_, i) => `M${i + 1}`).sort());
+  });
+
+  it('R-HJ: Spec 123 is a standard; Spec 121 no longer governs it; it leaves historical_design_records', () => {
+    const text = read(SPEC_123_REL);
+    expect(ck.extractRoleBanners(text)).toEqual(['standard']);
+    expect(text).not.toContain('GOVERNS this document');
+    expect(text).toContain('**Spec 121 is the historical method record this procedure instantiates**');
+    const meta = ruleMap().meta as { historical_design_records: string[]; precedence: string };
+    expect(meta.historical_design_records).toEqual(['Spec 119', 'Spec 120', 'Spec 121', 'Spec 122a']);
+    expect(meta.precedence).toContain('Spec 123 is the standard for the conversion procedure and its G0–G9 gates (R-HJ)');
+  });
+
+  it('none of the three is still on role_banner_pending (the list shrank by three)', () => {
+    const pending = manifest().role_banner_pending;
+    for (const rel of [SPEC_120_REL, SPEC_121_REL, SPEC_123_REL]) expect(pending).not.toContain(rel);
+  });
+});
+
 describe('R-GX — the role lock (spec-split-check arm vii)', () => {
   const specs = () => ck.collectSpecDocs();
 

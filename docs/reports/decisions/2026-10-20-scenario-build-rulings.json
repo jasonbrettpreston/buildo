@@ -1,0 +1,290 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Question, recommendation and decision are the review page export, verbatim. `decision_vocab`, `routing` (the register and row that record each decision) and `amendments` are added by the lane and are not the page text.",
+  "log_id": "2026-10-20-scenario-build-rulings",
+  "source": {
+    "kind": "page",
+    "title": "Scenario Build Rulings",
+    "url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+  },
+  "decision_vocab": {
+    "keep": "approve"
+  },
+  "decisions": [
+    {
+      "id": "R-1",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "Layer 2 v1 scope: lock a narrowed P2 (P5.3 targets × Phase-5 classes incl. suite and house+suite; base + authored exceptions; full rescan with no incremental L2-CHANGE at v1), and move P2-5 / P2-7 waves, P2-12 and P2-13 off the critical path?",
+      "recommendation": "Recommendation: Yes. Unauthored lots are already a closed not_evaluated reason (S68:472), so the waves raise coverage but do not change correctness.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "P2 sequences P2-5 / P2-6 waves before P2-8 and \"cutover … needs … wave 1 complete\" (P2:308)"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:35:17.251Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-2",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "Spec home for resolve_bylaws. P2 names \"Spec 72\" (P2:4), which is not in the tree.",
+      "recommendation": "Recommendation: A new owner spec for the step under 122/124 (the operator assigns the number), plus a one-line Spec 68 §11 pointer. Spec 68 is over budget (P2:312).",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "§1.2"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:35:28.032Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-3",
+      "group": "Other decisions",
+      "question": "Archetype: ENRICHER \"provisional, R-AO\" (P2:45) or MATERIALIZER (as the scenario step, S78:678)?",
+      "recommendation": "Recommendation: Operator choice. INFERRED lean: MATERIALIZER, because the write shape matches its own derived tables.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "It writes only its own two tables, never parcels (P2:45)"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:34:52.403Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-4",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "How far an unauthored exception reaches: the lot gate exception_closure_unauthored stops every target (P2:211 I4), or per target only (S78:737 \"per-target … propagates\")? Also P2 Q21(b) (P2:435).",
+      "recommendation": "Recommendation: Lot-wide scope, written per target (not_evaluated:exception_not_authored on every target of a gated lot). This satisfies both texts and never base-resolves silently (S68:472). Impact *[measured]*: ≥ 91,744 residential lots (20.8 %) until authoring continues.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "The two texts differ"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:35:38.400Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-5",
+      "group": "Other decisions",
+      "question": "One closed status set (M-223(2)): §11.1 field_status (VOC:342) vs §5a part 3 (S68:119).",
+      "recommendation": "Recommendation: Keep the Layer 2 set = §5a part 3 and the Layer 3 field set = §11.1, joined by a declared total map in layer2-map.json with a both-direction lock. If the operator wants literally one set, adopt §5a part 3 plus not_buildable.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "S69a:361"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:10.905Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-6",
+      "group": "Other decisions",
+      "question": "Structures and storage budget (P2 Q4 / Q5, P2:421-422): principal + suite + ancillary is projected at 1.03 GB (risk 1.84 GB) for Layer 2, plus ≈ 2.6 M scenario rows.",
+      "recommendation": "Recommendation: Principal + garden + laneway (Phase 5 needs the suites). Measure at P2-0 and at the first capture. Keep the §6.8 kill line.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "P2:58; S78:699"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:23.036Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-7",
+      "group": "Other decisions",
+      "question": "R-AS for new steps (P2 Q20, P2:434).",
+      "recommendation": "Recommendation: Record that R-DK covers both new steps. Close Q20 as superseded.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "Superseded? R-DK (S124a:473) now covers net-new steps"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:28.291Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-8",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "Chain placement of resolve_bylaws (P2 Q3, P2:420).",
+      "recommendation": "Recommendation: sources, after enrich_parcels and before link_parcel_abutments / compute_maxbld_scenarios (as P2 recommends).",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "S78:683 needs it before the scenario step"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:35:52.423Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-9",
+      "group": "Other decisions",
+      "question": "CoA u at the first release: seed u_single ≈ 1.14 / u_multiplex 1.00 from the second look (S78:504-505), or every form coa_factor_unfitted until the re-fit audit against the step's own AOR(s)?",
+      "recommendation": "Recommendation: Unfitted until the audit (N10). Then a re-run. The CoA tier is \"in the first release\" (O-18), so it ships with closed not_evaluated reasons, which §6.6 rule 5 shows.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "§6.4 rule 3 needs a pinned audit and the drift gate (S78:511). No u logic variable is seeded *[measured: none in logic_variables.json]*"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:41.463Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-10",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "Consumer contract: amend Spec 100 (§2.1 \"presentation only\", §3.2 excludes scenario / bylaw fields) to add a whitelisted scenarios block, as a coordinated .strict() break; or add a new endpoint?",
+      "recommendation": "Recommendation: Amend Spec 100 with an explicit whitelist block (one contract, R-DL-style parity). Not a new endpoint: the S-001 descriptor already says \"one contract\".",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "S100:34, :38, :96; descriptor frozen"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:00.255Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-11",
+      "group": "Layer 2 and scenario step: on the critical path",
+      "question": "Display before the shadow passes: may scenario cards show (labelled \"by-law-derived where the status is applies, with disclosed estimates\", S78:1433) beside the legacy headlines before the shadow / G-HT gates?",
+      "recommendation": "Recommendation: Yes for the cards, labelled. No for the headline takeover. Legacy areas headlines stay until the shadow passes. Ship to the admin view (N9) first.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "S78:452 (the headline takes over display only after the shadow); O-11"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:04.249Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-12",
+      "group": "Other decisions",
+      "question": "Renovation section before APP-RENO: show it at all?",
+      "recommendation": "Recommendation: Do not render renovation rows in v1 except the existing_storeys_needed prompt. Draft the APP-RENO spec in parallel.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "Renovation needs user storeys (O-13); no input UI until APP-RENO (S78:1006)"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:47.186Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-13",
+      "group": "Other decisions",
+      "question": "Stale owed entries: may the fix lane close the M-217..M-222 / M-225 owed entries by naming the bylaw-evaluator-fixes locks, or must INV-18 / INV-19 exist by id?",
+      "recommendation": "Recommendation: Add INV-18 / INV-19 as named describe titles in the existing lock file. That is the cheapest true lock.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "S78:1406-1407; §1.4"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:49.880Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    },
+    {
+      "id": "R-14",
+      "group": "Other decisions",
+      "question": "Runner rulings binding ① (S78:1232-1236): confirm the 18 are built.",
+      "recommendation": "Recommendation: The orchestrator checks programme-items.json / the R-DV, R-EB, R-EC rows before scheduling N6.",
+      "evidence": [
+        {
+          "label": "Where the gap is",
+          "quote": "Not verified by this lane"
+        }
+      ],
+      "decision": "keep",
+      "decided_at": "2026-10-20T17:36:52.222Z",
+      "source_url": "https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw"
+    }
+  ],
+  "routing": {
+    "R-1": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-230"
+    },
+    "R-2": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-GY"
+    },
+    "R-3": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HB"
+    },
+    "R-4": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-231"
+    },
+    "R-5": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-232"
+    },
+    "R-6": {
+      "register": "docs/specs/01-pipeline/69a_mcbylaw_register.md",
+      "row": "M-233"
+    },
+    "R-7": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HC"
+    },
+    "R-8": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HD"
+    },
+    "R-9": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-60"
+    },
+    "R-10": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HE"
+    },
+    "R-11": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-61"
+    },
+    "R-12": {
+      "register": "docs/specs/01-pipeline/131_lot_configuration_policy.md",
+      "row": "LC-62"
+    },
+    "R-13": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HF"
+    },
+    "R-14": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HG"
+    }
+  },
+  "amendments": {
+    "R-12": {
+      "text": "The renovation section is wanted in v1. The approved recommendation's \"Do not render renovation rows in v1 except the existing_storeys_needed prompt\" is withdrawn; drafting the APP-RENO spec in parallel stands. How the section renders before the APP-RENO input exists is not settled by this amendment.",
+      "operator_quote": "your rigth we want the renovation section",
+      "decided_at": "2026-10-20",
+      "source": "chat"
+    }
+  }
+}

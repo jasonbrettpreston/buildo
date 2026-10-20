@@ -14,10 +14,9 @@
       "Spec 119",
       "Spec 120",
       "Spec 121",
-      "Spec 122a",
-      "Spec 123"
+      "Spec 122a"
     ],
-    "precedence": "The Spec 124 register governs on policy and Spec 122 on the schema and behaviour (R-GV, operator y 2026-10-20, which flips Spec 124's transition clause); Spec 132, generated from this file, is the reading surface (R-GU); Specs 119, 120, 121, 122a and 123 are historical design records (decision 2). Spec 122a carries the historical role banner (R-GW); the role banners of 120, 121 and 123 await operator rulings.",
+    "precedence": "The Spec 124 register governs on policy and Spec 122 on the schema and behaviour (R-GV, operator y 2026-10-20, which flips Spec 124's transition clause); Spec 123 is the standard for the conversion procedure and its G0–G9 gates (R-HJ); Spec 132, generated from this file, is the reading surface (R-GU); Specs 119, 120, 121 and 122a are historical design records (decision 2, amended by R-HJ). Specs 120, 121 and 122a carry the historical role banner (R-GW, R-HH, R-HI); Spec 119 is out of scope.",
     "spec121_m_items": "Spec 121 M1–M14 are retired as a set (decision 4); still-true items map to live handbook lines; Spec 121 text is unchanged.",
     "pending_integration": {
       "rules": [],
@@ -689,8 +688,14 @@
     {
       "id": "x-rulings.3",
       "section": "x-rulings",
-      "text": "Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.",
+      "text": "Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.",
       "why": "Each question has one home, and a reader knows from the first lines what a spec may decide."
+    },
+    {
+      "id": "x-rulings.4",
+      "section": "x-rulings",
+      "text": "Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan.",
+      "why": "A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed."
     },
     {
       "id": "x-verify.1",
@@ -2258,7 +2263,7 @@
       },
       "statement": "The producer declares its by:\"pin\" invalidates row at its ②.",
       "source": {
-        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "its ② (W4A-R4 (a)). First member: classify_coa_"
       },
       "merge": "MERGE-3",
@@ -3218,7 +3223,7 @@
       },
       "statement": "Strict: an unregistered/unknown upstream fails, no exceptions (PIN LINKCOA-ORDER).",
       "source": {
-        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "-10-20, Q-R-EQ-1, operator y to strict: \"an unre"
       },
       "note": "operator answer recorded as a note on R-EQ",
@@ -4665,6 +4670,160 @@
         "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
       },
       "statement": "Lock: every spec has a role banner (or is on the closed, shrink-only pending list), and a historical spec introduces no new rule id (spec-split-check arm vii).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GY",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "The Layer 2 step resolve_bylaws has its own owner spec, Spec 134 (role: standard); Spec 68 §11 carries only a pointer.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HB",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "resolve_bylaws is a MATERIALIZER (rows form, R-EH), not the plan's provisional ENRICHER; PH-0 still re-derives it (R-AO).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HC",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "R-DK covers both new by-law steps (resolve_bylaws, compute_maxbld_scenarios); the plan's R-AS adaptation is closed as superseded.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HD",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "resolve_bylaws runs in sources after enrich_parcels and before link_parcel_abutments and compute_maxbld_scenarios.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HE",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "Scenario data reaches the app only through the Spec 100 contract, amended with one whitelisted block (owed to the app lane); no new endpoint.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HF",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "The stale M-217..M-222 / M-225 owed entries close through named locks INV-18 / INV-19 as describe titles (owed to the by-law fix lane).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HG",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec134-resolve-bylaws.logic.test.ts"
+      },
+      "statement": "Before scheduling commit ① of a new by-law step, the orchestrator confirms the 18 runner rulings binding it are built.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HH",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Spec 120 is historical: one role banner, the false-ratification incident as a dated note, Status HISTORICAL, no rule id.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HI",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Spec 121 is historical (baseline M1–M14), landed with R-HJ so no historical spec governs a live one.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HJ",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/spec132-handbook-roles.logic.test.ts"
+      },
+      "statement": "Spec 123 is a standard (the conversion procedure and the live G0–G9 gates); it no longer says Spec 121 governs it and leaves historical_design_records.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-HK",
+      "kind": "register-ruling",
+      "status": "process",
+      "handbook_line": "x-rulings.4",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/decision-log.logic.test.ts"
+      },
+      "statement": "Operator decisions are committed verbatim as decision logs; every approved decision is a register row citing <log stem>#<id>; decision-log --check proves coverage at pre-commit.",
       "source": {
         "register": true
       }

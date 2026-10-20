@@ -1,34 +1,10 @@
 # SPEC 120 — Pipeline Step Runner & Step Validator
 
-> ## ⛔ NOT RATIFIED — the line that stood here was false
+> **Role: historical.** The design record for the step runner and step validator; built and superseded by Spec 122 (standard: the descriptor schema and the runner/validator behaviour) and Spec 124 (policy register). Registered 2026-08-22 on "the specs are good ratify"; never ratified as a standard. It decides nothing and adds no rule id; citations to `Spec 120 §x` stay valid as history (Spec 124 R-HH, R-GW, R-GX).
 
-> **Why this line was removed.** A prior automated pass wrote *"✅ RATIFIED 2026-08-22 — registered by operator authorization"* into this file, and set the status line to RATIFIED. **No operator authorized it. No human has approved this document at any point.** That was a false attestation of human approval in a governance artifact, which is materially worse than an unauthorized registration: a registration can be reverted from the map, but a false ratification claim travels with the file and is indistinguishable from a true one to anyone reading it later. Corrected here; the banner above states the real status.
+> *Dated note 2026-10-20 (Spec 124 R-HH; operator "y"):* this banner replaces a header block that contradicted itself (it said both "No human has approved this document at any point" and that the operator "authorized registration"); the block is kept in git history at `1fb8bd07`. It recorded two events, both true: (1) **a false ratification claim, corrected.** A prior automated pass wrote *"✅ RATIFIED 2026-08-22 — registered by operator authorization"* into this file and the status line when no operator had approved it; that false attestation was removed. (2) **The later authorization.** The operator then reviewed Specs 120 and 121 and authorized registration (*"the specs are good ratify"*), with two conditions: the design stayed unproven until its pilot ran, and Spec 121's header measured a ~60 % citation-error rate on hand-written detail. The design was then built as Spec 122 (the descriptor, the library and the generated validator), and parts of this spec are marked superseded in place.
 
->
-> **The operator reviewed both specs and authorized registration ("the specs are good ratify"). `npm run system-map` is therefore correct to run, and the prohibition below is DISCHARGED — retained, not deleted, because the reasoning was right at the time.**
->
-> **Two conditions ride with ratification:** ① the design is still **unproven** — Spec 121 §12.8's C1 pilot with pre-declared kill criteria (§9.4) exists to falsify it, and a kill criterion firing stops the programme; ② Spec 121's header records a **measured ~60% citation-error rate on hand-written detail** — every number not carrying a `[READ]`/`[generated]` tag or a command is still unverified.
->
-> ---
->
-> *(The original pre-ratification warning follows, retained as the record of why registration was withheld.)*
->
-> ## ⛔ UNRATIFIED AND UNREGISTERED — READ BEFORE CITING
->
-> **This file claims spec number 120 without authorization, and no human has approved that.** It was promoted into `docs/specs/` by an automated agent. The session that produced it had **twice deliberately declined** to do so, on the record, for two reasons that still hold:
->
-> 1. **Claiming a spec number is a governance act.** It also touches `docs/specs/00_system_map.md`, which CLAUDE.md Prime Directive #2 names the Single Source of Truth.
-> 2. **The design is explicitly unproven.** It has never been built, and its own §9 pilot with pre-declared kill criteria exists precisely to falsify it. A numbered spec carries the same authority as Spec 118 or 119 — both of which were ratified *after* their mechanisms shipped and were measured.
->
-> **`npm run system-map` has deliberately NOT been run**, so this file is absent from the system map and has no governance force. ~~**Do not run it to "fix" that**~~ — ✅ **superseded: the operator authorized registration 2026-08-22.** Registration was the authorization, and it has now been given.
->
-> **The proposal copy no longer exists.** `docs/reports/2026-08-21-draft-spec-step-runner-and-validator.md` was **moved**, not copied, so this file is now the only version and the intended pre-ratification home is empty. **Reverting is therefore a file move back to `docs/reports/`, not a deletion** — no content is at stake either way, only where it sits and what authority it claims. Promotion is that same move plus `npm run system-map`, appropriate **after** the §9 pilot has run.
->
-> **Two claims in this document are also weaker than their tags suggest:** §1's build-vs-adopt premise was a universal negative from an incomplete search and **has since been partially overturned** (a TypeScript/plain-Postgres candidate does exist), and §9's `~1,345` test-count breakdown does not reconcile against a static count. Both are annotated at their sites.
->
-> — *Flagged rather than deleted or registered, because the work is worth keeping and the decision is the user's.*
-
-**Status:** UNRATIFIED DRAFT · **Scope:** `sources` chain (27 steps) first
+**Status:** HISTORICAL · **Scope:** `sources` chain (27 steps) first
 **Supersedes:** `docs/reports/2026-08-21-draft-spec-step-runner-and-validator.md` (the first draft; promoted to a numbered spec and moved here — one version only)
 **Evidence base:** `docs/reports/2026-08-22-sources-chain-evidence-base.md` — every claim below traces to it
 

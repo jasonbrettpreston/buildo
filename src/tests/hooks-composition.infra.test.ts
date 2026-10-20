@@ -323,11 +323,14 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/violations/generate-surface-registry.mjs --check',
     // Operator y 2026-10-20 consolidation 1-4: the generated step-standard handbook (rule-map.json → Spec 132, docs/specs/01-pipeline/132_step_standard_handbook.md; Spec 124 R-GU).
     'node scripts/generate-step-handbook.mjs --check',
+    // Spec 124 R-HK (operator 2026-10-20): every approved operator decision in docs/reports/decisions/*.json has a register row citing it.
+    'node scripts/analysis/decision-log.mjs --check',
   ];
 
-  it('GREEN — runs all 14 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+  it('GREEN — runs all 15 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
     // integrate-12: handbook-1 (generate-step-handbook) and tooling-fix-1 (generate-last-measured, R-GQ) each took 12 -> 13; merged, 14.
-    expect(CHAIN_ERA_GENERATOR_CHECKS).toHaveLength(14);
+    // layer2-spec (R-HK): decision-log --check, 15.
+    expect(CHAIN_ERA_GENERATOR_CHECKS).toHaveLength(15);
     const code = stripComments(PRE_COMMIT);
     const bylaw = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
     const sv = code.indexOf('step-validate.mjs --staged --fast');
