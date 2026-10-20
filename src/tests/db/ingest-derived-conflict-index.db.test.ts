@@ -37,11 +37,12 @@ const ledgerSpec = {
 };
 const descriptor = { identity: { name: 'r_dy_db', archetype: 'INGESTOR' }, outputs: { writes: [ledgerSpec] }, guards: { srid: 'none' } };
 
-/** The legacy statement's conflict arm, read from the frozen legacy file (never retyped). */
+/** The legacy statement's conflict arm, read from the frozen legacy file (never retyped). Since the Night P4 R-EQ shell swap
+ *  (42c9d3d5, 2026-10-20) scripts/load-coa.js is the frozen pipeline.step() shell, so the legacy text is the red suite's oracle. */
 function legacyTail(): string {
-  const src = fs.readFileSync(path.join(REPO_ROOT, 'scripts/load-coa.js'), 'utf8');
+  const src = fs.readFileSync(path.join(REPO_ROOT, 'src/tests/steps/coa/fixtures/legacy-load-coa.js.txt'), 'utf8');
   const m = src.match(/ON CONFLICT \(lead_id, to_status, date_trunc\('second', transitioned_at AT TIME ZONE 'UTC'\)\)\s*DO UPDATE SET event_date = EXCLUDED\.event_date\s*WHERE EXCLUDED\.event_date IS DISTINCT FROM lifecycle_status_history\.event_date\s*AND EXCLUDED\.event_date IS NOT NULL/);
-  if (!m) throw new Error('the frozen legacy ON CONFLICT arm was not found in scripts/load-coa.js');
+  if (!m) throw new Error('the frozen legacy ON CONFLICT arm was not found in the legacy load-coa oracle');
   return m[0];
 }
 

@@ -60,9 +60,15 @@ describe.skipIf(!dbAvailable())('lifecycle_status_history writers — Phase I.1.
     // tests 1-9 (`describe.skip` below) when CKAN file fixtures land.
     const fs = await import('node:fs');
     const path = await import('node:path');
-    const writers = ['load-permits.js', 'load-coa.js', 'classify-lifecycle-phase.js'];
-    for (const writer of writers) {
-      const src = fs.readFileSync(path.resolve(__dirname, '../../../scripts', writer), 'utf-8');
+    // load-coa.js RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20): its legacy text is the red suite's oracle;
+    // the converted step declares both rows as checks (scripts/load-coa.descriptor.json, src/tests/steps/coa/violations.test.ts).
+    const writers: Array<[string, string]> = [
+      ['load-permits.js', '../../../scripts/load-permits.js'],
+      ['load-coa.js', '../steps/coa/fixtures/legacy-load-coa.js.txt'],
+      ['classify-lifecycle-phase.js', '../../../scripts/classify-lifecycle-phase.js'],
+    ];
+    for (const [writer, rel] of writers) {
+      const src = fs.readFileSync(path.resolve(__dirname, rel), 'utf-8');
       // Object-literal pattern: `{ metric: 'lifecycle_status_history_inserted', ... }`
       // Whitespace-tolerant; matches both inline and multiline object literals.
       expect(src, `${writer} missing lifecycle_status_history_inserted audit row`).toMatch(
