@@ -167,75 +167,11 @@ describe('coa ② compute — the declared changes', () => {
     const legacyRow = ((o.summaries[0]?.records_meta as { audit_table: { rows: { metric: string; value: unknown }[] } }).audit_table.rows).find((x) => x.metric === 'max_days_stale');
     expect(legacyRow?.value).toBe(0);
     expect(c.NEWEST_PAST_HEARING_SQL).toMatch(/c\.hearing_date <= \(run\.at AT TIME ZONE 'UTC'\)::date/);
-    const seen: Report[] = [];
-    const ctx: Ctx = {
-      checks: ['max_days_stale'], descriptor: { identity: { name: 'coa' } },
-      acquired: { rows_read: 2, rows_shaped: 2, feature_count: 2 }, written: { inserted: 2, updated: 0 },
-      pool: { query: async () => ({ rows: [{ newest_hearing: '2026-08-01' }] }) }, clock: () => RUN_AT.getTime(),
-      report: (_id, ob) => seen.push(ob),
-    };
-    await c(ctx);
-    expect(seen[0]).toEqual({ value: 78, detail: '2026-08-01' });
+    // the observer over the dispatch-built ctx (value 78 from 2026-08-01) is locked in ./dispatch.logic.test.ts (R-EW)
+    expect(c.daysSince('2026-08-01', RUN_AT.getTime())).toBe(78);
     expect(c.daysSince(null, RUN_AT.getTime())).toBeNull();
   });
 });
-
-describe('coa ② compute — observers over the runner result (ctx.acquired / ctx.written)', () => {
-  async function run(checks: string[], acquired: Record<string, unknown> | null, written: Record<string, unknown> | null = { inserted: 0, updated: 0 }) {
-    const out: Record<string, Report> = {};
-    const r = await c({ checks, descriptor: { identity: { name: 'coa' } }, acquired, written, report: (id, ob) => { out[id] = ob; } });
-    return { out, r };
-  }
-
-  it('schema_mismatch_count names the CRITICAL fields absent from any selected member header (legacy drift list)', async () => {
-    const full = ['_id', 'REFERENCE_FILE#', 'C_OF_A_DESCISION', 'STATUSDESC', 'HEARING_DATE', 'STREET_NUM', 'STREET_NAME'];
-    const { out } = await run(['schema_mismatch_count'], { members: { coa_active: { record_fields: full }, coa_closed: { record_fields: full.filter((f) => f !== 'STATUSDESC') } } });
-    expect(out.schema_mismatch_count).toEqual({ violations: 1, detail: ['STATUSDESC'] });
-    const ok = await run(['schema_mismatch_count'], { members: { coa_active: { record_fields: full } } });
-    expect(ok.out.schema_mismatch_count).toEqual({ violations: 0, detail: [] });
-  });
-
-  it('skip rows: fetched / mapped / skipped with the legacy reason vocabulary, and skip_rate as a percent of fetched', async () => {
-    const { out, r } = await run(['records_fetched', 'records_mapped', 'records_skipped', 'skip_rate'], { rows_read: 40, rows_shaped: 38, bad_key_count: 2, feature_count: 37, shaped_skipped_by_reason: {} });
-    expect(out.records_fetched?.value).toBe(40);
-    expect(out.records_mapped?.value).toBe(38);
-    expect(out.records_skipped).toEqual({ violations: 0, value: 2, detail: { missing_app_num: 2 } });
-    expect(out.skip_rate?.value).toBe(5);
-    expect(r.records_meta.coa_load).toMatchObject({ records_fetched: 40, records_mapped: 38, records_skipped: 2, records_deduplicated: 37 });
-  });
-
-  it('zero_records, zoning_designation_null (all-null only) and the ledger counters (R-DY (e) written.e1)', async () => {
-    const z = await run(['zero_records'], { rows_read: 0 });
-    expect(z.out.zero_records?.violations).toBe(1);
-    const zn = await run(['zoning_designation_null'], { feature_count: 3, column_nulls: { zoning_designation: 3 } });
-    expect(zn.out.zoning_designation_null).toEqual({ violations: 1, detail: 3 });
-    const some = await run(['zoning_designation_null'], { feature_count: 3, column_nulls: { zoning_designation: 1 } });
-    expect(some.out.zoning_designation_null?.violations).toBe(0);
-    const l = await run(['lifecycle_status_history_inserted', 'lifecycle_status_history_errors'], {}, { e1: { inserted: 4, updated: 1, errors: 1 } });
-    expect(l.out.lifecycle_status_history_inserted?.value).toBe(5);
-    expect(l.out.lifecycle_status_history_errors?.violations).toBe(1);
-  });
-
-  // R-ET: the derived target's own per-table write count, the int emit #38's count_path reads (R-DN).
-  it('emits lifecycle_status_history_written = the same ledger count the check row reports (one source), declared int', async () => {
-    const l = await run(['lifecycle_status_history_inserted'], {}, { e1: { inserted: 4, updated: 1, errors: 1 } });
-    expect((l.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(5);
-    expect((l.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(l.out.lifecycle_status_history_inserted?.value);
-    const none = await run([], {}, null);
-    expect((none.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(0);
-    const d = req(path.join(REPO_ROOT, 'scripts/load-coa.descriptor.json')) as { emits: Array<{ key: string; type: string }>; terminals: Array<{ id: string; kind: string; records_meta: Record<string, string> }> };
-    expect(d.emits.find((e) => e.key === 'lifecycle_status_history_written')?.type).toBe('int');
-    for (const t of d.terminals.filter((x) => x.kind === 'success')) expect(t.records_meta.lifecycle_status_history_written).toBe('int');
-  });
-
-  it('max_days_stale is inert when no row was fed (zero records or a refused write)', async () => {
-    const skipped = await run(['max_days_stale'], { rows_read: 10 }, { inserted: 0, updated: 0, write_skipped_pre_write_fail: true });
-    expect(skipped.out.max_days_stale?.inert).toBe(true);
-    const empty = await run(['max_days_stale'], { rows_read: 0 });
-    expect(empty.out.max_days_stale?.inert).toBe(true);
-  });
-
-  it('an undeclared check id is refused by name (§5.5 dispatch table)', async () => {
-    await expect(run(['nope'], {})).rejects.toThrow(/no function in the compute dispatch table/);
-  });
-});
+// The observers over the runner result (ctx.acquired / ctx.written) are locked in ./dispatch.logic.test.ts against the
+// context the REAL ingestPrimaries dispatch builds (Spec 124 R-EW, COA-D13): a hand-built ctx here fed the flat
+// runIngestPhase shape and missed the zero counters the Night P4 swap measured (2026-10-20).

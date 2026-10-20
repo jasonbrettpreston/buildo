@@ -224,36 +224,89 @@ function shouldSkipDelete() {
 // ===========================================================================
 
 const num = (v) => Number(v) || 0;
-const acq = (ctx) => ctx.acquired || {};
-const wr = (ctx) => ctx.written || {};
 const INERT = { value: 0, detail: null, inert: true };
+const WRITE_SKIP_PREFIX = 'write_skipped_';
+
+/** The coa_applications primaries in declared order (both members of the one union group, R-DX (iii)). */
+const declaredPrimaries = (ctx) => ctx.descriptor.inputs.reads.externals.filter((e) => typeof e.target === 'string');
+
+/**
+ * Spec 124 R-EW (operator y 2026-10-20) — the ONE reader of the runner's ctx, in the shape the dispatch for this
+ * descriptor actually builds (COA-D13). The descriptor names `externals[].target`, so runWithPool dispatches the step
+ * to `ingestPrimaries` (0x), which calls compute twice:
+ *   - pre_write pass (`ctx.primary` set, `ctx.written` null): `ctx.acquired` is the group's own flat block —
+ *     `rows_read`, `rows_shaped`, `duplicate_key_count`, `bad_key_count` summed over the members, and the
+ *     members' own blocks under `acquired.members` (a union) or the block itself (one selected member);
+ *   - final pass: `ctx.acquired.primaries[id]` per declared member (`aggregatePrimaries`) and
+ *     `ctx.written.by_target.coa_applications` (the target's own counters: inserted, updated, touched (R-DZ),
+ *     e1 (R-DY)). A union member's entry is the group's block with the member's OWN acquisition block spread
+ *     over it (its `rows_parsed`, `feature_count`, `bad_key_count`, `record_fields`); the group-only counters
+ *     (`rows_read`, `rows_shaped`, `duplicate_key_count`, `column_nulls`, `shaped_*`) ride on every member
+ *     entry unchanged. An unselected member is `{selected:false, reason:"mode"}` (R-DX (iv)).
+ * So: group counters from the first selected entry; the bad keys summed over the selected members; the
+ * deduplicated row count as `rows_shaped - duplicate_key_count` (the runner's own kept.length, the same number in
+ * both passes); the write counters from the target's own `by_target` entry, never the summed step-level block.
+ * PURE.
+ * @returns {{group: object, members: Object<string, object>, badKeys: number, written: object|null, writeSkipped: boolean}}
+ */
+function runView(ctx) {
+  const a = ctx.acquired || {};
+  const skippedFlag = (w) => !!w && Object.keys(w).some((k) => k.startsWith(WRITE_SKIP_PREFIX) && w[k] === true);
+  if (!a.primaries || typeof a.primaries !== 'object') {
+    const members = a.members && typeof a.members === 'object' ? a.members : { [ctx.primary || 'primary']: a };
+    const w = ctx.written || null;
+    return { group: a, members, badKeys: num(a.bad_key_count), written: w, writeSkipped: !w || skippedFlag(w) };
+  }
+  const primaries = declaredPrimaries(ctx);
+  const selected = primaries
+    .map((e) => [e.id, a.primaries[e.id]])
+    .filter(([, p]) => p && typeof p === 'object' && p.selected !== false);
+  const members = Object.fromEntries(selected);
+  const group = selected.length > 0 ? selected[0][1] : {};
+  const target = primaries.length > 0 ? primaries[0].target : null;
+  const byTarget = ctx.written && ctx.written.by_target && typeof ctx.written.by_target === 'object' ? ctx.written.by_target : {};
+  const w = target && byTarget[target] && typeof byTarget[target] === 'object' ? byTarget[target] : null;
+  return {
+    group,
+    members,
+    badKeys: selected.reduce((n, [, p]) => n + num(p.bad_key_count), 0),
+    written: w,
+    writeSkipped: !w || skippedFlag(w) || skippedFlag(ctx.written),
+  };
+}
+
 /** True when the runner refused or skipped the write (its write_skipped_* flags), or reported no write at all. */
-const writeSkipped = (ctx) => !ctx.written || Object.keys(ctx.written).some((k) => k.startsWith('write_skipped_') && ctx.written[k] === true);
+const writeSkipped = (ctx) => runView(ctx).writeSkipped;
+/** The group's own acquired counters (R-EW). */
+const acq = (ctx) => runView(ctx).group;
+/** coa_applications' own write counters: written.by_target.coa_applications in the final pass (R-EW). */
+const wr = (ctx) => runView(ctx).written || {};
 
 /** Raw CKAN records fetched across the selected members (legacy allRaw.length). */
-const fetched = (ctx) => num(acq(ctx).rows_read ?? acq(ctx).rows_parsed);
+const fetched = (ctx) => num(acq(ctx).rows_read);
 /** Records mapped to a coa_applications row, pre-dedup (legacy mapped.length). */
 const mappedCount = (ctx) => num(acq(ctx).rows_shaped);
+/** Rows left after the one dedupe (legacy deduped.length): the runner's kept.length, identical in both passes. */
+const dedupedCount = (ctx) => Math.max(0, mappedCount(ctx) - num(acq(ctx).duplicate_key_count));
 /** Skip reasons in the legacy vocabulary: a blank key is the runner's bad key. */
 function skipReasons(ctx) {
-  const a = acq(ctx);
-  const out = { ...(a.shaped_skipped_by_reason || {}) };
-  if (num(a.bad_key_count) > 0) out.missing_app_num = (out.missing_app_num || 0) + num(a.bad_key_count);
+  const v = runView(ctx);
+  const out = { ...(v.group.shaped_skipped_by_reason || {}) };
+  if (v.badKeys > 0) out.missing_app_num = (out.missing_app_num || 0) + v.badKeys;
   return out;
 }
 
 /** The CRITICAL fields absent from any selected member's header, plus records shaped as schema_mismatch. */
 function schemaDrift(ctx) {
-  const a = acq(ctx);
-  const members = a.members && typeof a.members === 'object' ? a.members : { primary: a };
+  const v = runView(ctx);
   const missing = new Set();
-  for (const m of Object.values(members)) {
+  for (const m of Object.values(v.members)) {
     if (m && Array.isArray(m.record_fields)) for (const f of missingCriticalFields(m.record_fields)) missing.add(f);
   }
-  return { fields: CRITICAL_FIELDS.filter((f) => missing.has(f)), records: num((a.shaped_skipped_by_reason || {}).schema_mismatch) };
+  return { fields: CRITICAL_FIELDS.filter((f) => missing.has(f)), records: num((v.group.shaped_skipped_by_reason || {}).schema_mismatch) };
 }
 
-/** The derived lifecycle_status_history counters (R-DY (e): written.e<i>). */
+/** The derived lifecycle_status_history counters (R-DY (e): the target's written.e<i>). */
 const ledger = (ctx) => wr(ctx).e1 || {};
 /**
  * Ledger rows this run wrote — the ONE count behind both the lifecycle_status_history_inserted check row
@@ -283,6 +336,13 @@ function records_inserted(ctx) {
 function records_updated(ctx) {
   ctx.report('records_updated', { violations: 0, value: num(wr(ctx).updated) });
 }
+/**
+ * Spec 124 R-EX / R-DZ: the keys the runner's seen-column touch rewrote this run (written.touched) — the count the
+ * POST rerun proof requires the second run's rewritten rows to equal exactly (declared_drift.liveness names this check).
+ */
+function records_touched(ctx) {
+  ctx.report('records_touched', { violations: 0, value: num(wr(ctx).touched) });
+}
 function schema_mismatch_count(ctx) {
   const d = schemaDrift(ctx);
   // The legacy value is the distinct missing fields (:631); a record-level miss under a complete header still counts once.
@@ -293,7 +353,7 @@ function applicant_names_present(ctx) {
 }
 function zoning_designation_null(ctx) {
   const a = acq(ctx);
-  const rows = num(a.feature_count);
+  const rows = dedupedCount(ctx);
   const nulls = num((a.column_nulls || {}).zoning_designation);
   ctx.report('zoning_designation_null', { violations: rows > 0 && nulls === rows ? 1 : 0, detail: nulls });
 }
@@ -349,6 +409,7 @@ const CHECKS = {
   skip_rate,
   records_inserted,
   records_updated,
+  records_touched,
   schema_mismatch_count,
   max_days_stale,
   applicant_names_present,
@@ -366,7 +427,6 @@ async function compute(ctx) {
     }
     await check(ctx);
   }
-  const a = acq(ctx);
   return {
     records_meta: {
       coa_load: {
@@ -374,7 +434,7 @@ async function compute(ctx) {
         records_mapped: mappedCount(ctx),
         records_skipped: fetched(ctx) - mappedCount(ctx),
         skip_reasons: skipReasons(ctx),
-        records_deduplicated: num(a.feature_count),
+        records_deduplicated: dedupedCount(ctx),
         schema_mismatch_count: schemaDrift(ctx).fields.length,
       },
       // R-ET: the derived target's own per-table write count — the int emit gate G #38 reads as

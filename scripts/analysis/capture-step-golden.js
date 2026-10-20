@@ -83,7 +83,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { createResolvedPool } = require('../lib/resolve-db');
-const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, FAIL: RERUN_FAIL } = require('./capture-rerun-proof');
+const { rerunTables, isPostCapturePath, rerunProofDecision, measureRerun, auditValuesFromRecordsMeta, FAIL: RERUN_FAIL } = require('./capture-rerun-proof');
 const { parseFiveWords, captureGuardDecision, sameSessionDecision, prePathFor } = require('./capture-guard');
 const os = require('os');
 const witness = require('./capture-witness');
@@ -911,13 +911,14 @@ async function runRerunProof({ step, chain, args, descriptor, session = null }) 
   try {
     const env = { ...process.env };
     if (chain === 'none') delete env.PIPELINE_CHAIN; else env.PIPELINE_CHAIN = chain;
-    console.log(`[capture-step-golden] rerun proof: run 2 of ${step} (zero_writes tables: ${tables.map((t) => `${t.table}(${t.mode})`).join(', ')})`);
+    console.log(`[capture-step-golden] rerun proof: run 2 of ${step} (proof tables: ${tables.map((t) => `${t.table}(${t.mode})`).join(', ')})`);
     const { measured, run2, lo } = await measureRerun(pool, tables, async () => {
       const win = session ? await ledger.openWindow(pool) : null;
       const child = await spawnStep({ scriptPath: step, args, env });
       if (session) session.push(ledger.sessionEntry({ run: 2, kind: 'post', chain, win, completed_at: await ledger.closeWindow(pool), child, markers: parseMarkers(child.stdout) }));
       const rm = parseMarkers(child.stdout).summary?.records_meta ?? {};
-      return { exit_code: child.exit_code, skipped: rm.skipped === true, terminal: rm.terminal ?? null };
+      // R-EX (Spec 124 §5): run 2's audit-table values carry a seen-drift table's declared written.touched check.
+      return { exit_code: child.exit_code, skipped: rm.skipped === true, terminal: rm.terminal ?? null, audit: auditValuesFromRecordsMeta(rm) };
     });
     return { ...rerunProofDecision({ tables, measured, run2 }), txid_before_run2: lo, run2 };
   } finally {
@@ -1527,7 +1528,7 @@ async function main() {
     doc.rerun_proof = await runRerunProof({ step, chain: String(opts.chain), args, descriptor, session });
     console.log(`[capture-step-golden] rerun proof: ${doc.rerun_proof.answer} — ${doc.rerun_proof.reason}`);
     if (doc.rerun_proof.answer === RERUN_FAIL) {
-      throw new Error(`[capture-step-golden] REFUSING --out=${opts.out}: the immediate second run was not a zero-write rerun (${doc.rerun_proof.reason}) — the descriptor's idempotent_rerun: "zero_writes" is false for this step`);
+      throw new Error(`[capture-step-golden] REFUSING --out=${opts.out}: the immediate second run was not a zero-write rerun (${doc.rerun_proof.reason}) — the descriptor's idempotent_rerun declaration is false for this step (zero_writes, or an R-EX seen-column declared_drift)`);
     }
   }
 

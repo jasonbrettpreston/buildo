@@ -516,3 +516,67 @@ Operator decision (2026-10-20, verbatim): "y show which ruling authorixzes this 
 **Item 2 — authority found (no new rule).** The move is authorized by two existing texts. Spec 124 §2 Rule 1 (Spec 124:32): "Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field." The step's own IL-6 ruling (`docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md`:315): "`COST_MAG_ACCEPT` (`e99ae61a`) is a **declared `accept_list`** (an audited exception list, not a threshold) — descriptor-declared, not a logic var". R-DF EXTERNALIZED (124a §B18) is consistent: the list is not a threshold, so it stays out of `logic_variables`; the R-AU addendum (Spec 124:78) likewise keeps non-scalar data out of `logic_variables` and declares it in the descriptor. Built: `checks[].expect` (an OPEN object, `step.schema.json` `definitions.check`; no schema change, no RE-FREEZE) carries `accept_list` on `cost_estimate_over_ceiling` and `modeled_gfa_over_ceiling`, written by the descriptor's generator from CHECK_DEFS `acceptList`; the compute binds `declaredAcceptList(ctx.descriptor, <id>)` (fails closed) and no longer imports the constant. Dated notes "operator y 2026-10-20" are on Rule 1's Evidence line and on the IL-6 ruling. Red-first: `assert-data-bounds-accept-list.logic` 3/3 red on `0935a5cb` (`docs/reports/red-evidence/rulings-8/il6-accept-list-red.json`), green after. Recapture (local dev DB, under the DB lock, each POST by its `--replay` command): the five POSTs retaken with this change are IDENTICAL (normalised) to the same five retaken on the same DB with the parent `0935a5cb` code, so the move changes no output; against the committed POSTs they differ only by DB drift since those were taken (the target line's applied-migration count 264 → 268, and one sources row count 525372 → 525371), present identically in the parent-code retake. G8 3/3, #44 PASS, score back to 16/17.
 
 **Item 3 — authority found (no new rule); bundled RE-FREEZE night additions (operator y 2026-10-20).** Not implemented now. Two Rule 4 gaps ride the same night (PIN REFREEZE-BUNDLE-1), not before. Governing rule: Spec 124 §2 Rule 4 (Spec 124:89): "A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment." (3) neighbourhoods: the U+2019 → `'` apostrophe normalisation is written only in compute comments (`scripts/lib/compute/load-neighbourhoods.js`:143, :335), not in `scripts/load-neighbourhoods.notes.json`; write it there (and/or the governing check's `why`). (4) assert_global_coverage IL-11/IL-12: the `has_bldg` scoping lives in compute SQL (`scripts/lib/compute/assert-global-coverage.js`:258-265, :287) and its rule is written only as the field label "(residential w/ building)"; write it into the IL-11/IL-12 checks' `why`. Both change a descriptor or notes fingerprint, so they take that night's one recapture. PINs REFREEZE-BUNDLE-1 (3) and (4).
+
+---
+
+## Appendix §B20 — Conflict checks and V3 admission tables for R-EW, R-EX (rulings-7, 2026-10-20)
+
+Integration note (`wf2/p4-integrate-11`, 2026-10-20): numbered §B17 on `wf2/p4-rulings-7` (`b348e360`) and renumbered §B20 here, because the v3-label lane took §B17/§B18 and rulings-8 took §B19. rulings-7 also drafted a §B18 moving R-DG…R-DM (with the note that R-DF stays in Spec 124); it is dropped: those seven rows are byte-identical inside §B18 above, whose M33 moves R-DF…R-DT, R-DF included. Spec 124 line citations below are re-anchored to the merged tree (rows R-DF…R-DT now cite 124a §B18).
+
+Operator decision (2026-10-20, verbatim): "a nd b rullings approved - just ensure no conflict with existing rulings". Item a = R-EW (COA-D13, compute-side form, no library change), item b = R-EX (COA-D14, rerun-proof harness). COA-D12 (0x B6, `scripts/lib/step/index.js`:920 `refuse('B6', … must be an object: it is the primary's own prior/skip sub-block.`) needed no new rule: it applies B6 and R-DX (iii) (`index.js`:1052 "a union group keeps one prior sub-block PER MEMBER, under the member ids"); the fix adds `coa_active: {}`, `coa_closed: {}` to `emits[0].skeleton`. Night P4 evidence: lane night-p4-b scratchpad `night-p4b-evidence/`. Red-first artifacts: `docs/reports/red-evidence/rulings-7/red-d12.json` (5/6 RED), `red-d13.json` (3/6 RED, after the D12 fix), `red-d14.json` (10/38 RED; its `touchedFromRecordsMeta` test is the later `auditValuesFromRecordsMeta`).
+
+**Conflict check, R-EW (compute reads the dispatch's own ctx shape).**
+
+| Ruling | Citation (file:line, quote) | Verdict |
+|---|---|---|
+| R-DX (iii)/(iv) | 124:239 "each member keeps its own truth … (the 0x per-primary form, `acquired.primaries[id]`" ; "an unselected member is `{selected:false, reason:"mode"}`" | No conflict: R-EW makes compute read exactly that form. |
+| R-DY (e) | 124:240 "counters `written.e<i>.{inserted, updated, errors}`" | No conflict: under 0x the counters are the target's own, `written.by_target.<table>.e<i>` (`index.js`:1144 `byTarget[r.target] = o.written`, :1159). R-EW names where R-DY's counters land on that path. |
+| R-DZ | 124:241 "Counter `written.touched`" | No conflict: read from the same `by_target` entry. |
+| R-BZ | 124a:251 "Compute purity is a closed answer" | No conflict: `runView` is pure over ctx; no SQL, clock or I/O added. |
+| R-ET | 124:261 "`lifecycle_status_history_written` … from the same `ledgerWritten` as the check row" | No conflict: the one source is kept; it now reads `by_target.coa_applications.e1` (locked in `dispatch.logic`, R-ET case). |
+| R-DN / R-DP / #38 | 124a:476 "the same int emit #38 reads, never a second count source"; 124a:478 | No conflict: no emit or count_path changes. |
+| R-EQ / R-ES | 124:258 "a pending step may swap its frozen shell before ③"; 124:260 | No conflict: no stage, swap or pin change; coa stays `compute_ported`. |
+| R-EU / R-EV | 124:262; 124:263 "(b) the re-upsert changes no status" | No conflict: migrations and the hash form untouched. |
+| B6 / 0x | `index.js`:920; 122a:651 RE-FREEZE #29 | No conflict: B6 applied, not relaxed. |
+| Template freeze / RE-FREEZE | `scripts/steps/_schema/template-freeze.json`:312 "Library internals … inside scripts/lib/step/** — only the phase ORDER per shape and the shape enum are frozen"; `gates/captures.mjs`:332 "lib_fingerprint differs from the current scripts/lib/step/** fingerprint" | No conflict: only `scripts/lib/compute/load-coa.js` changes; `step.schema.json` and `scripts/lib/step/**` are untouched, so no RE-FREEZE and no fingerprint move. |
+| Gate G / G8 (Spec 123) | 123:310 "zero unexplained diffs; … `source_fingerprint` matches the current step" | No conflict: coa has no POST capture yet (`compute_ported`); its first captures carry the new fingerprint. |
+
+**Conflict check, R-EX (seen-column declared drift, measured).**
+
+| Ruling | Citation (file:line, quote) | Verdict |
+|---|---|---|
+| Spec 122 §1.0 | 122:137 "`zero_writes` is asserted, not asserted-to: run twice, assert the second run updates 0"; 122:379 | No conflict: the `zero_writes` proof is unchanged (mode `strict`). R-EX adds a measured proof for a `declared_drift` target, the schema value that already exists (`step.schema.json`:750, :766-775). |
+| R-DZ | 124:241 "touched per slice after the upsert … `t.<col> IS DISTINCT FROM $1`. Counter `written.touched`"; "goldens project it out or explain it (R-DA)" | No conflict: R-EX uses R-DZ's own counter as the declared drift and projects the seen column out of the content hash, the same treatment R-DZ gives goldens. |
+| R-DK | 124a:409 "a rerun-zero proof on every POST"; `gates/net-new.mjs`:20 "`rerun_proof.answer === "PASS"`" | No conflict: coa is not net-new. A net-new seen-column step would pass #22 only on R-EX's exact PASS; the decision answer stays PASS/FAIL. |
+| R-CZ / R-DA | 124a:391 "A capture is reproducible from committed data alone"; 124a:392 | No conflict: the proof reads only the run-2 audit table and DB counts; no new capture field, no new explained-diff route. |
+| R-DN / R-DP / R-ET / #38 | 124a:476, 124a:478, 124:261 | No conflict: #38 brackets measure run 1's writes. The rerun proof measures run 2 and never feeds `count_path`. |
+| R-DY | 124:240 | No conflict: the derived `lifecycle_status_history` keeps `zero_writes` (strict). An unchanged status writes no ledger row. |
+| R-EQ / R-ES / R-EU / R-EV | 124:258, 260, 262, 263 | No conflict: no stage, pin, migration or hash change. R-EV's one-time `--full` re-upsert happens in run 1 (counted as `records_updated`), so run 2's touch-only claim still holds. |
+| B6 / gate G8 | `index.js`:920; 123:310 | No conflict: neither reads `idempotent_rerun`. |
+| Template freeze / RE-FREEZE | `template-freeze.json`:312; `gates/captures.mjs`:332 | No conflict: `scripts/analysis/capture-rerun-proof.js` and `capture-step-golden.js` are outside `scripts/lib/step/**`, and the schema is unchanged, so the operator's STOP condition does not trigger. |
+
+**R-EW — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | It follows the form the two existing multi-primary computes already use: load_heritage and load_zoning fold both 0x shapes in `lanes(ctx)` (`scripts/lib/compute/load-heritage.js`:240-242, `load-zoning.js`:361-362). coa's `runView` is that same fold. |
+| OBSERVABLE | Lock `src/tests/steps/coa/dispatch.logic.test.ts` (11 tests) drives the real `ingestPrimaries` and `makePreWriteGate` over the real descriptor; the B6 control case refuses by name. |
+| RECORDED | Spec 124 §5 R-EW, dated 2026-10-20, with the operator's quote; this table. |
+| SCALABLE | (i) applies by dispatch path to every step. Measured: of the three multi-primary INGESTORs (coa, load_heritage, load_zoning), only coa misread the context. (ii) applies to every compute lock written or rewritten from 2026-10-20. The converted[] and pending[] rows of `converted.json` at 6d63db74 whose locks hand-build ctx form a closed list, owed under PIN R-EW-LOCKS, load_heritage and load_zoning first. |
+| ACCURATE | Night P4 measured all counters at 0. Red-first: `red-d13.json` 3/6 RED on the flat reader, green after `runView`. |
+| SIMPLE | Compute and lock only; no library change (the alternative, a runner shape change, would be a RE-FREEZE). |
+| EXTERNALIZED | No threshold, window or count is added; the fixtures' CONFIG keys are the seeded coa variables. |
+
+**R-EX — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One harness (`capture-rerun-proof.js`) and one answer set (`ANSWERS` + `seen_touch_only`). It reuses the xmin probe (`rewrittenSql`) and the `{kind:"check", ref}` liveness form (R-AX). |
+| OBSERVABLE | The capture's `rerun_proof` row (`mode: seen_drift`, `answer`, `rewritten`, `touched`, `row_delta`) and the REFUSING throw in `capture-step-golden.js`. Lock: `capture-rerun-proof.logic` (38 tests, including a fleet test that every seen-column target declares `declared_drift` with a check liveness). |
+| RECORDED | Spec 124 §5 R-EX, dated 2026-10-20; coa descriptor `idempotent_rerun_why` and `declared_drift` cite R-DZ and R-EX. |
+| SCALABLE | It is derived from `columns[].written:"seen"` on any target, with no step branch. A `zero_writes` claim on a seen column FAILs (`seen_zero_writes`). Today coa is the only seen-column descriptor (measured, `grep '"written": "seen"'`). |
+| ACCURATE | Exact equality (rewritten == touched, Δrows == 0, projected md5 equal). A gap throws. Red-first `red-d14.json` 10/38 RED. Night P4 measured 2,689 rows rewritten by run 2, all from the touch (the counters read 0 then, COA-D13). |
+| SIMPLE | One mode, one hash query, one INFO check (`records_touched`). No runner change. |
+| EXTERNALIZED | No tolerance: every comparison is exact; there is no literal beyond 0. |
+
+PIN R-EW-LOCKS (owner: each step's lane at its next lock touch): the existing compute locks feed a hand-built ctx. Rule R-EW (ii) owes each of them a dispatch-built ctx; load_heritage and load_zoning come first because they share coa's 0x path.
