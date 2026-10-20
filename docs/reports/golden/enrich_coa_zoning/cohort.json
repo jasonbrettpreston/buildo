@@ -1,0 +1,10 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "coa_applications",
+      "capture": "coa-forced.json",
+      "why": "POST docs/reports/golden/enrich_coa_zoning/post/coa-forced.json (Night P4 2026-10-20, Spec 124 R-CZ bracket in recapture.json): bylaw_max_fsi +1 on the first 50 linked CoAs; the guarded UPDATE (writes[0] coa_applications) rewrites and heals all 50 (records_updated). The orphan nullify (writes[1], same table) writes nothing on a settled DB. Restore verified."
+    }
+  ]
+}

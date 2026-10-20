@@ -356,6 +356,10 @@
       "application_number",
       "data_hash"
     ],
+    "coa_applications_cohort_bak_20261020t1932z": [
+      "bylaw_max_fsi",
+      "id"
+    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
