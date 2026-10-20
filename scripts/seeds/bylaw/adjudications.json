@@ -79431,6 +79431,52 @@
           "has_garden_suite"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.20(6)#(6)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/numeric_expression",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": [
+        "side_setback_m = max(side_setback_m; 1.5 m) @(6)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(6)#(6)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/calculation_handling",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "description": "In all other corner-lot cases, the garden suite's minimum side yard setback is the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres.",
+        "gaps": "The other max() argument is the residential building's side_setback_m, the same target name as this unit's, so it cannot be written without circularity; only 1.5 m is expressed. Condition corner_lot read from the stem heading 'Garden Suite on Corner Lot' and the (A)/(B) context.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(6)#(6)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/disclosure",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": "none"
     }
   ]
 }

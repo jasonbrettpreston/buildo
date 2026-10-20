@@ -36536,90 +36536,74 @@
    "disclosure_code": "suite_lot_fact_unknown",
    "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
    "zone": "R",
-   "class": "PROVEN",
+   "class": "OWED",
    "finding": null,
-   "owed_field": null,
-   "reason": "E2E-F-02 fixed (bylaw-fix-1, 2026-10-20; coordinator correction): with the M-198(1) proxy the step supplies (abutting_front_setback_m = the lot's own Layer 2 front_setback_m), (A) answers the larger of the proxy and (B) 1.5 m. Before: not_evaluated:missing_input:abutting_front_setback_m",
+   "owed_field": "disclosures (P5.12 `suite_lot_fact_unknown`)",
+   "reason": "M-198(1) (69a:326): \"the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken\". The proxy is a Layer 2 value that today's path does not supply (the evaluator answers not_evaluated:missing_input:abutting_front_setback_m on both through lots), so the value is owed to ① (P5.13)",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(3)#(3)(A)",
      "lot": "5370045",
      "scenario": {
-      "building_type": "garden_suite",
-      "flags": {
-       "garage_entrance_faces_street": false
-      },
-      "vars": {
-       "abutting_front_setback_m": 6
-      }
+      "building_type": "garden_suite"
      },
-     "target": "rear_setback_m",
-     "expect": {
-      "value": 6,
-      "winner": "150.7.60.20(3)#(3)(A)"
-     },
-     "rationale": "through lot (M-198(1)): the neighbour's required front yard is approximated by this lot's Layer 2 front_setback_m; the larger of it and (B) 1.5 m",
+     "rationale": "through lot (27 Gibson Ave): the through-lot arm (A) applies",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "value",
-       "value": 6,
-       "reason": null,
-       "winner": "150.7.60.20(3)#(3)(A)",
-       "applied": [
-        "150.7.60.20(2)#(2)(B)",
-        "150.7.60.20(3)#(3)(A)",
-        "150.7.60.20(3)#(3)(B)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
       }
      }
     },
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(3)#(3)(A)",
      "lot": "5397229",
      "scenario": {
-      "building_type": "garden_suite",
-      "flags": {
-       "garage_entrance_faces_street": false
-      },
-      "vars": {
-       "abutting_front_setback_m": 6
-      }
+      "building_type": "garden_suite"
      },
-     "target": "rear_setback_m",
-     "expect": {
-      "value": 6,
-      "winner": "150.7.60.20(3)#(3)(A)"
-     },
-     "rationale": "through lot, as above",
+     "rationale": "through lot (167 Ashdale Ave): (A) applies",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "value",
-       "value": 6,
-       "reason": null,
-       "winner": "150.7.60.20(3)#(3)(A)",
-       "applied": [
-        "150.7.60.20(2)#(2)(B)",
-        "150.7.60.20(3)#(3)(A)",
-        "150.7.60.20(3)#(3)(B)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(3)#(3)(A)",
+     "lot": "5403712",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition through_lot",
+     "rationale": "not a through lot: (A) is set aside and (B) 1.5 m answers (proven under 150.7.60.20(3)(B))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition through_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
   },
   {
    "unit_id": "150.7.60.20(3)#(3)(B)",
@@ -38363,43 +38347,56 @@
    "disclosure_code": null,
    "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
    "zone": "R",
-   "class": "PROVEN",
+   "class": "OWED",
    "finding": null,
-   "owed_field": null,
-   "reason": "E2E-F-01 fixed (bylaw-fix-1, 2026-10-20): (C) is keyed as the 1.5 m floor (M-179(2)); the larger-of with the principal house's required side yard is Layer 3 (M-198(2)). Before: not_evaluated:missing_input:side_setback_m (the unit read its own target)",
+   "owed_field": "disclosures (P5.12 code, step ①)",
+   "reason": "the corner-lot-only half is proven (the arm applies on corner lots and is set aside on interior lots). The value needs the principal building's side yard and the Layer 2 front-setback proxy (cross-structure, M-198(2)); the disposition owes it to P5.13. Today the evaluator answers not_evaluated:missing_input:side_setback_m on a corner lot, which is the input ① supplies",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(6)#(6)(C)",
      "lot": "5396831",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "side_setback_m",
-     "expect": {
-      "value": 1.5
-     },
-     "rationale": "corner lot (6.1 m frontage): (C) = max(the principal house's side setback 0.9 m (10.10.40.70(3)(A), evaluated on this lot), 1.5 m) = 1.5 m",
+     "rationale": "corner lot (20 Athletic Ave): the corner arm (C) applies",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "value",
-       "value": 1.5,
-       "reason": null,
-       "winner": "150.7.60.20(6)#(6)(C)",
-       "applied": [
-        "150.7.60.20(5)#(5)(B)",
-        "150.7.60.20(6)#(6)(C)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(6)#(6)(C)",
+     "lot": "5403712",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition corner_lot",
+     "rationale": "interior lot (36 Hallam St): (C) is set aside, so 1.5 m is not every garden suite's default (M-179(2)); (5)(B) answers there (proven under 150.7.60.20(5)(B))",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition corner_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
   },
   {
    "unit_id": "150.7.60.20(6)#(6)(C)",
@@ -38413,43 +38410,56 @@
    "disclosure_code": null,
    "corrected_value": "The 1.5 m minimum applies to a garden suite on a corner lot only, not as the default for every garden suite.",
    "zone": "RD",
-   "class": "PROVEN",
+   "class": "OWED",
    "finding": null,
-   "owed_field": null,
-   "reason": "E2E-F-01 fixed (bylaw-fix-1, 2026-10-20): (C) is keyed as the 1.5 m floor (M-179(2)); the larger-of with the principal house's required side yard is Layer 3 (M-198(2)). Before: not_evaluated:missing_input:side_setback_m (the unit read its own target)",
+   "owed_field": "disclosures (P5.12 code, step ①)",
+   "reason": "the corner-lot-only half is proven (the arm applies on corner lots and is set aside on interior lots). The value needs the principal building's side yard and the Layer 2 front-setback proxy (cross-structure, M-198(2)); the disposition owes it to P5.13. Today the evaluator answers not_evaluated:missing_input:side_setback_m on a corner lot, which is the input ① supplies",
    "checks": [
     {
-     "kind": "value",
+     "kind": "reach",
      "unit": "150.7.60.20(6)#(6)(C)",
      "lot": "5144129",
      "scenario": {
       "building_type": "garden_suite"
      },
-     "target": "side_setback_m",
-     "expect": {
-      "value": 1.8
-     },
-     "rationale": "corner lot (18.0 m frontage): (C) = max(the principal house's side setback 1.8 m (10.20.40.70(3)(E), evaluated on this lot), 1.5 m) = 1.8 m",
+     "rationale": "corner lot (68 Aviemore Dr): the corner arm (C) applies",
      "initial": {
       "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
-       "status": "value",
-       "value": 1.8,
-       "reason": null,
-       "winner": "150.7.60.20(5)#(5)(B)",
-       "applied": [
-        "150.7.60.20(5)#(5)(B)",
-        "150.7.60.20(6)#(6)(C)"
-       ],
-       "disclosures": [],
-       "alternate_paths": 30
+       "disclosures": []
+      }
+     }
+    },
+    {
+     "kind": "excluded",
+     "unit": "150.7.60.20(6)#(6)(C)",
+     "lot": "5118342",
+     "scenario": {
+      "building_type": "garden_suite"
+     },
+     "why": "condition corner_lot",
+     "rationale": "interior lot: (C) is set aside",
+     "initial": {
+      "pass": true,
+      "observed": {
+       "candidate": true,
+       "applies": false,
+       "why": "condition corner_lot",
+       "disclosures": []
       }
      }
     }
-   ]
+   ],
+   "lineage": {
+    "field": "disclosures",
+    "owed": [
+     "P5.12 codes in vocab.json — step commit ①"
+    ],
+    "regulation_ids": 0
+   }
   },
   {
    "unit_id": "150.7.60.21(1)#(1)(A)",
