@@ -59,7 +59,7 @@ export const REASON_CODES = Object.freeze([
   'not_an_override_invalid',
 ]);
 /** Backward triggers: the displaced provision precedes the phrase ("regulation (A) does not apply"). */
-export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply', 'apply to prevent', 'will prevent']); // Spec 69a M-94(b) "will prevent"; M-93: the regulations it switches off precede "apply to prevent"
+export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply', 'apply to prevent', 'will prevent', 'may be reduced to']); // Spec 69a M-94(b) "will prevent"; M-93: the regulations it switches off precede "apply to prevent"
 /** Phase 1 allowance (Spec 68 §6.1): an include_ref may resolve to a `ref` with this reason, counted. */
 export const PHASE1_INCLUDE_REF_REASONS = Object.freeze(['phase2_exception']);
 
@@ -151,6 +151,9 @@ export function displacesOf(index, unitId, vocab, external = null) {
   const row = view.row;
   const t = row.verbatim;
   const phrases = (vocab.displacement_triggers && vocab.displacement_triggers.phrases) || [];
+  // Spec 69a M-230 (operator CHAT-5): a declared, ruled mis-citation in this row's text resolves to the intended regulation
+  const fixes = (vocab.citation_corrections && vocab.citation_corrections[row.regulation_id]) || {};
+  const cite = (c) => (Object.hasOwn(fixes, c) && typeof fixes[c] === 'string' ? fixes[c] : c);
   const seen = new Set();
   let named = 0; // references the current trigger names (a target named twice still accounts for both triggers)
   const add = (citation, resolved, phrase) => {
@@ -194,14 +197,14 @@ export function displacesOf(index, unitId, vocab, external = null) {
       const tail = GROUP_TAIL.exec(t.slice(r.end, to));
       if (tail) {
         const groups = tail[1].split(/\s*(?:,\s*(?:and\s+|or\s+)?|and|or)\s*/).filter(Boolean);
-        const ex = groups.map((g) => ({ citation: `${r.citation}${g}`, resolved: resolveCitation(index, `${r.citation}${g}`, external) }));
+        const ex = groups.map((g) => ({ citation: `${r.citation}${g}`, resolved: resolveCitation(index, cite(`${r.citation}${g}`), external) }));
         if (ex.every((x) => x.resolved.ok)) {
           out2.push(...ex);
           last = r.end + tail[0].length;
           continue;
         }
       }
-      out2.push({ citation: r.citation, resolved: resolveCitation(index, r.citation, external) });
+      out2.push({ citation: r.citation, resolved: resolveCitation(index, cite(r.citation), external) });
     }
     return out2;
   };
@@ -234,7 +237,7 @@ export function displacesOf(index, unitId, vocab, external = null) {
             }
           }
         } else {
-          for (const r of (row.refs || []).filter((x) => x.start >= segFrom && x.end <= at)) add(r.citation, resolveCitation(index, r.citation, external), phrase);
+          for (const r of (row.refs || []).filter((x) => x.start >= segFrom && x.end <= at)) add(r.citation, resolveCitation(index, cite(r.citation), external), phrase);
           for (const x of relativeRefs(t.slice(segFrom, at))) for (const g of x.groups) add(`${row.regulation_id}#${g.map((s2) => `(${s2})`).join('')}`, relTarget(row, c.path, g), phrase);
         }
         // the sentence the trigger governs: from the trigger to the clause's first ";", ":" or sentence-ending "." (Q1);

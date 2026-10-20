@@ -149,7 +149,7 @@ export function evaluate(expr, lot, ctx) {
   }
   const trace = [];
   const reads = new Set();
-  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {} };
+  const env = { C, lot, trace, reads, resolveVariable: ctx && ctx.resolveVariable, argEdits: (ctx && ctx.argEdits) || {}, byTypeAlias: (ctx && ctx.byTypeAlias) || null };
   const r = ev(ast, env);
   const inputs = [...reads].sort(cmpStr);
   if (r.ne) return { value: null, unit: r.unit ?? null, not_evaluated: r.ne, trace, inputs };
@@ -213,9 +213,12 @@ function ev(e, env) {
       env.reads.add('building_type');
       const bt = lot.building_type;
       if (!bt) return ne('needs_user_input', 'building_type');
-      const hit = e.entries.find((x) => x.key === bt) || e.entries.find((x) => x.key === C.typeParent[bt]) || e.entries.find((x) => x.key === 'other');
+      // M-180(1) (E2E-F-06): an exception-layer by_type table's detached (semi-detached) house entry also binds the houseplex
+      // class the zone's "Applicable" clause names (vocab.exception_type_alias) — the same alias applies() reads
+      const viaAlias = env.byTypeAlias ? e.entries.find((x) => env.byTypeAlias[x.key] === bt) : null;
+      const hit = e.entries.find((x) => x.key === bt) || e.entries.find((x) => x.key === C.typeParent[bt]) || viaAlias || e.entries.find((x) => x.key === 'other');
       if (!hit) return ne('by_type_unlisted', bt);
-      trace.push(`by_type ${hit.key}`);
+      trace.push(hit === viaAlias ? `by_type ${hit.key} (M-180(1): binds ${bt})` : `by_type ${hit.key}`);
       return ev(hit.expr, env);
     }
     case 'bin': {
@@ -876,11 +879,12 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // layers (Spec 68 §7.5 rule 2, stated with the §7.4 worked example: HT 12.0 → 12.0 m; Spec 69 M-60)
   const dropped = new Set(); const consumed = new Set(); const edits = new Map(); // unit_id → {path: null|AST}
   const disappliedBy = new Map(); // M-183: dropped value unit_id → the DISAPPLY that named it
+  const droppedByException = new Set(); // M-180(2): base value units an exception-layer "Despite" dropped (still compared)
   for (const { d, v, m, err } of r2) { // = for d of sortedA, ref of d.displaces, v of sortedA (the A-independent tests: displacementPairs)
     if (!A.has(d) || (v && !A.has(v))) continue;
     if (err) throw err;
     {
-      if (m === 'full') { dropped.add(v.unit_id); if (d.archetype === 'DISAPPLY' && !disappliedBy.has(v.unit_id)) disappliedBy.set(v.unit_id, d.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
+      if (m === 'full') { dropped.add(v.unit_id); if (d.archetype === 'DISAPPLY' && !disappliedBy.has(v.unit_id)) disappliedBy.set(v.unit_id, d.unit_id); if (d.layer === 'exception' && v.layer === 'base') droppedByException.add(v.unit_id); trace.push(`rule 2: ${d.unit_id} drops ${v.unit_id}`); continue; }
       const tagged = parsedFor(v, target).some((s) => argPaths(s.expr).includes(m.arg));
       if (!tagged) return NE_RESULT(`displaced_argument_not_found:${m.arg}`, { trace: [...trace, `rule 2: ${d.unit_id} names ${m.arg} inside ${v.unit_id}, which tags no such argument`], disclosures, inputs: ins() });
       const own = parsedFor(d, target);
@@ -963,15 +967,18 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     if (b !== 'exact' && kept[b].some((u) => layerOf(u) === 'exception')) {
       for (const p of morePermissive) {
         const arts = new Set((p.application && p.application.articles) || []);
-        const alt = us.filter((u) => rank(u) !== top && layerOf(u) === 'base' && arts.has(articleOf(u)));
+        // E2E-F-06: the zone rule the exception's own "Despite" dropped is still the regulation M-180(2) compares against
+        const exDropped = sortedA.filter((u) => valueSet.has(u) && droppedByException.has(u.unit_id) && boundOfUnit(u) === b && arts.has(articleOf(u)) && !us.includes(u));
+        const alt = [...us.filter((u) => rank(u) !== top && layerOf(u) === 'base' && arts.has(articleOf(u))), ...exDropped];
         if (alt.length) { (altKept[b] = altKept[b] || { by: p.unit_id, units: [] }).units.push(...alt.filter((u) => !altKept[b].units.includes(u))); }
       }
     }
   }
 
   // evaluate + rule 4a
-  const ev1 = (s, args) => {
-    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args });
+  const ev1 = (s, args, u) => {
+    const alias = u && u.layer === 'exception' && C.exceptionTypeAlias ? C.exceptionTypeAlias[lot.zone] || null : null;
+    const r = evaluate(s, lot, { ...C, resolveVariable, argEdits: args, byTypeAlias: alias });
     addAll(reads, r.inputs);
     return r;
   };
@@ -981,7 +988,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
       into[b] = [];
       for (const u of us) for (const s of parsedFor(u, target)) {
         const ed = edits.get(u.unit_id);
-        const r = ev1(s, ed ? ed.args : {});
+        const r = ev1(s, ed ? ed.args : {}, u);
         const id = ed ? `${u.unit_id}<${ed.by.join('+')}` : u.unit_id;
         if (r.not_evaluated) return NE_RESULT(r.not_evaluated, { applied: [id], trace: [...trace, `${id}: ${r.not_evaluated}`, ...r.trace], disclosures, inputs: ins() });
         into[b].push({ id, unitId: u.unit_id, v: r.value });

@@ -20,6 +20,8 @@ per-branch reports are copied verbatim from the verify lanes' scratchpad into th
 | 4 | `wf1/bylaw-e2e-1` @ `fe1b02ce` | **PASS-WITH-NOTES** (53a21030 BLOCK (B1) → fe1b02ce PASS-WITH-NOTES, B1 closed) | [`../wf1-bylaw-e2e-1.md`](../wf1-bylaw-e2e-1.md), [`../wf1-bylaw-e2e-1-fix.md`](../wf1-bylaw-e2e-1-fix.md) |
 | 5 | `wf1/bylaw-fix-1` @ `3266cb59` | **PASS-WITH-NOTES** | [`../wf1-bylaw-fix-1.md`](../wf1-bylaw-fix-1.md) |
 
+Row 1 (`wf2/spec-132`): Report reissued by the verifier 2026-10-20 (row 8 mutation citations described in prose; no verdict change), operator: "option 2".
+
 Not merged: `wf2/p4-night-c` (separate verification; integrate-14).
 
 ## Commit order note

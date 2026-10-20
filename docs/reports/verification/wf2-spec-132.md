@@ -17,7 +17,7 @@
 | 5 | `generate-step-handbook.mjs --check` | "132_step_standard_handbook.md is up to date", exit 0 |
 | 6 | Size claim | 617 lines / 74,851 B; `generated_size_caps["132"]` = 925 lines / 112,000 B, with a measured why. Matches the claim |
 | 7 | Red-first: tip `spec132-handbook-roles.logic` on parent 208e8a82 | **14/14 FAIL**. At tip, 14/14 pass. Matches the committed red/green evidence (`docs/reports/red-evidence/spec132/roles-lock-{red,green}.json`) |
-| 8 | Arm (iii-b) mutation, on the aed98413 tree (a superset) | Each mutation came back as DRIFT exit 1: `Spec 132 §core.99 (R-L)` ("not a handbook line") and `Spec 132 §core.1 (R-EY)` ("R-EY maps to x-v3.1, not core.1") |
+| 8 | Arm (iii-b) mutation, on the aed98413 tree (a superset) | Each mutation came back as DRIFT exit 1: a citation of Spec 132 handbook line *core.99* for rule R-L (rejected: "not a handbook line"), and a citation of handbook line *core.1* for rule R-EY (rejected: "R-EY maps to x-v3.1, not core.1") |
 | 9 | Arm (vii) mutation | Each came back as DRIFT: removing Spec 124's role banner ("no role banner"), and adding `\| R-ZZ \|` to historical Spec 120 ("new rule id R-ZZ in a historical spec") |
 | 10 | `role_banner_pending` | 108 at this tip (R-GW says "108 at landing"). It shrinks to 105 on layer2-spec, as the shrink-only rule allows |
 | 11 | Spec 124:11 flip (R-GV) | The text was amended from "On conflict during the transition, Spec 122 governs" to the register/standard split, citing "y to this revised version". Spec 122 has left `historical_design_records`; 119/120/121/123 are still listed |
@@ -30,3 +30,11 @@
 **NOTE**
 - **N1.** R-GU…R-GX cite chat approvals ("y to both", "y to this revised version") but have no decision log. R-HK (decision logs, introduced next on wf2/layer2-spec) does not require one retroactively, and `decision-log --check` only checks logs that exist. Backfilling a `2026-10-20-spec132-rulings.json` would make these four rulings mechanically traceable like the rest. This is optional and the operator decides.
 - **N2.** The ids are provisional (R-GU…R-GX) and spec-132 is an ancestor of wf2/layer2-spec, so landing layer2-spec lands this commit too. See `integrate-13-plan.md`.
+
+## Reissue note
+
+- Date: 2026-10-20. Reissued by lane verify-13-reissue.
+- Reason: arm (iii-b) of `spec-split-check --check` scans every working-tree file under `docs/`, `src/`, `scripts/`, `tasks/` and `.cursor/` for handbook citations, so it scans verification reports in `docs/reports/verification/`. Row 8 quoted the two deliberately invalid mutation strings literally, in citation form, so once this report was in the tree the check rejected them and no commit could pass pre-commit.
+- Change: row 8 wording only. The two mutations are now described in prose rather than quoted in citation form. No other row needed a change: a scan of the whole report with the real extractor found no other citation that arm (iii) or arm (iii-b) matches.
+- No verdict or finding changed. Row 8 still records DRIFT exit 1 for both mutations, with the same reasons.
+- Decision: operator, 2026-10-20: "option 2".

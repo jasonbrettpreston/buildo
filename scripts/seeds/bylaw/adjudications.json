@@ -77306,6 +77306,2177 @@
       "rule": "Spec 69a M-169(4), M-214(3); Spec 78 P5.12 rooftop_elements_exempt; M-75",
       "unit": "10.10.40.10(10)#(10)(C)",
       "value": "A tower is the part of a building enclosing storeys more than 24.0 m above the ground, where no storey above 24.0 m averages more than 750 m² of floor area; towers are apartment forms and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.10.20.1(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-214(3) defers \"a secondary suite in a semi-detached house or townhouse\" and discloses it forms_deferred; M-177 keeps the semi + suite host in scope as a permitted class.",
+      "rule": "Spec 69a M-177, M-214(3); Spec 78 P5.12 forms_deferred; M-75",
+      "unit": "150.10.20.1(1)#(1)(B)",
+      "value": "A secondary suite is permitted in a semi-detached house; a secondary suite in a semi-detached house is not modelled in this release."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.10.20.1(2)#whole/disclosure~s1",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(4) \"One suite per dwelling unit (150.10.20.1(2)) is the class vector's has_secondary_suite = 1\" — the count is the class vector, not an unenforced count.",
+      "rule": "Spec 69a M-177(4); Spec 68 §7.3 UNUSUAL disclosure; M-75",
+      "supersedes": "COR-150.10.20.1(2)#whole/disclosure",
+      "unit": "150.10.20.1(2)#whole",
+      "value": "Each dwelling unit may have at most one secondary suite; the house-with-suite answer has exactly one."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.10.40.40(1)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-199 \"the denominator is the whole house's interior (suite included): suite_interior ≤ 0.45 × house_interior\"; the stricter reading is disclosed (secondary_suite_share_reading). The m² figure is the Spec 78 P5.10 suite_interior_sqm computation (owed to step commit ①).",
+      "rule": "Spec 69a M-199; Spec 78 P5.12 secondary_suite_share_reading; Spec 131 LC-52; M-75",
+      "unit": "150.10.40.40(1)#whole",
+      "value": "A secondary suite may take up to 45% of the interior floor area of the house it is in, the suite included; if the City reads 45% against the main unit only, the suite is smaller."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.gaps",
+      "id": "COR-150.10.40.40(1)#whole/calculation_handling.gaps",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-199 withdraws the host = house − suite split; the gaps text named the HOST dwelling unit.",
+      "rule": "Spec 69a M-199, M-177(4); Spec 68 §7.3; M-75",
+      "unit": "150.10.40.40(1)#whole",
+      "value": "The bound is 45 percent of the whole house interior floor area (suite included), M-199; the house interior is the principal's maximum build, a Layer 3 quantity (Spec 78 P5.10 suite_interior_sqm, owed to step commit ①), not a DSL input, so no expression is written and 45 percent stays a clause literal. No zone is named (Chapter 150 applies wherever a secondary suite is permitted)."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.10.40.40(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-199 \"150.10.40.40(2) (the whole basement of a one-storey detached house) is unchanged\"; M-177(4) \"a one-storey detached house's suite may take the whole basement\" — answered, not \"not evaluated\".",
+      "rule": "Spec 69a M-199, M-177(4); M-75",
+      "unit": "150.10.40.40(2)#whole",
+      "value": "In a one-storey detached house, a basement secondary suite may take the whole basement."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.50(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(2) \"GFA = min(120 m², < principal GFA)\" — the suite is sized against the principal's maximum build, never an unchecked comparison.",
+      "rule": "Spec 69a M-177(2); M-75",
+      "unit": "150.7.60.50(2)#whole",
+      "value": "A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(2)#(2)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-198(3) \"Laneway rear, 150.8.60.20(2): which line abuts the lane is not held, so 1.0 m (B)\"; M-197 \"Lot facts are not design choices: an unknown one takes the larger setback (M-198)\"; M-177(1) class data, no user input.",
+      "rule": "Spec 69a M-198(3), M-197, M-177(1); Spec 78 P5.12 suite_lot_fact_unknown; M-75",
+      "unit": "150.8.60.20(2)#(2)(A)",
+      "value": "Whether the rear lot line abuts a street or lane is not known for this lot; the larger setback (1.0 m) is used."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.20(2)#(2)(A)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): the 0.0 m arm waits on the lot-line classification (ML-1), a lot fact we lack — not a user input (openings are taken as none, M-197).",
+      "rule": "Spec 69a M-198(3), M-197; Spec 78 P5.14 ML-1; M-75",
+      "unit": "150.8.60.20(2)#(2)(A)",
+      "value": "needs_data_we_lack"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(2)#(2)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has; M-198(3) makes 1.0 m (B) the answer while the lane line is not held.",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(2)#(2)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.20(2)#(2)(B)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.20(2)(B) modelled).",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(2)#(2)(B)",
+      "value": "modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.20(2)#(2)(B)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): modelled carries no not_modelled_reason.",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(2)#(2)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(3)#(3)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-197 names laneway side (3)(A) 0.0 m \"if the … lot line does not abut a street or lane and there are no openings\"; the side-line classification is not held, so the larger setback (3)(D) 1.0 m answers (M-198, M-176).",
+      "rule": "Spec 69a M-198(3), M-197, M-177(1); Spec 78 P5.12 suite_lot_fact_unknown; M-75",
+      "unit": "150.8.60.20(3)#(3)(A)",
+      "value": "Whether the side lot line abuts a street or lane is not known for this lot; the larger setback (1.0 m) is used."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.20(3)#(3)(A)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): the side-line classification (ML-1) is a lot fact we lack.",
+      "rule": "Spec 69a M-198(3), M-197; Spec 78 P5.14 ML-1; M-75",
+      "unit": "150.8.60.20(3)#(3)(A)",
+      "value": "needs_data_we_lack"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(3)#(3)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-198(3) \"The laneway side abutting a street takes (3)(B)\" — the house's required side yard, computed with the house (Spec 78 P5.5).",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(3)#(3)(B)",
+      "value": "On a corner lot, the laneway suite is set back from the side lot line that abuts the street by the side yard setback required for the house."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.20(3)#(3)(B)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): which side line abuts the street is the lot-line classification (ML-1).",
+      "rule": "Spec 69a M-198(3); Spec 78 P5.14 ML-1; M-75",
+      "unit": "150.8.60.20(3)#(3)(B)",
+      "value": "needs_data_we_lack"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(3)#(3)(D)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has; 1.0 m (D) answers while the side line is not classified (M-198).",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(3)#(3)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.20(3)#(3)(D)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(3)#(3)(D)",
+      "value": "modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.20(3)#(3)(D)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): modelled carries no not_modelled_reason.",
+      "rule": "Spec 69a M-198(3), M-177(1); M-75",
+      "unit": "150.8.60.20(3)#(3)(D)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.30(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(2) \"Each answer discloses the other arm\"; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.30(1)(A)).",
+      "rule": "Spec 69a M-177(2), M-198; Spec 78 P5.12 suite_separation_arm; M-75",
+      "unit": "150.8.60.30(1)#(1)(A)",
+      "value": "A laneway suite no taller than 4.0 m must be at least 4.0 m from the house; a 6.3 m suite needs 7.5 m, taken where the lot depth fits."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.30(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(2) \"Each answer discloses the other arm\"; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.30(1)(B)).",
+      "rule": "Spec 69a M-177(2), M-198; Spec 78 P5.12 suite_separation_arm; M-75",
+      "unit": "150.8.60.30(1)#(1)(B)",
+      "value": "A laneway suite taller than 4.0 m must be at least 7.5 m from the house; at 4.0 m from the house the suite is limited to 4.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.40(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(1) \"SCALABLE, class data, no user input\" — the laneway height answers on every lot; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.40(1)#(1)(A)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(A)",
+      "value": "modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.40(1)#(1)(A)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): modelled carries no not_modelled_reason.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.40(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(1) \"SCALABLE, class data, no user input\" — the laneway height answers on every lot; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.40(1)#(1)(B)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(B)",
+      "value": "modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.40(1)#(1)(B)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): modelled carries no not_modelled_reason.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(1)#(1)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.40(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(1) \"SCALABLE, class data, no user input\" — the laneway height answers on every lot; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(2)#whole",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.40(2)#whole/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(2)#whole",
+      "value": "modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.40(2)#whole/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): modelled carries no not_modelled_reason.",
+      "rule": "Spec 69a M-177(1), M-177(2), M-198; M-75",
+      "unit": "150.8.60.40(2)#whole",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.50(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(2) \"GFA = min(120 m², < principal GFA)\"; Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.50(2)).",
+      "rule": "Spec 69a M-177(2); M-75",
+      "unit": "150.8.60.50(2)#whole",
+      "value": "A laneway suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.70(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(1) names 150.8.60.70(1)(A) among the units that \"change the principal lot's FSI and coverage answer\"; the suite scenario applies it from class data, never \"when you tell us\".",
+      "rule": "Spec 69a M-177(1), M-179(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(A)",
+      "value": "A laneway suite does not count toward the lot coverage limit for the house; all ancillary buildings together, the suite included, may cover at most 30% of the lot."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.70(1)#(1)(A)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): applied in the suite scenario (P2-10 / Spec 78 Phase 5); Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.50(1) partially_modelled DEFINE).",
+      "rule": "Spec 69a M-177(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(A)",
+      "value": "partially_modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.70(1)#(1)(A)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): partially_modelled from class data, no user input.",
+      "rule": "Spec 69a M-177(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.70(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): M-177(3) disclosure \"If the lot has other ancillary buildings, they count toward the {20 / 30} % ancillary coverage\"; class data, never \"when you tell us\" (M-177(1)).",
+      "rule": "Spec 69a M-177(1), M-177(3), M-179(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": "All ancillary buildings together, the laneway suite included, may cover at most 30% of the lot. If the lot has other ancillary buildings, they count toward the 30% ancillary coverage."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.status",
+      "id": "COR-150.8.60.70(1)#(1)(B)/calculation_handling.status",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): Parallel chapters 150.7 / 150.8 (memory rule: rule by provision family): the laneway unit takes the form its garden twin already has (150.7.60.70(1)(B) partially_modelled).",
+      "rule": "Spec 69a M-177(1), M-179(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": "partially_modelled"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.not_modelled_reason",
+      "id": "COR-150.8.60.70(1)#(1)(B)/calculation_handling.not_modelled_reason",
+      "kind": "correction",
+      "reason": "Envelope answer tracker UNFIXED row (suite keying lane, 2026-10-20): class data, no user input.",
+      "rule": "Spec 69a M-177(1), M-179(1); M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.20.1(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.20.1(1)#(1)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.40.10(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.40.10(1)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.40.11(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.40.11(1)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(A)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(B)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(1)#(1)(C)",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.50.50.10(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Stale-owed reconcile (bylaw fix lane, 2026-10-20; Spec 78 INV-18): the Section 150.50 place-of-worship rules were keyed building_types any, so a house with a secondary suite took interior_floor_area_m2 = 25 m2 from 150.50.20.1(1)(B) (\"retail store if … the interior floor area does not exceed 25 square metres\", permitted only \"if combined with a place of worship\"), and every house lot carried the 150.50 height, landscaping and driveway limits. By M-159 a unit governs only its own subject; keyed to the non-residential building the place of worship is — the M-159 dated note 2026-10-19 form (10.10.20.100(8)(B)). One form for the whole 150.50 family.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject; dated note 2026-10-19 place-of-worship form), M-217 (the 150.50.20.1(1) interior-floor-area leak); Spec 78 INV-18; M-75",
+      "unit": "150.50.50.10(2)#whole",
+      "value": [
+        "non_residential_building"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(A)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(A)",
+      "value": {
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(B)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(B)",
+      "value": {
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.20.1(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.20.1(1)#(1)(C)/application.building_types) carries its clause evidence, \"combined with a place of worship\" (verbatim, 150.50.20.1(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.20.1(1)#(1)(C)",
+      "value": {
+        "R": "Residential Zone category",
+        "RD": "Residential Zone category",
+        "RM": "Residential Zone category",
+        "RS": "Residential Zone category",
+        "RT": "Residential Zone category",
+        "dwelling_unit": "dwelling unit if",
+        "non_residential_building": "combined with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.40.10(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.40.10(1)#whole/application.building_types) carries its clause evidence, \"a place of worship building\" (verbatim, 150.50.40.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.40.10(1)#whole",
+      "value": {
+        "non_residential_building": "a place of worship building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.40.11(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.40.11(1)#whole/application.building_types) carries its clause evidence, \"lawfully existing place of worship\" (verbatim, 150.50.40.11(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.40.11(1)#whole",
+      "value": {
+        "lawfully_existing": "lawfully existing place",
+        "non_residential_building": "lawfully existing place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(A)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(A)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(B)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(B)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(1)#(1)(C)/application.building_types) carries its clause evidence, \"if a lot has a place of worship\" (verbatim, 150.50.50.10(1)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(1)#(1)(C)",
+      "value": {
+        "non_residential_building": "if a lot has a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.50.50.10(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The non_residential_building token keyed under M-159 (COR-150.50.50.10(2)#whole/application.building_types) carries its clause evidence, \"A lot with a place of worship\" (verbatim, 150.50.50.10(2)); the \"any\" evidence goes with the \"any\" token.",
+      "rule": "Spec 69a M-159 (dated note 2026-10-19 place-of-worship form), M-217; Spec 68 §6 (application evidence); M-75",
+      "unit": "150.50.50.10(2)#whole",
+      "value": {
+        "non_residential_building": "A lot with a place of worship"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-10.10.40.10(4)#whole/archetype",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": "LIMIT"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(4)#whole/target",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": "roof_slope_max"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-10.10.40.10(4)#whole/bound",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": "max"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(4)#whole/numeric_expression",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": [
+        "roof_slope_max = 5.0 ratio ÷ 3.0 ratio @(4)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(4)#whole/literals_not_expressed",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.10(4)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": {
+        "description": "A roof above the second storey on a detached house in the R zone may not be steeper than 5.0 vertical units for every 3.0 horizontal units.",
+        "gaps": "Which roof is above the second storey is Layer 3 geometry (Spec 78 P5.2 item 6, form (b)): the pitched roof is capped by this slope only on a detached house of more than two storeys.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(4)#whole/disclosure",
+      "kind": "correction",
+      "reason": "O-7 keying (bylaw fix lane, 2026-10-20): 10.10.40.10(4) \"a roof above the second storey or higher on a detached house may not have a slope greater than 5.0 vertical units for every 3.0 horizontal units\" is a maximum on the new vocab target roof_slope_max (ratio, vertical per horizontal), keyed from its two literals; it was UNUSUAL with no target (\"Roof slope is not a DSL target\").",
+      "rule": "Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the R roof slope is keyed by the keying lane before ①), P5.2 item 6; Spec 69a M-223(3) (dsl_target roof_slope_max); M-75",
+      "unit": "10.10.40.10(4)#whole",
+      "value": "On a detached house in the R zone, a roof above the second storey may be no steeper than 5 vertical to 3 horizontal."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.20(6)#(6)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "E2E-F-01 (golden-lot verification 2026-10-20: 20 Athletic Ave R, 68 Aviemore Dr RD answered not_evaluated:missing_input:side_setback_m). (C) \"the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres\" was keyed max(side_setback_m; 1.5 m): it read its own target, which on a garden-suite scenario is the suite's, never the principal building's. Layer 2 keys the 1.5 m floor; the principal building's side yard arm is the M-198(2) larger-of, computed by Layer 3 (owed to P5.13).",
+      "rule": "Spec 69a M-179(2) ((C) the corner-lot arm, condition [corner_lot]), M-198(2) (the larger-of with the principal's required side yard is Layer 3, Spec 78 P5.5 / P5.13); M-75",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": [
+        "side_setback_m = 1.5 m @(6)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(6)#(6)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "E2E-F-01 (golden-lot verification 2026-10-20: 20 Athletic Ave R, 68 Aviemore Dr RD answered not_evaluated:missing_input:side_setback_m). (C) \"the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres\" was keyed max(side_setback_m; 1.5 m): it read its own target, which on a garden-suite scenario is the suite's, never the principal building's. Layer 2 keys the 1.5 m floor; the principal building's side yard arm is the M-198(2) larger-of, computed by Layer 3 (owed to P5.13).",
+      "rule": "Spec 69a M-179(2) ((C) the corner-lot arm, condition [corner_lot]), M-198(2) (the larger-of with the principal's required side yard is Layer 3, Spec 78 P5.5 / P5.13); M-75",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "description": "In all other corner-lot cases, the garden suite's minimum side yard setback is the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres.",
+        "gaps": "Layer 2 answers the 1.5 m floor; the larger-of with the principal building's required side yard is Layer 3 (Spec 69a M-198(2); Spec 78 P5.5).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(6)#(6)(C)/disclosure",
+      "kind": "correction",
+      "reason": "E2E-F-01 (golden-lot verification 2026-10-20: 20 Athletic Ave R, 68 Aviemore Dr RD answered not_evaluated:missing_input:side_setback_m). (C) \"the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres\" was keyed max(side_setback_m; 1.5 m): it read its own target, which on a garden-suite scenario is the suite's, never the principal building's. Layer 2 keys the 1.5 m floor; the principal building's side yard arm is the M-198(2) larger-of, computed by Layer 3 (owed to P5.13).",
+      "rule": "Spec 69a M-179(2) ((C) the corner-lot arm, condition [corner_lot]), M-198(2) (the larger-of with the principal's required side yard is Layer 3, Spec 78 P5.5 / P5.13); M-75",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": "On a corner lot the suite's side yard is at least 1.5 m, and at least the house's own required side yard."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(3)#(3)(A)/condition",
+      "kind": "correction",
+      "reason": "E2E-F-02 (golden lots 27 Gibson Ave, 167 Ashdale Ave, R: not_evaluated:missing_input:abutting_front_setback_m). (A) applies only \"if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot\"; the second condition had no token, so every through lot took (A) and its unheld input. It is keyed as the lot condition adjacent_lot_fronts_rear_street, which no data fills, so by M-169(1) it is taken as not holding and disclosed: (B) 1.5 m answers. The neighbour-front-yard proxy (M-198(1)) stays with Layer 3.",
+      "rule": "Spec 69a M-169(1) (a lot condition no data fills is taken as not holding, disclosed), M-198(1) (through lot: the neighbour's front yard proxy and the larger-of with (B) are Layer 3); M-75",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "tokens": [
+          "through_lot",
+          "adjacent_lot_fronts_rear_street"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "E2E-F-02 (golden lots 27 Gibson Ave, 167 Ashdale Ave, R: not_evaluated:missing_input:abutting_front_setback_m). (A) applies only \"if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot\"; the second condition had no token, so every through lot took (A) and its unheld input. It is keyed as the lot condition adjacent_lot_fronts_rear_street, which no data fills, so by M-169(1) it is taken as not holding and disclosed: (B) 1.5 m answers. The neighbour-front-yard proxy (M-198(1)) stays with Layer 3.",
+      "rule": "Spec 69a M-169(1) (a lot condition no data fills is taken as not holding, disclosed), M-198(1) (through lot: the neighbour's front yard proxy and the larger-of with (B) are Layer 3); M-75",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": [
+        "through_lot",
+        "adjacent_lot_fronts_rear_street"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "E2E-F-02 (golden lots 27 Gibson Ave, 167 Ashdale Ave, R: not_evaluated:missing_input:abutting_front_setback_m). (A) applies only \"if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot\"; the second condition had no token, so every through lot took (A) and its unheld input. It is keyed as the lot condition adjacent_lot_fronts_rear_street, which no data fills, so by M-169(1) it is taken as not holding and disclosed: (B) 1.5 m answers. The neighbour-front-yard proxy (M-198(1)) stays with Layer 3.",
+      "rule": "Spec 69a M-169(1) (a lot condition no data fills is taken as not holding, disclosed), M-198(1) (through lot: the neighbour's front yard proxy and the larger-of with (B) are Layer 3); M-75",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "adjacent_lot_fronts_rear_street": "a residential building on an adjacent lot fronts on the street that abuts the rear lot line",
+        "garden_suite": "containing a garden suite",
+        "through_lot": "a through lot"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(3)#(3)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "E2E-F-02 (golden lots 27 Gibson Ave, 167 Ashdale Ave, R: not_evaluated:missing_input:abutting_front_setback_m). (A) applies only \"if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot\"; the second condition had no token, so every through lot took (A) and its unheld input. It is keyed as the lot condition adjacent_lot_fronts_rear_street, which no data fills, so by M-169(1) it is taken as not holding and disclosed: (B) 1.5 m answers. The neighbour-front-yard proxy (M-198(1)) stays with Layer 3.",
+      "rule": "Spec 69a M-169(1) (a lot condition no data fills is taken as not holding, disclosed), M-198(1) (through lot: the neighbour's front yard proxy and the larger-of with (B) are Layer 3); M-75",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "description": "On a through lot where a residential building on an adjacent lot fronts on the street abutting the rear lot line, the garden suite building's minimum rear yard setback equals the required minimum front yard setback for the residential building on the adjacent lot.",
+        "gaps": "Whether the adjacent lot fronts on the rear street is not held (adjacent_lot_fronts_rear_street, taken as not holding, M-169(1)); the neighbour's required front yard is approximated in Layer 3 (M-198(1)).",
+        "not_modelled_reason": "needs_data_we_lack",
+        "status": "not_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.8.60.20(3)#(3)(C)/condition",
+      "kind": "correction",
+      "reason": "E2E-F-03 (golden lots in R/RD/RS/RT/RM: a 4.0 m laneway suite answered 1.5 m from (3)(C)). (C) applies \"beginning from a height of 4.0 metres\"; keyed on abuts_lane alone it won the side setback of every laneway suite on a lane lot at ground level. The height threshold is keyed (building_height_band, proposed_height_m > 4.0 m), so a suite of 4.0 m or less takes (D) 1.0 m; a taller suite still answers 1.5 m as a whole-building value until the step-back geometry is Layer 3 (M-219 remainder, ruling drafted).",
+      "rule": "Spec 69a M-198(4) ((3)(C) is the mandatory 1.5 m step-back above 4.0 m), M-198(3) (1.0 m (D) where the lane line is not held), M-177(3); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": {
+        "if": "proposed_height_m > 4.0 m",
+        "tokens": [
+          "abuts_lane",
+          "building_height_band"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.8.60.20(3)#(3)(C)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "E2E-F-03 (golden lots in R/RD/RS/RT/RM: a 4.0 m laneway suite answered 1.5 m from (3)(C)). (C) applies \"beginning from a height of 4.0 metres\"; keyed on abuts_lane alone it won the side setback of every laneway suite on a lane lot at ground level. The height threshold is keyed (building_height_band, proposed_height_m > 4.0 m), so a suite of 4.0 m or less takes (D) 1.0 m; a taller suite still answers 1.5 m as a whole-building value until the step-back geometry is Layer 3 (M-219 remainder, ruling drafted).",
+      "rule": "Spec 69a M-198(4) ((3)(C) is the mandatory 1.5 m step-back above 4.0 m), M-198(3) (1.0 m (D) where the lane line is not held), M-177(3); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": [
+        "abuts_lane",
+        "building_height_band"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.20(3)#(3)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "E2E-F-03 (golden lots in R/RD/RS/RT/RM: a 4.0 m laneway suite answered 1.5 m from (3)(C)). (C) applies \"beginning from a height of 4.0 metres\"; keyed on abuts_lane alone it won the side setback of every laneway suite on a lane lot at ground level. The height threshold is keyed (building_height_band, proposed_height_m > 4.0 m), so a suite of 4.0 m or less takes (D) 1.0 m; a taller suite still answers 1.5 m as a whole-building value until the step-back geometry is Layer 3 (M-219 remainder, ruling drafted).",
+      "rule": "Spec 69a M-198(4) ((3)(C) is the mandatory 1.5 m step-back above 4.0 m), M-198(3) (1.0 m (D) where the lane line is not held), M-177(3); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": {
+        "abuts_lane": "rear lot line abuts a lane",
+        "ancillary_building": "an ancillary building must",
+        "building_height_band": "beginning from a height of 4.0 metres",
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.8.60.20(3)#(3)(C)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "E2E-F-03 (golden lots in R/RD/RS/RT/RM: a 4.0 m laneway suite answered 1.5 m from (3)(C)). (C) applies \"beginning from a height of 4.0 metres\"; keyed on abuts_lane alone it won the side setback of every laneway suite on a lane lot at ground level. The height threshold is keyed (building_height_band, proposed_height_m > 4.0 m), so a suite of 4.0 m or less takes (D) 1.0 m; a taller suite still answers 1.5 m as a whole-building value until the step-back geometry is Layer 3 (M-219 remainder, ruling drafted).",
+      "rule": "Spec 69a M-198(4) ((3)(C) is the mandatory 1.5 m step-back above 4.0 m), M-198(3) (1.0 m (D) where the lane line is not held), M-177(3); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.21(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.21(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.21(1)#(1)(A)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.21(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.21(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.21(1)#(1)(A)",
+      "value": {
+        "garden_suite": "for a garden suite",
+        "lawfully_existing": "lawfully existing ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.21(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.21(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.21(1)#(1)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.21(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.21(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.21(1)#(1)(B)",
+      "value": {
+        "garden_suite": "for a garden suite",
+        "lawfully_existing": "lawfully existing ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.30(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.30(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.30(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(A)",
+      "value": {
+        "building_height_band": "the height of",
+        "garden_suite": "a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.30(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.30(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.30(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(B)",
+      "value": {
+        "building_height_band": "the height of",
+        "garden_suite": "a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.30(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.30(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.30(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.30(1)#(1)(C)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.30(1)#(1)(C)",
+      "value": {
+        "building_height_band": "a height greater",
+        "garden_suite": "a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.31(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.31(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.31(1)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.31(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.31(1)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.31(1)#whole",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "lawfully_existing": "a lawfully existing ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(1)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(1)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(1)#whole",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(2) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(2)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(2)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(2)#whole",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(3)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(3) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(3)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(3)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(3)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(3)#whole",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(4)#(4)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(4) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(4)#(4)(A)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(4)#(4)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(4)#(4)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(4)#(4)(A)",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(4)#(4)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(4) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(4)#(4)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(4)#(4)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(4)#(4)(B)",
+      "value": {
+        "building_height_band": "that is one storey",
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.50(5)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.50(5) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(5)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.50(5)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.50(5)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.50(5)#whole",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.60(5)#(5)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.60.60(5) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(5)#(5)(C)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.60(5)#(5)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.60(5)#(5)(C)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(5)#(5)(C)",
+      "value": {
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.75.1(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.75.1(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.75.1(1)#(1)(A)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.75.1(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.75.1(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.75.1(1)#(1)(A)",
+      "value": {
+        "energy_device": "solar energy device",
+        "garden_suite": "containing a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.75.1(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.75.1(1) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.75.1(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.75.1(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.75.1(1)#(1)(B)",
+      "value": {
+        "energy_device": "solar energy device",
+        "garden_suite": "garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.80.1(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.80.1(2) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.80.1(2)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.80.1(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.80.1(2)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.80.1(2)#whole",
+      "value": {
+        "garden_suite": "a garden suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.80.1(3)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.7.80.1(3) governs \"an ancillary building containing a garden suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.80.1(3)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.80.1(3)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.80.1(3)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.80.1(3)#whole",
+      "value": {
+        "garden_suite": "a garden suite",
+        "lawfully_existing": "lawfully existing vehicle",
+        "parking_space": "a parking space"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.50.10(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.50.10(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.50.10(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.50.10(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(A)",
+      "value": {
+        "frontage_band": "a lot frontage",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.50.10(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.50.10(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.50.10(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.50.10(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(B)",
+      "value": {
+        "frontage_band": "a lot frontage",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.50.10(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.50.10(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(C)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.50.10(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.50.10(1)#(1)(C)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.50.10(1)#(1)(C)",
+      "value": {
+        "abuts_lane": "abutting a lane",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.20(3)#(3)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.20(3) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.21(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.21(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.21(1)#(1)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.21(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.21(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.21(1)#(1)(A)",
+      "value": {
+        "laneway_suite": "a laneway suite",
+        "lawfully_existing": "lawfully existing ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.21(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.21(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.21(1)#(1)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.21(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.21(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.21(1)#(1)(B)",
+      "value": {
+        "laneway_suite": "a laneway suite",
+        "lawfully_existing": "lawfully existing ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.30(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.30(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(1)#(1)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.30(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.30(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(1)#(1)(A)",
+      "value": {
+        "building_height_band": "if the height of the ancillary building",
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.30(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.30(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(1)#(1)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.30(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.30(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(1)#(1)(B)",
+      "value": {
+        "building_height_band": "if the height of the ancillary building",
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.30(5)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.30(5) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(5)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.30(5)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.30(5)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(5)#whole",
+      "value": {
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.30(6)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.30(6) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(6)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.30(6)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.30(6)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.30(6)#whole",
+      "value": {
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.31(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.31(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(1)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.31(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.31(1)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(1)#whole",
+      "value": {
+        "laneway_suite": "a laneway suite",
+        "lawfully_existing": "lawfully existing residential"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.31(2)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.31(2) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(2)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.31(2)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.31(2)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(2)#whole",
+      "value": {
+        "laneway_suite": "a laneway suite",
+        "lawfully_existing": "a lawfully existing"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.31(3)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.31(3) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(3)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.31(3)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.31(3)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.31(3)#whole",
+      "value": {
+        "laneway_suite": "a laneway suite",
+        "lawfully_existing": "a lawfully existing"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(1)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(1) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(1)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(1)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(1)#whole/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(1)#whole",
+      "value": {
+        "deck_or_platform": "a platform, such as",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(2)#(2)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(2) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(2)#(2)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(2)#(2)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(2)#(2)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(2)#(2)(B)",
+      "value": {
+        "deck_or_platform": "a platform without",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(5)#(5)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(5) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(5)#(5)(C)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(5)#(5)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(5)#(5)(C)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(5)#(5)(C)",
+      "value": {
+        "abuts_lane": "facing the lane",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(6)#(6)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(6) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(6)#(6)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(6)#(6)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(6)#(6)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(6)#(6)(A)",
+      "value": {
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(6)#(6)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(6) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(6)#(6)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(6)#(6)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(6)#(6)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(6)#(6)(B)",
+      "value": {
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(7)#(7)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(7) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)#(7)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(7)#(7)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(7)#(7)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)#(7)(A)",
+      "value": {
+        "abuts_lane": "facing a lane",
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(7)#(7)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(7) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)#(7)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(7)#(7)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(7)#(7)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)#(7)(B)",
+      "value": {
+        "laneway_suite": "a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(7)@1075-2026#(7)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20; golden-lot verification): 150.8.60.60(7) governs \"an ancillary building containing a laneway suite\", but it was keyed to building_types ancillary_building as well, so a plain ancillary building (a garage or shed, no suite) took the suite's limits — e.g. a one-storey ancillary building on an R lot answered gfa_m2 = 60 m2 from 150.7.60.50(4)(B). By M-159 the unit governs only its subject: the suite class.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)@1075-2026#(7)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(7)@1075-2026#(7)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.60(7)@1075-2026#(7)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(7)@1075-2026#(7)",
+      "value": {
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.20(3)#(3)(C)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.20(3)#(3)(C)/application.building_types); its evidence phrase goes with it. Supersedes the E2E-F-03 evidence record of the same day.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "supersedes": "COR-150.8.60.20(3)#(3)(C)/application.evidence",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": {
+        "abuts_lane": "rear lot line abuts a lane",
+        "building_height_band": "beginning from a height of 4.0 metres",
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.60(4)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20): 150.7.60.60(4) lets a platform or canopy encroach into the suite separation (150.7.60.30(1)) or the suite setbacks; Section 150.7 (Garden Suites) governs the building containing the suite, so the unit is keyed to that class, not to every ancillary building (M-159).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(4)#whole",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.60(4)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The garden_suite token (COR-150.7.60.60(4)#whole/application.building_types) carries the clause's own phrase for the suite building.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(4)#whole",
+      "value": {
+        "garden_suite": "of the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.60(5)#(5)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20): 150.7.60.60(5) lets a platform or canopy encroach into the suite separation (150.7.60.30(1)) or the suite setbacks; Section 150.7 (Garden Suites) governs the building containing the suite, so the unit is keyed to that class, not to every ancillary building (M-159).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(5)#(5)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.60(5)#(5)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The garden_suite token (COR-150.7.60.60(5)#(5)(B)/application.building_types) carries the clause's own phrase for the suite building.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.7.60.60(5)#(5)(B)",
+      "value": {
+        "garden_suite": "of the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(4)#whole/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20): 150.8.60.60(4) lets a platform or canopy encroach into the suite separation (150.8.60.30(1)) or the suite setbacks; Section 150.8 (Laneway Suites) governs the building containing the suite, so the unit is keyed to that class, not to every ancillary building (M-159).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(4)#whole",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(4)#whole/application.evidence",
+      "kind": "correction",
+      "reason": "The laneway_suite token (COR-150.8.60.60(4)#whole/application.building_types) carries the clause's own phrase for the suite building.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(4)#whole",
+      "value": {
+        "laneway_suite": "the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.60(5)#(5)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "Ancillary-building leak (bylaw fix lane, 2026-10-20): 150.8.60.60(5) lets a platform or canopy encroach into the suite separation (150.8.60.30(1)) or the suite setbacks; Section 150.8 (Laneway Suites) governs the building containing the suite, so the unit is keyed to that class, not to every ancillary building (M-159).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(5)#(5)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(5)#(5)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The laneway_suite token (COR-150.8.60.60(5)#(5)(B)/application.building_types) carries the clause's own phrase for the suite building.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1) (suite rules answer for the suite classes); M-75",
+      "unit": "150.8.60.60(5)#(5)(B)",
+      "value": {
+        "laneway_suite": "the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.60(4)#whole/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Keeps the platform use evidence (keyer A, verbatim) beside the suite-class evidence; supersedes the same-day record that dropped it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1); M-75",
+      "supersedes": "COR-150.7.60.60(4)#whole/application.evidence",
+      "unit": "150.7.60.60(4)#whole",
+      "value": {
+        "deck_or_platform": "a platform without main walls",
+        "garden_suite": "of the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.60(4)#whole/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Keeps the platform use evidence (keyer A, verbatim) beside the suite-class evidence; supersedes the same-day record that dropped it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-177(1); M-75",
+      "supersedes": "COR-150.8.60.60(4)#whole/application.evidence",
+      "unit": "150.8.60.60(4)#whole",
+      "value": {
+        "deck_or_platform": "a platform without",
+        "laneway_suite": "the ancillary building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(4)#(4)(A)/disclosure",
+      "kind": "correction",
+      "reason": "E2E-F-05 (golden lots 3375 and 3365 Weston Rd, RS: 17.0 m from 10.40.40.20(1) won over the 19.0 m townhouse length). The clause cites the RD regulation 10.20.40.20(1) inside the RS section; the operator read it as RS 10.40.40.20(1) (vocab citation_corrections), and the answer discloses the mis-citation.",
+      "rule": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5: read \"Despite regulation 10.20.40.20(1)\" as 10.40.40.20(1), disclose the mis-citation); M-75",
+      "unit": "10.40.40.20(4)#(4)(A)",
+      "value": "On a lot abutting a major street a townhouse may be 19.0 m long. The by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD regulation); we read it as the RS length rule 10.40.40.20(1), as intended."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "E2E-F-05 (golden lots 3375 and 3365 Weston Rd, RS: 17.0 m from 10.40.40.20(1) won over the 19.0 m townhouse length). The clause cites the RD regulation 10.20.40.20(1) inside the RS section; the operator read it as RS 10.40.40.20(1) (vocab citation_corrections), and the answer discloses the mis-citation.",
+      "rule": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5: read \"Despite regulation 10.20.40.20(1)\" as 10.40.40.20(1), disclose the mis-citation); M-75",
+      "unit": "10.40.40.20(4)#(4)(B)",
+      "value": "On a lot abutting a major street an apartment building may be 25.0 m long. The by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD regulation); we read it as the RS length rule 10.40.40.20(1), as intended."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "condition",
+      "id": "COR-150.7.60.20(3)#(3)(A)/condition~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/condition",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "tokens": [
+          "through_lot"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.lot_conditions~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/application.lot_conditions",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": [
+        "through_lot"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.20(3)#(3)(A)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/application.evidence",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "through_lot": "a through lot"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(3)#(3)(A)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Coordinator correction 2026-10-20 to E2E-F-02: the ratified M-198(1) reading takes (A) on every through lot (the unknown adjacent-lot fact taken the larger way, M-176) with the neighbour's required front yard approximated by the lot's own Layer 2 front_setback_m, supplied by the step as abutting_front_setback_m (P5.13); (B) 1.5 m is the floor. Supersedes the same-day records that set the fact aside (M-169), which gave 1.5 m.",
+      "rule": "Spec 69a M-198(1) (RATIFIED 2026-10-18: the neighbour's required front yard is approximated by the subject lot's Layer 2 front_setback_m, and the larger of (A) and (B) 1.5 m is taken), M-176 (an unknown fact is taken the larger way); M-75",
+      "supersedes": "COR-150.7.60.20(3)#(3)(A)/calculation_handling",
+      "unit": "150.7.60.20(3)#(3)(A)",
+      "value": {
+        "description": "On a through lot where a residential building on an adjacent lot fronts on the street abutting the rear lot line, the garden suite building's minimum rear yard setback equals the required minimum front yard setback for the residential building on the adjacent lot.",
+        "gaps": "The adjacent-lot fact is taken as holding (M-176, larger setback); abutting_front_setback_m is the lot's own Layer 2 front_setback_m, supplied by the step (Spec 69a M-198(1); Spec 78 P5.13). With no input the answer is not_evaluated:missing_input.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.20(6)#(6)(C)/numeric_expression~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/numeric_expression",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": [
+        "side_setback_m = max(side_setback_m; 1.5 m) @(6)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.7.60.20(6)#(6)(C)/calculation_handling~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/calculation_handling",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": {
+        "description": "In all other corner-lot cases, the garden suite's minimum side yard setback is the greater of the required minimum side yard setback for the residential building on the lot or 1.5 metres.",
+        "gaps": "The other max() argument is the residential building's side_setback_m, the same target name as this unit's, so it cannot be written without circularity; only 1.5 m is expressed. Condition corner_lot read from the stem heading 'Garden Suite on Corner Lot' and the (A)/(B) context.",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": [
+          "has_garden_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.60.20(6)#(6)(C)/disclosure~s1",
+      "kind": "correction",
+      "reason": "Coordinator / e2e lane reclassification 2026-10-20 (wf1/bylaw-e2e-1 @ fe1b02ce): E2E-F-01 is owed to compute_maxbld_scenarios ①, not an evaluator failure — the principal side yard is an input ① supplies, and not_evaluated:missing_input:side_setback_m is the correct Layer 2 answer today. The same-day records that keyed (C) as the 1.5 m floor are withdrawn: they dropped the principal-side-yard arm and could understate the setback. The keyer-A form is restored.",
+      "rule": "Spec 69a M-198(2) (the larger-of with the principal house's required side yard is computed where that value exists: Spec 78 P5.13, step commit ①), M-179(2); M-75",
+      "supersedes": "COR-150.7.60.20(6)#(6)(C)/disclosure",
+      "unit": "150.7.60.20(6)#(6)(C)",
+      "value": "none"
     }
   ]
 }

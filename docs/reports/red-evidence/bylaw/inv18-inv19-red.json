@@ -1,0 +1,124 @@
+{
+ "suite": "src/tests/bylaw-evaluator-fixes.logic.test.ts",
+ "run_on": "2026-10-20",
+ "note": "Spec 78 P5.15 INV-18 / INV-19 named describes (scenario plan R-13, operator APPROVED 2026-10-20), run in detached worktrees with this file copied in. 7a782801^ (before the evaluator-fix lane M-217..M-222): M-217, M-218, M-220 and the open-arm ratchet red; M-225 already fixed there (a0d5b41e is its ancestor). a0d5b41e^ (before the M-225 fix): every INV case red. 52b155ea (this lane's base, before the 150.50 place-of-worship corrections): only the M-217 / M-159 150.50 case red.",
+ "bases": [
+  {
+   "base": "7a782801^",
+   "counts": {
+    "red": 5,
+    "pass": 1
+   },
+   "cases": [
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217: on R / RD / RS / RT / RM, for every class, roof form and P5.3 target, every applied unit is from a residential or citywide chapter",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', false, …(2) ] to deeply equal [ 'R', 'detached_house', false, …(2) ]"
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217 / M-159: no place-of-worship unit (Section 150.50) decides a house or suite target — the interior floor area leak 150.50.20.1(1)",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', …(2) ]"
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-225: no parking-scoped unit, and never 10.5.80.1(2), decides a garden- or laneway-suite target",
+     "at_base": "pass",
+     "reason": null
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-218: a pitched-roof house in R / RD / RS / RM reads its x.40.10 main-wall limit, never not_evaluated:no_candidate",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ Array(4) ]"
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-220: a lot whose label has no u is never label_value_absent:u — dwelling_units_max is unregulated",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', null, …(1) ]"
+    },
+    {
+     "name": "INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 \"Also\", OWED; a ratchet that only shrinks) the open cells are exactly these (R coverage and length; RD semi depth; RT length, depth and main wall; RM houseplex length, depth and main wall)",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ …(30) ] to deeply equal [ …(19) ]"
+    }
+   ]
+  },
+  {
+   "base": "a0d5b41e^",
+   "counts": {
+    "red": 6,
+    "pass": 0
+   },
+   "cases": [
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217: on R / RD / RS / RT / RM, for every class, roof form and P5.3 target, every applied unit is from a residential or citywide chapter",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', false, …(2) ] to deeply equal [ 'R', 'detached_house', false, …(2) ]"
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217 / M-159: no place-of-worship unit (Section 150.50) decides a house or suite target — the interior floor area leak 150.50.20.1(1)",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', …(2) ]"
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-225: no parking-scoped unit, and never 10.5.80.1(2), decides a garden- or laneway-suite target",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'garden_suite', …(2) ] to deeply equal [ 'R', 'garden_suite', …(2) ]"
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-218: a pitched-roof house in R / RD / RS / RM reads its x.40.10 main-wall limit, never not_evaluated:no_candidate",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ Array(4) ]"
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-220: a lot whose label has no u is never label_value_absent:u — dwelling_units_max is unregulated",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', null, …(1) ]"
+    },
+    {
+     "name": "INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 \"Also\", OWED; a ratchet that only shrinks) the open cells are exactly these (R coverage and length; RD semi depth; RT length, depth and main wall; RM houseplex length, depth and main wall)",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ …(30) ] to deeply equal [ …(19) ]"
+    }
+   ]
+  },
+  {
+   "base": "52b155ea",
+   "counts": {
+    "red": 1,
+    "pass": 5
+   },
+   "cases": [
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217: on R / RD / RS / RT / RM, for every class, roof form and P5.3 target, every applied unit is from a residential or citywide chapter",
+     "at_base": "pass",
+     "reason": null
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-217 / M-159: no place-of-worship unit (Section 150.50) decides a house or suite target — the interior floor area leak 150.50.20.1(1)",
+     "at_base": "red",
+     "reason": "AssertionError: expected [ 'R', 'detached_house', …(2) ] to deeply equal [ 'R', 'detached_house', …(2) ]"
+    },
+    {
+     "name": "INV-18 — no applied unit comes from a non-residential chapter (M-217) and no excluded-use unit enters a suite target (M-225) M-225: no parking-scoped unit, and never 10.5.80.1(2), decides a garden- or laneway-suite target",
+     "at_base": "pass",
+     "reason": null
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-218: a pitched-roof house in R / RD / RS / RM reads its x.40.10 main-wall limit, never not_evaluated:no_candidate",
+     "at_base": "pass",
+     "reason": null
+    },
+    {
+     "name": "INV-19 — no not_evaluated where the zone regulates the main wall (M-218) or the label has no u (M-220) M-220: a lot whose label has no u is never label_value_absent:u — dwelling_units_max is unregulated",
+     "at_base": "pass",
+     "reason": null
+    },
+    {
+     "name": "INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 \"Also\", OWED; a ratchet that only shrinks) the open cells are exactly these (R coverage and length; RD semi depth; RT length, depth and main wall; RM houseplex length, depth and main wall)",
+     "at_base": "pass",
+     "reason": null
+    }
+   ]
+  }
+ ]
+}

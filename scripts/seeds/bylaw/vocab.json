@@ -95,6 +95,12 @@
       "concept": "minimum distance the front and rear main walls above the main-wall height limit are set back from the front and rear main walls below (flat or shallow roof); only the storey above the limit is set back, the storeys below are unchanged (Spec 69a M-223(3), M-218; operator 2026-10-19 Q-M218)",
       "patterns": ["additional front main walls and rear main walls"]
     },
+    "roof_slope_max": {
+      "unit": "ratio",
+      "aspect": "envelope",
+      "concept": "maximum roof slope, vertical units per horizontal unit, of the roof the unit applies to (R 10.10.40.10(4): a roof above the second storey or higher on a detached house; Spec 69a M-223(3), Spec 78 O-7)",
+      "patterns": ["may not have a slope greater than"]
+    },
     "entrance_height_m": {
       "unit": "m",
       "aspect": "envelope",
@@ -196,7 +202,7 @@
     "proposed_height_m": {
       "unit": "m",
       "definition": "800.50(240)",
-      "licensed_by": ["height of the", "with a height", "has a height"],
+      "licensed_by": ["height of the", "with a height", "has a height", "from a height of"],
       "note": "height of the building the unit applies to, measured from established grade (a scenario value)"
     },
     "proposed_building_depth_m": { "unit": "m", "definition": "800.50(100)", "licensed_by": ["building depth"], "note": "a scenario value" },
@@ -347,8 +353,12 @@
     "trial_name_map": { "layer1_unit_missing": "target_not_keyed", "lot_data_unavailable": "missing_input", "lot_flag_missing": "missing_input", "map_area_membership_unavailable": "map_area_not_held" },
     "derived_unit": { "m2/unit": "Layer 3 report targets only (avg_unit_gfa_sqm): m2 ÷ units; never a literal, dsl_target or Layer 1 unit (Spec 69 M-72 note)" }
   },
+  "citation_corrections": {
+    "$comment": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5): a by-law mis-citation read as the regulation it was meant to cite, per regulation row: {row: {cited: intended}}. Read by xref.mjs displacesOf only; the unit discloses the mis-citation.",
+    "10.40.40.20(4)": { "10.20.40.20(1)": "10.40.40.20(1)" }
+  },
   "displacement_triggers": {
-    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in"],
+    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in", "may be reduced to"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
   },
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
