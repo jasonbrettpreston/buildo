@@ -1,0 +1,927 @@
+{
+  "$comment": "Presentation registry of the MaxBLD lot report v2: everything a field with source `presentation:<key>` reads (labels, plain-words maps, formats, states, illustrations, Street View block, ad placements). Not lot data. Checked both ways by scripts/analysis/report-schema.mjs RS-4 (every key referenced by report-v2.decl.json, every reference resolves). Rulings cited by Q-id from scripts/surfaces/_schema/report-v2.rulings.json.",
+  "version": 1,
+  "display_label": {
+    "note": "card titles by scenario code; {dwelling_units} filled from the card (H is 4 or 6, gap 1)",
+    "by_code": {
+      "2": "MaxBLD Detached House + Secondary Suite",
+      "D": "MaxBLD Detached House",
+      "H": "MaxBLD Houseplex — {dwelling_units} units",
+      "S": "MaxBLD Semi Houseplex",
+      "RA": "Addition (back / up)",
+      "RE": "Expand to the full envelope",
+      "RI": "Gut job (envelope unchanged)",
+      "RB": "Basement underpinning",
+      "RF": "Basement renovation (no underpinning)"
+    }
+  },
+  "zone_class_label": {
+    "R": "Residential",
+    "RD": "Residential Detached",
+    "RS": "Residential Semi-Detached",
+    "RT": "Residential Townhouse",
+    "RM": "Residential Multiple Dwelling"
+  },
+  "trust_label": {
+    "high": "By-law derived",
+    "disclosed": "By-law derived, see notes",
+    "low": "Estimate",
+    "not_evaluated": "Not evaluated",
+    "precedent_estimate": "Precedent estimate (Committee of Adjustment), not law"
+  },
+  "status_text": {
+    "permitted": "Allowed as of right.",
+    "not_permitted": "Not allowed in this zone ({clause}).",
+    "not_buildable": "Allowed, but nothing fits on this lot as of right.",
+    "not_applicable": "Does not apply to this lot.",
+    "not_evaluated:exception_not_authored": "A site-specific exception applies; not yet evaluated.",
+    "not_evaluated:no_existing_house": "There is no existing house on this lot to renovate.",
+    "not_evaluated:needs_user_input:existing_storeys": "Enter the number of storeys of your house to see this result.",
+    "not_evaluated:needs_user_input:semi_lot": "This lot looks like half of a semi-detached house. Enter your house details to see renovation options.",
+    "not_evaluated:coa_factor_unfitted": "Not enough past Committee of Adjustment builds of this form to estimate.",
+    "not_evaluated:coa_factor_unfitted:suite": "Not enough past Committee of Adjustment rear-suite builds to estimate (Q-4: calibrating)."
+  },
+  "field_trust": {
+    "generated_from": "lineage.trust_tier",
+    "note": "emitted per lineage field by the generator into the JSON Schema; never hand-listed"
+  },
+  "disclosure_texts": {
+    "generated_from": "spec78.P5.12",
+    "note": "code → {template, slots, importance, mandatory} parsed from Spec 78 P5.12 by the generator; filled server-side from disclosure_params",
+    "importance_default": "normal"
+  },
+  "formats": {
+    "area_unit": {
+      "default": "m²",
+      "options": [
+        "m²",
+        "ft²"
+      ],
+      "note": "today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130"
+    },
+    "area": {
+      "formatter": "formatSqm",
+      "alt_formatter": "formatSqft",
+      "file": "mobile/src/lib/parcelCostFormat.ts"
+    },
+    "length": {
+      "formatter": null,
+      "pattern": "{v} m",
+      "note": "no formatter yet"
+    },
+    "fsi": {
+      "formatter": "formatFsi",
+      "file": "mobile/src/lib/parcelCostFormat.ts"
+    },
+    "currency": {
+      "formatter": "formatCurrency",
+      "file": "mobile/src/lib/parcelCostFormat.ts"
+    },
+    "percent": {
+      "formatter": null,
+      "pattern": "{v} %",
+      "note": "no formatter yet"
+    }
+  },
+  "cost_basis_label": {
+    "helper": "maxBuildBasisLabel",
+    "file": "mobile/src/lib/parcelCostFormat.ts",
+    "note": "Spec 100 §2.4 \"maximum envelope\" fallback"
+  },
+  "states": {
+    "hidden": [
+      "not_permitted",
+      "not_applicable",
+      "not_buildable"
+    ],
+    "shown": [
+      "permitted",
+      "not_evaluated"
+    ],
+    "null_value": "—",
+    "semi_needs_input": "This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.",
+    "semi_correction": "This isn't a semi — it's detached",
+    "note": "Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders \"—\", never 0 or \"no\""
+  },
+  "lot_form_rules": {
+    "rulings": [
+      "Q-1",
+      "Q-2",
+      "Q-3"
+    ],
+    "semi_half": {
+      "show_card_kinds": [
+        "renovation"
+      ],
+      "headline": null,
+      "headline_closed_reason": "not_evaluated:needs_user_input:semi_lot",
+      "suite_add_on": false,
+      "existing_estimates": "hidden",
+      "renovation_cards": "require_owner_input",
+      "prompt": "semi_needs_input",
+      "correction": {
+        "prompt": "semi_correction",
+        "field": "scenarios.lot_form.lot_form_user_override",
+        "value": "detached",
+        "effect": "lot_form_effective = detached → the full report"
+      }
+    },
+    "detached": {
+      "show_card_kinds": [
+        "new_build",
+        "renovation"
+      ],
+      "headline": "the is_headline row",
+      "suite_add_on": true,
+      "existing_estimates": "shown"
+    },
+    "note": "O-12: the pipeline never reads the override; the app applies it through the P5.7 shared pure function"
+  },
+  "sponsored_label": "Sponsored",
+  "comparable_family_by_scenario": {
+    "ruling": "Q-5",
+    "note": "Q-5 (decided): same-form comparables are a read-time filter of parcel.neighbourhood.comparableBuilds by structure_family (values from scripts/lib/build-norms.js:72-80: detached · townhouse · multiplex; semis group as detached). No new stored field (LC-51 holds).",
+    "map": {
+      "2": "detached",
+      "D": "detached",
+      "H": "multiplex",
+      "S": "multiplex"
+    }
+  },
+  "ad_placements": {
+    "rulings": [
+      "Q-7",
+      "Q-8"
+    ],
+    "container": "offers",
+    "top_level": true,
+    "first_party": true,
+    "never_inside_card": true,
+    "targeting_from": [
+      "scenario",
+      "building_class",
+      "zone_class",
+      "has_suite",
+      "renovation"
+    ],
+    "targeting_excludes": "user identity (targeting runs server-side on the lot / scenario context only)",
+    "note": "Q-7 (decided; operator: \"This will be targeted ads from us\"): first-party targeted ads, a separate top-level offers[] list, never inside parcel.* (Spec 100 §2.1). Q-8 (decided): two slots — after the scenario cards (detail_footer) and in the renovation section; never inside a card; always labelled Sponsored. Placement home is the placements table (Spec 128 R-34 (i)); this list is what projects into it. Disclosure: Spec 128 R-17 (FAIL) + R-34 (ii) blocking.",
+    "placements": [
+      {
+        "key": "detail_footer",
+        "position": "after the scenario cards",
+        "declared_on": "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json offers",
+        "max_slots": 1,
+        "targeting": [
+          "scenario",
+          "building_class",
+          "zone_class",
+          "has_suite"
+        ],
+        "disclosure": {
+          "label": "Sponsored",
+          "check_id": "parceldetail_offers_disclosure",
+          "severity": "FAIL",
+          "blocking": true
+        }
+      },
+      {
+        "key": "renovation_section",
+        "position": "in the renovation section",
+        "declared_on": null,
+        "max_slots": 1,
+        "targeting": [
+          "building_class",
+          "renovation"
+        ],
+        "disclosure": {
+          "label": "Sponsored",
+          "check_id": "report_renovation_offers_disclosure",
+          "severity": "FAIL",
+          "blocking": true
+        }
+      }
+    ]
+  },
+  "street_view": {
+    "ruling": "Q-9",
+    "owed": "re-check Google Maps Platform current pricing and terms before a spec cites them (the only analysis is archived Spec 74:164-176)",
+    "status": [
+      "available",
+      "no_imagery",
+      "disabled",
+      "quota"
+    ],
+    "fields": [
+      "status",
+      "pano_id",
+      "heading_deg",
+      "pitch_deg",
+      "fov_deg",
+      "image_url",
+      "captured_at",
+      "attribution"
+    ],
+    "attribution_template": "Photo: Google, {captured_at}",
+    "caption": "Street View photo — illustrative only",
+    "rules": [
+      "fetched server-side: panorama metadata lookup nearest the centroid, heading = bearing pano → lot, signed URL",
+      "never store image bytes (cache pano_id only)",
+      "always show attribution and imagery date; never crop the in-image logo",
+      "never used as a data input (storeys are owner input only, O-13)",
+      "kill switch + per-user cap (usage_events)"
+    ],
+    "placement": "renovation section first, identity header"
+  },
+  "illustrations": {
+    "ruling": "Q-10",
+    "key_order": [
+      "scenario",
+      "roof_form_headline",
+      "suite_type",
+      "lot_form"
+    ],
+    "caption_default": "Illustrative — not this lot",
+    "per_card": "all assets with the card key, in view order (a small carousel)",
+    "views": [
+      "street",
+      "rear",
+      "section"
+    ],
+    "note": "Q-10 (decided; operator: \"Each scenario shown will have a few different photos with it\"): several static illustrations per card. No new-build or suite variant on a semi_half lot (Q-1/Q-3 decided): those cards are never shown there; renovation diagrams keep a semi variant. file: null = not drawn yet",
+    "assets": [
+      {
+        "key": "D|flat_setback|none|detached",
+        "view": "street",
+        "asset_id": "illus_d_flat_setback_none_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|none|detached",
+        "view": "rear",
+        "asset_id": "illus_d_flat_setback_none_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|none|detached",
+        "view": "section",
+        "asset_id": "illus_d_flat_setback_none_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|garden|detached",
+        "view": "street",
+        "asset_id": "illus_d_flat_setback_garden_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_d_flat_setback_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|garden|detached",
+        "view": "section",
+        "asset_id": "illus_d_flat_setback_garden_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_d_flat_setback_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_d_flat_setback_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|flat_setback|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_d_flat_setback_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, flat roof with a set-back top storey, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|none|detached",
+        "view": "street",
+        "asset_id": "illus_d_pitched_attic_none_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|none|detached",
+        "view": "rear",
+        "asset_id": "illus_d_pitched_attic_none_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|none|detached",
+        "view": "section",
+        "asset_id": "illus_d_pitched_attic_none_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|garden|detached",
+        "view": "street",
+        "asset_id": "illus_d_pitched_attic_garden_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_d_pitched_attic_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|garden|detached",
+        "view": "section",
+        "asset_id": "illus_d_pitched_attic_garden_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_d_pitched_attic_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_d_pitched_attic_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "D|pitched_attic|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_d_pitched_attic_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Detached House, pitched roof with an attic, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|none|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_flat_setback_none_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|none|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_flat_setback_none_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|none|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_flat_setback_none_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|garden|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_flat_setback_garden_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_flat_setback_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|garden|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_flat_setback_garden_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_flat_setback_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_flat_setback_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|flat_setback|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_flat_setback_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, flat roof with a set-back top storey, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|none|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_pitched_attic_none_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|none|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_pitched_attic_none_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|none|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_pitched_attic_none_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|garden|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_pitched_attic_garden_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_pitched_attic_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|garden|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_pitched_attic_garden_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_suite2_pitched_attic_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_suite2_pitched_attic_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "2|pitched_attic|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_suite2_pitched_attic_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Detached House + Secondary Suite, pitched roof with an attic, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|none|detached",
+        "view": "street",
+        "asset_id": "illus_h_flat_setback_none_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|none|detached",
+        "view": "rear",
+        "asset_id": "illus_h_flat_setback_none_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|none|detached",
+        "view": "section",
+        "asset_id": "illus_h_flat_setback_none_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|garden|detached",
+        "view": "street",
+        "asset_id": "illus_h_flat_setback_garden_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_h_flat_setback_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|garden|detached",
+        "view": "section",
+        "asset_id": "illus_h_flat_setback_garden_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_h_flat_setback_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_h_flat_setback_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|flat_setback|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_h_flat_setback_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, flat roof with a set-back top storey, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|none|detached",
+        "view": "street",
+        "asset_id": "illus_h_pitched_attic_none_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|none|detached",
+        "view": "rear",
+        "asset_id": "illus_h_pitched_attic_none_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|none|detached",
+        "view": "section",
+        "asset_id": "illus_h_pitched_attic_none_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|garden|detached",
+        "view": "street",
+        "asset_id": "illus_h_pitched_attic_garden_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a garden suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|garden|detached",
+        "view": "rear",
+        "asset_id": "illus_h_pitched_attic_garden_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a garden suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|garden|detached",
+        "view": "section",
+        "asset_id": "illus_h_pitched_attic_garden_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a garden suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|laneway|detached",
+        "view": "street",
+        "asset_id": "illus_h_pitched_attic_laneway_street",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a laneway suite, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|laneway|detached",
+        "view": "rear",
+        "asset_id": "illus_h_pitched_attic_laneway_rear",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a laneway suite, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "H|pitched_attic|laneway|detached",
+        "view": "section",
+        "asset_id": "illus_h_pitched_attic_laneway_section",
+        "file": null,
+        "alt": "MaxBLD Houseplex — {dwelling_units} units, pitched roof with an attic, with a laneway suite, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|detached",
+        "view": "street",
+        "asset_id": "illus_ra_detached_street",
+        "file": null,
+        "alt": "Addition (back / up), from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|detached",
+        "view": "rear",
+        "asset_id": "illus_ra_detached_rear",
+        "file": null,
+        "alt": "Addition (back / up), from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|detached",
+        "view": "section",
+        "asset_id": "illus_ra_detached_section",
+        "file": null,
+        "alt": "Addition (back / up), cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|semi_half",
+        "view": "street",
+        "asset_id": "illus_ra_semi_half_street",
+        "file": null,
+        "alt": "Addition (back / up) on half of a semi-detached house, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|semi_half",
+        "view": "rear",
+        "asset_id": "illus_ra_semi_half_rear",
+        "file": null,
+        "alt": "Addition (back / up) on half of a semi-detached house, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RA|any|none|semi_half",
+        "view": "section",
+        "asset_id": "illus_ra_semi_half_section",
+        "file": null,
+        "alt": "Addition (back / up) on half of a semi-detached house, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|detached",
+        "view": "street",
+        "asset_id": "illus_re_detached_street",
+        "file": null,
+        "alt": "Expand to the full envelope, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|detached",
+        "view": "rear",
+        "asset_id": "illus_re_detached_rear",
+        "file": null,
+        "alt": "Expand to the full envelope, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|detached",
+        "view": "section",
+        "asset_id": "illus_re_detached_section",
+        "file": null,
+        "alt": "Expand to the full envelope, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|semi_half",
+        "view": "street",
+        "asset_id": "illus_re_semi_half_street",
+        "file": null,
+        "alt": "Expand to the full envelope on half of a semi-detached house, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|semi_half",
+        "view": "rear",
+        "asset_id": "illus_re_semi_half_rear",
+        "file": null,
+        "alt": "Expand to the full envelope on half of a semi-detached house, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RE|any|none|semi_half",
+        "view": "section",
+        "asset_id": "illus_re_semi_half_section",
+        "file": null,
+        "alt": "Expand to the full envelope on half of a semi-detached house, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|detached",
+        "view": "street",
+        "asset_id": "illus_ri_detached_street",
+        "file": null,
+        "alt": "Gut job (envelope unchanged), from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|detached",
+        "view": "rear",
+        "asset_id": "illus_ri_detached_rear",
+        "file": null,
+        "alt": "Gut job (envelope unchanged), from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|detached",
+        "view": "section",
+        "asset_id": "illus_ri_detached_section",
+        "file": null,
+        "alt": "Gut job (envelope unchanged), cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|semi_half",
+        "view": "street",
+        "asset_id": "illus_ri_semi_half_street",
+        "file": null,
+        "alt": "Gut job (envelope unchanged) on half of a semi-detached house, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|semi_half",
+        "view": "rear",
+        "asset_id": "illus_ri_semi_half_rear",
+        "file": null,
+        "alt": "Gut job (envelope unchanged) on half of a semi-detached house, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RI|any|none|semi_half",
+        "view": "section",
+        "asset_id": "illus_ri_semi_half_section",
+        "file": null,
+        "alt": "Gut job (envelope unchanged) on half of a semi-detached house, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|detached",
+        "view": "street",
+        "asset_id": "illus_rb_detached_street",
+        "file": null,
+        "alt": "Basement underpinning, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|detached",
+        "view": "rear",
+        "asset_id": "illus_rb_detached_rear",
+        "file": null,
+        "alt": "Basement underpinning, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|detached",
+        "view": "section",
+        "asset_id": "illus_rb_detached_section",
+        "file": null,
+        "alt": "Basement underpinning, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|semi_half",
+        "view": "street",
+        "asset_id": "illus_rb_semi_half_street",
+        "file": null,
+        "alt": "Basement underpinning on half of a semi-detached house, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|semi_half",
+        "view": "rear",
+        "asset_id": "illus_rb_semi_half_rear",
+        "file": null,
+        "alt": "Basement underpinning on half of a semi-detached house, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RB|any|none|semi_half",
+        "view": "section",
+        "asset_id": "illus_rb_semi_half_section",
+        "file": null,
+        "alt": "Basement underpinning on half of a semi-detached house, cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|detached",
+        "view": "street",
+        "asset_id": "illus_rf_detached_street",
+        "file": null,
+        "alt": "Basement renovation (no underpinning), from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|detached",
+        "view": "rear",
+        "asset_id": "illus_rf_detached_rear",
+        "file": null,
+        "alt": "Basement renovation (no underpinning), from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|detached",
+        "view": "section",
+        "asset_id": "illus_rf_detached_section",
+        "file": null,
+        "alt": "Basement renovation (no underpinning), cut-away",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|semi_half",
+        "view": "street",
+        "asset_id": "illus_rf_semi_half_street",
+        "file": null,
+        "alt": "Basement renovation (no underpinning) on half of a semi-detached house, from the street",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|semi_half",
+        "view": "rear",
+        "asset_id": "illus_rf_semi_half_rear",
+        "file": null,
+        "alt": "Basement renovation (no underpinning) on half of a semi-detached house, from the rear yard",
+        "caption": "Illustrative — not this lot"
+      },
+      {
+        "key": "RF|any|none|semi_half",
+        "view": "section",
+        "asset_id": "illus_rf_semi_half_section",
+        "file": null,
+        "alt": "Basement renovation (no underpinning) on half of a semi-detached house, cut-away",
+        "caption": "Illustrative — not this lot"
+      }
+    ]
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "$comment": "Operator rulings the v2 report schema waits on. Seeded mechanically from the Report Schema Rulings page export (questions: entries.json; decisions: answers/report_decisions/*.json; chat decisions after the export: a flagged overlay); `status` flips to \"decided\" only by transferring the operator decision, never by hand-editing a row source. RS-5 FAILs every row still pending on a decided ruling.",
+  "source": {
+    "page": "Report Schema Rulings (artifact)",
+    "questions": {
+      "export": "scripts/surfaces/_schema/report-v2-seed/entries.json",
+      "sha256_16": "52069fe7439ed653"
+    },
+    "decisions": {
+      "export": "scripts/surfaces/_schema/report-v2-seed/answers/report_decisions/*.json",
+      "files": 11,
+      "sha256_16": "aeed9a02af6ce7ef"
+    },
+    "chat_overlay": [
+      "Q-7"
+    ],
+    "exported": "2026-10-20",
+    "decision_vocabulary": {
+      "keep": "decided: the recommendation stands",
+      "drop": "decided: the recommendation is replaced by the note",
+      "discuss": "open"
+    }
+  },
+  "rulings": [
+    {
+      "ref": "Q-1",
+      "topic": "Semi lots",
+      "key": "Headline on a half-semi lot",
+      "gap": "On 93,123 half-semi lots, the detached house, house + suite and houseplex cards assume the attached half is removed. Today one of those can become the headline, and RD semis carry no disclosure saying so.",
+      "recommendation": "Recommendation: add a flag requires_attached_half_removed. Flagged rows never become the headline; they show as cards with a badge, and a new disclosure attached_half_removal applies in every zone including RD.",
+      "status": "decided",
+      "decision": {
+        "decision": "drop",
+        "note": "Operator in chat 2026-10-20: \"Can semi's be identified? If yes, then just the renovations card should show. This will allow for the use to input the key data and then generate teh costs.\" → On a half-semi lot show ONLY the renovation cards (no new-build cards, so no headline from a detached form). Supersedes the flag/badge recommendation.",
+        "recorded_by": "claude from chat",
+        "updated_at": "2026-10-20T19:00:00.000Z",
+        "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.show_card_kinds": [
+          "renovation"
+        ],
+        "lot_form_rules.semi_half.headline": null
+      }
+    },
+    {
+      "ref": "Q-2",
+      "topic": "Semi lots",
+      "key": "Existing-house footprint on a half-semi",
+      "gap": "The estimate uses the whole semi footprint for one half, so renovation figures and basement/addition costs are about 2× too high on ~53,000 halves.",
+      "recommendation": "Recommendation: use half the shared footprint as the estimate on a half-semi lot, disclosed as an estimate, until the owner enters their own.",
+      "status": "decided",
+      "decision": {
+        "decision": "drop",
+        "note": "Operator in chat 2026-10-20: \"maybe we dont even show our renovation data on the semi's and just require user input to solve that problem. as per the issue that it maynot be a semi - include a way for the user to tell us if it isnt so we can show the whole picture if it s a detached instead.\" → On a half-semi lot: no estimated existing-house figures at all; the renovation cards require the owner's input before showing numbers. Add a user correction 'this is not a semi (it's detached)' that switches the lot to the full report (all new-build cards). Supersedes the halve-the-footprint recommendation.",
+        "recorded_by": "claude from chat",
+        "updated_at": "2026-10-20T19:10:00.000Z",
+        "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.existing_estimates": "hidden",
+        "lot_form_rules.semi_half.renovation_cards": "require_owner_input",
+        "lot_form_rules.semi_half.correction.value": "detached"
+      }
+    },
+    {
+      "ref": "Q-3",
+      "topic": "Semi lots",
+      "key": "Rear suite on semi cards",
+      "gap": "A secondary suite in a semi is deferred (M-214(3)), but suite add-ons can appear on the semi houseplex and semi renovation cards.",
+      "recommendation": "Recommendation: no suite add-on on semi houseplex or semi renovation cards; show the deferred disclosure instead.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": "Operator in chat 2026-10-20 (semi lots show only renovation cards) — no suite add-on on semi cards follows from that.",
+        "recorded_by": "claude from chat",
+        "updated_at": "2026-10-20T19:00:00.000Z",
+        "via": "page export"
+      },
+      "pins": {
+        "lot_form_rules.semi_half.suite_add_on": false
+      }
+    },
+    {
+      "ref": "Q-4",
+      "topic": "Approved gaps",
+      "key": "Rear-suite CoA vs your earlier ruling LC-49",
+      "gap": "You approved a CoA version of the rear suite today. LC-49 (Spec 131) says CoA does not apply to the rear suite.",
+      "recommendation": "Recommendation: amend LC-49 to allow it, but show it as not evaluated (coa_factor_unfitted) until there are enough realized CoA suites to calibrate it.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": "Operator in chat 2026-10-20: \"does the COA grant variances to these suites if so then we should keep it\". Measured (local dev DB, read-only): 1,129 CoA applications mention a garden suite (607) or laneway suite (522) since 2018-11-21; 865 approved, 132 refused. So keep the rear-suite CoA: amend LC-49, shown as not evaluated until calibrated.",
+        "recorded_by": "claude from chat",
+        "updated_at": "2026-10-20T19:00:00.000Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-5",
+      "topic": "Approved gaps",
+      "key": "Same-form comparables vs your earlier ruling LC-51",
+      "gap": "You approved comparables by build type. LC-51 says no new field for comparables.",
+      "recommendation": "Recommendation: no new stored field. Filter the existing comparable_builds list by build type when the report is assembled, so LC-51 still holds.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": null,
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:10:15.260Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-6",
+      "topic": "Renovations",
+      "key": "What expanding the envelope means",
+      "gap": "Addition (back/up) already uses the renovation envelope. Expanding the envelope needs its own definition to be a separate card.",
+      "recommendation": "Recommendation: Addition = a targeted addition up or back sized by the owner; Expanding the envelope = keep the house and build out to the full renovation envelope (renovation_envelope_gfa_sqm − existing). Reject with a note if you meant something else.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": null,
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:10:50.187Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-7",
+      "topic": "App contract",
+      "key": "Open the app contract (Spec 100) for report identity and media",
+      "gap": "Spec 100 excludes zoning and geometry today. The report needs zone label, lot frontage/depth, the map outline, the Street View block and the offers list.",
+      "recommendation": "Recommendation: amend Spec 100 to whitelist these, server and mobile in one commit, with offers as a separate top-level list (never inside lot data).",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": "Operator \"y to Q7\" (2026-10-20): Spec 100 will be amended to whitelist identity (zone label, frontage/depth, map outline), street_view and offers. Offers are first-party targeted ads in a separate top-level list, always labelled Sponsored. Rows move to the consumer/presentation source, marked pending:spec100_amendment until the Spec 100 amendment (app lane) lands.",
+        "recorded_by": "coordinator relay of operator chat",
+        "updated_at": "2026-10-20",
+        "via": "chat relay (supersedes page export)",
+        "page_export": {
+          "decision": "discuss",
+          "note": "This will be targeted ads from us ",
+          "recorded_by": "operator (Rulings page)",
+          "updated_at": "2026-10-20T18:11:45.616Z",
+          "via": "page export"
+        }
+      }
+    },
+    {
+      "ref": "Q-8",
+      "topic": "Ads",
+      "key": "Where sponsored slots go (R-34)",
+      "gap": "Spec 126 defines placements; Spec 128 makes the Sponsored label mandatory. No placement policy is set.",
+      "recommendation": "Recommendation: two slots: after the scenario cards (detail_footer, already declared) and in the renovation section (renovation contractors). Never inside a card. Always labelled Sponsored.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": null,
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:13:33.298Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-9",
+      "topic": "Street View",
+      "key": "Street View photo for the renovation section",
+      "gap": "Web builds a Street View URL on the client with a public key; mobile has none. Google terms allow caching the panorama id but not the image; cost is per image.",
+      "recommendation": "Recommendation: fetch on the server (find the panorama, aim it at the lot, sign the URL), cache only the panorama id, always show attribution, cap usage with a kill switch, never use the photo as data. Re-check Google current pricing and terms first.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": null,
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:11:12.952Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-10",
+      "topic": "Images",
+      "key": "Scenario images in the carousel",
+      "gap": "No images exist yet.",
+      "recommendation": "Recommendation: v1 uses about 33 static illustrations keyed by scenario × roof form × suite type × semi, captioned Illustrative — not this lot. A per-lot massing drawing from the card numbers comes later.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": "Each scenario shown will have a few different photos with it.. ",
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:13:03.833Z",
+        "via": "page export"
+      }
+    },
+    {
+      "ref": "Q-11",
+      "topic": "Cost",
+      "key": "Cost per scenario",
+      "gap": "Today cost is per lot, not per scenario; no spec owns per-scenario cost.",
+      "recommendation": "Recommendation: the Spec 88 cost lane owns it: each scenario card prices its own floor area with the existing rates, after the scenario step exists.",
+      "status": "decided",
+      "decision": {
+        "decision": "keep",
+        "note": null,
+        "recorded_by": "operator (Rulings page)",
+        "updated_at": "2026-10-20T18:10:28.481Z",
+        "via": "page export"
+      }
+    }
+  ]
+}

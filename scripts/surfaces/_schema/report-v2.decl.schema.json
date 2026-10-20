@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "report-v2.decl.schema.json",
+  "title": "MaxBLD lot report v2 declaration",
+  "$comment": "Shape of scripts/surfaces/_schema/report-v2.decl.json, enforced by scripts/analysis/report-schema.mjs gate RS-0. Every field has exactly one source: lineage:<field> | consumer:<payload path> | parcels:<column> | presentation:<key> | pending:<reason> (operator_ruling | operator_confirm | lineage_queue | spec_owed | spec100_amendment). A pending field may name the `target` source it switches to; `origin` names the parcels column behind a consumer path, `via` a presentation map/filter applied at assembly.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "inputs", "outputs", "spec_owed", "proposed_disclosures", "cards", "sections", "not_in_report", "samples"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "$comment": { "type": "string" },
+    "version": { "const": 1 },
+    "provenance": { "type": "object" },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lineage", "spec78", "consumer_descriptor", "consumer_lookup", "presentation", "rulings"],
+      "properties": {
+        "lineage": { "type": "string" },
+        "spec78": { "type": "string" },
+        "consumer_descriptor": { "type": "string" },
+        "consumer_lookup": { "type": "string" },
+        "presentation": { "type": "string" },
+        "rulings": { "type": "string" }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["markdown", "json_schema", "types", "sample", "lineage_queue"],
+      "properties": {
+        "markdown": { "type": "string" },
+        "json_schema": { "type": "string" },
+        "types": { "type": "string" },
+        "sample": { "type": "string" },
+        "lineage_queue": { "type": "string" }
+      }
+    },
+    "spec_owed": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } },
+    "proposed_disclosures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "ruling", "text"],
+        "properties": { "code": { "type": "string", "pattern": "^[a-z0-9_]+$" }, "ruling": { "type": "string" }, "text": { "type": "string" } }
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "scenario", "kind", "title", "status", "source"],
+        "properties": {
+          "code": { "type": "string" },
+          "scenario": { "type": "string", "pattern": "^[a-z_]+$" },
+          "kind": { "enum": ["new_build", "renovation"] },
+          "title": { "type": "string" },
+          "status": { "$ref": "#/$defs/status" },
+          "source": { "type": "string", "pattern": "^(lineage:scenario|pending:(operator_ruling|operator_confirm|lineage_queue|spec_owed|spec100_amendment):.+)$" },
+          "disclosures": { "type": "array", "items": { "type": "string" } },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "fields"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z_]+$" },
+          "title": { "type": "string" },
+          "proposal_path": { "type": "string" },
+          "fields": { "type": "array", "items": { "$ref": "#/$defs/field" } }
+        }
+      }
+    },
+    "not_in_report": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "reason"],
+        "properties": { "field": { "type": "string" }, "reason": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "basis", "values", "cards", "renovations", "offers"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "basis": { "type": "string" },
+          "values": { "type": "object" },
+          "cards": { "type": "array", "items": { "$ref": "#/$defs/sample_card" } },
+          "renovations": { "type": "array", "items": { "$ref": "#/$defs/sample_card" } },
+          "offers": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "status": { "enum": ["live", "planned", "new", "proposed"] },
+    "source": { "type": "string", "pattern": "^(lineage:[a-z0-9_]+|consumer:[A-Za-z0-9_.]+|parcels:[a-z0-9_]+|presentation:[a-z_]+(\\.[a-z_]+)*|pending:(operator_ruling:Q-[0-9]+|lineage_queue:[a-z0-9_:A-Z]+|spec_owed:[A-Za-z0-9-]+|spec100_amendment:Q-[0-9]+|operator_confirm:Q-[0-9]+-scope))$" },
+    "target": { "type": "string", "pattern": "^(lineage:[a-z0-9_]+|consumer:[A-Za-z0-9_.]+|parcels:[a-z0-9_]+|presentation:[a-z_]+(\\.[a-z_]+)*)$" },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "name", "label", "type", "status", "source", "render"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^(match|parcel|scenarios|offers\\[\\]|ui)(\\.[A-Za-z0-9_<>]+(\\[\\])?)*$" },
+        "name": { "type": "string", "pattern": "^[A-Za-z0-9_]+$" },
+        "label": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["integer", "number", "text", "boolean", "text[]", "jsonb", "object[]", "timestamp", "url", "month", "geojson"] },
+        "unit": { "enum": ["m", "m²", "deg", "$", "$/m²", "ratio", "fraction"] },
+        "status": { "$ref": "#/$defs/status" },
+        "source": { "$ref": "#/$defs/source" },
+        "target": { "$ref": "#/$defs/target" },
+        "origin": { "type": "string", "pattern": "^parcels:[a-z0-9_]+$", "description": "the parcels column a consumer path is assembled from" },
+        "via": { "type": "string", "pattern": "^presentation:[a-z_]+(\\.[a-z_]+)*$", "description": "a presentation map or filter applied to the source value at assembly" },
+        "enum": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "render": { "enum": ["rendered", "payload_only", "admin"] },
+        "note": { "type": "string" },
+        "disclosures": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sample_card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "values", "disclosures"],
+      "properties": {
+        "code": { "type": "string" },
+        "values": { "type": "object" },
+        "disclosures": { "type": "array", "items": { "type": "string" } },
+        "params": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "type": "string" } } }
+      }
+    }
+  }
+}
