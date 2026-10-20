@@ -98,6 +98,9 @@ export function scopePinProblems(dispFile, readSpec) {
     const text = readSpec(p.recorded_in);
     if (!text.includes(id)) problems.push(`scope_pins: ${id} is not named in ${p.recorded_in}`);
     if (!text.includes(`"${p.ruling}"`)) problems.push(`scope_pins: ${id} ruling "${p.ruling}" is not recorded verbatim in ${p.recorded_in}`);
+    // integrate-12 (verify-12h N1): the id and its verbatim ruling must sit in the SAME row / entry (one line of the
+    // recorded spec), so an id mentioned anywhere cannot borrow a ruling recorded for other pins.
+    else if (text.includes(id) && !text.split('\n').some((l) => l.includes(id) && l.includes(`"${p.ruling}"`))) problems.push(`scope_pins: ${id} and its ruling "${p.ruling}" are not in the same entry of ${p.recorded_in}`);
   }
   for (const d of dispFile.dispositions || []) {
     if (d.scope_pin === undefined) continue;

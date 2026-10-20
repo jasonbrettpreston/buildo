@@ -50,3 +50,11 @@ The generator also checks the hand-written §1, §5 and glossary against the cod
 Still owed to a later ruling lane, and not tracked by any lock:
 - The register row recording decision 2 (the register is the authority; Specs 119–123 are historical design records; see `meta.precedence`).
 - Correcting the stale Spec 124 §3 Rule 7 cell, which still names the deleted `outputs.publish` (verify-12 E6).
+
+## Status after `wf2/p4-integrate-12` (2026-10-20)
+
+- rulings-7: done. `meta.pending_integration` is empty; R-EW and R-EX resolve and stay `partial` on `unenforced[]` with rewritten reasons.
+- backfill-9: done. R-FC…R-FH are the W4A register rows (each W4A id `superseded` by its row); `meta.register_rows_owed` is empty. R-FI…R-GO (except R-GF, historical) are locked by the condition-9 block in `src/tests/v3-label-enforcement.logic.test.ts`.
+- tooling-fix-1: done. R-GP…R-GT mapped and locked.
+- `unenforced[]` stayed at 67 (ceiling 67): the W4A entries moved to their register rows; nothing was added.
+- Also owed to a ruling lane: 124a R-CR's cell still says averaging is `not_evaluated` until Q-B1; Spec 130:93, Spec 131 LC-58 and Spec 69a M-205(1) superseded that on 2026-10-19 (verify-12d N5). Handbook line link.4 now says so.

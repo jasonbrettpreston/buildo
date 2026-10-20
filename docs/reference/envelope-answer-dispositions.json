@@ -91,9 +91,9 @@
     "M-187",
     "M-214"
    ],
-   "corrected_value": "Semi-detached house: the frontage applies per dwelling unit; townhouse fronting a street: per unit, less 1.0 m for each unit without an individual private driveway (M-176(1) / M-187 Q4 trade-off). Both forms are not modelled in R (M-214(2)/(3)), so the per-unit frontage is disclosed, not bound.",
+   "corrected_value": "Per dwelling unit, the (A)/(B) frontage (the f value, else 6.0 m) for a semi-detached house and a street-fronting townhouse; a townhouse unit without an individual private driveway may have 1.0 m less. The driveway layout is unknown and both R forms are not modelled (M-214(2)/(3)), so the per-unit frontage and the 1.0 m reduction are disclosed, not applied — the same reading as RD 10.20.30.20(1)(C), RS 10.40.30.20(1)(D), RM 10.80.30.20(1)(D) (operator \"y to both\", 2026-10-20).",
    "disclosure_code": "townhouse_driveway_width",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-176(1), M-187 Q4 (as RD / RT (C)), M-214(2)/(3) (forms not modelled); note empty, read by parallel chapters"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-176(1), M-187 Q4 (as RD / RT (C)), M-214(2)/(3) (forms not modelled); note empty, read by parallel chapters; operator \"y to both\" (2026-10-20, item 1): disclosure aligned with the RD / RS / RM answers (Spec 69a M-187 dated note)"
   },
   {
    "unit_id": "10.10.30.20(1)#(1)(D)",
@@ -146,7 +146,7 @@
     "M-177"
    ],
    "corrected_value": "One residential building per lot: the maximum build answers the one-building case (M-158 new build; M-177(3) other buildings not included); a garden or laneway suite is in an ancillary building, outside Article 10.10.40 (10.10.40.1(1)), so it does not count (as the RS note on 10.40.40.1(2)(A): \"This doesn't apply to garden suites or laneway suites\").",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-158 (as RD 10.20.40.1(2)(A)), M-177(3); note empty, read by parallel chapters"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-158 (as RD 10.20.40.1(2)(A)), M-177(3); note empty, read by parallel chapters; operator \"y to both\" (2026-10-20, item 2): confirmed — an ancillary building with a garden or laneway suite is not a second residential building (RS 10.40.40.1(2)(A) note, 150.7.20.1(2)); no value change"
   },
   {
    "unit_id": "10.10.40.1(2)#(2)(B)",
@@ -287,7 +287,7 @@
    ],
    "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1); operator \"keep tower and eglinton disclosed\" (2026-10-20, Spec 69a M-169 dated note)"
   },
   {
    "unit_id": "10.10.40.10(10)#(10)(B)",
@@ -299,7 +299,7 @@
    ],
    "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1); operator \"keep tower and eglinton disclosed\" (2026-10-20, Spec 69a M-169 dated note)"
   },
   {
    "unit_id": "10.10.40.10(10)#(10)(C)",
@@ -311,7 +311,7 @@
    ],
    "corrected_value": "Tower rooftop allowance (R): on the tower part of a building (storeys above 24.0 m) rooftop equipment may exceed the height limit by 6.5 m within 450 m², chimneys, pipes and vents by a further 3.0 m; disclosed, never evaluated (M-169(4)); a tower is an apartment-building form, deferred (M-214(3)).",
    "disclosure_code": "rooftop_elements_exempt",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1)"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(4) (as 10.5.40.10(3)–(5), R 10.10.40.10(8)), M-214(3); replaces the unauthorized PIN SCOPE-TOWER-1 (verify-12f batch 6 B1); operator \"keep tower and eglinton disclosed\" (2026-10-20, Spec 69a M-169 dated note)"
   },
   {
    "unit_id": "10.10.40.10(11)#(11)(A)",
@@ -723,7 +723,7 @@
    ],
    "corrected_value": "Setback exemption for a transportation use along Eglinton Avenue (setbacks 0–10.5 m): disclosed with the keyed sentence (\"does not affect houses and is not evaluated\"); the abuts_named_street condition is taken as not holding (M-169(1)/(2)); setback_encroachments is the nearest setback-permission code.",
    "disclosure_code": "setback_encroachments",
-   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(1)/(2)/(4); the keyed disclosure stands as the operator answered; replaces the unauthorized PIN NONRES-4 (verify-12f batch 6 B1)"
+   "basis": "review answers batch 6 (live page DB 2026-10-20, envdb12); M-169(1)/(2)/(4); the keyed disclosure stands as the operator answered; replaces the unauthorized PIN NONRES-4 (verify-12f batch 6 B1); operator \"keep tower and eglinton disclosed\" (2026-10-20, Spec 69a M-169 dated note)"
   },
   {
    "unit_id": "10.10.40.80(1)#(1)(A)",
@@ -6561,7 +6561,7 @@
   }
  ],
  "scope_pins": {
-  "description": "The closed list of operator-authorized scope pins (Spec 78 P5.15(B)). A disposition may carry scope_pin only for a pin listed here, on a listed unit; generate-answer-tracker --check also requires the pin id and the verbatim ruling to appear in the recorded spec. Unlisted pins fail.",
+  "description": "The closed list of operator-authorized scope pins (Spec 78 P5.15(B)). A disposition may carry scope_pin only for a pin listed here, on a listed unit; generate-answer-tracker --check also requires the pin id and the verbatim ruling to appear in the recorded spec, in the same entry (one row or dated note; integrate-12). Unlisted pins fail.",
   "pins": {
    "NONRES-1": {
     "units": [

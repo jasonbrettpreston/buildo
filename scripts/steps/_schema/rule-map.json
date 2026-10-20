@@ -516,7 +516,7 @@
     {
       "id": "link.4",
       "section": "link",
-      "text": "Open operator question Q-B1: the neighbour front-setback estimate (`front_setback_est_m`; owed to the Spec 130 lane). Until it is answered, averaging stays `not_evaluated`, and a reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as \"no neighbours\". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1.",
+      "text": "Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always \"needs survey\"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as \"no neighbours\". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)",
       "why": "An unanswered question stays visible on its own line, next to the rule that raised it."
     },
     {

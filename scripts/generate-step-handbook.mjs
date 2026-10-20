@@ -86,6 +86,7 @@ export const SYMBOL_HOME = {
   stageAwaitsCaptures: 'scripts/analysis/step-validate.mjs',
   rowBlocks: 'scripts/analysis/step-validate.mjs',
   checkPreservedInComputeHasWhy: 'scripts/analysis/step-validate.mjs',
+  DISPOSITION_VOCAB: 'scripts/analysis/step-validate.mjs',
   undeclaredPinItems: 'scripts/analysis/gates/witness.mjs',
   installBeforeImageSandbox: 'src/tests/setup.ts',
   writeBeforeImage: 'scripts/lib/step/write.js',
@@ -228,12 +229,12 @@ const GLOSSARY = [
   ['LDG-10, EP-PIN-D17', 'Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).'],
   ['W4A-Rn', 'Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).'],
   ['lock / lock-db / check / hook', 'Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.'],
-  ['Intent Ledger', 'The table in a step\'s assessment report listing each behaviour of the legacy step and its disposition (kept, fixed, retired, preserved-in-compute). Scored by scorecard G3; G-2 reads it.'],
+  ['Intent Ledger', 'The table in a step\'s assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.'],
   ['G-2', 'Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.'],
   ['§R Reflection', 'The closing section of a step\'s assessment report recording what the conversion taught; scorecard G9 checks it exists.'],
   ['seam', 'A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.'],
   ['sources chain', 'The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.'],
-  ['P0 … P3', 'Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8.'],
+  ['P0 … P3', 'Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1\'s "P0 categories adjudication" is that sense, not the stage.'],
   ['†', 'An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).'],
 ];
 

@@ -235,7 +235,7 @@ Joins two populations and writes the link rows or columns.
   *Why:* Shows the rules applied where they were first needed.
   Rules: `R-N` `R-CR`
 
-- **link.4** Open operator question Q-B1: the neighbour front-setback estimate (`front_setback_est_m`; owed to the Spec 130 lane). Until it is answered, averaging stays `not_evaluated`, and a reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1.
+- **link.4** Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always "needs survey"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)
   *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
   Rules: `Q-B1`
 
@@ -592,10 +592,10 @@ The Spec 124 register is the authority; the handbook is the reading surface; Spe
 - **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
 - **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
 - **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
-- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition (kept, fixed, retired, preserved-in-compute). Scored by scorecard G3; G-2 reads it.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
 - **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
 - **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
 - **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
 - **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
-- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
 - **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).

@@ -1401,14 +1401,14 @@
     "M-187",
     "M-214"
    ],
-   "corrected_value": "Semi-detached house: the frontage applies per dwelling unit; townhouse fronting a street: per unit, less 1.0 m for each unit without an individual private driveway (M-176(1) / M-187 Q4 trade-off). Both forms are not modelled in R (M-214(2)/(3)), so the per-unit frontage is disclosed, not bound.",
+   "corrected_value": "Per dwelling unit, the (A)/(B) frontage (the f value, else 6.0 m) for a semi-detached house and a street-fronting townhouse; a townhouse unit without an individual private driveway may have 1.0 m less. The driveway layout is unknown and both R forms are not modelled (M-214(2)/(3)), so the per-unit frontage and the 1.0 m reduction are disclosed, not applied — the same reading as RD 10.20.30.20(1)(C), RS 10.40.30.20(1)(D), RM 10.80.30.20(1)(D) (operator \"y to both\", 2026-10-20).",
    "disclosure_code": "townhouse_driveway_width",
    "question": "",
    "fields": [],
    "locks": [],
    "owed": [],
    "checks": [
-    "correction COR-10.10.30.20(1)#(1)(C)/calculation_handling"
+    "correction COR-10.10.30.20(1)#(1)(C)/calculation_handling, COR-10.10.30.20(1)#(1)(C)/disclosure"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"

@@ -15,8 +15,9 @@
 // RED today: `capture-step-golden.js` exports none of `measuredPathFor` /
 // `measuredFromCapture` / `mergeMeasured`, and `scripts/analysis/generate-last-measured.mjs`
 // does not exist at all — every assertion below is against an API written by the green steps.
-import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { afterAll, describe, expect, it } from 'vitest';
+import { readFileSync, readdirSync, mkdtempSync, mkdirSync, copyFileSync, existsSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -496,18 +497,39 @@ describe('R-GQ baseline is shrink-only against the committed previous baseline',
 // verifier's `--help` used to fall through to WRITE and rewrote 17 descriptors).
 // RED before because … any argv without --check/--shrink-baseline ran the write path.
 describe('generate-last-measured CLI — write is explicit', () => {
+  // integrate-12 (verify-12h B note): the CLI runs against a TEMP COPY of its inputs (the generator, every descriptor,
+  // every golden measured*.json, the stale baseline), never the live tree, so a regression that falls through to WRITE
+  // rewrites only the copy. The copy carries the 84 real stale entries, so a fall-through write would change its bytes.
+  const live = process.cwd();
+  const root = mkdtempSync(join(tmpdir(), 'lm-cli-'));
+  const copy = (rel: string) => { mkdirSync(join(root, rel, '..'), { recursive: true }); copyFileSync(join(live, rel), join(root, rel)); };
+  copy('scripts/analysis/generate-last-measured.mjs');
+  copy('scripts/steps/_schema/last-measured-stale-baseline.json');
+  for (const dir of ['scripts', 'scripts/quality']) {
+    for (const f of readdirSync(join(live, dir)).filter((n: string) => n.endsWith('.descriptor.json'))) copy(`${dir}/${f}`);
+  }
+  for (const slug of readdirSync(join(live, 'docs/reports/golden'))) {
+    for (const f of ['measured.json', 'measured-validate.json']) if (existsSync(join(live, 'docs/reports/golden', slug, f))) copy(`docs/reports/golden/${slug}/${f}`);
+  }
   const descriptorBytes = (): string => {
     const out: string[] = [];
     for (const dir of ['scripts', 'scripts/quality']) {
-      for (const f of readdirSync(join(process.cwd(), dir)).filter((n: string) => n.endsWith('.descriptor.json')).sort()) {
-        out.push(readFileSync(join(process.cwd(), dir, f), 'utf8'));
+      for (const f of readdirSync(join(root, dir)).filter((n: string) => n.endsWith('.descriptor.json')).sort()) {
+        out.push(readFileSync(join(root, dir, f), 'utf8'));
       }
     }
     return out.join('\u0000');
   };
   const cli = (args: string[]) => {
-    return spawnSync(process.execPath, ['scripts/analysis/generate-last-measured.mjs', ...args], { cwd: process.cwd(), encoding: 'utf8' });
+    return spawnSync(process.execPath, ['scripts/analysis/generate-last-measured.mjs', ...args], { cwd: root, encoding: 'utf8' });
   };
+
+  afterAll(() => rmSync(root, { recursive: true, force: true }));
+
+  it('C0 the temp copy is a faithful fixture: --check there sees the same stale entries as the live tree', () => {
+    const r = cli(['--check']);
+    expect(`${r.stdout}`).toMatch(/changed [1-9][0-9]*/);
+  });
 
   it('C1 --help prints usage, exits 0, writes nothing', () => {
     const before = descriptorBytes();

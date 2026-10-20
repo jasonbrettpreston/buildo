@@ -77193,6 +77193,17 @@
       "adjudicated_on": "2026-10-20",
       "adjudicator": "operator",
       "field": "disclosure",
+      "id": "COR-10.10.30.20(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Operator \"y to both\" (2026-10-20, item 1): R 10.10.30.20(1)(C) stays disclosed and says what the RD / RS / RM answers say (RD 10.20.30.20(1)(C), RS 10.40.30.20(1)(D), RM 10.80.30.20(1)(D), parallel chapters): per dwelling unit, less 1.0 m for each unit without an individual private driveway; the driveway is unknown, so the reduction is disclosed, not applied. R's per-unit figure is the (A)/(B) value (the f value, else 6.0 m, 10.10.30.20(1)(B)); the 1.0 m is 10.10.30.20(1)(C)(ii)(b).",
+      "rule": "Spec 69a M-187 (Q4; dated note 2026-10-20, operator \"y to both\"), M-176(1), M-214(2)/(3); Spec 78 P5.12 townhouse_driveway_width; M-75",
+      "unit": "10.10.30.20(1)#(1)(C)",
+      "value": "For a semi-detached house, and for a townhouse whose units all front a street, the minimum frontage applies to each dwelling unit: the f value on the zoning map, or 6.0 m where the zone label has no f value. A townhouse unit without its own private driveway may have 1.0 m less (5.0 m per unit at the 6.0 m default). We do not know the driveway layout, so the 1.0 m reduction is disclosed, not applied; this per-unit frontage is not yet calculated."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
       "id": "COR-10.10.40.10(8)#(8)(A)/disclosure",
       "kind": "correction",
       "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(8) (disclose): antennae on a building over 15.0 m may exceed the height limit by 5.0 m. M-169(4): a permission the user would verify is disclosed, never evaluated (as 10.5.40.10(2)-(5), batch 5).",

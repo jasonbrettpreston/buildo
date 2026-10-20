@@ -157,9 +157,43 @@ describe('verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling
   it('a pin whose ruling is not recorded verbatim in its spec fails', () => {
     expect(TR.scopePinProblems({ scope_pins: listed, dispositions: [] }, () => 'PIN NONRES-1')).toEqual(['scope_pins: NONRES-1 ruling "y pin them" is not recorded verbatim in spec.md']);
   });
+  it('a pin id and its ruling recorded in different entries fail (same-entry rule, integrate-12 / verify-12h N1)', () => {
+    const split = () => '| | note A: PIN NONRES-1 named here |\n| | note B: operator "y pin them" for other arms |';
+    expect(TR.scopePinProblems({ scope_pins: listed, dispositions: [] }, split)).toEqual(['scope_pins: NONRES-1 and its ruling "y pin them" are not in the same entry of spec.md']);
+    const same = () => '| | note: PIN NONRES-1, operator "y pin them" |';
+    expect(TR.scopePinProblems({ scope_pins: listed, dispositions: [] }, same)).toEqual([]);
+  });
   it('the committed list is exactly the three 2026-10-20 "y pin them" arms and every pin in the tree has authority', () => {
     const f = JSON.parse(read('docs/reference/envelope-answer-dispositions.json'));
     expect(Object.keys(f.scope_pins.pins).sort()).toEqual(['NONRES-1', 'NONRES-2', 'SCOPE-100UNITS-1']);
     expect(TR.scopePinProblems(f, read)).toEqual([]);
+  });
+});
+
+// integrate-12 — operator confirmations (2026-10-20): "keep tower and eglinton disclosed" and "y to both".
+describe('operator confirmations 2026-10-20 — recorded in Spec 69a, dispositions unchanged in kind', () => {
+  const spec69a = read('docs/specs/01-pipeline/69a_mcbylaw_register.md').split('\n');
+  const rowWith = (...parts: string[]) => spec69a.find((l) => parts.every((p) => l.includes(p)));
+  it('"keep tower and eglinton disclosed": the four arms stay disclosed_by with no scope pin, and 69a records the words', () => {
+    for (const id of ['10.10.40.10(10)#(10)(A)', '10.10.40.10(10)#(10)(B)', '10.10.40.10(10)#(10)(C)', '10.10.40.71(1)#whole']) {
+      expect(disp.get(id)?.disposition, id).toBe('disclosed_by');
+      expect(disp.get(id)?.scope_pin, id).toBeUndefined();
+      expect(disp.get(id)?.basis, id).toContain('"keep tower and eglinton disclosed"');
+    }
+    expect(rowWith('"keep tower and eglinton disclosed"', '10.10.40.10(10)(A)', '10.10.40.71(1)')).toBeTruthy();
+  });
+  it('"y to both" (1): R 10.10.30.20(1)(C) discloses the per-unit frontage and the 1.0 m driveway reduction, not applied, as RD / RS / RM', () => {
+    const u = unitOf('10.10.30.20(1)#(1)(C)');
+    expect(u.disclosure).toContain('applies to each dwelling unit');
+    expect(u.disclosure).toContain('6.0 m where the zone label has no f value');
+    expect(u.disclosure).toContain('1.0 m less');
+    expect(u.disclosure).toContain('the 1.0 m reduction is disclosed, not applied');
+    expect(disp.get('10.10.30.20(1)#(1)(C)')?.disclosure_code).toBe('townhouse_driveway_width');
+    expect(rowWith('"y to both"', '10.10.30.20(1)(C)', 'RD 10.20.30.20(1)(C)', 'RS 10.40.30.20(1)(D)', 'RM 10.80.30.20(1)(D)')).toBeTruthy();
+  });
+  it('"y to both" (2): R 10.10.40.1(2)(A) is confirmed with no value change (one residential building per lot)', () => {
+    expect(disp.get('10.10.40.1(2)#(2)(A)')?.disposition).toBe('resolved_by');
+    expect(unitOf('10.10.40.1(2)#(2)(A)').disclosure).toBe('none');
+    expect(rowWith('"y to both"', '10.10.40.1(2)(A)', '150.7.20.1(2)')).toBeTruthy();
   });
 });
