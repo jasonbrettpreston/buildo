@@ -603,10 +603,10 @@
       "file": "scripts/steps/_schema/grandfathered.json",
       "key": "link_parcels",
       "deviation_index": null,
-      "class": "b",
-      "rule_id": "R-FL",
-      "apply": "now",
-      "append_text": " [register: Spec 124 R-FL; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -622,9 +622,9 @@
           "quote": "* **A-3 — `guard_columns` vs the RUN_AT column.** **Ruling: option (2) — explicit `guard_columns: [is_primary, structure_type, match_type, confidence]` on E2 + the LG-9 validator rule (a run-clock-bound column may not be a guard column without a `why`); no `clock_columns` schema field.** **Reason:**"
         }
       ],
-      "decision_date": "2026-08-27",
-      "searched": null,
-      "note": "Own adjudication is orchestrator-only (Fold A B-1, LP-D10 self-adjudicated); traced to the link_massing E1 precedent + A-3/LG-9 run-clock rule it explicitly mirrors."
+      "decision_date": null,
+      "searched": "verify-12c: the entry is adjudicated \"Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated\" (pilot 7, plan status Planning, no operator authorization); pilot 3 (R-FL) decided only link_massing E1. Searched: grandfathered.json entry, pilot7 plan (~/Buildo/.cursor/pilot7_link_parcels_active_task.md:3 Planning), 2026-08-30 pilot7 assessment, git log --grep link_parcels, registry-truth plan O4 rows (row 7 is link_parcels re-check, not this DELETE)",
+      "note": "demoted from (b) at consolidation: verify-12c: the entry is adjudicated \"Fold A B-1 (2026-08-30) + orchestrator ruling (commit 7 dispatch); LP-D10 widening self-adjudicated\" (pilot 7, plan status Planning, no operator authorization); pilot 3 (R-FL) decided only link_massing E1. Searched: grandfathered.json entry, pilot7 plan (~/Buildo/.cursor/pilot7_link_parcels_active_task.md:3 Planning), 2026-08-30 pilot7 assessment, git log --grep link_parcels, registry-truth plan O4 rows (row 7 is link_parcels re-check, not this DELETE)"
     },
     {
       "ref": "g1-22",
@@ -1801,10 +1801,10 @@
       "file": "scripts/load-address-points.descriptor.json",
       "key": "declaring `guards.requires` only for what the write needs, and pinning every FAIL check as blocking:false",
       "deviation_index": 4,
-      "class": "b",
-      "rule_id": "R-FJ",
-      "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-FJ; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -1816,9 +1816,9 @@
           "quote": "**PIN, DO NOT FIX** (§3.1). Declare every check `blocking: false` at commit 7 so commit 7 stays a genuine no-op; promoting the halt is a peel with its own lock."
         }
       ],
-      "decision_date": "2026-08-25",
-      "searched": null,
-      "note": "Entry cites \"plan D-8\"; D-8 is the load_ravines pilot-2 plan row (not in the address_points plan). The guards.requires half is not in D-8."
+      "decision_date": null,
+      "searched": "verify-12c: two-part entry; R-FJ (pilot 2 D-8) decides only the blocking:false half; the guards.requires scope half has no operator decision found (address_points plan, pilot 2 plan, assessment, git log searched)",
+      "note": "demoted from (b) at consolidation: verify-12c: two-part entry; R-FJ (pilot 2 D-8) decides only the blocking:false half; the guards.requires scope half has no operator decision found (address_points plan, pilot 2 plan, assessment, git log searched)"
     },
     {
       "ref": "g3-5",
@@ -1905,10 +1905,10 @@
       "file": "scripts/load-parcels.descriptor.json",
       "key": "the pre-conversion per-batch transaction shape (`pipeline.withTransaction` once per 1,000-row BATCH_SIZE batch, :252-253, :275)",
       "deviation_index": 0,
-      "class": "b",
-      "rule_id": "R-FT",
-      "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-FT; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -1924,9 +1924,9 @@
           "quote": "**Status:** Implementation (authorized under the 2026-09-24 \"proceed\" on the runner-completion plan D7 reorder)"
         }
       ],
-      "decision_date": "2026-09-23",
-      "searched": null,
-      "note": "Parcels D1 is orchestrator-ruled. Traced via the stated \"address_points precedent\" to Fold B3 in the operator-authorized 3.1 plan."
+      "decision_date": null,
+      "searched": "verify-12c: parcels D1 txn_scope widening is orchestrator-ruled (batch2_p3_7_parcels plan, \"authorized under the 2026-09-24 proceed on the runner-completion plan D7 reorder\", which authorized ordering, not this plan); address_points Fold B3 (R-FT) is that step's own decision",
+      "note": "demoted from (b) at consolidation: verify-12c: parcels D1 txn_scope widening is orchestrator-ruled (batch2_p3_7_parcels plan, \"authorized under the 2026-09-24 proceed on the runner-completion plan D7 reorder\", which authorized ordering, not this plan); address_points Fold B3 (R-FT) is that step's own decision"
     },
     {
       "ref": "g3-9",
@@ -1959,10 +1959,10 @@
       "file": "scripts/load-parcels.descriptor.json",
       "key": "declaring `guards.requires` only for what the write/consumers need, and pinning every FAIL check as blocking:false",
       "deviation_index": 3,
-      "class": "b",
-      "rule_id": "R-FJ",
-      "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-FJ; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -1974,9 +1974,9 @@
           "quote": "**PIN, DO NOT FIX** (§3.1). Declare every check `blocking: false` at commit 7 so commit 7 stays a genuine no-op; promoting the halt is a peel with its own lock."
         }
       ],
-      "decision_date": "2026-08-25",
-      "searched": null,
-      "note": "Parcels D4 is orchestrator. Traced via the stated address_points plan D-8, which is the load_ravines pilot-2 D-8 pin (operator-authorized)."
+      "decision_date": null,
+      "searched": "verify-12c: as g3-4 (parcels D4 is an orchestrator ruling; the guards.requires half has no operator decision)",
+      "note": "demoted from (b) at consolidation: verify-12c: as g3-4 (parcels D4 is an orchestrator ruling; the guards.requires half has no operator decision)"
     },
     {
       "ref": "g3-11",
@@ -2157,9 +2157,9 @@
       "key": "M-D11 — per-1000-row pipeline.withTransaction batches",
       "deviation_index": 5,
       "class": "b",
-      "rule_id": "R-FT",
+      "rule_id": "R-FX",
       "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-FT; V3 condition-9 backfill 2026-10-20]",
+      "append_text": " [register: Spec 124 R-FX; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -2181,7 +2181,7 @@
       ],
       "decision_date": "2026-09-23",
       "searched": null,
-      "note": "Precedent Fold B3. M-D11 is also stated in the massing plan (operator-authorized 2026-09-24)."
+      "note": "verify-12c: re-cited from R-FT: the massing plan itself states M-D11 (docs/reports/2026-09-24-plan-batch2-p3-6-massing.md:91 \"per-1000-batch txn → txn_scope:step (address_points Fold B3)\")"
     },
     {
       "ref": "g3-18",
@@ -2439,9 +2439,9 @@
       "key": "M-D11",
       "deviation_index": null,
       "class": "b",
-      "rule_id": "R-FT",
+      "rule_id": "R-FX",
       "apply": "now",
-      "append_text": " [register: Spec 124 R-FT; V3 condition-9 backfill 2026-10-20]",
+      "append_text": " [register: Spec 124 R-FX; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -2463,7 +2463,7 @@
       ],
       "decision_date": "2026-09-23",
       "searched": null,
-      "note": "Ledger row mirroring the descriptor deviation g3-17. Precedent Fold B3. M-D11 is also stated in the massing plan (operator-authorized 2026-09-24)."
+      "note": "verify-12c: as g3-17 (ledger M-D11)"
     },
     {
       "ref": "g3-28",
@@ -2613,9 +2613,9 @@
       "key": "N-D8 — split transactions (boundary txn + 5 autocommit census UPDATEs + bulk txn)",
       "deviation_index": 7,
       "class": "b",
-      "rule_id": "R-FT",
+      "rule_id": "R-FY",
       "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-FT; V3 condition-9 backfill 2026-10-20]",
+      "append_text": " [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -2637,7 +2637,7 @@
       ],
       "decision_date": "2026-09-23",
       "searched": null,
-      "note": "Precedent Fold B3. Also stated in the neighbourhoods plan (operator-authorized 2026-09-25)."
+      "note": "verify-12c: re-cited from R-FT: the neighbourhoods plan itself states it (docs/reports/2026-09-25-plan-batch2-p3-8-neighbourhoods.md:51 B9 \"txn_scope:step → NB-D8\")"
     },
     {
       "ref": "g3-34",
@@ -3142,9 +3142,9 @@
       "key": "N-D8",
       "deviation_index": null,
       "class": "b",
-      "rule_id": "R-FT",
+      "rule_id": "R-FY",
       "apply": "now",
-      "append_text": " [register: Spec 124 R-FT; V3 condition-9 backfill 2026-10-20]",
+      "append_text": " [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -3166,7 +3166,7 @@
       ],
       "decision_date": "2026-09-23",
       "searched": null,
-      "note": "Ledger row mirroring the descriptor deviation g3-33. Precedent Fold B3. Also stated in the neighbourhoods plan (operator-authorized 2026-09-25)."
+      "note": "verify-12c: as g3-33 (ledger N-D8)"
     },
     {
       "ref": "g3-53",
@@ -4213,10 +4213,10 @@
       "file": "scripts/load-heritage.descriptor.json",
       "key": "LH-D8 (a) — a per-dataset failure returned `{ failed: true }`, which `pipeline.run` ignored, so a STANDALONE run exited 0 and its ledger row read `completed` with verdict FAIL (legacy :768; pipeline.js:589-600)",
       "deviation_index": 0,
-      "class": "b",
-      "rule_id": "R-GF",
-      "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-GF; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -4232,9 +4232,9 @@
           "quote": "0x adds no status override. Heritage ① declares the standalone deviation, and ④b fixes the compute-owned skeleton re-emit."
         }
       ],
-      "decision_date": "2026-09-29",
-      "searched": null,
-      "note": "The heritage plan §11 note (:208) had pinned legacy posture; the standalone-status deviation was decided in the authorized 0x plan."
+      "decision_date": null,
+      "searched": "verify-12c: LH-D8 standalone status (\"orchestrator ① decision 4\"); the operator y of 2026-09-29 (R-GF) is the O-1 scope cut only, and the load_heritage plan (R-GB) states parity for row 24 (docs/reports/2026-09-27-plan-batch2-load-heritage.md:104 \"terminal/status parity VERIFY-INT-3 — HR-D8\"), not this deviation. Searched: 0x plan :2/:173-174/:364/:403, heritage plan :104/:117, heritage assessment, QUEUE snapshot",
+      "note": "demoted from (b) at consolidation: verify-12c: LH-D8 standalone status (\"orchestrator ① decision 4\"); the operator y of 2026-09-29 (R-GF) is the O-1 scope cut only, and the load_heritage plan (R-GB) states parity for row 24 (docs/reports/2026-09-27-plan-batch2-load-heritage.md:104 \"terminal/status parity VERIFY-INT-3 — HR-D8\"), not this deviation. Searched: 0x plan :2/:173-174/:364/:403, heritage plan :104/:117, heritage assessment, QUEUE snapshot"
     },
     {
       "ref": "g4-29",
@@ -4298,9 +4298,9 @@
       "key": "the gated-skip sub-block — legacy re-emitted `{ ...skeletonSub(), ...priorSub, spec_version, features_inserted: 0, features_updated: 0, features_deleted: 0, skipped_reason }` and its specSub rename reset filtered_out_* / unknown_*_count to 0 (:493, :526-530, :654-657)",
       "deviation_index": 3,
       "class": "b",
-      "rule_id": "R-GF",
+      "rule_id": "R-GB",
       "apply": "bundled-night",
-      "append_text": " [register: Spec 124 R-GF; V3 condition-9 backfill 2026-10-20]",
+      "append_text": " [register: Spec 124 R-GB; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [
         {
@@ -4318,7 +4318,7 @@
       ],
       "decision_date": "2026-09-29",
       "searched": null,
-      "note": "Per-primary DS4 re-emit (skeleton ← prior ← pins) is the 0x mechanism; it carries prior counters by construction."
+      "note": "verify-12c: re-cited from R-GF to R-GB: the load_heritage plan states the per-primary skip re-emit (docs/reports/2026-09-27-plan-batch2-load-heritage.md:86 row 6 \"buildSkipReEmitMeta DS4 re-emit ... skipEmit per primary\"; :104 is parity)"
     },
     {
       "ref": "g4-32",
@@ -4400,15 +4400,14 @@
       "file": "scripts/load-heritage.descriptor.json",
       "key": "the step's own SQL reads of pipeline_runs, logic_variables and trade_configurations (reads evidence table, assessment §11)",
       "deviation_index": 7,
-      "class": "c",
-      "rule_id": null,
-      "apply": "none",
-      "append_text": null,
+      "class": "b",
+      "rule_id": "R-GG",
+      "apply": "bundled-night",
+      "append_text": " [register: Spec 124 R-GG; V3 condition-9 backfill 2026-10-20]",
       "stale": null,
       "evidence": [],
-      "decision_date": null,
-      "searched": "docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md §11 (:648, :674); grep \"new-conversion rule|evidence table|reads evidence\" across ~/Buildo/.cursor/*.md, .cursor/archive, docs/specs/01-pipeline; git log --grep over 2026-09-29..10-03; QUEUE.md",
-      "note": "The 2026-09-30 operator rule is cited only second-hand (assessment §11) and requires the evidence table, not the omission; no operator source found for the omission."
+      "searched": null,
+      "note": "verify-12c: R-GG (operator 2026-09-30, new conversions) governs: docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md:413 \"an intentional omission is an explicit deviation\"; this entry is that declared omission (adjudicated_by \"operator new-conversion rule 2026-09-30 (reads evidence table), explicit omission\")"
     },
     {
       "ref": "g4-36",

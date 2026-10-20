@@ -639,10 +639,10 @@
       "to_anchor": "## Appendix §B20 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
       "line_count": 39,
       "classification": "REGISTER",
-      "evidence": "backfill-9 (operator y 2026-10-20: the V3 condition-9 backfill, and consolidation decision 3, the W4A rulings): Spec 124 was at 372/380 lines and owes 39 rows, R-FC…R-GO. They stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. wf2/p4-rulings-7 also allocated 124a §B17/§B18 and M33 and rulings-8 used §B19: §B20 and M34 are renumbered at integration if taken.",
-      "content_sha256": "68cac02f43b8581af57d79bf0ff7de8cc54aba1f044db9441742d1bf26bed812",
+      "evidence": "backfill-9 (operator y 2026-10-20: the V3 condition-9 backfill, and consolidation decision 3, the W4A rulings): Spec 124 was at 372/380 lines and owes 39 rows, R-FC…R-GO. They stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. wf2/p4-rulings-7 also allocated 124a §B17/§B18 and M33 and rulings-8 used §B19: §B20 and M34 are renumbered at integration if taken. Re-performed 2026-10-20 after verify-12c (R-EZ) corrected rows R-FF, R-FJ, R-FL, R-FT, R-FY, R-FZ, R-GA, R-GB, R-GC, R-GF, R-GI, R-GL before integration.",
+      "content_sha256": "19c880f9286273413feb62a91f18760fe1813a0e1fe35d565a823f205400a2b5",
       "moved_at": "2026-10-20",
-      "commit": "1d16f155"
+      "commit": "a906623f"
     }
   ]
 }
