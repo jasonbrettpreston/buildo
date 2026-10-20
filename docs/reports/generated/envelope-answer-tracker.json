@@ -10,8 +10,8 @@
  "counts": {
   "answers": 788,
   "by_state": {
-   "INCORPORATED": 747,
-   "UNFIXED": 41
+   "INCORPORATED": 784,
+   "UNFIXED": 4
   },
   "by_verdict": {
    "disclose": 186,
@@ -24,10 +24,10 @@
   "by_disposition": {
    "disclosed_by": 186,
    "excluded": 236,
-   "fixed_by": 106,
+   "fixed_by": 84,
    "matches": 187,
    "resolved_by": 52,
-   "verified_by_lock": 21
+   "verified_by_lock": 43
   },
   "by_chapter": {
    "10.10": {
@@ -68,20 +68,20 @@
    },
    "150.10": {
     "total": 8,
-    "INCORPORATED": 2,
-    "UNFIXED": 6,
+    "INCORPORATED": 8,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "150.7": {
     "total": 96,
-    "INCORPORATED": 79,
-    "UNFIXED": 17,
+    "INCORPORATED": 95,
+    "UNFIXED": 1,
     "OPEN": 0
    },
    "150.8": {
     "total": 80,
-    "INCORPORATED": 65,
-    "UNFIXED": 15,
+    "INCORPORATED": 80,
+    "UNFIXED": 0,
     "OPEN": 0
    },
    "5.10": {
@@ -138,331 +138,6 @@
    "reason": "pinned out of scope (PIN SCOPE-100UNITS-1): answer kept, no disclosure applied"
   },
   {
-   "unit_id": "150.10.1(1)#whole",
-   "regulation_id": "150.10.1(1)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "Stating this section applies to secondary suites",
-   "source": "",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "A scope sentence (\"Section 150.10 applies to secondary suites\") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.10.20.1(1)#(1)(A)",
-   "regulation_id": "150.10.20.1(1)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "Secondary Suite permitted structures a) detached house",
-   "source": "",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.10.20.1(1)#(1)(B)",
-   "regulation_id": "150.10.20.1(1)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "Secondary Suite permitted structures b semi detached house.",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.10.20.1(2)#whole",
-   "regulation_id": "150.10.20.1(2)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "Defines the maximum number of secondary suites allowed. Each dwelling can have 1. Applies to etached house, semi-detached house, or townhouse",
-   "source": "",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "Each dwelling unit may have one secondary suite; the suite class carries one suite per host unit.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.10.40.40(1)#whole",
-   "regulation_id": "150.10.40.40(1)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "Defines the Secondary suite - Interior Floor Area ) Secondary Suite - Interior Floor Area The interior floor area must be no more than 45 percent of the interior floor area of the dwelling unit within which it is located. Makes sense - can't be bigger than the existing house etc.  We will need this information because we will create the max build for the main structure and this will inform the size of the secondary suite",
-   "source": "",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-199"
-   ],
-   "corrected_value": "A secondary suite's interior floor area is capped at 45 % of the whole house's interior floor area.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "host_interior_sqm",
-    "suite_interior_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.10.40.40(2)#whole",
-   "regulation_id": "150.10.40.40(2)",
-   "chapter": "150.10",
-   "verdict": "wrong",
-   "note": "The secondary suite - in a one storey house can occupy the entire basement.  Makes sense! ",
-   "source": "",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-199",
-    "M-177"
-   ],
-   "corrected_value": "In a one-storey detached house the basement suite may occupy the whole basement (permissive arm of the 45 % rule).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_interior_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.20.1(2)#whole",
-   "regulation_id": "150.7.20.1(2)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Critical - every lot can have one garden suite or laneway suite arden Suite - Use Restriction A maximum of one ancillary building containing either a garden suite or a laneway suite is permitted on a lot. A lot may not contain both a garden suite and a laneway suite.",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "One ancillary building with a garden or laneway suite per lot; a lot may have one, not both (A-axis definition).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_type"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(2)#(2)(A)",
-   "regulation_id": "150.7.60.20(2)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Rear setback on a lot deeper than 45.0 m is the greater of 1.5 m and half the suite height (3.15 m at 6.3 m).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_rear_setback_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(2)#(2)(B)",
-   "regulation_id": "150.7.60.20(2)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Garden-suite rear setback default is 1.5 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_rear_setback_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(3)#(3)(A)",
-   "regulation_id": "150.7.60.20(3)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite on Through Lot - Rear Yard Setback - Exceptions -  if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot, the required minimum rear yard setback for the ancillary building containing a garden suite is equal to the required minimum front yard setback for the residential building on the adjacent lot; ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
-   "disclosure_code": "suite_lot_fact_unknown",
-   "question": "",
-   "fields": [
-    "suite_rear_setback_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(3)#(3)(B)",
-   "regulation_id": "150.7.60.20(3)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite on Through Lot - Rear Yard Setback =1.5m ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "In all other cases the garden-suite rear setback is 1.5 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_rear_setback_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.20(5)#(5)(A)",
-   "regulation_id": "150.7.60.20(5)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - Side Yard Setback - if it doesn't abut a street and you have doors and windows etc - setback is the greater of 1.5 meters of 10% of the lot frontage to a mx of 3M. This is really a design issue.  ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-197",
-    "M-198"
-   ],
-   "corrected_value": "Openings in the suite side wall are taken as absent (design choice), so the greater side setback arm is disclosed, not bound.",
-   "disclosure_code": "suite_openings_setback",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "correction COR-150.7.60.20(5)#(5)(A)/condition, COR-150.7.60.20(5)#(5)(A)/application.lot_conditions, COR-150.7.60.20(5)#(5)(A)/application.evidence",
-    "unsatisfied: M-198"
-   ],
-   "state": "UNFIXED",
-   "reason": "partly applied: M-198 not yet applied"
-  },
-  {
-   "unit_id": "150.7.60.20(5)#(5)(B)",
-   "regulation_id": "150.7.60.20(5)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - Side Yard Setback is the greater of .6M or 10% of lot frontage to a mx of 3m",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Garden-suite side setback is the greater of 0.6 m and 10 % of frontage, capped at 3.0 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
    "unit_id": "150.7.60.20(6)#(6)(A)",
    "regulation_id": "150.7.60.20(6)",
    "chapter": "150.7",
@@ -479,605 +154,6 @@
    "question": "",
    "fields": [
     "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.21(1)#(1)(A)",
-   "regulation_id": "150.7.60.21(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Setback Exemptions Garden Suite - existing lawful buildings \n",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-158",
-    "M-198"
-   ],
-   "corrected_value": "A lawfully existing smaller rear setback stands for the garden suite (min template), answered with the caveat.",
-   "disclosure_code": "lawfully_existing_relief",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.21(1)#(1)(B)",
-   "regulation_id": "150.7.60.21(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-158",
-    "M-198"
-   ],
-   "corrected_value": "A lawfully existing smaller side setback stands for the garden suite (min template), answered with the caveat.",
-   "disclosure_code": "lawfully_existing_relief",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.40(1)#(1)(A)",
-   "regulation_id": "150.7.60.40(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Maximum Height of a Garden Suite = 4M on condition  if the ancillary building containing a garden suite is located less than 7.5 metres from the residential building",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177",
-    "M-198"
-   ],
-   "corrected_value": "Garden-suite maximum height is 4.0 m when it is less than 7.5 m from the house.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_height_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.40(1)#(1)(B)",
-   "regulation_id": "150.7.60.40(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Maximum Height of a Garden Suite = 6.3M if if the ancillary building containing a garden suite is located 7.5 metres or more from the residential building on the lot, - Critical - needs separation from our max BLd of 7.5M to achieve 6.3 M height",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177",
-    "M-198"
-   ],
-   "corrected_value": "Maximum height 6.3 m when the suite is 7.5 m or more from the house; the max build couples the suite placement to that distance.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_height_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.40(2)#whole",
-   "regulation_id": "150.7.60.40(2)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "2) Maximum Storeys for Garden Suites = 2",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "A garden suite may have up to two storeys.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.50(1)#whole",
-   "regulation_id": "150.7.60.50(1)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - FSI Exclusion - critical ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The garden-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap and the suite adds floor area.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.50(2)#whole",
-   "regulation_id": "150.7.60.50(2)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite - GFA = needs to be smaller than the main residential structure he gross floor area of an ancillary building containing a garden suite must be less than the gross floor area of the residential building on a lot",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The garden-suite GFA must be less than the principal building's GFA (a cross-structure limit).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_gfa_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.50(4)#(4)(A)",
-   "regulation_id": "150.7.60.50(4)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "Garden-suite maximum gross floor area is 120 m² (and less than the principal's GFA).",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_gfa_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.7.60.50(4)#(4)(B)",
-   "regulation_id": "150.7.60.50(4)",
-   "chapter": "150.7",
-   "verdict": "wrong",
-   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
-   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "A one-storey garden suite is capped at 60 m².",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_gfa_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.20.1(2)#whole",
-   "regulation_id": "150.8.20.1(2)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Only one laneway or garden suite is permitted on a lot. 1",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "One ancillary building with a laneway or garden suite per lot; a lot may hold one, not both.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_type"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.20(1)#whole",
-   "regulation_id": "150.8.60.20(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Setbacks for Laneway Suite Requirements: he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings.. We need to look at the ancillary building bylaws to understand what they are and they apply to the laneway suite - except for the footings. ",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the laneway suite, excluding footings.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.20(2)#(2)(A)",
-   "regulation_id": "150.8.60.20(2)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Laneway Suite Setbacks: Rear Yard Setback is 0 if condition is met. he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings. And we know if the parcel abuts a laneway. ",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-197",
-    "M-198"
-   ],
-   "corrected_value": "A 0.0 m rear setback needs no rear-wall openings and a rear lot line off street and lane; openings are taken as none, so it is disclosed.",
-   "disclosure_code": "suite_openings_setback",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_rear_setback_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.20(3)#(3)(A)",
-   "regulation_id": "150.8.60.20(3)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Laneway Suite  Side Yard Setback is zero if this condition is met , the required minimum side yard setback for an ancillary building containing a laneway suite is: (A) if the side lot line does not abut a street or lane and there are no openings such as vehicle access, doors or windows in the side main wall of the ancillary building, 0.0 metres;",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-197",
-    "M-198"
-   ],
-   "corrected_value": "A 0.0 m side setback needs no openings and a side lot line off street and lane; as keyed the 1.0 m default answers.",
-   "disclosure_code": "suite_openings_setback",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.20(3)#(3)(B)",
-   "regulation_id": "150.8.60.20(3)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "aneway Suite  Side Yard Setback isminimum side yard setback for the residential building on the lot if ), the required minimum side yard setback for an ancillary building containing a laneway suite is: (B) if the side lot line abuts a street, ",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Where the side lot line abuts a street, the suite takes the residential building's required side setback; a cross-structure value, disclosed.",
-   "disclosure_code": "suite_lot_fact_unknown",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.20(3)#(3)(D)",
-   "regulation_id": "150.8.60.20(3)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": " Laneway Suite  Side Yard Setback is 1m espite regulations 10.5.60.20(3) and (6) and regulation 10.10.60.20(1), the required minimum side yard setback for an ancillary building containing a laneway suite is: (D) in all other cases, 1.0 metres.",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-198"
-   ],
-   "corrected_value": "Laneway-suite side setback default is 1.0 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_openings_loss_sqm",
-    "suite_side_setbacks_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.30(1)#(1)(A)",
-   "regulation_id": "150.8.60.30(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Minimum Separation between a Residential Building and the Ancillary Building is 4m if the height is less than 4m.  This is the separation between he main wall an ancillary building containing a laneway suite",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177",
-    "M-198"
-   ],
-   "corrected_value": "4.0 m separation between the house and a laneway suite no taller than 4.0 m; the max build takes the taller/larger arm where the lot fits.",
-   "disclosure_code": "suite_separation_arm",
-   "question": "",
-   "fields": [
-    "suite_separation_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.30(1)#(1)(B)",
-   "regulation_id": "150.8.60.30(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Minimum Separation between a Residential Building and the Ancillary Building no less than 7.5 metres from the main wall of the residential building on the same lot if the height of the ancillary building is greater than 4.0 metres; - fthe main wall an ancillary building containing a laneway suite",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177",
-    "M-198"
-   ],
-   "corrected_value": "7.5 m separation where the suite is taller than 4.0 m; disclosed as the placement trade-off.",
-   "disclosure_code": "suite_separation_arm",
-   "question": "",
-   "fields": [
-    "suite_separation_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.30(5)#whole",
-   "regulation_id": "150.8.60.30(5)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Maximum Length of a Laneway Suite is 10M",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "Laneway-suite maximum building length is 10.0 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_footprint_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.30(6)#whole",
-   "regulation_id": "150.8.60.30(6)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Maximum Width of a Laneway Suite - 8M The permitted maximum building width of an ancillary building containing a laneway suite is 8.0 metres",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "Laneway-suite maximum building width is 8.0 m.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_footprint_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.40(1)#(1)(B)",
-   "regulation_id": "150.8.60.40(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Maximum Height of a Laneway Suite = 6.3 M if its located 7.5 meters from a residential building.",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177",
-    "M-198"
-   ],
-   "corrected_value": "Maximum height 6.3 m when the laneway suite is 7.5 m or more from the house; the max build couples placement to that distance.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_height_m"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.50(1)#whole",
-   "regulation_id": "150.8.60.50(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "This is important the FSI calculation for the lot excludes the laneway suite. Critical!",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The laneway-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.50(2)#whole",
-   "regulation_id": "150.8.60.50(2)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "Laneway Suite Gross Floor Area - Important the laneway suite can't be bigger than the residential building. condition.",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The laneway-suite GFA must be less than the principal building's GFA.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_gfa_sqm"
-   ],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.50(3)#whole",
-   "regulation_id": "150.8.60.50(3)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway suite",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [],
-   "locks": [],
-   "owed": [],
-   "checks": [
-    "no keyed correction cites the fix"
-   ],
-   "state": "UNFIXED",
-   "reason": "ruled; keyed correction not applied yet"
-  },
-  {
-   "unit_id": "150.8.60.70(1)#(1)(A)",
-   "regulation_id": "150.8.60.70(1)",
-   "chapter": "150.8",
-   "verdict": "wrong",
-   "note": "This is critical the lot coverage calculation does not include the laneway suite",
-   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
-   "disposition": "fixed_by",
-   "fix_ids": [
-    "M-177"
-   ],
-   "corrected_value": "The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap.",
-   "disclosure_code": "",
-   "question": "",
-   "fields": [
-    "suite_coverage_option"
    ],
    "locks": [],
    "owed": [],
@@ -13881,6 +12957,116 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "150.10.1(1)#whole",
+   "regulation_id": "150.10.1(1)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "Stating this section applies to secondary suites",
+   "source": "",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A scope sentence (\"Section 150.10 applies to secondary suites\") with no measure: recorded as no application (findings class D); the suite rules themselves ride M-177 / M-182 / M-199.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite class, one suite per dwelling unit",
+     "it": "M-177: 150.10.1(1) is the Section 150.10 scope sentence for the secondary_suite class, with no measure",
+     "asserts": [
+      "'150.10.1(1)#whole'",
+      "'PROCEDURAL'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.10.20.1(1)#(1)(A)",
+   "regulation_id": "150.10.20.1(1)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "Secondary Suite permitted structures a) detached house",
+   "source": "",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A detached house is a permitted secondary-suite host, so the detached + suite class is in MaxBLD scope.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite class, one suite per dwelling unit",
+     "it": "M-177: 150.10.20.1(1)(A) permits a suite in a detached house, and the house-with-suite class releases FSI in every zone",
+     "asserts": [
+      "'150.10.20.1(1)#(1)(A)'",
+      "has_secondary_suite"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.10.20.1(1)#(1)(B)",
+   "regulation_id": "150.10.20.1(1)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "Secondary Suite permitted structures b semi detached house.",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A semi-detached house is a permitted secondary-suite host, so the semi + suite class is in MaxBLD scope.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite class, one suite per dwelling unit",
+     "it": "M-177 / M-214(3): 150.10.20.1(1)(B) a suite in a semi-detached house is permitted and disclosed as not modelled (forms_deferred)",
+     "asserts": [
+      "'150.10.20.1(1)#(1)(B)'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.10.20.1(1)#(1)(B)/disclosure",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "150.10.20.1(1)#(1)(C)",
    "regulation_id": "150.10.20.1(1)",
    "chapter": "150.10",
@@ -13906,6 +13092,42 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "150.10.20.1(2)#whole",
+   "regulation_id": "150.10.20.1(2)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "Defines the maximum number of secondary suites allowed. Each dwelling can have 1. Applies to etached house, semi-detached house, or townhouse",
+   "source": "",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Each dwelling unit may have one secondary suite; the suite class carries one suite per host unit.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(4) — the 150.10 secondary-suite scope units: the suite class, one suite per dwelling unit",
+     "it": "M-177(4): 150.10.20.1(2) one suite per dwelling unit is the class vector (has_secondary_suite = 1), never an unenforced count",
+     "asserts": [
+      "'150.10.20.1(2)#whole'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.10.20.1(2)#whole/disclosure~s1",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "150.10.20.1(4)#whole",
    "regulation_id": "150.10.20.1(4)",
    "chapter": "150.10",
@@ -13928,6 +13150,87 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.10.40.40(1)#whole",
+   "regulation_id": "150.10.40.40(1)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "Defines the Secondary suite - Interior Floor Area ) Secondary Suite - Interior Floor Area The interior floor area must be no more than 45 percent of the interior floor area of the dwelling unit within which it is located. Makes sense - can't be bigger than the existing house etc.  We will need this information because we will create the max build for the main structure and this will inform the size of the secondary suite",
+   "source": "",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-199"
+   ],
+   "corrected_value": "A secondary suite's interior floor area is capped at 45 % of the whole house's interior floor area.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "host_interior_sqm",
+    "suite_interior_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-199 — 150.10.40.40: a secondary suite may be 45 % of the WHOLE house it sits in; the stricter reading is disclosed",
+     "it": "M-199: 150.10.40.40(1) states the whole-house reading and keeps 45 percent as a clause literal (keying owed)",
+     "asserts": [
+      "'150.10.40.40(1)#whole'",
+      "'45 percent'"
+     ],
+     "satisfies": [
+      "M-199"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.10.40.40(1)#whole/disclosure, COR-150.10.40.40(1)#whole/calculation_handling.gaps",
+    "verified by named lock: M-199"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.10.40.40(2)#whole",
+   "regulation_id": "150.10.40.40(2)",
+   "chapter": "150.10",
+   "verdict": "wrong",
+   "note": "The secondary suite - in a one storey house can occupy the entire basement.  Makes sense! ",
+   "source": "",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-199",
+    "M-177"
+   ],
+   "corrected_value": "In a one-storey detached house the basement suite may occupy the whole basement (permissive arm of the 45 % rule).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_interior_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-199 — 150.10.40.40: a secondary suite may be 45 % of the WHOLE house it sits in; the stricter reading is disclosed",
+     "it": "M-199 / M-177: 150.10.40.40(2) the basement suite of a one-storey detached house may take the whole basement",
+     "asserts": [
+      "'150.10.40.40(2)#whole'",
+      "'PERMIT'"
+     ],
+     "satisfies": [
+      "M-199",
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.10.40.40(2)#whole/disclosure",
+    "verified by named lock: M-177, M-199"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.1(1)#whole",
@@ -14068,6 +13371,45 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "150.7.20.1(2)#whole",
+   "regulation_id": "150.7.20.1(2)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Critical - every lot can have one garden suite or laneway suite arden Suite - Use Restriction A maximum of one ancillary building containing either a garden suite or a laneway suite is permitted on a lot. A lot may not contain both a garden suite and a laneway suite.",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "One ancillary building with a garden or laneway suite per lot; a lot may have one, not both (A-axis definition).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_type"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.20.1(2) and 150.8.20.1(2) allow one suite building on a lot",
+     "asserts": [
+      "'150.7.20.1(2)#whole'",
+      "buildings_on_lot"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
    "unit_id": "150.7.50.10(1)#(1)(A)",
    "regulation_id": "150.7.50.10(1)",
    "chapter": "150.7",
@@ -14165,6 +13507,86 @@
    "reason": "verified by named lock; owed elsewhere: M-198 → P5.13"
   },
   {
+   "unit_id": "150.7.60.20(2)#(2)(A)",
+   "regulation_id": "150.7.60.20(2)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite  Rear Yard Setback = condition - if on a lot with a lot depth greater than 45.0 metres, equal to the greater of 1.5 metres or half the height of the ancillary building containing a garden suite;",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Rear setback on a lot deeper than 45.0 m is the greater of 1.5 m and half the suite height (3.15 m at 6.3 m).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198: 150.7.60.20(2)(A) on a lot deeper than 45.0 m the rear setback is the greater of 1.5 m and half the suite height",
+     "asserts": [
+      "'150.7.60.20(2)#(2)(A)'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.20(2)#(2)(B)",
+   "regulation_id": "150.7.60.20(2)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "(2) Garden Suite  Rear Yard Setback = 1.5 meters - in all other cases. critical ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite rear setback default is 1.5 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198: 150.7.60.20(2)(B) the garden-suite rear setback is 1.5 m in all other cases",
+     "asserts": [
+      "'150.7.60.20(2)#(2)(B)'",
+      "rear_setback_m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
    "unit_id": "150.7.60.20(2)#(2)(C)",
    "regulation_id": "150.7.60.20(2)",
    "chapter": "150.7",
@@ -14190,6 +13612,84 @@
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.7.60.20(3)#(3)(A)",
+   "regulation_id": "150.7.60.20(3)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite on Through Lot - Rear Yard Setback - Exceptions -  if it is on a through lot, and a residential building on an adjacent lot fronts on the street that abuts the rear lot line of the through lot, the required minimum rear yard setback for the ancillary building containing a garden suite is equal to the required minimum front yard setback for the residential building on the adjacent lot; ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "On a through lot the rear setback equals the adjacent lot's required front setback; that neighbour fact is not held and is disclosed.",
+   "disclosure_code": "suite_lot_fact_unknown",
+   "question": "",
+   "fields": [
+    "suite_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198(1): 150.7.60.20(3)(A) a through lot is keyed on the neighbour front setback, which the step approximates (owed to P5.13)",
+     "asserts": [
+      "'150.7.60.20(3)#(3)(A)'",
+      "abutting_front_setback_m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.20(3)#(3)(B)",
+   "regulation_id": "150.7.60.20(3)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite on Through Lot - Rear Yard Setback =1.5m ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "In all other cases the garden-suite rear setback is 1.5 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198: 150.7.60.20(3)(B) the through-lot fallback is 1.5 m",
+     "asserts": [
+      "'150.7.60.20(3)#(3)(B)'",
+      "rear_setback_m = 1.5 m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.7.60.20(4)#(4)(A)",
@@ -14240,6 +13740,88 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.7.60.20(5)#(5)(A)",
+   "regulation_id": "150.7.60.20(5)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - Side Yard Setback - if it doesn't abut a street and you have doors and windows etc - setback is the greater of 1.5 meters of 10% of the lot frontage to a mx of 3M. This is really a design issue.  ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "Openings in the suite side wall are taken as absent (design choice), so the greater side setback arm is disclosed, not bound.",
+   "disclosure_code": "suite_openings_setback",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_side_setbacks_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198: 150.7.60.20(5)(A) the with-openings side arm is disclosed with its lot fact and never read",
+     "asserts": [
+      "'150.7.60.20(5)#(5)(A)'",
+      "'suite_wall_openings'"
+     ],
+     "satisfies": [
+      "M-197",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.7.60.20(5)#(5)(A)/condition, COR-150.7.60.20(5)#(5)(A)/application.lot_conditions, COR-150.7.60.20(5)#(5)(A)/application.evidence",
+    "verified by named lock: M-197, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.7.60.20(5)#(5)(B)",
+   "regulation_id": "150.7.60.20(5)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - Side Yard Setback is the greater of .6M or 10% of lot frontage to a mx of 3m",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite side setback is the greater of 0.6 m and 10 % of frontage, capped at 3.0 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_side_setbacks_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-198: 150.7.60.20(5)(B) the side setback is the greater of 0.6 m or 10 % of the frontage, at most 3.0 m",
+     "asserts": [
+      "'150.7.60.20(5)#(5)(B)'",
+      "side_setback_m"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.7.60.20(6)#(6)(B)",
@@ -14298,6 +13880,84 @@
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock); owed elsewhere: M-198 → P5.13"
+  },
+  {
+   "unit_id": "150.7.60.21(1)#(1)(A)",
+   "regulation_id": "150.7.60.21(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings \n",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-158",
+    "M-198"
+   ],
+   "corrected_value": "A lawfully existing smaller rear setback stands for the garden suite (min template), answered with the caveat.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-158 / M-198: 150.7.60.21(1)(A) and (B) a new build answers the 150.7.60.20 minimum; the lawfully existing setback is the caveat",
+     "asserts": [
+      "'150.7.60.21(1)#(1)(A)'",
+      "'lawfully_existing'"
+     ],
+     "satisfies": [
+      "M-158",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-158, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.21(1)#(1)(B)",
+   "regulation_id": "150.7.60.21(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Setback Exemptions Garden Suite - existing lawful buildings ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-158",
+    "M-198"
+   ],
+   "corrected_value": "A lawfully existing smaller side setback stands for the garden suite (min template), answered with the caveat.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
+     "it": "M-158 / M-198: 150.7.60.21(1)(A) and (B) a new build answers the 150.7.60.20 minimum; the lawfully existing setback is the caveat",
+     "asserts": [
+      "'150.7.60.21(1)#(1)(B)'",
+      "'lawfully_existing'"
+     ],
+     "satisfies": [
+      "M-158",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-158, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.7.60.21(2)#(2)(A)",
@@ -14632,6 +14292,123 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "150.7.60.40(1)#(1)(A)",
+   "regulation_id": "150.7.60.40(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Maximum Height of a Garden Suite = 4M on condition  if the ancillary building containing a garden suite is located less than 7.5 metres from the residential building",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Garden-suite maximum height is 4.0 m when it is less than 7.5 m from the house.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_height_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177(2) / M-198: 150.7.60.40(1) the garden suite is 4.0 m below 7.5 m from the house and 6.3 m at 7.5 m or more",
+     "asserts": [
+      "'150.7.60.40(1)#(1)(A)'"
+     ],
+     "satisfies": [
+      "M-177",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.40(1)#(1)(B)",
+   "regulation_id": "150.7.60.40(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Maximum Height of a Garden Suite = 6.3M if if the ancillary building containing a garden suite is located 7.5 metres or more from the residential building on the lot, - Critical - needs separation from our max BLd of 7.5M to achieve 6.3 M height",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Maximum height 6.3 m when the suite is 7.5 m or more from the house; the max build couples the suite placement to that distance.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_height_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177(2) / M-198: 150.7.60.40(1) the garden suite is 4.0 m below 7.5 m from the house and 6.3 m at 7.5 m or more",
+     "asserts": [
+      "'150.7.60.40(1)#(1)(B)'"
+     ],
+     "satisfies": [
+      "M-177",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.40(2)#whole",
+   "regulation_id": "150.7.60.40(2)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "2) Maximum Storeys for Garden Suites = 2",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A garden suite may have up to two storeys.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.60.40(2) a garden suite has at most 2 storeys",
+     "asserts": [
+      "'150.7.60.40(2)#whole'",
+      "'height_storeys'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
    "unit_id": "150.7.60.40(3)#(3)(A)",
    "regulation_id": "150.7.60.40(3)",
    "chapter": "150.7",
@@ -14885,6 +14662,81 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "150.7.60.50(1)#whole",
+   "regulation_id": "150.7.60.50(1)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - FSI Exclusion - critical ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The garden-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap and the suite adds floor area.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.60.50(1) the garden-suite GFA is left out of the lot FSI (a DEFINE on gfa_m2, applied in the suite scenario)",
+     "asserts": [
+      "'150.7.60.50(1)#whole'",
+      "'gfa_m2'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.50(2)#whole",
+   "regulation_id": "150.7.60.50(2)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite - GFA = needs to be smaller than the main residential structure he gross floor area of an ancillary building containing a garden suite must be less than the gross floor area of the residential building on a lot",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The garden-suite GFA must be less than the principal building's GFA (a cross-structure limit).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177(2): 150.7.60.50(2) the garden suite is kept smaller than the house, disclosed, never an unchecked comparison",
+     "asserts": [
+      "'150.7.60.50(2)#whole'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.7.60.50(2)#whole/disclosure",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "150.7.60.50(3)#whole",
    "regulation_id": "150.7.60.50(3)",
    "chapter": "150.7",
@@ -14902,6 +14754,84 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(A)",
+   "regulation_id": "150.7.60.50(4)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite  Maximum Gross Floor Area = ) the maximum gross floor area for an ancillary building containing a garden suite is 120 square metres. critical ",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Garden-suite maximum gross floor area is 120 m² (and less than the principal's GFA).",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.60.50(4)(A) 120 m2 and (4)(B) 60 m2 for one storey are the garden-suite GFA caps",
+     "asserts": [
+      "'150.7.60.50(4)#(4)(A)'",
+      "'gfa_m2'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.7.60.50(4)#(4)(B)",
+   "regulation_id": "150.7.60.50(4)",
+   "chapter": "150.7",
+   "verdict": "wrong",
+   "note": "Garden Suite  Maximum Gross Floor Area = 60 sqm for 1 storey - critical. e maximum gross floor area for an ancillary building containing a garden suite that is one storey is 60 square metres",
+   "source": "operator copy-out 2026-10-16 (garden suites), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "A one-storey garden suite is capped at 60 m².",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.60.50(4)(A) 120 m2 and (4)(B) 60 m2 for one storey are the garden-suite GFA caps",
+     "asserts": [
+      "'150.7.60.50(4)#(4)(B)'",
+      "gfa_m2 = 60 m2"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.7.60.50(5)#whole",
@@ -15882,6 +15812,45 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "150.8.20.1(2)#whole",
+   "regulation_id": "150.8.20.1(2)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Only one laneway or garden suite is permitted on a lot. 1",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "One ancillary building with a laneway or garden suite per lot; a lot may hold one, not both.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_type"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177(1)/(2) — the garden-suite caps answer on every lot from class data (no user input)",
+     "it": "M-177: 150.7.20.1(2) and 150.8.20.1(2) allow one suite building on a lot",
+     "asserts": [
+      "'150.8.20.1(2)#whole'",
+      "buildings_on_lot"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
    "unit_id": "150.8.30.20(1)#whole",
    "regulation_id": "150.8.30.20(1)",
    "chapter": "150.8",
@@ -15986,6 +15955,84 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "150.8.60.20(1)#whole",
+   "regulation_id": "150.8.60.20(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Setbacks for Laneway Suite Requirements: he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings.. We need to look at the ancillary building bylaws to understand what they are and they apply to the laneway suite - except for the footings. ",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Ancillary-building setbacks apply to all above- and below-ground parts of the laneway suite, excluding footings.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-198: 150.8.60.20(1) the setbacks reach every part of the building above and below ground, footings excepted",
+     "asserts": [
+      "'150.8.60.20(1)#whole'",
+      "'DEFINE'"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.8.60.20(2)#(2)(A)",
+   "regulation_id": "150.8.60.20(2)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Laneway Suite Setbacks: Rear Yard Setback is 0 if condition is met. he required minimum ancillary building setbacks apply to all parts of an ancillary building containing a laneway suite above-ground and below-ground, excluding footings. And we know if the parcel abuts a laneway. ",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "A 0.0 m rear setback needs no rear-wall openings and a rear lot line off street and lane; openings are taken as none, so it is disclosed.",
+   "disclosure_code": "suite_openings_setback",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_rear_setback_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-197 / M-198(3): 150.8.60.20(2)(A) the 0.0 m rear arm is set aside because the lane line is not held; 1.0 m answers",
+     "asserts": [
+      "'150.8.60.20(2)#(2)(A)'"
+     ],
+     "satisfies": [
+      "M-197",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.20(2)#(2)(A)/disclosure, COR-150.8.60.20(2)#(2)(A)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-197, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
    "unit_id": "150.8.60.20(2)#(2)(B)",
    "regulation_id": "150.8.60.20(2)",
    "chapter": "150.8",
@@ -16008,6 +16055,86 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(A)",
+   "regulation_id": "150.8.60.20(3)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Laneway Suite  Side Yard Setback is zero if this condition is met , the required minimum side yard setback for an ancillary building containing a laneway suite is: (A) if the side lot line does not abut a street or lane and there are no openings such as vehicle access, doors or windows in the side main wall of the ancillary building, 0.0 metres;",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-197",
+    "M-198"
+   ],
+   "corrected_value": "A 0.0 m side setback needs no openings and a side lot line off street and lane; as keyed the 1.0 m default answers.",
+   "disclosure_code": "suite_openings_setback",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_side_setbacks_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-197 / M-198: 150.8.60.20(3)(A) the 0.0 m side arm is set aside because the side line is not classified; 1.0 m answers",
+     "asserts": [
+      "'150.8.60.20(3)#(3)(A)'"
+     ],
+     "satisfies": [
+      "M-197",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.20(3)#(3)(A)/disclosure, COR-150.8.60.20(3)#(3)(A)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-197, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(B)",
+   "regulation_id": "150.8.60.20(3)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "aneway Suite  Side Yard Setback isminimum side yard setback for the residential building on the lot if ), the required minimum side yard setback for an ancillary building containing a laneway suite is: (B) if the side lot line abuts a street, ",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Where the side lot line abuts a street, the suite takes the residential building's required side setback; a cross-structure value, disclosed.",
+   "disclosure_code": "suite_lot_fact_unknown",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_side_setbacks_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-198: 150.8.60.20(3)(B) the side abutting a street takes the house side yard, computed with the house",
+     "asserts": [
+      "'150.8.60.20(3)#(3)(B)'"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.20(3)#(3)(B)/disclosure, COR-150.8.60.20(3)#(3)(B)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.20(3)#(3)(C)",
@@ -16035,6 +16162,45 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.8.60.20(3)#(3)(D)",
+   "regulation_id": "150.8.60.20(3)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": " Laneway Suite  Side Yard Setback is 1m espite regulations 10.5.60.20(3) and (6) and regulation 10.10.60.20(1), the required minimum side yard setback for an ancillary building containing a laneway suite is: (D) in all other cases, 1.0 metres.",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-198"
+   ],
+   "corrected_value": "Laneway-suite side setback default is 1.0 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_openings_loss_sqm",
+    "suite_side_setbacks_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-198: 150.8.60.20(3)(D) the laneway-suite side setback is 1.0 m in all other cases, modelled",
+     "asserts": [
+      "'150.8.60.20(3)#(3)(D)'"
+     ],
+     "satisfies": [
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.20(3)#(3)(D)/disclosure, COR-150.8.60.20(3)#(3)(D)/calculation_handling.status, COR-150.8.60.20(3)#(3)(D)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.21(1)#(1)(A)",
@@ -16080,6 +16246,88 @@
    "owed": [],
    "checks": [
     "correction COR-150.8.60.21(1)#(1)(B)/calculation_handling, COR-150.8.60.21(1)#(1)(B)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.8.60.30(1)#(1)(A)",
+   "regulation_id": "150.8.60.30(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Minimum Separation between a Residential Building and the Ancillary Building is 4m if the height is less than 4m.  This is the separation between he main wall an ancillary building containing a laneway suite",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "4.0 m separation between the house and a laneway suite no taller than 4.0 m; the max build takes the taller/larger arm where the lot fits.",
+   "disclosure_code": "suite_separation_arm",
+   "question": "",
+   "fields": [
+    "suite_separation_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177(2) / M-198: 150.8.60.30(1)(A) and (B) the separation is 4.0 m, or 7.5 m for a suite over 4.0 m, with the trade-off disclosed",
+     "asserts": [
+      "'150.8.60.30(1)#(1)(A)'",
+      "separation_m"
+     ],
+     "satisfies": [
+      "M-177",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.30(1)#(1)(A)/disclosure",
+    "verified by named lock: M-177, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.8.60.30(1)#(1)(B)",
+   "regulation_id": "150.8.60.30(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Minimum Separation between a Residential Building and the Ancillary Building no less than 7.5 metres from the main wall of the residential building on the same lot if the height of the ancillary building is greater than 4.0 metres; - fthe main wall an ancillary building containing a laneway suite",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "7.5 m separation where the suite is taller than 4.0 m; disclosed as the placement trade-off.",
+   "disclosure_code": "suite_separation_arm",
+   "question": "",
+   "fields": [
+    "suite_separation_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177(2) / M-198: 150.8.60.30(1)(A) and (B) the separation is 4.0 m, or 7.5 m for a suite over 4.0 m, with the trade-off disclosed",
+     "asserts": [
+      "'150.8.60.30(1)#(1)(B)'",
+      "separation_m"
+     ],
+     "satisfies": [
+      "M-177",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.30(1)#(1)(B)/disclosure",
+    "verified by named lock: M-177, M-198"
    ],
    "state": "INCORPORATED",
    "reason": "every cited ruling applied (keyed correction or named lock)"
@@ -16140,6 +16388,84 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "150.8.60.30(5)#whole",
+   "regulation_id": "150.8.60.30(5)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Maximum Length of a Laneway Suite is 10M",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Laneway-suite maximum building length is 10.0 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_footprint_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177: 150.8.60.30(5) and (6) the laneway suite is at most 10.0 m long and 8.0 m wide",
+     "asserts": [
+      "'150.8.60.30(5)#whole'",
+      "'building_length_m'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.8.60.30(6)#whole",
+   "regulation_id": "150.8.60.30(6)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Maximum Width of a Laneway Suite - 8M The permitted maximum building width of an ancillary building containing a laneway suite is 8.0 metres",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "Laneway-suite maximum building width is 8.0 m.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_footprint_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177: 150.8.60.30(5) and (6) the laneway suite is at most 10.0 m long and 8.0 m wide",
+     "asserts": [
+      "'150.8.60.30(6)#whole'",
+      "'building_width_m'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.8.60.31(1)#whole",
@@ -16235,6 +16561,46 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "150.8.60.40(1)#(1)(B)",
+   "regulation_id": "150.8.60.40(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Maximum Height of a Laneway Suite = 6.3 M if its located 7.5 meters from a residential building.",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177",
+    "M-198"
+   ],
+   "corrected_value": "Maximum height 6.3 m when the laneway suite is 7.5 m or more from the house; the max build couples placement to that distance.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_height_m"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177(2) / M-198: 150.8.60.40(1)(B) the laneway suite is 6.3 m at 7.5 m or more from the house, modelled",
+     "asserts": [
+      "'150.8.60.40(1)#(1)(B)'"
+     ],
+     "satisfies": [
+      "M-177",
+      "M-198"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.40(1)#(1)(B)/disclosure, COR-150.8.60.40(1)#(1)(B)/calculation_handling.status, COR-150.8.60.40(1)#(1)(B)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-177, M-198"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.40(2)#whole",
@@ -16516,6 +16882,118 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "150.8.60.50(1)#whole",
+   "regulation_id": "150.8.60.50(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "This is important the FSI calculation for the lot excludes the laneway suite. Critical!",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway-suite GFA is excluded from the lot FSI, so the principal keeps its full FSI cap.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177: 150.8.60.50(1) the laneway-suite GFA is left out of the lot FSI (a DEFINE on gfa_m2)",
+     "asserts": [
+      "'150.8.60.50(1)#whole'",
+      "'gfa_m2'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "150.8.60.50(2)#whole",
+   "regulation_id": "150.8.60.50(2)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "Laneway Suite Gross Floor Area - Important the laneway suite can't be bigger than the residential building. condition.",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway-suite GFA must be less than the principal building's GFA.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_gfa_sqm"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177(2): 150.8.60.50(2) the laneway suite is kept smaller than the house, disclosed",
+     "asserts": [
+      "'150.8.60.50(2)#whole'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.50(2)#whole/disclosure",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "150.8.60.50(3)#whole",
+   "regulation_id": "150.8.60.50(3)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "This provision doesn't apply to ancillary building with a laneway suite - so different rules for ancillary buildings and ancillary building which is a laneway suite",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The generic ancillary floor-area cap (10.5.60.50(2)) does not apply to a laneway suite; the suite chapter applies instead.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177: 150.8.60.50(3) the general ancillary floor-area cap 10.5.60.50(2) does not apply to a laneway suite",
+     "asserts": [
+      "'150.8.60.50(3)#whole'",
+      "'DISAPPLY'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
   },
   {
    "unit_id": "150.8.60.50(4)#whole",
@@ -17028,6 +17506,45 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "150.8.60.70(1)#(1)(A)",
+   "regulation_id": "150.8.60.70(1)",
+   "chapter": "150.8",
+   "verdict": "wrong",
+   "note": "This is critical the lot coverage calculation does not include the laneway suite",
+   "source": "operator copy-out 2026-10-16 (page storage not connected), saved by Claude",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-177"
+   ],
+   "corrected_value": "The laneway suite is outside overall lot coverage, so the principal keeps its full coverage cap.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_coverage_option"
+   ],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-suite-owed.logic.test.ts",
+     "describe": "M-177 / M-198 / M-197 — laneway-suite setbacks, height, separation and caps answer on every lot, in the garden-suite form",
+     "it": "M-177(1): 150.8.60.70(1)(A) the laneway suite is outside the lot coverage, applied in the suite scenario",
+     "asserts": [
+      "'150.8.60.70(1)#(1)(A)'",
+      "'lot_coverage_pct'"
+     ],
+     "satisfies": [
+      "M-177"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "correction COR-150.8.60.70(1)#(1)(A)/disclosure, COR-150.8.60.70(1)#(1)(A)/calculation_handling.status, COR-150.8.60.70(1)#(1)(A)/calculation_handling.not_modelled_reason",
+    "verified by named lock: M-177"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.70(1)#(1)(B)",
