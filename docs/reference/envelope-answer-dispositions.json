@@ -1,7 +1,7 @@
 {
  "schema": "envelope-answer-dispositions-v1",
- "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions. Batch 4 (26 answers, dump envdb10, 2026-10-19) added by Claude under existing rulings; 0 OPEN.",
- "count": 631,
+ "description": "One disposition per operator envelope-review answer (docs/reference/envelope-answers.json). matches → the keyed unit agrees; excluded → no_application; fixed_by → the fixing Spec 69 M-row(s) and the corrected value (APPLIED when adjudications.json already holds a correction for the unit citing one of them, else UNFIXED); disclosed_by → a Spec 78 P5.12 code; resolved_by → a ruling answered an unsure / null (or a \"wrong\" needed no change); open → the operator question. Drafted 2026-10-18 by DeepSeek (Spec 08, run 20261018T180550Z-0d6a3db5) from findings.md and family-triage-2026-10-16.md, verified and corrected by Claude. Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15). Batch 2 (56 answers from the live page DB dump envdb8, 2026-10-19) added by Claude under existing rulings. Batch 3 (38 answers, dump envdb9, 2026-10-19) added by Claude under existing rulings; 4 OPEN on two questions. Batch 4 (26 answers, dump envdb10, 2026-10-19) added by Claude under existing rulings; 0 OPEN. Batch 5 (98 answers, dump envdb11, 2026-10-20) added by Claude under existing rulings; 3 OPEN on two drafted rows (M-226, M-227).",
+ "count": 729,
  "dispositions": [
   {
    "unit_id": "10.10.30.10(1)#(1)(A)",
@@ -63,6 +63,11 @@
    "unit_id": "10.10.40.1(3)#(3)(B)",
    "verdict": "no_application",
    "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.1(4)#(4)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
   },
   {
    "unit_id": "10.10.40.1(4)#(4)(B)",
@@ -410,9 +415,30 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.10.40.80(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.80(1)#(1)(B)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.10.40.80(1)#(1)(C)",
    "verdict": "no_application",
    "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.10.40.81(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Lawfully existing buildings keep their lawful separation (caveat), as RT / RM x.40.81(1).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158 (as 10.60.40.81(1), 10.80.40.81(1); parallel chapters)"
   },
   {
    "unit_id": "10.20.20.100(12)#whole",
@@ -1026,6 +1052,11 @@
    "disposition": "excluded"
   },
   {
+   "unit_id": "10.20.40.70(1)#whole",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
    "unit_id": "10.20.40.70(2)#(2)(A)",
    "verdict": "wrong",
    "disposition": "verified_by_lock",
@@ -1122,6 +1153,16 @@
   },
   {
    "unit_id": "10.20.40.70(7)#(7)(C)",
+   "verdict": "matches",
+   "disposition": "matches"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(B)",
    "verdict": "matches",
    "disposition": "matches"
   },
@@ -1844,6 +1885,43 @@
    "basis": "findings E unsure; M-174(4) zone-label mask"
   },
   {
+   "unit_id": "10.5.20.40(6)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-196",
+    "M-214"
+   ],
+   "corrected_value": "Prohibit: a secondary suite may not be in the portion of a semi-detached house or townhouse converted to hold up to four dwelling units (10.5.20.40(2)/(3)). Applied in the interior-conversion answer (M-196(1)); a secondary suite in a semi or townhouse is a deferred form, disclosed (M-214(3) forms_deferred).",
+   "disclosure_code": "forms_deferred",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-196(1) (no secondary suite in a converted semi or townhouse portion), M-214(3)"
+  },
+  {
+   "unit_id": "10.5.30.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.30.1(2)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
    "unit_id": "10.5.30.11(1)#whole",
    "verdict": null,
    "disposition": "resolved_by",
@@ -1853,6 +1931,57 @@
    "corrected_value": "Required minimum lot area is answered; if the lot lawfully existed smaller on 9 May 2013 that lawful area is the minimum (caveat).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings F note-only; M-158 min-template caveat"
+  },
+  {
+   "unit_id": "10.5.30.11(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition on a lawfully existing undersized lot must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158, M-192 (as 10.5.30.21(2), 10.5.30.41(2): one form)"
+  },
+  {
+   "unit_id": "10.5.30.11(3)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "A vacant lawfully existing undersized lot is a site fact taken as not holding (as 10.5.30.21(3)): the house may be built if it meets the rest of the by-law; never bound, disclosed (vacant_existing_lot).",
+   "disclosure_code": "vacant_existing_lot",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158(1), M-169 (as 10.5.30.21(3), batch 3)"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-226"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
+   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); drafted M-226 (PROPOSED); no existing M-row covers the through-lot front lot line (M-198(1) covers the suite rear setback only)"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(B)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-226"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
+   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); drafted M-226 (PROPOSED); no existing M-row covers the through-lot front lot line (M-198(1) covers the suite rear setback only)"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
   },
   {
    "unit_id": "10.5.30.20(2)#(2)(A)",
@@ -1873,6 +2002,29 @@
     "M-207"
    ],
    "corrected_value": "Disclosure-only, not evaluated: the unit stays UNUSUAL with the 3.5 m as limit_not_modelled (M-133); lane widths are not held, so the lane exception cannot be tested. The M-207 not_buildable gate arm for 10.5.30.20(2) is withdrawn."
+  },
+  {
+   "unit_id": "10.5.30.21(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Required minimum frontage is answered; a lawful smaller frontage of a lawfully existing lot is its minimum (caveat), as 10.5.30.11(1) for area.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158 min-template caveat (as 10.5.30.11(1))"
+  },
+  {
+   "unit_id": "10.5.30.21(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition on a lawfully existing narrow lot must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158, M-192"
   },
   {
    "unit_id": "10.5.30.21(3)#(3)(A)",
@@ -1920,6 +2072,18 @@
    "basis": "findings F note-only; M-158"
   },
   {
+   "unit_id": "10.5.30.41(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition to a lawfully existing building over the coverage limit must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-158, M-192 (10.5.30.41 disclosed)"
+  },
+  {
    "unit_id": "10.5.30.50(1)#(1)(A)",
    "verdict": "no_application",
    "disposition": "excluded"
@@ -1930,9 +2094,136 @@
    "disposition": "excluded"
   },
   {
+   "unit_id": "10.5.40.1(1)#whole",
+   "verdict": "wrong",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-31"
+   ],
+   "corrected_value": "Procedural: Article 10.5.40 applies to every building in the residential zones except ancillary buildings (Article 10.5.60). The keyed unit already reads so (PROCEDURAL, informational); no change.",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-31 informational row; verified by named lock",
+   "locks": [
+    {
+     "file": "src/tests/bylaw-answers-batch-5.logic.test.ts",
+     "describe": "M-31 — 10.5.40.1(1) is the procedural scope of Article 10.5.40",
+     "it": "M-31: 10.5.40.1(1) scopes 10.5.40 to every building except ancillary buildings, informational",
+     "asserts": [
+      "'10.5.40.1(1)#whole'"
+     ],
+     "satisfies": [
+      "M-31"
+     ]
+    }
+   ]
+  },
+  {
+   "unit_id": "10.5.40.1(2)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
    "unit_id": "10.5.40.10(1)#whole",
    "verdict": "no_application",
    "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop antennae may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); rooftop_elements_exempt now reads building or suite height (150.x.60.40(3)–(6) family)"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop flagpoles may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); rooftop_elements_exempt now reads building or suite height (150.x.60.40(3)–(6) family)"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop green-roof parapets may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); rooftop_elements_exempt now reads building or suite height (150.x.60.40(3)–(6) family)"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(D)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop satellite dishes may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); rooftop_elements_exempt now reads building or suite height (150.x.60.40(3)–(6) family)"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(E)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop weather vanes may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); rooftop_elements_exempt now reads building or suite height (150.x.60.40(3)–(6) family)"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(A)",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Not a limit on the building: rooftop functional equipment may exceed the height limit by 5.0 m (skylights 1.0 m), within the 30 % roof-area cap of (4); a permission the user would verify, disclosed, never evaluated (rooftop_elements_exempt).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4) (permissions the user would verify are disclosed, never evaluated)"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(B)",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop functional structures (stairwells, roof access, elevator shafts, chimneys, vents) may exceed the height limit by 5.0 m; disclosed, never evaluated (rooftop_elements_exempt).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "On a building over 15.0 m, enclosures of rooftop equipment may exceed the height limit by 5.0 m; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
+   "unit_id": "10.5.40.10(4)#(4)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop elements above the height limit may cover at most 30 % of the roof; disclosed, not checked (as 150.8.60.40(6)(A)).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
   },
   {
    "unit_id": "10.5.40.10(4)#(4)(B)",
@@ -1945,6 +2236,28 @@
    "basis": "findings F note-only (sha differs); M-169"
   },
   {
+   "unit_id": "10.5.40.10(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "On a building over 15.0 m, rooftop amenity railings and wind screens may exceed the height limit by 3.0 m; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
+   "unit_id": "10.5.40.10(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop amenity railings and wind screens stay 2.0 m inside the main walls; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
    "unit_id": "10.5.40.11(1)#whole",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -1954,6 +2267,29 @@
    "corrected_value": "Permitted maximum height answered; a greater lawful height of an existing building stands (caveat).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "10.5.40.11(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "An addition to a lawfully existing over-height building must meet the permitted maximum height (or a minor variance): the renovation answer holds every addition to the base height limit, so the clause is met by construction; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192 (10.5.40.11 disclosed, never applied), M-211(1) (additions must comply)"
+  },
+  {
+   "unit_id": "10.5.40.11(3)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192 (10.5.40.11(1)–(7) disclosed, never applied); the unit already carries the sentence"
   },
   {
    "unit_id": "10.5.40.11(4)#(4)(A)",
@@ -1976,6 +2312,39 @@
    "corrected_value": "Lawfully existing main walls taller than the limit keep their height; disclosed, never applied.",
    "disclosure_code": "existing_walls_site_fact",
    "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.11(5)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192 (10.5.40.11(1)–(7) disclosed, never applied); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.11(6)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192 (10.5.40.11(1)–(7) disclosed, never applied); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.11(7)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192 (10.5.40.11(1)–(7) disclosed, never applied); the unit already carries the sentence"
   },
   {
    "unit_id": "10.5.40.20(1)#whole",
@@ -2081,6 +2450,18 @@
    "basis": "review answers batch 2 (live page DB 2026-10-19); M-203"
   },
   {
+   "unit_id": "10.5.40.40(2)#whole",
+   "verdict": "wrong",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-227"
+   ],
+   "corrected_value": "Every build has mechanical equipment: an attic area that passes the 10.5.40.40(1) test and holds mechanical equipment is left out of GFA up to the lesser of 5 % of the permitted maximum GFA or 20 m², applied by default. PROPOSED (M-227, operator ruling owed): M-171 today discloses GFA deductions, never applies them.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "question": "Q-mechanical-attic (draft M-227): apply 10.5.40.40(2) by default — where the maximum design has an attic counted in GFA, leave up to the lesser of 5 % of the permitted maximum GFA or 20 m² of it out of GFA as mechanical-equipment area (achieved-if disclosure), amending M-171 for this one deduction as M-210 does for suites? Recommendation: y.",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); drafted M-227 (PROPOSED; amends M-171 for 10.5.40.40(2), as M-210 for suites)"
+  },
+  {
    "unit_id": "10.5.40.40(3)#(3)(A)",
    "verdict": "wrong",
    "disposition": "fixed_by",
@@ -2125,6 +2506,31 @@
    "basis": "review answers batch 2 (live page DB 2026-10-19); as 970.10.15.10(1)(D); M-171"
   },
   {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#(3)(E)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.40(4)#row",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#(4)(J)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
    "unit_id": "10.5.40.40(5)#(5)(B)",
    "verdict": "wrong",
    "disposition": "fixed_by",
@@ -2142,6 +2548,195 @@
    "disposition": "matches"
   },
   {
+   "unit_id": "10.5.40.50(1)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "The open sides of a deck, porch or balcony are not main walls; platforms are not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-175 (deck_or_platform never limits the principal building)"
+  },
+  {
+   "unit_id": "10.5.40.50(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A platform without main walls must meet the setbacks; platforms are not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-175"
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A deck beside a side wall may be no higher than the floor it serves; not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-175; the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4), M-175; the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4), M-175; the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4), M-175; the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(E)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4), M-175; the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(2)#(2)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(2)#(2)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4) (as (6)(A), (8)(E), batch 4)"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4) (as (6)(A), (8)(E), batch 4)"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4) (as (6)(A), (8)(E), batch 4)"
+  },
+  {
+   "unit_id": "10.5.40.60(4)#(4)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(4)#(4)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
+   "unit_id": "10.5.40.60(4)@1075-2026#(4)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(4)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(5)#(5)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(5)#(5)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
    "unit_id": "10.5.40.60(6)#(6)(A)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -2153,6 +2748,83 @@
    "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(4) encroachment permissions disclosed; new P5.12 code setback_encroachments"
   },
   {
+   "unit_id": "10.5.40.60(6)#(6)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(7)#(7)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4)"
+  },
+  {
+   "unit_id": "10.5.40.60(7)#(7)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(C)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(D)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(4); the unit already carries the sentence"
+  },
+  {
    "unit_id": "10.5.40.60(8)#(8)(E)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -2162,6 +2834,21 @@
    "corrected_value": "Wall-mounted utility meters in a setback are a design detail; disclosed, not modelled.",
    "disclosure_code": "setback_encroachments",
    "basis": "review answers batch 4 (live page DB 2026-10-19); M-169(4); new P5.12 code setback_encroachments"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(C)@1075-2026#(8)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(C)@1075-2026#[instruction]",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(D)@1075-2026#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
   },
   {
    "unit_id": "10.5.40.70(1)#(1)(A)",
@@ -2222,6 +2909,17 @@
    "corrected_value": "A lawfully existing building closer to a side lot line keeps that setback; disclosed.",
    "disclosure_code": "existing_walls_site_fact",
    "basis": "review answers batch 3 (live page DB 2026-10-19); M-192"
+  },
+  {
+   "unit_id": "10.5.40.71(2)#whole",
+   "verdict": null,
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "An addition to a building relying on its lawful existing setbacks must meet the current setbacks or a minor variance; the renovation answer applies the current setbacks; disclosed (M-192 lists 10.5.40.71(2) disclosed, never applied).",
+   "disclosure_code": "lawfully_existing_relief",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-192"
   },
   {
    "unit_id": "10.5.40.71(3)#whole",
@@ -4432,6 +5130,17 @@
    "basis": "findings B2; M-209 laneway eligibility"
   },
   {
+   "unit_id": "150.8.50.10(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "Laneway suite, frontage 6.0 m or less: 60 % of the area between the house and the suite must be soft landscaping; computed and disclosed, not binding (as (1)(B)).",
+   "disclosure_code": "suite_soft_landscaping",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-208 (as 150.8.50.10(1)(B), (C))"
+  },
+  {
    "unit_id": "150.8.50.10(1)#(1)(B)",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -4644,6 +5353,11 @@
    "corrected_value": "A lawfully existing wider ancillary building keeps its width (caveat).",
    "disclosure_code": "lawfully_existing_relief",
    "basis": "findings C2; M-158"
+  },
+  {
+   "unit_id": "150.8.60.40(1)#(1)(A)",
+   "verdict": "matches",
+   "disposition": "matches"
   },
   {
    "unit_id": "150.8.60.40(1)#(1)(B)",
@@ -4998,6 +5712,52 @@
    "basis": "findings C6; M-216"
   },
   {
+   "unit_id": "5.10.40.1(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.1(2)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.1(3)#(3)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.1(3)#(3)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.1(4)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.1(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-213"
+   ],
+   "corrected_value": "On a heritage designated site, work under a Heritage Permit follows the permit and the zone rules do not stop it; disclosed on every heritage-designated lot.",
+   "disclosure_code": "heritage_designated",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-213(3) (heritage computed and disclosed), M-169(2) heritage_property"
+  },
+  {
+   "unit_id": "5.10.40.10(1)#(1)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.10(1)#(1)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
    "unit_id": "5.10.40.40(1)#whole",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -5009,6 +5769,41 @@
    "basis": "findings C1; M-212 site-fact disclosures (shoreline)"
   },
   {
+   "unit_id": "5.10.40.40(2)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(1)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(2)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(3)#whole",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(A)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(B)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(C)",
+   "verdict": "no_application",
+   "disposition": "excluded"
+  },
+  {
    "unit_id": "5.10.40.70(5)#whole",
    "verdict": "disclose",
    "disposition": "disclosed_by",
@@ -5018,6 +5813,78 @@
    "corrected_value": "The lot is flagged triangular and the radial rear-setback calculation is disclosed (reading changed after this review).",
    "disclosure_code": "triangular_lot",
    "basis": "findings C1; M-212 triangular lot"
+  },
+  {
+   "unit_id": "5.10.40.70(6)#(6)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
+  },
+  {
+   "unit_id": "5.10.40.70(6)#(6)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
+  },
+  {
+   "unit_id": "5.10.40.70(7)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
+  },
+  {
+   "unit_id": "5.10.40.80(1)#(1)(A)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
+  },
+  {
+   "unit_id": "5.10.40.80(1)#(1)(B)",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
+  },
+  {
+   "unit_id": "5.10.40.80(2)#whole",
+   "verdict": "disclose",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "basis": "review answers batch 5 (live page DB 2026-10-20); M-169(2) shoreline_or_top_of_bank, M-212(3); shoreline_hazard now names the 10 m setback"
   },
   {
    "unit_id": "600.60.40(2)#(2)(A)",

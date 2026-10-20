@@ -8,37 +8,38 @@
   "docs/specs/01-pipeline/78_optimal_lot_configuration.md"
  ],
  "counts": {
-  "answers": 631,
+  "answers": 729,
   "by_state": {
-   "INCORPORATED": 593,
+   "INCORPORATED": 688,
+   "OPEN": 3,
    "UNFIXED": 38
   },
   "by_verdict": {
-   "disclose": 117,
-   "matches": 179,
-   "no_application": 175,
-   "null": 13,
+   "disclose": 165,
+   "matches": 184,
+   "no_application": 210,
+   "null": 16,
    "unsure": 35,
-   "wrong": 112
+   "wrong": 119
   },
   "by_disposition": {
-   "disclosed_by": 117,
-   "excluded": 175,
-   "fixed_by": 90,
-   "matches": 179,
-   "resolved_by": 50,
-   "verified_by_lock": 20
+   "disclosed_by": 165,
+   "excluded": 210,
+   "fixed_by": 96,
+   "matches": 184,
+   "resolved_by": 53,
+   "verified_by_lock": 21
   },
   "by_chapter": {
    "10.10": {
-    "total": 51,
-    "INCORPORATED": 51,
+    "total": 55,
+    "INCORPORATED": 55,
     "UNFIXED": 0,
     "OPEN": 0
    },
    "10.20": {
-    "total": 90,
-    "INCORPORATED": 90,
+    "total": 93,
+    "INCORPORATED": 93,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -49,10 +50,10 @@
     "OPEN": 0
    },
    "10.5": {
-    "total": 45,
-    "INCORPORATED": 45,
+    "total": 113,
+    "INCORPORATED": 110,
     "UNFIXED": 0,
-    "OPEN": 0
+    "OPEN": 3
    },
    "10.60": {
     "total": 66,
@@ -79,14 +80,14 @@
     "OPEN": 0
    },
    "150.8": {
-    "total": 75,
-    "INCORPORATED": 60,
+    "total": 77,
+    "INCORPORATED": 62,
     "UNFIXED": 15,
     "OPEN": 0
    },
    "5.10": {
-    "total": 2,
-    "INCORPORATED": 2,
+    "total": 23,
+    "INCORPORATED": 23,
     "UNFIXED": 0,
     "OPEN": 0
    },
@@ -109,9 +110,78 @@
     "OPEN": 0
    }
   },
-  "feeding_a_lineage_field": 257
+  "feeding_a_lineage_field": 262
  },
  "rows": [
+  {
+   "unit_id": "10.5.30.20(1)#(1)(A)",
+   "regulation_id": "10.5.30.20(1)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-226"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
+   "disclosure_code": "",
+   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix"
+   ],
+   "state": "OPEN",
+   "reason": "fix rests on rows awaiting the operator (M-226)"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(B)",
+   "regulation_id": "10.5.30.20(1)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;if: (B) the lot line abuts a street where an adjacent lot has its front lot line on the same street; . It needs to match the adjacent lot.  ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-226"
+   ],
+   "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots have their front lot line (10.5.30.20(1)(B)), if no 0.3 m reserve separates it from the street ((A)); the opposite street line is the rear lot line. PROPOSED (M-226, operator ruling owed): no existing ruling designates it.",
+   "disclosure_code": "",
+   "question": "Q-through-lot-front (draft M-226): on a through lot, take the front lot line on the street the neighbouring lots face (read as the lot's address street), the 0.3 m reserve as not separating (M-169), and disclose it (new code through_lot_front_line)? Recommendation: y.",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix"
+   ],
+   "state": "OPEN",
+   "reason": "fix rests on rows awaiting the operator (M-226)"
+  },
+  {
+   "unit_id": "10.5.40.40(2)#whole",
+   "regulation_id": "10.5.40.40(2)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Exclusion:  the area used for a mechanical room is excluded from the GFA. Every build has this - this should be factored in our GFA's - the default is 5% of the max GFA can be allocated to this as long as it doesn't exceed 20 sq meters.  Every building has this. this should be a factor",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-227"
+   ],
+   "corrected_value": "Every build has mechanical equipment: an attic area that passes the 10.5.40.40(1) test and holds mechanical equipment is left out of GFA up to the lesser of 5 % of the permitted maximum GFA or 20 m², applied by default. PROPOSED (M-227, operator ruling owed): M-171 today discloses GFA deductions, never applies them.",
+   "disclosure_code": "gfa_deductions_not_applied",
+   "question": "Q-mechanical-attic (draft M-227): apply 10.5.40.40(2) by default — where the maximum design has an attic counted in GFA, leave up to the lesser of 5 % of the permitted maximum GFA or 20 m² of it out of GFA as mechanical-equipment area (achieved-if disclosure), amending M-171 for this one deduction as M-210 does for suites? Recommendation: y.",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix"
+   ],
+   "state": "OPEN",
+   "reason": "fix rests on rows awaiting the operator (M-227)"
+  },
   {
    "unit_id": "150.10.1(1)#whole",
    "regulation_id": "150.10.1(1)",
@@ -1232,6 +1302,27 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "10.10.40.1(4)#(4)(A)",
+   "regulation_id": "10.10.40.1(4)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.10.40.1(4)#(4)(B)",
    "regulation_id": "10.10.40.1(4)",
    "chapter": "10.10",
@@ -2303,6 +2394,46 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.10.40.80(1)#(1)(A)",
+   "regulation_id": "10.10.40.80(1)",
+   "chapter": "10.10",
+   "verdict": "no_application",
+   "note": "Details for townhouses and apartment buildings",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.10.40.80(1)#(1)(B)",
+   "regulation_id": "10.10.40.80(1)",
+   "chapter": "10.10",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.10.40.80(1)#(1)(C)",
    "regulation_id": "10.10.40.80(1)",
    "chapter": "10.10",
@@ -2320,6 +2451,30 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.10.40.81(1)#whole",
+   "regulation_id": "10.10.40.81(1)",
+   "chapter": "10.10",
+   "verdict": "disclose",
+   "note": "This just grandfathers in the legally existing building . We don't know that... ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Lawfully existing buildings keep their lawful separation (caveat), as RT / RM x.40.81(1).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
   },
   {
    "unit_id": "10.20.20.100(12)#whole",
@@ -4082,6 +4237,29 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "10.20.40.70(1)#whole",
+   "regulation_id": "10.20.40.70(1)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "main_front_setback_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
    "unit_id": "10.20.40.70(2)#(2)(A)",
    "regulation_id": "10.20.40.70(2)",
    "chapter": "10.20",
@@ -4424,6 +4602,46 @@
    "verdict": "matches",
    "note": "",
    "source": "claude.ai review page DB 2026-10-19 (envdb9 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(A)",
+   "regulation_id": "10.20.40.80(1)",
+   "chapter": "10.20",
+   "verdict": "no_application",
+   "note": "Details for townhouses and apartment buildings",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.20.40.80(1)#(1)(B)",
+   "regulation_id": "10.20.40.80(1)",
+   "chapter": "10.20",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "disposition": "matches",
    "fix_ids": [],
    "corrected_value": "",
@@ -6602,6 +6820,125 @@
    "reason": "resolved by a RATIFIED ruling"
   },
   {
+   "unit_id": "10.5.20.40(6)#whole",
+   "regulation_id": "10.5.20.40(6)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "This is important the secondary suite can not be counted in a semi detached and townhouse converted to contain up to four dwelling. prohibit",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-196",
+    "M-214"
+   ],
+   "corrected_value": "Prohibit: a secondary suite may not be in the portion of a semi-detached house or townhouse converted to hold up to four dwelling units (10.5.20.40(2)/(3)). Applied in the interior-conversion answer (M-196(1)); a secondary suite in a semi or townhouse is a deferred form, disclosed (M-214(3) forms_deferred).",
+   "disclosure_code": "forms_deferred",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.20.40(6)#whole/disclosure, COR-10.5.20.40(6)#whole/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.30.1(1)#whole",
+   "regulation_id": "10.5.30.1(1)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.30.1(2)#whole",
+   "regulation_id": "10.5.30.1(2)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(A)",
+   "regulation_id": "10.5.30.1(3)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(B)",
+   "regulation_id": "10.5.30.1(3)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.30.1(3)#(3)(C)",
+   "regulation_id": "10.5.30.1(3)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "10.5.30.11(1)#whole",
    "regulation_id": "10.5.30.11(1)",
    "chapter": "10.5",
@@ -6621,6 +6958,72 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.11(2)#whole",
+   "regulation_id": "10.5.30.11(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition on a lawfully existing undersized lot must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.30.11(3)#whole",
+   "regulation_id": "10.5.30.11(3)",
+   "chapter": "10.5",
+   "verdict": null,
+   "note": "vacant lot -  detached house or detached houseplex may be constructed on that lot, and the detached house or detached houseplex must comply with all other regulations of this By-law or be authorized by a Section 45 Planning Act minor variance.",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-158",
+    "M-169"
+   ],
+   "corrected_value": "A vacant lawfully existing undersized lot is a site fact taken as not holding (as 10.5.30.21(3)): the house may be built if it meets the rest of the by-law; never bound, disclosed (vacant_existing_lot).",
+   "disclosure_code": "vacant_existing_lot",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.20(1)#(1)(C)",
+   "regulation_id": "10.5.30.20(1)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "apartment building and townhouse",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
   },
   {
    "unit_id": "10.5.30.20(2)#(2)(A)",
@@ -6667,6 +7070,55 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.30.21(1)#whole",
+   "regulation_id": "10.5.30.21(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This is just grandfathering in the permitted lot frontage for legally existing lots",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158"
+   ],
+   "corrected_value": "Required minimum frontage is answered; a lawful smaller frontage of a lawfully existing lot is its minimum (caveat), as 10.5.30.11(1) for area.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.30.21(2)#whole",
+   "regulation_id": "10.5.30.21(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Additions scenario - procedural - must comply with 1) must comply with all other regulations in this By-law or be authorized by a Section 45 Planning Act minor variance.- we should check that we are",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition on a lawfully existing narrow lot must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
   },
   {
    "unit_id": "10.5.30.21(3)#(3)(A)",
@@ -6764,6 +7216,31 @@
    "reason": "resolved by a RATIFIED ruling"
   },
   {
+   "unit_id": "10.5.30.41(2)#whole",
+   "regulation_id": "10.5.30.41(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "dditions scenario - procedural - must comply with 1) must comply with all other regulations in this By-law or be authorized by a Section 45 Planning Act minor variance.- we should check that we are",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-158",
+    "M-192"
+   ],
+   "corrected_value": "An addition to a lawfully existing building over the coverage limit must meet every other rule (or a minor variance); the maximum build meets them; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "10.5.30.50(1)#(1)(A)",
    "regulation_id": "10.5.30.50(1)",
    "chapter": "10.5",
@@ -6802,6 +7279,61 @@
    "reason": "no application (excluded)"
   },
   {
+   "unit_id": "10.5.40.1(1)#whole",
+   "regulation_id": "10.5.40.1(1)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "procedural  - all buildings except ancillary buildings ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "verified_by_lock",
+   "fix_ids": [
+    "M-31"
+   ],
+   "corrected_value": "Procedural: Article 10.5.40 applies to every building in the residential zones except ancillary buildings (Article 10.5.60). The keyed unit already reads so (PROCEDURAL, informational); no change.",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [
+    {
+     "file": "src/tests/bylaw-answers-batch-5.logic.test.ts",
+     "describe": "M-31 — 10.5.40.1(1) is the procedural scope of Article 10.5.40",
+     "it": "M-31: 10.5.40.1(1) scopes 10.5.40 to every building except ancillary buildings, informational",
+     "asserts": [
+      "'10.5.40.1(1)#whole'"
+     ],
+     "satisfies": [
+      "M-31"
+     ]
+    }
+   ],
+   "owed": [],
+   "checks": [
+    "no keyed correction cites the fix",
+    "verified by named lock: M-31"
+   ],
+   "state": "INCORPORATED",
+   "reason": "verified by named lock"
+  },
+  {
+   "unit_id": "10.5.40.1(2)#whole",
+   "regulation_id": "10.5.40.1(2)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "10.5.40.10(1)#whole",
    "regulation_id": "10.5.40.10(1)",
    "chapter": "10.5",
@@ -6821,6 +7353,218 @@
    "checks": [],
    "state": "INCORPORATED",
    "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(A)",
+   "regulation_id": "10.5.40.10(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "This speaks to height of specific structure ie antenna c= max height of  1.5 M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop antennae may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(B)",
+   "regulation_id": "10.5.40.10(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "his speaks to height of specific structures ie flag poles = max height of  1.5 M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop flagpoles may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(C)",
+   "regulation_id": "10.5.40.10(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "his speaks to height of specific structure ie parapets = max height of  1.5 M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop green-roof parapets may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(D)",
+   "regulation_id": "10.5.40.10(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "his speaks to height of specific structure iesatellite dishes c= max height of  1.5 M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop satellite dishes may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(2)#(2)(E)",
+   "regulation_id": "10.5.40.10(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "his speaks to height of specific structure s on roof ie weather vanes  = max height of  1.5 M ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop weather vanes may exceed the height limit by 1.5 m; a design detail, disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(A)",
+   "regulation_id": "10.5.40.10(3)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Height of Elements for Functional Operation - Not important - can exceed max height of the building by 5M - except for skylights which are = 1M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Not a limit on the building: rooftop functional equipment may exceed the height limit by 5.0 m (skylights 1.0 m), within the 30 % roof-area cap of (4); a permission the user would verify, disclosed, never evaluated (rooftop_elements_exempt).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.10(3)#(3)(A)/disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(B)",
+   "regulation_id": "10.5.40.10(3)",
+   "chapter": "10.5",
+   "verdict": null,
+   "note": "Height of Elements for Functional Operation - Not important - can exceed max height of the building by 5M ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop functional structures (stairwells, roof access, elevator shafts, chimneys, vents) may exceed the height limit by 5.0 m; disclosed, never evaluated (rooftop_elements_exempt).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
+  },
+  {
+   "unit_id": "10.5.40.10(3)#(3)(C)",
+   "regulation_id": "10.5.40.10(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Height of Elements for Functional Operation - Not important - can exceed max height of the building by 5M however, the building needs a height greater than 15M",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "On a building over 15.0 m, enclosures of rooftop equipment may exceed the height limit by 5.0 m; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(4)#(4)(A)",
+   "regulation_id": "10.5.40.10(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Height - Horizontal Limits on Elements for Functional - the functional operation of the building elements on the roof - can't exceed more than 30% of the roof",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop elements above the height limit may cover at most 30 % of the roof; disclosed, not checked (as 150.8.60.40(6)(A)).",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
   },
   {
    "unit_id": "10.5.40.10(4)#(4)(B)",
@@ -6844,6 +7588,54 @@
    "reason": "resolved by a RATIFIED ruling"
   },
   {
+   "unit_id": "10.5.40.10(5)#(5)(A)",
+   "regulation_id": "10.5.40.10(5)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": " Height of Rooftop Amenity Space Safety and Wind Protection In the Residential Zone - Not important! Just disclosure",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "On a building over 15.0 m, rooftop amenity railings and wind screens may exceed the height limit by 3.0 m; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.10(5)#(5)(B)",
+   "regulation_id": "10.5.40.10(5)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Height of Rooftop Amenity Space Safety and Wind Protection In the Residential Zone category, unenclosed structures providing safety or wind protection - Not important - just disclosure ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Rooftop amenity railings and wind screens stay 2.0 m inside the main walls; disclosed, never evaluated.",
+   "disclosure_code": "rooftop_elements_exempt",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code rooftop_elements_exempt",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "10.5.40.11(1)#whole",
    "regulation_id": "10.5.40.11(1)",
    "chapter": "10.5",
@@ -6855,6 +7647,54 @@
     "M-158"
    ],
    "corrected_value": "Permitted maximum height answered; a greater lawful height of an existing building stands (caveat).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(2)#whole",
+   "regulation_id": "10.5.40.11(2)",
+   "chapter": "10.5",
+   "verdict": "wrong",
+   "note": "Scenario - Additions to existing buildings - Condition = must comply with the permitted maximum height or be authorized by a Section 45 Planning Act minor variance.",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "fixed_by",
+   "fix_ids": [
+    "M-192",
+    "M-211"
+   ],
+   "corrected_value": "An addition to a lawfully existing over-height building must meet the permitted maximum height (or a minor variance): the renovation answer holds every addition to the base height limit, so the clause is met by construction; disclosed.",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "correction COR-10.5.40.11(2)#whole/calculation_handling"
+   ],
+   "state": "INCORPORATED",
+   "reason": "every cited ruling applied (keyed correction or named lock)"
+  },
+  {
+   "unit_id": "10.5.40.11(3)#whole",
+   "regulation_id": "10.5.40.11(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Scenarion - Renovations - Change to the Roof of existing building - condition = 1) may be constructed to the maximum height in regulation 10.5.40.11(1).\n",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
    "disclosure_code": "lawfully_existing_relief",
    "question": "",
    "fields": [],
@@ -6910,6 +7750,78 @@
    "owed": [],
    "checks": [
     "P5.12 code existing_walls_site_fact",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(5)#whole",
+   "regulation_id": "10.5.40.11(5)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Scenario - Additions - Height of Main walls - condition = is subject to the main wall heights in regulation 10.5.40.11(4).",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(6)#whole",
+   "regulation_id": "10.5.40.11(6)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Speaks the height of the first floor - grandfather this height in for lawfully existing builds -. Disclosure.  No impact",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.11(7)#whole",
+   "regulation_id": "10.5.40.11(7)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Scenario Additions - Hieght of First Floor condition = lawfully existing building referred to in regulation 10.5.40.11(6) may have a first floor above established grade up to the maximum height in regulation 10.5.40.11(6).",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "Lawfully existing height / main-wall / first-floor relief for a renovation: disclosed, never applied (needs as-built facts).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code lawfully_existing_relief",
     "unit carries a disclosure"
    ],
    "state": "INCORPORATED",
@@ -7274,6 +8186,109 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#(3)(E)",
+   "regulation_id": "10.5.40.40(3)(E)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.40(3)(E)@1075-2026#[instruction]",
+   "regulation_id": "10.5.40.40(3)(E)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "basement_livable_gain_sqm",
+    "basement_livable_sqm",
+    "main_gfa_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.40(4)#row",
+   "regulation_id": "10.5.40.40(4)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#(4)(J)",
+   "regulation_id": "10.5.40.40(4)(J)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.40(4)(J)@1075-2026#[instruction]",
+   "regulation_id": "10.5.40.40(4)(J)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "10.5.40.40(5)#(5)(B)",
    "regulation_id": "10.5.40.40(5)",
    "chapter": "10.5",
@@ -7319,6 +8334,446 @@
    "reason": "keyed unit agreed"
   },
   {
+   "unit_id": "10.5.40.50(1)#whole",
+   "regulation_id": "10.5.40.50(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Interpretation - Procedural - Exterior sides of a platform - are not main walls if at least 50% of the exterior sides above the floor are open to the outside ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "The open sides of a deck, porch or balcony are not main walls; platforms are not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.50(2)#whole",
+   "regulation_id": "10.5.40.50(2)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platforms - disclosure ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A platform without main walls must meet the setbacks; platforms are not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(B)",
+   "regulation_id": "10.5.40.50(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platforms - Not important - Disclosure ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-175"
+   ],
+   "corrected_value": "A deck beside a side wall may be no higher than the floor it serves; not modelled, disclosed.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.50(4)#(4)(C)",
+   "regulation_id": "10.5.40.50(4)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "Platforms ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(A)",
+   "regulation_id": "10.5.40.60(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platforms",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(B)",
+   "regulation_id": "10.5.40.60(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platforms ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(C)",
+   "regulation_id": "10.5.40.60(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platforms - ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(1)#(1)(E)",
+   "regulation_id": "10.5.40.60(1)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Platfroms ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-175"
+   ],
+   "corrected_value": "Deck, porch and balcony projections into a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "decks_platforms_not_modelled",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code decks_platforms_not_modelled",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(2)#(2)(A)",
+   "regulation_id": "10.5.40.60(2)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(2)#(2)(B)",
+   "regulation_id": "10.5.40.60(2)",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(A)",
+   "regulation_id": "10.5.40.60(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "3) Exterior Stairs, Access Ramp and Elevating Device In the Residential Zone category, exterior stairs, pedestrian access ramp and elevating device providing access to a building or structure may encroach into a required minimum building setback as follows: (A) exterior stairs, if the stairs are: (i) no longer than 1.5 horizontal units for each 1.0 vertical unit above the ground at the point where the stairs meet the building or structure; (ii) no wider than 2.0 metres; and (iii) no closer to a lot line than 0.6 metres;",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(B)",
+   "regulation_id": "10.5.40.60(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "3) Exterior Stairs, Access Ramp and Elevating Device In the Residential Zone category, exterior stairs, pedestrian access ramp and elevating device providing access to a building or structure may encroach into a required minimum building setback as follows: (B) an uncovered ramp, if the ramp is: (i) no longer than 15 horizontal units for each 1.0 vertical unit above-ground at the point where the ramp meets the building or structure; (ii) no wider than 1.5 metres for each sloped ramp segment; and (iii) no closer to a lot line than 0.6 metres; and",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(3)#(3)(C)",
+   "regulation_id": "10.5.40.60(3)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "3) Exterior Stairs, Access Ramp and Elevating Device In the Residential Zone category, exterior stairs, pedestrian access ramp and elevating device providing access to a building or structure may encroach into a required minimum building setback as follows: (C) an elevating device, if the elevating device: (i) elevates no higher than the first floor of the building; (ii) has a maximum area of 3.0 square metres; and (iii) is no closer to a lot line than 0.6 metres.",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Exterior stairs, ramps and elevating devices in a setback are design details; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(4)#(4)(A)",
+   "regulation_id": "10.5.40.60(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(4)#(4)(B)",
+   "regulation_id": "10.5.40.60(4)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Exterior main wall surfaces - ie pipe and cladding added to the main walls - not important",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(4)@1075-2026#(4)",
+   "regulation_id": "10.5.40.60(4)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "Exterior wall surfaces - not important 4) Exterior Main Wall Surface In the Residential Zone category, cladding added to the original exterior surface of the main wall of a building or added to an addition or extension to a building may encroach into a required minimum building setback a maximum of 0.3 metres, if the added cladding is no closer to a lot line than 0.3 metres.",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(4)@1075-2026#[instruction]",
+   "regulation_id": "10.5.40.60(4)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(5)#(5)(A)",
+   "regulation_id": "10.5.40.60(5)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(5)#(5)(B)",
+   "regulation_id": "10.5.40.60(5)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "10.5.40.60(6)#(6)(A)",
    "regulation_id": "10.5.40.60(6)",
    "chapter": "10.5",
@@ -7330,6 +8785,174 @@
     "M-169"
    ],
    "corrected_value": "Bay and box window projections into a setback are a design detail; disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(6)#(6)(B)",
+   "regulation_id": "10.5.40.60(6)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(7)#(7)(A)",
+   "regulation_id": "10.5.40.60(7)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(7)#(7)(B)",
+   "regulation_id": "10.5.40.60(7)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(A)",
+   "regulation_id": "10.5.40.60(8)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(B)",
+   "regulation_id": "10.5.40.60(8)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(C)",
+   "regulation_id": "10.5.40.60(8)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
+   "disclosure_code": "setback_encroachments",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code setback_encroachments",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(8)#(8)(D)",
+   "regulation_id": "10.5.40.60(8)",
+   "chapter": "10.5",
+   "verdict": "disclose",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169"
+   ],
+   "corrected_value": "Setback encroachment permission (cladding, architectural features, windows, dormers, eaves, wall-mounted equipment): a design detail, disclosed, not modelled.",
    "disclosure_code": "setback_encroachments",
    "question": "",
    "fields": [],
@@ -7365,6 +8988,63 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(C)@1075-2026#(8)(C)",
+   "regulation_id": "10.5.40.60(8)(C)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "This only applies to antenna or pole used to hold an antenna - disclosure not important. ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(C)@1075-2026#[instruction]",
+   "regulation_id": "10.5.40.60(8)(C)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "10.5.40.60(8)(D)@1075-2026#whole",
+   "regulation_id": "10.5.40.60(8)(D)@1075-2026",
+   "chapter": "10.5",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
   },
   {
    "unit_id": "10.5.40.70(1)#(1)(A)",
@@ -7513,6 +9193,27 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "10.5.40.71(2)#whole",
+   "regulation_id": "10.5.40.71(2)",
+   "chapter": "10.5",
+   "verdict": null,
+   "note": "Scenarion - Additions to lawfully  ) must comply with the required minimum building setbacks or be authorized by a Section 45 Planning Act minor variance.",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "resolved_by",
+   "fix_ids": [
+    "M-192"
+   ],
+   "corrected_value": "An addition to a building relying on its lawful existing setbacks must meet the current setbacks or a minor variance; the renovation answer applies the current setbacks; disclosed (M-192 lists 10.5.40.71(2) disclosed, never applied).",
+   "disclosure_code": "lawfully_existing_relief",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "resolved by a RATIFIED ruling"
   },
   {
    "unit_id": "10.5.40.71(3)#whole",
@@ -12942,6 +14643,32 @@
    "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
+   "unit_id": "150.8.50.10(1)#(1)(A)",
+   "regulation_id": "150.8.50.10(1)",
+   "chapter": "150.8",
+   "verdict": "disclose",
+   "note": "Laneway Suite - landscaping requirements. Disclosure",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-208"
+   ],
+   "corrected_value": "Laneway suite, frontage 6.0 m or less: 60 % of the area between the house and the suite must be soft landscaping; computed and disclosed, not binding (as (1)(B)).",
+   "disclosure_code": "suite_soft_landscaping",
+   "question": "",
+   "fields": [
+    "suite_soft_landscaping_sqm"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code suite_soft_landscaping",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
    "unit_id": "150.8.50.10(1)#(1)(B)",
    "regulation_id": "150.8.50.10(1)",
    "chapter": "150.8",
@@ -13220,6 +14947,29 @@
    ],
    "state": "INCORPORATED",
    "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "150.8.60.40(1)#(1)(A)",
+   "regulation_id": "150.8.60.40(1)",
+   "chapter": "150.8",
+   "verdict": "matches",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "matches",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [
+    "suite_height_m"
+   ],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "unit agreed"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed unit agreed"
   },
   {
    "unit_id": "150.8.60.40(2)#whole",
@@ -14080,6 +15830,163 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "5.10.40.1(1)#whole",
+   "regulation_id": "5.10.40.1(1)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.1(2)#whole",
+   "regulation_id": "5.10.40.1(2)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.1(3)#(3)(A)",
+   "regulation_id": "5.10.40.1(3)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.1(3)#(3)(B)",
+   "regulation_id": "5.10.40.1(3)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.1(4)#whole",
+   "regulation_id": "5.10.40.1(4)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.1(6)#(6)(A)",
+   "regulation_id": "5.10.40.1(6)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "We do flag heritage buildings - this only applies to them . They need a heritage permit - this must be disclosed on all heritage buildings A) (i) the alteration, erection or placing of, or addition or extension to, the building or structure must comply with any requirements governing the bulk, massing, form and location of the building or structure to ensure the conservation of the cultural heritage value of the heritage designated site, as set out in a Heritage Permit; (ii) the building regulations for the zone in which the building or structure is located do not apply to prevent the alteration, erection or placing of, or addition or extension to, the building or structure in compliance with a Heritage Permit as described in (i) above; and (iii) for the purpose of this regulation, \"Heritage Permit\" has the meaning given to the term \"permit\" in Section 1 of the Ontario Heritage Act, R.S.O. 1990, c.O.18, as amended. [ By-law: 1260-2024 ]",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-213"
+   ],
+   "corrected_value": "On a heritage designated site, work under a Heritage Permit follows the permit and the zone rules do not stop it; disclosed on every heritage-designated lot.",
+   "disclosure_code": "heritage_designated",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code heritage_designated",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.10(1)#(1)(A)",
+   "regulation_id": "5.10.40.10(1)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.10(1)#(1)(B)",
+   "regulation_id": "5.10.40.10(1)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "5.10.40.40(1)#whole",
    "regulation_id": "5.10.40.40(1)",
    "chapter": "5.10",
@@ -14106,6 +16013,139 @@
    "reason": "keyed disclosure + P5.12 code"
   },
   {
+   "unit_id": "5.10.40.40(2)#whole",
+   "regulation_id": "5.10.40.40(2)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(1)#whole",
+   "regulation_id": "5.10.40.70(1)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(2)#whole",
+   "regulation_id": "5.10.40.70(2)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(3)#whole",
+   "regulation_id": "5.10.40.70(3)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "If building on more than one lot at a time - this is beyond our scope",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(A)",
+   "regulation_id": "5.10.40.70(4)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(B)",
+   "regulation_id": "5.10.40.70(4)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
+   "unit_id": "5.10.40.70(4)#(4)(C)",
+   "regulation_id": "5.10.40.70(4)",
+   "chapter": "5.10",
+   "verdict": "no_application",
+   "note": "",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "excluded",
+   "fix_ids": [],
+   "corrected_value": "",
+   "disclosure_code": "",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [],
+   "state": "INCORPORATED",
+   "reason": "no application (excluded)"
+  },
+  {
    "unit_id": "5.10.40.70(5)#whole",
    "regulation_id": "5.10.40.70(5)",
    "chapter": "5.10",
@@ -14127,6 +16167,156 @@
    "owed": [],
    "checks": [
     "P5.12 code triangular_lot",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.70(6)#(6)(A)",
+   "regulation_id": "5.10.40.70(6)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards - just lots on the shoreline",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.70(6)#(6)(B)",
+   "regulation_id": "5.10.40.70(6)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.70(7)#whole",
+   "regulation_id": "5.10.40.70(7)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.80(1)#(1)(A)",
+   "regulation_id": "5.10.40.80(1)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards - seperation distance ",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.80(1)#(1)(B)",
+   "regulation_id": "5.10.40.80(1)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Shoreline Hazards - seperation distance - lots on shoreline",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
+    "unit carries a disclosure"
+   ],
+   "state": "INCORPORATED",
+   "reason": "keyed disclosure + P5.12 code"
+  },
+  {
+   "unit_id": "5.10.40.80(2)#whole",
+   "regulation_id": "5.10.40.80(2)",
+   "chapter": "5.10",
+   "verdict": "disclose",
+   "note": "Lawfully existing buildings on shorelienes Shoreline Hazards",
+   "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
+   "disposition": "disclosed_by",
+   "fix_ids": [
+    "M-169",
+    "M-212"
+   ],
+   "corrected_value": "The 10 m setback / separation from a TRCA shoreline hazard limit or stable top-of-bank (and its exemptions and lawful-existing relief) is disclosed; the line is not held, so it is taken as not crossing the lot.",
+   "disclosure_code": "shoreline_hazard",
+   "question": "",
+   "fields": [],
+   "locks": [],
+   "owed": [],
+   "checks": [
+    "P5.12 code shoreline_hazard",
     "unit carries a disclosure"
    ],
    "state": "INCORPORATED",

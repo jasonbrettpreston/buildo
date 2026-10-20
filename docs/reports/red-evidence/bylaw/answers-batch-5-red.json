@@ -1,0 +1,187 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-5.logic.test.ts",
+ "base": "cd7a649e",
+ "run_on": "2026-10-20",
+ "note": "Review answers batch 5 (dump envdb11). Red: the rooftop sentences 10.5.40.10(2)-(5) and the rooftop_elements_exempt template, the 10.5.40.60 encroachment sentences, the shoreline sentences 5.10.40.70/.80 and the shoreline_hazard template, the lawfully existing lot family 10.5.30.11/.21/.41 and 10.5.40.11(2), 10.5.20.40(6), the platform / laneway / heritage sentences. Pass both sides: 10.5.40.1(1) already reads as the answer (M-31) and is the named lock.",
+ "counts": {
+  "red": 34,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(2)#(2)(A) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Antennae on the roof may rise up to 1…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(2)#(2)(B) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Flagpoles on the roof may rise up to …' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(2)#(2)(C) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Parapets for a green roof may rise up…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(2)#(2)(D) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Satellite dishes on the roof may rise…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(2)#(2)(E) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Weather vanes on the roof may rise up…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(3)#(3)(A) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Rooftop equipment such as mechanical …' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(3)#(3)(B) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Rooftop stairwells, roof access, elev…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(3)#(3)(C) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a building taller than 15.0 m, scr…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(5)#(5)(A) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a building taller than 15.0 m, ope…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) 10.5.40.10(5)#(5)(B) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Open railings or wind screens for a r…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — rooftop height allowances 10.5.40.10(2)-(5) are disclosed, never evaluated (rooftop_elements_exempt) rooftop_elements_exempt reads \"building or suite height\" and cites 10.5.40.10(2)-(5)",
+   "at_base": "red",
+   "reason": "AssertionError: expected '| `rooftop_elements_exempt` | \"Roofto…' to match /may exceed the building or suite heig…/"
+  },
+  {
+   "name": "M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence 10.5.40.60(3)#(3)(A) carries its encroachment sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Exterior stairs may project into a se…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence 10.5.40.60(3)#(3)(B) carries its encroachment sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An uncovered ramp may project into a …' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence 10.5.40.60(3)#(3)(C) carries its encroachment sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'A lift of up to 3.0 m² that rises no …' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence 10.5.40.60(4)#(4)(B) carries its encroachment sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a lot with 100 or more dwelling un…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — the rest of the 10.5.40.60 encroachments carry their setback_encroachments sentence 10.5.40.60(7)#(7)(A) carries its encroachment sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'No wall of a roof dormer may be close…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.70(6)#(6)(A) carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If TRCA has determined a shoreline ha…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.70(6)#(6)(B) carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If TRCA has determined a shoreline ha…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.70(7)#whole carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If an existing building lawfully sits…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.80(1)#(1)(A) carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If TRCA has determined a shoreline ha…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.80(1)#(1)(B) carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If TRCA has determined a shoreline ha…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) 5.10.40.80(2)#whole carries its shoreline sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If an existing building lawfully sits…' // Object.is equality"
+  },
+  {
+   "name": "M-169(2) / M-212(3) — the shoreline setback and separation are disclosed site facts (shoreline_hazard) shoreline_hazard names the 10 m setback beside the FSI rule",
+   "at_base": "red",
+   "reason": "AssertionError: expected '| `shoreline_hazard` | \"If a shorelin…' to match /allowed floor area \\(FSI\\), and build…/"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form 10.5.30.11(2)#whole carries its lawfully-existing sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An addition to a lawfully existing bu…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form 10.5.30.11(3)#whole carries its lawfully-existing sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If this is a vacant lot that lawfully…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form 10.5.30.21(1)#whole carries its lawfully-existing sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'If this lot lawfully existed with les…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form 10.5.30.21(2)#whole carries its lawfully-existing sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An addition to a lawfully existing bu…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form 10.5.30.41(2)#whole carries its lawfully-existing sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'An addition to a lawfully existing bu…' // Object.is equality"
+  },
+  {
+   "name": "M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / .41 is disclosed, one form M-192 / M-211(1): 10.5.40.11(2) names the renovation answer holding additions to the base height",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The unit text names no zone; its scop…' to match /…/ M-211\\(1\\): an addition meets the permitted maximum height"
+  },
+  {
+   "name": "M-196(1) / M-214(3) — 10.5.20.40(6): no secondary suite in a converted semi or townhouse portion 10.5.20.40(6) carries the prohibition sentence and names M-196(1) / M-214(3)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'A secondary suite is not allowed in a…' // Object.is equality"
+  },
+  {
+   "name": "M-175 / M-208 / M-213(3) — platforms, laneway soft landscaping and the heritage permit are disclosed 10.5.40.50(1)#whole carries its sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'The sides of a deck, porch or balcony…' // Object.is equality"
+  },
+  {
+   "name": "M-175 / M-208 / M-213(3) — platforms, laneway soft landscaping and the heritage permit are disclosed 10.5.40.50(2)#whole carries its sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'A deck, porch or balcony without main…' // Object.is equality"
+  },
+  {
+   "name": "M-175 / M-208 / M-213(3) — platforms, laneway soft landscaping and the heritage permit are disclosed 150.8.50.10(1)#(1)(A) carries its sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a lot with a frontage of 6.0 m or …' // Object.is equality"
+  },
+  {
+   "name": "M-175 / M-208 / M-213(3) — platforms, laneway soft landscaping and the heritage permit are disclosed 5.10.40.1(6)#(6)(A) carries its sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a heritage-designated property, wo…' // Object.is equality"
+  },
+  {
+   "name": "M-31 — 10.5.40.1(1) is the procedural scope of Article 10.5.40 M-31: 10.5.40.1(1) scopes 10.5.40 to every building except ancillary buildings, informational",
+   "at_base": "pass",
+   "reason": "passes at base: the unit already reads as the answer (named lock)"
+  }
+ ]
+}

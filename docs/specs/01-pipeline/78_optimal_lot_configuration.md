@@ -1270,7 +1270,7 @@ Its commit ① lands after them. If a runner form it needs changes shape, the ch
 | `conversion_within_building` | "Added units must fit inside the building as it lawfully existed." | 10.5.20.40(1); 600.60.40(3)(A) |
 | `attic_outside_gfa` | "The attic ({A} m²) is livable but not counted in the City's floor-area total (GFA): it does not meet the headroom and size test." | M-203; 10.5.40.40(1) |
 | `existing_roof_alteration` | "Changing the existing roof line is limited (roof slope rules for altered roofs)." | 10.10.40.11, 10.20.40.11; M-192 |
-| `decks_platforms_not_modelled` | "Decks, porches, balconies and platforms are not modelled; they have their own size and setback rules." | x.40.50; 150.7.60.60; 150.8.60.60 |
+| `decks_platforms_not_modelled` | "Decks, porches, balconies and platforms are not modelled; they have their own size and setback rules." | x.40.50; 10.5.40.60(1); 150.7.60.60; 150.8.60.60; M-175 |
 | `setback_encroachments` | "Bay windows, wall-mounted equipment and similar parts may project into a setback within set limits; they are design details and are not modelled." | 10.5.40.60; M-169(4) (operator 2026-10-19, review answers batch 4) |
 | `r_roof_slope` | "In the R zone a detached house's roof above the second storey may be no steeper than 5 vertical to 3 horizontal; the roof design is not checked." | 10.10.40.10(4); M-169(1); O-7 (slope keying owed); F-33 (operator 2026-10-19, review answers batch 4) |
 | `lawfully_existing_relief` | "If the existing building or suite is lawfully existing, {clause} lets it keep its {height / setback / separation / size}." | M-158, M-178, M-192 |
@@ -1279,10 +1279,10 @@ Its commit ① lands after them. If a runner form it needs changes shape, the ch
 | `semi_house_two_lots` | "If the semi-detached house is divided onto two lots, each lot's minimums are 50 %." | M-174(1), M-181 |
 | `main_entrance_height` | "The main front entrance may be no more than 1.2 m above the ground level the City measures from (established grade)." (where the clause applies) | M-174(2), M-215(2) |
 | `suite_soft_landscaping` | "Soft landscaping (grass or planting) of {X} m² is required {behind the house / between the house and the suite}; a suite of this size must still leave that area." | M-208 |
-| `rooftop_elements_exempt` | "Rooftop equipment, skylights, solar devices and similar elements may exceed the suite height within limits." | 150.7.60.40(3)–(6), 150.7.75.1, 150.8.60.40(3)–(6), 150.8.75.1 |
+| `rooftop_elements_exempt` | "Rooftop equipment, skylights, antennae, solar devices and similar elements may exceed the building or suite height within limits." | 150.7.60.40(3)–(6), 150.7.75.1, 150.8.60.40(3)–(6), 150.8.75.1; the principal-building twin 10.5.40.10(2)–(5), M-169(4) (operator 2026-10-20, review answers batch 5) |
 | `suite_parking_bicycle` | "No parking is required with the suite; it must provide two bicycle parking spaces." | M-216 |
 | `gfa_deductions_not_applied` | "The City's floor-area total (GFA) may also leave out garage, void and similar areas; these depend on the design and are not applied." | M-171; 10.5.40.40(3)(B)–(D); 970.10.15.10 |
-| `shoreline_hazard` | "If a shoreline hazard limit or stable top-of-bank crosses the lot, the land below it does not count toward the allowed floor area (FSI)." | 5.10.40.40(1); M-212(3) |
+| `shoreline_hazard` | "If a shoreline hazard limit or stable top-of-bank crosses or is near the lot, the land below it does not count toward the allowed floor area (FSI), and buildings must stay 10 m from it." | 5.10.40.40(1); M-212(3); the 10 m setback and separation 5.10.40.70(6), (7), 5.10.40.80(1), (2), M-169(2) (operator 2026-10-20, review answers batch 5) |
 | `triangular_lot` | "The lot has no rear lot line; the rear setback is measured as a radius from where the side lot lines meet." | 5.10.40.70(5); M-212(2) |
 | `established_grade` | "Heights are measured from the ground level the City measures from (established grade), which is not known for this lot; on a sloped lot the usable height may differ." | 10.5.40.10(1); M-212(1) |
 | `front_yard_averaging` | "The front setback ({X} m) averages the neighbouring houses' estimated setbacks; a survey may differ." | 10.5.40.70(1); M-205 |

@@ -57,9 +57,9 @@ describe('answer tracker (INV-25)', () => {
     expect(tracker.problems).toEqual([]);
     expect(tracker.drift).toEqual([]);
   });
-  it('accounts for every answer in the committed snapshot (631 since batch 4, 2026-10-19), every "wrong" carries a fix id, every disclose a code', () => {
+  it('accounts for every answer in the committed snapshot (729 since batch 5, 2026-10-20), every "wrong" carries a fix id, every disclose a code', () => {
     const snapshot = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/reference/envelope-answers.json'), 'utf8'));
-    expect([snapshot.count, snapshot.answers.length]).toEqual([631, 631]);
+    expect([snapshot.count, snapshot.answers.length]).toEqual([729, 729]);
     expect(tracker.rows.length).toBe(snapshot.count);
     const s = tracker.counts.by_state;
     expect((s.INCORPORATED || 0) + (s.UNFIXED || 0) + (s.OPEN || 0)).toBe(snapshot.count);
