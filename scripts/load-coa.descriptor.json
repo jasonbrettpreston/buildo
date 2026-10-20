@@ -193,7 +193,21 @@
           ],
           "scope": "none",
           "expected_change_ratio": ">= 0",
-          "idempotent_rerun": "zero_writes",
+          "idempotent_rerun": "declared_drift",
+          "idempotent_rerun_why": {
+            "text": "Spec 124 R-DZ: last_seen_at is the written \"seen\" column, touched to the run clock for every fed key the data_hash guard skipped, so an immediate second run over unchanged CKAN rows rewrites exactly those keys (Night P4 2026-10-20 measured 2,689 on coa_applications) and zero_writes is false by construction (COA-D14). Spec 124 R-EX: the POST rerun proof passes this target only when the second run's rewritten rows equal its written.touched exactly, the row delta is 0 and the content hash with last_seen_at projected out is unchanged.",
+            "liveness": {
+              "kind": "check",
+              "ref": "records_touched"
+            }
+          },
+          "declared_drift": {
+            "text": "Rows rewritten per run = the fed keys whose data_hash is unchanged and whose last_seen_at is not already the run clock (written.touched, the records_touched check row); only last_seen_at moves on them. Every content change is a guarded update counted as records_updated, never as drift.",
+            "liveness": {
+              "kind": "check",
+              "ref": "records_touched"
+            }
+          },
           "txn_scope": "step",
           "why": {
             "text": "The legacy upsert is change-guarded by WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:316-333]; data_hash covers every mapped column, so it is the one guard column. last_seen_at is the written \"seen\" column (Spec 124 R-DZ): inserted, set on conflict, excluded from the guard and touched for every fed key inside the same transaction, which closes COA-D4 (the legacy touch ran on the pool after the batches [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:565-583]). One transaction for the target in R-CU slices; the legacy per-500-row transaction form is not carried (Spec 124 R-DY (d): no per-batch transaction form, coa_batch_size is not seeded).",
@@ -580,6 +594,26 @@
       }
     },
     {
+      "id": "records_touched",
+      "kind": "freshness",
+      "expect": {
+        "reports": "coa_applications rows whose last_seen_at the seen-column touch rewrote"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 124 R-DZ / R-EX: written.touched, the keys the runner's seen-column touch rewrote (no legacy row: the legacy touch was an unreported pool UPDATE [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:565-583], COA-D4). The POST rerun proof reads this row's value as the declared drift (declared_drift.liveness, COA-D14).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/analysis/capture-rerun-proof.js"
+        }
+      }
+    },
+    {
       "id": "schema_mismatch_count",
       "kind": "invariant",
       "expect": {
@@ -734,7 +768,9 @@
         "records_skipped": 0,
         "skip_reasons": {},
         "records_deduplicated": 0,
-        "schema_mismatch_count": 0
+        "schema_mismatch_count": 0,
+        "coa_active": {},
+        "coa_closed": {}
       }
     },
     {

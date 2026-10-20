@@ -45,7 +45,7 @@ function descriptor(writes: unknown[], outputs: unknown = { writes }) {
 describe('answer vocabulary', () => {
   it('ZERO_WRITES is the declared literal and ANSWERS is a frozen closed set', () => {
     expect(ZERO_WRITES).toBe('zero_writes');
-    expect(ANSWERS).toEqual(['zero', 'rewrote', 'drift_declared']);
+    expect(ANSWERS).toEqual(['zero', 'rewrote', 'drift_declared', 'seen_touch_only']); // R-EX (Spec 124 §5, 2026-10-20) adds seen_touch_only
     expect(Object.isFrozen(ANSWERS)).toBe(true);
   });
 });
@@ -341,5 +341,151 @@ describe('measureRerun', () => {
     const decision = rerunProofDecision({ tables: rerunTables(descriptor([target('parcels', ZERO_WRITES)])), ...out });
     expect(decision.answer).toBe('FAIL');
     expect(decision.reason).toContain('12 row(s) rewritten');
+  });
+});
+
+// ── R-EX (Spec 124 §5, operator y 2026-10-20; COA-D14) — the seen-column declared drift ──────────────
+// A target with an R-DZ `written:"seen"` column cannot be zero_writes: the touch rewrites every fed key the
+// guard skipped on every run. It declares `declared_drift` (why citing R-DZ), and `declared_drift.liveness`
+// names the check whose row value is the run's `written.touched`. The proof passes such a table only when
+// run 2's rewritten rows == that touched count EXACTLY, the row delta is 0 and the content hash with the
+// seen column projected out is unchanged. A zero_writes claim on a seen-column target FAILs.
+describe('R-EX — a seen-column target proves declared drift, not zero writes', () => {
+  const fs = require('node:fs') as typeof import('node:fs');
+  const path = require('node:path') as typeof import('node:path');
+  const {
+    MODE_SEEN_DRIFT,
+    MODE_SEEN_ZERO_WRITES,
+    projectedHashSql,
+    auditValuesFromRecordsMeta,
+  } = proof;
+
+  function seenTarget(table: string, idempotentRerun: string, check: string | null = 'records_touched') {
+    return {
+      table,
+      key: ['application_number'],
+      columns: [
+        { name: 'application_number', written: 'step' },
+        { name: 'data_hash', written: 'step' },
+        { name: 'last_seen_at', written: 'seen' },
+      ],
+      write_discipline: {
+        class: 'guarded_upsert',
+        guard: 'is_distinct_from',
+        idempotent_rerun: idempotentRerun,
+        ...(idempotentRerun === 'declared_drift'
+          ? {
+              idempotent_rerun_why: { text: 'Spec 124 R-DZ: the seen column is touched every run.', liveness: { kind: 'check', ref: check } },
+              ...(check ? { declared_drift: { text: 'the touched keys', liveness: { kind: 'check', ref: check } } } : {}),
+            }
+          : {}),
+      },
+    };
+  }
+  const ok = { exit_code: 0, skipped: false, audit: { records_touched: 2689 } };
+
+  it('rerunTables projects a declared_drift seen-column target as seen_drift, with its seen column, key and touched check', () => {
+    expect(rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift')]))).toEqual([
+      { table: 'coa_applications', mode: MODE_SEEN_DRIFT, seen_column: 'last_seen_at', key: ['application_number'], touched_check: 'records_touched' },
+    ]);
+    expect(ANSWERS).toContain('seen_touch_only');
+  });
+
+  it('PASS when rewritten == written.touched exactly, row delta 0 and the projected hash is unchanged', () => {
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift')]));
+    const d = rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 2689, rows_before: 31000, rows_after: 31000, hash_before: 'h1', hash_after: 'h1' } } });
+    expect(d.answer).toBe('PASS');
+    expect(d.rows[0]).toMatchObject({ table: 'coa_applications', answer: 'seen_touch_only', rewritten: 2689, touched: 2689, row_delta: 0 });
+  });
+
+  it('FAIL when one more row was rewritten than the touch reports (2690 vs 2689)', () => {
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift')]));
+    const d = rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 2690, rows_before: 31000, rows_after: 31000, hash_before: 'h1', hash_after: 'h1' } } });
+    expect(d.answer).toBe('FAIL');
+    expect(d.reason).toContain('2690 row(s) rewritten, written.touched 2689');
+  });
+
+  it('FAIL when the projected content hash moved (a content write hiding behind the touch) or a row was deleted', () => {
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift')]));
+    const moved = rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 2689, rows_before: 31000, rows_after: 31000, hash_before: 'h1', hash_after: 'h2' } } });
+    expect(moved.answer).toBe('FAIL');
+    expect(moved.reason).toContain('projected content hash changed');
+    const deleted = rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 2689, rows_before: 31000, rows_after: 30999, hash_before: 'h1', hash_after: 'h1' } } });
+    expect(deleted.answer).toBe('FAIL');
+  });
+
+  it('THROWS when run 2 reported no touched count or a hash is missing — a gap is never a pass', () => {
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift')]));
+    const m = { coa_applications: { rewritten: 0, rows_before: 1, rows_after: 1, hash_before: 'h', hash_after: 'h' } };
+    expect(() => rerunProofDecision({ tables, run2: { exit_code: 0, audit: {} }, measured: m })).toThrow(/records_touched/);
+    expect(() => rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 0, rows_before: 1, rows_after: 1 } } })).toThrow(/hash/);
+  });
+
+  it('a zero_writes claim on a seen-column target FAILs (R-EX), and a declared_drift one without a check liveness THROWS', () => {
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', ZERO_WRITES)]));
+    expect(tables).toEqual([{ table: 'coa_applications', mode: MODE_SEEN_ZERO_WRITES, seen_column: 'last_seen_at', key: ['application_number'], touched_check: null }]);
+    const d = rerunProofDecision({ tables, run2: ok, measured: { coa_applications: { rewritten: 0, rows_before: 1, rows_after: 1 } } });
+    expect(d.answer).toBe('FAIL');
+    expect(d.reason).toContain('R-EX');
+    expect(() => rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift', null)]))).toThrow(/declared_drift\.liveness/);
+  });
+
+  it('projectedHashSql hashes every row minus the seen column, ordered by the key; identifiers are validated', () => {
+    expect(projectedHashSql('coa_applications', 'last_seen_at', ['application_number'])).toBe(
+      'SELECT md5(coalesce(string_agg((to_jsonb(t) - \'last_seen_at\')::text, E\'\\n\' ORDER BY t."application_number"), \'\')) AS h FROM "coa_applications" t',
+    );
+    expect(() => projectedHashSql('coa_applications', "x'; DROP", ['application_number'])).toThrow(/invalid/);
+  });
+
+  it('auditValuesFromRecordsMeta reads the named check row value off run 2\'s audit_table (null when absent)', () => {
+    const rm = { audit_table: { rows: [{ metric: 'records_updated', value: 0 }, { metric: 'records_touched', value: 2689 }] } };
+    expect(auditValuesFromRecordsMeta(rm)).toEqual({ records_updated: 0, records_touched: 2689 });
+    expect(auditValuesFromRecordsMeta({})).toEqual({});
+  });
+
+  it('measureRerun takes the projected hash with the counts before run 2 and again after it, for a seen_drift table only', async () => {
+    const calls: string[] = [];
+    const pool = {
+      query: vi.fn(async (sql: string) => {
+        calls.push(sql === TXID_SQL ? 'txid' : sql.includes('md5') ? 'hash' : sql.includes('xmin') ? 'xmin' : 'count');
+        if (sql === TXID_SQL) return { rows: [{ lo: '7' }] };
+        if (sql.includes('md5')) return { rows: [{ h: 'abc' }] };
+        return { rows: [{ n: '3' }] };
+      }),
+    };
+    const tables = rerunTables(descriptor([seenTarget('coa_applications', 'declared_drift'), target('lifecycle_status_history', ZERO_WRITES)]));
+    const out = await measureRerun(pool, tables, async () => { calls.push('RUN_SECOND'); return ok; });
+    expect(calls).toEqual(['count', 'hash', 'count', 'txid', 'RUN_SECOND', 'xmin', 'count', 'hash', 'xmin', 'count']);
+    expect(out.measured.coa_applications).toEqual({ rewritten: 3, rows_before: 3, rows_after: 3, hash_before: 'abc', hash_after: 'abc' });
+    expect(out.measured.lifecycle_status_history).toEqual({ rewritten: 3, rows_before: 3, rows_after: 3 });
+  });
+
+  it('the coa descriptor: coa_applications is seen_drift (records_touched), lifecycle_status_history stays strict zero_writes', () => {
+    const coa = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'scripts/load-coa.descriptor.json'), 'utf8'));
+    expect(rerunTables(coa)).toEqual([
+      { table: 'coa_applications', mode: MODE_SEEN_DRIFT, seen_column: 'last_seen_at', key: ['application_number'], touched_check: 'records_touched' },
+      { table: 'lifecycle_status_history', mode: 'strict' },
+    ]);
+  });
+
+  it('fleet: every descriptor target with a seen column declares declared_drift, a why citing R-DZ, and a declared check as its drift liveness', () => {
+    const { execSync } = require('node:child_process') as typeof import('node:child_process');
+    const files = execSync("git ls-files 'scripts/*.descriptor.json' 'scripts/**/*.descriptor.json'", { encoding: 'utf8' }).split('\n').filter(Boolean)
+      .filter((f) => !f.includes('/_schema/'));
+    let seen = 0;
+    for (const f of files) {
+      const d = JSON.parse(fs.readFileSync(path.join(process.cwd(), f), 'utf8'));
+      const ids = new Set((Array.isArray(d.checks) ? d.checks : []).map((c: { id: string }) => c.id));
+      for (const w of (d.outputs && Array.isArray(d.outputs.writes) ? d.outputs.writes : [])) {
+        if (!(w.columns || []).some((c: { written?: string }) => c.written === 'seen')) continue;
+        seen++;
+        const wd = w.write_discipline || {};
+        expect(wd.idempotent_rerun, `${f} ${w.table}`).toBe('declared_drift');
+        expect(String(wd.idempotent_rerun_why && wd.idempotent_rerun_why.text), `${f} ${w.table}`).toContain('R-DZ');
+        expect(wd.declared_drift && wd.declared_drift.liveness && wd.declared_drift.liveness.kind, `${f} ${w.table}`).toBe('check');
+        expect(ids.has(wd.declared_drift.liveness.ref), `${f} ${w.table}: ${wd.declared_drift.liveness.ref} is a declared check`).toBe(true);
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
 });
