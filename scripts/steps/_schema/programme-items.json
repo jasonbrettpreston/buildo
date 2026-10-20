@@ -749,22 +749,20 @@
       "title": "reset generated per archetype",
       "promised": "reset generated per archetype (a library mechanism that produces reset SQL from outputs/recovery.reset)",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 2: scripts/lib/step/reset.js generateReset(descriptor) reads recovery.reset and, for \"generated\", derives DELETE/UPDATE-SET-NULL reset SQL per outputs.writes[] entry via write.buildWritePlan; dry-run by default. Exported from scripts/lib/step/index.js. Conformance in src/tests/step-conformance.infra.test.ts (describe 'STA-2 — generateReset'): 0 real descriptors declare \"generated\" today (vacuous, per this item's own prior evidence, unchanged), so non-vacuity is proven on fixture descriptors — a retract:\"all\" fixture and a set_based_null_retract fixture both round-trip to >=1 statement, and a RED-first negative fixture (retract:\"departed\") throws naming the table/index/class. Spec 122 §7.5b documents the mechanism same commit.",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 2: scripts/lib/step/reset.js generateReset(descriptor) reads recovery.reset and, for \"generated\", derives DELETE/UPDATE-SET-NULL reset SQL per outputs.writes[] entry via write.buildWritePlan; dry-run by default. Exported from scripts/lib/step/index.js. Conformance in src/tests/step-conformance.infra.test.ts (describe 'STA-2 — generateReset'): 0 real descriptors declare \"generated\" today (vacuous, per this item's own prior evidence, unchanged), so non-vacuity is proven on fixture descriptors — a retract:\"all\" fixture and a set_based_null_retract fixture both round-trip to >=1 statement, and a RED-first negative fixture (retract:\"departed\") throws naming the table/index/class. Spec 122 §7.5b documents the mechanism same commit. FORWARD-DECLARED 2026-10-20 (operator y, rs-purity V3 pass): gate.blocks [\"refresh_snapshot\"] -> [] per programme-items.schema.json:101 (\"FORWARD-DECLARED cutover_prereq ... may declare blocks:[] ... on the condition that applies_when is present\"), the STA-1/HB-1/CEIL-1 form. refresh_snapshot declares recovery.reset as prose, so applies_when (recovery.reset == \"generated\") never matches it and checkCutoverPrereqs already skips it (RS-D-STA, Spec 124a R-T); the item stays armed for any future \"generated\" declarer.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
       },
       "gate": {
         "kind": "cutover_prereq",
-        "blocks": [
-          "refresh_snapshot"
-        ],
+        "blocks": [],
         "applies_when": {
           "descriptor_path": "recovery.reset",
           "equals": "generated"
         }
       },
-      "last_reviewed": "2026-09-03"
+      "last_reviewed": "2026-10-20"
     },
     {
       "id": "STA-3",
@@ -772,22 +770,20 @@
       "title": "3 destructive-reset guards",
       "promised": "3 destructive-reset guards (dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard)",
       "status": "BUILT",
-      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 3: scripts/lib/step/reset.js ships 3 guards, each refusing before any statement runs — assertBeforeImageDeclared (R-M: no reset without recovery.before_image \"generated\"), assertForceFullAuthorized (R-L: no reset outside override.force_full sourced from a manifest.json chain_args.sources \"--full\" declaration), assertAdvisoryLockAvailable (no reset while the step's identity.lock is held elsewhere, via the same pg_try_advisory_xact_lock primitive pipeline.withAdvisoryLock uses). applyGeneratedReset runs all three in order then reuses write.writeBeforeImage verbatim before each statement. Each guard has a known-bad fixture and both-directions lock (fake pool) in src/tests/step-library.logic.test.ts (describe 'STA-3'). DELTA FROM PROMISED, recorded not silently substituted: the original promise was \"dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard\" — dry-run default survives unchanged (STA-2's generateReset own default); the other two guards are RE-DERIVED from R-L and R-M (Spec 124 §5), which post-date the original promise and are the stronger, already-ratified mechanisms. Spec 124 R-L/R-M rows gain an \"Enforced by\" note same commit.",
+      "evidence": "BUILT 2026-09-03, WF1 'state tables reset' commit 3: scripts/lib/step/reset.js ships 3 guards, each refusing before any statement runs — assertBeforeImageDeclared (R-M: no reset without recovery.before_image \"generated\"), assertForceFullAuthorized (R-L: no reset outside override.force_full sourced from a manifest.json chain_args.sources \"--full\" declaration), assertAdvisoryLockAvailable (no reset while the step's identity.lock is held elsewhere, via the same pg_try_advisory_xact_lock primitive pipeline.withAdvisoryLock uses). applyGeneratedReset runs all three in order then reuses write.writeBeforeImage verbatim before each statement. Each guard has a known-bad fixture and both-directions lock (fake pool) in src/tests/step-library.logic.test.ts (describe 'STA-3'). DELTA FROM PROMISED, recorded not silently substituted: the original promise was \"dry-run default, explicit target confirmation, one-txn magnitude+empty-source guard\" — dry-run default survives unchanged (STA-2's generateReset own default); the other two guards are RE-DERIVED from R-L and R-M (Spec 124 §5), which post-date the original promise and are the stronger, already-ratified mechanisms. Spec 124 R-L/R-M rows gain an \"Enforced by\" note same commit. FORWARD-DECLARED 2026-10-20 (operator y, rs-purity V3 pass): gate.blocks [\"refresh_snapshot\"] -> [] per programme-items.schema.json:101 (\"FORWARD-DECLARED cutover_prereq ... may declare blocks:[] ... on the condition that applies_when is present\"), the STA-1/HB-1/CEIL-1 form. refresh_snapshot declares recovery.reset as prose, so applies_when (recovery.reset == \"generated\") never matches it and checkCutoverPrereqs already skips it (RS-D-STA, Spec 124a R-T); the item stays armed for any future \"generated\" declarer.",
       "owner": {
         "kind": "wf",
         "ref": "wf: programme-STA-2"
       },
       "gate": {
         "kind": "cutover_prereq",
-        "blocks": [
-          "refresh_snapshot"
-        ],
+        "blocks": [],
         "applies_when": {
           "descriptor_path": "recovery.reset",
           "equals": "generated"
         }
       },
-      "last_reviewed": "2026-09-03"
+      "last_reviewed": "2026-10-20"
     },
     {
       "id": "STA-4",
