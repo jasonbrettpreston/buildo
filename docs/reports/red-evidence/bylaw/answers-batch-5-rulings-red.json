@@ -1,0 +1,47 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-5.logic.test.ts",
+ "base": "e6cb9973",
+ "run_on": "2026-10-20",
+ "note": "Review answers batch 5, follow-up: operator rulings 2026-10-20 (\"1 & 2 y\": M-228 through-lot front lot line, M-229 mechanical attic out of GFA, amends M-171) and \"y pin them\" (PIN NONRES-1..3: the non-residential arms carry no disclosure). Red: the M-228 / M-229 unit sentences and gaps, the two new P5.12 codes, and the three pinned units (they carried a disclosure at the base). The other 32 cases pass both sides (batch 5 proper; red evidence answers-batch-5-red.json).",
+ "counts": {
+  "red": 7,
+  "pass": 32
+ },
+ "cases": [
+  {
+   "name": "M-228 — a through lot takes its front lot line on the street the neighbouring lots face (10.5.30.20(1)(A)/(B)) M-228: 10.5.30.20(1)(A) / (B) carry the reserve and front-line sentences and name M-228",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a through lot, a street line separ…' // Object.is equality"
+  },
+  {
+   "name": "M-228 — a through lot takes its front lot line on the street the neighbouring lots face (10.5.30.20(1)(A)/(B)) M-228: P5.12 carries through_lot_front_line",
+   "at_base": "red",
+   "reason": "AssertionError: expected '' to match /the front lot line is taken on \\{stre…/"
+  },
+  {
+   "name": "M-229 — the mechanical attic area is left out of GFA by default (10.5.40.40(2); amends M-171) M-229: 10.5.40.40(2) carries the achieved-if sentence and names M-229",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'Up to the lesser of 5% of the permitt…' // Object.is equality"
+  },
+  {
+   "name": "M-229 — the mechanical attic area is left out of GFA by default (10.5.40.40(2); amends M-171) M-229: P5.12 carries mechanical_attic_excluded",
+   "at_base": "red",
+   "reason": "AssertionError: expected '' to match /achieved if that space holds the mech…/"
+  },
+  {
+   "name": "PIN NONRES — non-residential arms answered \"disclose\" are pinned out of scope, no disclosure applied 5.10.40.70(6)#(6)(B) carries no disclosure (PIN NONRES)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'If TRCA has determined a shoreline ha…' to be 'none' // Object.is equality"
+  },
+  {
+   "name": "PIN NONRES — non-residential arms answered \"disclose\" are pinned out of scope, no disclosure applied 5.10.40.80(1)#(1)(B) carries no disclosure (PIN NONRES)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'If TRCA has determined a shoreline ha…' to be 'none' // Object.is equality"
+  },
+  {
+   "name": "PIN NONRES — non-residential arms answered \"disclose\" are pinned out of scope, no disclosure applied 10.5.40.60(4)#(4)(B) carries no disclosure (PIN NONRES)",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'On a lot with 100 or more dwelling un…' to be 'none' // Object.is equality"
+  }
+ ]
+}

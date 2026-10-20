@@ -1,0 +1,162 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-6.logic.test.ts",
+ "base": "a444e245",
+ "run_on": "2026-10-20",
+ "note": "verify-12f batch 6 B1 fix: the NONRES-4 / SCOPE-TOWER-1 pins had no operator ruling. Red at a444e245 (throwaway detached worktree, only this test file added): the tower sentences and 10.10.40.71(1) disclosure, the 150.7.1(2) re-cite to M-158, the misquote check, and the scopePinProblems closed-list lock (absent at the base). Cases that pass at the base are the batch-6 cases already green there.",
+ "counts": {
+  "red": 11,
+  "pass": 19
+ },
+ "cases": [
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(A) carries its rooftop sentence",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(B) carries its rooftop sentence",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(C) carries its rooftop sentence",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) rooftop_elements_exempt cites R 10.10.40.10(8)",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f batch 6 B1 — the tower and Eglinton arms are disclosed as the operator answered, never pinned M-169(4) / M-214(3): 10.10.40.10(10)#(10)(A) carries its tower sentence, no scope_pin, INCORPORATED",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On the tower part of a building (stor…' // Object.is equality"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — the tower and Eglinton arms are disclosed as the operator answered, never pinned M-169(4) / M-214(3): 10.10.40.10(10)#(10)(B) carries its tower sentence, no scope_pin, INCORPORATED",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On the tower part of a building, chim…' // Object.is equality"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — the tower and Eglinton arms are disclosed as the operator answered, never pinned M-169(4) / M-214(3): 10.10.40.10(10)#(10)(C) carries its tower sentence, no scope_pin, INCORPORATED",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'A tower is the part of a building enc…' // Object.is equality"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — the tower and Eglinton arms are disclosed as the operator answered, never pinned 10.10.40.71(1) keeps its keyed disclosure, no scope_pin, no withdrawal correction",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to match /^Transit facilities along Eglinton Av…/"
+  },
+  {
+   "name": "M-196(1) / M-214(3) — R 10.10.20.41(6) and the townhouse suite host 150.10.20.1(1)(C) (forms_deferred) 10.10.20.41(6) names M-196(1) and M-214(3) in its gaps",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-196(1) / M-214(3) — R 10.10.20.41(6) and the townhouse suite host 150.10.20.1(1)(C) (forms_deferred) 150.10.20.1(1)(C) carries the townhouse-suite sentence",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-176(1) / M-187 Q4 / M-214 — R 10.10.30.20(1)(C) per-unit frontage is disclosed (parallel chapters) 10.10.30.20(1)(C) names the driveway trade-off and the forms not modelled",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-211(3) / M-158 — renovation and lawful-date readings 10.10.40.40(2)(A) names the pre-1953 FSI 0.69 relief as disclosed, never applied",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "M-211(3) / M-158 — renovation and lawful-date readings 150.7.1(2) carries the garden-suite lawful-date sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'M-158', 'M-178' ] to deeply equal [ 'M-158' ]"
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.30.11(3)#whole is disclosed_by vacant_existing_lot",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.40.10(3)#(3)(B) is disclosed_by rooftop_elements_exempt",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.40.71(2)#whole is disclosed_by lawfully_existing_relief",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 5.10.40.70(6)#(6)(B) is pinned NONRES-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 5.10.40.80(1)#(1)(B) is pinned NONRES-2, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.5.40.60(4)#(4)(B) is pinned SCOPE-100UNITS-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope the 100-unit cladding arm is not called non-residential",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope no pinned row cites the Q-PR-2 answer (\"our focus is residential …\") as scope authority",
+   "at_base": "red",
+   "reason": "AssertionError: expected '{\"unit_id\":\"5.10.40.70(6)#(6)(B)\",\"ve…' not to match /our focus is residential|beyond the s…/"
+  },
+  {
+   "name": "verify-12f N6 — 10.5.40.11(2) is re-cited to M-192 alone 10.5.40.11(2) disposition and correction cite M-192, not M-211",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.30.20(1)#(1)(A) names the owed computation",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.30.20(1)#(1)(B) names the owed computation",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.40.40(2)#whole names the owed computation",
+   "at_base": "pass",
+   "reason": ""
+  },
+  {
+   "name": "verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling (closed scope_pins list) a listed pin on a listed unit, recorded verbatim, passes",
+   "at_base": "red",
+   "reason": "TypeError: TR.scopePinProblems is not a function"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling (closed scope_pins list) an unlisted pin fails",
+   "at_base": "red",
+   "reason": "TypeError: TR.scopePinProblems is not a function"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling (closed scope_pins list) a listed pin on an unlisted unit, or on a non-disclose disposition, fails",
+   "at_base": "red",
+   "reason": "TypeError: TR.scopePinProblems is not a function"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling (closed scope_pins list) a pin whose ruling is not recorded verbatim in its spec fails",
+   "at_base": "red",
+   "reason": "TypeError: TR.scopePinProblems is not a function"
+  },
+  {
+   "name": "verify-12f batch 6 B1 — a scope pin needs a recorded operator ruling (closed scope_pins list) the committed list is exactly the three 2026-10-20 \"y pin them\" arms and every pin in the tree has authority",
+   "at_base": "red",
+   "reason": "TypeError: Cannot read properties of undefined (reading 'pins')"
+  }
+ ]
+}

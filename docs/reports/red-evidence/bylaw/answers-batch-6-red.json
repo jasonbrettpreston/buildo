@@ -1,0 +1,152 @@
+{
+ "suite": "src/tests/bylaw-answers-batch-6.logic.test.ts",
+ "base": "1309de7b",
+ "run_on": "2026-10-20",
+ "note": "Review answers batch 6 (dump envdb12, 59 new answers + 3 null verdicts given \"disclose\") with the verify-12f notes folded in (N1 pin rename SCOPE-100UNITS-1 / SCOPE-TOWER-1, N3 owed computation named, N6 10.5.40.11(2) re-cited to M-192, N8 pin-aware tracker reason). Red at the base in a throwaway detached worktree with only this test file added.",
+ "counts": {
+  "red": 28,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(A) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a building taller than 15.0 m, ant…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(B) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a building taller than 15.0 m, fla…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) 10.10.40.10(8)#(8)(C) carries its rooftop sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'On a building taller than 15.0 m, sat…' // Object.is equality"
+  },
+  {
+   "name": "M-169(4) — R rooftop allowances over 15.0 m (10.10.40.10(8)) are disclosed, never evaluated (rooftop_elements_exempt) rooftop_elements_exempt cites R 10.10.40.10(8)",
+   "at_base": "red",
+   "reason": "AssertionError: expected '| `rooftop_elements_exempt` | \"Roofto…' to match /R 10\\.10\\.40\\.10\\(8\\)/"
+  },
+  {
+   "name": "PIN NONRES-4 / SCOPE-TOWER-1 — the Eglinton transit and tower arms answered \"disclose\" are pinned, no disclosure applied 10.10.40.71(1)#whole carries no disclosure and its disposition names the pin",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Transit facilities along Eglinton Ave…' to be 'none' // Object.is equality"
+  },
+  {
+   "name": "PIN NONRES-4 / SCOPE-TOWER-1 — the Eglinton transit and tower arms answered \"disclose\" are pinned, no disclosure applied 10.10.40.10(10)#(10)(A) carries no disclosure and its disposition names the pin",
+   "at_base": "red",
+   "reason": "TypeError: .toMatch() expects to receive a string, but got undefined"
+  },
+  {
+   "name": "PIN NONRES-4 / SCOPE-TOWER-1 — the Eglinton transit and tower arms answered \"disclose\" are pinned, no disclosure applied 10.10.40.10(10)#(10)(B) carries no disclosure and its disposition names the pin",
+   "at_base": "red",
+   "reason": "TypeError: .toMatch() expects to receive a string, but got undefined"
+  },
+  {
+   "name": "PIN NONRES-4 / SCOPE-TOWER-1 — the Eglinton transit and tower arms answered \"disclose\" are pinned, no disclosure applied 10.10.40.10(10)#(10)(C) carries no disclosure and its disposition names the pin",
+   "at_base": "red",
+   "reason": "TypeError: .toMatch() expects to receive a string, but got undefined"
+  },
+  {
+   "name": "M-196(1) / M-214(3) — R 10.10.20.41(6) and the townhouse suite host 150.10.20.1(1)(C) (forms_deferred) 10.10.20.41(6) names M-196(1) and M-214(3) in its gaps",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Applies only to a semi-detached porti…' to match /M-196\\(1\\).*M-214\\(3\\)/"
+  },
+  {
+   "name": "M-196(1) / M-214(3) — R 10.10.20.41(6) and the townhouse suite host 150.10.20.1(1)(C) (forms_deferred) 150.10.20.1(1)(C) carries the townhouse-suite sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'A secondary suite is permitted in a t…' // Object.is equality"
+  },
+  {
+   "name": "M-176(1) / M-187 Q4 / M-214 — R 10.10.30.20(1)(C) per-unit frontage is disclosed (parallel chapters) 10.10.30.20(1)(C) names the driveway trade-off and the forms not modelled",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Modifies the (A)/(B) value rather tha…' to match /M-176\\(1\\) \\/ M…/ M-187 Q4.*M-214\\(2\\)\\"
+  },
+  {
+   "name": "M-211(3) / M-178 — renovation and lawful-date readings 10.10.40.40(2)(A) names the pre-1953 FSI 0.69 relief as disclosed, never applied",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Applies only to a detached or semi-de…' to match /M-211\\(3\\) \\(with M-192\\).*r_pre1953_…/"
+  },
+  {
+   "name": "M-211(3) / M-178 — renovation and lawful-date readings 150.7.1(2) carries the garden-suite lawful-date sentence",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to be 'For garden suites, a building or use …' // Object.is equality"
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.30.11(3)#whole is disclosed_by vacant_existing_lot",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, 'resolved_by', …(1) ] to deeply equal [ 'disclose', 'disclosed_by', …(1) ]"
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.40.10(3)#(3)(B) is disclosed_by rooftop_elements_exempt",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, 'resolved_by', …(1) ] to deeply equal [ 'disclose', 'disclosed_by', …(1) ]"
+  },
+  {
+   "name": "the operator's explicit \"disclose\" on the three batch-5 null answers is honoured 10.5.40.71(2)#whole is disclosed_by lawfully_existing_relief",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ null, 'resolved_by', …(1) ] to deeply equal [ 'disclose', 'disclosed_by', …(1) ]"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 5.10.40.70(6)#(6)(B) is pinned NONRES-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'NONRES-1' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 5.10.40.80(1)#(1)(B) is pinned NONRES-2, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'NONRES-2' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.5.40.60(4)#(4)(B) is pinned SCOPE-100UNITS-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'SCOPE-100UNITS-1' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.10.40.71(1)#whole is pinned NONRES-4, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'NONRES-4' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.10.40.10(10)#(10)(A) is pinned SCOPE-TOWER-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'SCOPE-TOWER-1' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.10.40.10(10)#(10)(B) is pinned SCOPE-TOWER-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'SCOPE-TOWER-1' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope 10.10.40.10(10)#(10)(C) is pinned SCOPE-TOWER-1, UNFIXED, reason \"pinned out of scope\"",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'SCOPE-TOWER-1' // Object.is equality"
+  },
+  {
+   "name": "verify-12f N1 / N8 — pinned rows carry scope_pin and the tracker says they are pinned out of scope no disposition calls the 100-unit cladding arm or the tower arms non-residential",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'The cladding allowance on a lot with …' to match /residential but outside the MaxBLD bu…/"
+  },
+  {
+   "name": "verify-12f N6 — 10.5.40.11(2) is re-cited to M-192 alone 10.5.40.11(2) disposition and correction cite M-192, not M-211",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'M-192', 'M-211' ] to deeply equal [ 'M-192' ]"
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.30.20(1)#(1)(A) names the owed computation",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Through lots are in scope: the front …' to match /is owed to the Spec 78 Phase-5 step c…/"
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.30.20(1)#(1)(B) names the owed computation",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Through lots are in scope: the front …' to match /is owed to the Spec 78 Phase-5 step c…/"
+  },
+  {
+   "name": "verify-12f N3 — M-228 / M-229 rows say the computation is owed to step commit ① 10.5.40.40(2)#whole names the owed computation",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'Applied by default: where the maximum…' to match /is owed to the Spec 78 Phase-5 step c…/"
+  }
+ ]
+}

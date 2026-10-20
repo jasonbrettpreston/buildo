@@ -81,6 +81,34 @@ const chapterOf = (reg) => {
 };
 const baseReg = (id) => String(id).replace(/@[^#]*$/, '').replace(/^(.*?\(\d+[A-Za-z]?\)).*$/, '$1');
 
+/**
+ * Scope-pin authority (Spec 78 P5.15(B); verify-12f batch 6 B1). A disposition may carry `scope_pin` only when the pin is
+ * in the closed list `scope_pins.pins` of the dispositions file, the unit is one of that pin's `units`, the disposition is
+ * `disclosed_by`, and the recorded spec (`recorded_in`) carries both the pin id and the operator's verbatim ruling in
+ * quotes. Unlisted pins, unlisted units and unrecorded rulings fail. `readSpec(rel)` returns a file's text ('' if absent).
+ * Returns problems (strings); an empty array means every pin has operator authority.
+ */
+export function scopePinProblems(dispFile, readSpec) {
+  const problems = [];
+  const pins = (dispFile.scope_pins && dispFile.scope_pins.pins) || {};
+  for (const [id, p] of Object.entries(pins)) {
+    if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+$/.test(id)) problems.push(`scope_pins: "${id}" is not a PIN id`);
+    if (!Array.isArray(p.units) || !p.units.length) problems.push(`scope_pins: ${id} lists no units`);
+    if (!p.ruling || !p.ruled_on || !p.recorded_in) { problems.push(`scope_pins: ${id} needs ruling, ruled_on and recorded_in`); continue; }
+    const text = readSpec(p.recorded_in);
+    if (!text.includes(id)) problems.push(`scope_pins: ${id} is not named in ${p.recorded_in}`);
+    if (!text.includes(`"${p.ruling}"`)) problems.push(`scope_pins: ${id} ruling "${p.ruling}" is not recorded verbatim in ${p.recorded_in}`);
+  }
+  for (const d of dispFile.dispositions || []) {
+    if (d.scope_pin === undefined) continue;
+    const p = pins[d.scope_pin];
+    if (d.disposition !== 'disclosed_by') problems.push(`${d.unit_id}: scope_pin on a ${d.disposition} disposition`);
+    if (!p) { problems.push(`${d.unit_id}: scope_pin ${d.scope_pin} has no recorded operator ruling (not in scope_pins)`); continue; }
+    if (!(p.units || []).includes(d.unit_id)) problems.push(`${d.unit_id}: scope_pin ${d.scope_pin} does not list this unit`);
+  }
+  return problems;
+}
+
 export function build(root) {
   const answersFile = readJson(root, ANSWERS_REL);
   const dispFile = readJson(root, DISPOSITIONS_REL);
@@ -103,6 +131,7 @@ export function build(root) {
     if (disp.has(d.unit_id)) problems.push(`${d.unit_id}: two dispositions`);
     disp.set(d.unit_id, d);
   }
+  problems.push(...scopePinProblems(dispFile, (rel) => { try { return readText(root, rel); } catch { return ''; } }));
   const rows = [];
   const seen = new Set();
   for (const a of answersFile.answers) {
@@ -143,7 +172,15 @@ export function build(root) {
         if (!row.disclosure_code) problems.push(`${a.unit_id}: disclose without a P5.12 code`);
         const keyedDisclosure = unit && unit.disclosure && unit.disclosure !== 'none';
         row.checks.push(`P5.12 code ${row.disclosure_code || '(none)'}`, keyedDisclosure ? 'unit carries a disclosure' : 'unit carries no disclosure');
-        if (keyedDisclosure || isRowAnswer) { row.state = 'INCORPORATED'; row.reason = isRowAnswer ? 'row answer; P5.12 code' : 'keyed disclosure + P5.12 code'; } else { row.state = 'UNFIXED'; row.reason = 'P5.12 code ruled; keyed unit has no disclosure yet'; }
+        if (d.scope_pin !== undefined) {
+          // Pinned out of scope (operator "y pin them", 2026-10-20): the answer is kept, no disclosure is applied, and the
+          // row stays UNFIXED, owed to the pin. The pin id must be named in the corrected value, and the unit must carry none.
+          if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+$/.test(String(d.scope_pin))) problems.push(`${a.unit_id}: scope_pin "${d.scope_pin}" is not a PIN id`);
+          if (!row.corrected_value.includes(`PIN ${d.scope_pin}`)) problems.push(`${a.unit_id}: scope_pin ${d.scope_pin} not named in the corrected value`);
+          if (keyedDisclosure) problems.push(`${a.unit_id}: pinned out of scope (PIN ${d.scope_pin}) but the unit carries a disclosure`);
+          row.checks.push(`pinned out of scope: PIN ${d.scope_pin}`);
+          row.state = 'UNFIXED'; row.reason = `pinned out of scope (PIN ${d.scope_pin}): answer kept, no disclosure applied`;
+        } else if (keyedDisclosure || isRowAnswer) { row.state = 'INCORPORATED'; row.reason = isRowAnswer ? 'row answer; P5.12 code' : 'keyed disclosure + P5.12 code'; } else { row.state = 'UNFIXED'; row.reason = 'P5.12 code ruled; keyed unit has no disclosure yet'; }
         break;
       }
       case 'fixed_by':
