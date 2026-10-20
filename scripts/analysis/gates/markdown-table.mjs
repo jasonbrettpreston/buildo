@@ -1,5 +1,5 @@
 // SPEC LINK: docs/specs/01-pipeline/124_step_standard_policy.md §5 R-FA (header and separator rows are never
-//            data rows), R-FB (G3/G-2 score intent-ledger tables only); docs/specs/01-pipeline/123_step_opt_assessment_validation.md §6 (G3)
+//            data rows), R-FB (G3 scores intent-ledger tables only; G-2 reads ledger and evidence); docs/specs/01-pipeline/123_step_opt_assessment_validation.md §6 (G3)
 //
 // THE ONE markdown-table row reader for every row-counting scorer (R-FA, McDonald's Airtight V3, operator y
 // 2026-10-20). A table's SEPARATOR row (`|---|:---:|`, alignment colons allowed) and its HEADER row (the `|`
@@ -8,8 +8,10 @@
 // rows through `tableDataRows`, so no scorer can count a header, and no report gains by naming its
 // disposition vocabulary in a header.
 //
-// R-FB (operator y 2026-10-20): inside a PH-3 section, G3 and G-2 read only INTENT-LEDGER tables (a header naming a
-// Disposition column) through `ledgerTableRows`; every other table there is evidence and is not scored.
+// R-FB (operator y 2026-10-20): inside a PH-3 section, G3 scores only INTENT-LEDGER tables (a header naming a
+// Disposition column) through `ledgerTableRows`; every other table there is evidence and is not scored by G3.
+// G-2 (Rule 4) reads through the same split but checks ledger AND evidence rows (a preserved-in-compute
+// disposition binds wherever it sits).
 
 const SEPARATOR_RE = /^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/;
 
@@ -64,7 +66,7 @@ export function isLedgerTable(table) {
 /**
  * R-FB (operator y 2026-10-20): the rows of a PH-3 section split into intent-LEDGER rows (tables whose header names
  * a Disposition column) and EVIDENCE rows (every other table: censuses, lock inventories, line accounting,
- * provenance; a headerless table is evidence). G3 scores `ledger` only; G-2 reads `ledger` only. PURE.
+ * provenance; a headerless table is evidence). G3 scores `ledger` only; G-2 checks `ledger` and `evidence`. PURE.
  * @param {string} text
  * @returns {{ledger: Array<{text: string, line: number}>, evidence: Array<{text: string, line: number}>}}
  */

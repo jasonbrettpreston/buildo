@@ -228,6 +228,13 @@ describe('COA-D13 — compute reads the ctx the ingestPrimaries dispatch builds 
     expect((await runFinal(allNull.final)).out.zoning_designation_null).toEqual({ violations: 1, detail: 3 });
   });
 
+  it('zero_records fires on an empty feed (the empty-feed case of the retired hand-built compute.logic lock; verify-11 F6)', async () => {
+    const { final } = await dispatch({ full: false, active: [] });
+    const { out } = await runFinal(final);
+    expect(out.records_fetched?.value).toBe(0);
+    expect(out.zero_records?.violations).toBe(1);
+  });
+
   it('schema_mismatch_count (pre_write) names the CRITICAL field a member\'s own header lacks, and the write is refused (max_days_stale inert)', async () => {
     const closed = CLOSED.map((r) => { const { STATUSDESC: _drop, ...rest } = r; return rest; });
     const { sink, final, ingest } = await dispatch({ full: true, closed });
