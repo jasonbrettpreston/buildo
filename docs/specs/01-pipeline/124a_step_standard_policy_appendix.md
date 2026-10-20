@@ -580,3 +580,31 @@ Operator decision (2026-10-20, verbatim): "a nd b rullings approved - just ensur
 | EXTERNALIZED | No tolerance: every comparison is exact; there is no literal beyond 0. |
 
 PIN R-EW-LOCKS (owner: each step's lane at its next lock touch): the existing compute locks feed a hand-built ctx. Rule R-EW (ii) owes each of them a dispatch-built ctx; load_heritage and load_zoning come first because they share coa's 0x path. The closed list, named at `wf2/p4-integrate-11` (verify F4), is every `converted.json` row at 6d63db74 with a `scripts/lib/compute/` module and a compute lock, coa excepted (its lock is now dispatch-built). It is set by R-EW (ii)'s scope, not by a per-lock audit. Converted (29): assert_schema, load_ravines, link_massing, link_wsib, link_parcel_addresses, compute_centroids, link_parcels, refresh_snapshot, enrich_parcels, assert_global_coverage, assert_data_bounds, assert_engine_health, link_neighbourhoods, geocode_permits, assert_parcel_sanity, enrich_ravines, enrich_heritage, compute_parcel_cost_estimates, address_points, parcels, load_centreline, massing, neighbourhoods, load_wsib, load_heritage, enrich_centreline, load_zoning, load_bylaw_map_areas, link_parcel_abutments. Pending (8): load_coa_notices, assert_coa_freshness, classify_coa_scope, link_coa_to_parcels, enrich_permits, enrich_coa_zoning, classify_coa_trades, compute_coa_cost_estimates. permits and the four batch-5 asserts had no compute module at 6d63db74, so they are outside the list. A slug leaves the list when its compute lock builds ctx through the real dispatch.
+
+## Appendix §B21 — Conflict check and V3 admission table for R-GZ (night-p4-c, 2026-10-20; provisional numbering)
+
+Operator decision (2026-10-20): y to the lane night-p4-c draft "fit-to-width perturbation for a bracket column". Provisional ids: `wf2/p4-integrate-12` (not in this lane's base 5f1cc5ba) allocated through R-GT and may hold §B21; the row and this section may be renumbered at integration with no change of content. Red case: Night P4 2026-10-20, R-ET `--run` on coa (`--column=data_hash --derive-column=status --op="derived_status: forced"`) failed `ERROR: value too long for type character varying(64)`, "this run never perturbed; the table is left as found" (lane scratchpad `p4c/r2/ret-run.log`). Red-first lock: `docs/reports/red-evidence/r-gz/red-fit-width.json` (6/7 RED before the code).
+
+**Conflict check.**
+
+| Ruling | Citation | Verdict |
+|---|---|---|
+| R-CZ | 124a:391 "a bracket names every flag, so nothing is re-chosen" | No conflict: no flag is added; the fitted form is derived from the catalog at run time, so a recipe in `recapture.json` replays as written. |
+| R-ET | 124:261 "`--run` … appends `<s>` to the guard column and the prior column in ONE transaction" | Amended: "appends" becomes "appends, fitted to a bounded column's width". The one transaction, the exactly-one-derived-row claim and the restore are unchanged. |
+| R-DP | 124a:478 delete-and-reinsert | No conflict: pair mode has no SET expression (`perturbationSetExpr` still refuses it). |
+| R-DN | 124a:476 "the same int emit #38 reads, never a second count source" | No conflict: count_path untouched. |
+| R-EV | 124:263 the UTC data_hash form | No conflict: the fitted value is a perturbation the step heals and the restore reverts under `IS DISTINCT FROM`; no stored hash keeps it. |
+| R-EX / Spec 122 §1.0 | 124:265 | No conflict: the rerun proof measures run 2 of a plain POST, never a bracket's perturbation. |
+| Template freeze / RE-FREEZE | `template-freeze.json`:312 (library internals under scripts/lib/step/**) | No conflict: `scripts/analysis/ingestor-forced-cohort.js` is outside `scripts/lib/step/**`; no lib_fingerprint move. |
+
+**R-GZ — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One script, one SET-expression builder (`perturbationSetExpr` → `appendAssignment`) used by both text ops; one catalog query (`COLUMN_WIDTH_SQL`). |
+| OBSERVABLE | `--plan`/`--backup`/`--run` print each width and the SET form; `--plan` prints the first cohort row's fitted value; a refusal names the column, its width and the suffix length. Locks: `cohort-fit-width.logic` (7 tests) and `--self-test` (fit, overflow, refuse). |
+| RECORDED | Spec 124 §5 R-GZ, dated 2026-10-20, with the operator's y; this section. |
+| SCALABLE | Any bounded text column under either text op, by catalog width; no step branch. |
+| ACCURATE | Red first (6/7 RED, plus the live overflow). The fitted value has the column's width at most, ends in the suffix, and so differs from a full-width value that does not (the `--run` unmoved check still refuses a void perturbation). |
+| SIMPLE | One expression and one read; unbounded columns render exactly as before. |
+| EXTERNALIZED | No threshold: the width is the catalog's; the suffix is the operator's flag. |
