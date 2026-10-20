@@ -22,6 +22,8 @@ const CENSUS_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-c
 const CENSUS_SCHEMA_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/step-archetype-census.schema.json');
 const STEP_SCHEMA_PATH = path.join(REPO_ROOT, 'scripts/steps/_schema/step.schema.json');
 const SPEC_124 = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_standard_policy.md');
+// integrate-12: M35 moved R-DU, R-DV, R-DX…R-EP (R-EI…R-EN among them) to a 124a LIVE REGISTER section (§B24).
+const SPEC_124A = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
 const SPEC_122 = path.join(REPO_ROOT, 'docs/specs/01-pipeline/122_pipeline_step_optimization.md');
 
 type Exemption = { slug: string; file: string | null; reason: string; ruling: string; scope: string; covered_by?: string[]; evidence?: string };
@@ -199,8 +201,16 @@ describe('R-EM — a one-time backfill leaves its chain only on a measured zero'
 });
 
 describe('R-EI..R-EN are recorded in Spec 124', () => {
+  // A register row lives in Spec 124 §5 or in a 124a LIVE REGISTER section (moved for the byte budget, still in force).
+  const liveRegister = (): string => {
+    let live = false;
+    return fs.readFileSync(SPEC_124A, 'utf8').split('\n').filter((l) => {
+      if (/^#{1,2} /.test(l)) live = /^## .*\(moved from Spec 124 §5\).*LIVE REGISTER/.test(l);
+      return live;
+    }).join('\n');
+  };
   it.each(['R-EI', 'R-EJ', 'R-EK', 'R-EL', 'R-EM', 'R-EN'])('%s has a register row', (id) => {
-    const s124 = fs.readFileSync(SPEC_124, 'utf8');
+    const s124 = `${fs.readFileSync(SPEC_124, 'utf8')}\n${liveRegister()}`;
     expect(s124).toMatch(new RegExp(`^\\| ${id} \\| \\*\\*`, 'm'));
   });
 });
