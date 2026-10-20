@@ -105,7 +105,8 @@
         "R-ER",
         "R-ES",
         "W4A-R4",
-        "R-FF"
+        "R-FF",
+        "R-HA"
       ]
     },
     {
@@ -132,6 +133,7 @@
         "R-DQ",
         "R-EL",
         "R-ET",
+        "R-GZ",
         "K4",
         "G8"
       ]
@@ -2045,7 +2047,8 @@
       "kind": "register-ruling",
       "status": "amended-by",
       "by": [
-        "R-DB"
+        "R-DB",
+        "R-HA"
       ],
       "handbook_line": "core.14",
       "enforcement": {
@@ -2142,7 +2145,10 @@
     {
       "id": "R-DB",
       "kind": "register-ruling",
-      "status": "active",
+      "status": "amended-by",
+      "by": [
+        "R-HA"
+      ],
       "handbook_line": "core.14",
       "enforcement": {
         "kind": "lock",
@@ -3371,7 +3377,8 @@
         "R-DN",
         "R-DP",
         "R-DQ",
-        "R-ET"
+        "R-ET",
+        "R-GZ"
       ],
       "handbook_line": "x-captures.1",
       "enforcement": {
@@ -3489,7 +3496,10 @@
     {
       "id": "R-ET",
       "kind": "register-ruling",
-      "status": "active",
+      "status": "amended-by",
+      "by": [
+        "R-GZ"
+      ],
       "handbook_line": "x-captures.2",
       "enforcement": {
         "kind": "lock",
@@ -4687,6 +4697,36 @@
       "source": {
         "register": true
       }
+    },
+    {
+      "id": "R-GZ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.2",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/cohort-fit-width.logic.test.ts"
+      },
+      "statement": "A bracket's text suffix (append_text, derived_status) is fitted to a bounded column's catalog width: left(col, w - len(s)) || s; an unbounded column keeps the plain append, and a suffix as wide as the column is refused before any perturbation.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-4"
+    },
+    {
+      "id": "R-HA",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/witness-derived-target.logic.test.ts"
+      },
+      "statement": "#44 (b)/(c) for an R-DY derived target: per trace, written tables within the declared set with every non-derived target written and statements in [statements, statements + derived_statements]; per slug, each derived target written by at least one fresh POST trace.",
+      "source": {
+        "register": true
+      },
+      "merge": "MERGE-3"
     },
     {
       "id": "R-HB",

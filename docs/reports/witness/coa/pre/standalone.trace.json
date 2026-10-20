@@ -1,0 +1,248 @@
+{
+  "trace_version": 1,
+  "step": "scripts/load-coa.js",
+  "chain": "none",
+  "source_fingerprint": "16ba052410e4054ce840ac2699b9766570a8e31babccf8236ed1198bb9158376",
+  "git_head": "fa899041ac02f01cc89bd8c0cac982f64cd5429f",
+  "header": {
+    "processes": 1,
+    "calls": 38,
+    "distinct": 10,
+    "utility": 18,
+    "tracer_self_ms": 8.341,
+    "wall_ms": 1848
+  },
+  "statements": [
+    {
+      "fingerprint": "314354e0efb11324",
+      "kind": "write",
+      "count": 6,
+      "rowCount": 2689,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "last_seen_at"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "last_seen_at"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "504ef25008758990",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "64b95be5fb578690",
+      "kind": "write",
+      "count": 6,
+      "rowCount": 0,
+      "reads": {
+        "coa_applications": [
+          "data_hash"
+        ]
+      },
+      "writes": {
+        "coa_applications": [
+          "address",
+          "applicant",
+          "application_number",
+          "data_hash",
+          "decision",
+          "decision_date",
+          "description",
+          "first_seen_at",
+          "hearing_date",
+          "last_seen_at",
+          "status",
+          "street_name",
+          "street_name_normalized",
+          "street_num",
+          "sub_type",
+          "ward",
+          "zoning_designation"
+        ]
+      },
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "77d30c21e4d01ffb",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "7bbcde9cfab6c79c",
+      "kind": "utility",
+      "count": 7,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "81fddf573258d48a",
+      "kind": "utility",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "9c3f34312b372efb",
+      "kind": "read",
+      "count": 6,
+      "rowCount": 2689,
+      "reads": {
+        "coa_applications": [
+          "application_number",
+          "status"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "b16b431979fc3e05",
+      "kind": "utility",
+      "count": 7,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "c943c893daafa8b8",
+      "kind": "utility",
+      "count": 2,
+      "rowCount": 0,
+      "reads": {},
+      "writes": {},
+      "excluded": [],
+      "error": null
+    },
+    {
+      "fingerprint": "f766a42a465c91a8",
+      "kind": "read",
+      "count": 1,
+      "rowCount": 1,
+      "reads": {
+        "coa_applications": [
+          "decision",
+          "decision_date",
+          "linked_permit_num"
+        ]
+      },
+      "writes": {},
+      "excluded": [],
+      "error": null
+    }
+  ],
+  "transactions": [
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    },
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    },
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    },
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    },
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    },
+    {
+      "client": "61996:2",
+      "write_fingerprints": [
+        "64b95be5fb578690"
+      ]
+    }
+  ],
+  "autocommit_writes": [
+    "314354e0efb11324"
+  ],
+  "touched": {
+    "reads": {
+      "coa_applications": [
+        "address",
+        "applicant",
+        "application_number",
+        "data_hash",
+        "decision",
+        "decision_date",
+        "description",
+        "first_seen_at",
+        "hearing_date",
+        "last_seen_at",
+        "linked_permit_num",
+        "status",
+        "street_name",
+        "street_name_normalized",
+        "street_num",
+        "sub_type",
+        "ward",
+        "zoning_designation"
+      ]
+    },
+    "writes": {
+      "coa_applications": [
+        "address",
+        "applicant",
+        "application_number",
+        "data_hash",
+        "decision",
+        "decision_date",
+        "description",
+        "first_seen_at",
+        "hearing_date",
+        "last_seen_at",
+        "status",
+        "street_name",
+        "street_name_normalized",
+        "street_num",
+        "sub_type",
+        "ward",
+        "zoning_designation"
+      ]
+    }
+  },
+  "errors": []
+}

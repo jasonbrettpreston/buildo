@@ -1,0 +1,41 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=lead_parcels",
+          "--key=lead_id",
+          "--column=parcel_id",
+          "--op=delete_reinsert",
+          "--count=50",
+          "--where=t.lead_id LIKE 'coa:%'",
+          "--order=t.lead_id",
+          "--backup-table=lead_parcels_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=lead_parcels",
+          "--key=lead_id",
+          "--column=parcel_id",
+          "--op=delete_reinsert",
+          "--count=50",
+          "--where=t.lead_id LIKE 'coa:%'",
+          "--order=t.lead_id",
+          "--backup-table=lead_parcels_cohort_bak_{ts}",
+          "--step=scripts/link-coa-to-parcels.js",
+          "--chain=coa",
+          "--out=docs/reports/golden/link_coa_to_parcels/post/coa-forced.json",
+          "--capture-arg=--tables=coa_applications,lead_parcels",
+          "--capture-arg=--table-columns=coa_applications:id,latitude,longitude,neighbourhood_id;lead_parcels:lead_id,parcel_id,match_type,confidence",
+          "--capture-arg=--table-order=lead_parcels:lead_id,parcel_id"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-DP delete_reinsert, Night P4 2026-10-20, lane night-p4-c): every lead_parcels row of the first 50 coa: lead_ids (31,762 eligible after the first converted run) is deleted in one transaction (lead_parcels has no inbound FK and no DELETE trigger; the bracket's pair-safety reads refuse otherwise). The converted step re-matches every eligible CoA every run (Ruling 1, LCTP-D3), so its guarded upsert re-inserts each deleted pair (links_inserted) and, the link having changed this run, the back-fill re-stamps those CoAs' coordinates, neighbourhood and parcel_linked_at (coa_backfilled). The pair set heals to the before-image; restore re-inserts only pairs still missing."
+    }
+  }
+}

@@ -27,14 +27,18 @@ describe('R-EO — admin shows whether a setting is in effect (real tree)', () =
     expect(committed.entries.assert_coa_freshness_fail_max_days).toMatchObject({ badge: BADGE_CUTOVER, step: 'assert_coa_freshness', legacy_name: 'coa_freshness_fail_days' });
   });
 
-  it('(a) enrich_permits / enrich_coa_zoning copy window: every step-owned copy takes effect at cutover', () => {
-    for (const slug of ['enrich_permits', 'enrich_coa_zoning']) {
-      for (const suffix of ['zoning_coverage_fail_pct', 'zoning_coverage_pass_min_pct', 'bylaw_max_fsi_null_warn_pct', 'bylaw_max_coverage_null_warn_pct', 'centreline_coverage_min']) {
-        expect(committed.entries[`${slug}_${suffix}`], `${slug}_${suffix}`).toMatchObject({ badge: BADGE_CUTOVER, step: slug });
-      }
+  // Night P4 R-EQ shell swap (b2ea1532, 2026-10-20): enrich_coa_zoning left the copy window (stage runner_wired), so its
+  // step-owned copies are read by the live frozen shell and carry no badge. enrich_permits is still in its window.
+  it('(a) enrich_permits copy window: its step-owned copies take effect at cutover; enrich_coa_zoning (runner_wired) reads its own', () => {
+    // centreline_coverage_min is left out for enrich_permits: the shared, now-live scripts/lib/enrich-lead-zoning.js reads
+    // `${slug}_centreline_coverage_min`, which R-EO's template-literal rule counts as a read for BOTH slugs (the
+    // documented known limit, variable-effect.mjs header). PIN VAR-EFFECT-SHARED-TEMPLATE (lane night-p4-c report).
+    for (const suffix of ['zoning_coverage_fail_pct', 'zoning_coverage_pass_min_pct', 'bylaw_max_fsi_null_warn_pct', 'bylaw_max_coverage_null_warn_pct']) {
+      expect(committed.entries[`enrich_permits_${suffix}`], `enrich_permits_${suffix}`).toMatchObject({ badge: BADGE_CUTOVER, step: 'enrich_permits' });
     }
-    expect(committed.entries.enrich_coa_zoning_centreline_coverage_min?.legacy_name).toBe('centreline_propagation_coverage_min');
-    expect(committed.entries.enrich_coa_zoning_bylaw_max_fsi_null_warn_pct?.legacy_name).toBe('coa_bylaw_max_fsi_null_warn_pct');
+    for (const suffix of ['zoning_coverage_fail_pct', 'zoning_coverage_pass_min_pct', 'bylaw_max_fsi_null_warn_pct', 'bylaw_max_coverage_null_warn_pct', 'centreline_coverage_min']) {
+      expect(committed.entries[`enrich_coa_zoning_${suffix}`], `enrich_coa_zoning_${suffix}`).toBeUndefined();
+    }
   });
 
   it('the legacy variables those steps still read are in effect, so they carry no badge', () => {

@@ -1,5 +1,8 @@
 // SPEC LINK: docs/specs/01-pipeline/51_source_coa.md (Target Table: zoning_designation)
 // SPEC LINK: .cursor/wf1_mcbylaw_phase2_inputs_active_task.md (C3)
+// RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20): the shipped script is now the frozen pipeline.step()
+// shell (Spec 122 §5.1); these legacy pins read the verbatim legacy text kept as the red suite's oracle
+// (src/tests/steps/coa/fixtures/legacy-load-coa.js.txt). The converted behaviour is pinned by src/tests/steps/coa/violations.test.ts.
 
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -7,7 +10,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
 
-const SRC = fs.readFileSync(path.resolve(__dirname, '../../scripts/load-coa.js'), 'utf-8');
+const SRC = fs.readFileSync(path.resolve(__dirname, './steps/coa/fixtures/legacy-load-coa.js.txt'), 'utf-8');
 
 /**
  * Slice the pure/behavioural regions of load-coa.js out of the source text and

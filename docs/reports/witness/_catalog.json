@@ -333,6 +333,46 @@
       "zoning_enriched_at",
       "zoning_parcel_count"
     ],
+    "coa_applications_cohort_bak_20261020t1728z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1740z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1741z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261020t1811z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1812z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261020t1932z": [
+      "bylaw_max_fsi",
+      "id"
+    ],
+    "coa_applications_cohort_bak_20261020t2100z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t2101z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261020t2103z": [
+      "bylaw_max_fsi",
+      "id"
+    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
@@ -630,6 +670,20 @@
       "matched_at",
       "parcel_id"
     ],
+    "lead_parcels_cohort_bak_20261020t1827z": [
+      "confidence",
+      "lead_id",
+      "match_type",
+      "matched_at",
+      "parcel_id"
+    ],
+    "lead_parcels_cohort_bak_20261020t2102z": [
+      "confidence",
+      "lead_id",
+      "match_type",
+      "matched_at",
+      "parcel_id"
+    ],
     "lead_products": [
       "classified_at",
       "confidence",
@@ -686,6 +740,22 @@
       "to_seq",
       "to_status",
       "transitioned_at"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1728z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1740z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1811z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t2100z": [
+      "dk",
+      "nk"
     ],
     "lifecycle_transitions": [
       "coa_type_class",
@@ -1155,6 +1225,10 @@
       "is_corner_lot"
     ],
     "parcels_cohort_bak_20261019t2009z": [
+      "id",
+      "max_buildable_footprint_sqm"
+    ],
+    "parcels_cohort_bak_20261020t1841z": [
       "id",
       "max_buildable_footprint_sqm"
     ],

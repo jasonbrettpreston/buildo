@@ -26,7 +26,14 @@ const loadW = async (): Promise<WitnessMod> =>
   (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/gates/witness.mjs')).href)) as unknown as WitnessMod;
 const loadSv = async (): Promise<SvMod> =>
   (await import(pathToFileURL(path.join(ROOT, 'scripts/analysis/step-validate.mjs')).href)) as unknown as SvMod;
-const enrichParcels = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/enrich-parcels.descriptor.json'), 'utf8')) as unknown;
+// The reader BEFORE it paid the pin: the real enrich_parcels descriptor declares the link_coa_to_parcels pin since that
+// producer's R-EQ swap (Night P4 2026-10-20, 2f0d4446), so the copy-window cases strip exactly that one pin.
+type Pin = { step?: string };
+const enrichParcelsReal = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/enrich-parcels.descriptor.json'), 'utf8')) as { staleness: { pins: Pin[] } };
+const enrichParcels = {
+  ...enrichParcelsReal,
+  staleness: { ...enrichParcelsReal.staleness, pins: enrichParcelsReal.staleness.pins.filter((p) => p.step !== 'link_coa_to_parcels') },
+} as unknown;
 
 // The link_coa_to_parcels ② producer shape: coa_applications.parcel_linked_at is its run_at back-fill stamp.
 const producer = {

@@ -750,7 +750,8 @@ describe('PIPELINE_SUMMARY convention', () => {
   // Scripts that track record counts and should emit PIPELINE_SUMMARY
   const SCRIPTS_WITH_COUNTS = [
     'load-permits.js',
-    'load-coa.js',
+    // load-coa.js RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20): the frozen shell calls pipeline.step();
+    // the library emits PIPELINE_SUMMARY / PIPELINE_META (successor lock: step-conformance.infra.test.ts).
     // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): the library emits PIPELINE_SUMMARY.
     // load-neighbourhoods.js RE-HOMED (batch-2 row 3.8 ②, 2026-09-28): the library emits PIPELINE_SUMMARY.
     'extract-builders.js',
@@ -969,7 +970,8 @@ describe('PIPELINE_META convention', () => {
   // All pipeline scripts that perform DB operations should emit PIPELINE_META
   const SCRIPTS_WITH_META = [
     'load-permits.js',
-    'load-coa.js',
+    // load-coa.js RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20): the frozen shell calls pipeline.step();
+    // the library emits PIPELINE_SUMMARY / PIPELINE_META (successor lock: step-conformance.infra.test.ts).
     // load-massing.js RE-HOMED (batch-2 row 3.6 ②, 2026-09-27): PIPELINE_META is derived from the descriptor (M-D6).
     // load-neighbourhoods.js RE-HOMED (batch-2 row 3.8 ②, 2026-09-28): PIPELINE_META is derived from the descriptor (N-D12).
     // load-wsib.js RE-HOMED (batch-2 row 3.5 ②, 2026-09-29): PIPELINE_META is derived from the descriptor (deviation 11).

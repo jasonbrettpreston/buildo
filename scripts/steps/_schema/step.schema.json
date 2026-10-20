@@ -3090,6 +3090,20 @@
                   "type": "integer",
                   "minimum": 0
                 },
+                "derived_statements": {
+                  "x-trust": "witnessed:#44",
+                  "description": "Spec 124 R-HA (provisional id; operator y 2026-10-20; RE-FREEZE #38, provisional number) — the write statements an R-DY DERIVED target (outputs.writes[i].derive) adds when the run writes a derived row. With it, `statements` counts the primary statements only and gate #44 (c) accepts a per-trace count in [statements, statements + derived_statements]: a run whose prior-state read changed nothing issues no derived statement (coa: lifecycle_status_history is written only on a status change). Absent: the exact `statements` count, as before.",
+                  "type": "integer",
+                  "minimum": 0,
+                  "x-ruling": {
+                    "rungs_tried": [
+                      "rung (a) one exact `statements` integer — false for every run of a derived-target step whose prior state changed nothing (coa Night P4 2026-10-20: plain POST traces 2 statements, the R-ET bracket trace 3)",
+                      "by_mode — keyed by the resolved run mode, but a derived write depends on the data (a status change), not on the mode",
+                      "deriving the count from the number of derived targets — one statement per target is the current codegen, but that is a runner internal, not a declaration; the operator ruled for a declared field"
+                    ],
+                    "why": "Gate #44 (c) compares distinct write fingerprints to the declared count; a conditionally written derived target needs the count as a declared range, or the gate must lie for one class of run."
+                  }
+                },
                 "why": {
                   "$ref": "#/definitions/why"
                 },

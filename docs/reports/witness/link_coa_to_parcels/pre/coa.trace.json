@@ -2,22 +2,22 @@
   "trace_version": 1,
   "step": "scripts/link-coa-to-parcels.js",
   "chain": "coa",
-  "source_fingerprint": null,
-  "git_head": "97747fb72d53154a82bbcf452048f4198cd5061d",
+  "source_fingerprint": "7d4a79e0bd5d398ec3334670b7adb805b44d9b06eef0f8bf90cc33c9d200771d",
+  "git_head": "42c9d3d50d4465dd74c1cb5fea9d277281aaa4da",
   "header": {
     "processes": 1,
-    "calls": 3816,
+    "calls": 135,
     "distinct": 23,
-    "utility": 1099,
-    "tracer_self_ms": 30.904,
-    "wall_ms": 1296
+    "utility": 41,
+    "tracer_self_ms": 4.921,
+    "wall_ms": 486
   },
   "statements": [
     {
       "fingerprint": "0201ab8bf4a1a3a5",
       "kind": "read",
       "count": 2,
-      "rowCount": 546,
+      "rowCount": 17,
       "reads": {
         "coa_applications": [
           "id",
@@ -57,8 +57,8 @@
     {
       "fingerprint": "231f5cbb6a734dec",
       "kind": "write",
-      "count": 12,
-      "rowCount": 12,
+      "count": 1,
+      "rowCount": 1,
       "reads": {
         "coa_applications": [
           "id",
@@ -76,8 +76,8 @@
     {
       "fingerprint": "4369b24dd3b21853",
       "kind": "write",
-      "count": 534,
-      "rowCount": 0,
+      "count": 16,
+      "rowCount": 16,
       "reads": {
         "lead_parcels": [
           "confidence",
@@ -119,7 +119,7 @@
       "fingerprint": "4da6a2f10c1922ae",
       "kind": "write",
       "count": 1,
-      "rowCount": 3,
+      "rowCount": 0,
       "reads": {
         "coa_applications": [
           "lead_id",
@@ -139,7 +139,7 @@
       "fingerprint": "5426100388d8d81a",
       "kind": "read",
       "count": 1,
-      "rowCount": 788,
+      "rowCount": 805,
       "reads": {},
       "writes": {},
       "excluded": [
@@ -162,8 +162,8 @@
     {
       "fingerprint": "5f259e47ca7ccfb0",
       "kind": "write",
-      "count": 534,
-      "rowCount": 534,
+      "count": 16,
+      "rowCount": 16,
       "reads": {
         "coa_applications": [
           "id",
@@ -187,7 +187,7 @@
     {
       "fingerprint": "602a4aab6d75b63e",
       "kind": "read",
-      "count": 12,
+      "count": 1,
       "rowCount": 0,
       "reads": {
         "parcels": [
@@ -207,7 +207,7 @@
     {
       "fingerprint": "60d618658252d2af",
       "kind": "utility",
-      "count": 546,
+      "count": 17,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -217,8 +217,8 @@
     {
       "fingerprint": "62f55e7b33708b65",
       "kind": "read",
-      "count": 534,
-      "rowCount": 534,
+      "count": 16,
+      "rowCount": 16,
       "reads": {},
       "writes": {},
       "excluded": [],
@@ -257,8 +257,8 @@
     {
       "fingerprint": "8ae099686f43d2de",
       "kind": "read",
-      "count": 546,
-      "rowCount": 534,
+      "count": 17,
+      "rowCount": 16,
       "reads": {
         "address_points": [
           "addr_num_normalized",
@@ -289,7 +289,7 @@
     {
       "fingerprint": "8ebd566ea1bf947b",
       "kind": "utility",
-      "count": 546,
+      "count": 17,
       "rowCount": 0,
       "reads": {},
       "writes": {},
@@ -299,8 +299,8 @@
     {
       "fingerprint": "afb5a28bbff96664",
       "kind": "read",
-      "count": 534,
-      "rowCount": 534,
+      "count": 16,
+      "rowCount": 16,
       "reads": {
         "neighbourhoods": [
           "geom",
@@ -378,7 +378,7 @@
   ],
   "transactions": [
     {
-      "client": "4249:2",
+      "client": "23073:2",
       "write_fingerprints": [
         "231f5cbb6a734dec",
         "4369b24dd3b21853",

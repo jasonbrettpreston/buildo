@@ -242,7 +242,9 @@ describe('enrich_coa_zoning ② — converted claims (D1–D4, D6 GREEN at ②; 
     expect(readText(REPORT_REL)).toContain('## Validation scorecard (generated)');
   });
 
-  it.fails('D7 — the frozen shell: pipeline.step() over ./lib/compute/enrich-coa-zoning (flips at ③)', () => {
+  // FLIPPED at the Night P4 shell swap (Spec 124 R-EQ, operator y 2026-10-19: "A step whose ② landed at `compute_ported` moves to
+  // `runner_wired` in its swap commit"): the frozen shell is the live writer from runner_wired; D5 (env) and D8 (converted[]) stay at ③.
+  it('D7 — the frozen shell: pipeline.step() over ./lib/compute/enrich-coa-zoning (flipped at the R-EQ shell swap, stage runner_wired)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toMatch(/pipeline\.step\(/);
     expect(shell).toContain("require('./lib/compute/enrich-coa-zoning')");

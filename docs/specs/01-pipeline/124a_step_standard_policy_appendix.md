@@ -192,7 +192,6 @@ Moved from Spec 124 — H6 conformance (QUEUE 2026-10-16): Spec 124 had ~100 B o
 Moved blocks stay byte-identical (spec-split-check arm i), so an amendment to a row inside one is recorded here.
 - **R-AG amended by Spec 124 R-DH (2026-10-17, McDonald's Airtight V3):** the DB tier is the `*.db.test.ts` suffix — under `src/tests/db/` or beside its step — and `npm run test` excludes `**/*.db.test.ts`; no `*.infra.test.ts` connects to Postgres and no per-file `package.json` list routes one. The R-AG gate placement (full Vitest suite at pre-push) is unchanged.
 
-
 ---
 
 - **R-BC (c) amended by Spec 124 R-DI (2026-10-17, McDonald's Airtight V3; R-BC now in §B10, moved by M24):** "reconcile declared reads/writes with runtime lineage (`records_meta.pipeline_meta`)" reads "reconcile declared reads/writes with the #44 witness traces (observed SQL, column level) — for a converted step `records_meta.pipeline_meta` is the declaration re-emitted (Spec 122 §6.6.1); it stays the observed source only for unconverted steps (gate D `unproducedStepReads`)".
@@ -200,6 +199,7 @@ Moved blocks stay byte-identical (spec-split-check arm i), so an amendment to a 
 - **R-CZ amended by R-DN, R-DP, R-DQ;** R-AS (ii)'s whole-table-hash return is read per R-DQ for a bracket heal (a heal may move non-perturbed columns).
 - **R-DQ cross-reference corrected:** its Amends column reads "Applies 122a §A27 trap 12 (d)" — R-DQ applies trap 12 (d), it does not amend it.
 - **The struck R-DL allocation note's R-DO gloss is wrong:** R-DO = #44 (i); the enrich_parcels pass3 scope emit is R-CY form, with no register row.
+- **R-ET amended by Spec 124 R-GZ (2026-10-20, McDonald's Airtight V3; R-ET now in §B26, moved by M36):** "`--run` re-verifies both before-images against live, then appends `<s>` to the guard column and the prior column in ONE transaction" reads "… in ONE transaction *(fitted to a bounded column's width, R-GZ, 2026-10-20)*" (the night-p4-c amendment, landed at integrate-14).
 ## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17
 
 Moved from Spec 124 — Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
@@ -1110,3 +1110,59 @@ Operator decisions (2026-10-20, verbatim, "push failed 1 test y to 1-4"), commit
 | EXTERNALIZED | Names, types, presentation and pending states live in the declaration, not code. |
 
 **R-HK, confirmed.** CHAT-3 confirms R-HK as drafted. The verify-13 tooling gaps are closed in the same change: an amended decision's routed row must carry the amendment quote; a routed decision cited by a row in another register is RED; each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/` (a hand edit is RED); `--import` takes a page export, a chat record (`--chat`) or a rulings memo (`--rulings-md`), which replaces the scratchpad script that built the spec-roles log. Red first: `docs/reports/red-evidence/decision-log/verify13-arms-red.json` (7 of 21 failing before the change) and `verify13-check-red.txt` (the committed logs had no raw record).
+
+## Appendix §B29 — Conflict check and V3 admission table for R-GZ (night-p4-c, 2026-10-20; renumbered from §B21 at integrate-14)
+
+Operator decision (2026-10-20): y to the lane night-p4-c draft "fit-to-width perturbation for a bracket column". Provisional ids: `wf2/p4-integrate-12` (not in this lane's base 5f1cc5ba) allocated through R-GT and may hold §B21; the row and this section may be renumbered at integration with no change of content. Red case: Night P4 2026-10-20, R-ET `--run` on coa (`--column=data_hash --derive-column=status --op="derived_status: forced"`) failed `ERROR: value too long for type character varying(64)`, "this run never perturbed; the table is left as found" (lane scratchpad `p4c/r2/ret-run.log`). Red-first lock: `docs/reports/red-evidence/r-gz/red-fit-width.json` (6/7 RED before the code).
+
+**Conflict check.**
+
+| Ruling | Citation | Verdict |
+|---|---|---|
+| R-CZ | 124a:391 "a bracket names every flag, so nothing is re-chosen" | No conflict: no flag is added; the fitted form is derived from the catalog at run time, so a recipe in `recapture.json` replays as written. |
+| R-ET | 124a:907 "`--run` … appends `<s>` to the guard column and the prior column in ONE transaction" | Amended: "appends" becomes "appends, fitted to a bounded column's width". The one transaction, the exactly-one-derived-row claim and the restore are unchanged. |
+| R-DP | 124a:478 delete-and-reinsert | No conflict: pair mode has no SET expression (`perturbationSetExpr` still refuses it). |
+| R-DN | 124a:476 "the same int emit #38 reads, never a second count source" | No conflict: count_path untouched. |
+| R-EV | 124a:909 the UTC data_hash form | No conflict: the fitted value is a perturbation the step heals and the restore reverts under `IS DISTINCT FROM`; no stored hash keeps it. |
+| R-EX / Spec 122 §1.0 | 124a:911 | No conflict: the rerun proof measures run 2 of a plain POST, never a bracket's perturbation. |
+| Template freeze / RE-FREEZE | `template-freeze.json`:312 (library internals under scripts/lib/step/**) | No conflict: `scripts/analysis/ingestor-forced-cohort.js` is outside `scripts/lib/step/**`; no lib_fingerprint move. |
+
+**R-GZ — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One script, one SET-expression builder (`perturbationSetExpr` → `appendAssignment`) used by both text ops; one catalog query (`COLUMN_WIDTH_SQL`). |
+| OBSERVABLE | `--plan`/`--backup`/`--run` print each width and the SET form; `--plan` prints the first cohort row's fitted value; a refusal names the column, its width and the suffix length. Locks: `cohort-fit-width.logic` (7 tests) and `--self-test` (fit, overflow, refuse). |
+| RECORDED | Spec 124 §5 R-GZ, dated 2026-10-20, with the operator's y; this section. |
+| SCALABLE | Any bounded text column under either text op, by catalog width; no step branch. |
+| ACCURATE | Red first (6/7 RED, plus the live overflow). The fitted value has the column's width at most, ends in the suffix, and so differs from a full-width value that does not (the `--run` unmoved check still refuses a void perturbation). |
+| SIMPLE | One expression and one read; unbounded columns render exactly as before. |
+| EXTERNALIZED | No threshold: the width is the catalog's; the suffix is the operator's flag. |
+
+## Appendix §B30 — Conflict check and V3 admission table for R-HA (night-p4-c, 2026-10-20; renumbered from §B22 at integrate-14)
+
+Operator decision (2026-10-20): y to the lane night-p4-c draft "#44 (b)/(c) for an R-DY derived target". Provisional id R-HA (R-GU…R-GX taken by spec132-move; the Layer 2 spec lane takes the next ids after R-GX) and provisional section / RE-FREEZE numbers; all may be renumbered at integration with no change of content. Red case: the four coa POST traces of Night P4 (2026-10-20), committed verbatim as `src/tests/fixtures/witness-derived-coa/`, failed `FAIL:WITNESS:coa:b:lifecycle_status_history` and `c:statements`; red-first lock `docs/reports/red-evidence/r-ha/red-witness-derived.json` (3/6 RED before the code).
+
+**Conflict check.**
+
+| Ruling | Citation | Verdict |
+|---|---|---|
+| #44 (b) | `witness.mjs` grammar "written tables must EQUAL declared write tables" | Amended for a derived target only: per trace ⊆ plus every primary; the derived target moves to a slug-level "at least one fresh trace" requirement, so it is still witnessed. |
+| R-BK / R-DB (#44 (c)) | `schema-homes.mjs` `writeInventoryForMode`; by_mode per resolved mode | Extended: `derived_statements` adds a range on top of the mode's count; by_mode is unchanged and still selects the base count. |
+| R-DY | 124a:801 "(e) A derived target is never a primary" | Applied: the relaxation keys on `writes[i].derive` only; a primary target stays required in every writing trace. |
+| R-ET | 124a:907 the derived-status bracket | Applied: the bracket's capture is the trace that witnesses the derived target. |
+| R-DI / LDG-10 | 124a register: #44 HARD for pending and converted | No conflict: the rows stay FAIL-hard; only their condition changes. |
+| Rule 1 / G-1 schema ratchet | `generate-schema-baseline.mjs` (x-ruling on a new field) | Applied: the field carries `x-ruling` (rungs tried: one exact integer, by_mode, a runner-derived count). |
+| Template freeze / RE-FREEZE | `generate-template-freeze.mjs` R-E | Applied: `template-freeze.json` refreshed and Spec 122 §8 amended in the same commit (RE-FREEZE #38, provisional). `scripts/lib/step/**` untouched: no `lib_fingerprint` move, so the bundled RE-FREEZE night (124a §B17) is not affected. |
+
+**R-HA — V3 admission.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One witness gate; the derived set comes from the existing `writes[i].derive` declaration; one schema field beside `statements`/`by_mode`. |
+| OBSERVABLE | Two closed FAIL strings (`b:derived-unwitnessed:<t>`, `c:statements:<lo>..<hi>!=<n>`) in the #44 output; lock `witness-derived-target.logic` (6 tests over the real coa traces). |
+| RECORDED | Spec 124 §5 R-HA and Spec 122 §8 RE-FREEZE #38, dated 2026-10-20; this section. |
+| SCALABLE | Every R-DY derived target (coa now, permits next) by declaration; no slug branch. |
+| ACCURATE | Red first on the four real traces; exact bounds; a derived target no fresh trace wrote still fails. |
+| SIMPLE | One helper (`derivedWriteTables`), one branch in (b), one range in (c), one slug-level loop. |
+| EXTERNALIZED | The counts are declared descriptor data, not literals. |

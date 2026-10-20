@@ -1,0 +1,38 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=coa_applications",
+          "--key=id",
+          "--column=bylaw_max_fsi",
+          "--op=add_number:1",
+          "--count=50",
+          "--where=t.bylaw_max_fsi IS NOT NULL AND EXISTS (SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = t.lead_id)",
+          "--order=t.id",
+          "--backup-table=coa_applications_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=coa_applications",
+          "--key=id",
+          "--column=bylaw_max_fsi",
+          "--op=add_number:1",
+          "--count=50",
+          "--where=t.bylaw_max_fsi IS NOT NULL AND EXISTS (SELECT 1 FROM lead_parcels lp WHERE lp.lead_id = t.lead_id)",
+          "--order=t.id",
+          "--backup-table=coa_applications_cohort_bak_{ts}",
+          "--step=scripts/enrich-coa-zoning.js",
+          "--chain=coa",
+          "--out=docs/reports/golden/enrich_coa_zoning/post/coa-forced.json"
+        ]
+      ],
+      "why": "#38 evidence (Spec 124 R-CZ add_number, Night P4 2026-10-20, lane night-p4-c): the first 50 coa_applications by id with a propagated bylaw_max_fsi and at least one lead_parcels link (2,310 eligible) get +1; the converted step re-materializes every linked CoA from its dominant parcel (always full, Spec 66 DEC-3) and the guarded UPDATE (guard is_distinct_from over every propagated column, writes[0]) rewrites and heals all 50 (records_updated), re-stamping their zoning_enriched_at. Restore verified."
+    }
+  }
+}

@@ -3,7 +3,7 @@
   "spec": "docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.3",
   "step": "scripts/link-coa-to-parcels.js",
   "chain": "none",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "42c9d3d50d4465dd74c1cb5fea9d277281aaa4da",
   "exit_code": 0,
   "signal": null,
   "summary": {
@@ -11,9 +11,9 @@
     "records_new": 0,
     "records_updated": 0,
     "records_meta": {
-      "coa_corpus_total": 33949,
-      "coa_corpus_linked_count": 30161,
-      "coa_corpus_unlinked_count": 3788,
+      "coa_corpus_total": 33966,
+      "coa_corpus_linked_count": 30177,
+      "coa_corpus_unlinked_count": 3789,
       "coa_corpus_missing_normalized_count": 106,
       "audit_table": {
         "phase": 11,
@@ -34,13 +34,13 @@
           },
           {
             "metric": "coa_corpus_total",
-            "value": 33949,
+            "value": 33966,
             "threshold": null,
             "status": "INFO"
           },
           {
             "metric": "coa_corpus_linked_count",
-            "value": 30161,
+            "value": 30177,
             "threshold": null,
             "status": "INFO"
           },
@@ -52,7 +52,7 @@
           },
           {
             "metric": "coa_corpus_unlinked_count",
-            "value": 3788,
+            "value": 3789,
             "threshold": null,
             "status": "INFO"
           },
@@ -70,7 +70,7 @@
           },
           {
             "metric": "sys_duration_ms",
-            "value": 101,
+            "value": 94,
             "threshold": null,
             "status": "INFO"
           }
@@ -138,16 +138,19 @@
   "parse_errors": [],
   "verdict": "WARN",
   "ledger_status": [],
-  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 760 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"PostGIS detected — neighbourhood lookup will use ST_Contains\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 158 neighbourhoods with geometry\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Unprocessed CoAs to process: 0\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"coa_corpus_total\":33949,\"coa_corpus_linked_count\":30161,\"coa_corpus_unlinked_count\":3788,\"coa_corpus_missing_normalized_count\":106,\"audit_table\":{\"phase\":11,\"name\":\"CoA Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"status\",\"value\":\"NO_NEW_WORK\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"reason\",\"value\":\"No unprocessed CoAs this run — corpus coverage reported regardless\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_total\",\"value\":33949,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_linked_count\",\"value\":30161,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_linked_pct\",\"value\":\"88.8%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"coa_corpus_unlinked_count\",\"value\":3788,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_missing_normalized_count\",\"value\":106,\"threshold\":\"== 0\",\"status\":\"WARN\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":101,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"street_num\",\"street_name\",\"street_name_normalized\",\"parcel_linked_at\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"centroid_lat\",\"centroid_lng\",\"geom\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"street_type_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\",\"retired_at\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"],\"neighbourhoods\":[\"id\",\"geom\"]},\"writes\":{\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"match_type\",\"confidence\",\"matched_at\"],\"coa_applications\":[\"neighbourhood_id\",\"latitude\",\"longitude\",\"parcel_linked_at\"]}}\n\n[link-coa-to-parcels] completed in 0.1s\n",
+  "stdout": "{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 35 trade configs from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 805 logic variables from control panel\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"PostGIS detected — neighbourhood lookup will use ST_Contains\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Loaded 158 neighbourhoods with geometry\"}\n{\"level\":\"INFO\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"Unprocessed CoAs to process: 0\"}\nPIPELINE_SUMMARY:{\"records_total\":0,\"records_new\":0,\"records_updated\":0,\"records_meta\":{\"coa_corpus_total\":33966,\"coa_corpus_linked_count\":30177,\"coa_corpus_unlinked_count\":3789,\"coa_corpus_missing_normalized_count\":106,\"audit_table\":{\"phase\":11,\"name\":\"CoA Parcel Linking\",\"verdict\":\"WARN\",\"rows\":[{\"metric\":\"status\",\"value\":\"NO_NEW_WORK\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"reason\",\"value\":\"No unprocessed CoAs this run — corpus coverage reported regardless\",\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_total\",\"value\":33966,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_linked_count\",\"value\":30177,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_linked_pct\",\"value\":\"88.8%\",\"threshold\":\">= 90%\",\"status\":\"WARN\"},{\"metric\":\"coa_corpus_unlinked_count\",\"value\":3789,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"coa_corpus_missing_normalized_count\",\"value\":106,\"threshold\":\"== 0\",\"status\":\"WARN\"},{\"metric\":\"sys_velocity_rows_sec\",\"value\":0,\"threshold\":null,\"status\":\"INFO\"},{\"metric\":\"sys_duration_ms\",\"value\":94,\"threshold\":null,\"status\":\"INFO\"}]}}}\nPIPELINE_META:{\"reads\":{\"coa_applications\":[\"id\",\"lead_id\",\"street_num\",\"street_name\",\"street_name_normalized\",\"parcel_linked_at\"],\"parcels\":[\"id\",\"addr_num_normalized\",\"street_name_normalized\",\"street_type_normalized\",\"centroid_lat\",\"centroid_lng\",\"geom\"],\"address_points\":[\"address_point_id\",\"addr_num_normalized\",\"linear_name_normalized\",\"street_type_normalized\",\"address_class_desc\",\"maint_stage\",\"address_status\",\"retired_at\"],\"parcel_address_points\":[\"parcel_id\",\"address_point_id\"],\"neighbourhoods\":[\"id\",\"geom\"]},\"writes\":{\"lead_parcels\":[\"lead_id\",\"parcel_id\",\"match_type\",\"confidence\",\"matched_at\"],\"coa_applications\":[\"neighbourhood_id\",\"latitude\",\"longitude\",\"parcel_linked_at\"]}}\n\n[link-coa-to-parcels] completed in 0.1s\n",
   "stderr": "{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"allocation_pct sum is 1.0744 (expected 1.0) — normalizing\"}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_22_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_28_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_30_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_34_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_37_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_44_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_47_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_48_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_50_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_53_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_54_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_55_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_56_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_58_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_65_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_66_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_67_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_70_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_71_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_74_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_75_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_76_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_77_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_78_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_79_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_80_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_81_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_82_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_83_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_88_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_91_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_94_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n{\"level\":\"WARN\",\"tag\":\"[link-coa-to-parcels]\",\"msg\":\"logic_variables.lifecycle_seq_band_96_max is non-finite — keeping fallback\",\"context\":{\"raw\":null}}\n",
   "pipeline_runs": [],
-  "pipeline_runs_max_id_before": 3411,
+  "pipeline_runs_max_id_before": 3644,
   "table_state": [
     {
       "table": "coa_applications",
-      "row_count": 33949,
-      "content_hash": "c44a4bd7d0f3abec40fb55773845ce41",
-      "order_by": "pk",
+      "row_count": 33966,
+      "content_hash": "7087fc70bb347e0b6f7575eb3a437bc1",
+      "order_by": "explicit",
+      "order_columns": [
+        "id"
+      ],
       "columns": [
         "id",
         "latitude",
@@ -157,9 +160,9 @@
     },
     {
       "table": "lead_parcels",
-      "row_count": 275431,
+      "row_count": 275447,
       "ceiling_bypassed": "projected",
-      "content_hash": "20ba73175df832c5b2caed207dff34e9",
+      "content_hash": "6d30b52cd8788424627551daa65e3cf9",
       "order_by": "explicit",
       "order_columns": [
         "lead_id",
@@ -173,11 +176,11 @@
       ]
     }
   ],
-  "tables_source": "arg",
+  "tables_source": "descriptor",
   "table_row_ceiling": 100000,
   "table_timing": {
-    "coa_applications": 22,
-    "lead_parcels": 97
+    "coa_applications": 28,
+    "lead_parcels": 108
   },
   "table_specs": {
     "coa_applications": {
@@ -188,8 +191,10 @@
         "neighbourhood_id"
       ],
       "columns_source": "arg",
-      "order": null,
-      "order_source": "none"
+      "order": [
+        "id"
+      ],
+      "order_source": "descriptor"
     },
     "lead_parcels": {
       "columns": [
@@ -242,13 +247,13 @@
               "metric": "coa_corpus_total",
               "status": "INFO",
               "threshold": null,
-              "value": 33949
+              "value": 33966
             },
             {
               "metric": "coa_corpus_linked_count",
               "status": "INFO",
               "threshold": null,
-              "value": 30161
+              "value": 30177
             },
             {
               "metric": "coa_corpus_linked_pct",
@@ -260,7 +265,7 @@
               "metric": "coa_corpus_unlinked_count",
               "status": "INFO",
               "threshold": null,
-              "value": 3788
+              "value": 3789
             },
             {
               "metric": "coa_corpus_missing_normalized_count",
@@ -271,10 +276,10 @@
           ],
           "verdict": "WARN"
         },
-        "coa_corpus_linked_count": 30161,
+        "coa_corpus_linked_count": 30177,
         "coa_corpus_missing_normalized_count": 106,
-        "coa_corpus_total": 33949,
-        "coa_corpus_unlinked_count": 3788
+        "coa_corpus_total": 33966,
+        "coa_corpus_unlinked_count": 3789
       },
       "records_new": 0,
       "records_total": 0,
@@ -341,7 +346,7 @@
     "pipeline_runs": [],
     "stdout_lines": [
       "{\"level\":\"INFO\",\"msg\":\"Loaded 35 trade configs from control panel\",\"tag\":\"[link-coa-to-parcels]\"}",
-      "{\"level\":\"INFO\",\"msg\":\"Loaded 760 logic variables from control panel\",\"tag\":\"[link-coa-to-parcels]\"}",
+      "{\"level\":\"INFO\",\"msg\":\"Loaded 805 logic variables from control panel\",\"tag\":\"[link-coa-to-parcels]\"}",
       "{\"level\":\"INFO\",\"msg\":\"PostGIS detected — neighbourhood lookup will use ST_Contains\",\"tag\":\"[link-coa-to-parcels]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Loaded 158 neighbourhoods with geometry\",\"tag\":\"[link-coa-to-parcels]\"}",
       "{\"level\":\"INFO\",\"msg\":\"Unprocessed CoAs to process: 0\",\"tag\":\"[link-coa-to-parcels]\"}",
@@ -355,9 +360,12 @@
           "longitude",
           "neighbourhood_id"
         ],
-        "content_hash": "c44a4bd7d0f3abec40fb55773845ce41",
-        "order_by": "pk",
-        "row_count": 33949,
+        "content_hash": "7087fc70bb347e0b6f7575eb3a437bc1",
+        "order_by": "explicit",
+        "order_columns": [
+          "id"
+        ],
+        "row_count": 33966,
         "table": "coa_applications"
       },
       {
@@ -368,13 +376,13 @@
           "match_type",
           "confidence"
         ],
-        "content_hash": "20ba73175df832c5b2caed207dff34e9",
+        "content_hash": "6d30b52cd8788424627551daa65e3cf9",
         "order_by": "explicit",
         "order_columns": [
           "lead_id",
           "parcel_id"
         ],
-        "row_count": 275431,
+        "row_count": 275447,
         "table": "lead_parcels"
       }
     ],
@@ -382,12 +390,16 @@
   },
   "capture_ledger_rows": [
     {
-      "id": 3412,
+      "id": 3645,
       "recorded_by": "harness"
     }
   ],
-  "source_fingerprint": null,
-  "fingerprint_files": [],
-  "fingerprint_skipped_reason": "no_descriptor_yet",
+  "source_fingerprint": "7d4a79e0bd5d398ec3334670b7adb805b44d9b06eef0f8bf90cc33c9d200771d",
+  "fingerprint_files": [
+    "scripts/lib/compute/link-coa-to-parcels.js",
+    "scripts/link-coa-to-parcels.descriptor.json",
+    "scripts/link-coa-to-parcels.js",
+    "scripts/link-coa-to-parcels.notes.json"
+  ],
   "lib_fingerprint": "fef97e277f31828ec1710bc2acb253ea24e1291390f7f9ddebbe61e044fbb155"
 }

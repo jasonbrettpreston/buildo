@@ -1,0 +1,84 @@
+{
+  "contract_version": 1,
+  "captures": {
+    "post/coa-forced-status.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=coa_applications",
+          "--key=application_number",
+          "--column=data_hash",
+          "--op=derived_status: forced",
+          "--count=50",
+          "--where=t.last_seen_at = (SELECT max(last_seen_at) FROM coa_applications) AND t.status IS NOT NULL AND t.data_hash IS NOT NULL",
+          "--order=t.application_number",
+          "--backup-table=coa_applications_cohort_bak_{ts}",
+          "--derive-column=status",
+          "--derived-table=lifecycle_status_history",
+          "--derived-key=lead_id",
+          "--derived-key-prefix=coa:",
+          "--derived-natural-key=lead_id,to_status,transitioned_at"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=coa_applications",
+          "--key=application_number",
+          "--column=data_hash",
+          "--op=derived_status: forced",
+          "--count=50",
+          "--where=t.last_seen_at = (SELECT max(last_seen_at) FROM coa_applications) AND t.status IS NOT NULL AND t.data_hash IS NOT NULL",
+          "--order=t.application_number",
+          "--backup-table=coa_applications_cohort_bak_{ts}",
+          "--derive-column=status",
+          "--derived-table=lifecycle_status_history",
+          "--derived-key=lead_id",
+          "--derived-key-prefix=coa:",
+          "--derived-natural-key=lead_id,to_status,transitioned_at",
+          "--step=scripts/load-coa.js",
+          "--chain=coa",
+          "--out=docs/reports/golden/coa/post/coa-forced-status.json",
+          "--count-path=lifecycle_status_history_written",
+          "--capture-arg=--table-columns=coa_applications:application_number,address,street_num,street_name,street_name_normalized,ward,status,decision,decision_date,hearing_date,description,applicant,sub_type,zoning_designation,data_hash,first_seen_at"
+        ]
+      ],
+      "why": "#38 evidence for the derived target lifecycle_status_history (Spec 124 R-ET, first live use, Night P4 2026-10-20; R-GZ fit-to-width): the first 50 coa_applications rows of the live Active feed (last_seen_at = the last run's clock) get ' forced' fitted into data_hash (varchar(64), the guard column) and appended to status (varchar(50), the R-DY derive.prior_columns column) in one transaction; the converted step's prior-status read sees a changed status, deriveRows writes exactly one ledger row per cohort key (lifecycle_status_history_written 50, R-DN count_path) and the guarded upsert heals both columns (records_updated 50). Restore deletes the 50 gained ledger rows by natural key and verifies the primary pair. The derived rows carry the run clock, so the lifecycle_status_history hash of this capture churns on every --replay-all; that churn is expected, not drift."
+    },
+    "post/coa-forced-data-hash.json": {
+      "via": "bracket",
+      "steps": [
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--backup",
+          "--table=coa_applications",
+          "--key=application_number",
+          "--column=data_hash",
+          "--op=append_text: forced",
+          "--count=50",
+          "--where=t.last_seen_at = (SELECT max(last_seen_at) FROM coa_applications) AND t.data_hash IS NOT NULL",
+          "--order=t.application_number",
+          "--backup-table=coa_applications_cohort_bak_{ts}"
+        ],
+        [
+          "scripts/analysis/ingestor-forced-cohort.js",
+          "--run",
+          "--table=coa_applications",
+          "--key=application_number",
+          "--column=data_hash",
+          "--op=append_text: forced",
+          "--count=50",
+          "--where=t.last_seen_at = (SELECT max(last_seen_at) FROM coa_applications) AND t.data_hash IS NOT NULL",
+          "--order=t.application_number",
+          "--backup-table=coa_applications_cohort_bak_{ts}",
+          "--step=scripts/load-coa.js",
+          "--chain=coa",
+          "--out=docs/reports/golden/coa/post/coa-forced-data-hash.json",
+          "--capture-arg=--table-columns=coa_applications:application_number,address,street_num,street_name,street_name_normalized,ward,status,decision,decision_date,hearing_date,description,applicant,sub_type,zoning_designation,data_hash,first_seen_at"
+        ]
+      ],
+      "why": "#38 evidence for coa_applications (Spec 124 R-CZ append_text with R-GZ fit-to-width, Night P4 2026-10-20): the first 50 Active-feed rows get ' forced' fitted into data_hash (sha256 hex, always 64 chars in varchar(64)); the guarded upsert (guard data_hash, is_distinct_from) rewrites and heals all 50 (records_updated 50, lifecycle_status_history_written 0: status untouched, so no ledger row). coa writes two tables, so this capture is named per table in cohort.json. Restore verified."
+    }
+  }
+}

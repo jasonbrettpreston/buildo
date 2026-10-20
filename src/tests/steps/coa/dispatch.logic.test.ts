@@ -217,7 +217,7 @@ describe('COA-D13 — compute reads the ctx the ingestPrimaries dispatch builds 
     const { preWrite, sink } = await dispatch({ full: true });
     expect(preWrite).toHaveLength(1);
     expect(preWrite[0]!.primary).toBe('coa_active+coa_closed');
-    expect(sink.schema_mismatch_count).toEqual({ violations: 0, detail: [] });
+    expect(sink.schema_mismatch_count).toEqual({ violations: 0 }); // COA-D15: the field names ride on a drift row only
   });
 
   it('skip_rate is a percent of fetched; zoning_designation_null fires only when every written row is null', async () => {
@@ -255,7 +255,7 @@ describe('COA-D13 — compute reads the ctx the ingestPrimaries dispatch builds 
 
   it('COA-D6: max_days_stale reads the newest hearing on/before the run date; inert without one', async () => {
     const d6 = await dispatch({ full: false, newestHearing: '2026-08-01' });
-    expect((await runFinal(d6.final)).out.max_days_stale).toEqual({ value: 78, detail: '2026-08-01' });
+    expect((await runFinal(d6.final)).out.max_days_stale).toEqual({ value: 78 }); // COA-D15: the day count, rendered as the row value
     const none = await dispatch({ full: false, newestHearing: null });
     expect((await runFinal(none.final)).out.max_days_stale?.inert).toBe(true);
   });
@@ -265,5 +265,52 @@ describe('COA-D13 — compute reads the ctx the ingestPrimaries dispatch builds 
     const { out, meta } = await runFinal(final);
     expect(meta.lifecycle_status_history_written).toBe(out.lifecycle_status_history_inserted?.value);
     await expect(runFinal({ ...final, checks: ['nope'] })).rejects.toThrow(/no function in the compute dispatch table/);
+  });
+});
+
+// COA-D15 (Night P4 2026-10-20, lane night-p4-c): the compute reported its INFO counters as `{violations: 0, value: N}`,
+// and `verdict.js` checkRow renders `detail ?? violations ?? value`, so every counter ROW read 0 on a real run (the
+// rerun proof read records_touched 0 against 2,689 rewritten rows). The observation-level asserts above never saw it:
+// this block asserts the RENDERED audit row, through the runner's own buildAuditTable (Spec 124 R-EW (ii), R-EX).
+const verdictLib = req(path.join(REPO_ROOT, 'scripts/lib/step/verdict.js')) as any;
+
+async function renderedRows(final: Record<string, any>) {
+  const { out } = await runFinal(final);
+  const built = verdictLib.buildAuditTable(final.descriptor, null, out, [], CONFIG);
+  return Object.fromEntries(built.rows.map((r: { metric: string; value: unknown; status: string }) => [r.metric, r]));
+}
+
+describe('COA-D15 — the audit row renders the measured count, not the violation flag (Spec 124 R-EX, R-EW (ii))', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('full mode: every counter row renders its count (legacy row values), INFO', async () => {
+    const { final } = await dispatch({ full: true });
+    const rows = await renderedRows(final);
+    expect(rows.records_fetched).toMatchObject({ value: 6, status: 'INFO' });
+    expect(rows.records_mapped).toMatchObject({ value: 5, status: 'INFO' });
+    expect(rows.records_skipped).toMatchObject({ value: 1, status: 'INFO' });
+    expect(rows.records_inserted).toMatchObject({ value: 4, status: 'INFO' });
+    expect(rows.records_updated).toMatchObject({ value: 0, status: 'INFO' });
+    expect(rows.lifecycle_status_history_inserted).toMatchObject({ value: 4, status: 'INFO' });
+    expect(rows.schema_mismatch_count).toMatchObject({ value: 0, status: 'PASS' });
+  });
+
+  it('records_touched renders written.touched — the value the R-EX rerun proof reads as the declared drift', async () => {
+    const { final } = await dispatch({ full: false, prior: { A1: 'Hearing Scheduled', A2: 'Hearing Scheduled', A3: 'Hearing Scheduled' }, unchanged: ['A1', 'A2', 'A3'], touched: 3 });
+    const rows = await renderedRows(final);
+    expect(rows.records_touched).toMatchObject({ value: 3, status: 'INFO' });
+  });
+
+  it('max_days_stale renders the day count its value_max bound reads (legacy row value), not the hearing date', async () => {
+    const { final } = await dispatch({ full: false, newestHearing: '2026-08-01' });
+    const rows = await renderedRows(final);
+    expect(rows.max_days_stale).toMatchObject({ value: 78, status: 'WARN' });
+  });
+
+  it('control: a schema drift still renders the missing field names on its FAIL row', async () => {
+    const closed = CLOSED.map((r) => { const { STATUSDESC: _drop, ...rest } = r; return rest; });
+    const { sink } = await dispatch({ full: true, closed });
+    const built = verdictLib.buildAuditTable(descriptor(), null, sink, [], CONFIG, new Set(['schema_mismatch_count']));
+    expect(built.rows[0]).toMatchObject({ metric: 'schema_mismatch_count', value: ['STATUSDESC'] });
   });
 });

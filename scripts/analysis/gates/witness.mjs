@@ -13,8 +13,11 @@
 //   FAIL:STALE:<slug>:<invocation>                  source_fingerprint != currentFingerprint
 //   FAIL:WITNESS:<slug>:a:<table>.<col>|a:<table>.* traced read/write not declared (declared = inputs.reads ∪ checks[].reads ∪ writes, R-BJ)
 //   FAIL:WITNESS:<slug>:a:unwitnessed:<table>.<col>|.*  a declared read touched by no fresh trace and no fixture record (P1-C4a)
-//   FAIL:WITNESS:<slug>:b:<table>[.<col>]           written tables must EQUAL declared write tables
+//   FAIL:WITNESS:<slug>:b:<table>[.<col>]           written tables must EQUAL declared write tables (R-HA: a derived
+//                                                    target is not required per trace)
+//   FAIL:WITNESS:<slug>:b:derived-unwitnessed:<table>  an R-DY derived target no fresh post trace wrote (R-HA)
 //   FAIL:WITNESS:<slug>:c:statements:<d>!=<t>       distinct write fingerprints vs write_inventory (by_mode[mode] when declared, R-BK/R-DB)
+//   FAIL:WITNESS:<slug>:c:statements:<lo>..<hi>!=<t>  the R-HA range: statements .. statements + derived_statements
 //   FAIL:INPUT:<slug>:<invocation>:c:mode-unresolved  by_mode declared but the invocation's resolved mode is unknown (never a guess)
 //   FAIL:WITNESS:<slug>:d:txn_scope:<declared>:<observed>
 //   FAIL:WITNESS:<slug>:g:<key>                     PRE key absent from POST and unexplained
@@ -118,6 +121,21 @@ export function declaredWrites(descriptor) {
     if (!entry.cols.includes(inv.column)) entry.cols.push(inv.column);
   }
   return out;
+}
+
+/**
+ * R-HA (Spec 124, provisional id; operator y 2026-10-20): the R-DY DERIVED write targets
+ * (`outputs.writes[i].derive`), written only when their prior-state read differs. Pure.
+ */
+export function derivedWriteTables(descriptor) {
+  const writes = descriptor && descriptor.outputs && Array.isArray(descriptor.outputs.writes) ? descriptor.outputs.writes : [];
+  return new Set(writes.filter((w) => w && typeof w.table === 'string' && w.derive && typeof w.derive === 'object').map((w) => w.table));
+}
+
+/** R-HA: `write_inventory.derived_statements` when declared (an integer >= 0), else null. Pure. */
+function derivedStatements(descriptor) {
+  const inv = descriptor && descriptor.outputs && descriptor.outputs.write_inventory;
+  return inv && Number.isInteger(inv.derived_statements) && inv.derived_statements >= 0 ? inv.derived_statements : null;
 }
 
 /**
@@ -620,9 +638,12 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace, invocation = null,
   for (const table of tracedWriteTables) {
     if (!declaredWriteTables.has(table)) rows.push(`FAIL:WITNESS:${slug}:b:${table}`);
   }
+  const derived = derivedWriteTables(descriptor);
   for (const table of declaredWriteTables) {
     if (!tracedWriteTables.has(table)) {
-      rows.push(`FAIL:WITNESS:${slug}:b:${table}`);
+      // R-HA: a derived target is conditional per trace; the slug-level check in evaluateWitness
+      // requires at least one fresh post trace to write it.
+      if (!derived.has(table)) rows.push(`FAIL:WITNESS:${slug}:b:${table}`);
       continue; // a table the trace never wrote yields no per-column row
     }
     const tracedCols = new Set(Array.isArray(touched.writes[table]) ? touched.writes[table] : []);
@@ -648,8 +669,12 @@ function checkTraceAgainstDescriptor(slug, descriptor, trace, invocation = null,
     for (const s of Array.isArray(trace && trace.statements) ? trace.statements : []) {
       if (isStepWrite(s) && typeof s.fingerprint === 'string') fp.add(s.fingerprint);
     }
-    if (fp.size !== declaredCount) {
-      rows.push(`FAIL:WITNESS:${slug}:c:statements:${declaredCount}!=${fp.size}`);
+    const extra = derivedWriteTables(descriptor).size > 0 ? derivedStatements(descriptor) : null;
+    if (extra === null) {
+      if (fp.size !== declaredCount) rows.push(`FAIL:WITNESS:${slug}:c:statements:${declaredCount}!=${fp.size}`);
+    } else if (fp.size < declaredCount || fp.size > declaredCount + extra) {
+      // R-HA: a run that wrote no derived row issues the primary statements only.
+      rows.push(`FAIL:WITNESS:${slug}:c:statements:${declaredCount}..${declaredCount + extra}!=${fp.size}`);
     }
   }
 
@@ -1040,6 +1065,12 @@ export function evaluateWitness({
     }
     for (const item of unwitnessedItems(descriptor, witnessed)) {
       rows.push(`FAIL:WITNESS:${slug}:${item}`);
+    }
+    // R-HA: every R-DY derived target is written by at least one fresh post trace of the slug.
+    for (const table of derivedWriteTables(descriptor)) {
+      if (!witnessedTouched.some((t) => Object.prototype.hasOwnProperty.call(t.writes, table))) {
+        rows.push(`FAIL:WITNESS:${slug}:b:derived-unwitnessed:${table}`);
+      }
     }
     // (h) pins witnessed and verified (R-BL (v); LDG-10, Spec 124 R-DI).
     for (const item of pinItems(descriptor, tracesTouchRuns(freshTraces), producerSummaries)) rows.push(`FAIL:WITNESS:${slug}:${item}`);

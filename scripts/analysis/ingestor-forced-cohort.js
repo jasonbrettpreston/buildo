@@ -495,17 +495,94 @@ function isDerivedMode(o) {
  * boolean; a non-boolean column makes Postgres raise, which is the right failure
  * (silently coercing would produce an unmodelled perturbation).
  */
-function perturbationSetExpr(op, column, deriveColumn) {
+function perturbationSetExpr(op, column, deriveColumn, widths = {}) {
   if (!TABLE_NAME_RE.test(column)) throw new Error(`invalid column name ${JSON.stringify(column)}`);
   if (op.kind === 'delete_reinsert') throw new Error('delete_reinsert has no SET expression — its perturbation is perturbationDeleteSql');
   if (op.kind === 'derived_status') {
     if (typeof deriveColumn !== 'string' || !TABLE_NAME_RE.test(deriveColumn)) throw new Error(`derived_status needs a valid derive column (got ${JSON.stringify(deriveColumn)})`);
-    return `"${column}" = "${column}" || $2, "${deriveColumn}" = "${deriveColumn}" || $2`;
+    return `${appendAssignment(column, widths)}, ${appendAssignment(deriveColumn, widths)}`;
   }
   if (op.kind === 'negate_bool') return `"${column}" = NOT "${column}"`;
   if (op.kind === 'add_number') return `"${column}" = "${column}" + $2`;
-  if (op.kind === 'append_text') return `"${column}" = "${column}" || $2`;
+  if (op.kind === 'append_text') return appendAssignment(column, widths);
   throw new Error(`unknown op kind ${JSON.stringify(op.kind)}`);
+}
+
+/**
+ * R-GZ (Spec 124, provisional id; operator y 2026-10-20; amends R-CZ append_text and R-ET derived_status):
+ * fit-to-width. A text suffix is appended to a BOUNDED column (catalog character_maximum_length w) in the
+ * fitted form `left(col, w - char_length($2)) || $2`, so a full-width value (coa_applications.data_hash,
+ * sha256 hex in varchar(64)) keeps its width and still changes; a shorter value gets exactly the plain append.
+ * An unbounded column (w null, or no catalog answer) keeps the plain append, byte-identical to before R-GZ.
+ * `fitWidthDecision` refuses a suffix as wide as the column before anything is perturbed. Pure.
+ */
+function appendAssignment(column, widths) {
+  const w = widths && Object.prototype.hasOwnProperty.call(widths, column) ? widths[column] : null;
+  if (Number.isInteger(w) && w > 0) return `"${column}" = left("${column}", ${w} - char_length($2)) || $2`;
+  return `"${column}" = "${column}" || $2`;
+}
+
+/** R-GZ: the catalog widths of the perturbed columns ($1 table, $2 columns); null = unbounded. */
+const COLUMN_WIDTH_SQL = `SELECT column_name, character_maximum_length AS w
+    FROM information_schema.columns
+   WHERE table_schema = current_schema() AND table_name = $1 AND column_name = ANY($2)`;
+
+/** R-GZ: the text columns an op appends to (none for the other ops). Pure. */
+function appendColumns(o) {
+  if (!o || !o.op) return [];
+  if (o.op.kind === 'append_text') return [o.column];
+  if (o.op.kind === 'derived_status') return [o.column, o.deriveColumn];
+  return [];
+}
+
+/** R-GZ: read the widths of `appendColumns(o)` from the catalog ({col: w|null}). */
+async function columnWidths(pool, o) {
+  const cols = appendColumns(o);
+  const widths = {};
+  for (const c of cols) widths[c] = null;
+  if (cols.length === 0) return widths;
+  const rows = await readOnlyQuery(pool, COLUMN_WIDTH_SQL, [o.table, cols]);
+  for (const r of rows) widths[r.column_name] = r.w === null || r.w === undefined ? null : Number(r.w);
+  return widths;
+}
+
+/**
+ * R-GZ: may the suffix be fitted into every bounded perturbed column? Refuses when the suffix is as
+ * wide as (or wider than) a column: `left(col, w - n)` would keep nothing of the original value (and a
+ * negative length would drop from the right). Returns the bounded columns it fits. Pure.
+ */
+function fitWidthDecision({ columns, widths, suffix }) {
+  const n = String(suffix).length;
+  const fitted = [];
+  for (const c of columns) {
+    const w = widths ? widths[c] : null;
+    if (!Number.isInteger(w)) continue;
+    if (n >= w) return { ok: false, reason: `the suffix (${n} char(s)) is as wide as ${c} (${w}); fit-to-width needs suffix < width (R-GZ)` };
+    fitted.push(c);
+  }
+  return { ok: true, fitted };
+}
+
+/** R-GZ: the value the fitted SQL produces, for --plan's transcript (JS mirror of left(...) || s). Pure. */
+function fittedPreview(value, width, suffix) {
+  const v = value === null || value === undefined ? '' : String(value);
+  if (!Number.isInteger(width)) return v + suffix;
+  return v.slice(0, Math.max(0, width - String(suffix).length)) + suffix;
+}
+
+/** R-GZ: read the widths, refuse an unfittable suffix, print the fitted form; returns the widths. */
+async function resolveFitWidths(pool, o, tag) {
+  const cols = appendColumns(o);
+  if (cols.length === 0) return {};
+  const widths = await columnWidths(pool, o);
+  const suffix = opBindValue(o.opRaw);
+  const d = fitWidthDecision({ columns: cols, widths, suffix });
+  if (!d.ok) throw new Error(`refusing: ${d.reason}`);
+  for (const c of cols) {
+    console.log(`[cohort:${tag}] width ${o.table}.${c}: ${widths[c] === null ? 'unbounded (plain append)' : `${widths[c]} → fitted form left("${c}", ${widths[c]} - char_length(suffix)) || suffix`} (R-GZ)`);
+  }
+  console.log(`[cohort:${tag}] SET ${perturbationSetExpr(o.op, o.column, o.deriveColumn, widths)}`);
+  return widths;
 }
 
 /**
@@ -1457,6 +1534,13 @@ async function plan(o) {
     console.log(`[cohort:plan] eligible=${cohort.eligible} cohort=${cohort.keys.length} (where ${JSON.stringify(o.where)}; order ${o.order})`);
     console.log(`[cohort:plan] whole-table hash over (${[o.key, o.column].join(', ')}): ${whole}`);
     for (const r of cohort.rows) console.log(`[cohort:plan]   ${o.key}=${r.key} ${o.column}=${JSON.stringify(r.value)}`);
+    const widths = await resolveFitWidths(pool, o, 'plan');
+    if (appendColumns(o).length > 0 && cohort.rows.length > 0) {
+      const first = cohort.rows[0];
+      let v = Array.isArray(first.value) ? first.value : [first.value];
+      if (isDerivedMode(o) && typeof first.value === 'string') { try { const p = JSON.parse(first.value); if (Array.isArray(p)) v = p; } catch { /* a plain value */ } }
+      appendColumns(o).forEach((c, i) => console.log(`[cohort:plan]   fitted ${c} of ${o.key}=${first.key}: ${JSON.stringify(fittedPreview(v[i], widths[c], opBindValue(o.opRaw)))}`));
+    }
     if (isDerivedMode(o)) {
       const d = await liveDerivedRows(pool, o, cohort.keys);
       console.log(`[cohort:plan] derived ${o.derivedTable}: ${d.length} existing row(s) for the cohort's ${cohort.keys.length} ${o.derivedKey} value(s); snapshot ${derivedSnapshotTable(o)} (R-ET)`);
@@ -1486,6 +1570,7 @@ async function backup(o) {
       throw new Error(`the derived before-image ${derivedSnapshotTable(o)} already exists — refusing to overwrite it; pick a fresh <yyyymmddthhmmz> name`);
     }
     await assertPairModeSafe(pool, o);
+    await resolveFitWidths(pool, o, 'backup');
     const cohort = await resolveCohort(pool, o);
     reportSourceCheck('backup', cohort.sourceInfo, console.log);
     await pool.query(backupCreateSql(o), [cohort.keys]);
@@ -1705,6 +1790,7 @@ async function run(o) {
         throw new Error(`--backup-table ${o.backupTable} does not exist — take --backup first; refusing to perturb without a before-image`);
       }
       await assertPairModeSafe(pool, o);
+      const fitWidths = await resolveFitWidths(pool, o, 'run');
       const cohort = await resolveCohort(pool, o);
       cohortKeys = cohort.keys;
       reportSourceCheck('run', cohort.sourceInfo, console.log);
@@ -1739,7 +1825,7 @@ async function run(o) {
           }
         } else {
           const bind = opBindValue(o.opRaw);
-          const setExpr = perturbationSetExpr(o.op, o.column, o.deriveColumn);
+          const setExpr = perturbationSetExpr(o.op, o.column, o.deriveColumn, fitWidths);
           const upd = bind === null
             ? await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys])
             : await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys, bind]);
@@ -1929,6 +2015,13 @@ function selfTest() {
   assert(perturbationSetExpr(parseOp('add_number:1'), 'n') === '"n" = "n" + $2', `add_number set expr: ${perturbationSetExpr(parseOp('add_number:1'), 'n')}`);
   assert(perturbationSetExpr(parseOp('append_text:x'), 's') === '"s" = "s" || $2', `append_text set expr: ${perturbationSetExpr(parseOp('append_text:x'), 's')}`);
   throws(() => perturbationSetExpr(parseOp('negate_bool'), 'bad col'), 'perturbationSetExpr accepted an invalid column name');
+  // R-GZ fit-to-width: fit (bounded), overflow (the Night P4 varchar(64) data_hash), refuse.
+  assert(perturbationSetExpr(parseOp('append_text:x'), 'h', null, { h: 64 }) === '"h" = left("h", 64 - char_length($2)) || $2', 'R-GZ: a bounded column did not get the fitted form');
+  assert(perturbationSetExpr(parseOp('append_text:x'), 's', null, { s: null }) === '"s" = "s" || $2', 'R-GZ: an unbounded column lost the plain append');
+  assert(fittedPreview('a'.repeat(64), 64, ' forced').length === 64 && fittedPreview('a'.repeat(64), 64, ' forced').endsWith(' forced'), 'R-GZ: a full-width value overflowed its width');
+  assert(fittedPreview('ab', 64, 'x') === 'abx', 'R-GZ: a short value was not plainly appended');
+  assert(fitWidthDecision({ columns: ['c'], widths: { c: 3 }, suffix: 'abc' }).ok === false, 'R-GZ: a suffix as wide as the column was not refused');
+  assert(fitWidthDecision({ columns: ['c', 'd'], widths: { c: 64, d: null }, suffix: 'x' }).fitted.join() === 'c', 'R-GZ: fitWidthDecision fitted the wrong columns');
 
   // hashOf: the harness's narrow-table shape, ordered by the key, over (key, column).
   const h = hashOf({ table: 'address_points', key: 'id', column: 'class_family_desc' });
@@ -2260,6 +2353,11 @@ module.exports = {
   parseOp,
   opBindValue,
   perturbationSetExpr,
+  appendAssignment,
+  COLUMN_WIDTH_SQL,
+  appendColumns,
+  fitWidthDecision,
+  fittedPreview,
   perturbationDeleteSql,
   countPathCohortDecision,
   pairSafetySql,

@@ -19747,11 +19747,11 @@
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/none_incremental.trace.json",
-      "sha256": "b9a6e9b330abc39a"
+      "sha256": "bb7337a6aaa9a488"
     },
     {
       "path": "docs/reports/witness/enrich_parcels/post/sources_run1.trace.json",
-      "sha256": "8a8bd59057afff8a"
+      "sha256": "ab446058c4d0743a"
     },
     {
       "path": "migrations/205_archetype_cost_rates.sql",

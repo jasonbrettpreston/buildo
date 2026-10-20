@@ -687,12 +687,14 @@ describe('Pipeline Chains', () => {
 
 // ── Regression: assert-schema expected columns match CKAN reality ─────
 
-describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
+// The CKAN field reads live in the coa compute since the Night P4 R-EQ shell swap (42c9d3d5, 2026-10-20):
+// scripts/load-coa.js is the frozen pipeline.step() shell.
+describe('assert-schema.js EXPECTED_COA_COLUMNS sync with the coa compute (scripts/lib/compute/load-coa.js)', () => {
   const schemaSource = fs.readFileSync(
     path.join(__dirname, '../../scripts/lib/compute/assert-schema.js'), 'utf-8'
   );
   const coaSource = fs.readFileSync(
-    path.join(__dirname, '../../scripts/load-coa.js'), 'utf-8'
+    path.join(__dirname, '../../scripts/lib/compute/load-coa.js'), 'utf-8'
   );
 
   it('does not reference renamed CKAN columns (APPLICATION_DATE, STATUS)', () => {
@@ -708,14 +710,14 @@ describe('assert-schema.js EXPECTED_COA_COLUMNS sync with load-coa.js', () => {
 
   it('EXPECTED_COA_COLUMNS includes STATUSDESC which load-coa.js reads', () => {
     // load-coa.js reads raw.STATUSDESC — assert-schema must validate it exists
-    expect(coaSource).toContain('raw.STATUSDESC');
+    expect(coaSource).toContain('r.STATUSDESC');
     const match = schemaSource.match(/EXPECTED_COA_COLUMNS\s*=\s*\[([\s\S]*?)\]/);
     expect(match).not.toBeNull();
     expect(match![1]).toContain("'STATUSDESC'");
   });
 
   it('EXPECTED_COA_COLUMNS includes REFERENCE_FILE# which load-coa.js reads', () => {
-    expect(coaSource).toContain("raw['REFERENCE_FILE#']");
+    expect(coaSource).toContain("r['REFERENCE_FILE#']");
     const match = schemaSource.match(/EXPECTED_COA_COLUMNS\s*=\s*\[([\s\S]*?)\]/);
     expect(match).not.toBeNull();
     expect(match![1]).toContain("'REFERENCE_FILE#'");

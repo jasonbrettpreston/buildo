@@ -3,6 +3,9 @@
 // Phase I.1 — presence-only source-grep regression-lock for load-coa.js's
 // lifecycle_status_history ledger writer. Q1 trigger = status only (decision is
 // snapshot at every status-change row). Behavioral verification in `.db.test.ts`.
+// RE-HOMED (Night P4 R-EQ shell swap, 42c9d3d5, 2026-10-20): the shipped script is now the frozen pipeline.step()
+// shell (Spec 122 §5.1); these legacy pins read the verbatim legacy text kept as the red suite's oracle
+// (src/tests/steps/coa/fixtures/legacy-load-coa.js.txt). The converted behaviour is pinned by src/tests/steps/coa/violations.test.ts.
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
@@ -11,7 +14,7 @@ import path from 'node:path';
 describe('load-coa.js — Spec 37 applicant-names tripwire (deferred CoA entity extraction)', () => {
   it('emits the applicant_names_present audit row, WARN-on-presence (the build signal)', () => {
     const src = fs.readFileSync(
-      path.resolve(__dirname, '../../scripts/load-coa.js'),
+      path.resolve(__dirname, './steps/coa/fixtures/legacy-load-coa.js.txt'),
       'utf-8',
     );
     expect(src).toContain("metric: 'applicant_names_present'");
@@ -25,7 +28,7 @@ describe('load-coa.js — lifecycle_status_history ledger writer (Phase I.1)', (
   let src: string;
 
   beforeAll(() => {
-    src = fs.readFileSync(path.resolve(__dirname, '../../scripts/load-coa.js'), 'utf-8');
+    src = fs.readFileSync(path.resolve(__dirname, './steps/coa/fixtures/legacy-load-coa.js.txt'), 'utf-8');
   });
 
   it('pre-UPSERT capture queries coa_applications.status', () => {

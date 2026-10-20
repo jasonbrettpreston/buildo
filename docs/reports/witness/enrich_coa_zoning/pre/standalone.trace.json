@@ -3,14 +3,14 @@
   "step": "scripts/enrich-coa-zoning.js",
   "chain": "none",
   "source_fingerprint": "698e0e42da881daa7ef131bb887031e9febb18e25d810367688198191acdd241",
-  "git_head": "15d79445291f7e4a61961d08a152c0c80d345751",
+  "git_head": "2f0d4446014cd69a005650fbd30ff0b521348cef",
   "header": {
     "processes": 1,
     "calls": 47,
     "distinct": 30,
     "utility": 8,
-    "tracer_self_ms": 2.73,
-    "wall_ms": 31140
+    "tracer_self_ms": 6.558,
+    "wall_ms": 2780
   },
   "statements": [
     {
@@ -60,7 +60,7 @@
       "fingerprint": "21cc118d1ba6f2ba",
       "kind": "read",
       "count": 1,
-      "rowCount": 30161,
+      "rowCount": 31762,
       "reads": {
         "coa_applications": [
           "id",
@@ -847,7 +847,7 @@
   ],
   "transactions": [
     {
-      "client": "77339:2",
+      "client": "87374:2",
       "write_fingerprints": [
         "4ab3f90bf8066fbe",
         "67c075c592d8301a"

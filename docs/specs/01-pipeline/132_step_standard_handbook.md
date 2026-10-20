@@ -59,16 +59,16 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 
 | # | Predicate | `execution.shape` | Phase | Mode / skip | Reads off the compute module | Steps |
 |---|---|---|---|---|---|---|
-| 1 | `isLinkStep` | `link` | `runLinkPhase` via `primaryMatchBinds` | `resolveLinkGate → staleness.selectMode` | `buildMatchSql`, `classifyFallback`, `classifyMatches`, `primaryMatchBinds` | link_coa_to_parcels (legacy shell), link_massing, link_parcel_abutments |
+| 1 | `isLinkStep` | `link` | `runLinkPhase` via `primaryMatchBinds` | `resolveLinkGate → staleness.selectMode` | `buildMatchSql`, `classifyFallback`, `classifyMatches`, `primaryMatchBinds` | link_coa_to_parcels, link_massing, link_parcel_abutments |
 | 2 | `isLinkKeyedStep` | `link_keyed` | `runLinkKeyedPhase` | `resolveLinkGate → staleness.selectMode` | `buildMatchSql`, `classifyPrimary`, `classifySpatialContainment`, `classifySpatialFallback` | link_parcels |
 | 3 | `isLinkColumnStep` | `link_column` | `runLinkColumnPhase` | — | `buildMatchSql`, `scalar` | link_neighbourhoods |
 | 4 | `isIngestStep` | `ingest` (or no shape: inferred), one primary | `runIngestPhase` | `staleness.preAcquisitionDecision`, `resolveRunMode` | `buildLookup`, `buildWriteSql`, `coerceKey`, `dedupeBySourceId`, `deriveRows`, `reconcileDocuments`, `shapeDocument`, `shapeRecord`, `shouldSkipDelete`, `validatorCounterDelta` | address_points, load_bylaw_map_areas, load_centreline, load_coa_notices, load_ravines, load_wsib, massing, neighbourhoods, parcels |
-|  |  | `ingest` (or no shape: inferred), several primaries (`isMultiPrimary`) | `ingestPrimaries` (runs `runIngestPhase` per primary) | `staleness.allPrimariesDecision`, `resolveRunMode` | `buildWriteSql`, `shapeRecord` | coa (legacy shell), load_heritage, load_zoning |
+|  |  | `ingest` (or no shape: inferred), several primaries (`isMultiPrimary`) | `ingestPrimaries` (runs `runIngestPhase` per primary) | `staleness.allPrimariesDecision`, `resolveRunMode` | `buildWriteSql`, `shapeRecord` | coa, load_heritage, load_zoning |
 | 5 | `isCascadeStep` | `cascade` | `runCascadePhase` | `resolveLinkGate → staleness.selectMode`, `staleness.ledgerGatedSkip` | `buildApplyLinksSql`, `buildContactsReverseClearSql`, `buildCumulativeSql`, `buildDerivationSql`, `buildEntitiesFlagCountSql`, `buildEntitiesUnflagCorrectionCountSql`, `buildTierSql`, `exactTierConfidences` | link_wsib |
 | 6 | `isMaterializeStep` | `materialize` | `runMaterializePhase` via `materializeRowsArm` | `staleness.ledgerGatedSkip` | `buildMaterializeSql`, `buildPostSql`, `buildSourceSql`, `finalizeMatched`, `materializeRows` | classify_coa_trades (legacy shell), compute_coa_cost_estimates (legacy shell), link_parcel_addresses |
 | 7 | `isBackfillStep` | `backfill` | `runBackfillPhase` via `runBackfillFullRecompute` | — | `buildBackfillSql`, `buildFullRecomputeSql`, `buildPostSql`, `buildPreSql` | compute_centroids |
 | 8 | `isRecorderStep` | `recorder` | `runRecorderPhase` | — | `buildReads`, `buildRow`, `buildWriteSql` | refresh_snapshot |
-| 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope (legacy shell), compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning (legacy shell), enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
+| 9 | `isEnrichStep` | `enrich` | `runEnrichPhase` | `resolveRunMode` | `OVERLAY_LAYERS`, `passes` | classify_coa_scope (legacy shell), compute_parcel_cost_estimates, enrich_centreline, enrich_coa_zoning, enrich_heritage, enrich_parcels, enrich_permits (legacy shell), enrich_ravines, geocode_permits |
 | — | none matched | none | no phase: `compute(ctx)` then `runWritePlan` | — | main function only | assert_coa_freshness (legacy shell), assert_data_bounds, assert_engine_health, assert_global_coverage, assert_parcel_sanity, assert_schema |
 | — | runner, any shape | any | `runWithPool` via `makePreWriteGate` | — | `DISTRIBUTION_SCOPE` | every step |
 
@@ -85,18 +85,18 @@ Run `node scripts/analysis/step-validate.mjs --step=<slug> --fast` to see the sc
 | assert_schema | ASSERT | none | no phase | `scripts/quality/assert-schema.js` | `scripts/quality/assert-schema.descriptor.json` | `scripts/lib/compute/assert-schema.js` | converted |
 | classify_coa_scope | ENRICHER | enrich | legacy shell runs; descriptor → `runEnrichPhase` | `scripts/classify-coa-scope.js` | `scripts/classify-coa-scope.descriptor.json` | `scripts/lib/compute/classify-coa-scope.js` | pending: compute_ported |
 | classify_coa_trades | MATERIALIZER | materialize | legacy shell runs; descriptor → `runMaterializePhase` | `scripts/classify-coa-trades.js` | `scripts/classify-coa-trades.descriptor.json` | `scripts/lib/compute/classify-coa-trades.js` | pending: compute_ported |
-| coa | INGESTOR | ingest | legacy shell runs; descriptor → `ingestPrimaries` | `scripts/load-coa.js` | `scripts/load-coa.descriptor.json` | `scripts/lib/compute/load-coa.js` | pending: compute_ported |
+| coa | INGESTOR | ingest | `ingestPrimaries` | `scripts/load-coa.js` | `scripts/load-coa.descriptor.json` | `scripts/lib/compute/load-coa.js` | pending: runner_wired |
 | compute_centroids | BACKFILL | backfill | `runBackfillPhase` | `scripts/compute-centroids.js` | `scripts/compute-centroids.descriptor.json` | `scripts/lib/compute/compute-centroids.js` | converted |
 | compute_coa_cost_estimates | MATERIALIZER | materialize | legacy shell runs; descriptor → `runMaterializePhase` | `scripts/compute-coa-cost-estimates.js` | `scripts/compute-coa-cost-estimates.descriptor.json` | `scripts/lib/compute/compute-coa-cost-estimates.js` | pending: compute_ported |
 | compute_parcel_cost_estimates | ENRICHER | enrich | `runEnrichPhase` | `scripts/compute-parcel-cost-estimates.js` | `scripts/compute-parcel-cost-estimates.descriptor.json` | `scripts/lib/compute/compute-parcel-cost-estimates.js` | converted |
 | enrich_centreline | ENRICHER | enrich | `runEnrichPhase` | `scripts/enrich-centreline.js` | `scripts/enrich-centreline.descriptor.json` | `scripts/lib/compute/enrich-centreline.js` | converted |
-| enrich_coa_zoning | ENRICHER | enrich | legacy shell runs; descriptor → `runEnrichPhase` | `scripts/enrich-coa-zoning.js` | `scripts/enrich-coa-zoning.descriptor.json` | `scripts/lib/compute/enrich-coa-zoning.js` | pending: compute_ported |
+| enrich_coa_zoning | ENRICHER | enrich | `runEnrichPhase` | `scripts/enrich-coa-zoning.js` | `scripts/enrich-coa-zoning.descriptor.json` | `scripts/lib/compute/enrich-coa-zoning.js` | pending: runner_wired |
 | enrich_heritage | ENRICHER | enrich | `runEnrichPhase` | `scripts/enrich-heritage.js` | `scripts/enrich-heritage.descriptor.json` | `scripts/lib/compute/enrich-heritage.js` | converted |
 | enrich_parcels | ENRICHER | enrich | `runEnrichPhase` | `scripts/enrich-parcels.js` | `scripts/enrich-parcels.descriptor.json` | `scripts/lib/compute/enrich-parcels.js` | converted |
 | enrich_permits | ENRICHER | enrich | legacy shell runs; descriptor → `runEnrichPhase` | `scripts/enrich-permits.js` | `scripts/enrich-permits.descriptor.json` | `scripts/lib/compute/enrich-permits.js` | pending: compute_ported |
 | enrich_ravines | ENRICHER | enrich | `runEnrichPhase` | `scripts/enrich-ravines.js` | `scripts/enrich-ravines.descriptor.json` | `scripts/lib/compute/enrich-ravines.js` | converted |
 | geocode_permits | ENRICHER | enrich | `runEnrichPhase` | `scripts/geocode-permits.js` | `scripts/geocode-permits.descriptor.json` | `scripts/lib/compute/geocode-permits.js` | converted |
-| link_coa_to_parcels | LINK | link | legacy shell runs; descriptor → `runLinkPhase` | `scripts/link-coa-to-parcels.js` | `scripts/link-coa-to-parcels.descriptor.json` | `scripts/lib/compute/link-coa-to-parcels.js` | pending: compute_ported |
+| link_coa_to_parcels | LINK | link | `runLinkPhase` | `scripts/link-coa-to-parcels.js` | `scripts/link-coa-to-parcels.descriptor.json` | `scripts/lib/compute/link-coa-to-parcels.js` | pending: runner_wired |
 | link_massing | LINK | link | `runLinkPhase` | `scripts/link-massing.js` | `scripts/link-massing.descriptor.json` | `scripts/lib/compute/link-massing.js` | converted |
 | link_neighbourhoods | LINK | link_column | `runLinkColumnPhase` | `scripts/link-neighbourhoods.js` | `scripts/link-neighbourhoods.descriptor.json` | `scripts/lib/compute/link-neighbourhoods.js` | converted |
 | link_parcel_abutments | LINK | link | `runLinkPhase` | `scripts/link-parcel-abutments.js` | `scripts/link-parcel-abutments.descriptor.json` | `scripts/lib/compute/link-parcel-abutments.js` | converted |
@@ -173,7 +173,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
   *Why:* The cross-step ledger is only true if it is measured, never re-typed.
-  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` · history: `W4A-R4`
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` `R-HA` · history: `W4A-R4`
 
 - **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
   *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
@@ -355,7 +355,7 @@ How a conversion proves it changed nothing it did not mean to.
 
 - **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
   *Why:* A rerun that writes nothing proves nothing about a guarded write path.
-  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET`
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ`
 
 - **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
   *Why:* A commit message saying "diff is fine" is not evidence.
@@ -475,7 +475,7 @@ Hand-written and locked: every symbol, path and flag below is checked against th
 | A producer contract reads an old run | Status filter (baselines accept completed/completed_with_warnings; seam reads accept every finished status) or a bare-slug vs chain-prefixed ledger name. | R-CB, R-BG | EC-D10 (ledger l.297) |
 | Gate E reads zero, yet a config value still decides the output | A local alias of `ctx.config` inside a check body (PURITY-G7, a Gate E code, not scorecard G7). | R-DC | LCN-D5 (ledger l.318) |
 | Rule 4 / G-2 flags `preserved-in-compute` Intent Ledger rows | Each such row must name where its rule is written (a check `why`, a `checks[]` citation or `notes.json`); `checkPreservedInComputeHasWhy` in `scripts/analysis/step-validate.mjs`. | Rule-4 | LW-D21 (ledger l.74), CC-D4 (ledger l.83) |
-| A tunable cap, bind-limit formula or cadence is a literal in the step | Make it a logic variable; derive batch from the 65,535-parameter limit. | Rule-3, R-CU | CCS-D3 (ledger l.351), CCCE-D2 (ledger l.392) |
+| A tunable cap, bind-limit formula or cadence is a literal in the step | Make it a logic variable; derive batch from the 65,535-parameter limit. | Rule-3, R-CU | CCS-D3 (ledger l.353), CCCE-D2 (ledger l.394) |
 
 Validator messages that name their rule directly:
 
@@ -496,7 +496,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 324 mapped ids: 209 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 326 mapped ids: 211 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -572,8 +572,8 @@ The Spec 124 register governs on policy and Spec 122 on the schema and behaviour
 
 - MERGE-1 EXTERNALIZED → core.8 (16 ids)
 - MERGE-2 Compute is pure → core.9 (14 ids)
-- MERGE-3 Declared == witnessed → core.14 (18 ids)
-- MERGE-4 Captures are reproducible and every diff is explained → x-captures.1, x-captures.2, x-captures.3, x-captures.4 (16 ids)
+- MERGE-3 Declared == witnessed → core.14 (19 ids)
+- MERGE-4 Captures are reproducible and every diff is explained → x-captures.1, x-captures.2, x-captures.3, x-captures.4 (17 ids)
 - MERGE-5 The V3 label → x-v3.1 (5 ids)
 - MERGE-6 Lifecycle stage is declared data → x-stages.1, x-stages.2, x-stages.3 (12 ids)
 - MERGE-7 Truthful crash posture → core.13, link.1 (4 ids)

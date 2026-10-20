@@ -20,6 +20,9 @@
 // than diffing it against a twin that no longer carries this code.
 //
 // WF3 2026-10-10: LP-D9 port (street-type constraint) pinned below.
+// RE-HOMED (Night P4 R-EQ shell swap, 2f0d4446, 2026-10-20): the shipped script is now the frozen pipeline.step()
+// shell (Spec 122 §5.1); these legacy pins read the verbatim legacy text kept as the red suite's oracle
+// (src/tests/steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt). The converted behaviour is pinned by src/tests/steps/link_coa_to_parcels/violations.test.ts.
 
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -27,7 +30,7 @@ import path from 'node:path';
 
 describe('link-coa-to-parcels.js — geometry helpers (pinned; twin retired at pilot 7 commit 7)', () => {
   const coaSrc = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
+    path.resolve(__dirname, './steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt'),
     'utf-8',
   );
 
@@ -58,7 +61,7 @@ describe('link-coa-to-parcels.js — geometry helpers (pinned; twin retired at p
 
 describe("Spec 54 level 0 — tier 1a judged on the address point's street type (WF2 2026-10-10)", () => {
   const coaSrc = fs.readFileSync(
-    path.resolve(__dirname, '../../scripts/link-coa-to-parcels.js'),
+    path.resolve(__dirname, './steps/link_coa_to_parcels/fixtures/legacy-link-coa-to-parcels.js.txt'),
     'utf-8',
   );
   // WF2 brief L (2026-10-10): the tier-1a bridge SQL text moved out of the script into
