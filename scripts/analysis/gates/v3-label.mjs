@@ -118,6 +118,32 @@ export function parseDefectRows(text) {
   return rows;
 }
 
+/** R-GR: a status naming a declared deviation (the R-EY (9) population, plus the wave-4 "DEVIATION at" spelling). */
+const DECLARED_DEVIATION_RE = /declared deviation|\bDEVIATION at\b/i;
+/** R-GR form 1: accepted and ruled — every cited id must resolve in the register. */
+const CLOSED_FORM_RE = /^CLOSED · declared deviation \((R-[A-Z]{1,2}(?:\.[0-9]+)?(?:, R-[A-Z]{1,2}(?:\.[0-9]+)?)*)\)$/;
+/** R-GR form 2: work still owed. */
+const OPEN_FORM_RE = /^OPEN · \*\*PIN\*\*(?: |$)/;
+
+/**
+ * Spec 124 R-GR (operator y 2026-10-20): every defect-ledger row whose status names a declared deviation takes
+ * one of two forms — `CLOSED · declared deviation (<rule id>[, …])`, each id resolving in the register, or
+ * `OPEN · **PIN** <pin>`. Any third form is a finding. PURE.
+ * @returns {Array<{id: string, why: string}>}
+ */
+export function ledgerStatusFormFindings(rows, registerIds) {
+  const out = [];
+  for (const r of rows || []) {
+    const status = String(r.status || '');
+    if (!DECLARED_DEVIATION_RE.test(status) || OPEN_FORM_RE.test(status)) continue;
+    const m = CLOSED_FORM_RE.exec(status);
+    if (!m) { out.push({ id: r.id, why: `status "${status}" is a third form — use "CLOSED · declared deviation (<rule id>)" or "OPEN · **PIN** <pin>" (R-GR)` }); continue; }
+    const unresolved = m[1].split(', ').filter((id) => !registerIds.has(id));
+    if (unresolved.length) out.push({ id: r.id, why: `cites ${unresolved.join(', ')}, not a register rule id (R-GR)` });
+  }
+  return out;
+}
+
 let cachedSources = null;
 /** Disk sources for condition (9), read once per process. */
 export function loadExceptionSources(repoRoot = REPO_ROOT) {

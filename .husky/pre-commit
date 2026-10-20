@@ -28,6 +28,7 @@ node scripts/analysis/step-churn-complexity.mjs --check && \
   node scripts/generate-assert-parcel-sanity-descriptor.js --check && \
   node scripts/generate-assert-global-coverage-descriptor.js --check && \
   node scripts/generate-assert-data-bounds-descriptor.js --check && \
+  node scripts/analysis/generate-last-measured.mjs --check && \
   node scripts/analysis/report-fields.mjs --check && \
   node scripts/violations/generate-conversion-roadmap.mjs --check && \
   node scripts/violations/generate-programme-backlog.mjs --check && \

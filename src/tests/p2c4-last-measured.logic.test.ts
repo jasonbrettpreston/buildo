@@ -16,7 +16,8 @@
 // `measuredFromCapture` / `mergeMeasured`, and `scripts/analysis/generate-last-measured.mjs`
 // does not exist at all — every assertion below is against an API written by the green steps.
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -339,5 +340,195 @@ describe('step-validate --write → measured-validate.json (R1 writer)', () => {
     for (const s of ['duration_ms', 'foldValidateOnlyMeasured(', "'measured-validate.json'", 'writeFileSync(']) {
       expect(body, `runDataValidatorsForWrite must contain ${s}`).toContain(s);
     }
+  });
+
+  // MV-DRIFT (tooling-fix-1, operator y 2026-10-20; Spec 124 R-GP): a --write whose measured VALUES are
+  // unchanged leaves measured-validate.json byte-identical — only metadata (at/commit/cost_ms/sample_n)
+  // would differ, and that churn re-dirtied the file and the descriptor generated from it on every run.
+  // RED before the fix because … the fold re-stamps every executed entry whatever its value.
+  const foldOf = async (): Promise<Fold> => {
+    const sv = (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/step-validate.mjs')).href)) as { foldValidateOnlyMeasured: Fold };
+    return sv.foldValidateOnlyMeasured;
+  };
+  const writeOf = (doc: unknown): string => `${JSON.stringify(doc, null, 2)}\n`;
+  const vo = (id: string, value: unknown, duration_ms: number) => ({ id, source: 'invariant', frequency: 'validate_only', status: 'ok', value, duration_ms });
+
+  it('M14 RED-first — two --write runs with unchanged values: the second folds nothing and the bytes are identical', async () => {
+    const fold = await foldOf();
+    const first = fold(null, [vo('vo_a', 61571, 3314), vo('vo_b', 0, 10314)], { at: AT, commit: 'aaaaaaa' });
+    const text1 = writeOf(first.doc);
+    const second = fold(JSON.parse(text1), [vo('vo_a', 61571, 2999), vo('vo_b', 0, 9001)], { at: '2026-10-20T02:04:28.378Z', commit: 'bbbbbbb' });
+    expect(Object.keys(second.measured)).toEqual([]);
+    expect(writeOf(second.doc)).toBe(text1);
+  });
+
+  it('M15 — a changed value DOES rewrite that entry (new at/commit/cost_ms, sample_n + 1); an unchanged sibling keeps its bytes', async () => {
+    const fold = await foldOf();
+    const first = fold(null, [vo('vo_a', 61571, 3314), vo('vo_b', 0, 10314)], { at: AT, commit: 'aaaaaaa' });
+    const at2 = '2026-10-20T02:04:28.378Z';
+    const second = fold(JSON.parse(writeOf(first.doc)), [vo('vo_a', 61572, 2999), vo('vo_b', 0, 9001)], { at: at2, commit: 'bbbbbbb' });
+    expect(Object.keys(second.measured)).toEqual(['vo_a']);
+    expect(second.doc.entries.vo_a).toMatchObject({ value: 61572, cost_ms: 2999, at: at2, commit: 'bbbbbbb', sample_n: 2 });
+    expect(second.doc.entries.vo_b).toEqual(first.doc.entries.vo_b);
+    // A value that changes TYPE but not JSON-equality (none here) is the same value; null -> 0 is a change.
+    const third = fold(second.doc, [vo('vo_b', null, 1)], { at: at2, commit: 'ccccccc' });
+    expect(Object.keys(third.measured)).toEqual(['vo_b']);
+  });
+
+  it('M16 wiring (structural lock) — the writer writes only when the fold reports a changed entry', () => {
+    const src = readFileSync(join(process.cwd(), 'scripts/analysis/step-validate.mjs'), 'utf8');
+    const start = src.indexOf('async function runDataValidatorsForWrite(');
+    const body = src.slice(start, src.indexOf('\n}\n', start));
+    const guard = body.indexOf('if (slug && n > 0)');
+    expect(guard).toBeGreaterThan(-1);
+    expect(body.indexOf('writeFileSync(sidecarPath', guard)).toBeGreaterThan(guard);
+    expect(body.split('writeFileSync(sidecarPath').length - 1).toBe(1);
+  });
+});
+
+// R-GQ (tooling-fix-1 follow-on, operator y 2026-10-20 "a & b y"): generate-last-measured.mjs --check runs
+// at pre-commit (R-DJ (1)) against a CLOSED, SHRINK-ONLY baseline of the 84 entries that were stale when it
+// was wired, each waiting for REFREEZE-BUNDLE-1. RED before R-GQ because … the generator exports no
+// staleEntries / baselineDecision, and its --check is RED on any stale entry at all.
+describe('generate-last-measured --check stale baseline (R-GQ)', () => {
+  type Entry = { step: string; key: string; pin?: string };
+  type Decision = { pass: boolean; problems: string[]; fresh: Array<{ step: string; key: string }> };
+  const load = async () => (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/generate-last-measured.mjs')).href)) as {
+    staleEntries?: (report: unknown[]) => Entry[];
+    baselineDecision?: (stale: Entry[], baseline: unknown) => Decision;
+    run: (o: { check?: boolean; dryRun?: boolean; log?: (s: string) => void }) => { red: boolean; report: unknown[] };
+    BASELINE_REL_PATH?: string;
+  };
+  const PIN = 'REFREEZE-BUNDLE-1';
+  const base = (rows: Entry[]) => ({ entries: rows });
+
+  it('B1 GREEN — exactly the listed stale entries, each citing REFREEZE-BUNDLE-1, pass', async () => {
+    const g = await load();
+    expect(typeof g.baselineDecision).toBe('function');
+    const d = g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d).toEqual({ pass: true, problems: [], fresh: [] });
+  });
+
+  it('B2 RED — a NEW stale entry not on the list fails (the baseline never grows)', async () => {
+    const g = await load();
+    const d = g.baselineDecision!([{ step: 's', key: 'a' }, { step: 's', key: 'b' }], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d.pass).toBe(false);
+    expect(d.problems.join('\n')).toContain('NEW stale last_measured s.b');
+  });
+
+  it('B3 RED — a listed entry that is fresh now must leave the list (shrink-only, R-X orphan)', async () => {
+    const g = await load();
+    const d = g.baselineDecision!([], base([{ step: 's', key: 'a', pin: PIN }]));
+    expect(d.pass).toBe(false);
+    expect(d.fresh).toEqual([{ step: 's', key: 'a' }]);
+  });
+
+  it('B4 RED — an entry without the REFREEZE-BUNDLE-1 citation, a duplicate, or a missing file fails', async () => {
+    const g = await load();
+    expect(g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a' }])).pass).toBe(false);
+    expect(g.baselineDecision!([{ step: 's', key: 'a' }], base([{ step: 's', key: 'a', pin: PIN }, { step: 's', key: 'a', pin: PIN }])).pass).toBe(false);
+    expect(g.baselineDecision!([], null).pass).toBe(false);
+  });
+
+  it('B5 staleEntries — one {step, key} per changed id, deduplicated and sorted', async () => {
+    const g = await load();
+    expect(g.staleEntries!([{ slug: 'b', changed: ['y', 'x', 'x'] }, { slug: 'a', changed: ['z'] }]))
+      .toEqual([{ step: 'a', key: 'z' }, { step: 'b', key: 'x' }, { step: 'b', key: 'y' }]);
+  });
+
+  it('B6 LIVE — the committed baseline lists exactly the live stale set (84 at R-GQ, shrink-only) and --check is GREEN', async () => {
+    const g = await load();
+    const baseline = JSON.parse(readFileSync(join(process.cwd(), g.BASELINE_REL_PATH ?? 'missing'), 'utf8')) as { entries: Entry[] };
+    expect(baseline.entries.length).toBeLessThanOrEqual(84);
+    expect(baseline.entries.every((e) => e.pin === PIN)).toBe(true);
+    const out = g.run({ check: true, log: () => {} });
+    expect(out.red).toBe(false);
+  });
+});
+
+// verify-12 follow-up (operator y 2026-10-20, Spec 124 R-GQ): the baseline is a TRUE shrink-only set — the
+// current entries must be a subset (by step + key) of the committed previous baseline, so an entry can be
+// neither swapped for another nor re-added once removed (the R-DW / R-EB high-water-mark posture).
+// RED before because … the only lock was `entries.length <= 84` and no shrink predicate existed.
+describe('R-GQ baseline is shrink-only against the committed previous baseline', () => {
+  type Entry = { step: string; key: string; pin?: string };
+  const load = async () => (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/generate-last-measured.mjs')).href)) as {
+    baselineShrinkFindings?: (current: unknown, previous: unknown) => string[];
+    BASELINE_REL_PATH: string;
+  };
+  const doc = (rows: Array<[string, string]>) => ({ entries: rows.map(([step, key]) => ({ step, key, pin: 'REFREEZE-BUNDLE-1' })) });
+
+  it('S1 GREEN — an unchanged or shrunk baseline passes; no committed previous baseline is vacuous', async () => {
+    const g = await load();
+    expect(typeof g.baselineShrinkFindings).toBe('function');
+    expect(g.baselineShrinkFindings!(doc([['s', 'a'], ['s', 'b']]), doc([['s', 'a'], ['s', 'b']]))).toEqual([]);
+    expect(g.baselineShrinkFindings!(doc([['s', 'a']]), doc([['s', 'a'], ['s', 'b']]))).toEqual([]);
+    expect(g.baselineShrinkFindings!(doc([['s', 'a']]), null)).toEqual([]);
+  });
+
+  it('S2 RED — a swapped entry (same count) and a re-added entry both fail, naming step.key', async () => {
+    const g = await load();
+    const swapped = g.baselineShrinkFindings!(doc([['s', 'a'], ['t', 'z']]), doc([['s', 'a'], ['s', 'b']]));
+    expect(swapped.join('\n')).toContain('t.z');
+    const readded = g.baselineShrinkFindings!(doc([['s', 'a'], ['s', 'b']]), doc([['s', 'a']]));
+    expect(readded.join('\n')).toContain('s.b');
+  });
+
+  it('S3 LIVE — the working baseline is a subset of HEAD\'s and of the one R-GQ first committed', async () => {
+    const g = await load();
+    const git = (args: string[]) => spawnSync('git', args, { cwd: process.cwd(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const current = JSON.parse(readFileSync(join(process.cwd(), g.BASELINE_REL_PATH), 'utf8')) as { entries: Entry[] };
+    const first = git(['log', '--format=%H', '--diff-filter=A', '--', g.BASELINE_REL_PATH]).stdout.trim().split('\n').pop() ?? '';
+    // A merge commit that brings the baseline in (integrate-12) has no HEAD copy yet: compare against the merged
+    // branch's copy (MERGE_HEAD) instead, so the arm is never vacuous.
+    const headHas = git(['cat-file', '-e', `HEAD:${g.BASELINE_REL_PATH}`]).status === 0;
+    const headRev = headHas ? 'HEAD' : 'MERGE_HEAD';
+    for (const rev of [headRev, first]) {
+      const res = git(['show', `${rev}:${g.BASELINE_REL_PATH}`]);
+      expect(res.status, `git show ${rev}`).toBe(0);
+      expect(g.baselineShrinkFindings!(current, JSON.parse(res.stdout))).toEqual([]);
+    }
+  });
+});
+
+// verify-12 follow-up (operator y 2026-10-20): the generator WRITES only on an explicit --write; --help prints
+// usage and writes nothing; an unknown flag or no flag exits non-zero with usage and writes nothing (a
+// verifier's `--help` used to fall through to WRITE and rewrote 17 descriptors).
+// RED before because … any argv without --check/--shrink-baseline ran the write path.
+describe('generate-last-measured CLI — write is explicit', () => {
+  const descriptorBytes = (): string => {
+    const out: string[] = [];
+    for (const dir of ['scripts', 'scripts/quality']) {
+      for (const f of readdirSync(join(process.cwd(), dir)).filter((n: string) => n.endsWith('.descriptor.json')).sort()) {
+        out.push(readFileSync(join(process.cwd(), dir, f), 'utf8'));
+      }
+    }
+    return out.join('\u0000');
+  };
+  const cli = (args: string[]) => {
+    return spawnSync(process.execPath, ['scripts/analysis/generate-last-measured.mjs', ...args], { cwd: process.cwd(), encoding: 'utf8' });
+  };
+
+  it('C1 --help prints usage, exits 0, writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli(['--help']);
+    expect(r.status).toBe(0);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/usage/i);
+    expect(descriptorBytes()).toBe(before);
+  });
+
+  it('C2 RED — an unknown flag exits non-zero with usage and writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli(['--frobnicate']);
+    expect(r.status).not.toBe(0);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/usage/i);
+    expect(descriptorBytes()).toBe(before);
+  });
+
+  it('C3 RED — no flag exits non-zero with usage and writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli([]);
+    expect(r.status).not.toBe(0);
+    expect(descriptorBytes()).toBe(before);
   });
 });

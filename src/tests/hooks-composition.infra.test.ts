@@ -315,6 +315,8 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/generate-assert-parcel-sanity-descriptor.js --check',
     'node scripts/generate-assert-global-coverage-descriptor.js --check',
     'node scripts/generate-assert-data-bounds-descriptor.js --check',
+    // R-GQ (operator y 2026-10-20): descriptor last_measured drift, against its closed shrink-only baseline.
+    'node scripts/analysis/generate-last-measured.mjs --check',
     'node scripts/analysis/report-fields.mjs --check',
     'node scripts/violations/generate-conversion-roadmap.mjs --check',
     'node scripts/violations/generate-programme-backlog.mjs --check',
@@ -323,7 +325,9 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/generate-step-handbook.mjs --check',
   ];
 
-  it('GREEN — runs all 13 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+  it('GREEN — runs all 14 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+    // integrate-12: handbook-1 (generate-step-handbook) and tooling-fix-1 (generate-last-measured, R-GQ) each took 12 -> 13; merged, 14.
+    expect(CHAIN_ERA_GENERATOR_CHECKS).toHaveLength(14);
     const code = stripComments(PRE_COMMIT);
     const bylaw = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
     const sv = code.indexOf('step-validate.mjs --staged --fast');
@@ -340,6 +344,13 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     expect(tampered).not.toBe(PRE_COMMIT);
     const code = stripComments(tampered);
     expect(CHAIN_ERA_GENERATOR_CHECKS.filter((c) => !code.includes(c))).toEqual(['node scripts/analysis/report-fields.mjs --check']);
+  });
+
+  it('RED — a tampered pre-commit with the last_measured --check stripped is caught (R-GQ)', () => {
+    const tampered = PRE_COMMIT.replace(/node scripts\/analysis\/generate-last-measured\.mjs --check && \\\n\s*/, '');
+    expect(tampered).not.toBe(PRE_COMMIT);
+    const code = stripComments(tampered);
+    expect(CHAIN_ERA_GENERATOR_CHECKS.filter((c) => !code.includes(c))).toEqual(['node scripts/analysis/generate-last-measured.mjs --check']);
   });
 
   // File-only (R-BC (e)(2)): DB checks live in test:db / cloud:pre, never in a commit hook.

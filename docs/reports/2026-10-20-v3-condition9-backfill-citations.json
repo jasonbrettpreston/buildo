@@ -1,5 +1,5 @@
 {
-  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (5), PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged.",
+  "$comment": "V3 condition-9 backfill (lane backfill-9, operator y 2026-10-20; Spec 124 R-EY (9)). One object per exception entry that cited no register rule id at 1d16f155. class a = an existing register row governs it; b = a historical operator decision, recorded as the register row rule_id (124a §B21/§B22; §B20/§B21 on wf2/v3-backfill-9, renumbered at wf2/p4-integrate-12); c = no decision found (not cited; listed for the operator). apply: now = cited in this lane (grandfathered.json, defect-ledger.md, pending-step descriptors); bundled-night = a converted step descriptor deviations[] entry: editing it changes source_fingerprint (golden-fingerprint.infra), so it is applied on the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1 item (6); (5) on wf2/v3-backfill-9, PIN FP-RECAPTURE) by appending append_text to deviations[deviation_index].adjudicated_by (assert_global_coverage, assert_data_bounds and assert_parcel_sanity descriptors through their generators). staleness-disposition.json spec_version.not_executed (19 entries, R-BH) is cited in this lane and not listed here. stale (when present): stale text the same night fixes: retire (a deviation whose defect is closed), correct (a ruling the entry still calls owed) or note (a cited source that does not exist). Evidence paths under docs/reports/ marked verbatim copy of untracked are tracked copies of .cursor files (operator y 2026-10-20); line numbers are unchanged.",
   "generated_at": "2026-10-20",
   "base": "1d16f155",
   "entries": [
@@ -2948,10 +2948,10 @@
       "file": "docs/reports/defect-ledger.md",
       "key": "N-D1",
       "deviation_index": null,
-      "class": "b",
-      "rule_id": "R-FY",
-      "apply": "now",
-      "append_text": " [register: Spec 124 R-FY; V3 condition-9 backfill 2026-10-20]",
+      "class": "c",
+      "rule_id": null,
+      "apply": "none",
+      "append_text": null,
       "stale": null,
       "evidence": [
         {
@@ -2968,8 +2968,8 @@
         }
       ],
       "decision_date": "2026-09-25",
-      "searched": null,
-      "note": "Fold CF-4 is in the operator-authorized plan."
+      "searched": "integrate-12 (2026-10-20): docs/reports/2026-09-25-plan-batch2-p3-8-neighbourhoods.md §11 (:123-124) and Fold CF-4 (:133); docs/reports/2026-10-20-operator-queue-snapshot.md :1656, :1659-1660.",
+      "note": "Reclassified at wf2/p4-integrate-12: the plan resolved NB-D1 \"without the operator\" (§11, Fold CF-4 seat adjudication), and the operator ruled N-D1 RULING-OWED on 2026-10-20 (queue :1659). The R-FY citation is removed from the ledger row; N-D1 is on the rulings page."
     },
     {
       "ref": "g3-46",

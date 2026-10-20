@@ -1833,7 +1833,7 @@
       },
       "statement": "Answered by R-EP.",
       "source": {
-        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "d under Q-W4G-3).** Telemetry whose keys are not"
       },
       "merge": "MERGE-9"
@@ -2867,7 +2867,7 @@
       },
       "statement": "Answered by R-EH.",
       "source": {
-        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "wave-4 Q-MZ; draft `.cursor/v3-materializer-for"
       }
     },
@@ -3196,7 +3196,7 @@
       },
       "statement": "A pending step lands ② at compute_ported with the legacy shell live until ③ (text in untracked .cursor/v3-runner-standardization-trace-2026-10-18.md:34 per 124a:288).",
       "source": {
-        "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
+        "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "-EF | **W4A-R6 amended: gate F's score floor tak"
       },
       "merge": "MERGE-6",
@@ -4534,6 +4534,76 @@
         "ref": "src/tests/v3-label-enforcement.logic.test.ts"
       },
       "statement": "Historical operator decision recorded by the V3 condition-9 backfill: Wave-4 step-local rulings Q-C2…Q-C4, Q-CE1…Q-CE3 and lane B drafts 1–9 (e.g. Q-CE1 kill switch → shared `archetype_cost_enabled`; Q-CE2 watermark updates stay unguarded; lane B 7 always-render `*_count_zero`).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GP",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.14",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/p2c4-last-measured.logic.test.ts"
+      },
+      "statement": "An unchanged step-validate --write leaves measured-validate.json byte-identical: an entry is rewritten only when a measured value changes.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GQ",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-tooling.1",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/p2c4-last-measured.logic.test.ts"
+      },
+      "statement": "generate-last-measured.mjs --check runs at pre-commit against a closed, shrink-only stale baseline (no entry outside HEAD's baseline).",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GR",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "x-captures.3",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-status-form.logic.test.ts"
+      },
+      "statement": "A defect-ledger row for a declared deviation reads either \"CLOSED · declared deviation (<register ids>)\" or \"OPEN · **PIN** <pin>\"; no third form.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GS",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.18",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/step-library.logic.test.ts"
+      },
+      "statement": "Operator ruling A-5: an override.accept_anomaly entry lets a run complete past a declared FAIL check and never suppresses the FAIL row.",
+      "source": {
+        "register": true
+      }
+    },
+    {
+      "id": "R-GT",
+      "kind": "register-ruling",
+      "status": "active",
+      "handbook_line": "core.18",
+      "enforcement": {
+        "kind": "lock",
+        "ref": "src/tests/ledger-status-form.logic.test.ts"
+      },
+      "statement": "A conversion retires an INGESTOR's local acquisition override (env var, argv path, data/ cache) by declared deviation; the declared external is the only source.",
       "source": {
         "register": true
       }

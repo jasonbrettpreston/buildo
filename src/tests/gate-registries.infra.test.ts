@@ -267,8 +267,41 @@ describe('gate I — registry coverage (#33-#36)', () => {
       expect(rows.map((r) => r.id)).toEqual(['AS-D1b', 'ADB-D7']);
     });
 
+    // Single-letter step prefixes (tooling-fix-1, operator y 2026-10-20; Spec 124 R-BA gate I): the
+    // initials convention gives a one-word slug a one-letter prefix (massing -> M, neighbourhoods -> N,
+    // parcels -> P; `defectPrefixFor`, step-validate.mjs), so those rows are definitions too.
+    it('T6g: a single-letter step prefix (M-D, N-D, P-D) is a definition, bold or plain', () => {
+      const rows = reg.defectDefinitionRows([
+        '| M-D1 | massing | anchor | line | OPEN | closes | src |',
+        '| **N-D22** | neighbourhoods | anchor | line | OPEN | closes | src |',
+        '| P-D5 | parcels | anchor | line | OPEN | closes | src |',
+        '| m-D1 | lower-case | anchor | line | OPEN | closes | src |',
+        '| ABCDEF-D1 | six letters | anchor | line | OPEN | closes | src |',
+      ].join('\n'));
+      expect(rows.map((r) => r.id)).toEqual(['M-D1', 'N-D22', 'P-D5']);
+    });
+
+    it('T6h: RED — a single-letter id mirrored with DISAGREEING statuses fails, naming both rows', () => {
+      const out = reg.defectIdUniqueness([
+        { file: 'docs/reports/defect-ledger.md', text: defRow('M-D1', 'OPEN · **PIN** (declared deviation at ②)') },
+        { file: 'docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md', text: defRow('M-D1', 'none (O1)') },
+      ]);
+      expect(out.pass).toBe(false);
+      expect(out.violations.map((v) => v.id)).toEqual(['M-D1']);
+      expect(out.violations[0]?.why).toContain('massing-assessment');
+    });
+
+    it('T6i: LIVE — every single-letter ledger row is counted as a definition', () => {
+      const text = read('docs/reports/defect-ledger.md');
+      const raw = text.split('\n').filter((l) => /^\| (\*\*)?[A-Z]-D\d+[a-z]?(\*\*)? \|/.test(l)).length;
+      const counted = reg.defectDefinitionRows(text).filter((r) => /^[A-Z]-D/.test(String(r.id))).length;
+      expect(raw).toBeGreaterThanOrEqual(38);
+      expect(counted).toBe(raw);
+    });
+
     // 57 → 30 (2026-10-16, V3 B1): the RV prefix override and RV-D2/RV-D4 dispositions removed 27 disagreements; T6f keeps the ledger exact.
     // 30 → 0 (2026-10-17, ledger WP6 I30): the AS/AGC/ADB/AEH report tables mirror the register status verbatim (Q10 a precedent).
+    // 2026-10-20 (tooling-fix-1): single-letter prefixes now count — 497 → 568 definitions, 101 → 134 mirrors, still 0 disagreements (massing §5.1 gained a Ledger status column, 43b238ab).
     it('T6e: LIVE — the real tree reports a measured definition count (currently 0 disagreements)', () => {
       const out = reg.checkDefectIdUniqueness(REPO_ROOT);
       expect(out.definitions).toBeGreaterThan(50);

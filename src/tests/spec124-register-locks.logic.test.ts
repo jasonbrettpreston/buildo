@@ -7,7 +7,7 @@
 // R-A…R-Z, R-K.1, R-PACE-1 and the moved 124a LIVE REGISTER rows are all in scope)
 // and fails a row that carries no "McDonald's Airtight V3" label or whose backticked
 // tokens name no file in the repo. A row moved to a 124a LIVE REGISTER section for the
-// byte budget (M32, M33 on, Spec 124 §4 R-I(4)) stays in force and stays under this lock.
+// byte budget (M32–M35 on, Spec 124 §4 R-I(4)) stays in force and stays under this lock.
 //
 // Widened 2026-10-20 (operator y, consolidation 1-4; observe-1): the lock used to start
 // at R-CX, the first row written under V3-final. Rows written before R-CX predate the
@@ -131,6 +131,11 @@ describe('Spec 124 §5 R-DF — every register row is labelled and names a lock 
   it('keeps the rows moved to 124a (M33: R-DF…R-DT) under the lock', () => {
     const ids = rows.map((r) => r.id);
     for (const id of ['R-DF', 'R-DG', 'R-DH', 'R-DI', 'R-DJ', 'R-DK', 'R-DL', 'R-DM', 'R-DN', 'R-DO', 'R-DP', 'R-DQ', 'R-DR', 'R-DS', 'R-DT']) expect(ids).toContain(id);
+  });
+
+  it('keeps the rows moved to 124a (M34: R-FC…R-GO; M35: R-DU, R-DV, R-DX…R-EP, integrate-12) under the lock', () => {
+    const ids = rows.map((r) => r.id);
+    for (const id of ['R-FC', 'R-FH', 'R-FI', 'R-GO', 'R-DU', 'R-DV', 'R-DW', 'R-DX', 'R-EA', 'R-EF', 'R-EK', 'R-EP']) expect(ids).toContain(id);
   });
 
   it("each row carries the McDonald's Airtight V3 label, or is a grandfathered pre-R-CX row", () => {

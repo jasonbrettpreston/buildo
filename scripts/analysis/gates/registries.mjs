@@ -50,8 +50,13 @@ export const DEFECT_LEDGER_REL_PATH = 'docs/reports/defect-ledger.md';
 /** Spec 124 §5 R-X — the closed disposition menu; one vocabulary, never two. */
 export const STALENESS_MENU = ['executed', 'descriptive', 'retire'];
 
-/** A KNOWN-DEFECT id: step prefix + `-D` + ordinal (optionally a letter suffix). */
-export const DEFECT_ID_RE = /^([A-Z]{2,5}-D\d+[a-z]?)$/;
+/**
+ * A KNOWN-DEFECT id: step prefix + `-D` + ordinal (optionally a letter suffix). The prefix is
+ * 1-5 capitals: `defectPrefixFor` (step-validate.mjs) gives a one-word slug a ONE-letter prefix
+ * (massing -> M, neighbourhoods -> N, parcels -> P), and those rows are definitions like any other
+ * (tooling-fix-1, operator y 2026-10-20, Spec 124 R-BA gate I; a {2,5} prefix hid all 38+ of them).
+ */
+export const DEFECT_ID_RE = /^([A-Z]{1,5}-D\d+[a-z]?)$/;
 
 const kebab = (slug) => String(slug).replace(/_/g, '-');
 const readJson = (repoRoot, rel) => JSON.parse(fs.readFileSync(path.join(repoRoot, rel), 'utf8'));
@@ -331,6 +336,8 @@ export function selfTestCases() {
       run: () => censusParity([{ slug: 'assert_schema' }, { slug: 'reconcile' }], census) },
     { name: '#36 RED — the same id defined twice with disagreeing statuses', expect: { pass: false, violations: 1, id: 'AS-D1' },
       run: () => defectIdUniqueness([{ ...ledger, text: defRow('AS-D1', '**CLOSED · 8b**') }, { ...assessment, text: defRow('AS-D1', 'OPEN · PIN') }]) },
+    { name: '#36 RED — a single-letter step prefix (massing M-D) is a definition, so its drifted mirror is RED', expect: { pass: false, violations: 1, id: 'M-D1' },
+      run: () => defectIdUniqueness([{ ...ledger, text: defRow('M-D1', 'OPEN · PIN') }, { ...assessment, text: defRow('M-D1', 'none') }]) },
     { name: '#36 GREEN — an identical-status cross-file mirror is legal; a prose mention is not a definition', expect: { pass: true, violations: 0, mirrored: 1 },
       run: () => defectIdUniqueness([{ ...ledger, text: `${defRow('AS-D1', 'CLOSED')}\nThe AS-D1 class recurs.` }, { ...assessment, text: defRow('AS-D1', 'CLOSED') }]) },
   ];

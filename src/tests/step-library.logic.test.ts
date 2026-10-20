@@ -321,6 +321,8 @@ describe('the verdict is ROW-DERIVED, and all three values are reachable (§7.1,
     }
   });
 
+  // rule-map: R-GS — operator ruling A-5 (integrate-12): an accepted FAIL row lets the run complete (COMPLETED_WITH_ERRORS)
+  // while the row stays a FAIL in failedIds; an errored query is never accepted.
   // POST-B1-1 Guardian fold (operator ruling, 2026-09-15) — `override.accept_anomaly`
   // covers a MEASURED anomaly ONLY. Now that `fail_step` produces a real FAIL row, a
   // standing accept flag on that check id would have walked the row straight into

@@ -643,6 +643,19 @@
       "content_sha256": "19c880f9286273413feb62a91f18760fe1813a0e1fe35d565a823f205400a2b5",
       "moved_at": "2026-10-20",
       "commit": "a906623f"
+    },
+    {
+      "id": "M35",
+      "from_spec": "124",
+      "anchor": "| R-DU | **A pending step with no descriptor does not block R-DJ's whole-registry pre-commit selection (McDonald's Airtight V3, operator y 2026-10-18; amends R-DJ).** When a registry input is staged, `stagedRowsFor` (step-validate.mjs) selects every row. A `pending` row whose descriptor file is ABSENT (an early ① at stage red_suite) is selected but not blocking: a registry gate has nothing to read before ② (the rule stated at the overlayRows site). The rule is keyed on the descriptor FILE, never the stage label. Once the descriptor exists, the row blocks again, and a converted row always blocks. Measured: without this, no conversion's commit ① could land after R-DJ (permits ① refused at 69c1a1ef). *(Amended 2026-10-18, operator y: the same rule applies to `--all`/`--step` (pre-push, fleet runs) through `rowBlocks`; the red scorecard still prints, labelled non-blocking.)* | Amends R-DJ; R-K | `step-validate-staged-rdu.logic` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B24 — Register rows R-DU…R-EP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 21,
+      "classification": "REGISTER",
+      "evidence": "integrate-12 (wf2/p4-integrate-12, 2026-10-20): merging backfill-9 and tooling-fix-1 put Spec 124 at 384/380 lines and 130,429/126,959 B. Rows R-DU, R-DV and R-DX…R-EP (21 contiguous rows; R-DW sits out of order further down and stays) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9), rule-map.mjs and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.",
+      "content_sha256": "bacbdf6bef2e3b7b2145e09c8691b02e088755b39d6966fa8f01e4be1cfcb16c",
+      "moved_at": "2026-10-20",
+      "commit": "1901b3c1"
     }
   ]
 }

@@ -169,7 +169,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
   *Why:* The cross-step ledger is only true if it is measured, never re-typed.
-  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` · history: `W4A-R4`
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` · history: `W4A-R4`
 
 - **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
   *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
@@ -185,7 +185,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.18** Overrides are honest: `override.dry_run` is `"none"` unless the step honours it, and per-invocation row caps (`--limit=N`) are retired by deviation.
   *Why:* A dry run that writes, or a cap that hides rows, makes the run report false.
-  Rules: `R-AV` `R-AZ`
+  Rules: `R-AV` `R-AZ` `R-GS` `R-GT`
 
 ## 3. By archetype
 
@@ -355,7 +355,7 @@ How a conversion proves it changed nothing it did not mean to.
 
 - **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
   *Why:* A commit message saying "diff is fine" is not evidence.
-  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8)
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
 
 - **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
   *Why:* Tests and captures must not spend money or depend on someone else's uptime.
@@ -427,7 +427,7 @@ How the repo machinery runs.
 
 - **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
   *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
-  Rules: `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` · history: `R-BV`
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` · history: `R-BV`
 
 - **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
   *Why:* Ceremony is spent where an archetype is still new.
@@ -484,7 +484,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 302 mapped ids: 187 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 307 mapped ids: 192 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
