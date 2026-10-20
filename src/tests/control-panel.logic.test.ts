@@ -438,6 +438,8 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // WF2 P6.5 — chain-honesty WARN/FAIL floors.
   'coa_freshness_fail_days',                 // assert-coa-freshness 3-tier FAIL (legacy name; retires at ③)
   'assert_coa_freshness_fail_max_days',      // assert-coa-freshness 3-tier FAIL (step-owned copy, migration 270, R-DE (v))
+  // Phase-4 coa root ② (2026-10-19, migration 278) — load-coa.js's former literals (R-DF EXTERNALIZED, COA-D1).
+  'coa_page_size', 'coa_download_retries', 'coa_download_retry_backoff_ms', 'coa_skip_rate_max_pct', 'coa_max_days_stale_warn', 'coa_applications_dead_tuple_ratio_warn_max',
   'coa_active_trades_warn_max',              // classify-coa-trades active fan-out WARN
   'permits_bylaw_max_fsi_null_warn_pct',     // enrich-permits bylaw NULL-rate floors
   'permits_bylaw_max_coverage_null_warn_pct',

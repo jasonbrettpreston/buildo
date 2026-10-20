@@ -84,10 +84,10 @@
     },
     {
       "file": "scripts/load-coa.js",
-      "registers_at": "commit ③ cutover, full form (Spec 123 §7; R-PACE-1 ineligible — 1 converted MATERIALIZER; operator Q5 y 2026-10-19)",
-      "reason": "Phase 4 wave 1 (coa, INGESTOR multi-target: two CKAN DataStore resources Active + Closed -> coa_applications upsert + lifecycle_status_history ledger rows; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md). ① lands the assessment docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md + red suite (L1-L24 legacy pins executing the frozen oracle, D1-D8 it.fails) + gate-K red evidence + COA-D1..COA-D10; ② the descriptor/compute/shell/notes/seeds (operator 2026-10-17: prefix COA, prior-status via the ingest lookup seam, portal rot from the newest hearing on/before the run date, stats query dropped, R-DM on_error warn_row for lifecycle_status_history) + PRE/POST goldens under the DB lock (R-CQ) with an R-CZ forced cohort; ③ registers, per Spec 124 R-K.",
+      "registers_at": "commit ③ cutover, compressed form R-PACE-1",
+      "reason": "Phase 4 wave 1 (coa, INGESTOR multi-target: two CKAN DataStore resources Active + Closed -> coa_applications upsert + lifecycle_status_history ledger rows; McDonald's Airtight V3 from ①, Spec 124 R-BA/R-BZ/R-DF; plan .cursor/v3-phase4-key-steps-plan-2026-10-17.md). ① lands the assessment docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md + red suite (L1-L24 legacy pins executing the frozen oracle, D1-D8 it.fails) + gate-K red evidence + COA-D1..COA-D10; ② the descriptor/compute/shell/notes/seeds (operator 2026-10-17: prefix COA, prior-status via the ingest lookup seam, portal rot from the newest hearing on/before the run date, stats query dropped, R-DM on_error warn_row for lifecycle_status_history) + PRE/POST goldens under the DB lock (R-CQ) with an R-CZ forced cohort; ③ registers, per Spec 124 R-K. ② landed at stage compute_ported (W4A-R6; Spec 124 R-EF), the legacy shell live until ③: descriptor in the RE-FREEZE #37 forms (R-DX union group, Closed modes [full]; R-DY derived lifecycle_status_history from the runner prior-status read; R-DZ last_seen_at seen column; R-DM warn_row) + pure compute + notes + migration 278 seeds (coa_batch_size not seeded, R-DY (d)).",
       "declared": "2026-10-17",
-      "stage": "red_suite"
+      "stage": "compute_ported"
     },
     {
       "file": "scripts/quality/assert-coa-freshness.js",

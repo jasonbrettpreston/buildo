@@ -1,0 +1,1047 @@
+{
+  "identity": {
+    "name": "coa",
+    "display_name": "CoA Applications Ingestion",
+    "owner": "data",
+    "description": "Loads Committee of Adjustment applications from two Toronto Open Data CKAN DataStore resources (Active always; Closed since 2017 in full mode only), one union group (R-DX (iii)/(iv)) on coa_applications: a data_hash-guarded upsert on application_number with the last_seen_at touch for every fed key (R-DZ), and one derived lifecycle_status_history row per status change from the runner's prior-status read (R-DY), non-fatal (R-DM).",
+    "lock": 95,
+    "why_lock": {
+      "text": "Spec 47 §A.5 lock registry row 95; the legacy ADVISORY_LOCK_ID = 95 wrapped the whole run in withAdvisoryLock [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:432-435]; the shell keeps the constant as a §5.4 source-text literal.",
+      "liveness": {
+        "kind": "file",
+        "ref": "src/tests/pipeline-advisory-lock.infra.test.ts"
+      }
+    },
+    "spec": "51",
+    "spec_version": "1.0",
+    "archetype": "INGESTOR",
+    "contract_version": 1,
+    "gate_exempt": false
+  },
+  "inputs": {
+    "reads": {
+      "steps": [],
+      "tables": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "application_number",
+            "status"
+          ]
+        }
+      ],
+      "externals": [
+        {
+          "id": "coa_active",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "51fd09cd-99d6-430a-9d42-c24a937b0cb0",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=committee-of-adjustment-applications",
+            "page_size_from_config": "coa_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "REFERENCE_FILE#",
+          "target": "coa_applications"
+        },
+        {
+          "id": "coa_closed",
+          "kind": "http_api",
+          "format": "ckan_datastore",
+          "url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/datastore_search",
+          "ckan": {
+            "resource_id": "9c97254e-5460-4799-896f-c7823413c81c",
+            "package_url": "https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3/action/package_show?id=committee-of-adjustment-applications",
+            "page_size_from_config": "coa_page_size"
+          },
+          "license": "https://open.toronto.ca/open-data-license/",
+          "key_property": "REFERENCE_FILE#",
+          "target": "coa_applications",
+          "modes": [
+            "full"
+          ]
+        }
+      ]
+    },
+    "expect_nonempty": false,
+    "on_missing": "run"
+  },
+  "outputs": {
+    "writes": [
+      {
+        "table": "coa_applications",
+        "key": [
+          "application_number"
+        ],
+        "key_sql_type": "TEXT",
+        "columns": [
+          {
+            "name": "application_number",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "address",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "street_num",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "street_name",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "street_name_normalized",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "ward",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "status",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "decision",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "decision_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "hearing_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "description",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "applicant",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "sub_type",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "zoning_designation",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "data_hash",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value"
+          },
+          {
+            "name": "first_seen_at",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "last_seen_at",
+            "vocabulary": "none",
+            "written": "seen",
+            "bind": "value"
+          },
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "data_hash"
+          ],
+          "scope": "none",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The legacy upsert is change-guarded by WHERE coa_applications.data_hash IS DISTINCT FROM EXCLUDED.data_hash [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:316-333]; data_hash covers every mapped column, so it is the one guard column. last_seen_at is the written \"seen\" column (Spec 124 R-DZ): inserted, set on conflict, excluded from the guard and touched for every fed key inside the same transaction, which closes COA-D4 (the legacy touch ran on the pool after the batches [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:565-583]). One transaction for the target in R-CU slices; the legacy per-500-row transaction form is not carried (Spec 124 R-DY (d): no per-batch transaction form, coa_batch_size is not seeded).",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/load-coa.js"
+            }
+          }
+        },
+        "retract": "none"
+      },
+      {
+        "table": "lifecycle_status_history",
+        "key": [
+          "lead_id",
+          "to_status",
+          "transitioned_at"
+        ],
+        "key_sql_type": "TEXT",
+        "derive": {
+          "from": "coa_applications",
+          "prior_columns": [
+            "status"
+          ],
+          "why": {
+            "text": "Spec 124 R-DY, operator decision 2 (2026-10-17): the legacy read SELECT application_number, status FROM coa_applications WHERE application_number = ANY($1) before each batch upsert [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:255-264] and wrote one ledger row per application whose CKAN status differs from the stored one [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:351-377]. The runner now reads that prior state per slice inside the primary transaction and hands it to the pure compute export deriveRows.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/load-coa.js"
+            }
+          }
+        },
+        "on_error": "warn_row",
+        "on_error_why": {
+          "text": "Spec 124 R-DM (operator y 2026-10-17): the legacy wrapped the ledger INSERT in SAVEPOINT ledger_write and on failure rolled back to it, kept the upsert and counted ledgerErrorCount = 1 [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:380-426]. The runner's SAVEPOINT sp_e1 does the same per slice and counts written.e1.errors, which the declared WARN check lifecycle_status_history_errors bounds at viol == 0.",
+          "liveness": {
+            "kind": "check",
+            "ref": "lifecycle_status_history_errors"
+          }
+        },
+        "columns": [
+          {
+            "name": "lead_id",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "from_status",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "to_status",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "decision",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "decision_date",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "transitioned_at",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "detected_by",
+            "vocabulary": "none",
+            "written": "insert_only",
+            "bind": "value"
+          },
+          {
+            "name": "event_date",
+            "vocabulary": "none",
+            "written": "step",
+            "bind": "value",
+            "on_empty": "preserve_null"
+          },
+          {
+            "name": "id",
+            "vocabulary": "none",
+            "written": "db_default",
+            "bind": "value"
+          }
+        ],
+        "write_discipline": {
+          "class": "guarded_upsert",
+          "guard": "is_distinct_from",
+          "guard_columns": [
+            "event_date"
+          ],
+          "scope": "none",
+          "conflict_index": "uniq_lifecycle_status_history_natural_key",
+          "expected_change_ratio": ">= 0",
+          "idempotent_rerun": "zero_writes",
+          "txn_scope": "step",
+          "why": {
+            "text": "The shared natural-key ON CONFLICT of the three ledger writers [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:389-401]: ON CONFLICT (lead_id, to_status, date_trunc('second', transitioned_at AT TIME ZONE 'UTC')) DO UPDATE event_date only when the new value is non-null and differs. The conflict target is probed from the unique index uniq_lifecycle_status_history_natural_key (migrations/127_create_lifecycle_status_history.sql:58; Spec 124 R-DY (c)), and event_date on_empty \"preserve_null\" renders the legacy non-null-and-different guard.",
+            "liveness": {
+              "kind": "file",
+              "ref": "scripts/lib/compute/load-coa.js"
+            }
+          }
+        },
+        "retract": "none"
+      }
+    ],
+    "invalidates": [],
+    "write_inventory": {
+      "statements": 4,
+      "why": {
+        "text": "Four generated statements per R-CU slice inside the one transaction (Spec 124 R-DY (a)): the prior-status read, the guarded coa_applications upsert, the last_seen_at touch for every fed key (R-DZ) and the derived lifecycle_status_history upsert.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    }
+  },
+  "staleness": {
+    "trigger": "none",
+    "mode_select": "none",
+    "fingerprint": "derived",
+    "fingerprint_inputs": "none",
+    "logic_version": "none",
+    "on_fingerprint_change": "run"
+  },
+  "guards": {
+    "requires": [
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "coa_applications",
+        "on_missing": "fail",
+        "why": {
+          "text": "Migration 227 enabled RLS on coa_applications with ZERO policies (relrowsecurity=true, 0 policies [MEASURED 2026-10-17, assessment §1.5]); under a non-bypass role the upsert affects 0 rows with no error (trap 2, Spec 124 R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_applications"
+          }
+        }
+      },
+      {
+        "kind": "rls_bypass_or_policy",
+        "name": "lifecycle_status_history",
+        "on_missing": "fail",
+        "why": {
+          "text": "RLS is on for lifecycle_status_history with zero policies [MEASURED 2026-10-17, assessment §1.5]; a non-bypass role would drop every ledger row silently (Spec 124 R-CT).",
+          "liveness": {
+            "kind": "table",
+            "ref": "lifecycle_status_history"
+          }
+        }
+      },
+      {
+        "kind": "trigger",
+        "name": "coa_applications.trg_coa_lead_id",
+        "on_missing": "fail",
+        "why": {
+          "text": "coa_applications.lead_id is trigger-maintained (BEFORE INSERT OR UPDATE OF application_number); the ledger rows key on coa:<application_number> = that lead_id (R-BL(iii)).",
+          "liveness": {
+            "kind": "table",
+            "ref": "coa_applications"
+          }
+        }
+      }
+    ],
+    "srid": "none",
+    "empty_source": "none",
+    "schema_drift": "propagate"
+  },
+  "execution": {
+    "shape": "ingest",
+    "txn_scope": "step",
+    "statement_timeout": "none",
+    "step_timeout": "15m",
+    "batch": "none",
+    "batch_why": {
+      "text": "Generated (scripts/generate-ingest-batch.js, FLEET-2 B-3 #37): a step with two write targets declares \"none\" — the runner slices each target at its own write stride (pipeline.maxRowsPerInsert, Spec 124 R-CU), and the derived lifecycle_status_history rows ride the primary slice (R-DY (a)). The legacy BATCH_SIZE 500 per-batch transaction is not carried (R-DY (d)).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/step/write.js"
+      }
+    },
+    "on_row_error": "skip",
+    "on_row_error_why": {
+      "text": "A record with a blank REFERENCE_FILE# is the runner's counted bad key (legacy skip reason missing_app_num [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:179-180]); a record missing a CRITICAL field is shaped as schema_mismatch. The tolerance is the FAIL check skip_rate.",
+      "liveness": {
+        "kind": "check",
+        "ref": "skip_rate"
+      }
+    },
+    "on_batch_error": "fail_step",
+    "on_check_error": "fail_step",
+    "on_check_error_why": {
+      "text": "Every check reads a value the runner already measured (rows_read, rows_shaped, bad_key_count, column_nulls, the write counters) or one declared SELECT, so a check that throws is a defect, not an upstream condition — it must redden the run.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-coa.js"
+      }
+    },
+    "on_degrade": "none",
+    "network": {
+      "timeout": "none",
+      "retries": 2,
+      "retries_from_config": "coa_download_retries",
+      "retry_backoff_from_config": "coa_download_retry_backoff_ms"
+    },
+    "invocation": {
+      "coa": {
+        "argv": [],
+        "env": {
+          "PIPELINE_CHAIN": "coa"
+        }
+      }
+    },
+    "maintenance": [
+      {
+        "operation": "vacuum_analyze",
+        "table": "coa_applications",
+        "owned_by": "self",
+        "why": {
+          "text": "COA-D7: the legacy loader ran VACUUM ANALYZE coa_applications on every run [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:600-602]; runMaintenance gates it on coa_applications_dead_tuple_ratio_warn_max (seeded 0, so any dead tuple triggers it, the faithful form of the unconditional legacy run) and runs it autocommit after the write — the load_massing / load_neighbourhoods form.",
+          "liveness": {
+            "kind": "file",
+            "ref": "scripts/lib/step/plausibility.js"
+          }
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "zero_records",
+      "kind": "invariant",
+      "expect": {
+        "records_fetched_zero": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Zero records from CKAN is a WARN run that writes nothing — possible API outage or empty dataset [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:465-486]; the legacy SKIPPED status/reason rows become this one zero-tolerance row (COA-D14).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "records_fetched",
+      "kind": "freshness",
+      "expect": {
+        "reports": "raw CKAN records fetched (Active, plus Closed in full mode)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row records_fetched [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:617] = acquired.rows_read (every raw record of the selected members, bad keys included).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "records_mapped",
+      "kind": "freshness",
+      "expect": {
+        "reports": "records mapped to a coa_applications row"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row records_mapped [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:618] = acquired.rows_shaped (pre-dedup).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "records_skipped",
+      "kind": "freshness",
+      "expect": {
+        "reports": "records skipped (missing_app_num, schema_mismatch) with the reason counts"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row records_skipped [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:619] = rows_read - rows_shaped; the detail is the skip reasons in the legacy vocabulary (missing_app_num = the runner's bad_key_count; schema_mismatch).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "skip_rate",
+      "kind": "bound",
+      "expect": {
+        "of": "skipped records over fetched records, percent",
+        "direction": "max"
+      },
+      "limit": "pct <= 5",
+      "limit_from_config": "coa_skip_rate_max_pct",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy FAIL at skipRate >= 5 [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:620]; the bound is the logic variable coa_skip_rate_max_pct in the closed inclusive grammar (pct <=): a rate EXACTLY equal to the bound now PASSes (declared deviation; the ADB inclusive-ceiling precedent, drafted ruling for operator review).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "records_inserted",
+      "kind": "freshness",
+      "expect": {
+        "reports": "new coa_applications rows (RETURNING xmax = 0)"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row records_inserted [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:621] = written.inserted (RETURNING xmax = 0).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "records_updated",
+      "kind": "freshness",
+      "expect": {
+        "reports": "changed coa_applications rows"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row records_updated [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:622] = written.updated.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "schema_mismatch_count",
+      "kind": "invariant",
+      "expect": {
+        "missing_critical_fields": 0
+      },
+      "limit": "viol == 0",
+      "severity": "FAIL",
+      "blocking": false,
+      "when": "pre_write",
+      "chains": "all",
+      "accept_until": "none",
+      "order_guarantee": {
+        "guarantee": "A CKAN record missing a CRITICAL field fails the run before any write to coa_applications or lifecycle_status_history.",
+        "spec_ref": "docs/specs/01-pipeline/51_source_coa.md",
+        "anchor": "schema drift: the run fails before any write"
+      },
+      "why": {
+        "text": "A CKAN record missing a CRITICAL field aborted the legacy run before any write [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:171-177, :515-533]. The observer reads each selected member's acquired header (acquired.members[id].record_fields, the CKAN arm's first-record keys; CKAN DataStore records carry the full field set) and the records shaped as schema_mismatch; zero tolerance, scored by the runner's pre_write gate, so a FAIL means no write at all.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "max_days_stale",
+      "kind": "bound",
+      "expect": {
+        "of": "days from the newest hearing on/before the run date to the run clock",
+        "direction": "max"
+      },
+      "limit": "value_max 45",
+      "limit_from_config": "coa_max_days_stale_warn",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Portal rot. Legacy WARN at >= 45 days from max(hearing_date) [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:587-590, :626]. COA-D6, operator-ruled 2026-10-17 (decision 4): measured from the newest hearing ON/BEFORE the run date among the rows this run fed — the rows at MAX(last_seen_at), which R-DZ touches for every fed key inside the write transaction — so a future-scheduled hearing no longer hides staleness. COA-D2: the log line's > 45 retires; the bound is coa_max_days_stale_warn in the inclusive value_max form (declared deviation).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "reads": [
+        {
+          "table": "coa_applications",
+          "columns": [
+            "hearing_date",
+            "last_seen_at"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "applicant_names_present",
+      "kind": "invariant",
+      "expect": {
+        "mapped_rows_with_applicant": 0
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 37 tripwire: WARN the moment CONTACT_NAME data reappears — the build signal for the deferred CoA entity extraction [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:627-635]. Counted pre-dedup over the mapped records (shapeRecord tags applicant_present; acquired.shaped_tags), as the legacy mapped.filter.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "zoning_designation_null",
+      "kind": "invariant",
+      "expect": {
+        "every_row_null": false
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "WARN only when EVERY written row has no zoning_designation — the signature of a CKAN rename of ZONING_DESIGNATION [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:636-637]. Read from acquired.column_nulls.zoning_designation over acquired.feature_count (the deduplicated rows, as the legacy deduplicated.every); the null count is the row detail.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "lifecycle_status_history_inserted",
+      "kind": "freshness",
+      "expect": {
+        "reports": "ledger rows inserted"
+      },
+      "limit": "viol == 0",
+      "severity": "INFO",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Legacy INFO row: the ledger INSERT's rowCount [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:411, :641] = written.e1.inserted + written.e1.updated (Spec 124 R-DY (e) counters of the derived target).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "lifecycle_status_history_errors",
+      "kind": "invariant",
+      "expect": {
+        "ledger_write_errors": 0
+      },
+      "limit": "viol == 0",
+      "severity": "WARN",
+      "blocking": false,
+      "when": "post",
+      "chains": "all",
+      "accept_until": "none",
+      "why": {
+        "text": "Spec 124 R-DM: a failed lifecycle_status_history slice rolls back to the runner SAVEPOINT sp_e1, the coa_applications upsert is kept, and written.e1.errors counts it; this row WARNs on any [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:415-426, :642].",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "override": {
+    "force_full": "none",
+    "force_run": "none",
+    "dry_run": "none"
+  },
+  "emits": [
+    {
+      "key": "coa_load",
+      "type": "object",
+      "consumers": [],
+      "skeleton": {
+        "records_fetched": 0,
+        "records_mapped": 0,
+        "records_skipped": 0,
+        "skip_reasons": {},
+        "records_deduplicated": 0,
+        "schema_mismatch_count": 0
+      }
+    },
+    {
+      "key": "audit_table",
+      "type": "object",
+      "consumers": [
+        "src/components/FreshnessTimeline.tsx"
+      ],
+      "skeleton": {
+        "phase": 2,
+        "name": "CoA Ingestion",
+        "verdict": "PASS",
+        "rows": []
+      }
+    }
+  ],
+  "deviations": [
+    {
+      "from": "records_meta.data_health / api_health / duration_ms flat keys [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:659-680]",
+      "why": {
+        "text": "Spec 124 R-DE (iv): an INGESTOR emits ONE <x>_load object, so the data_health block is records_meta.coa_load (same fields; max_days_stale is the check row of that name); api_health and duration_ms are runner telemetry. Measured readers of coa data_health: none outside the step (grep 2026-10-18).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-DE (iv) (McDonald's Airtight V3)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the exclusive boundaries skipRate >= 5 FAIL and maxDaysStale >= 45 WARN [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:620, :626]",
+      "why": {
+        "text": "The config-substituted limit grammar is inclusive (pct <= / value_max; verdict.js PCT_RE / VALUE_MAX_RE): a value EXACTLY at the seeded bound (5.0 % skipped, 45 days) now PASSes. Seeds keep the former literals (R-CV).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-DC (124:236, the inclusive ceiling_max form, operator y 2026-10-17) — the assert_coa_freshness ACF-D7 precedent (W4A-R2)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "max_days_stale over max(hearing_date) clamped at 0 [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:502-504, :587-589]",
+      "why": {
+        "text": "COA-D6: a future-scheduled hearing (live max 2027-10-08) clamped the value to 0, so portal rot was undetectable; now the newest hearing on/before the run date.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-17 (QUEUE 2026-10-17, CoA decision 4)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "the log-only stats SELECT with NOW() - INTERVAL '90 days' [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:697-707]",
+      "why": {
+        "text": "Writes nothing and decides nothing; the same counts are measured by assert_global_coverage and link_coa.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "operator y 2026-10-17 (CoA decision 5)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "$9/$10::timestamptz[] bound into DATE columns [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:307-308]",
+      "why": {
+        "text": "COA-D3: the stored date depended on the session TimeZone; the compute now binds the CKAN calendar date text (YYYY-MM-DD) into the DATE columns through the generated plan (scripts/lib/compute/load-coa.js isoDate). Identical on a UTC session (measured dev DB).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "COA-D3 (assessment §6; red D6)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "avg_latency_ms / api_errors audit rows and records_meta.api_health [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:623-624, :665-669]",
+      "why": {
+        "text": "Request latency and retries are runner acquisition telemetry; an exhausted retry is an acquisition failure (failed_acquisition terminal), never a counted row.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      },
+      "adjudicated_by": "load_zoning precedent (runner acquisition owns network telemetry)",
+      "date": "2026-10-18"
+    },
+    {
+      "from": "one transaction per 500-row batch (BATCH_SIZE, withTransaction) and the last_seen_at touch on the pool outside it [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:33, :553-583]",
+      "why": {
+        "text": "Spec 124 R-DY (d): one transaction per target in R-CU slices, no per-batch transaction form (coa_batch_size is not seeded); R-DZ moves the touch inside that transaction (COA-D4). An interruption now leaves nothing half-written.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/write.js"
+        }
+      },
+      "adjudicated_by": "Spec 124 R-DY (d) and R-DZ (operator y 2026-10-18, runner-lane rulings 3, 4, 5; RE-FREEZE #37)",
+      "date": "2026-10-19"
+    },
+    {
+      "from": "MAX_RETRIES 3 attempts with exponential backoff RETRY_BASE_MS * 2^(n-1) [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:34-35, :108-136]",
+      "why": {
+        "text": "The runner CKAN arm retries coa_download_retries times after the first attempt with a linear backoff_ms * attempt (acquire.js acquireCkanDatastore); seeded 2 retries / 2000 ms, the waits are 2000 then 4000 ms — identical to the legacy three attempts. GR-3 adds a named refusal when fetched != result.total.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/step/acquire.js"
+        }
+      },
+      "adjudicated_by": "load_zoning precedent (runner acquisition owns retries, R-DX ckan_datastore primary)",
+      "date": "2026-10-19"
+    }
+  ],
+  "limitations": [
+    {
+      "what": "COA-D11: data_hash takes dates in the UTC-midnight ISO form (YYYY-MM-DDT00:00:00.000Z), identical to the legacy under a UTC process. The legacy read the zone-less Closed FINALDATE through Date.parse in the PROCESS TimeZone, so hashes written by an America/Toronto process differ: the first converted --full on such a database re-upserts those Closed rows once (status unchanged, so no ledger row). Incremental (Active-only) runs are unaffected: a YYYY-MM-DD date parses as UTC in both forms.",
+      "measured": "dev DB vs live CKAN, read-only 2026-10-19: 31,253 of 31,270 Closed rows hash in the America/Toronto form, 0 in the UTC form (17 are live CKAN changes); 2,628 of 2,675 Active rows hash identically in both forms (47 are live CKAN changes) [MEASURED, scratchpad parity-tz.js]",
+      "check_id": "records_updated"
+    },
+    {
+      "what": "Rows that leave the feed are never retired; last_seen_at is the only departure signal (assert_coa_freshness).",
+      "measured": "assessment §1.1",
+      "check_id": "none"
+    }
+  ],
+  "interpretation": {
+    "file": "load-coa.notes.json"
+  },
+  "recovery": {
+    "reset": "none",
+    "resume": "none",
+    "force": "none",
+    "rollback": "none",
+    "verify_clean": "generated",
+    "cascades": "derived",
+    "interrupted": "none",
+    "interrupted_why": {
+      "text": "The coa_applications upsert, the last_seen_at touch and the derived ledger rows commit in one transaction (Spec 124 R-DY (d)); an interrupted run commits nothing and a rerun writes only what changed (data_hash guard).",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-coa.js"
+      }
+    },
+    "before_image": "none",
+    "before_image_why": {
+      "text": "A guarded upsert of a published feed; the CKAN resources are the before-image.",
+      "liveness": {
+        "kind": "file",
+        "ref": "scripts/lib/compute/load-coa.js"
+      }
+    }
+  },
+  "database": {
+    "class": "primary",
+    "min_migration": 261,
+    "assert_current_database": "postgres"
+  },
+  "counters": {
+    "records_total": {
+      "source": "written.inserted + written.updated"
+    },
+    "records_new": {
+      "source": "written.inserted"
+    },
+    "records_updated": {
+      "source": "written.updated"
+    }
+  },
+  "config": {
+    "logic_variables": [
+      {
+        "name": "coa_page_size",
+        "min": 100,
+        "max": 32000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_download_retries",
+        "min": 0,
+        "max": 10,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_download_retry_backoff_ms",
+        "min": 0,
+        "max": 60000,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_skip_rate_max_pct",
+        "min": 0,
+        "max": 100,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_max_days_stale_warn",
+        "min": 1,
+        "max": 365,
+        "on_invalid": "fail"
+      },
+      {
+        "name": "coa_applications_dead_tuple_ratio_warn_max",
+        "min": 0,
+        "max": 5,
+        "on_invalid": "fail"
+      }
+    ],
+    "validation": "strict",
+    "hoisted_above_gate": true
+  },
+  "sharing": {
+    "chains": "derived",
+    "shared": "derived",
+    "slug_forms": "derived",
+    "varies_by_chain": {
+      "checks": "none",
+      "phase": {
+        "coa": 2
+      },
+      "audit_table": "one",
+      "scope": "none"
+    },
+    "on_contention": "self_skip"
+  },
+  "terminals": [
+    {
+      "id": "loaded",
+      "kind": "success",
+      "status": "completed",
+      "records_meta": {
+        "coa_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Every batch written, every check PASS/INFO.",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "loaded_with_warnings",
+      "kind": "success",
+      "status": "completed_with_warnings",
+      "records_meta": {
+        "coa_load": "object",
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "Written, with a WARN check (portal rot, applicant names, zoning rename, ledger errors).",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "failed_schema_drift",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A CRITICAL CKAN field is missing: nothing is written [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:515-533].",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "failed_acquisition",
+      "kind": "fail_error",
+      "status": "failed",
+      "records_meta": {
+        "audit_table": "object",
+        "terminal": "string"
+      },
+      "why": {
+        "text": "A CKAN page failed after coa_download_retries attempts [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:141-145].",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    },
+    {
+      "id": "lock_held_elsewhere",
+      "kind": "skip_lock_contention",
+      "status": "self_skipped",
+      "records_meta": {
+        "skipped": "bool",
+        "reason": "string"
+      },
+      "why": {
+        "text": "Advisory lock 95 held: nothing fetched or written [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:710].",
+        "liveness": {
+          "kind": "file",
+          "ref": "scripts/lib/compute/load-coa.js"
+        }
+      }
+    }
+  ]
+}

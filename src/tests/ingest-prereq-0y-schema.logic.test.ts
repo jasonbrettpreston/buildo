@@ -583,6 +583,21 @@ describe('INGESTOR prerequisite 0y — ckan_datastore + ckan + trigger style + s
         );
         continue;
       }
+      // coa ② (phase-4, 2026-10-19): the second declared consumer — Spec 124 R-DX (iii)/(iv) (124:256) made the
+      // ckan_datastore primary first-class in the UNION form: two CKAN primaries on one target, Closed selected by
+      // `modes`. A union refuses skip_scope "all_primaries" (R-DX (iii)) and coa declares trigger "none", so the
+      // skip_scope / trigger-style pins below still hold for it; only the format/ckan pin is inverted.
+      if (path.basename(file) === 'load-coa.descriptor.json') {
+        for (const e of (descriptor.inputs?.reads?.externals as Array<Record<string, any>>) ?? []) {
+          expect(e.format, `${label}'s external ${e.id} must declare the 0y \`ckan_datastore\` format (R-DX union member)`).toBe('ckan_datastore');
+          expect(e.ckan, `${label}'s external ${e.id} must declare the 0y \`ckan\` block`).toBeDefined();
+        }
+        expect(descriptor.staleness?.skip_scope, `${label} is a union group and must not declare skip_scope (R-DX (iii))`).toBeUndefined();
+        for (const trigger of triggersAt(descriptor)) {
+          expect(trigger.style, `${label} has a trigger declaring a 0y \`style\``).toBeUndefined();
+        }
+        continue;
+      }
 
       for (const e of (descriptor.inputs?.reads?.externals as Array<Record<string, any>>) ?? []) {
         expect(e.ckan, `${label}'s external ${e.id} must not declare a 0y \`ckan\` block`).toBeUndefined();

@@ -93,6 +93,7 @@ The CoA stream parallels the permits stream — neither is a foreign key of the 
 - Empty records on incremental → `process.exit(0)` after logging "no new records"
 - CKAN SQL endpoint returns 500 → treated as error, chain halts
 - `ZONING_DESIGNATION` absent or blank → `zoning_designation` NULL, counted in the `zoning_designation_null` audit row; never a skip (not in CRITICAL_FIELDS).
+- A CKAN record missing a CRITICAL field (`REFERENCE_FILE#`, `C_OF_A_DESCISION`, `STATUSDESC`, `HEARING_DATE`, `STREET_NUM`, `STREET_NAME`) → schema drift: the run fails before any write (`schema_mismatch_count` FAIL; legacy `load-coa.js:171-177, :515-532`; the phase-4 descriptor scores it `when: "pre_write"`).
 
 ### Lifecycle status history `event_date` population (WF3 Pass-2.5 Finding C Phase 3 — shipped 2026-05-22)
 

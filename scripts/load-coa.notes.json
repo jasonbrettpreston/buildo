@@ -1,0 +1,41 @@
+{
+  "$comment": [
+    "Prose sidecar for scripts/load-coa.descriptor.json (Spec 120 §3.4-§3.4b).",
+    "",
+    "CAP: 12 prose entries (step-validate fast invariant #45, NOTES-CAP). A 13th is PROMOTED to a check or DELETED."
+  ],
+  "expected_shape": [
+    {
+      "what": "Incremental runs (the coa chain default) read the WHOLE Active resource (about 2,800 records), not 'the last 90 days' (COA-D5: Spec 51 and the legacy header say 90 days; the code never filtered). records_updated on a daily run is the rows whose mapped fields changed — run 1545 updated 248 — so a three-digit count is normal. --full adds Closed (about 34,000) and, once hashes are stable, updates 0."
+    }
+  ],
+  "read_this_way": [
+    {
+      "what": "max_days_stale is the age of the newest hearing ON or BEFORE the run date (COA-D6, operator-ruled 2026-10-17). Future-scheduled hearings are ignored, so a WARN means CKAN has published no hearing for coa_max_days_stale_warn days — the portal-rot signal, which the legacy max(hearing_date) hid whenever any hearing was scheduled in the future."
+    },
+    {
+      "what": "decision_date and hearing_date are the CKAN calendar date text (YYYY-MM-DD) bound into the DATE columns (COA-D3), so the stored date is the same under any session TimeZone. data_hash takes those dates in the UTC-midnight ISO form, identical to the legacy under a UTC process (COA-D11)."
+    }
+  ],
+  "known_normal": [
+    {
+      "what": "applicant_names_present PASS with value 0: the Active resource has no CONTACT_NAME field and Closed carries it blank (2026-07-29). A WARN is the build signal for the deferred Spec 37 CoA entity extraction, not a defect."
+    },
+    {
+      "what": "lifecycle_status_history_inserted is 0 on most incremental runs and tracks status changes only; a decision change without a status change writes no ledger row (Spec 51 §3, Option B)."
+    }
+  ],
+  "decisions": [
+    {
+      "what": "The ledger write is a derived target (R-DY) and non-fatal (R-DM, operator y 2026-10-17): the runner reads coa_applications(application_number, status) per slice before the upsert, in the same transaction (operator decision 2), the pure deriveRows emits one row per status change, and a failed slice rolls back to the runner SAVEPOINT, keeps the coa_applications upsert and WARNs lifecycle_status_history_errors."
+    },
+    {
+      "what": "The data_hash covers the MAPPED record (sorted keys), never the raw CKAN row, whose _id / _full_text / rank change between fetches (8bcbee18). Dedup keeps the record with the later decision_date; the union acquires Active before Closed, so a tie keeps the Active row. Closed is acquired in full mode only (externals[].modes, R-DX (iv))."
+    }
+  ],
+  "how_to_investigate": [
+    {
+      "what": "A skip_rate FAIL: read the records_skipped row detail (or records_meta.coa_load.skip_reasons) — missing_app_num is a blank REFERENCE_FILE# (run 1545: 101 of 2,875, 3.5 %); schema_mismatch means a CRITICAL field vanished, and schema_mismatch_count FAILs before any write."
+    }
+  ]
+}
