@@ -104,6 +104,10 @@ function slugify(s) {
 // ---------------------------------------------------------------------------
 // P13-1 magnitude-gate accepted-by-id allowlist (IL-6, `e99ae61a`). VERBATIM
 // port of `COST_MAG_ACCEPT` — an AUDITED EXCEPTION LIST (declared `accept_list`,
+// descriptor-declared per the IL-6 ruling, operator y 2026-10-20: the generator
+// writes it to both magnitude checks' `checks[].expect.accept_list` (CHECK_DEFS
+// `acceptList` below) and the compute binds the DESCRIPTOR's list
+// (`declaredAcceptList`), never this constant — it is generator input only;
 // not a logic var; Rule 3 draws the same carve-out IL-6/parcel-sanity-audit.js's
 // `<> ALL(ARRAY[...])` precedent already established for a Rule-3-exempt constant).
 // 3 genuine large multi-unit developments investigated 2026-07-09, all
@@ -199,8 +203,8 @@ const CHECK_DEFS = [
   { id: 'orphaned_permit_parcels', chains: ['permits'], severity: 'FAIL', kind: 'raw0', loader: 'permits', field: 'orphanParcels', cfgVar: null, fence: null, whyText: 'permit_parcels rows with no matching (permit_num, revision_num) in permits — referential-integrity invariant.' },
   { id: 'duplicate_pk_groups', chains: ['permits'], severity: 'FAIL', kind: 'raw0', loader: 'permits', field: 'dupes', cfgVar: null, fence: null, whyText: 'Duplicate (permit_num, revision_num) groups in permits — PK-uniqueness invariant.' },
   { id: 'permits_pre_permit_count', chains: ['permits'], severity: 'FAIL', kind: 'raw0', loader: 'permits', field: 'prePermitCount', cfgVar: null, fence: 'adec1f68', whyText: 'Phase G (Spec 42 §6.11) Pre-Permit retirement residue, permits-branch site. IL-3 ACCEPT: preserved as an INDEPENDENT check from the coa-branch site (coa_permits_pre_permit_count) — disjoint runPermitChecks/runCoaChecks guards preclude a single shared variable (defense-in-depth, v2-Q2).' },
-  { id: 'cost_estimate_over_ceiling', chains: ['permits'], severity: 'WARN', kind: 'raw0', loader: 'costmag', field: 'costMagCount', cfgVar: null, fence: 'e99ae61a', whyText: `P13-1 legacy cost_estimates.estimated_cost magnitude gate (> cost_est_legacy_cost_ceiling_cad, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list (audited exception, not a threshold): ${COST_MAG_ACCEPT.join(', ')} — investigated 2026-07-09, all cost_source='archetype_rate' genuine multi-unit developments.` },
-  { id: 'modeled_gfa_over_ceiling', chains: ['permits'], severity: 'WARN', kind: 'raw0', loader: 'costmag', field: 'gfaMagCount', cfgVar: null, fence: 'e99ae61a', whyText: `P13-1 legacy cost_estimates.modeled_gfa_sqm magnitude gate (priced rows only, > cost_est_legacy_gfa_ceiling_sqm, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list: ${COST_MAG_ACCEPT.join(', ')}.` },
+  { id: 'cost_estimate_over_ceiling', chains: ['permits'], severity: 'WARN', kind: 'raw0', loader: 'costmag', field: 'costMagCount', acceptList: COST_MAG_ACCEPT, cfgVar: null, fence: 'e99ae61a', whyText: `P13-1 legacy cost_estimates.estimated_cost magnitude gate (> cost_est_legacy_cost_ceiling_cad, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list (audited exception, not a threshold): ${COST_MAG_ACCEPT.join(', ')} — investigated 2026-07-09, all cost_source='archetype_rate' genuine multi-unit developments.` },
+  { id: 'modeled_gfa_over_ceiling', chains: ['permits'], severity: 'WARN', kind: 'raw0', loader: 'costmag', field: 'gfaMagCount', acceptList: COST_MAG_ACCEPT, cfgVar: null, fence: 'e99ae61a', whyText: `P13-1 legacy cost_estimates.modeled_gfa_sqm magnitude gate (priced rows only, > cost_est_legacy_gfa_ceiling_sqm, AND permit_num <> ALL(COST_MAG_ACCEPT)). Accept-list: ${COST_MAG_ACCEPT.join(', ')}.` },
   { id: 'ghost_permits_30d', chains: ['permits'], severity: 'WARN', kind: 'raw0', loader: 'ghost', field: 'ghostCount', cfgVar: null, fence: 'ea087109', whyText: "Permits not seen (last_seen_at) in 30+ days, EXCLUDING terminal lifecycle_phase IN ('P19','P20') — ea087109 baseline: pre-fix 8,683 false positives (all P19/P20), true non-terminal ghost count in prod 0. Non-fatal on query error (last_seen_at column may not exist) — reports a SKIP row, never omitted." },
   // ── permits: 2 warnings-only checks promoted to visible rows (consequence 3) ──
   { id: 'cost_estimates_null_rate', chains: ['permits'], severity: 'WARN', kind: 'pctmax_cfg', loader: 'costest', field: 'nullPct', cfgVar: 'cost_est_null_rate_warn_pct', fence: null, whyText: 'cost_estimates.estimated_cost NULL rate. Pre-conversion: warnings[]-only, no audit_table row — promoted to a visible row so cost_est_null_rate_warn_pct is honestly CONSUMED (Nothing Hidden), never a verdict change.' },
@@ -256,4 +260,4 @@ const CHECK_DEFS = [
   { id: 'date_before_permit_year', chains: ['deep_scrapes'], severity: 'FAIL', kind: 'raw0', loader: 'inspection', field: 'dateBeforePermit', cfgVar: null, fence: null, whyText: "permit_inspections.inspection_date year precedes the permit_num's 2-digit year prefix." },
 ];
 
-module.exports = { CHECK_DEFS, LOGIC_VAR_DEFS, COST_MAG_ACCEPT, slugify };
+module.exports = { CHECK_DEFS, LOGIC_VAR_DEFS, slugify };
