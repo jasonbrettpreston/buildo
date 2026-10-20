@@ -45,7 +45,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.3** Use the closed vocabulary: full-word archetypes, a lock id unique across manifest, one-time and backfill scripts, `guards.schema_drift` none/propagate/pause, no `append_unsafe` for new steps, staleness as scope × trigger, typed `empty_source`, and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits, notes keys).
   *Why:* Shared names let one library, one gate and one admin page read every step the same way.
-  Rules: `R-DE` `V1` `V2` `V3` `V4` `V5` `V6`
+  Rules: `R-DE` `V1` `V2` `V3` `V5` `V6` · history: `V4`
 
 - **core.4** Take the archetype from the code: PH-0 derives it, and the census (`step-archetype-census.json`) must agree with the descriptor (#25). The archetype selects the required and forbidden categories. A step whose only write is a snapshot it exists to record is a RECORDER, not an ASSERT with a hidden write.
   *Why:* The archetype drives which fields are required, so a wrong label silently drops checks.
@@ -89,7 +89,7 @@ What every step declares and does, whatever its archetype.
 
 - **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
   *Why:* The cross-step ledger is only true if it is measured, never re-typed.
-  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `W4A-R4` `Q-B1`
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `W4A-R4`
 
 - **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
   *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
@@ -154,6 +154,10 @@ Joins two populations and writes the link rows or columns.
 - **link.3** Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).
   *Why:* Shows the rules applied where they were first needed.
   Rules: `R-N` `R-CR`
+
+- **link.4** Open operator question Q-B1. Until the next run a deleted parcel has no abutment pairs (link_parcel_abutments, R-CR); a reader must not read that as "no neighbours": averaging stays `not_evaluated` until Q-B1 is answered. It closes when a library keyed-delete arm with an optional lost-link flag lands.
+  *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
+  Rules: `Q-B1`
 
 ### MATCHER
 
@@ -422,7 +426,7 @@ Validator messages that name their rule directly:
 | GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
 | GAP-G-5 | none | core.6 | no machine check: author judgment |
 | W4A-R2 | none | core.6 | no machine check beyond step deviation |
-| Q-B1 | none | core.14 | no machine check found (consolidate-1 inventory) |
+| Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
 | Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
 | Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
 | V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
@@ -468,7 +472,7 @@ The Spec 124 register is the authority; the handbook is the reading surface; Spe
 
 - MERGE-1 EXTERNALIZED → core.8 (14 ids)
 - MERGE-2 Compute is pure → core.9 (14 ids)
-- MERGE-3 Declared == witnessed → core.14 (18 ids)
+- MERGE-3 Declared == witnessed → core.14 (17 ids)
 - MERGE-4 Captures are reproducible and every diff is explained → x-captures.1, x-captures.2, x-captures.3, x-captures.4 (16 ids)
 - MERGE-5 The V3 label → x-v3.1 (5 ids)
 - MERGE-6 Lifecycle stage is declared data → x-stages.1, x-stages.2, x-stages.3 (11 ids)

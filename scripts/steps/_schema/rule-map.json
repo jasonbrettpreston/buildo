@@ -30,7 +30,7 @@
         "COA-D14"
       ],
       "branch": "wf2/rulings-7 @ b348e360",
-      "note": "Cited before integration; the lock requires each to NOT yet resolve here, so the integrator empties this list when rulings-7 lands."
+      "note": "Cited before integration; the lock requires each to NOT yet resolve here. When rulings-7 lands the integrator follows docs/handbook/INTEGRATION.md in the same commit: empty this list, drop source.pending_integration on R-EW/R-EX, confirm their lock files name them, revisit their \"rul7 branch only\" unenforced reasons, regenerate."
     },
     "register_rows_owed": {
       "ids": [
@@ -42,7 +42,7 @@
         "W4A-R6"
       ],
       "lane": "backfill-9 (operator decision 3)",
-      "note": "When their rows land, add each new register id here with handbook_line and alias the W4A id via by/aliases."
+      "note": "When their rows land, add each new register id with its handbook_line and point the W4A id at it via by + status_reason; steps in docs/handbook/INTEGRATION.md."
     }
   },
   "statuses": {
@@ -117,8 +117,7 @@
         "R-EA",
         "R-ER",
         "R-ES",
-        "W4A-R4",
-        "Q-B1"
+        "W4A-R4"
       ]
     },
     {
@@ -523,6 +522,12 @@
       "why": "Shows the rules applied where they were first needed."
     },
     {
+      "id": "link.4",
+      "section": "link",
+      "text": "Open operator question Q-B1. Until the next run a deleted parcel has no abutment pairs (link_parcel_abutments, R-CR); a reader must not read that as \"no neighbours\": averaging stays `not_evaluated` until Q-B1 is answered. It closes when a library keyed-delete arm with an optional lost-link flag lands.",
+      "why": "An unanswered question stays visible on its own line, next to the rule that raised it."
+    },
+    {
       "id": "matcher.1",
       "section": "matcher",
       "text": "Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.",
@@ -822,7 +827,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "✅ **GAP G-1 CLOSED (2026-08-29).** The *preferen"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R-Y",
@@ -836,7 +842,8 @@
       "statement": "Kill criterion K1 (21st category) is retired because the schema makes it impossible.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "Rule-5",
@@ -961,7 +968,7 @@
     {
       "id": "V4",
       "kind": "spec122-vocab",
-      "status": "active",
+      "status": "historical",
       "handbook_line": "core.3",
       "enforcement": {
         "kind": "lock",
@@ -972,6 +979,7 @@
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **V4** | `outputs.replay` | **`append_unsa"
       },
+      "status_reason": "active -> historical: outputs.writes[].replay (append_unsafe) was deleted at the Phase 3 RE-FREEZE; step-schema.logic \"V4 — SUPERSEDED\" locks the deletion",
       "aliases": [
         "SPEC122A-V4"
       ]
@@ -1205,7 +1213,8 @@
         "anchor": "ation), W4A-R2 (inclusive ceiling), W4A-R3 (`pip"
       },
       "register_row_owed": "lane backfill-9 (operator decision 3)",
-      "merge": "MERGE-8"
+      "merge": "MERGE-8",
+      "status_reason": "inventory UNCERTAIN (draft) -> active: steps already declare it (inclusive ceiling_max deviations, R-DC precedent); register row owed to backfill-9"
     },
     {
       "id": "Rule-4",
@@ -1253,7 +1262,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "✅ **GAP G-2 CLOSED (2026-08-29), narrowed honest"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R-A",
@@ -1301,7 +1311,8 @@
       "source": {
         "register": true
       },
-      "merge": "MERGE-1"
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R-AW",
@@ -1403,7 +1414,8 @@
         "file": "docs/specs/01-pipeline/124_step_standard_policy.md",
         "anchor": "> **R-AU addendum (2026-09-21, operator-adju"
       },
-      "merge": "MERGE-1"
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "P4",
@@ -1438,7 +1450,8 @@
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "✅ **GAP G-4 CLOSED for the VERDICT half (2026-08"
       },
-      "merge": "MERGE-1"
+      "merge": "MERGE-1",
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "W4A-R1",
@@ -1455,7 +1468,8 @@
         "anchor": "ion):** W4A-R1 (rename into `<slug>_*` by migrat"
       },
       "register_row_owed": "lane backfill-9 (operator decision 3)",
-      "merge": "MERGE-1"
+      "merge": "MERGE-1",
+      "status_reason": "inventory UNCERTAIN (draft outside the register) -> active: applied fleet-wide through R-DE (v) renames and locked by r-de-vocabulary.logic; its register row is owed to backfill-9 (meta.register_rows_owed)"
     },
     {
       "id": "W4A-R3",
@@ -2239,13 +2253,14 @@
         "anchor": "its ② (W4A-R4 (a)). First member: classify_coa_"
       },
       "register_row_owed": "lane backfill-9 (operator decision 3)",
-      "merge": "MERGE-3"
+      "merge": "MERGE-3",
+      "status_reason": "inventory UNCERTAIN (cited by R-ER as live) -> active: R-ER, an in-force register row, depends on it; register row owed to backfill-9"
     },
     {
       "id": "Q-B1",
       "kind": "operator-question",
       "status": "active",
-      "handbook_line": "core.14",
+      "handbook_line": "link.4",
       "enforcement": {
         "kind": "none",
         "ref": null
@@ -2255,7 +2270,7 @@
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "` until Q-B1). Closes when a library keyed-delet"
       },
-      "merge": "MERGE-3"
+      "status_reason": "inventory UNCERTAIN (open) -> active: the question is unanswered, but its interim constraint (averaging stays not_evaluated, 124a R-CR row) is in force until it is answered"
     },
     {
       "id": "R-X",
@@ -2314,6 +2329,7 @@
         "anchor": "| **M4** | **Deprecation lifecycle** `active"
       },
       "retired_as_set": "spec121-M1-M14",
+      "status_reason": "inventory UNCERTAIN -> historical: Spec 121 M1–M14 retired as a set (decision 4)",
       "aliases": [
         "SPEC121-M4"
       ]
@@ -2583,7 +2599,8 @@
       "statement": "A parcel geometry change invalidates only beyond a logic-variable tolerance.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-BX",
@@ -2597,7 +2614,8 @@
       "statement": "The parcels loader replaces geometry only on a material change against the stored shape.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-EN",
@@ -2611,7 +2629,8 @@
       "statement": "close_stale_permits folds into load_permits' declared retraction.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-EV",
@@ -2625,7 +2644,8 @@
       "statement": "A conversion may make a change-detection hash timezone-independent at the cost of one measured re-upsert.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (coa)"
     },
     {
       "id": "R-L",
@@ -2668,7 +2688,8 @@
       "statement": "A link-rate floor's denominator is the entity population, not the source-row count.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-CR",
@@ -2682,7 +2703,8 @@
       "statement": "A full_rescan LINK may keep its junction current with a material-geometry AFTER DELETE trigger, declared as guards.requires trigger.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (link_parcel_abutments)"
     },
     {
       "id": "R-O",
@@ -2856,7 +2878,8 @@
       "statement": "A one-time backfill leaves its chain once a measured run inserts 0 rows.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-CH",
@@ -2887,7 +2910,8 @@
       "statement": "assert_schema checks at chain start that every declared logic variable has a DB row.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory active -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype) (assert_schema)"
     },
     {
       "id": "R-CD",
@@ -2950,7 +2974,8 @@
       "statement": "observe_chain is a runner_owned exemption.",
       "source": {
         "register": true
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-EK",
@@ -3022,7 +3047,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "-10-12, Q-S1-a — the cost is extra downstream ru"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-K",
@@ -3114,6 +3140,7 @@
       },
       "retired_as_set": "spec121-M1-M14",
       "merge": "MERGE-6",
+      "status_reason": "inventory superseded-by R-K -> historical: Spec 121 M1–M14 retired as a set (decision 4); R-K is the live successor",
       "aliases": [
         "SPEC121-M5"
       ]
@@ -3629,6 +3656,7 @@
         "anchor": "| **M7** | **Mutation run**, scoped to valid"
       },
       "retired_as_set": "spec121-M1-M14",
+      "status_reason": "inventory superseded-by R-E -> historical: Spec 121 M1–M14 retired as a set (decision 4); R-E is the live successor",
       "aliases": [
         "SPEC121-M7"
       ]
@@ -4578,7 +4606,8 @@
       "source": {
         "register": true
       },
-      "merge": "MERGE-10"
+      "merge": "MERGE-10",
+      "status_reason": "inventory historical-one-off -> one-off. one-off criterion: the ruling is still in force but governs exactly one named step (a worked example under its archetype)"
     },
     {
       "id": "R-EC",
@@ -4728,7 +4757,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **R1** | **This is a re-architecture of th"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R3",
@@ -4743,7 +4773,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **R3** | **The P-track and S-track run in"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R4",
@@ -4758,7 +4789,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **R4** | **S2 is a vertical slice, not a m"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R5",
@@ -4773,7 +4805,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **R5** | **Per-step re-verification folds"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "R6",
@@ -4788,7 +4821,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
         "anchor": "| **R6** | **The six missing P0 categories g"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "M1",
@@ -4982,7 +5016,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "18) and Q-W4G-1 (classify_coa_trades `trade_clas"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     },
     {
       "id": "Q-CE2",
@@ -4997,7 +5032,8 @@
       "source": {
         "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
         "anchor": "y), the Q-CE2 (compute_coa_cost_estimates `cost_"
-      }
+      },
+      "status_reason": "inventory historical-one-off -> historical. historical criterion: no longer governs any step (closed, delivered, or replaced in effect); kept so citations resolve"
     }
   ],
   "unenforced": [
@@ -5234,7 +5270,7 @@
     {
       "id": "Q-B1",
       "class": "none",
-      "reason": "no machine check found (consolidate-1 inventory)"
+      "reason": "no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row"
     },
     {
       "id": "Rule-1",
