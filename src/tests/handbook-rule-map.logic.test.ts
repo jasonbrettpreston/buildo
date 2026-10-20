@@ -39,9 +39,9 @@ type Mod = {
   enforcementCounts: (map: RuleMap) => Record<string, number>;
 };
 type Gen = {
-  factFindings: (texts: string[], root?: string) => string[];
+  factFindings: (texts: string[], root?: string, opts?: { symbolHome?: Record<string, string>; flagHome?: Record<string, string> }) => string[];
   handWrittenTexts: (shapes?: string) => string[];
-  readDispatch: (root?: string, src?: string | null) => { order: Array<{ predicate: string; shape: string; phases: string[] }>; phases: Record<string, { hooks: string[] }> };
+  readDispatch: (root?: string, src?: string | null) => { order: Array<{ predicate: string; shape: string; phases: string[] }>; phases: Record<string, { hooks: string[]; via: string[] }>; runner: { hooks: string[] } };
   readSteps: (root?: string) => Array<{ slug: string; shape: string; phase: string }>;
   RUNNER_REL: string;
 };
@@ -260,5 +260,34 @@ describe('step handbook — hand-written facts are locked to the code (verify-12
     expect(() => gen.readDispatch(REPO_ROOT, noLock)).toThrow(/advisory lock on identity.lock/);
     const noReportGuard = src.replace('if (!declared.has(checkId))', 'if (false)');
     expect(() => gen.readDispatch(REPO_ROOT, noReportGuard)).toThrow(/ctx.report/);
+  });
+});
+
+// verify-12b E28/E32 (operator y 2026-10-20 consolidation 1-4): table 1a follows compute-taking helpers; the fact lock
+// matches whole tokens outside comments and whole flags.
+describe('step handbook — table 1a hooks through helpers, and a stricter fact lock (verify-12b E28, E32)', () => {
+  let gen: Gen;
+  beforeAll(async () => {
+    gen = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/generate-step-handbook.mjs')).href)) as unknown as Gen;
+  });
+
+  it('GREEN — hooks reached through a runner helper are listed (materializeRowsArm, runBackfillFullRecompute), and the runner row reads DISTRIBUTION_SCOPE', () => {
+    const d = gen.readDispatch();
+    expect(d.phases.runMaterializePhase!.hooks).toEqual(expect.arrayContaining(['materializeRows', 'buildSourceSql', 'finalizeMatched', 'buildPostSql']));
+    expect(d.phases.runMaterializePhase!.via).toContain('materializeRowsArm');
+    expect(d.phases.runBackfillPhase!.hooks).toEqual(expect.arrayContaining(['buildPreSql', 'buildPostSql']));
+    expect(d.phases.runLinkPhase!.hooks).toContain('primaryMatchBinds');
+    expect(d.runner.hooks).toContain('DISTRIBUTION_SCOPE');
+  });
+
+  it('RED — a symbol that occurs only in a comment of its home file, and a flag that is only a prefix of a real flag', () => {
+    const f = gen.factFindings(['`nullAddressCount` and `--replay-al`'], REPO_ROOT, {
+      symbolHome: { nullAddressCount: 'scripts/lib/step/index.js' },
+      flagHome: { '--replay-al': 'scripts/analysis/capture-step-golden.js' },
+    });
+    expect(f).toEqual(expect.arrayContaining([
+      'symbol nullAddressCount does not occur outside comments in scripts/lib/step/index.js',
+      'flag --replay-al does not occur in scripts/analysis/capture-step-golden.js',
+    ]));
   });
 });

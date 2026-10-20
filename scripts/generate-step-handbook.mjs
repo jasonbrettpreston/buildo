@@ -88,6 +88,8 @@ export const SYMBOL_HOME = {
   checkPreservedInComputeHasWhy: 'scripts/analysis/step-validate.mjs',
   undeclaredPinItems: 'scripts/analysis/gates/witness.mjs',
   installBeforeImageSandbox: 'src/tests/setup.ts',
+  writeBeforeImage: 'scripts/lib/step/write.js',
+  joinUpdate: RUNNER_REL,
   buildMatchSql: RUNNER_REL,
   pre_acquisition: 'scripts/lib/step/staleness.js',
   logic_variables: 'scripts/lib/step/config.js',
@@ -124,7 +126,7 @@ This section is the map for diagnosis. Tables 1a and 1b are generated from the r
 5. It builds the compute context. Its keys are a closed list (\`STEP_CTX_KEYS\`); a test harness may set only those keys.
 6. It measures the input guards and producer pins (\`measureInputGuards\`, \`measureProducerPins\`). A halt runs no phase and no compute; its errored FAIL row makes the verdict FAIL.
 7. It dispatches on \`execution.shape\`: the first predicate in table 1a that matches picks the phase. The shapes are {{SHAPES}}. The archetype (\`identity.archetype\`) decides which descriptor fields are required or forbidden; it does not pick the phase. With no shape, \`isIngestStep\` infers an INGESTOR when the descriptor writes, has a \`pre_acquisition\` trigger and names an external with a URL. Any other step without a shape gets no phase.
-8. The phase owns the I/O. It probes \`guards.requires\` (\`assertRequirements\`; the ingest phases do not call it), checks write privileges (\`assertWritePrivileges\` in \`scripts/lib/step/write.js\`), decides its own mode or skip (table 1a, column "Mode / skip"), reads, calls the compute module's named hooks (table 1a, column "Reads off the compute module"), writes (\`scripts/lib/step/write.js\`) and writes before-images (\`scripts/lib/step/reset.js\`). It hands what it acquired and wrote back into the context.
+8. The phase owns the I/O. It probes \`guards.requires\` (\`assertRequirements\`; the ingest phases do not call it), checks write privileges (\`assertWritePrivileges\` in \`scripts/lib/step/write.js\`), decides its own mode or skip (table 1a, column "Mode / skip"), reads, calls the compute module's named hooks (table 1a, column "Reads off the compute module"), writes (\`scripts/lib/step/write.js\`) and writes before-images (\`writeBeforeImage\` in \`scripts/lib/step/write.js\`; \`scripts/lib/step/reset.js\` reuses it on the \`recovery.reset\` path). It hands what it acquired and wrote back into the context.
 9. Then, for every step that did not halt (with a phase or without one), the runner calls the compute module's main function once: \`compute(ctx)\`. This is where checks are measured. Compute reports each check value with \`ctx.report(checkId, value)\`; an id the descriptor does not declare throws. A returned \`observations\` object is ignored; the return value carries only \`records_meta\`, counters and an optional \`write_plan\`.
 10. \`runWritePlan\` executes a returned \`write_plan\` (R-CD), one autocommit statement per row, and reports the outcome to the plan's \`report_check\`.
 11. \`buildAuditTable\` (\`scripts/lib/step/verdict.js\`) turns the reported values into audit rows: FAIL rows go to \`errors[]\`, WARN rows to \`warnings[]\`, and \`deriveVerdict\` gives the verdict. \`checks_failed\` is the length of \`errors[]\`. The run status follows the verdict, the summary is emitted (\`emitSummary\`) and the run row is closed (\`finalizeLedgerRow\`).
@@ -214,18 +216,24 @@ const GLOSSARY = [
   ['stage', 'A pending step\'s declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.'],
   ['RE-FREEZE #N', 'A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.'],
   ['#NN', 'A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.'],
-  ['Gate A … K', 'Lettered R-BA gates in `scripts/analysis/gates/` (Gate E is compute purity, Gate F the score floor). Not the scorecard.'],
+  ['Gate A … K, V', 'Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.'],
   ['PURITY-G0 … PURITY-G13', 'Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.'],
   ['SCORECARD-G0 … SCORECARD-G9', 'Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.'],
   ['V3 (standard) vs V3 (vocabulary)', '`standard=V3` is the McDonald\'s Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.'],
   ['SPEC121-M1 … SPEC121-M14', 'Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.'],
-  ['five words', 'R-BA gate V: STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.'],
+  ['five words', 'R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.'],
   ['bracket', 'A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).'],
   ['OWED', 'Printed by #44 (h) when a reader\'s pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.'],
   ['class-A', 'Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.'],
   ['LDG-10, EP-PIN-D17', 'Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).'],
   ['W4A-Rn', 'Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).'],
   ['lock / lock-db / check / hook', 'Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.'],
+  ['Intent Ledger', 'The table in a step\'s assessment report listing each behaviour of the legacy step and its disposition (kept, fixed, retired, preserved-in-compute). Scored by scorecard G3; G-2 reads it.'],
+  ['G-2', 'Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.'],
+  ['§R Reflection', 'The closing section of a step\'s assessment report recording what the conversion taught; scorecard G9 checks it exists.'],
+  ['seam', 'A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.'],
+  ['sources chain', 'The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.'],
+  ['P0 … P3', 'Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8.'],
   ['†', 'An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).'],
 ];
 
@@ -285,17 +293,39 @@ export function readDispatch(root = ROOT, srcOverride = null) {
     order.push({ predicate: m[1], ...shapeOf[m[1]], phases });
   }
   if (!order.length) throw new Error('[step-handbook] no dispatch branches found in runWithPool');
+  // A hook a phase reaches through a helper counts too: follow calls into every other top-level function of the
+  // runner whose signature takes `compute`, transitively (verify-12b E28: materializeRowsArm, runBackfillFullRecompute,
+  // primaryMatchBinds, makePreWriteGate …). Phase functions are not followed into each other.
+  const phaseNames = new Set(order.flatMap((x) => x.phases));
+  const helpers = [...src.matchAll(/^(?:async )?function ([A-Za-z_][A-Za-z0-9_]*)\(([^)]*)\)/gm)]
+    .filter((m) => /\bcompute\b/.test(m[2]) && !phaseNames.has(m[1]) && m[1] !== 'runWithPool' && m[1] !== 'step')
+    .map((m) => m[1]);
+  const reach = (start) => {
+    const seen = new Set();
+    const todo = [start];
+    let code = '';
+    while (todo.length) {
+      const f = todo.pop();
+      const c = stripComments(functionBody(src, f) || '');
+      code += `\n${c}`;
+      for (const h of helpers) if (!seen.has(h) && h !== start && new RegExp(`\\b${h}\\(`).test(c)) { seen.add(h); todo.push(h); }
+    }
+    return { code, via: [...seen].sort() };
+  };
+  const hooksIn = (c) => [...new Set([...c.matchAll(/\bcompute\.([A-Za-z_][A-Za-z0-9_]*)/g)].map((x) => x[1]))].sort();
   const phases = {};
   for (const o of order) for (const p of o.phases) {
-    const body = functionBody(src, p);
-    if (!body) throw new Error(`[step-handbook] phase ${p} not found in ${RUNNER_REL}`);
-    const c = stripComments(body);
-    const hooks = [...new Set([...c.matchAll(/\bcompute\.([A-Za-z_][A-Za-z0-9_]*)/g)].map((x) => x[1]))].sort();
-    const deciders = MODE_DECIDERS.filter(([tok]) => c.includes(`${tok}(`)).map(([, label]) => label);
-    const calls = order.flatMap((x) => x.phases).filter((q) => q !== p && c.includes(`await ${q}(`));
-    phases[p] = { hooks, deciders, calls };
+    if (!functionBody(src, p)) throw new Error(`[step-handbook] phase ${p} not found in ${RUNNER_REL}`);
+    const own = stripComments(functionBody(src, p));
+    const { code, via } = reach(p);
+    const deciders = MODE_DECIDERS.filter(([tok]) => own.includes(`${tok}(`)).map(([, label]) => label);
+    const calls = [...phaseNames].filter((q) => q !== p && own.includes(`await ${q}(`));
+    phases[p] = { hooks: hooksIn(code), deciders, calls, via };
   }
-  return { order, phases };
+  // Runner level (any shape): what runWithPool itself, and the compute-taking helpers it calls, read off the module.
+  const rw = reach('runWithPool');
+  const runner = { hooks: hooksIn(rw.code), via: rw.via };
+  return { order, phases, runner };
 }
 
 /** Every manifest step that has a descriptor, classified by the runner's own exported predicates. */
@@ -357,13 +387,15 @@ export function factFindings(texts, root = ROOT, opts = {}) {
   const symbolHome = opts.symbolHome || SYMBOL_HOME;
   const flagHome = opts.flagHome || FLAG_HOME;
   const corpus = opts.checkCorpus || readCheckCorpus(root);
+  const codeOf = (rel) => (/\.(c|m)?[jt]s$/.test(rel) ? stripComments(read(rel)) : read(rel));
+  const flagRe = (flag) => new RegExp(`(?<![A-Za-z0-9-])${flag.replace(/-/g, '\\-')}(?![A-Za-z0-9-])`);
   for (const t of texts) {
     for (const tok of backticked(t)) {
       if (/^--[a-z]/.test(tok)) {
         const flag = tok.split('=')[0];
         const home = flagHome[flag];
         if (!home) out.push(`flag ${flag} has no FLAG_HOME entry`);
-        else if (!exists(home) || !read(home).includes(flag)) out.push(`flag ${flag} does not occur in ${home}`);
+        else if (!exists(home) || !flagRe(flag).test(read(home))) out.push(`flag ${flag} does not occur in ${home}`);
         continue;
       }
       if (/^(scripts|src|docs|\.husky)\//.test(tok)) {
@@ -373,13 +405,13 @@ export function factFindings(texts, root = ROOT, opts = {}) {
       for (const m of tok.matchAll(/--[a-z][a-z-]*/g)) {
         const home = flagHome[m[0]];
         if (!home) out.push(`flag ${m[0]} has no FLAG_HOME entry`);
-        else if (!exists(home) || !read(home).includes(m[0])) out.push(`flag ${m[0]} does not occur in ${home}`);
+        else if (!exists(home) || !flagRe(m[0]).test(read(home))) out.push(`flag ${m[0]} does not occur in ${home}`);
       }
       for (const id of tok.replace(/--[a-z][a-z-]*/g, ' ').split(/[^A-Za-z0-9_]+/)) {
         if (!(/^[a-z][a-z0-9]*[A-Z][A-Za-z0-9]*$/.test(id) || /^[A-Za-z][A-Za-z0-9]*_[A-Za-z0-9_]+$/.test(id))) continue;
         const home = symbolHome[id];
         if (!home) { if (/[A-Z]/.test(id)) out.push(`symbol ${id} has no SYMBOL_HOME entry`); continue; }
-        if (!exists(home) || !new RegExp(`\\b${id}\\b`).test(read(home))) out.push(`symbol ${id} does not occur in ${home}`);
+        if (!exists(home) || !new RegExp(`(?<![A-Za-z0-9_$])${id}(?![A-Za-z0-9_$])`).test(codeOf(home))) out.push(`symbol ${id} does not occur outside comments in ${home}`);
       }
     }
     for (const m of t.matchAll(/#(\d{2})\b/g)) {
@@ -448,11 +480,14 @@ function shapeTable(dispatch, steps) {
       const multi = o.phases.length > 1 ? (j === 0 ? ', one primary' : ', several primaries (`isMultiPrimary`)') : '';
       const shapeCell = `\`${o.shape}\`${o.infers ? ' (or no shape: inferred)' : ''}${multi}`;
       const via = ph.calls.length ? ` (runs ${ph.calls.map((c) => `\`${c}\``).join(', ')} per primary)` : '';
-      rows.push(`| ${j === 0 ? i + 1 : ''} | ${j === 0 ? `\`${o.predicate}\`` : ''} | ${shapeCell} | \`${p}\`${via} | ${fmt(ph.deciders)} | ${fmt(ph.hooks)} | ${users.length ? users.join(', ') : '—'} |`);
+      const helpersCell = ph.via.length ? ` via ${ph.via.map((h) => `\`${h}\``).join(', ')}` : '';
+      rows.push(`| ${j === 0 ? i + 1 : ''} | ${j === 0 ? `\`${o.predicate}\`` : ''} | ${shapeCell} | \`${p}\`${via}${helpersCell} | ${fmt(ph.deciders)} | ${fmt(ph.hooks)} | ${users.length ? users.join(', ') : '—'} |`);
     });
   });
   const none = steps.filter((s) => s.phase === 'no phase').map((s) => (s.wired ? s.slug : `${s.slug} (legacy shell)`));
   rows.push(`| — | none matched | none | no phase: \`compute(ctx)\` then \`runWritePlan\` | — | main function only | ${none.length ? none.join(', ') : '—'} |`);
+  const rv = dispatch.runner.via.length ? ` via ${dispatch.runner.via.map((h) => `\`${h}\``).join(', ')}` : '';
+  rows.push(`| — | runner, any shape | any | \`runWithPool\`${rv} | — | ${fmt(dispatch.runner.hooks)} | every step |`);
   return rows.join('\n');
 }
 
@@ -493,14 +528,14 @@ export function render(map, defectLines, facts = {}) {
   out.push('');
   out.push(`- *Generated from the code* on every commit: §1 tables 1a and 1b (the dispatch order, each shape's predicate and phase, how the phase decides its mode, what it reads off the compute module, which steps use it, and every step's real file paths and stage). Source: \`${RUNNER_REL}\` (parsed, and its exported predicates run on every real descriptor), \`${MANIFEST_REL}\`, the descriptors and shells, \`${CONVERTED_REL}\`.`);
   out.push('- *Generated from data:* §2–§4, §6 and §7 from `scripts/steps/_schema/rule-map.json` (locked by `src/tests/handbook-rule-map.logic.test.ts`: every register id has a line, and every lock names a test file that mentions the rule id or alias); the §5 Defect Ledger line numbers from `docs/reports/defect-ledger.md`.');
-  out.push('- *Hand-written and locked:* the §1 prose, the §5 tables and the glossary, in `scripts/generate-step-handbook.mjs`. Every code symbol, file path, CLI flag and fast-invariant number they name, and the run order §1 states, is checked against the code each time the generator runs; a mismatch fails `--check` at pre-commit. The line texts in §2–§4 are hand-written in the rule map and checked only for their rule ids. Whether any prose explains the code well is still a human judgement.');
+  out.push('- *Hand-written and locked:* the §1 prose, the §5 tables and the glossary, in `scripts/generate-step-handbook.mjs`. What the lock checks, each time the generator runs: every backticked camelCase or snake_case identifier names an entry in `SYMBOL_HOME` and occurs as a whole token outside comments in that file; every backticked repo path exists; every backticked CLI flag occurs as a whole flag in its script (`FLAG_HOME`); every #NN is a step-validate fast invariant; the §1 run order occurs in that order in `runWithPool`; `ctx.report` refuses an undeclared id. It checks that names exist and the order holds, not what each sentence says the code does; a mismatch fails `--check` at pre-commit. The line texts in §2–§4 are hand-written in the rule map and checked only for their rule ids. Whether any prose explains the code well is still a human judgement.');
   out.push('');
   out.push('**How to read it.** Each line says what a step must declare or do, then why, then the rule ids it summarises (with an alias where an id collides with another name). Ids under "history" are superseded or retired and are listed only so old citations resolve. † marks an id or pointer that lands with another branch (' + map.meta.pending_integration.branch + '). Look an id up in Spec 124 §5 or the 124a LIVE REGISTER sections for the full text. Terms are defined in the glossary at the end.');
   out.push('');
   out.push('**Contents.** 1 How a step is built, run, read and written · 2 Every step · 3 By archetype · 4 Cross-cutting · 5 Symptom → where to look · 6 Rules with no or partial machine check · 7 History · Glossary');
   out.push('');
   out.push(SECTION_1.replace('{{SHAPES}}', shapes));
-  out.push('**Table 1a: dispatch (generated).** `runWithPool` tries these in order; the first match runs. "Mode / skip" lists the shared deciders the phase calls. "Reads off the compute module" lists every `compute.<name>` the phase uses.');
+  out.push('**Table 1a: dispatch (generated).** `runWithPool` tries these in order; the first match runs. "Mode / skip" lists the shared deciders the phase calls. "Reads off the compute module" lists every `compute.<name>` the phase reads, in its own body or in a runner helper that receives `compute` (named after "via"). The last row is what the runner reads for every step.');
   out.push('');
   out.push(shapeTable(dispatch, steps));
   out.push('');

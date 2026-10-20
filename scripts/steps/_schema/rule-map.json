@@ -524,7 +524,7 @@
     {
       "id": "link.4",
       "section": "link",
-      "text": "Open operator question Q-B1. Until the next run a deleted parcel has no abutment pairs (link_parcel_abutments, R-CR); a reader must not read that as \"no neighbours\": averaging stays `not_evaluated` until Q-B1 is answered. It closes when a library keyed-delete arm with an optional lost-link flag lands.",
+      "text": "Open operator question Q-B1: the neighbour front-setback estimate (`front_setback_est_m`; owed to the Spec 130 lane). Until it is answered, averaging stays `not_evaluated`, and a reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as \"no neighbours\". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1.",
       "why": "An unanswered question stays visible on its own line, next to the rule that raised it."
     },
     {
