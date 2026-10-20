@@ -18,8 +18,19 @@
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(__dirname, '../../');
+// A lock must be a TRACKED file: an untracked local file (e.g. the operator's .cursor/ notes in the
+// main checkout) must not satisfy the check, or the result differs between checkouts.
+const TRACKED = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  .split('\n')
+  .filter(Boolean);
+const TRACKED_SET = new Set(TRACKED);
+const isTrackedPath = (rel: string) => {
+  const p = rel.replace(/\/+$/, '');
+  return TRACKED_SET.has(p) || TRACKED.some((f) => f.startsWith(`${p}/`));
+};
 const SPEC_124 = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_standard_policy.md');
 const SPEC_124A = path.join(REPO_ROOT, 'docs/specs/01-pipeline/124a_step_standard_policy_appendix.md');
 const LIVE_REGISTER_HEADING = /^## .*\(moved from Spec 124 §5\).*LIVE REGISTER/;
@@ -73,7 +84,7 @@ function listFiles(dir: string, out: string[]): string[] {
 function namesExistingFile(token: string, files: string[]): boolean {
   const bare = token.replace(/:\d+(-\d+)?$/, '').replace(/\s.*$/, '');
   if (bare.length < 4) return false;
-  if (bare.includes('/')) return fs.existsSync(path.join(REPO_ROOT, bare));
+  if (bare.includes('/')) return isTrackedPath(bare);
   return files.some((f) => {
     const base = path.basename(f);
     return base === bare || base.startsWith(`${bare}.`);
@@ -113,7 +124,7 @@ const locklessIds = (rows: RegisterRow[], files: string[]) =>
     .map((r) => r.id);
 
 describe('Spec 124 §5 R-DF — every register row is labelled and names a lock (pre-R-CX rows grandfathered, shrink-only)', () => {
-  const files = LOCK_DIRS.flatMap((d) => listFiles(path.join(REPO_ROOT, d), []));
+  const files = LOCK_DIRS.flatMap((d) => listFiles(path.join(REPO_ROOT, d), [])).filter((f) => TRACKED_SET.has(f));
   const rows = registerRows();
 
   // rule-map: P4-3 (partial) — register rows parse with unique ids; statement/amends columns unchecked (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
