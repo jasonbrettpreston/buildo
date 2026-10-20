@@ -79825,6 +79825,468 @@
       "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75; Spec 78 P5.12 laneway_upper_side_stepback",
       "unit": "150.8.60.20(3)#(3)(C)",
       "value": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(A)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(B)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(A)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(B)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.40(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": [
+        "attic_counted_clearance_m",
+        "attic_qualifying_share_pct",
+        "attic_qualifying_clearance_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.40(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": [
+        "attic_counted_clearance_m = 1.4 m @(1)",
+        "attic_qualifying_share_pct = 80 pct @(1)",
+        "attic_qualifying_clearance_m = 2.0 m @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.40(1)#(1)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": {
+        "description": "Attic test for a residential building other than an apartment building: attic floor area with more than 1.4 m clearance between the ceiling joists and the roof rafters counts toward GFA if at least 80% of that area has more than 2.0 m clearance (and is at least 10.0 m2, see (B)).",
+        "gaps": "Layer 2 answers the attic-test thresholds; whether an attic passes, and its floor area, is Layer 3 geometry from the roof form (Spec 78 P5.2 item 6: gfa_pitched_sqm counts a passing attic, attic_outside_gfa_sqm reports a failing one, M-203).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.40(1)#(1)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": "attic_qualifying_area_m2"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.40(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": [
+        "attic_qualifying_area_m2 = 10.0 m2 @(1)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.40(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2. The stem 1.4 m and 80 % are keyed on (A).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": [
+        {
+          "clause": "(1)",
+          "literal": "1.4 metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(1)",
+          "literal": "80%",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": {
+        "description": "Attic test threshold (B): the qualifying attic area must be at least 10.0 m2.",
+        "gaps": "Layer 2 answers the attic-test thresholds; whether an attic passes, and its floor area, is Layer 3 geometry from the roof form (Spec 78 P5.2 item 6: gfa_pitched_sqm counts a passing attic, attic_outside_gfa_sqm reports a failing one, M-203).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.10(2)#(2)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). R 10.10.40.10(2)(B) carried the lot condition frontage_band with no condition.if, so the unit was never applicable (Spec 68 §6: a band token needs its numeric if); the frontage tiers are now the band of the main_wall_front_rear_share_pct statement itself, and the main-wall height applies at every frontage, as in RD / RS / RM (2)(B), which carry no lot condition.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.10(2)#(2)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). R 10.10.40.10(2)(B) carried the lot condition frontage_band with no condition.if, so the unit was never applicable (Spec 68 §6: a band token needs its numeric if); the frontage tiers are now the band of the main_wall_front_rear_share_pct statement itself, and the main-wall height applies at every frontage, as in RD / RS / RM (2)(B), which carry no lot condition.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": {
+        "R": "In the R zone",
+        "detached_house": "residential building, other than an apartment building",
+        "detached_houseplex": "residential building, other than an apartment building",
+        "semi_detached_house": "residential building, other than an apartment building",
+        "semi_detached_houseplex": "residential building, other than an apartment building",
+        "townhouse": "residential building, other than an apartment building"
+      }
     }
   ]
 }

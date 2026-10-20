@@ -117,6 +117,8 @@ export function checkVocab(vocab) {
     if (!units.has(t.unit)) v.push(`vocab_unit_invalid: dsl_target.${name} unit ${t.unit}`);
     if (!aspects.has(t.aspect)) v.push(`vocab_aspect_unmapped: dsl_target.${name} aspect ${t.aspect}`);
     if (!isStr(t.concept)) v.push(`vocab_missing_field: dsl_target.${name}.concept`);
+    // M-239 (CHAT-9): a target may declare its own bound (the share tiers are minimums; the attic thresholds exact)
+    if (t.bound !== undefined && !(vocab.bound || []).includes(t.bound)) v.push(`vocab_reference_invalid: dsl_target.${name}.bound ${t.bound}`);
     if (!Array.isArray(t.patterns) || t.patterns.length === 0 || t.patterns.some((p) => !isStr(p))) v.push(`vocab_missing_field: dsl_target.${name}.patterns`);
     for (const p of t.patterns || []) {
       const k = String(p).toLowerCase();

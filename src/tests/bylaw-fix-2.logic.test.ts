@@ -234,3 +234,39 @@ describe('CHAT-10 / M-223(1) — the Layer 3 scenario status gains not_buildable
     expect(Object.keys(L3.status_form?.field ?? {}).sort()).toEqual([...L3.field_status].sort());
   });
 });
+
+// CHAT-9 (operator chat 2026-10-20, approve: "Give the main-wall share tiers their own minimum targets, and key the
+// 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per
+// statement — whichever the keying lane finds smaller; the operator approves the target shape"); Spec 78 O-7 (RULED
+// 2026-10-18: the unkeyed law numbers are keyed before ①); Spec 69a M-223(3). x.40.10(2): "(A) all side main walls, for
+// at least 70 percent of the total width of each side main wall; or (B) all front main walls and all rear main walls, for
+// at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres;
+// (iii) 40 percent … 7.5 metres or less". 10.5.40.40(1): "includes the portion of the floor area in an attic that has a
+// vertical clearance of more than 1.4 metres …, if at least 80% of the area has: (A) a vertical clearance of more than
+// 2.0 metres; and (B) an area of at least 10.0 square metres".
+describe('CHAT-9 / O-7 / M-223(3) — the main-wall share tiers are minimum targets; the attic test is four threshold targets', () => {
+  const SHARE = ['main_wall_side_share_pct', 'main_wall_front_rear_share_pct'];
+  const ATTIC: Record<string, [string, number]> = { attic_counted_clearance_m: ['m', 1.4], attic_qualifying_share_pct: ['pct', 80], attic_qualifying_clearance_m: ['m', 2.0], attic_qualifying_area_m2: ['m2', 10] };
+  it('vocab: the two share targets are pct and declare bound min; the four attic targets carry their units', () => {
+    for (const t of SHARE) expect([t, I.vocab.dsl_target[t]?.unit, I.vocab.dsl_target[t]?.bound]).toEqual([t, 'pct', 'min']);
+    for (const [t, [u]] of Object.entries(ATTIC)) expect([t, I.vocab.dsl_target[t]?.unit]).toEqual([t, u]);
+  });
+  it('R / RD / RS / RM house: side walls take 70 % (min); front and rear walls 60 / 50 / 40 % by frontage tier (min)', () => {
+    for (const zone of ['R', 'RD', 'RS', 'RM']) {
+      for (const [f, fr] of [[12, 60], [15, 60], [10, 50], [7.5, 40], [6, 40]] as const) {
+        const l = lot(zone, 'detached_house', { vars: { lot_frontage_m: f } });
+        const s = eff(l, 'main_wall_side_share_pct'); const b = eff(l, 'main_wall_front_rear_share_pct');
+        expect([zone, f, s.value, s.bound, b.value, b.bound]).toEqual([zone, f, 70, 'min', fr, 'min']);
+      }
+    }
+  });
+  it('the main-wall height those units carry is unchanged (max, 7.5 m at a 10.0 m height)', () => {
+    for (const zone of ['R', 'RD', 'RS']) { const r = eff(lot(zone, 'detached_house'), 'main_wall_height_m'); expect([zone, r.value, r.bound]).toEqual([zone, 7.5, 'max']); }
+  });
+  it('every zone: the attic test thresholds 1.4 m, 80 %, 2.0 m and 10.0 m2 answer from 10.5.40.40(1)', () => {
+    for (const zone of ZONES) for (const [t, [, v]] of Object.entries(ATTIC)) {
+      const r = eff(lot(zone, 'detached_house'), t);
+      expect([zone, t, r.value, String(r.winner).startsWith('10.5.40.40(1)#')]).toEqual([zone, t, v, true]);
+    }
+  });
+});

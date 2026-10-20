@@ -107,6 +107,48 @@
       "concept": "maximum roof slope, vertical units per horizontal unit, of the roof the unit applies to (R 10.10.40.10(4): a roof above the second storey or higher on a detached house; Spec 69a M-223(3), Spec 78 O-7)",
       "patterns": ["may not have a slope greater than"]
     },
+    "main_wall_side_share_pct": {
+      "unit": "pct",
+      "aspect": "envelope",
+      "bound": "min",
+      "concept": "minimum share of the total width of each side main wall that the main-wall height limit applies to, when the design takes the side pair (x.40.10(2)(A): at least 70 percent); always a minimum, whatever the bound of the main-wall unit that carries it (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the total width of each side main wall"]
+    },
+    "main_wall_front_rear_share_pct": {
+      "unit": "pct",
+      "aspect": "envelope",
+      "bound": "min",
+      "concept": "minimum share of the total width of all front and rear main walls that the main-wall height limit applies to, when the design takes the front-rear pair (x.40.10(2)(B): at least 60 / 50 / 40 percent by lot frontage tier); always a minimum, whatever the bound of the main-wall unit that carries it (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the total width of all front main walls and all rear main walls"]
+    },
+    "attic_counted_clearance_m": {
+      "unit": "m",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the vertical clearance between the ceiling joists and the roof rafters above which attic floor area is the portion the attic test counts toward gross floor area (10.5.40.40(1): more than 1.4 metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["between the ceiling joists and the roof rafters"]
+    },
+    "attic_qualifying_share_pct": {
+      "unit": "pct",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the share of that attic area that must meet the attic test for it to count toward gross floor area (10.5.40.40(1): at least 80%); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the area has"]
+    },
+    "attic_qualifying_clearance_m": {
+      "unit": "m",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the vertical clearance that share of the attic area must exceed (10.5.40.40(1)(A): more than 2.0 metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["a vertical clearance of more than"]
+    },
+    "attic_qualifying_area_m2": {
+      "unit": "m2",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the area that share of the attic must reach (10.5.40.40(1)(B): at least 10.0 square metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["an area of at least"]
+    },
     "entrance_height_m": {
       "unit": "m",
       "aspect": "envelope",

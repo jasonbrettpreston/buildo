@@ -106,6 +106,10 @@ export function makeContext(vocab, extra = {}) {
     // M-237 (operator chat 2026-10-20 CHAT-8): rule 7a ignores a unit that carries the target only for a lawfully existing
     // building or only for an ancillary building / suite / accessory structure (declared in vocab.absence_ignore).
     absenceIgnore: vocab.absence_ignore || null,
+    // M-239 (operator chat 2026-10-20 CHAT-9; Spec 78 O-7): a dsl_target that declares its own bound (the x.40.10(2)
+    // main-wall share tiers are minimums) is resolved in that direction whatever the bound of the unit that carries it
+    // (a main-wall unit is a max on main_wall_height_m and lists the share beside it, Spec 69 M-76 A10).
+    targetBound: Object.fromEntries(Object.entries(vocab.dsl_target || {}).filter(([, t]) => t && ['min', 'max', 'exact'].includes(t.bound)).map(([k, t]) => [k, t.bound])),
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
@@ -972,7 +976,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // rule 4: per bound direction, the highest layer (with rule 3 immunity) replaces lower layers; rule 6 falls out
   const layerOf = (u) => (edits.has(u.unit_id) ? edits.get(u.unit_id).layer : u.layer);
   const rank = (u) => Math.max(LAYER_RANK[layerOf(u)] ?? 0, rankOf(u), edits.has(u.unit_id) ? edits.get(u.unit_id).immune : -1);
-  const boundOfUnit = (u) => (u.bound === 'min' || u.bound === 'max' ? u.bound : 'exact'); // DEFINE / 'none' / missing → exact
+  // DEFINE / 'none' / missing → exact; a target that declares its bound (M-239) takes it whatever the unit's bound
+  const boundOfUnit = (u) => C.targetBound?.[target] ?? (u.bound === 'min' || u.bound === 'max' ? u.bound : 'exact');
   const byBound = {};
   for (const u of T) (byBound[boundOfUnit(u)] = byBound[boundOfUnit(u)] || []).push(u);
   const kept = {}; const altKept = {};

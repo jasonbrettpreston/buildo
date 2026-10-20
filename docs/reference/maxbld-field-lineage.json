@@ -1233,14 +1233,21 @@
     "10.80.40.10(2)"
    ],
    "keyed": {
-    "units": [],
-    "layer2_targets": [],
-    "owed": [
-     {
-      "what": "keying of the share tiers (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "units": [
+     "10.10.40.10(2)#(2)(A)",
+     "10.10.40.10(2)#(2)(B)",
+     "10.20.40.10(2)#(2)(A)",
+     "10.20.40.10(2)#(2)(B)",
+     "10.40.40.10(2)#(2)(A)",
+     "10.40.40.10(2)#(2)(B)",
+     "10.80.40.10(2)#(2)(A)",
+     "10.80.40.10(2)#(2)(B)"
+    ],
+    "layer2_targets": [
+     "main_wall_front_rear_share_pct",
+     "main_wall_side_share_pct"
+    ],
+    "owed": []
    },
    "inputs": [
     {
@@ -1360,18 +1367,19 @@
    ],
    "keyed": {
     "units": [
+     "10.5.40.40(1)#(1)(A)",
+     "10.5.40.40(1)#(1)(B)",
      "10.10.40.10(4)#whole"
     ],
     "layer2_targets": [
+     "attic_counted_clearance_m",
+     "attic_qualifying_area_m2",
+     "attic_qualifying_clearance_m",
+     "attic_qualifying_share_pct",
      "element_width_pct",
      "roof_slope_max"
     ],
-    "owed": [
-     {
-      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [
@@ -1401,14 +1409,17 @@
     "10.5.40.40(2)"
    ],
    "keyed": {
-    "units": [],
-    "layer2_targets": [],
-    "owed": [
-     {
-      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "units": [
+     "10.5.40.40(1)#(1)(A)",
+     "10.5.40.40(1)#(1)(B)"
+    ],
+    "layer2_targets": [
+     "attic_counted_clearance_m",
+     "attic_qualifying_area_m2",
+     "attic_qualifying_clearance_m",
+     "attic_qualifying_share_pct"
+    ],
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [
