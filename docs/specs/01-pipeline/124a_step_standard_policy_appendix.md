@@ -561,7 +561,7 @@ Operator decision (2026-10-20, verbatim): "y to all", on two items: (1) gate #36
 | R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-GQ: the check is wired in the same block, locked by `hooks-composition.infra` (13 arms, GREEN and RED). |
 | R-BA | 124a:211 | "a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json` … An ORPHAN row (its violation since fixed) is RED" | Conflict on the allowlist home, resolved by amendment for this check only: the 84 entries are generated-artifact drift, not a step-gate finding; as ledger rows they would read as gate allowances against 17 steps (R-BC (b), R-EY (2)). The orphan posture is kept: a fresh entry is RED until removed. |
 | R-BC (b) | 124a:213 | "(b) admits NO ledger row of any disposition — pending or permanent" | No conflict: no standard-gates-ledger row is added. The baseline is time-boxed to REFREEZE-BUNDLE-1 (item (5)) and only shrinks. |
-| R-DW | Spec 124:277 | "The rest is a closed, shrink-only grandfather list of 12 unconverted steps" | Precedent for the form. |
+| R-DW | Spec 124:278 | "The rest is a closed, shrink-only grandfather list of 12 unconverted steps" | Precedent for the form. |
 | R-EB | Spec 124:243; `scripts/steps/_schema/estate-literal-high-water-mark.json` | "Monotonic: --write only lowers a mark; a rise is RED" | Precedent: `--shrink-baseline` only removes. |
 | R-EC | Spec 124:244 | "`scripts/analysis/precommit-budget.mjs --measure` times ea[ch stage]" | Re-measured with the new stage, inside both budgets (`docs/reports/generated/precommit-budget.json`). |
 | R-GP | Spec 124 §5 | "an unchanged `step-validate --write` leaves `measured-validate.json` byte-identical" | No conflict: R-GP keeps the sidecar still; R-GQ checks the descriptors generated from it. |
@@ -577,3 +577,33 @@ Operator decision (2026-10-20, verbatim): "y to all", on two items: (1) gate #36
 | ACCURATE | The 84 entries are the generator's own report at `47de0640` (17 steps); red-first: B1–B6 RED on `47de0640` (`docs/reports/red-evidence/tooling-fix-1/r-gq-red.json`), green after. |
 | SIMPLE | One pure decision, one JSON list, one hook line; no descriptor or golden moves. |
 | EXTERNALIZED | No threshold: set equality (zero tolerance). |
+
+**Follow-on (b) — R-GR, operator y 2026-10-20 ("a & b y").** Authority search: no rule fixes the status form. The ledger header (`docs/reports/defect-ledger.md`:4) says "a row is OPEN until the closing commit lands and the differential points at it"; Spec 123 G6 (`123_step_opt_assessment_validation.md`:308) asks only that "every DEFECT has a ledger ID", scored by `LEDGER_STATUS_VOCAB = /\b(CLOSED|PIN)\b/i` (`step-validate.mjs`:350); R-EY (9) (Spec 124:264) needs "a defect-ledger row whose status is a declared deviation" to cite "a register rule id". The ledger carried five spellings (`CLOSED · declared deviation at ②` with no rule, a bolded `**CLOSED · declared deviation at ②** (…)`, and three `OPEN · **PIN**` variants). Hence R-GR.
+
+**R-GR conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-EY (9) | Spec 124:264 | "a defect-ledger row whose status is a declared deviation … cites a register rule id that resolves in §5 or a 124a LIVE REGISTER section" | Supports R-GR: the CLOSED form carries that id in the status itself; an OPEN row still names the deviation, so it stays in (9)'s population and is not hidden. |
+| Ledger header | `defect-ledger.md`:4 | "a row is OPEN until the closing commit lands and the differential points at it" | No conflict: a CLOSED row's ② landed and its descriptor `deviations[]` entry points at it. |
+| Spec 123 G6 | 123:308; `step-validate.mjs`:350 | "every DEFECT has a ledger ID"; `/\b(CLOSED|PIN)\b/i` | No conflict: both forms carry CLOSED or PIN; G6 scores are unchanged. |
+| R-BA gate I (#36) | 124a:211 | "STANDARDIZED (… gate I registry coverage)" | No conflict: the mirroring report rows (load_centreline 4, neighbourhoods 3, massing 1) were updated in the same commit; #36 stays at 0 disagreements. |
+| R-EV | Spec 124:263 | "COA-D11 cites it (CLOSED · declared deviation at ②)" (124a §B15) | Amended in form only: COA-D11 now reads `CLOSED · declared deviation (R-EV)`. |
+| R-W | 124a:137 | "Compute MUST NOT branch on PostGIS availability … `guards.requires` … is the only legal form" | Covers N-D4 exactly (the PostGIS probe became the guard; descriptor adjudicated_by "Spec 124 Rule 2 R-W"). |
+| R-AZ | 124a:210 | "A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override and is RETIRED BY STANDARD at conversion" | Named by the acceptance record of LC-D6/LC-D11 ("operator ruling, Spec 124 R-AZ / LC-D6, LC-D11") and of M-D10/N-D5 ("Spec 124 R-AZ, … precedent"). Its text names the row cap; it reaches the local-file/argv acquisition overrides only as the precedent class those records invoke. PIN R-AZ-CLASS: the operator confirms or extends R-AZ to local-file overrides; if refused, these four go back to `OPEN · **PIN** RULING-OWED`. |
+| R-AR.1 | 124a:183 | "the gate is KNOWINGLY RETIRED — a register row plus a `deviations[]` entry" | Named by N-D1's acceptance record ("Spec 124 §7 LM-D7/A-8 + R-AR.1"); its subject is a legacy run-ledger gate, so N-D1 rides the same PIN R-AZ-CLASS confirmation. |
+
+**R-GR — seven questions.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | Two forms, no third; the CLOSED form is the R-EV row's own (COA-D11), normalised. |
+| OBSERVABLE | `ledger-status-form.logic` L4 reads the live ledger; R-EY (9)'s `ledger … no rule id` detail lists the OPEN rows still owed a ruling. |
+| RECORDED | Spec 124 §5 R-GR, dated 2026-10-20, operator y. |
+| SCALABLE | Every ledger row, every step; the scope is a status regex, not a list. |
+| ACCURATE | Red-first: L1–L4 RED on `47de0640` (`docs/reports/red-evidence/tooling-fix-1/r-gr-red.json`), green after. Each CLOSED row cites the rule its acceptance record names (above); rows with no such rule stay OPEN (listed in the commit). |
+| SIMPLE | One pure predicate; nine status cells and eight mirrors changed. |
+| EXTERNALIZED | No threshold: a form match and register membership. |
+
+- **PIN R-AZ-CLASS** (owner: operator). Confirm or extend R-AZ (row cap) to the local-file/argv acquisition overrides of LC-D6, LC-D11, M-D10, N-D5, and R-AR.1 to N-D1's insert arm; a refusal reverts those five to `OPEN · **PIN** RULING-OWED`.
+- **Integration note.** R-GQ and R-GR are new register rows: `rule-map.json` (on `wf2/handbook-1`) needs entries at integration.
