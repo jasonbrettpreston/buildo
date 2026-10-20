@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://buildo.local/schemas/rule-map.schema.json",
   "title": "Step-standard rule map — every register/standard id to exactly one handbook line",
-  "description": "Operator y 2026-10-20 consolidation 1-4. The Spec 124 register is the authority; docs/handbook/step-standard.md is the reading surface, generated from this file by scripts/generate-step-handbook.mjs. Locked by src/tests/handbook-rule-map.logic.test.ts.",
+  "description": "Operator y 2026-10-20 consolidation 1-4. The Spec 124 register (policy) and Spec 122 (schema) are the authority (Spec 124 R-GV); Spec 132 (docs/specs/01-pipeline/132_step_standard_handbook.md) is the reading surface, generated from this file by scripts/generate-step-handbook.mjs (R-GU). Locked by src/tests/handbook-rule-map.logic.test.ts.",
   "x-contract-version": 1,
   "type": "object",
   "additionalProperties": false,

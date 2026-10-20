@@ -4,7 +4,7 @@
 line exists so `scripts/generate-system-map.mjs`'s `/^\*\*Status:\*\*\s*(.+)$/m` match does not silently
 default this file to `'Done'`).
 
-> Sibling of `docs/specs/01-pipeline/124_step_standard_policy.md` (Spec 124). Created 2026-10-02 per the operator ruling "Split to 124a": Spec 124 breached its arm (iv) byte budget in `docs/specs/01-pipeline/122_split_manifest.json` (157,811 B against a 156,781 B ceiling with register row R-BG drafted), and the ruling was to split, not to rebaseline `measured_at`. Each section below arrived ONLY through `node scripts/analysis/spec-split-check.mjs --refresh` (Spec 124 R-AA): its heading names the source anchor, its `moves[]` row in the manifest records the content hash, and the source heading survives in Spec 124 as a stub pointing here.
+> **Role: authority register.** Part of the Spec 124 policy register: its LIVE REGISTER sections hold §5 rows moved for the byte budget, in force as Spec 124 rulings; every other section is history (Spec 124 R-GV, R-GW). Sibling of `docs/specs/01-pipeline/124_step_standard_policy.md` (Spec 124). Created 2026-10-02 per the operator ruling "Split to 124a": Spec 124 breached its arm (iv) byte budget in `docs/specs/01-pipeline/122_split_manifest.json` (157,811 B against a 156,781 B ceiling with register row R-BG drafted), and the ruling was to split, not to rebaseline `measured_at`. Each section below arrived ONLY through `node scripts/analysis/spec-split-check.mjs --refresh` (Spec 124 R-AA): its heading names the source anchor, its `moves[]` row in the manifest records the content hash, and the source heading survives in Spec 124 as a stub pointing here.
 
 **Governance:** this file decides nothing of its own. Spec 124's §2 rules stay in Spec 124. **Exception, 2026-10-07 (move `M18`, P1-C9):** Appendix §B7 holds Spec 124 §5 register rows R-A…R-AI, moved for Spec 124's byte budget. They are LIVE and in force exactly as if they stood in §5, are cited as `Spec 124 R-x`, and are amended only by the §4 protocol; `spec-split-check` arm (iii) resolves a ruling citation against §5 plus every 124a section headed `LIVE REGISTER`. Every other section below is history: where it conflicts with current Spec 124 text, Spec 124 governs.
 
@@ -816,3 +816,80 @@ Moved from Spec 124 — integrate-12 (wf2/p4-integrate-12, 2026-10-20): merging 
 | R-EN | **`close_stale_permits` is folded into `load_permits`' declared retraction (McDonald's Airtight V3, operator y 2026-10-19, C6 Q6).** It writes the loader's own `status` / `completed_date` columns from feed disappearance (`scripts/close-stale-permits.js:127-150`), so under Spec 122 §1.10 this is the INGESTOR's `retract`, not a separate step. Conditions: (1) the fold lands after wave-4 `load_permits` ③; (2) it reads the loader's own seen-in-feed signal from the run, never `permits.last_seen_at`, which `classify_permit_phase` and `classify_inspection_status` also bump (finding F1); (3) its dates come from the run's timestamp, never `CURRENT_DATE`/`NOW()` (finding F2); (4) the two-stage `Pending Closed` → `Closed` rule is kept. `departed_mark` refuses a composite key (`scripts/lib/step/write.js:847`), and permits are keyed `(permit_num, revision_num)`, so the PH-0 of the fold picks the mechanism (extend `write.js`, or a new retract value) with a numbered RE-FREEZE. Until then `close_stale_permits` runs unchanged. | Spec 122 §1.10 INGESTOR profile (`retract`); FLEET-2 `departed_mark` (RE-FREEZE #31) | `c6-rulings.infra` (row recorded); PIN C6-CLOSE-1 (after wave-4 `load_permits` ③) |
 | R-EO | **Admin shows whether a setting is in effect (McDonald's Airtight V3, operator Q6 y 2026-10-19).** A declared logic variable the live step does not read carries an admin badge with its reason: (a) **"Takes effect at cutover"**: a pending step in its copy window (descriptor landed at `descriptor_only` / `compute_ported`, the legacy shell still live, W4A-R6 / R-EF) declares it, and the live legacy script reads `<legacy name>` (named by the step's copy migration) or a built-in value; (b) **"Not read — scheduled for retirement"**: no live code reads it and no descriptor declares it. Derived, never hand-listed (the R-DL form): the seeds, the `converted.json` stages, the descriptors, the live code (whole-word, template and live-descriptor reads; generators, admin rendering and copy-window-only compute excluded) and the copy migrations, in `scripts/analysis/gates/variable-effect.mjs`. `scripts/generate-logic-variable-effect.mjs` writes `src/features/admin-controls/generated/logic-variable-effect.json`; the control panel renders it (`EffectBadge`). Fast invariant #53 VARIABLE-EFFECT fails on an unread variable with no badge, a stale badge, or a drifted kind or legacy name. A read with no effect (a console-only read) still counts as a read; its badge arrives when the step's converted descriptor drops the variable. | R-DL (admin visibility, derived); R-EF / W4A-R6 (the copy window); R-DE (v) (step-owned copies); R-A (retirement) | `variable-effect.logic` (derivation + #53 both directions), `variable-effect.infra` (real tree, members, the admin card); red evidence `docs/reports/red-evidence/r-eo/` |
 | R-EP | **Dynamic-keyed telemetry is a check-row detail, never an emit (McDonald's Airtight V3, operator y 2026-10-19; drafted under Q-W4G-3).** Telemetry whose keys are not known at declaration (a per-slug tally, a per-count histogram) is not an emit. It travels as the `detail` of the declared check row it explains (`scripts/lib/step/verdict.js:306`: the detail is the row value), capped by a step-owned `<slug>_max_detail_keys` logic variable (R-DE (v), R-DF), with a `<key>_truncated` flag read from the slice (R-DC) and the measured value beside it; the rendered row is still bounded by the runner-owned `step_audit_value_max_chars` (R-EB (a)). The emit, if any, is a flat count (R-DE (iv)). Fixed-key objects are flattened to `<prefix>_<key>` emits instead (Q-W4G-3 (a)). First application: `classify_coa_trades` `trade_slug_distribution` and `coa_trades_per_lead_histogram` (no consumer) move to the `avg_active_trades_per_lead` row's detail under `classify_coa_trades_max_detail_keys` (migration 274), a declared deviation on the descriptor. | Precedents: Spec 62:582 `load_centreline_max_detail_keys`; migration 263:23 `load_ravines_max_detail_keys` (LR-D1, `scripts/lib/compute/load-ravines.js` `ravine_geometry_skipped_pct`); R-DE (iv); R-EB (a) | R-DE (iv) emit-shape gate (`scripts/analysis/gates/emits-equiv.mjs` `emitShapeViolations`: an object emit outside `EMIT_SHAPE_GRANDFATHER` fails); `src/tests/steps/classify_coa_trades/r-ep-detail.logic.test.ts` |
+
+---
+
+## Appendix §B25 — Conflict checks and V3 admission tables for R-GU…R-GX (Spec 132 and the spec roles, wf2/spec-132, 2026-10-20)
+
+Operator decisions (2026-10-20, verbatim): "y to both" (the step handbook becomes Spec 132 — Step Standard Handbook, a generated reading spec; the by-law handbook will be Spec 133; generated specs are exempt from the hand-written line budget but keep a size check); "y to this revised version" (spec roles as standard + policy pairs: steps 122 + 124, by-laws 68 + 69/69a, lot configuration 78 + 131; Spec 124:11's transition clause flips to the 78/131 wording; Spec 132 is generated from 122 + 124; 122a is historical; Specs 120, 121 and 123 go to the operator as rulings; Spec 119 is out of scope). Shorthand: "comply with Spec 132"; citation form "Spec 132 §<line id> (R-xx)". R-GU…R-GX are provisional (the next free ids after R-GT; R-GZ is held by lane night-p4-c) and are renumbered at integration if taken.
+
+**Conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| Spec 124 transition clause | Spec 124:11 (before this lane) | "On conflict during the transition, Spec 122 governs (it carries the live schema)." | Conflict, resolved by R-GV as the operator ruled: amended in place to "On a policy question this register governs; on the schema and behaviour, Spec 122 governs (R-GV)". |
+| Spec 131 pair wording | Spec 131:7 | "On a policy question this spec governs; on behaviour, Spec 78." | Supports R-GV: the form the operator named. |
+| Spec 69 / Spec 68 pair | Spec 69:8; Spec 68:6 | "On conflict with Spec 68, this spec governs."; "On conflict, Spec 69 governs." | No conflict: the by-law pair already gives the register every conflict; R-GV names the pair and does not edit either spec. |
+| R-J | 124a:124 | "Spec 124 is the standalone home of this policy; Spec 122 §1.2a is now a pointer here; this register is authoritative going forward" | Supports R-GV on policy. R-GV adds what R-J left open: on the schema and behaviour, Spec 122 governs. |
+| Spec 124 §5 preamble | Spec 124:193 | "This section is the authoritative register going forward (R-J, 2026-08-28)." | No conflict: unchanged. |
+| Spec 122 reading order | Spec 122:28 | "Ratified rulings … sit at the top and govern on conflict. §1–§8 are the live standard" | No conflict: the ratified rulings at the top moved to 122a as history (122:44, :48, :54), and §1–§8 are what R-GV calls the standard. |
+| Spec 122a governance | 122a:9 | "this file carries no rulings of its own and decides nothing … Spec 122's dated `R-A..R-F` block and its R1–R6/V1–V7 tables remain the live rulings" | Supports R-GW's historical role ("decides nothing"). The second clause predates the moves to 122a and R-J; R-GX freezes those ids (baseline R1–R6, V1–V7) and adds none. Not edited (history). |
+| Decision 2 | `rule-map.json` `meta.precedence` (before this lane) | "The Spec 124 register is the authority; the handbook is the reading surface; Specs 119–123 are historical design records (decision 2). The register row recording this is owed to the later ruling lane." | Conflict on Spec 122 only, resolved by the operator's revised version: Spec 122 is the standard, not a historical record; R-GV is the owed row, recording decision 2 as amended. |
+| Old handbook authority | `docs/handbook/step-standard.md`:5 (before this lane) | "If this page and a register row disagree, the register wins" | Superseded by R-GU/R-GV: the page names both halves; the old path is a pointer. |
+| R-BF | 124a:216 | "every step-registry and cross-step-ledger row generated or witnessed, never hand-kept" | Supports R-GU: Spec 132 is generated, never hand-kept. |
+| R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-GU: the handbook `--check` stays in `.husky/pre-commit` (line 36); only its output path moved. |
+| R-AA | 124a:141 | "`--check` re-verifies six arms (content survived, stub present, citations resolve, budget, reader guards, totality)" | Extended, not contradicted: arms (iii-b), (iv-b) and (vii) are added beside the six; no arm changes. |
+| R-I (4) budgets | 124a:123; `122_split_manifest.json` `budgets` | "document-move line-set-diff verification (§4.7)" with the arm (iv) ratchet over hand-written specs | No conflict: a generated spec has no hand-written budget (the operator's ruling); arm (iv-b) refuses a spec that has both. |
+| R-DW, R-EB, R-GQ | Spec 124:274; R-EB row 124a:804, quote as cited at 124a:697 (`estate-literal-high-water-mark.json`); Spec 124:254 | "closed, shrink-only grandfather list"; "Monotonic: --write only lowers a mark"; "a closed, shrink-only stale baseline" | Precedent for R-GX's `role_banner_pending` and `historical_rule_ids` forms. |
+| Spec 123 governance | Spec 123:12 | "Spec 121 is the method and GOVERNS this document." | Not ruled here (operator ruling owed); R-GV leaves Specs 120, 121, 123 on `historical_design_records` and on `role_banner_pending`. |
+
+**R-GU — the step handbook is Spec 132, generated.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One reading surface per family, a generated spec with the spec header form every spec uses (title, `**Status:**`, Operating Boundaries) and one citation form, `Spec 132 §<line id> (R-xx)`. |
+| OBSERVABLE | `generate-step-handbook.mjs --check` at pre-commit; `spec-split-check --check` arms (iii-b) and (iv-b); `spec132-handbook-roles.logic` R-GU arms; the system map lists Spec 132 (Status GENERATED). |
+| RECORDED | Spec 124 §5 R-GU, dated 2026-10-20, operator "y to both"; `rule-map.json` R-GU → line x-rulings.3. |
+| SCALABLE | The by-law handbook (Spec 133) takes the same form: `generated_size_caps` and arm (iii-b)'s resolver are keyed by spec id. |
+| ACCURATE | Red-first: 14/14 RED before the build (`docs/reports/red-evidence/spec132/roles-lock-red.json`); the header's citation example is checked against the map; the size cap is measured (617 lines, 74,851 B at landing). |
+| SIMPLE | A path change, a header and three checker arms; the generator's rendering is otherwise unchanged. |
+| EXTERNALIZED | The size cap is declared data in the manifest with its why (925 lines / 112,000 B = 1.5x the first Spec 132, below Spec 124's 126,959 B ceiling), raised only by a reviewed hand-edit. |
+
+**R-GV — standard + policy pairs; the 124:11 flip.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One precedence sentence for all three pairs, the Spec 131:7 form the operator named. |
+| OBSERVABLE | `spec132-handbook-roles.logic` R-GV arms read Spec 124's header and `rule-map.json` `meta`; Spec 132's banner prints the sentence. |
+| RECORDED | Spec 124 §5 R-GV, dated 2026-10-20, operator "y to this revised version"; Spec 124:11 cites it. |
+| SCALABLE | Any new family takes a standard + register pair; the by-law and lot pairs already match. |
+| ACCURATE | Each pair's own precedence line quoted above; Spec 122 measured as carrying the live schema and behaviour (§1–§8, 122:28). |
+| SIMPLE | One header sentence and one `meta` field; no spec outside 122/122a/124/124a/132 is edited. |
+| EXTERNALIZED | No threshold. |
+
+**R-GW — one role banner per spec.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One banner line, `> **Role: <role>.** …`, from a closed vocabulary of five roles (`ROLE_VOCAB`, `spec-split-check.mjs`). |
+| OBSERVABLE | Arm (vii) prints every missing, doubled or unknown banner; the five first banners are pinned by `spec132-handbook-roles.logic`. |
+| RECORDED | Spec 124 §5 R-GW, dated 2026-10-20, operator "y to this revised version". |
+| SCALABLE | Every spec in `docs/specs` (113 at landing) is read; a new spec needs a banner on its first commit. |
+| ACCURATE | The five roles are the ones the operator's revised version names; the banners state what each spec decides. |
+| SIMPLE | One line per spec, read by one regex. |
+| EXTERNALIZED | No threshold. |
+
+**R-GX — the role lock.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The closed, shrink-only list form of R-DW, R-EB and R-GQ, for both the pending banners and the historical baseline. |
+| OBSERVABLE | `spec-split-check --check` arm (vii), at pre-commit and in the suite; the self-test and `spec132-handbook-roles.logic` include a real-CLI RED on a fixture tree. |
+| RECORDED | Spec 124 §5 R-GX, dated 2026-10-20, operator y. |
+| SCALABLE | All specs; a newly historical spec gets a baseline when its banner lands. |
+| ACCURATE | Red-first (`roles-lock-red.json`, 14/14 RED); the baseline is measured from 122a (R1–R6, V1–V7 from the rule map and its register-shaped rows). Declared limitation: a prose-only id is not seen. |
+| SIMPLE | One checker function; no spec edited to grandfather 108 others. |
+| EXTERNALIZED | No threshold: exact membership. |
+
+- **Integration note.** R-GU…R-GX are mapped in `rule-map.json` (line x-rulings.3, new). If integration renumbers them, the map, the generator's `CITATION_EXAMPLE_RULE` and `spec132-handbook-roles.logic` move with them.
+- **Owed to the operator** (prepared, not applied): rulings on the roles of Specs 120, 121 and 123 (123:12; 123's G0–G9 gates).

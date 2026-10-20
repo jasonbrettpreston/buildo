@@ -321,7 +321,7 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/violations/generate-conversion-roadmap.mjs --check',
     'node scripts/violations/generate-programme-backlog.mjs --check',
     'node scripts/violations/generate-surface-registry.mjs --check',
-    // Operator y 2026-10-20 consolidation 1-4: the generated step-standard handbook (rule-map.json → docs/handbook/step-standard.md).
+    // Operator y 2026-10-20 consolidation 1-4: the generated step-standard handbook (rule-map.json → Spec 132, docs/specs/01-pipeline/132_step_standard_handbook.md; Spec 124 R-GU).
     'node scripts/generate-step-handbook.mjs --check',
   ];
 
