@@ -300,7 +300,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
 | G3 | 2 | 2 | ledger rows=9 vocab-hit rows=9; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
-| G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |
+| G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=0 it-count=35 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
 | G8 | 0 | 3 | missing-invocations=2 missing-pre-invocations=2 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (compute_ported) |
 | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
@@ -335,7 +335,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 497 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 501 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
@@ -378,7 +378,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
 | 11 | Phase-order re-derive (declared half, checkOrderGuaranteesCited) | enforced-green | 1 when:"pre_write" check(s), 0 order_guarantee violation(s) — G-3 completeness half stays open |
 | 12 | Truthful crash posture (R-B reachability, static + R-M before-image) | enforced-green | R-B (checkInterruptedPostureTruthful): recovery.interrupted="none" — no reachability claim to verify · R-M: not-run (R-M/LG-17 not evaluated — vitest did not run (--fast)) |
 | 13 | A step validates itself | enforced-green | this run of step:validate IS the mechanism |
-| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=38467B notes=3051B checks=13 rows records_meta=(no capture) |
+| P3 | I/O cost adjudication (measured, not gated) | prose-only | descriptor=40538B notes=3051B checks=14 rows records_meta=(no capture) |
 
 **Enforced-green: 12/14** · not-run: 1 · vacuous: 0
 

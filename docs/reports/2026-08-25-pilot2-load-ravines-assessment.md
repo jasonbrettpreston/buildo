@@ -196,11 +196,11 @@ Discoverer: this agent pass (Claude, commit 2). Adjudicator: **operator — pend
 | `fs.rmSync(tmpRoot, {recursive, force})` in `finally` `:372-373` | `1ceebd17` (`git log -S rmSync` → 1ceebd17 only) | locked textually by `load-ravines.infra.test.ts:114` (*"temp cleanup"*); a leaked temp dir per run is a disk defect | `preserved-in-runner` — `ctx.acquire` must own the temp root and clean it in its own `finally`; the lock re-homes to the acquire seam (G4d row, not a fence: no `Severity:` footer names it, but load-bearing) |
 | the 3 resource `finally`s `:194` `:216` (clearTimeout) `:229` (zip.close) | `1ceebd17` | resource hygiene | `preserved-in-runner` (acquire seam) |
 | `String(runAt)` version fallback `:459` | `1ceebd17` (`git log -S`) — **INTENT-UNKNOWN** (commit body silent; unreachable in practice, see LR-D4) | contentHash is always a 32-char md5 on the write path (`downloadZip` cannot return null) | `knowingly-retired` candidate — pending operator; if retired, `source_dataset_version` = content hash, full stop |
-| `'sha1'` of `last-modified` fallback `:459` | `1ceebd17` — INTENT-UNKNOWN (same chain) | same | same |
+| `'sha1'` of `last-modified` fallback `:459` | `1ceebd17` — INTENT-UNKNOWN (same chain) | same | same — ruled `knowingly-retired` in §2.5 (LR-D4) |
 | `LICENSE_URL` row `:41`, `:280` | `1ceebd17` — INTENT-UNKNOWN in body; Spec 59 §9 lists `dataset_source_license` | a §9 audit row | `encoded-as-descriptor-field` (INFO check or `inputs.reads.externals[].license`) |
 | `365.25` `:159`, `:316` · `86400000` `:153` · `round3` `:583` · `4326` `:475` · `3` `:67` · `-4` `:244` | `1ceebd17` — structural (plan S3–S7, S10) | commented at `:159`; API/unit constants | `preserved-in-compute` **with** the value stated in `notes.json`/`limitations` (P5) — `4326` → `guards.srid` |
-| the six `ConfigSchema` defaults `:47-52` | `1ceebd17` (`git log -S 0.05/60000` → 1ceebd17) | 0 registered (P4 violation, #421) | `config[]` ×6 (plan T1–T6) — **LR-D8** |
-| `PIPELINE_NAME = 'sources:load_ravines'` `:40` | `1ceebd17` (#409 correction of Spec 59 L18) | comment `:37-39` | `identity.name` + `notes.json` |
+| the six `ConfigSchema` defaults `:47-52` | `1ceebd17` (`git log -S 0.05/60000` → 1ceebd17) | 0 registered (P4 violation, #421) | `encoded-as-descriptor-field` — `config[]` ×6 (plan T1–T6) — **LR-D8** (ruled in §2.5) |
+| `PIPELINE_NAME = 'sources:load_ravines'` `:40` | `1ceebd17` (#409 correction of Spec 59 L18) | comment `:37-39` | `encoded-as-descriptor-field` — `identity.name` + `notes.json` (ruled in §2.5) |
 
 All fence constructs have a recovered why; the two INTENT-UNKNOWN constants are the `:459` fallback chain and are proposed for retirement — **G3 is claimable once the operator adjudicates §2.3/§2.5.**
 
@@ -225,7 +225,9 @@ Discoverer ≠ adjudicator on every row (§7.1). Locks land in `src/tests/steps/
 
 **Ruling (operator, 2026-08-25, §7.1 — "Approve both as proposed"):** F-1 `1ceebd17` → `encoded-as-descriptor-field` (check `ravine_mass_delete_pct`, `limit_from_config`, `blocking:false` at commit 7 — matches today's FAIL-row-no-halt; env override → `override.accept_anomaly[]`) + `preserved-in-validator`; F-2 `0b230472` → `encoded-as-descriptor-field` (`staleness.trigger[]` ×2, md5 pin as data) + `preserved-in-runner` (`acquire.js` owns streaming under a shape rule); nothing `preserved-in-compute` on either fence. INTENT-UNKNOWN constants dispositioned per the plan's P4 inventory (structural → `encoded-as-descriptor-field` where mapped to a descriptor field, else `preserved-in-compute` with the rule declared). 12 rows, 0 `unknown`, 0 awaiting; 2 fence SHAs named; discoverer ≠ adjudicator on every row.
 
-### 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 605 lines, 100%, no overlap)
+## 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 605 lines, 100%, no overlap)
+
+_Its own section, not part of the PH-3 Intent Ledger: Spec 123 §7 (R-PACE-1, `123_step_opt_assessment_validation.md:360`) lists line accounting as its own report section beside the PH-3 intent ledger, and it is scored at the §14.5 differential (Gate 4c, Spec 121 `:1057`), not at G3. Heading level raised from `###` on 2026-10-20; no content changed._
 
 Categories: `runner-owned | validator-owned | descriptor-encoded | compute | dead (proved) | duplicate`. Measured against the working tree = `HEAD:scripts/load-ravines.js` (605 lines; the file is untouched since `0b230472`). Under ruling A-1 (b), *runner-owned* = the library's acquire/validate/write/gate phases; *validator-owned* = declared checks evaluated by `verdict.js`; *compute* = the pure functions exported at `:591-605`. No range is claimed `dead (proved)` — the `:459` fallback is dead-in-practice by reading, and reading is not proof (Gate 4f). Blank lines fold into the adjacent range.
 
@@ -475,9 +477,9 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=34 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 2 | 2 | ledger rows=12 vocab-hit rows=12; evidence rows=43 (not scored) |
+| G3 | 2 | 2 | ledger rows=12 vocab-hit rows=12; evidence rows=8 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 12 ledger row(s), 0 without CLOSED/PIN () |
@@ -515,7 +517,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 497 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 501 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |

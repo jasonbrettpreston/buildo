@@ -205,7 +205,9 @@ Closed vocabulary: `preserved-in-runner | preserved-in-validator | preserved-in-
 
 No row is `unknown`; 100% dispositioned. The `knowingly-retired` row names a human approver (operator) and a retirement point (peel 8b), and is not retired by this pass.
 
-### 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 606 lines, 100%, no overlap)
+## 2.6 Line accounting (Spec 120 §14.5 Gate 4c — 606 lines, 100%, no overlap)
+
+_Its own section, not part of the PH-3 Intent Ledger: Spec 123 §7 (R-PACE-1, `123_step_opt_assessment_validation.md:360`) lists line accounting as its own report section beside the PH-3 intent ledger, and it is scored at the §14.5 differential (Gate 4c, Spec 121 `:1057`), not at G3. Heading level raised from `###` on 2026-10-20; no content changed._
 
 Categories: `runner-owned | validator-owned | descriptor-encoded | compute | dead (proved) | duplicate`. Measured against `git show HEAD:scripts/quality/assert-schema.js` (606 lines; the working tree already carries the uncommitted commit-7 frozen shape). No range is claimed `dead (proved)` — nothing was instrumented this session, and reading is not proof (Gate 4f). Blank lines are folded into the adjacent range.
 
@@ -456,9 +458,9 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=51 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=50 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 2 | 2 | ledger rows=12 vocab-hit rows=12; evidence rows=17 (not scored) |
+| G3 | 2 | 2 | ledger rows=12 vocab-hit rows=12; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 14 ledger row(s), 0 without CLOSED/PIN () |
@@ -496,7 +498,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 497 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 501 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |

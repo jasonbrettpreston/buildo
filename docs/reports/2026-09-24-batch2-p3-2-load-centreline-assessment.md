@@ -311,12 +311,10 @@ the orchestrator ruling (transcribed).
 
 **Introducing commits (brief-author `git log -S`, 2026-09-24):**
 
-| Commit | Date | Scope | Constructs it introduced |
-|---|---|---|---|
-| `f6047e89` | 2026-06-06 | initial loader | F-C1 dual mode; L7 `0.5`; L8 `0.05`; `VALIDATION_CHUNK`; F13 `REQUIRED_DBF_FIELDS`; `UNKNOWN_FEATURE_SENTINEL`; `PIPELINE_NAME`; lock 63; `centrelineMinFeatureCount` (dead); `centreline_head_error` WARN-proceed; `INCLUDING CONSTRAINTS` (F-S11) |
-| `3bf05d2b` | 2026-06-08 | live-smoke hardening | stream-to-disk md5; 3-attempt retry; 600000 ms timeout |
-| `346626ae` | 2026-06-08 | local override | `CENTRELINE_LOCAL_ZIP` |
-| `0b230472` | 2026-08-10 | Phase B B1 | `readPriorRunMeta`; tier-2 `contentHashDecision`; DS4 `buildSkipReEmitMeta`; `contentHashInNoValidatorsBail:true` (inert — the tier-1 call passes no hash) |
+- `f6047e89` (2026-06-06, initial loader) — F-C1 dual mode; L7 `0.5`; L8 `0.05`; `VALIDATION_CHUNK`; F13 `REQUIRED_DBF_FIELDS`; `UNKNOWN_FEATURE_SENTINEL`; `PIPELINE_NAME`; lock 63; `centrelineMinFeatureCount` (dead); `centreline_head_error` WARN-proceed; `INCLUDING CONSTRAINTS` (F-S11)
+- `3bf05d2b` (2026-06-08, live-smoke hardening) — stream-to-disk md5; 3-attempt retry; 600000 ms timeout
+- `346626ae` (2026-06-08, local override) — `CENTRELINE_LOCAL_ZIP`
+- `0b230472` (2026-08-10, Phase B B1) — `readPriorRunMeta`; tier-2 `contentHashDecision`; DS4 `buildSkipReEmitMeta`; `contentHashInNoValidatorsBail:true` (inert — the tier-1 call passes no hash)
 
 | # | Construct [READ] | Introduced (`git log -S`) | Intent | Disposition | Adjudicator |
 |---|---|---|---|---|---|
@@ -616,7 +614,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=35 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 2 | 2 | ledger rows=25 vocab-hit rows=25; evidence rows=4 (not scored) |
+| G3 | 2 | 2 | ledger rows=25 vocab-hit rows=25; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 17 ledger row(s), 0 without CLOSED/PIN () |
@@ -654,7 +652,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 497 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 501 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |

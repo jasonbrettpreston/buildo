@@ -188,31 +188,40 @@ Spec 43 read for its `address_points` statements.
 | **Ordering guarantee (Rule 11)** | Spec 43 row 4 (`geocode_permits` "re-joins EVERY permit … to `address_points`") and row 9 (`link_parcel_addresses` populates the bridge) imply an **"address_points before geocode_permits / link_parcel_addresses"** ordering guarantee [READ `43_chain_sources.md` rows 4, 9]. Since the loader never retracts (class A), a `geo_id` can only "vanish" via a source-side change, which the class-A shape cannot express — a KNOWN limitation, declared not fixed. | **PH-0 states the guarantee**; the class-A limitation is disclosed. Plan Registry sweep. |
 | **Floor duplication (Rule 3)** | `assert_data_bounds` already declares the `address_points ≥ 500K` floor (Spec 43 row 27, READ `43_chain_sources.md` row 27) ⇒ the loader's own `rows_read >= 500000` [READ `:413`] DUPLICATES a fleet check. The registered var is `sources_address_points_floor` [READ `scripts/seeds/logic_variables.json:5010-5016`, `default:500000`, consumed by `assert_data_bounds`]. | **RULING: KEEP** the loader's own check at the peel, sharing the **SAME registered variable name** `sources_address_points_floor` via `checks[].limit_from_config` (Rule 3, one source of truth) — not a second key, not retired. Plan Registry sweep; §5 literal ledger. |
 
+### 2.1 Risk class (G4 — Spec 121 §3 P4 / Spec 123 §2.1: risk = chance × impact)
+
+Added 2026-10-20: this report carried no risk-class row (scorecard G4 0/2). Scale: 1–3 per factor, product → class
+A (9) / B (4, 6) / C (1, 2, 3), Spec 121 §3 P4.
+
+| Risk class | Chance | Impact | Test intensity |
+|---|---|---|---|
+| **B** (2 × 3 = 6) | **MEDIUM (2)** — churn 19 commits, below the 22-commit median (`docs/reports/generated/122-churn-complexity.md`, quadrant top-left, window `b87f62d`); fix density 8/19 = 42% (`git log --follow --format=%s b87f62db -- scripts/load-address-points.js`, `^fix` subjects); 0 `Severity:` fence trailers, 16 recovered constructs (§3) | **HIGH (3)** — 525,699 rows (`docs/reports/golden/address_points/post/sources.json:242`); `sources` position 3, read by the converted `geocode_permits`, `link_parcel_addresses`, `link_parcels` and `assert_data_bounds` computes, `scripts/lib/coa-link-sql.js` and the admin `parcel-lookup`/`stats` readers (§5 CONTRACT row); class A `guarded_upsert` with `retract:"departed_mark"` (`scripts/load-address-points.descriptor.json:180`, `:212-213`) — never deletes, but a wrong mass-retire hides rows from every `retired_at IS NULL` reader, bounded by `address_points_mass_retire_max_pct` (AP-D9) | •• — `src/tests/steps/address_points/` (red proof §10) |
+
 ---
 
 ## 3. PH-3 — Intent Ledger (G3)
 
 Every non-obvious constant / fence in the 497 lines. `git blame`/`git log` provenance per row (allowed flags). Disposition
 vocabulary: **declared** (`encoded-as-descriptor-field`), **preserved-in-compute** (rule written in `checks[].why` or
-`notes.json`), **retired** (`knowingly-retired`, citing the plan ruling). Adjudicator column = the orchestrator ruling.
+`notes.json`), **retired** (`knowingly-retired`, citing the plan ruling). Adjudicator column = the orchestrator ruling. The cells below spell each value in full (expanded from the `declared`/`retired` shorthand on 2026-10-20, Spec 123 §6 G3). The same pass brought rows 4–6, 10 and 15 up to the shipped descriptor: rows 4–6 were retired at commit 9 and rows 10 and 15 carry later descriptor values; each row keeps its ① disposition beside the current one.
 
 | # | Literal / fence (line) | Introduced by (`git blame`/`git log`) | What it protects | Disposition | Adjudicator |
 |---|---|---|---|---|---|
-| 1 | `ADVISORY_LOCK_ID = 96` (`:80`) | `745a1b4d0` 2026-04-16 "Brett" | Mutual exclusion with specs 41/42/43 steps on `address_points` — the fleet lock registry | **declared** → `identity.lock:96` + `why_lock` (+ liveness file ref) | plan Registry sweep; Spec 47 §A.5:1941 |
-| 2 | `CSV_URL` (`:37-38`) | `67057269c` 2026-02-22 | The CKAN download endpoint identity (dataset `abedd8bc…`, resource `64d4e54b…`) | **declared** → `inputs.reads.externals[].url` (`address_points_csv`) | Rule 2 / Spec 122 §5.1 |
-| 3 | `process.argv[2]` local-path override (`:89`) | `67057269c` 2026-02-22 | A debug affordance: run against a hand-supplied local CSV without downloading | **retired** → a `deviations[]` entry (Spec 124 R-AZ argv-seam rule); the fixture tier replaces it | plan Fold B; Spec 124 R-AZ |
-| 4 | byte-window `10 * 1024 * 1024` (`:66`) | `67057269c` 2026-02-22 | Download-progress log cadence (every 10 MB), not correctness | **declared** → `config.logic_variables.address_points_progress_bytes_window` | §5 literal ledger |
-| 5 | progress modulo `50000` (`:380`) | `3ed30f836` 2026-03-17 | Progress-line cadence during parse | **declared** → `address_points_progress_row_modulo` | §5 literal ledger |
-| 6 | expected-total `525000` (`:381`) | `3ed30f836` 2026-03-17 | Progress-bar denominator only (a display estimate, not a gate) | **declared** → `address_points_expected_total_rows` | §5 literal ledger |
-| 7 | `rows_read >= 500000` (`:413`) | `d32612bba` 2026-03-26 | Catastrophic-load detector: a near-empty load must WARN | **declared** → `checks[].limit_from_config` SHARING `sources_address_points_floor` (KEEP per §2 ruling) | plan Registry sweep |
-| 8 | `skip_rate < 5%` (`:418`) | `d32612bba` 2026-03-26 | A rising coordinate/ID skip rate signals CSV drift | **declared** → `address_points_skip_rate_max_pct` | §5 literal ledger |
-| 9 | null-`address_number` `0.10` in drift lib (`address-points-csv-drift.js:96`, threshold text `:95`) | drift lib (WF1 Phase 2b `10db268c`) | CKAN strip detector: >10% null address_number ⇒ WARN | **declared** → `address_points_null_address_number_max_pct`; NOTE this peel **forces an `assert_schema` recapture** (§2 coupling) | plan Registry sweep |
-| 10 | `pipeline.BATCH_SIZE` (`:371`) | `0ef23550c` 2026-03-09 | Insert batch size (1000 rows → 15K bind params, under the 65535 cap) [READ `:139`] | **declared** → `execution.batch` | Rule 3 / Spec 122 §5.1 |
+| 1 | `ADVISORY_LOCK_ID = 96` (`:80`) | `745a1b4d0` 2026-04-16 "Brett" | Mutual exclusion with specs 41/42/43 steps on `address_points` — the fleet lock registry | **encoded-as-descriptor-field** → `identity.lock:96` + `why_lock` (+ liveness file ref) | plan Registry sweep; Spec 47 §A.5:1941 |
+| 2 | `CSV_URL` (`:37-38`) | `67057269c` 2026-02-22 | The CKAN download endpoint identity (dataset `abedd8bc…`, resource `64d4e54b…`) | **encoded-as-descriptor-field** → `inputs.reads.externals[].url` (`address_points_csv`) | Rule 2 / Spec 122 §5.1 |
+| 3 | `process.argv[2]` local-path override (`:89`) | `67057269c` 2026-02-22 | A debug affordance: run against a hand-supplied local CSV without downloading | **knowingly-retired** → a `deviations[]` entry (Spec 124 R-AZ argv-seam rule); the fixture tier replaces it | plan Fold B; Spec 124 R-AZ |
+| 4 | byte-window `10 * 1024 * 1024` (`:66`) | `67057269c` 2026-02-22 | Download-progress log cadence (every 10 MB), not correctness | **knowingly-retired** at commit 9 (the ① disposition was `encoded-as-descriptor-field` → `config.logic_variables.address_points_progress_bytes_window`): a dead declaration under the whole-array INGESTOR acquisition (no per-byte/per-row progress loop left), recorded as descriptor `deviations[0]` (`scripts/load-address-points.descriptor.json:496`); Spec 122 §1.2a P4, the dead-declaration posture Spec 124 R-DR names | §5 literal ledger |
+| 5 | progress modulo `50000` (`:380`) | `3ed30f836` 2026-03-17 | Progress-line cadence during parse | **knowingly-retired** at commit 9 (the ① disposition was `encoded-as-descriptor-field` → `address_points_progress_row_modulo`): a dead declaration under the whole-array INGESTOR acquisition (no per-byte/per-row progress loop left), recorded as descriptor `deviations[0]` (`scripts/load-address-points.descriptor.json:496`); Spec 122 §1.2a P4, the dead-declaration posture Spec 124 R-DR names | §5 literal ledger |
+| 6 | expected-total `525000` (`:381`) | `3ed30f836` 2026-03-17 | Progress-bar denominator only (a display estimate, not a gate) | **knowingly-retired** at commit 9 (the ① disposition was `encoded-as-descriptor-field` → `address_points_expected_total_rows`): a dead declaration under the whole-array INGESTOR acquisition (no per-byte/per-row progress loop left), recorded as descriptor `deviations[0]` (`scripts/load-address-points.descriptor.json:496`); Spec 122 §1.2a P4, the dead-declaration posture Spec 124 R-DR names | §5 literal ledger |
+| 7 | `rows_read >= 500000` (`:413`) | `d32612bba` 2026-03-26 | Catastrophic-load detector: a near-empty load must WARN | **encoded-as-descriptor-field** → `checks[].limit_from_config` SHARING `sources_address_points_floor` (KEEP per §2 ruling) | plan Registry sweep |
+| 8 | `skip_rate < 5%` (`:418`) | `d32612bba` 2026-03-26 | A rising coordinate/ID skip rate signals CSV drift | **encoded-as-descriptor-field** → `address_points_skip_rate_max_pct` | §5 literal ledger |
+| 9 | null-`address_number` `0.10` in drift lib (`address-points-csv-drift.js:96`, threshold text `:95`) | drift lib (WF1 Phase 2b `10db268c`) | CKAN strip detector: >10% null address_number ⇒ WARN | **encoded-as-descriptor-field** → `address_points_null_address_number_max_pct`; NOTE this peel **forces an `assert_schema` recapture** (§2 coupling) | plan Registry sweep |
+| 10 | `pipeline.BATCH_SIZE` (`:371`) | `0ef23550c` 2026-03-09 | Insert batch size (1000 rows → 15K bind params, under the 65535 cap) [READ `:139`] | **encoded-as-descriptor-field** → `execution.batch` (legacy 1000 at ①; today generated from the write stride, `3640`, descriptor `:272`, `2a96590c`) | Rule 3 / Spec 122 §5.1 |
 | 11 | geometry OR-contract (`geometry` JSON vs LATITUDE/LONGITUDE, `:289-321`; `hasCoordinateSource`) | `67057269c` 2026-02-22 (+ WF3 hotfix `5db7891f`) | The live CSV ships `geometry`; lat/lng are the fallback; both-absent ⇒ skipped | **preserved-in-compute** — rule written in `checks[].why` (the `assert_schema` twin lives at `address_point_coordinate_source.why`; the loader's own copy is the compute path + notes.json) | plan Defect candidates; Spec 122 §5.1 |
 | 12 | `COALESCE(NULLIF(EXCLUDED.x,''),x)` preservation (`:204-218`) | `67057269c` 2026-02-22 (+ 2026-05-20 strip pattern) | Day-1 safety: a blank/NULL incoming value must not overwrite 525K existing rows | **preserved-in-compute** — rule written in the SQL comment + notes.json (a behavior, not a literal) | plan Registry sweep |
 | 13 | `IS DISTINCT FROM` guard column list (`:219-241`) | `67057269c` 2026-02-22 | The write-guard: skip the UPDATE when nothing changed (13 cols + geom) | **preserved-in-compute** — notes.json (no field to externalize) | Spec 122 §1.4 |
 | 14 | `JSON.parse` swallow (AP-D2) (`:293-305`) | `67057269c` 2026-02-22 (catch comment `3ed30f836`) | Comment-only catch: an unparseable geometry falls through to the lat/lng fallback | **preserved-in-compute** → counted `geom_parse_failures` audit row at the peel (name its `checks[].why`); see §4 AP-D2 | plan Defect candidates AP-D2 |
-| 15 | batch-drop catch (AP-D3) (`:372-378`) | `67057269c` 2026-02-22 (error line `0ef23550c`) | A failed batch is logged, `errors++`, and its rows DROPPED for the run | **declared** → `execution.on_batch_error:"drop_batch"` (the schema's own description cites this file); see §4 AP-D3 | plan Defect candidates AP-D3; plan Fold B8 |
+| 15 | batch-drop catch (AP-D3) (`:372-378`) | `67057269c` 2026-02-22 (error line `0ef23550c`) | A failed batch is logged, `errors++`, and its rows DROPPED for the run | **encoded-as-descriptor-field** → `execution.on_batch_error` — `"drop_batch"` at ①; since FLEET-2 `"fail_step"` (descriptor `:281`): the runner's one-transaction write cannot drop a batch, AP-D3 CLOSED · FIXED-BY-RUNNER (operator MQ-B5 (a), 2026-10-05; retirement recorded in descriptor `deviations[]`); see §4 AP-D3 | plan Defect candidates AP-D3; plan Fold B8 |
 | 16 | absent `maint_stage`/`address_status` filter (AP-D1) | script never had one; Spec 54 narrates it (`54:35-36`, `:80`) | Spec/code DIVERGENCE — the loader inserts every row | **preserved-in-compute** (carry the CODE, zero-diff) → PIN as KNOWN-DEFECT; see §4 AP-D1 | plan Defect candidates AP-D1 — the rule is written down: `why` in `notes.json` (AP-D1 pin, no filter) and the `deviations[]` entry |
 
 **Provenance method:** `git log --oneline -n 3 -- scripts/load-address-points.js` ⇒ `1be8d767`, `5db7891f`, `10db268c`
@@ -678,7 +687,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 > Generated by `node scripts/analysis/step-validate.mjs --step=address_points --write` — Spec 123 §6, ruling R-R (2026-08-29).
 > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
 
-**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+**Score: 17/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
 
 ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
 
@@ -693,10 +702,10 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | Gate | Score | Max | Detail |
 |---|---:|---:|---|
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
-| G1 | 1 | 1 | PH-3 section found=true sha-count=23 |
+| G1 | 1 | 1 | PH-3 section found=true sha-count=24 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 1 | 2 | ledger rows=16 vocab-hit rows=5; evidence rows=0 (not scored) |
-| G4 | 0 | 2 | risk-class row with chance+impact found=false |
+| G3 | 2 | 2 | ledger rows=16 vocab-hit rows=16; evidence rows=0 (not scored) |
+| G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 5 ledger row(s), 0 without CLOSED/PIN () |
 | G7 | 3 | 3 | file=true fences=3 it-count=58 red-evidence-claims=1 red-evidence-pass=true ledger-deferred=false |
@@ -733,7 +742,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
 | 33 | (registry) | PASS | BANNED-COVERAGE (gate I): all 2 x-banned-for-new path(s) enforced |
 | 34 | (registry) | PASS | STALENESS-DISPOSITION (gate I): 35 declared fingerprint_inputs entries, all adjudicated (registry present=true) |
 | 35 | (registry) | PASS | CENSUS-PARITY (gate I): every converted slug has a census row, an exemption, or a ledger-allowed gap |
-| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 497 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
+| 36 | (registry) | PASS | DEFECT-ID-UNIQUENESS (gate I): 501 definition row(s) checked, 101 legal mirror(s), 0 disagreements |
 | 38 | (registry) | PASS | CAPTURE-NONZERO (gate G): every declared write target is closed (0 ledger-allowed, 4 outputs:"none" vacuous) |
 | 39 | (registry) | PASS | CAPTURE-FRESHNESS (gate G): 89 post capture(s) checked against scripts/lib/step/**, all fresh or ledger-allowed |
 | 40 | (registry) | PASS | CAPTURE-EXPLAINED (gate G): 29 step(s) checked — every diff-explanation channel accounted for |
