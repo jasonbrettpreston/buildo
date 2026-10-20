@@ -89,27 +89,6 @@
       "legacy_name": "coa_trades_unmapped_threshold_pct",
       "reason": "classify_coa_trades still runs its legacy script, which reads coa_trades_unmapped_threshold_pct; this value is used from the step's cutover (stage compute_ported)."
     },
-    "coa_download_retries": {
-      "badge": "takes_effect_at_cutover",
-      "label": "Takes effect at cutover",
-      "step": "coa",
-      "legacy_name": null,
-      "reason": "coa still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
-    },
-    "coa_download_retry_backoff_ms": {
-      "badge": "takes_effect_at_cutover",
-      "label": "Takes effect at cutover",
-      "step": "coa",
-      "legacy_name": null,
-      "reason": "coa still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
-    },
-    "coa_max_days_stale_warn": {
-      "badge": "takes_effect_at_cutover",
-      "label": "Takes effect at cutover",
-      "step": "coa",
-      "legacy_name": null,
-      "reason": "coa still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
-    },
     "coa_notices_link_precision_min": {
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
@@ -124,20 +103,6 @@
       "badge": "not_read_scheduled_for_retirement",
       "label": "Not read — scheduled for retirement",
       "reason": "No step or app code reads this setting, so changing it has no effect; it is scheduled for retirement."
-    },
-    "coa_page_size": {
-      "badge": "takes_effect_at_cutover",
-      "label": "Takes effect at cutover",
-      "step": "coa",
-      "legacy_name": null,
-      "reason": "coa still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
-    },
-    "coa_skip_rate_max_pct": {
-      "badge": "takes_effect_at_cutover",
-      "label": "Takes effect at cutover",
-      "step": "coa",
-      "legacy_name": null,
-      "reason": "coa still runs its legacy script, which uses a built-in value; this value is used from the step's cutover (stage compute_ported)."
     },
     "commercial_shell_multiplier": {
       "badge": "not_read_scheduled_for_retirement",

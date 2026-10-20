@@ -1,0 +1,135 @@
+{
+  "contract_version": 1,
+  "step": "coa",
+  "source": "Spec 124 R-DA (McDonald's Airtight V3): every entry is the measured PRE -> POST diff of docs/reports/golden/coa/{pre,post}/{coa,standalone}.json (Night P4 2026-10-20, lane night-p4-c, back-to-back captures; table_state identical: coa_applications 33966/5f16985b, lifecycle_status_history 381698/9b1ea64b) or the #44 (g) PRE-trace read absent from POST, explained from the descriptor deviation, register rule or runner code it names.",
+  "diffs": [
+    {
+      "key": "meta[].external",
+      "why": "PIPELINE_META is derived from the descriptor (Spec 122 §5.1): the runner names the two declared externals coa_active and coa_closed (union group, R-DX (iii), COA-D12); the legacy hand-built meta named no external key."
+    },
+    {
+      "key": "meta[].reads.CKAN API",
+      "why": "The legacy hand-typed \"CKAN API\" read label (11 CKAN field names) is replaced by the declared externals coa_active / coa_closed in meta.external; no reader consumes PIPELINE_META reads by that label (descriptor-derived meta, Spec 122 §5.1)."
+    },
+    {
+      "key": "meta[].writes.coa_applications[]",
+      "why": "The descriptor-derived write list adds lead_id, a declared coa_applications column with written \"db_default\": trigger-maintained by coa_applications.trg_coa_lead_id (descriptor guards, R-BL(iii)) and keyed by the derived ledger rows (coa:<application_number>); the legacy hand-written list omitted it. The step binds no value for it; no column the legacy wrote is missing."
+    },
+    {
+      "key": "meta[].writes.lifecycle_status_history[]",
+      "why": "The descriptor-derived write list adds id, the derived target's surrogate key, declared with written \"db_default\" (never bound by the step); the legacy hand-written list omitted it. The same eight content columns are written."
+    },
+    {
+      "key": "stdout_lines[]",
+      "why": "scripts/load-coa.descriptor.json deviations[] 1, 6, 7: the legacy progress/log lines (Mode:, Fetching, offset, Sample CKAN fields, Mapped, Deduplicated, the 500-row batch progress, last_seen_at refreshed, Load complete, Stats:) retire with the per-batch transaction form, the runner acquisition telemetry and deviation 4's stats SELECT; the runner prints its target line, the ckan_datastore acquisition line, the runMaintenance VACUUM line (COA-D7) and the completion line. Same counts (2774 fetched, 2690 mapped, 2689 deduplicated) are in records_meta.coa_load."
+    },
+    {
+      "key": "pipeline_runs[]",
+      "why": "Standalone only: the legacy loader wrote no pipeline_runs row of its own under --chain=none (PRE ledger=[]); the runner owns the standalone ledger row (records_meta.ledger_row \"owned\", Spec 122 §5.1), status completed, with the full records_meta."
+    },
+    {
+      "key": "summary.records_meta.acquired",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run (FLEET-2 lib #33): acquired.record_fields records the raw header of the first acquired record per declared external (coa_active 30 fields; coa_closed null on an incremental run, which reads the Active resource only)."
+    },
+    {
+      "key": "summary.records_meta.api_health",
+      "why": "scripts/load-coa.descriptor.json deviations[] 1 and 6: request latency and API errors are runner acquisition telemetry, not a records_meta block; an exhausted retry is a failed_acquisition terminal, never a counted row."
+    },
+    {
+      "key": "summary.records_meta.audit_table.name",
+      "why": "The runner titles the audit table with the descriptor identity.display_name \"CoA Applications Ingestion\"; the legacy literal (and the emits skeleton) was \"CoA Ingestion\". The FreshnessTimeline consumer reads rows, not the name."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[]",
+      "why": "Follows the declared check set (descriptor checks[], Spec 124 R-DE (iv)) and its order: the runner appends the guards.schema_drift INFO row (schema_drift:coa_active, header unchanged, 30 fields) and the runMaintenance row (COA-D7); the legacy avg_latency_ms / api_errors rows retire (scripts/load-coa.descriptor.json deviations[] 6)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].metric",
+      "why": "Follows the declared check set (descriptor checks[], Spec 124 R-DE (iv)) and its order: zero_records (the legacy WARN-on-zero path as one zero-tolerance row) is first and records_touched (Spec 124 R-DZ / R-EX, the seen-column touch) is added, so each later position names the next declared check; avg_latency_ms and api_errors retire (scripts/load-coa.descriptor.json deviations[] 6). Every legacy counter name is still present."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].value",
+      "why": "Follows the metric reorder: each position now carries its declared check's value (zero_records \"2774 records fetched\", records_fetched 2774, records_mapped 2690, records_skipped 84, skip_rate 3.028 unrounded, records_touched 2689; COA-D15). max_days_stale reads 6 instead of 0: scripts/load-coa.descriptor.json deviations[] 3, COA-D6 (newest hearing on/before the run date, not a clamped future hearing)."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].threshold",
+      "why": "The library renders the declared limit in force (\"viol == 0\", \"pct <= 5\", \"value_max 45\"), where the legacy printed its own literal strings (\"< 5%\", \"== 0\", \"< 45\", prose signals); scripts/load-coa.descriptor.json deviations[] 2 records the inclusive-bound grammar."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].status",
+      "why": "Follows the metric reorder: an INFO counter row now sits where a PASS row was and vice versa (rows 0, 3, 4, 6); every declared check row is PASS or INFO, verdict PASS in both captures."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].source",
+      "why": "The library stamps every declared check row with source \"check\" (verdict.js checkRow); the legacy hand-built rows carried no source field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].observed",
+      "why": "The library stamps every declared check row with observed before_write / after_write (FLEET-2 lib #52), its observation phase relative to the write; the legacy rows had no such field."
+    },
+    {
+      "key": "summary.records_meta.audit_table.rows[].order_guarantee",
+      "why": "schema_mismatch_count carries the descriptor's declared order_guarantee (a CKAN record missing a CRITICAL field fails the run before any write), rendered by the library; the legacy row carried none."
+    },
+    {
+      "key": "summary.records_meta.checks_failed",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the row-derived failed-check count (0); the legacy had no check tally."
+    },
+    {
+      "key": "summary.records_meta.checks_passed",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the row-derived check tally (\"all\"); the legacy had no check tally."
+    },
+    {
+      "key": "summary.records_meta.checks_warned",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the row-derived warned-check count (0); the legacy had no check tally."
+    },
+    {
+      "key": "summary.records_meta.coa_load",
+      "why": "scripts/load-coa.descriptor.json deviations[] 1 (Spec 124 R-DE (iv)): an INGESTOR emits one <x>_load object, so the legacy data_health block is records_meta.coa_load with the same fields and values (2774 fetched, 2690 mapped, 84 skipped, 2689 deduplicated, schema_mismatch_count 0); max_days_stale is the check row of that name."
+    },
+    {
+      "key": "summary.records_meta.config",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the resolved logic variables in force (coa_page_size 10000, coa_download_retries 2, coa_download_retry_backoff_ms 2000, coa_max_days_stale_warn 45, coa_skip_rate_max_pct 5, coa_applications_dead_tuple_ratio_warn_max 0), which close COA-D1's unseeded literals."
+    },
+    {
+      "key": "summary.records_meta.data_health",
+      "why": "scripts/load-coa.descriptor.json deviations[] 1 (Spec 124 R-DE (iv)): moved into records_meta.coa_load with the same fields and values; max_days_stale is the audit check row (now 6, COA-D6)."
+    },
+    {
+      "key": "summary.records_meta.errors",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run (FLEET-2 lib #75): records_meta.errors is always emitted, [] when no FAIL row."
+    },
+    {
+      "key": "summary.records_meta.warnings",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run (FLEET-2 lib #75): records_meta.warnings is always emitted, [] when no WARN row."
+    },
+    {
+      "key": "summary.records_meta.gate",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the acquisition gate decision ({reason: multi_primary, gated_skip: false}) for the union group (R-DX (iii)); the legacy had no gate vocabulary."
+    },
+    {
+      "key": "summary.records_meta.ledger_row",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: who owns the pipeline_runs row, chain_owned under --chain=coa and owned standalone (Spec 122 §5.1); the legacy did not record it."
+    },
+    {
+      "key": "summary.records_meta.lifecycle_status_history_written",
+      "why": "The descriptor's int emit for the R-DY derived target (Spec 124 R-DN count_path, cohort.json): 0 on these plain runs (no status changed); the coa-forced-status bracket reads 50. The legacy reported the same count only as the audit row lifecycle_status_history_inserted, which is unchanged."
+    },
+    {
+      "key": "summary.records_meta.pool_errors",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the pool error counter the library records on every run (0)."
+    },
+    {
+      "key": "summary.records_meta.run_mode",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the resolved run mode (incremental: Active resource only, R-DX (iv) externals[].modes); the legacy printed it only as the \"Mode: INCREMENTAL\" log line."
+    },
+    {
+      "key": "summary.records_meta.terminal",
+      "why": "Runner meta key stamped by scripts/lib/step on every converted run: the declared terminal the run landed (loaded); the legacy had no terminal vocabulary."
+    },
+    {
+      "key": "reads.coa_applications.linked_permit_num",
+      "why": "#44 (g), PRE read absent from POST: the legacy log-only stats SELECT (total / approved / linked / upcoming, with NOW() - INTERVAL '90 days') read coa_applications.linked_permit_num for the \"33185 linked\" log line only. It is retired by the declared deviation scripts/load-coa.descriptor.json deviations[] 4 (\"Writes nothing and decides nothing; the same counts are measured by assert_global_coverage and link_coa\", operator y 2026-10-17, CoA decision 5); the converted step reads only application_number and status."
+    }
+  ]
+}

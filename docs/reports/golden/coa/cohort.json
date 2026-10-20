@@ -1,0 +1,16 @@
+{
+  "contract_version": 1,
+  "targets": [
+    {
+      "table": "coa_applications",
+      "capture": "coa-forced-data-hash.json",
+      "why": "POST docs/reports/golden/coa/post/coa-forced-data-hash.json (Night P4 2026-10-20, Spec 124 R-CZ bracket in recapture.json, under the R-DP bracket lock): ingestor-forced-cohort.js appended a marker to data_hash (fitted to its varchar(64) width, Spec 124 R-GZ) on the first 50 coa_applications rows of the live Active feed (last_seen_at = the last run's clock); the guarded upsert (descriptor outputs.writes[coa_applications].write_discipline guard data_hash, is_distinct_from) rewrote and healed all 50 (records_updated). coa writes two tables, so the step-level counters attribute this capture to coa_applications only through this target: status is untouched, so no lifecycle_status_history row is written by this bracket. Restore verified."
+    },
+    {
+      "table": "lifecycle_status_history",
+      "capture": "coa-forced-status.json",
+      "count_path": "lifecycle_status_history_written",
+      "why": "POST docs/reports/golden/coa/post/coa-forced-status.json (Night P4 2026-10-20, Spec 124 R-ET derived-status bracket in recapture.json; discharges R-DY (e) and PIN R-ET-LIVE / R-ET-COHORT-JSON): ingestor-forced-cohort.js --op=derived_status appended a marker to data_hash (guard column, fitted to its varchar(64) width, Spec 124 R-GZ) and status (the R-DY derive.prior_columns column) on the first 50 Active-feed coa_applications rows; the runner's prior-status read saw a changed status, so deriveRows wrote exactly one lifecycle_status_history row per cohort key (lifecycle_status_history_written, the descriptor's int emit, R-DN) and the upsert healed both columns. Restore deleted the 50 gained ledger rows by natural key and restored the primary pair."
+    }
+  ]
+}

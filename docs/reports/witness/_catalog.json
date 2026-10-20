@@ -333,6 +333,29 @@
       "zoning_enriched_at",
       "zoning_parcel_count"
     ],
+    "coa_applications_cohort_bak_20261020t1728z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1740z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1741z": [
+      "application_number",
+      "data_hash"
+    ],
+    "coa_applications_cohort_bak_20261020t1811z": [
+      "application_number",
+      "data_hash",
+      "status"
+    ],
+    "coa_applications_cohort_bak_20261020t1812z": [
+      "application_number",
+      "data_hash"
+    ],
     "coa_notice_variances": [
       "application_number",
       "bound",
@@ -686,6 +709,18 @@
       "to_seq",
       "to_status",
       "transitioned_at"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1728z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1740z": [
+      "dk",
+      "nk"
+    ],
+    "lifecycle_status_history_cohort_bak_20261020t1811z": [
+      "dk",
+      "nk"
     ],
     "lifecycle_transitions": [
       "coa_type_class",

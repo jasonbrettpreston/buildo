@@ -336,7 +336,7 @@ function loadDescriptor(): Descriptor {
   return JSON.parse(readText(DESCRIPTOR_REL)) as Descriptor;
 }
 
-describe('coa — converted claims (D1–D6 GREEN at ②; D1b and D8 at ③)', () => {
+describe('coa — converted claims (D1–D6 GREEN at ②; D1b at the R-EQ swap; D8 at ③)', () => {
   it('D1 — identity: descriptor exists, archetype INGESTOR, lock 95, spec "51", shape "ingest"; notes exist (flipped at ②)', () => {
     const d = loadDescriptor();
     expect(d.identity).toMatchObject({ name: 'coa', archetype: 'INGESTOR', spec: '51', lock: LOCK_ID });
@@ -344,7 +344,9 @@ describe('coa — converted claims (D1–D6 GREEN at ②; D1b and D8 at ③)', (
     expect(readText(NOTES_REL).length).toBeGreaterThan(0);
   });
 
-  it.fails('D1b — frozen shell: pipeline.step(), not pipeline.run() (flips at ③; the legacy shell stays live at compute_ported, W4A-R6 / R-EF)', () => {
+  // FLIPPED at the Night P4 shell swap (Spec 124 R-EQ, operator y 2026-10-19: "A step whose ② landed at `compute_ported` moves to
+  // `runner_wired` in its swap commit"): the frozen shell is the live writer from runner_wired; D8 (converted[]) stays at ③.
+  it('D1b — frozen shell: pipeline.step(), not pipeline.run() (flipped at the R-EQ shell swap, stage runner_wired)', () => {
     const shell = readText(SHELL_REL);
     expect(shell).toContain('pipeline.step(');
     expect(shell).not.toContain('pipeline.run(');
