@@ -9,7 +9,9 @@
 // optional second input `measured-validate.json` for `validate_only` entries (written by `step-validate
 // --write`, event 'step_validate_write'; an entry's own `event` is carried, absent = 'golden_capture').
 //
-//   node scripts/analysis/generate-last-measured.mjs           write every descriptor whose entries moved
+//   node scripts/analysis/generate-last-measured.mjs --write   write every descriptor whose entries moved
+//   node scripts/analysis/generate-last-measured.mjs --help    usage; no flag or an unknown flag prints usage
+//                                                              and exits 2, writing nothing (verify-12)
 //   node scripts/analysis/generate-last-measured.mjs --check   write nothing; exitCode 1 when any entry
 //                                                              would change (a hand edit / stale value) or
 //                                                              carries a last_measured with no measured source
@@ -31,6 +33,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CATEGORIES = ['invariants', 'plausibility'];
@@ -218,10 +221,30 @@ export function baselineDecision(stale, baseline) {
     else if (r.pin !== BASELINE_PIN) problems.push(`baseline entry ${r.step}.${r.key} must cite pin ${BASELINE_PIN}`);
   }
   const staleKeys = new Set(stale.map(entryKey));
-  for (const e of stale) if (!listed.has(entryKey(e))) problems.push(`NEW stale last_measured ${e.step}.${e.key} — regenerate (node scripts/analysis/generate-last-measured.mjs); the baseline never grows`);
+  for (const e of stale) if (!listed.has(entryKey(e))) problems.push(`NEW stale last_measured ${e.step}.${e.key} — regenerate (node scripts/analysis/generate-last-measured.mjs --write); the baseline never grows`);
   const fresh = rows.filter((r) => r && !staleKeys.has(entryKey(r)));
   for (const r of fresh) problems.push(`baseline entry ${r.step}.${r.key} is fresh now — remove it (node scripts/analysis/generate-last-measured.mjs --shrink-baseline)`);
   return { pass: problems.length === 0, problems, fresh: fresh.map((r) => ({ step: r.step, key: r.key })) };
+}
+
+/**
+ * R-GQ shrink-only: every current baseline entry must already be in the committed previous baseline (by step +
+ * key), so an entry is never swapped in or re-added; `previous` null (no committed baseline yet) is vacuous. PURE.
+ * @returns {string[]} problems
+ */
+export function baselineShrinkFindings(current, previous) {
+  if (!previous) return [];
+  const prior = new Set((Array.isArray(previous.entries) ? previous.entries : []).map(entryKey));
+  return (Array.isArray(current && current.entries) ? current.entries : [])
+    .filter((r) => !prior.has(entryKey(r)))
+    .map((r) => `baseline entry ${r.step}.${r.key} is not in the committed baseline (HEAD) — the list only shrinks (R-GQ)`);
+}
+
+/** The committed (HEAD) baseline, parsed, or null when HEAD has none (or this is not a git checkout). */
+export function committedBaseline(root = REPO_ROOT) {
+  const res = spawnSync('git', ['show', `HEAD:${BASELINE_REL_PATH}`], { cwd: root, encoding: 'utf8' });
+  if (res.status !== 0) return null;
+  try { return JSON.parse(res.stdout); } catch { return null; }
 }
 
 /** Run the generator over the estate; writes only when `check` is false. */
@@ -247,6 +270,9 @@ export function run({ check = false, dryRun = false, root = REPO_ROOT, log = con
   if (check) {
     const baseline = readJson(path.join(root, BASELINE_REL_PATH));
     const decision = baselineDecision(staleEntries(report), baseline);
+    const shrink = baselineShrinkFindings(baseline, committedBaseline(root));
+    decision.problems.push(...shrink);
+    decision.pass = decision.pass && shrink.length === 0;
     for (const p of decision.problems) log(`[generate-last-measured] RED: ${p}`);
     log(`[generate-last-measured] baseline (R-GQ): ${(baseline && baseline.entries || []).length} listed stale entr${(baseline && baseline.entries || []).length === 1 ? 'y' : 'ies'} (${BASELINE_PIN}), ${decision.problems.length} problem(s)`);
     red = !decision.pass || sum('unsourced') > 0;
@@ -269,9 +295,22 @@ export function shrinkBaseline({ root = REPO_ROOT, log = console.log } = {}) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.includes('--shrink-baseline')) shrinkBaseline();
+  const USAGE = [
+    'usage: node scripts/analysis/generate-last-measured.mjs <--check | --write | --shrink-baseline | --help>',
+    '  --check            write nothing; exit 1 on a stale entry outside the R-GQ baseline, a fresh listed entry, or an unsourced entry',
+    '  --write            regenerate every descriptor whose last_measured moved',
+    '  --shrink-baseline  drop baseline entries that are fresh now (never adds one)',
+    '  --help             this text',
+  ].join('\n');
+  const args = process.argv.slice(2);
+  const known = ['--check', '--write', '--shrink-baseline', '--help'];
+  if (args.includes('--help')) console.log(USAGE);
+  else if (args.length !== 1 || !known.includes(args[0])) {
+    console.error(`[generate-last-measured] ${args.length ? `unknown or conflicting arguments: ${args.join(' ')}` : 'no mode given'}\n${USAGE}`);
+    process.exitCode = 2;
+  } else if (args[0] === '--shrink-baseline') shrinkBaseline();
   else {
-    const { red } = run({ check: process.argv.includes('--check') });
+    const { red } = run({ check: args[0] === '--check' });
     if (red) process.exitCode = 1;
   }
 }

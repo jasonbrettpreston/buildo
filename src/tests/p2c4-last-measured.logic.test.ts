@@ -16,7 +16,8 @@
 // `measuredFromCapture` / `mergeMeasured`, and `scripts/analysis/generate-last-measured.mjs`
 // does not exist at all — every assertion below is against an API written by the green steps.
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -442,5 +443,88 @@ describe('generate-last-measured --check stale baseline (R-GQ)', () => {
     expect(baseline.entries.every((e) => e.pin === PIN)).toBe(true);
     const out = g.run({ check: true, log: () => {} });
     expect(out.red).toBe(false);
+  });
+});
+
+// verify-12 follow-up (operator y 2026-10-20, Spec 124 R-GQ): the baseline is a TRUE shrink-only set — the
+// current entries must be a subset (by step + key) of the committed previous baseline, so an entry can be
+// neither swapped for another nor re-added once removed (the R-DW / R-EB high-water-mark posture).
+// RED before because … the only lock was `entries.length <= 84` and no shrink predicate existed.
+describe('R-GQ baseline is shrink-only against the committed previous baseline', () => {
+  type Entry = { step: string; key: string; pin?: string };
+  const load = async () => (await import(pathToFileURL(join(process.cwd(), 'scripts/analysis/generate-last-measured.mjs')).href)) as {
+    baselineShrinkFindings?: (current: unknown, previous: unknown) => string[];
+    BASELINE_REL_PATH: string;
+  };
+  const doc = (rows: Array<[string, string]>) => ({ entries: rows.map(([step, key]) => ({ step, key, pin: 'REFREEZE-BUNDLE-1' })) });
+
+  it('S1 GREEN — an unchanged or shrunk baseline passes; no committed previous baseline is vacuous', async () => {
+    const g = await load();
+    expect(typeof g.baselineShrinkFindings).toBe('function');
+    expect(g.baselineShrinkFindings!(doc([['s', 'a'], ['s', 'b']]), doc([['s', 'a'], ['s', 'b']]))).toEqual([]);
+    expect(g.baselineShrinkFindings!(doc([['s', 'a']]), doc([['s', 'a'], ['s', 'b']]))).toEqual([]);
+    expect(g.baselineShrinkFindings!(doc([['s', 'a']]), null)).toEqual([]);
+  });
+
+  it('S2 RED — a swapped entry (same count) and a re-added entry both fail, naming step.key', async () => {
+    const g = await load();
+    const swapped = g.baselineShrinkFindings!(doc([['s', 'a'], ['t', 'z']]), doc([['s', 'a'], ['s', 'b']]));
+    expect(swapped.join('\n')).toContain('t.z');
+    const readded = g.baselineShrinkFindings!(doc([['s', 'a'], ['s', 'b']]), doc([['s', 'a']]));
+    expect(readded.join('\n')).toContain('s.b');
+  });
+
+  it('S3 LIVE — the working baseline is a subset of HEAD\'s and of the one R-GQ first committed', async () => {
+    const g = await load();
+    const git = (args: string[]) => spawnSync('git', args, { cwd: process.cwd(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    const current = JSON.parse(readFileSync(join(process.cwd(), g.BASELINE_REL_PATH), 'utf8')) as { entries: Entry[] };
+    const first = git(['log', '--format=%H', '--diff-filter=A', '--', g.BASELINE_REL_PATH]).stdout.trim().split('\n').pop() ?? '';
+    for (const rev of ['HEAD', first]) {
+      const res = git(['show', `${rev}:${g.BASELINE_REL_PATH}`]);
+      expect(res.status, `git show ${rev}`).toBe(0);
+      expect(g.baselineShrinkFindings!(current, JSON.parse(res.stdout))).toEqual([]);
+    }
+  });
+});
+
+// verify-12 follow-up (operator y 2026-10-20): the generator WRITES only on an explicit --write; --help prints
+// usage and writes nothing; an unknown flag or no flag exits non-zero with usage and writes nothing (a
+// verifier's `--help` used to fall through to WRITE and rewrote 17 descriptors).
+// RED before because … any argv without --check/--shrink-baseline ran the write path.
+describe('generate-last-measured CLI — write is explicit', () => {
+  const descriptorBytes = (): string => {
+    const out: string[] = [];
+    for (const dir of ['scripts', 'scripts/quality']) {
+      for (const f of readdirSync(join(process.cwd(), dir)).filter((n: string) => n.endsWith('.descriptor.json')).sort()) {
+        out.push(readFileSync(join(process.cwd(), dir, f), 'utf8'));
+      }
+    }
+    return out.join('\u0000');
+  };
+  const cli = (args: string[]) => {
+    return spawnSync(process.execPath, ['scripts/analysis/generate-last-measured.mjs', ...args], { cwd: process.cwd(), encoding: 'utf8' });
+  };
+
+  it('C1 --help prints usage, exits 0, writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli(['--help']);
+    expect(r.status).toBe(0);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/usage/i);
+    expect(descriptorBytes()).toBe(before);
+  });
+
+  it('C2 RED — an unknown flag exits non-zero with usage and writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli(['--frobnicate']);
+    expect(r.status).not.toBe(0);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/usage/i);
+    expect(descriptorBytes()).toBe(before);
+  });
+
+  it('C3 RED — no flag exits non-zero with usage and writes nothing', () => {
+    const before = descriptorBytes();
+    const r = cli([]);
+    expect(r.status).not.toBe(0);
+    expect(descriptorBytes()).toBe(before);
   });
 });
