@@ -209,3 +209,28 @@ describe('CHAT-8 / rule 7a / M-186 — lawfully-existing-only and ancillary-only
     for (const zone of ['R', 'RD', 'RS']) expect([zone, eff(lot(zone, 'detached_house'), 'main_wall_height_m').value]).toEqual([zone, 7.5]);
   });
 });
+
+// CHAT-10 (operator chat 2026-10-20, approve: "Amend Spec 68 §11.1 and the vocab together to add not_buildable and the
+// prefixed status forms"); Spec 69a M-223(1) ("vocab.layer3.scenario_status lacks not_buildable:<clauses>; Spec 78's
+// not_permitted:<clause> prefix form is not in vocab"). Spec 68 §11.1: the status list "equals that block in both
+// directions" — so the lock parses §11.1's Status paragraph and compares each level, name and parameter form, both ways.
+describe('CHAT-10 / M-223(1) — the Layer 3 scenario status gains not_buildable; vocab and Spec 68 §11.1 declare the same prefixed forms', () => {
+  const spec = fs.readFileSync(path.join(process.cwd(), 'docs/specs/01-pipeline/68_mcbylaw_standard.md'), 'utf8');
+  const para = spec.split('\n').find((l) => l.startsWith('**Status (closed;')) ?? '';
+  const forms = (seg: string): Record<string, string> => Object.fromEntries([...seg.matchAll(/`([a-z_]+)(?::([^`]+))?`/g)].map((m) => [m[1], m[2] ?? '']));
+  const scenarioSeg = (/Scenario level \([^)]*\): (.*?)\. Field level/.exec(para) ?? [])[1] ?? '';
+  const fieldSeg = (/Field level \([^)]*\): (.*?)\. `not_permitted` reason/.exec(para) ?? [])[1] ?? '';
+  const L3 = I.vocab.layer3;
+  it('Spec 68 §11.1 names not_buildable:<clauses> at the scenario level', () => {
+    expect(forms(scenarioSeg)).toMatchObject({ not_buildable: '<clauses>' });
+  });
+  it('vocab.layer3.scenario_status has not_buildable', () => {
+    expect(L3.scenario_status).toContain('not_buildable');
+  });
+  it('vocab.layer3.status_form declares each level\'s prefixed forms, equal to Spec 68 §11.1 in both directions', () => {
+    expect(L3.status_form?.scenario).toEqual(forms(scenarioSeg));
+    expect(L3.status_form?.field).toEqual(forms(fieldSeg));
+    expect(Object.keys(L3.status_form?.scenario ?? {}).sort()).toEqual([...L3.scenario_status].sort());
+    expect(Object.keys(L3.status_form?.field ?? {}).sort()).toEqual([...L3.field_status].sort());
+  });
+});

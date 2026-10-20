@@ -747,7 +747,7 @@ There is one row per `(parcel_id, scenario)`.
 - Where both suites are eligible, the larger objective is kept and the other is disclosed.
 - On `renovation_interior` and `renovation_basement` rows the suite is sized against the existing house (O-16).
 
-**Scenario status** (closed, Spec 68 §11.1): `permitted` · `not_permitted:<clause>` · `not_buildable:<clauses>` · `not_evaluated:<reason>`. (`vocab.layer3.scenario_status` lacks the `not_buildable` and prefixed forms today: M-223(1), OWED.)
+**Scenario status** (closed, Spec 68 §11.1): `permitted` · `not_permitted:<clause>` · `not_buildable:<clauses>` · `not_evaluated:<reason>`. (`vocab.layer3.scenario_status` has `not_buildable` and `vocab.layer3.status_form` the prefixed forms since 2026-10-20: 69a M-223(1) / M-238, operator CHAT-10; `collapsed_into:<scenario>:<rule>` is the fifth §11.1 form.)
 - A Layer 2 `not_evaluated` reason propagates unchanged.
 - An ambiguous zone gives `not_evaluated:ambiguous_zone`.
 - A renovation with no existing-house input gives `not_evaluated:no_existing_house`.
@@ -1484,7 +1484,7 @@ Reviews folded: the reality check (`.cursor/maxbld-review-rc-2026-10-18.md`: 70 
 | F-23 | Lane centreline 2.5 m (10.5.40.70(2), 10.5.60.20(4)) | **fixed** | 69a M-205(5); P5.5 |
 | F-24 | Missing scenarios: major-street apartment/townhouse; new semi-detached house on a semi lot | **ruled: disclose both, not modelled** | 69a M-214(1)(2); P5.1 |
 | F-25 | Missing scenarios: townhouse; apartment R/RM; suite in semi/townhouse; existing 5–6-unit apartment | **disclosed, deferred** (ratified 2026-10-18) | 69a M-214(3) |
-| F-26 | Status vocabularies and O-7 targets absent from vocab; no suite / house+suite class | OWED (by-law keying/evaluator lane) | 69a M-223 |
+| F-26 | Status vocabularies and O-7 targets absent from vocab; no suite / house+suite class | Scenario status `not_buildable` and the prefixed forms **fixed** 2026-10-20 (69a M-238, operator CHAT-10); O-7 targets and the classes OWED (by-law keying/evaluator lane; P2-10) | 69a M-223, M-238 |
 | F-27 | M-171 vs `basement_livable_sqm` | **noted** (design choice) | 69a M-171 dated note |
 | F-28 | Garden suite inherits principal setbacks; Coxwell gate everywhere; 10.5.80.1(2)(A) leak | **fixed** (7a782801, a0d5b41e; re-verified 2026-10-20); the laneway 150.8.60.20(3)(C) step-back is its own target `upper_side_setback_m` 2026-10-20 (M-219 remainder, operator CHAT-7, 69a M-236) | 69a M-219, M-222, M-225, M-236 |
 | F-29 | `binding_constraint` / `suite_binding` sets incomplete | **fixed** (values added) | P5.2 item 10; P5.5 |

@@ -350,8 +350,13 @@
   "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "label_letter_unknown", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
   "layer3": {
     "$comment": "McBylaw Layer 3 report-field statuses and reasons (Spec 68 §11.1, Spec 69 M-64; PRE-LOCK FIX 2026-10-07 after the Phase 3 trial K2/K3). Equal to Spec 68 §11.1 in both directions. A parameterised status is written <status>:<param> (a clause, scenario, rule, target, form, field or input). A Layer 2 not_evaluated_reason (the top-level list) propagates unchanged at either level. Consumed by the planned Layer 3 step and the G-SHAPE status arm; no code reads it yet.",
-    "scenario_status": ["permitted", "not_permitted", "collapsed_into", "not_evaluated"],
+    "scenario_status": ["permitted", "not_permitted", "not_buildable", "collapsed_into", "not_evaluated"],
     "field_status": ["computed", "unregulated", "unlimited", "not_applicable", "not_buildable", "not_evaluated"],
+    "status_form": {
+      "$comment": "Spec 69a M-223(1) / M-238 (operator chat 2026-10-20 CHAT-10): the written form of each status, <status>:<param> or the bare name (\"\"), per level; equal to Spec 68 §11.1 in both directions (bylaw-fix-2.logic.test.ts › CHAT-10).",
+      "scenario": { "permitted": "", "not_permitted": "<clause>", "not_buildable": "<clauses>", "collapsed_into": "<scenario>:<rule>", "not_evaluated": "<reason>" },
+      "field": { "computed": "", "unregulated": "<clause>", "unlimited": "<clause>", "not_applicable": "<clause>", "not_buildable": "<clauses>", "not_evaluated": "<reason>" }
+    },
     "not_permitted_reason": ["requires_severance"],
     "scenario_not_evaluated_reason": ["ambiguous_zone", "coa_factor_unfitted"],
     "field_not_evaluated_reason": ["layer2_conflict", "no_producer", "insufficient_comps", "target_not_keyed"],
