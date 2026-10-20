@@ -258,7 +258,7 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
 
 | # | Scope | Pass | Detail |
 |---|---|---|---|
-| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=270 |
+| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=271 |
 | 2 | link_coa_to_parcels | PASS | 5 declared, missing from seeds: none |
 | 3 | link_coa_to_parcels | PASS | retired=0 overlap-with-declared=none |
 | 7 | link_coa_to_parcels | PASS | SPEC LINK header present=true |
@@ -269,8 +269,8 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
 | 5 | (registry) | PASS | clean (0 it.fails( call sites outside a declared pending slug) |
 | 9 | (registry) | PASS | clean (0 converted slugs blocked by an unmet cutover_prereq item; blocks batching: 0) |
 | 22 | (registry) | PASS | GOLD-PRE-FRESH: 83 PRE capture(s) across 27 converted step(s) all tracked + clean (git can restore every reference); net-new (R-DK): load_bylaw_map_areas, link_parcel_abutments |
-| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 5 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
-| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 5 eligible pending slug(s), all either compressed or carry a stated full-form reason |
+| 23 | (registry) | PASS | COMPRESSED-FORM-ELIGIBLE: 6 compressed-form declaration(s), all eligible (proven archetype, >=2 converted members) |
+| 24 | (registry) | PASS | COMPRESSED-FORM-DEFAULT: 6 eligible pending slug(s), all either compressed or carry a stated full-form reason |
 | 25 | (registry) | PASS | ARCHETYPE-PARITY: 29 converted slug(s) — 29 compared against a retained census row (all agree), 0 with no retained row (census arm n/a, pre-R-AO cutovers); every archetype has a declared freeze profile |
 | 26 | (registry) | PASS | COUNTER-ROOT: 74 declared counter source(s) across 25 descriptor(s) all root in their own shape's counterScope (+ records_meta) |
 | 27 | (registry) | PASS | ROW-ERROR-GATE: 11 skip/quarantine declaration(s), all cite a real FAIL-severity, bound-carrying check in their own descriptor |
@@ -295,8 +295,9 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
 | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 532 emits.type check(s), 0 mismatches |
 | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
 | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 169 terminal(s) unwitnessed (no capture) |
-| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (7 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
-| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 33 take effect at cutover, 9 not read; admin badges current |
+| 51 | (registry) | PASS | ADMIN-REGISTRATION (R-DL/R-DW): 43 converted/pending step(s) admin-verifiable (6 without a descriptor: slug arms only, R-DV); no hand-written range on a converted step |
+| 53 | (registry) | PASS | VARIABLE-EFFECT (R-EO): 35 take effect at cutover, 9 not read; admin badges current |
+| 54 | (registry) | PASS | SWAP-ORDER (R-EQ): every swapped pending step's declared upstreams are converted or swapped (R-EQ) |
 
 ### Captures (item iv)
 - missing invocations (POST): coa::, none::
