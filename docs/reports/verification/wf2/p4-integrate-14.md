@@ -60,3 +60,12 @@ merge), so the merge notes land verbatim in the merge commit, where the id resol
   message. enrich_coa_zoning's plain POSTs now read 33966/005c56aa (PRE a140d3ef): the Night P4 R-CZ bracket's heal
   re-stamped `zoning_enriched_at` on its 50 rows (R-DQ, 124a:479), explained in its `explained-diffs.json` (R-DA);
   link_coa_to_parcels' `table_state[].content_hash` why extended the same way (33966/e879292a).
+- **R-GZ / R-HA chat approvals imported (verify-13 N3; R-HK).** The operator's "y" to the two night-p4-c drafts
+  (both rows: "operator y 2026-10-20, to the night-p4-c draft"; 124a §B29/§B30 name the drafts) is committed as the
+  raw chat record `docs/reports/decisions/raw/2026-10-20-chat-night-p4c/2026-10-20-night-p4c.json` (each
+  recommendation is the draft as put to the operator in `.cursor/QUEUE.md`, verbatim) and imported with
+  `decision-log.mjs --import --chat … --out docs/reports/decisions/2026-10-20-chat-night-p4c.json`. Routing (the
+  lane-added field): FIT-WIDTH → R-GZ, DERIVED-WITNESS → R-HA; both rows now cite
+  `2026-10-20-chat-night-p4c#FIT-WIDTH` / `#DERIVED-WITNESS`. `decision-log --check`: clean, 5 logs, 26 decisions,
+  27 register rows, 52 citations, 0 owed. The real-tree lock in `decision-log.logic` counts 26 decisions and pins the
+  new log's routing.

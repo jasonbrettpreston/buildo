@@ -306,10 +306,23 @@ describe('R-HK — the committed decision logs are fully recorded (real tree)', 
     expect(s132.decisions.map((d) => [d.id, d.operator_quote])).toEqual([['HANDBOOK', 'y to both'], ['ROLES', 'y to this revised version']]);
   });
 
+  it('the night-p4-c chat log (integrate-14): the operator\'s "y" to the two drafts routes to R-GZ and R-HA, and both rows cite it', () => {
+    const np4c = byStem.get('2026-10-20-chat-night-p4c') as { source: { operator_quote: string }; decisions: Array<{ id: string; decision: string }>; routing: Record<string, { register: string; row: string; owed?: string }> };
+    expect(np4c.source.operator_quote).toBe('y');
+    expect(np4c.decisions.map((d) => [d.id, d.decision])).toEqual([['FIT-WIDTH', 'y'], ['DERIVED-WITNESS', 'y']]);
+    expect(Object.fromEntries(Object.entries(np4c.routing).map(([k, v]) => [k, [v.register, v.row, v.owed]]))).toEqual({
+      'FIT-WIDTH': ['docs/specs/01-pipeline/124_step_standard_policy.md', 'R-GZ', undefined],
+      'DERIVED-WITNESS': ['docs/specs/01-pipeline/124_step_standard_policy.md', 'R-HA', undefined],
+    });
+    const rows = fs.readFileSync(path.join(REPO_ROOT, 'docs/specs/01-pipeline/124_step_standard_policy.md'), 'utf8').split('\n');
+    expect(rows.find((l) => l.startsWith('| R-GZ |'))).toContain('`2026-10-20-chat-night-p4c#FIT-WIDTH`');
+    expect(rows.find((l) => l.startsWith('| R-HA |'))).toContain('`2026-10-20-chat-night-p4c#DERIVED-WITNESS`');
+  });
+
   it('GREEN — every approved decision has its routed register row (or is owed), and every log matches its committed raw record', () => {
     const r = dl.checkDecisionLogs(logs, specs, { io });
     expect(r.problems).toEqual([]);
-    expect(r.decisions).toBe(24);
+    expect(r.decisions).toBe(26);
     expect(r.owed).toBe(0);
   });
 });

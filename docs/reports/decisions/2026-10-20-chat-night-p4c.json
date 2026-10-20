@@ -1,0 +1,43 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). Imported verbatim from the committed chat record docs/reports/decisions/raw/2026-10-20-chat-night-p4c/2026-10-20-night-p4c.json. `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-chat-night-p4c",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y",
+    "record": "operator chat 2026-10-20 (lane night-p4-c drafts, as put to the operator in .cursor/QUEUE.md)",
+    "raw": {
+      "form": "chat",
+      "file": "docs/reports/decisions/raw/2026-10-20-chat-night-p4c/2026-10-20-night-p4c.json"
+    }
+  },
+  "decision_vocab": {
+    "y": "approve"
+  },
+  "routing": {
+    "FIT-WIDTH": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-GZ"
+    },
+    "DERIVED-WITNESS": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HA"
+    }
+  },
+  "amendments": {},
+  "decisions": [
+    {
+      "id": "FIT-WIDTH",
+      "question": "fit-to-width perturbation for a bracket column",
+      "recommendation": "fit-to-width perturbation left(col,w-len(s))||s, refuse if len(s)>=w; V3 table in report.",
+      "decision": "y",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "DERIVED-WITNESS",
+      "question": "#44 (b)/(c) for an R-DY derived target",
+      "recommendation": "derived target witnessed by ≥1 fresh POST trace; per-trace write count range; write_inventory.derived_statements.",
+      "decision": "y",
+      "decided_at": "2026-10-20"
+    }
+  ]
+}

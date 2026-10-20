@@ -1,0 +1,8 @@
+{
+  "source": "operator chat 2026-10-20 (lane night-p4-c drafts, as put to the operator in .cursor/QUEUE.md)",
+  "operator_quote": "y",
+  "decisions": [
+    {"id": "FIT-WIDTH", "subject": "fit-to-width perturbation for a bracket column", "decision": "y", "recommendation": "fit-to-width perturbation left(col,w-len(s))||s, refuse if len(s)>=w; V3 table in report."},
+    {"id": "DERIVED-WITNESS", "subject": "#44 (b)/(c) for an R-DY derived target", "decision": "y", "recommendation": "derived target witnessed by ≥1 fresh POST trace; per-trace write count range; write_inventory.derived_statements."}
+  ]
+}
