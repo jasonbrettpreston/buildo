@@ -58,4 +58,15 @@ describe('R-GR — one ledger status form for a declared deviation', () => {
     const rows = m.parseDefectRows(readFileSync(join(process.cwd(), 'docs/reports/defect-ledger.md'), 'utf8'));
     expect(m.ledgerStatusFormFindings!(rows, m.loadExceptionSources().registerIds)).toEqual([]);
   });
+
+  // R-GS / R-GT (operator y 2026-10-20: "y to your recommendations to 1 and 2 ... y to liftinh A-5"): each
+  // row closes only on the rule whose text covers it; R-AZ and R-AR.1 are not stretched.
+  it('L5 LIVE — LC-D7 closes on R-GS (A-5); LC-D6, LC-D11, M-D10, N-D5 on R-GT; N-D1 and LC-D12 stay RULING-OWED', async () => {
+    const m = await load();
+    const rows = m.parseDefectRows(readFileSync(join(process.cwd(), 'docs/reports/defect-ledger.md'), 'utf8'));
+    const status = (id: string) => rows.find((r) => r.id === id)?.status;
+    expect(status('LC-D7')).toBe('CLOSED · declared deviation (R-GS)');
+    for (const id of ['LC-D6', 'LC-D11', 'M-D10', 'N-D5']) expect(status(id), id).toBe('CLOSED · declared deviation (R-GT)');
+    for (const id of ['N-D1', 'LC-D12']) expect(status(id), id).toMatch(/^OPEN · \*\*PIN\*\* RULING-OWED /);
+  });
 });

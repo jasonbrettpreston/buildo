@@ -607,3 +607,51 @@ Operator decision (2026-10-20, verbatim): "y to all", on two items: (1) gate #36
 
 - **PIN R-AZ-CLASS** (owner: operator). Confirm or extend R-AZ (row cap) to the local-file/argv acquisition overrides of LC-D6, LC-D11, M-D10, N-D5, and R-AR.1 to N-D1's insert arm; a refusal reverts those five to `OPEN · **PIN** RULING-OWED`.
 - **Integration note.** R-GQ and R-GR are new register rows: `rule-map.json` (on `wf2/handbook-1`) needs entries at integration.
+
+**Follow-on (c) — R-GS and R-GT; R-AZ and R-AR.1 not stretched (operator 2026-10-20, verbatim: "y to your recommendations to 1 and 2 ... y to liftinh A-5").** PIN R-AZ-CLASS (above) is resolved by these two rows: the four local-override rows re-cite R-GT, LC-D7 closes on R-GS, and N-D1 reverts to `OPEN · **PIN** RULING-OWED`.
+
+**R-GS — operator ruling A-5, lifted.** Source (tracked): `scripts/steps/_schema/step.schema.json`:4871, the `override.accept_anomaly` description, added in commit `1a440908` (2026-08-25); the ruling is also cited at `scripts/lib/step/index.js`:793, :6104, :7566 and `docs/specs/01-pipeline/62_source_centreline.md`:584. The pilot plan that first carried it (`.cursor/active_task.md`, Pilot 2, per `docs/reports/2026-08-25-pilot2-load-ravines-assessment.md`:4 "A-5 `accept_anomaly[]`") is untracked and now holds a later task, so the tracked schema text is the verbatim source. Original date 2026-08-25; recorded 2026-10-20 (operator y).
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| A-5 itself | `step.schema.json`:4871 | "the override lets the run COMPLETE, it NEVER suppresses the FAIL row. `check_id` must name a declared check; the runner also emits a WARN row whenever the env is standing" | Recorded verbatim; R-GS adds nothing beyond it. |
+| Spec 59 L7c / LR-D9 | `scripts/load-ravines.descriptor.json`:589 | "Spec 59 L7 and L8 are not merely FAIL checks … zero rows touched" | No conflict: an accepted anomaly is the declared escape from that abort and leaves the FAIL row in place (`scripts/load-centreline.descriptor.json`:376, "ENABLES execution but NEVER suppresses the FAIL row"). |
+| R-AZ (row cap) | 124a:210 | "A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override" | No conflict: accept_anomaly is a declared override kind in the schema, not a cap. |
+| R-EY (9), R-GR | Spec 124:264, 270 | "cites a register rule id"; "`CLOSED · declared deviation (<rule id>[, …])`" | Supports: LC-D7 reads `CLOSED · declared deviation (R-GS)`. |
+
+Coverage. **LC-D7, covered:** `CENTRELINE_ACCEPT_FEATURE_COUNT_DRIFT` (legacy `load-centreline.js`:412, literal `=== '1'`) became `override.accept_anomaly[0]` `{env, check_id: centreline_count_drift_pct}` (`scripts/load-centreline.descriptor.json`:518-519); the FAIL row stays and `centreline_override_feature_count_drift_present` fires whenever the env stands (:521); that is A-5's text. **LC-D12, not covered:** the `VALIDATION_CHUNK = 5000` batched validator loop running as one library call (deviations[4], `scripts/load-centreline.descriptor.json`:594, adjudicated "plan LC-D12 / address_points one-call precedent") is a batching change, not an override; it stays `OPEN · **PIN** RULING-OWED`.
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One override kind, the schema's `override.accept_anomaly[]`, used by load_ravines and load_centreline. |
+| OBSERVABLE | The standing-override WARN row and the retained FAIL row in every run's audit table; `ledger-status-form.logic` L5 pins LC-D7. |
+| RECORDED | Spec 124 §5 R-GS: A-5 dated 2026-08-25, recorded 2026-10-20 (operator y). |
+| SCALABLE | Any INGESTOR with an accept env; the closed shape is the schema's. |
+| ACCURATE | Quote read from the tracked schema; LC-D7 read against the descriptor lines above; red-first L5 RED before the ledger change (`docs/reports/red-evidence/tooling-fix-1/r-gs-gt-red.json`). |
+| SIMPLE | Records an existing ruling; no code change. |
+| EXTERNALIZED | No threshold: the drift bound stays `limit_from_config`. |
+
+**R-GT — local acquisition overrides retire at conversion.** No existing row accepts it: R-AZ (124a:210) is the `--limit` row cap only, and R-AR.1 (124a:183) a retired run-ledger gate.
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-AZ (row cap) | 124a:210 | "The standard debug affordances are `override.dry_run` … and the `src/tests/steps/<slug>/` fixture tier" | No conflict: R-GT names the same affordances; R-AZ is unchanged. |
+| Spec 124 Rule 1 | Spec 124:32 | "Nothing about a step's behaviour may live only in code — it is descriptor data" | Supports: the source becomes the declared `inputs.reads.externals[]` entry. |
+| R-GR | Spec 124:270 | "`CLOSED · declared deviation (<rule id>[, …])`" | Supports: the four rows read `CLOSED · declared deviation (R-GT)`. |
+| load_wsib WS-D4 | `docs/reports/defect-ledger.md`, WS-D4 | "the chain never loads: it passes no `--file`" | Not accepted by R-GT: the local file is that step's real source; it stays open. |
+
+Coverage (each read from the shipped descriptor or the legacy file): **LC-D6, LC-D11** — `CENTRELINE_LOCAL_ZIP` local-zip override and its `centreline_local_zip_override` WARN row (`scripts/load-centreline.descriptor.json` deviations[0]); acquisition is `externals[0]` `ckan:toronto-centreline-tcl-shp`. **M-D10** — legacy `process.argv[2]` path plus the `data/3d-massing-wgs84/` cache of the same `ZIP_URL` download and its unzip/PowerShell `execSync` (`git show 98412d53~1:scripts/load-massing.js`:141-165); `scripts/load-massing.descriptor.json` deviations[4]. **N-D5** — `data/neighbourhoods-4326.geojson` cache plus `process.argv[2]`/`[3]` (`git show 98412d53~1:scripts/load-neighbourhoods.js`:637-638), the cache measured byte-identical to CKAN (`scripts/load-neighbourhoods.descriptor.json` deviation N-D5). All four are covered.
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One acquisition form for every INGESTOR: the declared external via `acquire.js`; one test affordance (fixture tier / dry_run). |
+| OBSERVABLE | Each retirement is a descriptor `deviations[]` entry (R-EY (9) reads it); `ledger-status-form.logic` L5 pins the four rows. |
+| RECORDED | Spec 124 §5 R-GT, dated 2026-10-20, operator y. |
+| SCALABLE | Any INGESTOR; the excluded case (a local file as the real source) is named. |
+| ACCURATE | Each case read against the descriptor and legacy lines above; red-first L5 RED before the ledger change. |
+| SIMPLE | No code change; the conversions already did it. |
+| EXTERNALIZED | No threshold. |
+
+**N-D1, back to `OPEN · **PIN** RULING-OWED` (for the operator's rulings page).** Ledger `docs/reports/defect-ledger.md`:225: the legacy `INSERT INTO neighbourhoods (neighbourhood_id, name, geometry)` omits `geom` (only the `SET` arm writes it), so a NEW row would get `geom` NULL; the insert path is dead on live input (`created_at` 2026-02-20 on 158/158, `geom IS NULL` 0/158, no trigger). Descriptor `scripts/load-neighbourhoods.descriptor.json`:530 deviations[0], "Knowingly retired … a NEW row is now surfaced by the check boundary_rows_inserted", adjudicated "Fold CF-4 (Schema-Fidelity/Op-Model seat), Spec 124 §7 LM-D7/A-8 + R-AR.1", 2026-09-28; report `docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md`:130. Not an override case; R-AR.1 covers a run-ledger gate, not an insert arm. A ruling is owed.
+
+- **Integration note.** R-GS and R-GT are new register rows: `rule-map.json` (on `wf2/handbook-1`) needs entries at integration, with R-GP, R-GQ and R-GR.
