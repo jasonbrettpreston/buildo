@@ -1,0 +1,27 @@
+{
+ "suite": "src/tests/bylaw-fix-2.logic.test.ts",
+ "base": "20582cea",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-2, CHAT-10 (M-223(1): scenario status not_buildable and the prefixed forms, vocab and Spec 68 §11.1 together), run on the working tree at 20582cea with the CHAT-10 describe added, before the vocab and Spec 68 changes.",
+ "counts": {
+  "red": 3,
+  "pass": 0
+ },
+ "cases": [
+  {
+   "name": "CHAT-10 / M-223(1) — the Layer 3 scenario status gains not_buildable; vocab and Spec 68 §11.1 declare the same prefixed forms Spec 68 §11.1 names not_buildable:<clauses> at the scenario level",
+   "at_base": "red",
+   "reason": "AssertionError: expected { permitted: '', …(3) } to match object { not_buildable: '<clauses>' }"
+  },
+  {
+   "name": "CHAT-10 / M-223(1) — the Layer 3 scenario status gains not_buildable; vocab and Spec 68 §11.1 declare the same prefixed forms vocab.layer3.scenario_status has not_buildable",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'permitted', 'not_permitted', …(2) ] to include 'not_buildable'"
+  },
+  {
+   "name": "CHAT-10 / M-223(1) — the Layer 3 scenario status gains not_buildable; vocab and Spec 68 §11.1 declare the same prefixed forms vocab.layer3.status_form declares each level's prefixed forms, equal to Spec 68 §11.1 in both directions",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to deeply equal { permitted: '', …(3) }"
+  }
+ ]
+}

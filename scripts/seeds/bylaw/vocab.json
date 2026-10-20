@@ -80,7 +80,7 @@
       "patterns": ["minimum lot frontage", "required minimum lot frontage", "lot frontage of at least", "lot frontage is at least", "minimum required lot frontage"]
     },
     "lot_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum lot coverage, percent of the lot area, of the buildings the unit applies to", "patterns": ["lot coverage"] },
-    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures"] },
+    "ancillary_coverage_pct": { "unit": "pct", "aspect": "envelope", "concept": "maximum coverage, percent of the lot area, of all ancillary buildings on the lot combined (Spec 69a M-179(1); never the lot's overall coverage)", "patterns": ["ancillary buildings combined", "covered by ancillary buildings and structures", "covered by all ancillary buildings and structures"] },
     "fsi": { "unit": "ratio", "aspect": "envelope", "concept": "maximum floor space index (gross floor area / lot area)", "patterns": ["floor space index"] },
     "gfa_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum gross floor area of the building the unit applies to", "patterns": ["gross floor area"] },
     "ancillary_floor_area_m2": { "unit": "m2", "aspect": "envelope", "concept": "maximum floor area of the ancillary building(s) the unit applies to (Spec 69a M-82 V5a)", "patterns": ["total floor area", "maximum floor area", "its floor area", "area of the ancillary"] },
@@ -95,11 +95,59 @@
       "concept": "minimum distance the front and rear main walls above the main-wall height limit are set back from the front and rear main walls below (flat or shallow roof); only the storey above the limit is set back, the storeys below are unchanged (Spec 69a M-223(3), M-218; operator 2026-10-19 Q-M218)",
       "patterns": ["additional front main walls and rear main walls"]
     },
+    "upper_side_setback_m": {
+      "unit": "m",
+      "aspect": "envelope",
+      "concept": "minimum setback from a side lot line of the portion of a building above a stated height; the building below keeps its own side setback (side_setback_m), and Layer 3 draws the step-back (150.8.60.20(3)(C): a laneway suite, 1.5 m from the side lot line abutting another lot's rear lot line, beginning from a height of 4.0 m; Spec 69a M-198(4), M-219; operator chat 2026-10-20 CHAT-7)",
+      "patterns": ["beginning from a height of"]
+    },
     "roof_slope_max": {
       "unit": "ratio",
       "aspect": "envelope",
       "concept": "maximum roof slope, vertical units per horizontal unit, of the roof the unit applies to (R 10.10.40.10(4): a roof above the second storey or higher on a detached house; Spec 69a M-223(3), Spec 78 O-7)",
       "patterns": ["may not have a slope greater than"]
+    },
+    "main_wall_side_share_pct": {
+      "unit": "pct",
+      "aspect": "envelope",
+      "bound": "min",
+      "concept": "minimum share of the total width of each side main wall that the main-wall height limit applies to, when the design takes the side pair (x.40.10(2)(A): at least 70 percent); always a minimum, whatever the bound of the main-wall unit that carries it (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the total width of each side main wall"]
+    },
+    "main_wall_front_rear_share_pct": {
+      "unit": "pct",
+      "aspect": "envelope",
+      "bound": "min",
+      "concept": "minimum share of the total width of all front and rear main walls that the main-wall height limit applies to, when the design takes the front-rear pair (x.40.10(2)(B): at least 60 / 50 / 40 percent by lot frontage tier); always a minimum, whatever the bound of the main-wall unit that carries it (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the total width of all front main walls and all rear main walls"]
+    },
+    "attic_counted_clearance_m": {
+      "unit": "m",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the vertical clearance between the ceiling joists and the roof rafters above which attic floor area is the portion the attic test counts toward gross floor area (10.5.40.40(1): more than 1.4 metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["between the ceiling joists and the roof rafters"]
+    },
+    "attic_qualifying_share_pct": {
+      "unit": "pct",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the share of that attic area that must meet the attic test for it to count toward gross floor area (10.5.40.40(1): at least 80%); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["of the area has"]
+    },
+    "attic_qualifying_clearance_m": {
+      "unit": "m",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the vertical clearance that share of the attic area must exceed (10.5.40.40(1)(A): more than 2.0 metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["a vertical clearance of more than"]
+    },
+    "attic_qualifying_area_m2": {
+      "unit": "m2",
+      "aspect": "measurement",
+      "bound": "exact",
+      "concept": "the area that share of the attic must reach (10.5.40.40(1)(B): at least 10.0 square metres); a threshold definition, bound exact (Spec 69a M-239, operator chat 2026-10-20 CHAT-9; Spec 78 O-7; M-223(3))",
+      "patterns": ["an area of at least"]
     },
     "entrance_height_m": {
       "unit": "m",
@@ -344,8 +392,13 @@
   "not_evaluated_reason": ["no_569_2013_zone", "no_candidate", "needs_user_input", "missing_input", "map_area_not_held", "map_value_absent", "label_value_absent", "label_letter_unknown", "all_map_arguments_absent", "all_arguments_displaced", "displaced_argument_not_found", "existing_building_facts", "enactment_date_unknown", "band_no_match", "by_type_unlisted", "unlimited_in_arithmetic", "unregulated_in_arithmetic", "division_by_zero", "condition_unknown", "named_lots_only", "target_cycle", "referenced_target_conflict", "expression_error", "exception_not_authored"],
   "layer3": {
     "$comment": "McBylaw Layer 3 report-field statuses and reasons (Spec 68 §11.1, Spec 69 M-64; PRE-LOCK FIX 2026-10-07 after the Phase 3 trial K2/K3). Equal to Spec 68 §11.1 in both directions. A parameterised status is written <status>:<param> (a clause, scenario, rule, target, form, field or input). A Layer 2 not_evaluated_reason (the top-level list) propagates unchanged at either level. Consumed by the planned Layer 3 step and the G-SHAPE status arm; no code reads it yet.",
-    "scenario_status": ["permitted", "not_permitted", "collapsed_into", "not_evaluated"],
+    "scenario_status": ["permitted", "not_permitted", "not_buildable", "collapsed_into", "not_evaluated"],
     "field_status": ["computed", "unregulated", "unlimited", "not_applicable", "not_buildable", "not_evaluated"],
+    "status_form": {
+      "$comment": "Spec 69a M-223(1) / M-238 (operator chat 2026-10-20 CHAT-10): the written form of each status, <status>:<param> or the bare name (\"\"), per level; equal to Spec 68 §11.1 in both directions (bylaw-fix-2.logic.test.ts › CHAT-10).",
+      "scenario": { "permitted": "", "not_permitted": "<clause>", "not_buildable": "<clauses>", "collapsed_into": "<scenario>:<rule>", "not_evaluated": "<reason>" },
+      "field": { "computed": "", "unregulated": "<clause>", "unlimited": "<clause>", "not_applicable": "<clause>", "not_buildable": "<clauses>", "not_evaluated": "<reason>" }
+    },
     "not_permitted_reason": ["requires_severance"],
     "scenario_not_evaluated_reason": ["ambiguous_zone", "coa_factor_unfitted"],
     "field_not_evaluated_reason": ["layer2_conflict", "no_producer", "insufficient_comps", "target_not_keyed"],
@@ -517,6 +570,12 @@
   "label_absence_unregulated": {
     "$comment": "Spec 69a M-220 / M-202(3): when no unit applies to the target and the lot's zone label carries no such letter, the answer is unregulated (no label cap), not no_candidate.",
     "dwelling_units_max": { "letter": "u", "ruling": "M-202(3)", "statement": "the zone label has no 'u', so the 'u' dwelling-unit cap does not apply" }
+  },
+  "absence_ignore": {
+    "$comment": "Spec 68 §7.5 rule 7a (Spec 69 M-54 note): absence needs no by-law unit for the target. Operator chat 2026-10-20 batch B CHAT-8 (Spec 69a M-237): a unit that carries the target only for a lawfully existing building (its condition or lot_conditions name one of lot_conditions), or only for an ancillary building, a garden or laneway suite (every application.building_types entry in building_types), or only for an accessory structure (accessory_structure_uses: a vocab.accessory_structure_use in application.uses, M-159(2)) does not block absence for a new principal building.",
+    "lot_conditions": ["lawfully_existing"],
+    "building_types": ["ancillary_building", "garden_suite", "laneway_suite"],
+    "accessory_structure_uses": true
   },
   "accessory_structure_use": {
     "$comment": "Spec 69a M-159 (2): a unit whose application.uses names one of these governs that structure, never the principal building; on a principal-building target it is set aside with this closed disclosure until the structure dimension (phase2-plan-v2 S.3) answers it.",

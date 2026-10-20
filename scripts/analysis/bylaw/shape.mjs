@@ -33,7 +33,7 @@
 //   shape_required_missing     a §7.3 required field of the unit's archetype is "none" / empty
 //   shape_must_be_none         a §7.3 must-be-"none" field (the expression) is written (Spec 69a M-82: also `literals_not_expressed` reason `limit_not_modelled` on a non-UNUSUAL unit; M-107 / M-130: `lot_condition_arm_not_modelled` / `limit_arm_not_modelled` on a non-LIMIT unit)
 //   value_form_not_allowed     the generated value_form is outside the archetype's allowed forms (§7.3)
-//   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10)
+//   statement_target_mismatch  a LIMIT / DEFINE statement's target ≠ the unit's `target` (a mixed-measure LIMIT may list several targets, each with its own statement — Spec 69 M-76 A10; a DEFINE only over declared threshold definitions — 69a M-239)
 //   modelled_without_inputs    calculation_handling `modelled` with an overlay / existing(…) we do not hold, or
 //                              applies_to.part ∈ {map_area, named_addresses, lot_list} (§7.3 cross-cutting)
 //   feeds_unresolved           a LIMIT / PERMIT / PROHIBIT unit resolves to no (structure, aspect) pair (M-52)
@@ -230,7 +230,10 @@ function shapeProblems(u, index, vocab, external) {
     if (Array.isArray(u.target)) {
       // Spec 69 M-76 A10: each statement is checked against its own target; every listed target has a statement
       const ts = unitTargets(u.target);
-      if (a !== 'LIMIT') p.push(['statement_target_mismatch', `a target list is LIMIT-only (Spec 69 M-76 A10); ${a} has ${ts.join(', ')}`]);
+      // M-239 (operator chat 2026-10-20 CHAT-9): a DEFINE may list targets only when each is a declared threshold
+      // definition (vocab.dsl_target.<t>.bound "exact"), e.g. the four 10.5.40.40(1) attic-test thresholds
+      const thresholds = a === 'DEFINE' && ts.every((t) => vocab.dsl_target?.[t]?.bound === 'exact');
+      if (a !== 'LIMIT' && !thresholds) p.push(['statement_target_mismatch', `a target list is LIMIT-only, or DEFINE over declared threshold definitions (Spec 69 M-76 A10, 69a M-239); ${a} has ${ts.join(', ')}`]);
       else {
         for (const s of sts) if (!ts.includes(s.target)) p.push(['statement_target_mismatch', `statement target ${s.target} ∉ unit targets ${ts.join(', ')}`]);
         if (sts.length) for (const t of ts) if (!sts.some((s) => s.target === t)) p.push(['statement_target_mismatch', `unit target ${t} has no statement`]);

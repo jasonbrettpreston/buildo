@@ -1233,14 +1233,21 @@
     "10.80.40.10(2)"
    ],
    "keyed": {
-    "units": [],
-    "layer2_targets": [],
-    "owed": [
-     {
-      "what": "keying of the share tiers (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "units": [
+     "10.10.40.10(2)#(2)(A)",
+     "10.10.40.10(2)#(2)(B)",
+     "10.20.40.10(2)#(2)(A)",
+     "10.20.40.10(2)#(2)(B)",
+     "10.40.40.10(2)#(2)(A)",
+     "10.40.40.10(2)#(2)(B)",
+     "10.80.40.10(2)#(2)(A)",
+     "10.80.40.10(2)#(2)(B)"
+    ],
+    "layer2_targets": [
+     "main_wall_front_rear_share_pct",
+     "main_wall_side_share_pct"
+    ],
+    "owed": []
    },
    "inputs": [
     {
@@ -1360,18 +1367,19 @@
    ],
    "keyed": {
     "units": [
+     "10.5.40.40(1)#(1)(A)",
+     "10.5.40.40(1)#(1)(B)",
      "10.10.40.10(4)#whole"
     ],
     "layer2_targets": [
+     "attic_counted_clearance_m",
+     "attic_qualifying_area_m2",
+     "attic_qualifying_clearance_m",
+     "attic_qualifying_share_pct",
      "element_width_pct",
      "roof_slope_max"
     ],
-    "owed": [
-     {
-      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [
@@ -1401,14 +1409,17 @@
     "10.5.40.40(2)"
    ],
    "keyed": {
-    "units": [],
-    "layer2_targets": [],
-    "owed": [
-     {
-      "what": "keying of the attic test (O-7; vocab target owed, M-223(3))",
-      "owner": "by-law keying/evaluator lane"
-     }
-    ]
+    "units": [
+     "10.5.40.40(1)#(1)(A)",
+     "10.5.40.40(1)#(1)(B)"
+    ],
+    "layer2_targets": [
+     "attic_counted_clearance_m",
+     "attic_qualifying_area_m2",
+     "attic_qualifying_clearance_m",
+     "attic_qualifying_share_pct"
+    ],
+    "owed": []
    },
    "inputs": [],
    "logic_variables": [
@@ -2427,7 +2438,8 @@
     ],
     "layer2_targets": [
      "side_setback_m",
-     "side_setback_street_m"
+     "side_setback_street_m",
+     "upper_side_setback_m"
     ],
     "owed": [
      {
@@ -2439,8 +2451,8 @@
       "owner": "Spec 130 lane / enrich_centreline WF3"
      },
      {
-      "what": "M-219 remainder: 150.8.60.20(3)(C) is keyed as a whole-building 1.5 m side setback on a lane lot, so Layer 2 answers 1.5 m where (3)(D) gives 1.0 m below 4.0 m (M-198(4) step-back; ruling drafted 2026-10-20)",
-      "owner": "by-law keying/evaluator lane"
+      "what": "the laneway step-back geometry: 150.8.60.20(3)(C) upper_side_setback_m 1.5 m above 4.0 m over the (3)(D) 1.0 m side setback (Spec 69a M-236, CHAT-7; M-198(4))",
+      "owner": "compute_maxbld_scenarios ① (Spec 78 P5.5)"
      }
     ]
    },

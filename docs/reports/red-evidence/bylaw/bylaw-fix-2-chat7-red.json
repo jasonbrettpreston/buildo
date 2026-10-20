@@ -1,0 +1,32 @@
+{
+ "suite": "src/tests/bylaw-fix-2.logic.test.ts",
+ "base": "02ccf852",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-2, CHAT-7 (laneway step-back target), run on the working tree at 02ccf852 with the CHAT-7 describe added, before the vocab target and the corrections.",
+ "counts": {
+  "red": 3,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m is upper_side_setback_m; the side setback stays 1.0 m upper_side_setback_m is a vocab dsl_target in metres",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to be 'm' // Object.is equality"
+  },
+  {
+   "name": "CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m is upper_side_setback_m; the side setback stays 1.0 m 150.8.60.20(3)(C) is keyed on upper_side_setback_m, laneway suite only",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'side_setback_m', …(2) ] to deeply equal [ 'upper_side_setback_m', …(2) ]"
+  },
+  {
+   "name": "CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m is upper_side_setback_m; the side setback stays 1.0 m a 6.3 m laneway suite on a lane lot: side setback 1.0 m from (3)(D), upper side setback 1.5 m from (3)(C)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 1.5, '150.8.60.20(3)#(3)(C)' ] to deeply equal [ 'R', 1, '150.8.60.20(3)#(3)(D)' ]"
+  },
+  {
+   "name": "CHAT-7 / M-198(4) / M-219 — the laneway 1.5 m step-back above 4.0 m is upper_side_setback_m; the side setback stays 1.0 m a 4.0 m laneway suite has no step-back; no house or garden suite takes one",
+   "at_base": "pass",
+   "reason": null
+  }
+ ]
+}

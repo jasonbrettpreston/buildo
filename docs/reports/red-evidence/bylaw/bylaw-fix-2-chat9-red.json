@@ -1,0 +1,32 @@
+{
+ "suite": "src/tests/bylaw-fix-2.logic.test.ts",
+ "base": "34828e16",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-2, CHAT-9 (O-7: the x.40.10(2) main-wall share tiers as minimum targets, the 10.5.40.40(1) attic test as four threshold targets), run on the working tree at 34828e16 with the CHAT-9 describe added, before the vocab targets, the evaluator / G-SHAPE change and the corrections.",
+ "counts": {
+  "red": 3,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "CHAT-9 / O-7 / M-223(3) — the main-wall share tiers are minimum targets; the attic test is four threshold targets vocab: the two share targets are pct and declare bound min; the four attic targets carry their units",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'main_wall_side_share_pct', …(2) ] to deeply equal [ 'main_wall_side_share_pct', …(2) ]"
+  },
+  {
+   "name": "CHAT-9 / O-7 / M-223(3) — the main-wall share tiers are minimum targets; the attic test is four threshold targets R / RD / RS / RM house: side walls take 70 % (min); front and rear walls 60 / 50 / 40 % by frontage tier (min)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ Array(6) ] to deeply equal [ 'R', 12, 70, 'min', 60, 'min' ]"
+  },
+  {
+   "name": "CHAT-9 / O-7 / M-223(3) — the main-wall share tiers are minimum targets; the attic test is four threshold targets the main-wall height those units carry is unchanged (max, 7.5 m at a 10.0 m height)",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "CHAT-9 / O-7 / M-223(3) — the main-wall share tiers are minimum targets; the attic test is four threshold targets every zone: the attic test thresholds 1.4 m, 80 %, 2.0 m and 10.0 m2 answer from 10.5.40.40(1)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', …(3) ] to deeply equal [ 'R', …(3) ]"
+  }
+ ]
+}

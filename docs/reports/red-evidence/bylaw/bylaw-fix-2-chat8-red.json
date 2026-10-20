@@ -1,0 +1,32 @@
+{
+ "suite": "src/tests/bylaw-fix-2.logic.test.ts + src/tests/bylaw-evaluator-fixes.logic.test.ts",
+ "base": "80bece11",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-2, CHAT-8 (rule 7a: lawfully-existing-only and ancillary-only units do not block absence; ABS-2 RT main wall, M-186), run on the working tree at 80bece11 with the CHAT-8 describe added and the INV-19 open-arm ratchet shrunk by the three RT main-wall cells, before the vocab, evaluator and absence-ruling changes.",
+ "counts": {
+  "red": 3,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "INV-19 open arm — where the article does not exist the answer is still not_evaluated:no_candidate (M-220 \"Also\", OWED; a ratchet that only shrinks) the open cells are exactly these (R coverage and length; RD semi depth; RT length and depth; RM houseplex length, depth and main wall)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ …(19) ] to deeply equal [ …(16) ]"
+  },
+  {
+   "name": "CHAT-8 / rule 7a / M-186 — lawfully-existing-only and ancillary-only units no longer block absence; RT main wall is unregulated vocab declares what rule 7a ignores (lawfully_existing; the ancillary and garden / laneway suite classes; accessory-structure uses)",
+   "at_base": "red",
+   "reason": "AssertionError: expected undefined to match object { …(3) }"
+  },
+  {
+   "name": "CHAT-8 / rule 7a / M-186 — lawfully-existing-only and ancillary-only units no longer block absence; RT main wall is unregulated RT: a house, semi or houseplex main wall answers unregulated by absence (ABS-2, M-186)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'detached_house', …(4) ] to deeply equal [ 'detached_house', 'value', …(3) ]"
+  },
+  {
+   "name": "CHAT-8 / rule 7a / M-186 — lawfully-existing-only and ancillary-only units no longer block absence; RT main wall is unregulated a principal-building unit for the target still blocks absence: RD / RS main walls keep their x.40.10(2) limit",
+   "at_base": "pass",
+   "reason": null
+  }
+ ]
+}

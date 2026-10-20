@@ -103,6 +103,13 @@ export function makeContext(vocab, extra = {}) {
     // M-222 / M-224: a map-gated unit whose map is not held takes the literal reading (the unit is set aside, its own
     // disclosure says so), never not_evaluated:map_area_not_held on every lot.
     mapUnheldReading: vocabMap(vocab.map_area_unheld_reading),
+    // M-237 (operator chat 2026-10-20 CHAT-8): rule 7a ignores a unit that carries the target only for a lawfully existing
+    // building or only for an ancillary building / suite / accessory structure (declared in vocab.absence_ignore).
+    absenceIgnore: vocab.absence_ignore || null,
+    // M-239 (operator chat 2026-10-20 CHAT-9; Spec 78 O-7): a dsl_target that declares its own bound (the x.40.10(2)
+    // main-wall share tiers are minimums) is resolved in that direction whatever the bound of the unit that carries it
+    // (a main-wall unit is a max on main_wall_height_m and lists the share beside it, Spec 69 M-76 A10).
+    targetBound: Object.fromEntries(Object.entries(vocab.dsl_target || {}).filter(([, t]) => t && ['min', 'max', 'exact'].includes(t.bound)).map(([k, t]) => [k, t.bound])),
     // M-220 / M-202(3): a target whose only rule is a zone-label letter answers unregulated when the lot has no such letter.
     labelAbsence: vocabMap(vocab.label_absence_unregulated),
     // M-180(1): zone → {exception building type → the houseplex class it also binds}, read for exception-layer units only
@@ -389,6 +396,22 @@ function rankedLayers(rl) {
 }
 
 // ---------------------------------------------------------------- applicability
+// M-237 (operator chat 2026-10-20 CHAT-8; Spec 68 §7.5 rule 7a): a unit that carries the target only for a lawfully
+// existing building (a declared lot condition in its condition or lot_conditions), only for the ancillary building / suite
+// classes (every building type declared), or only for an accessory structure (M-159(2)) never limits a new principal
+// building, so it does not block unregulated-by-absence. Declared data (vocab.absence_ignore), no id or zone in code.
+function absenceIgnored(u, C) {
+  const ig = C.absenceIgnore;
+  if (!ig) return false;
+  const app = u.application || {};
+  const conds = new Set([...tokensOf(u.condition), ...(app.lot_conditions || []).map((x) => (x && typeof x === 'object' ? x.token : x))]);
+  if ((ig.lot_conditions || []).some((t) => conds.has(t))) return true;
+  const types = (app.building_types || []).map((x) => (x && typeof x === 'object' ? x.token : x));
+  if (types.length && types.every((t) => (ig.building_types || []).includes(t))) return true;
+  if (ig.accessory_structure_uses === true && (app.uses || []).some((x) => C.accessoryUses && C.accessoryUses.has(x && typeof x === 'object' ? x.token : x))) return true;
+  return false;
+}
+
 // condition.if string → its parsed AST (or the DslError it throws), parsed once per string, not once per applies()
 // call; the AST is only read (as the PARSED statement ASTs are). Perf only, outputs unchanged.
 const PARSED_COND = new Map();
@@ -939,7 +962,7 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
     // any layer carries the target, keyed or pending.
     const abs = (C.absences || []).find((a) => a.zone === lot.zone && a.target === target);
     if (abs) {
-      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length));
+      const any = candidates.filter((u) => u.layer !== 'provincial' && (unitTargets(u.target).includes(target) || parsedFor(u, target).length) && !absenceIgnored(u, C));
       if (!any.length) {
         return { status: 'value', value: 'unregulated', unit: C.units.target[target] ?? null, bound: null, winner: null, clause: null,
           evidence: { kind: 'absence', ruling: abs.id, statement: abs.statement, expert_sample: abs.expert_sample === true },
@@ -953,7 +976,8 @@ function resolveSet({ lot, target, candidates, C, resolveVariable, valueSet, rea
   // rule 4: per bound direction, the highest layer (with rule 3 immunity) replaces lower layers; rule 6 falls out
   const layerOf = (u) => (edits.has(u.unit_id) ? edits.get(u.unit_id).layer : u.layer);
   const rank = (u) => Math.max(LAYER_RANK[layerOf(u)] ?? 0, rankOf(u), edits.has(u.unit_id) ? edits.get(u.unit_id).immune : -1);
-  const boundOfUnit = (u) => (u.bound === 'min' || u.bound === 'max' ? u.bound : 'exact'); // DEFINE / 'none' / missing → exact
+  // DEFINE / 'none' / missing → exact; a target that declares its bound (M-239) takes it whatever the unit's bound
+  const boundOfUnit = (u) => C.targetBound?.[target] ?? (u.bound === 'min' || u.bound === 'max' ? u.bound : 'exact');
   const byBound = {};
   for (const u of T) (byBound[boundOfUnit(u)] = byBound[boundOfUnit(u)] || []).push(u);
   const kept = {}; const altKept = {};

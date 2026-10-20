@@ -1,0 +1,77 @@
+{
+ "suite": "src/tests/bylaw-fix-2.logic.test.ts",
+ "base": "70ec6aed",
+ "run_on": "2026-10-20",
+ "note": "Lane wf1/bylaw-fix-2, group 1 (CoA-notice findings N-1, N-3, N-4 and operator chat batch B CHAT-6, CHAT-13), run on the working tree at 70ec6aed with only this test file added, before any correction, vocab or disposition change. G-AGREE passes at the base; every finding case is red.",
+ "counts": {
+  "red": 12,
+  "pass": 1
+ },
+ "cases": [
+  {
+   "name": "G-AGREE holds with every correction of this lane (no orphan) no violation",
+   "at_base": "pass",
+   "reason": null
+  },
+  {
+   "name": "N-1 / M-159 / M-179(1) — a plain ancillary building takes 10.10.60.70(1) 5 % (R) or 10.5.60.70(1)(B) 10 %, never a suite cap no 150.7.60.70 / 150.8.60.70 unit decides a plain ancillary building's ancillary_coverage_pct",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', …(1) ] to deeply equal [ 'R', [] ]"
+  },
+  {
+   "name": "N-1 / M-159 / M-179(1) — a plain ancillary building takes 10.10.60.70(1) 5 % (R) or 10.5.60.70(1)(B) 10 %, never a suite cap R: a plain ancillary building answers 5 % from 10.10.60.70(1) (20 Norwood Rd examiner figure)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'value', 20, false ] to deeply equal [ 'value', 5, true ]"
+  },
+  {
+   "name": "N-1 / M-159 / M-179(1) — a plain ancillary building takes 10.10.60.70(1) 5 % (R) or 10.5.60.70(1)(B) 10 %, never a suite cap RD / RS / RT / RM: a plain ancillary building answers 10 % from 10.5.60.70(1)(B), keyed on ancillary_coverage_pct",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'lot_coverage_pct', …(1) ] to deeply equal [ 'ancillary_coverage_pct', …(1) ]"
+  },
+  {
+   "name": "N-1 / M-159 / M-179(1) — a plain ancillary building takes 10.10.60.70(1) 5 % (R) or 10.5.60.70(1)(B) 10 %, never a suite cap the suites keep their own caps: a garden suite 20 %, a laneway suite 30 %",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '150.7.60.70(1)#(1)(B)', true ] to deeply equal [ '150.7.60.70(1)#(1)(B)', false ]"
+  },
+  {
+   "name": "N-4 / M-171 — 10.10.60.70(1)(B) is an exclusion from the 5 %, not a 5 % cap for parking neither arm is scoped to a use: the 5 % stem binds every ancillary building",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '10.10.60.70(1)#(1)(A)', …(1) ] to deeply equal [ '10.10.60.70(1)#(1)(A)', [] ]"
+  },
+  {
+   "name": "N-4 / M-171 — 10.10.60.70(1)(B) is an exclusion from the 5 %, not a 5 % cap for parking (B) discloses the parking exclusion; (A) the pool water-surface exclusion",
+   "at_base": "red",
+   "reason": "AssertionError: expected 'none' to match /one parking space per dwelling unit/"
+  },
+  {
+   "name": "N-4 / M-171 — 10.10.60.70(1)(B) is an exclusion from the 5 %, not a 5 % cap for parking the 10.10.60.70(1)(A) stem is no longer set aside by the M-175 accessory-structure guard",
+   "at_base": "red",
+   "reason": "AssertionError: expected false to be true // Object.is equality"
+  },
+  {
+   "name": "N-3 / Spec 68 §6 — 10.5.60.50(2)(B) \"in all other cases\" resolves: under 12.0 m of frontage, 40 m² (B) carries condition.if lot_frontage_m < 12.0 m",
+   "at_base": "red",
+   "reason": "AssertionError: expected { tokens: [ 'frontage_band' ] } to deeply equal { tokens: [ 'frontage_band' ], …(1) }"
+  },
+  {
+   "name": "N-3 / Spec 68 §6 — 10.5.60.50(2)(B) \"in all other cases\" resolves: under 12.0 m of frontage, 40 m² a 9.0 m lot answers 40 m² from (B); a 12.0 m lot 60 m² from (A)",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', null, undefined ] to deeply equal [ 'R', 40, '10.5.60.50(2)#(2)(B)' ]"
+  },
+  {
+   "name": "CHAT-13 / M-175 — the 150.7 / 150.8.60.60(5)(A) canopy height is disclosure-only, never a building height both units are UNUSUAL with no target and carry their disclosure",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ '150.7.60.60(5)#(5)(A)', …(3) ] to deeply equal [ '150.7.60.60(5)#(5)(A)', …(3) ]"
+  },
+  {
+   "name": "CHAT-13 / M-175 — the 150.7 / 150.8.60.60(5)(A) canopy height is disclosure-only, never a building height no canopy unit decides height_m for an ancillary building or a suite",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'R', 'ancillary_building', …(1) ] to deeply equal [ 'R', 'ancillary_building', [] ]"
+  },
+  {
+   "name": "CHAT-6 — 150.7.60.20(6)(A) closes on M-198 (M-193 dropped as a mis-citation) the disposition cites no M-193 and the tracker row is INCORPORATED",
+   "at_base": "red",
+   "reason": "AssertionError: expected [ 'M-198', 'M-193' ] to deeply equal [ 'M-198' ]"
+  }
+ ]
+}

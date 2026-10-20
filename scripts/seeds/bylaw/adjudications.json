@@ -79477,6 +79477,816 @@
       "supersedes": "COR-150.7.60.20(6)#(6)(C)/disclosure",
       "unit": "150.7.60.20(6)#(6)(C)",
       "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.7.60.70(1)#(1)(B)/application.building_types~s1",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 (bylaw fix lane 2, 2026-10-20; City examiner, 20 Norwood Rd A0625/26TEY, R d1.0: ancillary coverage 5 % from 10.10.60.70(1)). The regulation opens \"if a lot has a residential building, other than an apartment building, and an ancillary building containing a garden suite: … (B) … the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a garden suite, may not exceed 20 percent\"; it was also keyed to ancillary_building, so a plain garage or shed on a lot with no suite took 20 % instead of 10.10.60.70(1)'s 5 % (R) or 10.5.60.70(1)(B)'s 10 %. By M-159 the cap governs the suite lot: the garden-suite class only. On a suite lot the other ancillary buildings still count toward it (M-177(3) disclosure).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "supersedes": "COR-150.7.60.70(1)#(1)(B)/application.building_types",
+      "unit": "150.7.60.70(1)#(1)(B)",
+      "value": [
+        "garden_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.7.60.70(1)#(1)(B)/application.evidence~s1",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.7.60.70(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "supersedes": "COR-150.7.60.70(1)#(1)(B)/application.evidence",
+      "unit": "150.7.60.70(1)#(1)(B)",
+      "value": {
+        "garden_suite": "containing a garden suite",
+        "overlay_mapped": "Lot Coverage Overlay Map"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.70(1)#(1)(A)/application.building_types",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 (bylaw fix lane 2, 2026-10-20; City examiner, 20 Norwood Rd A0625/26TEY, R d1.0: ancillary coverage 5 % from 10.10.60.70(1)). The regulation opens \"if a lot has an ancillary building containing a laneway suite: (A) the ancillary building containing a laneway suite it is not included in the overall calculation of lot coverage; and (B) the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a laneway suite, may not exceed 30 percent\"; (1)(A) was also keyed to ancillary_building, so a plain ancillary building on a lot with no suite took the laneway-suite lot's terms (30 %). By M-159 the unit governs the suite lot: the laneway-suite class only (parallel chapter of 150.7.60.70(1)).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "unit": "150.8.60.70(1)#(1)(A)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.70(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.70(1)#(1)(A)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "unit": "150.8.60.70(1)#(1)(A)",
+      "value": {
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-150.8.60.70(1)#(1)(B)/application.building_types",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 (bylaw fix lane 2, 2026-10-20; City examiner, 20 Norwood Rd A0625/26TEY, R d1.0: ancillary coverage 5 % from 10.10.60.70(1)). The regulation opens \"if a lot has an ancillary building containing a laneway suite: (A) the ancillary building containing a laneway suite it is not included in the overall calculation of lot coverage; and (B) the area of the lot covered by all ancillary buildings combined, including the ancillary building containing a laneway suite, may not exceed 30 percent\"; (1)(B) was also keyed to ancillary_building, so a plain ancillary building on a lot with no suite took the laneway-suite lot's terms (30 %). By M-159 the unit governs the suite lot: the laneway-suite class only (parallel chapter of 150.7.60.70(1)).",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": [
+        "laneway_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-150.8.60.70(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed (COR-150.8.60.70(1)#(1)(B)/application.building_types); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-159 (a unit governs only its own subject), M-179(1) (the all-ancillary cap is its own target, on the suite lot), M-177(3); dated note under M-229 (28b959c2, the suite ancillary-building leak, same provision family); M-75",
+      "unit": "150.8.60.70(1)#(1)(B)",
+      "value": {
+        "laneway_suite": "containing a laneway suite"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.60.70(1)#(1)(B)/target",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 knock-on (bylaw fix lane 2, 2026-10-20). 10.5.60.70(1)(B): \"the area of the lot covered by all ancillary buildings and structures may not exceed 10 percent of the lot area\" bounds the ancillary buildings together; it was keyed on lot_coverage_pct (its own gaps text: \"lot_coverage_pct here is the coverage of ancillary buildings only\"). M-179(1) gives that bound its own target. With the suite caps scoped to the suite lot (N-1), this is the RD / RS / RT / RM ancillary cap; in R 10.10.60.70(1) applies \"despite regulation 10.5.60.70(1)\".",
+      "rule": "Spec 69a M-179(1) (\"All-ancillary coverage is its own target (NEW vocab target)\": a clause bounding \"the area of the lot covered by all ancillary buildings\" is keyed on ancillary_coverage_pct, never lot_coverage_pct); M-75",
+      "unit": "10.5.60.70(1)#(1)(B)",
+      "value": "ancillary_coverage_pct"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.60.70(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 knock-on (bylaw fix lane 2, 2026-10-20). 10.5.60.70(1)(B): \"the area of the lot covered by all ancillary buildings and structures may not exceed 10 percent of the lot area\" bounds the ancillary buildings together; it was keyed on lot_coverage_pct (its own gaps text: \"lot_coverage_pct here is the coverage of ancillary buildings only\"). M-179(1) gives that bound its own target. With the suite caps scoped to the suite lot (N-1), this is the RD / RS / RT / RM ancillary cap; in R 10.10.60.70(1) applies \"despite regulation 10.5.60.70(1)\".",
+      "rule": "Spec 69a M-179(1) (\"All-ancillary coverage is its own target (NEW vocab target)\": a clause bounding \"the area of the lot covered by all ancillary buildings\" is keyed on ancillary_coverage_pct, never lot_coverage_pct); M-75",
+      "unit": "10.5.60.70(1)#(1)(B)",
+      "value": [
+        "ancillary_coverage_pct = 10 pct @(1)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.gaps",
+      "id": "COR-10.5.60.70(1)#(1)(B)/calculation_handling.gaps",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 knock-on (bylaw fix lane 2, 2026-10-20). 10.5.60.70(1)(B): \"the area of the lot covered by all ancillary buildings and structures may not exceed 10 percent of the lot area\" bounds the ancillary buildings together; it was keyed on lot_coverage_pct (its own gaps text: \"lot_coverage_pct here is the coverage of ancillary buildings only\"). M-179(1) gives that bound its own target. With the suite caps scoped to the suite lot (N-1), this is the RD / RS / RT / RM ancillary cap; in R 10.10.60.70(1) applies \"despite regulation 10.5.60.70(1)\". The gaps text named the old target's mismatch; on ancillary_coverage_pct there is none.",
+      "rule": "Spec 69a M-179(1) (\"All-ancillary coverage is its own target (NEW vocab target)\": a clause bounding \"the area of the lot covered by all ancillary buildings\" is keyed on ancillary_coverage_pct, never lot_coverage_pct); M-75",
+      "unit": "10.5.60.70(1)#(1)(B)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.10.60.70(1)#(1)(A)/application.uses",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-4 (bylaw fix lane 2, 2026-10-20; 20 Norwood Rd A0625/26TEY: the City applied the 5 % to a garage). 10.10.60.70(1): \"in the R zone, the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area, except for the following: (A) the water surface area of an outdoor swimming pool … and (B) ancillary buildings or structures containing parking spaces, to a maximum of one parking space per dwelling unit on the lot\". The 5 % is the stem every arm repeats (the unit's own gaps text); (A) and (B) are exclusions from the measure, not scopes of the cap. Scoped to uses swimming_pool, the stem was set aside by the M-175 guard on every ancillary building; the pool exclusion is disclosed.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.60.70(1)#(1)(A)/application.evidence",
+      "kind": "correction",
+      "reason": "The swimming_pool use token is removed (COR-10.10.60.70(1)#(1)(A)/application.uses); its evidence phrase goes with it.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(A)",
+      "value": {
+        "R": "in the R zone",
+        "ancillary_building": "ancillary buildings and structures"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.60.70(1)#(1)(A)/disclosure",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-4 (bylaw fix lane 2, 2026-10-20; 20 Norwood Rd A0625/26TEY: the City applied the 5 % to a garage). 10.10.60.70(1): \"in the R zone, the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area, except for the following: (A) the water surface area of an outdoor swimming pool … and (B) ancillary buildings or structures containing parking spaces, to a maximum of one parking space per dwelling unit on the lot\". The 5 % is the stem every arm repeats (the unit's own gaps text); (A) and (B) are exclusions from the measure, not scopes of the cap. M-171: the exclusion needs the pool's design, so it is disclosed, not deducted.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(A)",
+      "value": "The water surface of an outdoor swimming pool (or other structure holding water) that complies with 10.5.60.70(2) is not counted in the 5% ancillary coverage; the answer does not deduct it."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.uses",
+      "id": "COR-10.10.60.70(1)#(1)(B)/application.uses",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-4 (bylaw fix lane 2, 2026-10-20; 20 Norwood Rd A0625/26TEY: the City applied the 5 % to a garage). 10.10.60.70(1): \"in the R zone, the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area, except for the following: (A) the water surface area of an outdoor swimming pool … and (B) ancillary buildings or structures containing parking spaces, to a maximum of one parking space per dwelling unit on the lot\". The 5 % is the stem every arm repeats (the unit's own gaps text); (A) and (B) are exclusions from the measure, not scopes of the cap. Scoped to uses parking_space / dwelling_unit, (B) read as a 5 % cap for parking; the stem binds every ancillary building and the parking exclusion is disclosed.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.60.70(1)#(1)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "The parking_space / dwelling_unit use tokens are removed (COR-10.10.60.70(1)#(1)(B)/application.uses); their evidence phrases go with them.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(B)",
+      "value": {
+        "R": "in the R zone",
+        "ancillary_building": "ancillary buildings or structures"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.60.70(1)#(1)(B)/disclosure",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-4 (bylaw fix lane 2, 2026-10-20; 20 Norwood Rd A0625/26TEY: the City applied the 5 % to a garage). 10.10.60.70(1): \"in the R zone, the area of the lot covered by ancillary buildings and structures may not exceed 5% of the lot area, except for the following: (A) the water surface area of an outdoor swimming pool … and (B) ancillary buildings or structures containing parking spaces, to a maximum of one parking space per dwelling unit on the lot\". The 5 % is the stem every arm repeats (the unit's own gaps text); (A) and (B) are exclusions from the measure, not scopes of the cap. M-171: the excluded area depends on the parking design and the unit count, so it is disclosed, not deducted.",
+      "rule": "Spec 69a M-171 (a deduction from a measure that needs building facts is disclosed, never evaluated), M-159 (a unit governs only its own subject: the stem's subject is every ancillary building and structure), M-175(1) (the accessory-structure guard applies to units scoped to a structure, which this stem is not); M-75",
+      "unit": "10.10.60.70(1)#(1)(B)",
+      "value": "Ancillary buildings with parking spaces are not counted in the 5% ancillary coverage, up to one parking space per dwelling unit on the lot; the answer does not deduct them."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "archetype",
+      "id": "COR-150.7.60.60(5)#(5)(A)/archetype",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8).",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": "UNUSUAL"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.7.60.60(5)#(5)(A)/target",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8).",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "bound",
+      "id": "COR-150.7.60.60(5)#(5)(A)/bound",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8).",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.7.60.60(5)#(5)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8).",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": "none"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-150.7.60.60(5)#(5)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8). The 4.0 is the canopy's cap; the twin lists it with the same closed reason.",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": [
+        {
+          "clause": "(5)(A)",
+          "literal": "4.0",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling.gaps",
+      "id": "COR-150.7.60.60(5)#(5)(A)/calculation_handling.gaps",
+      "kind": "correction",
+      "reason": "Operator chat 2026-10-20 batch B, CHAT-13 (\"bug_fix\": \"Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying\"; raw record docs/reports/decisions/raw/2026-10-20-chat-batch-b/2026-10-20-batch-b.json, \"y to all\"). 150.7.60.60(5)(A): \"the maximum height of the roof, canopy, awning or similar structure is 4.0 metres above the average elevation of the ground measured along the abutting main wall of the ancillary building\" caps the encroaching canopy, not the building; keyed LIMIT height_m on ancillary_building it limited every ancillary building's height. The operator answered it \"disclose\" (envelope-answers.json, decks_platforms_not_modelled under M-175); the laneway twin 150.8.60.60(5)(A) is already UNUSUAL, so the garden unit takes the same form (parallel chapters 150.7 / 150.8).",
+      "rule": "Operator envelope answer \"disclose\" on 150.7.60.60(5)(A) (docs/reference/envelope-answers.json; disposition decks_platforms_not_modelled, M-175); CHAT-13 (bug fix under that answer); Spec 68 §7.3 (UNUSUAL: no target, the literal listed); parallel twin 150.8.60.60(5)(A); M-75",
+      "unit": "150.7.60.60(5)#(5)(A)",
+      "value": "A height cap on an encroaching canopy, awning or roof over a platform; height_m is the height of the building the unit applies to and no element-height target exists, so it is keyed UNUSUAL and disclosed (CHAT-13; the laneway twin 150.8.60.60(5)(A)). The 4.0 is the cap itself; threshold_used_in_application is the closest closed reason."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.building_types",
+      "id": "COR-10.5.60.70(1)#(1)(C)/application.building_types",
+      "kind": "correction",
+      "reason": "CoA-notice finding N-1 knock-on (bylaw fix lane 2, 2026-10-20). 10.5.60.70(1)(C): \"the permitted maximum lot coverage for ancillary buildings or structures in regulation (B) above does not apply to a lot with a detached houseplex, semi-detached houseplex or a residential building with a secondary suite if: (i) the overall lot coverage of all buildings and structures on the lot does not exceed 45 percent\". Its subject is the lot's principal building (a houseplex or a house with a suite); keyed to ancillary_building as well, it disapplied (B) on every plain ancillary building (RD / RS / RT / RM: not_applicable instead of 10 %). Keyed as its R twin 10.10.60.70(1)(C).",
+      "rule": "Spec 69a M-182(1)/(2) (every unit whose clause names \"a residential building with a secondary suite\" carries secondary_suite; R twin 10.10.60.70(1)(C) corrected so), M-159 (a unit governs only its own subject); parallel twin 10.10.60.70(1)(C); M-75",
+      "unit": "10.5.60.70(1)#(1)(C)",
+      "value": [
+        "detached_houseplex",
+        "semi_detached_houseplex",
+        "secondary_suite"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.5.60.70(1)#(1)(C)/application.evidence",
+      "kind": "correction",
+      "reason": "The ancillary_building token is removed and secondary_suite added (COR-10.5.60.70(1)#(1)(C)/application.building_types); the evidence follows.",
+      "rule": "Spec 69a M-182(1)/(2) (every unit whose clause names \"a residential building with a secondary suite\" carries secondary_suite; R twin 10.10.60.70(1)(C) corrected so), M-159 (a unit governs only its own subject); parallel twin 10.10.60.70(1)(C); M-75",
+      "unit": "10.5.60.70(1)#(1)(C)",
+      "value": {
+        "R": "in the Residential Zone category",
+        "RD": "in the Residential Zone category",
+        "RM": "in the Residential Zone category",
+        "RS": "in the Residential Zone category",
+        "RT": "in the Residential Zone category",
+        "detached_houseplex": "with a detached houseplex",
+        "has_secondary_suite": "with a secondary suite",
+        "secondary_suite": "a residential building with a secondary suite",
+        "semi_detached_houseplex": "semi-detached houseplex or a residential building"
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-150.8.60.20(3)#(3)(C)/target",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": "upper_side_setback_m"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-150.8.60.20(3)#(3)(C)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": [
+        "upper_side_setback_m = 1.5 m @(3)(C)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-150.8.60.20(3)#(3)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m. Class data (M-177(1)): no user input.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": {
+        "description": "If the side lot line abuts a lot in the R, RD, RS, RT or RM zone and the rear lot line abuts a lane, the part of the laneway-suite building above a height of 4.0 m must be set back 1.5 m from a side lot line that abuts the rear lot line of another lot.",
+        "gaps": "Layer 2 answers the 1.5 m upper side setback of the part above 4.0 m (upper_side_setback_m); Layer 3 draws the step-back over the 1.0 m side setback below (Spec 78 P5.5). Which side line abuts another lot's rear lot line, and that lot's zone, have no tokens (lot-line classification, Spec 78 P5.14 ML-1): the step-back is applied on the lane lot as the larger setback (M-198, M-197).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.8.60.20(3)#(3)(C)/disclosure",
+      "kind": "correction",
+      "reason": "CHAT-7 / M-219 remainder (bylaw fix lane 2, 2026-10-20). 150.8.60.20(3)(C): \"if the side lot line abuts a lot in the R, RD, RS, RT or RM Zone and the rear lot line abuts a lane, beginning from a height of 4.0 metres, an ancillary building must be set back 1.5 metres from the side lot line that abuts the rear lot line of another lot\". Keyed on side_setback_m it set the whole building's side yard (1.5 m on every lane lot taller than 4.0 m, where (3)(D) gives 1.0 m). It is the step-back of the part above 4.0 m: its own target upper_side_setback_m (vocab, this lane), laneway suite only; side_setback_m stays (3)(D) 1.0 m. The \"tell us\" sentence predates M-177(1) (class data, no user input).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-7 (approve, \"y to all\": \"Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry\"; Spec 69a M-236); Spec 69a M-198(4) (the step-back is a mandatory upper-storey rule), M-219 (remainder); M-75; Spec 78 P5.12 laneway_upper_side_stepback",
+      "unit": "150.8.60.20(3)#(3)(C)",
+      "value": "Above 4.0 m the laneway suite steps back 1.5 m from the side lot line that abuts another lot's rear lot line; below 4.0 m its side setback is 1.0 m."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(A)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.10.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.10.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(B)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.10.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.10.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(A)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.20.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.20.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)(B)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.20.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.20.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.20.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.40.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.40.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.40.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.40.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.40.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.10(2)#(2)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_side_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.10(2)#(2)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_side_share_pct = 70 pct @(2)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.10(2)#(2)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(A) \"all side main walls, for at least 70 percent of the total width of each side main wall\": the 70 percent was listed as a threshold; it is the minimum share the main-wall height limit applies to, keyed as its own target main_wall_side_share_pct (vocab bound min) beside main_wall_height_m (a mixed-measure LIMIT, M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.80.40.10(2)#(2)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m",
+        "main_wall_front_rear_share_pct"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.80.40.10(2)#(2)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": [
+        "main_wall_height_m = max(7.0 m; height_m − 2.5 m) @(2)",
+        "main_wall_front_rear_share_pct = band(lot_frontage_m; ≥ 12.0 m: 60 pct; > 7.5 m and < 12.0 m: 50 pct; ≤ 7.5 m: 40 pct) @(2)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.80.40.10(2)#(2)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.80.40.10(2)(B) \"all front main walls and all rear main walls, for at least: (i) 60 percent … 12.0 metres or more; (ii) 50 percent … greater than 7.5 metres and less than 12.0 metres; (iii) 40 percent … 7.5 metres or less\": the tiers were listed as thresholds; they are the minimum share by lot frontage, keyed as its own target main_wall_front_rear_share_pct (vocab bound min) beside main_wall_height_m (M-76 A10).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.80.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.40(1)#(1)(A)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": [
+        "attic_counted_clearance_m",
+        "attic_qualifying_share_pct",
+        "attic_qualifying_clearance_m"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.40(1)#(1)(A)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": [
+        "attic_counted_clearance_m = 1.4 m @(1)",
+        "attic_qualifying_share_pct = 80 pct @(1)",
+        "attic_qualifying_clearance_m = 2.0 m @(1)(A)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.40(1)#(1)(A)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(1)#(1)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(A)",
+      "value": {
+        "description": "Attic test for a residential building other than an apartment building: attic floor area with more than 1.4 m clearance between the ceiling joists and the roof rafters counts toward GFA if at least 80% of that area has more than 2.0 m clearance (and is at least 10.0 m2, see (B)).",
+        "gaps": "Layer 2 answers the attic-test thresholds; whether an attic passes, and its floor area, is Layer 3 geometry from the roof form (Spec 78 P5.2 item 6: gfa_pitched_sqm counts a passing attic, attic_outside_gfa_sqm reports a failing one, M-203).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "target",
+      "id": "COR-10.5.40.40(1)#(1)(B)/target",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": "attic_qualifying_area_m2"
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "numeric_expression",
+      "id": "COR-10.5.40.40(1)#(1)(B)/numeric_expression",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": [
+        "attic_qualifying_area_m2 = 10.0 m2 @(1)(B)"
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "literals_not_expressed",
+      "id": "COR-10.5.40.40(1)#(1)(B)/literals_not_expressed",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2. The stem 1.4 m and 80 % are keyed on (A).",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": [
+        {
+          "clause": "(1)",
+          "literal": "1.4 metres",
+          "reason": "threshold_used_in_application"
+        },
+        {
+          "clause": "(1)",
+          "literal": "80%",
+          "reason": "threshold_used_in_application"
+        }
+      ]
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.5.40.40(1)#(1)(B)/calculation_handling",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). 10.5.40.40(1): \"the gross floor area … includes the portion of the floor area in an attic that has a vertical clearance of more than 1.4 metres between the ceiling joists and the roof rafters, if at least 80% of the area has: (A) a vertical clearance of more than 2.0 metres; and (B) an area of at least 10.0 square metres\". The units were DEFINE gfa_m2 with no expression and the four numbers listed as thresholds; they are the attic test's threshold definitions, keyed as four targets (vocab bound exact): (A) the stem 1.4 m and 80 % and its own 2.0 m, (B) its 10.0 m2.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.5.40.40(1)#(1)(B)",
+      "value": {
+        "description": "Attic test threshold (B): the qualifying attic area must be at least 10.0 m2.",
+        "gaps": "Layer 2 answers the attic-test thresholds; whether an attic passes, and its floor area, is Layer 3 geometry from the roof form (Spec 78 P5.2 item 6: gfa_pitched_sqm counts a passing attic, attic_outside_gfa_sqm reports a failing one, M-203).",
+        "not_modelled_reason": "none",
+        "status": "partially_modelled",
+        "user_inputs": []
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.lot_conditions",
+      "id": "COR-10.10.40.10(2)#(2)(B)/application.lot_conditions",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). R 10.10.40.10(2)(B) carried the lot condition frontage_band with no condition.if, so the unit was never applicable (Spec 68 §6: a band token needs its numeric if); the frontage tiers are now the band of the main_wall_front_rear_share_pct statement itself, and the main-wall height applies at every frontage, as in RD / RS / RM (2)(B), which carry no lot condition.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": []
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "application.evidence",
+      "id": "COR-10.10.40.10(2)#(2)(B)/application.evidence",
+      "kind": "correction",
+      "reason": "CHAT-9 / O-7 (bylaw fix lane 2, 2026-10-20). R 10.10.40.10(2)(B) carried the lot condition frontage_band with no condition.if, so the unit was never applicable (Spec 68 §6: a band token needs its numeric if); the frontage tiers are now the band of the main_wall_front_rear_share_pct statement itself, and the main-wall height applies at every frontage, as in RD / RS / RM (2)(B), which carry no lot condition.",
+      "rule": "Operator chat 2026-10-20 batch B CHAT-9 (approve, \"y to all\": \"Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape\"; Spec 69a M-239); Spec 78 §Phase-5 O-7 (RULED 2026-10-18: the unkeyed law numbers are keyed by the keying lane before ①); Spec 69a M-223(3); Spec 69 M-76 A10; M-75",
+      "unit": "10.10.40.10(2)#(2)(B)",
+      "value": {
+        "R": "In the R zone",
+        "detached_house": "residential building, other than an apartment building",
+        "detached_houseplex": "residential building, other than an apartment building",
+        "semi_detached_house": "residential building, other than an apartment building",
+        "semi_detached_houseplex": "residential building, other than an apartment building",
+        "townhouse": "residential building, other than an apartment building"
+      }
     }
   ]
 }

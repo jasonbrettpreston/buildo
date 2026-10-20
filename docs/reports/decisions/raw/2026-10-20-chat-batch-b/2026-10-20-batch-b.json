@@ -1,0 +1,15 @@
+{
+  "source": "operator chat 2026-10-20",
+  "operator_quote": "y to all",
+  "context": "Answer to: y to 1-5 (bylaw-fix-1 rulings) plus the 10 extra Q-7 report fields; M-229 no-max-GFA reading and the canopy keying bug were explained as settled/bug-fix (no ruling needed).",
+  "decisions": [
+    {"id": "CHAT-6", "subject": "150.7.60.20(6)(A) mis-citation", "decision": "approve", "recommendation": "Drop the M-193 (Coxwell map area) mis-citation so the row closes as M-198 owed to P5.13, like (6)(C)."},
+    {"id": "CHAT-7", "subject": "M-219 remainder: laneway suite step-back above 4.0 m", "decision": "approve", "recommendation": "Key the 1.5 m step-back above 4.0 m (150.8.60.20(3)(C)) as its own target (e.g. upper_side_setback_m, laneway suite only); the whole-building side setback stays 1.0 m; Layer 3 does the step-back geometry."},
+    {"id": "CHAT-8", "subject": "M-220 absent-article arm (19 cells)", "decision": "approve", "recommendation": "Let rule 7a treat a target as unregulated by absence when only lawfully-existing or ancillary-only units carry it; then confirm absence for R/RT length, RT depth and main wall (M-186), RM houseplex (M-204 not_applicable); R coverage and RD semi depth per the 19-cell ratchet list."},
+    {"id": "CHAT-9", "subject": "O-7 main-wall share tiers and attic test target shape", "decision": "approve", "recommendation": "Give the main-wall share tiers their own minimum targets, and key the 10.5.40.40(1) attic test as four threshold-definition targets (1.4 m, 80 %, 2.0 m, 10.0 m2), or allow a bound per statement — whichever the keying lane finds smaller; the operator approves the target shape."},
+    {"id": "CHAT-10", "subject": "M-223(1) not_buildable scenario status", "decision": "approve", "recommendation": "Amend Spec 68 §11.1 and the vocab together to add not_buildable and the prefixed status forms."},
+    {"id": "CHAT-11", "subject": "Q-7 scope: 10 extra report fields", "decision": "approve", "recommendation": "Add to the Spec 100 whitelist with the Q-7 set: parcel.lot.zone_class_label, exception_number, is_irregular, is_corner_lot, is_through_lot, abuts_laneway, centroid_lat, centroid_lng, overlays, neighbourhood_name."},
+    {"id": "CHAT-12", "subject": "M-229 with no permitted maximum GFA", "decision": "settled", "recommendation": "Where no maximum GFA applies (FSI not applicable / unlimited), nothing is excluded; buildable area unchanged. Explained to operator as settled, no ruling needed; recorded for completeness."},
+    {"id": "CHAT-13", "subject": "Canopy height keyed as building height (150.7.60.60(5)(A), 150.8.60.60(5)(A))", "decision": "bug_fix", "recommendation": "Per the operator's existing 'disclose' answers, make these disclosure-only and remove them from the suite building height keying."}
+  ]
+}

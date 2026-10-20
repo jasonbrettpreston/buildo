@@ -114,6 +114,15 @@ describe('4. equivalence: the fixture corpus is byte-identical to the pre-refact
     // re-pinned 2026-10-20 (O-7 / M-223(3), bylaw fix lane): roof_slope_max is a new dsl_target; its 140 cells are
     // not_evaluated:no_candidate (the fixture units predate the keying). With it left out the hash is the previous pin
     // 2e16556b…b491 exactly, so no existing cell moved.
-    expect(h.digest('hex')).toBe('8c8eca03a35c68dd22295e3027b38d2f67d62c0b066bdea7492c1144bf9aa8b6');
+    // re-pinned 2026-10-20 (CHAT-7 / M-198(4), bylaw fix lane 2): upper_side_setback_m is a new dsl_target; its 140 cells
+    // are not_evaluated:no_candidate (the fixture units predate the keying). With it left out the hash is the previous pin
+    // 8c8eca03…a8b6 exactly, so no existing cell moved.
+    // re-pinned 2026-10-20 (CHAT-8 / M-237, rule 7a; ABS-2 / M-186, bylaw fix lane 2): the only cells that move are the 40 RT
+    // main_wall_height_m cells, not_evaluated:no_candidate → unregulated by absence (ABS-2); a per-cell diff with
+    // vocab.absence_ignore and ABS-2 left out reproduces the previous pin e957100c…f5fc exactly.
+    // re-pinned 2026-10-20 (CHAT-9 / M-239, O-7, bylaw fix lane 2): six new dsl_targets (the two main-wall share tiers,
+    // the four attic-test thresholds); their 840 cells are not_evaluated:no_candidate (the fixture units predate the
+    // keying). With the six left out the hash is the previous pin 459ee9f1…e931 exactly, so no existing cell moved.
+    expect(h.digest('hex')).toBe('0baad134ff29613222f23daec02ac87a0e0060df3445291125afd6d56bc3fd48');
   }, 60_000);
 });
