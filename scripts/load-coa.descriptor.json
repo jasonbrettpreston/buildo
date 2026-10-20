@@ -738,6 +738,11 @@
       }
     },
     {
+      "key": "lifecycle_status_history_written",
+      "type": "int",
+      "consumers": []
+    },
+    {
       "key": "audit_table",
       "type": "object",
       "consumers": [
@@ -967,6 +972,7 @@
       "status": "completed",
       "records_meta": {
         "coa_load": "object",
+        "lifecycle_status_history_written": "int",
         "audit_table": "object",
         "terminal": "string"
       },
@@ -984,6 +990,7 @@
       "status": "completed_with_warnings",
       "records_meta": {
         "coa_load": "object",
+        "lifecycle_status_history_written": "int",
         "audit_table": "object",
         "terminal": "string"
       },

@@ -255,6 +255,11 @@ function schemaDrift(ctx) {
 
 /** The derived lifecycle_status_history counters (R-DY (e): written.e<i>). */
 const ledger = (ctx) => wr(ctx).e1 || {};
+/**
+ * Ledger rows this run wrote — the ONE count behind both the lifecycle_status_history_inserted check row
+ * and the lifecycle_status_history_written emit (R-ET: the derived target's #38 count_path, R-DN).
+ */
+const ledgerWritten = (ctx) => num(ledger(ctx).inserted) + num(ledger(ctx).updated);
 
 function zero_records(ctx) {
   ctx.report('zero_records', { violations: fetched(ctx) === 0 ? 1 : 0, detail: `${fetched(ctx)} records fetched` });
@@ -293,8 +298,7 @@ function zoning_designation_null(ctx) {
   ctx.report('zoning_designation_null', { violations: rows > 0 && nulls === rows ? 1 : 0, detail: nulls });
 }
 function lifecycle_status_history_inserted(ctx) {
-  const e = ledger(ctx);
-  ctx.report('lifecycle_status_history_inserted', { violations: 0, value: num(e.inserted) + num(e.updated) });
+  ctx.report('lifecycle_status_history_inserted', { violations: 0, value: ledgerWritten(ctx) });
 }
 function lifecycle_status_history_errors(ctx) {
   ctx.report('lifecycle_status_history_errors', { violations: num(ledger(ctx).errors) });
@@ -373,6 +377,10 @@ async function compute(ctx) {
         records_deduplicated: num(a.feature_count),
         schema_mismatch_count: schemaDrift(ctx).fields.length,
       },
+      // R-ET: the derived target's own per-table write count — the int emit gate G #38 reads as
+      // lifecycle_status_history's cohort.json count_path (R-DN), so its bracket never borrows the
+      // step-level records_new/records_updated, which count coa_applications.
+      lifecycle_status_history_written: ledgerWritten(ctx),
     },
   };
 }

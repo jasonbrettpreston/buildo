@@ -60,6 +60,8 @@
  *   --column=<col>         the ONE column to perturb
  *   --op=<op>              add_number:<n> | append_text:<s> | negate_bool | delete_reinsert
  *                          (delete_reinsert, Spec 124 R-DP: the INSERT-only form — see isPairMode)
+ *                          | derived_status:<s> (R-ET, Spec 124 R-DY (e): the derived-target form —
+ *                          see isDerivedMode; needs the --derive-column/--derived-* flags below)
  *   --count=<N>            the cohort size
  *   --where=<SQL pred>     selects the ELIGIBLE rows (no semicolons)
  *   --order=<SQL expr>     the ORDER BY expression that picks the FIRST N
@@ -68,6 +70,13 @@
  *   --step=<scripts/x.js>  --chain=<sources|none|…>  --out=<capture json>
  *   [--env=K=V …]          extra env for the spawned step (repeatable)
  *   [--capture-arg=<arg> …] passed through to capture-step-golden.js (repeatable)
+ * --op=derived_status:<s> additionally (every mode; R-ET):
+ *   --derive-column=<col>          the R-DY `derive.prior_columns` column the step reads before its upsert
+ *   --derived-table=<t>            the derived target (`outputs.writes[i].table`, i >= 1)
+ *   --derived-key=<col>            the derived column that carries the cohort key
+ *   [--derived-key-prefix=<s>]     literal prefix of that value (e.g. `coa:` for lead_id)
+ *   --derived-natural-key=<c,c,…>  the derived row identity (must include --derived-key)
+ *   and, with --run, --count-path=<derived-table>_written (R-DN: the step's own int emit)
  *
  * Usage (LOCAL dev DB only — never a shared/cloud target; `assertLocalTarget` refuses any
  * resolved target that is not loopback, on the RESOLVED description, in every connecting
@@ -194,6 +203,7 @@ function parseArgs(argv) {
     step: null, chain: null, out: null,
     sourceCsv: null, sourceKey: null,
     env: [], captureArgs: [], countPath: null,
+    deriveColumn: null, derivedTable: null, derivedKey: null, derivedKeyPrefix: null, derivedNaturalKey: null,
   };
   const setMode = (name) => {
     if (out.mode !== null) {
@@ -225,6 +235,8 @@ function parseArgs(argv) {
       step: 'step', chain: 'chain', out: 'out',
       'source-csv': 'sourceCsv', 'source-key': 'sourceKey',
       'count-path': 'countPath',
+      'derive-column': 'deriveColumn', 'derived-table': 'derivedTable', 'derived-key': 'derivedKey',
+      'derived-key-prefix': 'derivedKeyPrefix', 'derived-natural-key': 'derivedNaturalKey',
     }[name];
     if (!slot) throw new Error(`unknown flag --${name} (try --help)`);
     out[slot] = value;
@@ -330,6 +342,8 @@ function validateFlags(args) {
       throw new Error(`--count-path must be a top-level emits key (got ${JSON.stringify(countPath)})`);
     }
   }
+  const derived = derivedFlags(args, { mode, table, key, column, op, countPath, need });
+  if (derived.deriveColumn !== null) shellUnsafe('derived-key-prefix', derived.derivedKeyPrefix);
   if (mode === 'run') {
     const step = need('step', args.step);
     const chain = need('chain', args.chain);
@@ -374,7 +388,42 @@ function validateFlags(args) {
     sourceCsv, sourceKey,
     step: args.step, chain: args.chain, out: args.out, env: args.env, captureArgs: args.captureArgs,
     countPath,
+    ...derived,
   };
+}
+
+/**
+ * R-ET (Spec 124 R-DY (e)): the derived-target flags, validated before any DB connect. Pure.
+ * Returns all-null fields when the op is not derived_status, and refuses a derived flag given without it
+ * (a flag that silently does nothing is a recipe nobody can replay).
+ */
+function derivedFlags(args, { mode, table, key, column, op, countPath, need }) {
+  const given = (v) => v !== null && v !== undefined;
+  const flagNames = { deriveColumn: 'derive-column', derivedTable: 'derived-table', derivedKey: 'derived-key', derivedKeyPrefix: 'derived-key-prefix', derivedNaturalKey: 'derived-natural-key' };
+  if (op.kind !== 'derived_status') {
+    const stray = Object.keys(flagNames).filter((k) => given(args[k]));
+    if (stray.length > 0) throw new Error(`--${flagNames[stray[0]]} is valid only with --op=derived_status:<s> (R-ET)`);
+    return { deriveColumn: null, derivedTable: null, derivedKey: null, derivedKeyPrefix: null, derivedNaturalKey: null };
+  }
+  const deriveColumn = need('derive-column', args.deriveColumn);
+  const derivedTable = need('derived-table', args.derivedTable);
+  const derivedKey = need('derived-key', args.derivedKey);
+  const naturalRaw = need('derived-natural-key', args.derivedNaturalKey);
+  const derivedKeyPrefix = given(args.derivedKeyPrefix) && args.derivedKeyPrefix !== true ? String(args.derivedKeyPrefix) : '';
+  const derivedNaturalKey = String(naturalRaw).split(',').map((s) => s.trim());
+  for (const [n, v] of [['derive-column', deriveColumn], ['derived-table', derivedTable], ['derived-key', derivedKey], ...derivedNaturalKey.map((c) => ['derived-natural-key', c])]) {
+    if (!TABLE_NAME_RE.test(v)) throw new Error(`--${n}=${JSON.stringify(v)} is not a legal identifier (${TABLE_NAME_RE})`);
+  }
+  if (deriveColumn === key || deriveColumn === column) throw new Error(`--derive-column must differ from --key and --column (got ${JSON.stringify(deriveColumn)})`);
+  if (derivedTable === table) throw new Error(`--derived-table must differ from --table (both are ${JSON.stringify(table)})`);
+  if (!derivedNaturalKey.includes(derivedKey)) throw new Error(`--derived-natural-key must include --derived-key ${JSON.stringify(derivedKey)} (got ${JSON.stringify(naturalRaw)})`);
+  if (new Set(derivedNaturalKey).size !== derivedNaturalKey.length) throw new Error(`--derived-natural-key repeats a column (got ${JSON.stringify(naturalRaw)})`);
+  // R-DN: the derived write count is the step's own per-table int emit, never the step-level counters.
+  const expected = `${derivedTable}_written`;
+  if (mode === 'run' && countPath !== expected) {
+    throw new Error(`--op=derived_status --run requires --count-path=${expected} (the step's own int emit for the derived table, R-DN; got ${JSON.stringify(countPath)})`);
+  }
+  return { deriveColumn, derivedTable, derivedKey, derivedKeyPrefix, derivedNaturalKey };
 }
 
 /**
@@ -385,6 +434,7 @@ function parseOp(raw) {
   if (typeof raw !== 'string' || raw === '') throw new Error(`--op must be add_number:<n>|append_text:<s>|negate_bool|delete_reinsert (got ${JSON.stringify(raw)})`);
   if (raw === 'negate_bool') return { kind: 'negate_bool' };
   if (raw === 'delete_reinsert') return { kind: 'delete_reinsert' };
+  if (raw === 'derived_status') throw new Error('--op=derived_status:<s> needs the text <s> to append to --column and --derive-column');
   const i = raw.indexOf(':');
   if (i < 0) throw new Error(`--op must be add_number:<n>|append_text:<s>|negate_bool (got ${JSON.stringify(raw)})`);
   const head = raw.slice(0, i);
@@ -395,6 +445,12 @@ function parseOp(raw) {
     return { kind: 'add_number' };
   }
   if (head === 'append_text') return { kind: 'append_text' };
+  // R-ET: appends <s> to BOTH the guard column and the derive prior column; <s> must be non-empty
+  // (an empty suffix is a void perturbation the --run unmoved check would refuse anyway).
+  if (head === 'derived_status') {
+    if (arg === '') throw new Error('--op=derived_status:<s> needs a non-empty <s> to append');
+    return { kind: 'derived_status' };
+  }
   throw new Error(`--op kind must be add_number|append_text|negate_bool (got ${JSON.stringify(head)})`);
 }
 
@@ -415,8 +471,21 @@ function isPairMode(o) {
 function opBindValue(opRaw) {
   const op = parseOp(opRaw);
   if (op.kind === 'add_number') return Number(opRaw.slice(opRaw.indexOf(':') + 1));
-  if (op.kind === 'append_text') return opRaw.slice(opRaw.indexOf(':') + 1);
+  if (op.kind === 'append_text' || op.kind === 'derived_status') return opRaw.slice(opRaw.indexOf(':') + 1);
   return null;
+}
+
+/**
+ * R-ET (Spec 124 R-DY (e)): `derived_status:<s>` is the #38 bracket for a DERIVED target. The step
+ * writes a derived row only when its runner-owned prior read of `--derive-column` differs from the new
+ * value, and only re-upserts a primary row whose guard (`--column`) moved — so BOTH are perturbed in one
+ * transaction. The before-image holds (key, column, derive column); a sibling before-image snapshots the
+ * derived table's natural keys for the cohort. --run requires the primary back to the before-image AND
+ * exactly one inserted derived row per cohort key (counted by the `<derived_table>_written` emit, R-DN);
+ * the restore deletes exactly the inserted derived rows and commits only on an exact RETURNING match. Pure.
+ */
+function isDerivedMode(o) {
+  return Boolean(o && o.op && o.op.kind === 'derived_status');
 }
 
 /**
@@ -426,9 +495,13 @@ function opBindValue(opRaw) {
  * boolean; a non-boolean column makes Postgres raise, which is the right failure
  * (silently coercing would produce an unmodelled perturbation).
  */
-function perturbationSetExpr(op, column) {
+function perturbationSetExpr(op, column, deriveColumn) {
   if (!TABLE_NAME_RE.test(column)) throw new Error(`invalid column name ${JSON.stringify(column)}`);
   if (op.kind === 'delete_reinsert') throw new Error('delete_reinsert has no SET expression — its perturbation is perturbationDeleteSql');
+  if (op.kind === 'derived_status') {
+    if (typeof deriveColumn !== 'string' || !TABLE_NAME_RE.test(deriveColumn)) throw new Error(`derived_status needs a valid derive column (got ${JSON.stringify(deriveColumn)})`);
+    return `"${column}" = "${column}" || $2, "${deriveColumn}" = "${deriveColumn}" || $2`;
+  }
   if (op.kind === 'negate_bool') return `"${column}" = NOT "${column}"`;
   if (op.kind === 'add_number') return `"${column}" = "${column}" + $2`;
   if (op.kind === 'append_text') return `"${column}" = "${column}" || $2`;
@@ -526,10 +599,18 @@ function hashOf(o) {
   return hashSqlFor({ table, key, column, where: null, pair: isPairMode(o) });
 }
 
+/**
+ * The projected cohort columns `t."key", t."column"` — plus `t."<derive column>"` in derived mode (R-ET),
+ * so every value read, before-image and heal check covers BOTH perturbed columns. Pure.
+ */
+function selectCols(o) {
+  return isDerivedMode(o) ? `t."${o.key}", t."${o.column}", t."${o.deriveColumn}"` : `t."${o.key}", t."${o.column}"`;
+}
+
 /** The cohort SELECT: the FIRST N eligible rows by --order, key + column. READ ONLY. Pure. */
 function cohortSelect(o) {
   if (!Number.isInteger(o.count) || o.count <= 0) throw new Error(`invalid cohort count ${JSON.stringify(o.count)}`);
-  return `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE ${o.where} ORDER BY ${o.order} LIMIT ${o.count}`;
+  return `SELECT ${selectCols(o)} FROM ${o.table} t WHERE ${o.where} ORDER BY ${o.order} LIMIT ${o.count}`;
 }
 
 /** The eligibility COUNT: how many rows --where selects. Pure. */
@@ -564,7 +645,7 @@ function backupCreateSql(o) {
   if (!TABLE_NAME_RE.test(o.backupTable)) throw new Error(`invalid before-image name ${JSON.stringify(o.backupTable)}`);
   // R-DP: a deleted row must come back whole, so the pair-mode before-image is the FULL row.
   if (isPairMode(o)) return `CREATE TABLE ${o.backupTable} AS SELECT t.* FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
-  return `CREATE TABLE ${o.backupTable} AS SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
+  return `CREATE TABLE ${o.backupTable} AS SELECT ${selectCols(o)} FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`;
 }
 
 /**
@@ -573,7 +654,7 @@ function backupCreateSql(o) {
  */
 function backupSelectSql(o) {
   if (!TABLE_NAME_RE.test(o.backupTable)) throw new Error(`invalid before-image name ${JSON.stringify(o.backupTable)}`);
-  return `SELECT t."${o.key}", t."${o.column}" FROM ${o.backupTable} t ORDER BY t."${o.key}"`;
+  return `SELECT ${selectCols(o)} FROM ${o.backupTable} t ORDER BY t."${o.key}"`;
 }
 
 /**
@@ -597,6 +678,14 @@ function restoreSql(o, columns) {
     const bcols = columns.map((c) => `b."${c}"`).join(', ');
     return `INSERT INTO ${o.table} (${cols}) SELECT ${bcols} FROM ${o.backupTable} b WHERE b."${o.key}" = ANY($1)`
       + ` AND NOT EXISTS (SELECT 1 FROM ${o.table} t WHERE t."${o.key}" = b."${o.key}" AND t."${o.column}" = b."${o.column}")`;
+  }
+  // R-ET: both perturbed columns come back, guarded so a no-op restore writes nothing.
+  if (isDerivedMode(o)) {
+    const c = o.column;
+    const d = o.deriveColumn;
+    return `UPDATE ${o.table} t SET "${c}" = b."${c}", "${d}" = b."${d}" FROM ${o.backupTable} b`
+      + ` WHERE b."${o.key}" = t."${o.key}" AND t."${o.key}" = ANY($1)`
+      + ` AND (t."${c}" IS DISTINCT FROM b."${c}" OR t."${d}" IS DISTINCT FROM b."${d}")`;
   }
   return `UPDATE ${o.table} t SET "${o.column}" = b."${o.column}" FROM ${o.backupTable} b`
     + ` WHERE b."${o.key}" = t."${o.key}" AND t."${o.key}" = ANY($1)`
@@ -720,6 +809,131 @@ function resolveCaptureOut(out) {
     throw new Error(`--out must name a <name>.json directly under docs/reports/golden/<slug>/[pre|post]/ (got ${out})`);
   }
   return abs;
+}
+
+// ── R-ET: the derived-target half (Spec 124 R-DY (e)) ─────────────────────
+/**
+ * The derived snapshot's name: `<derived_table>_cohort_bak_<the --backup-table stamp>` — the same
+ * disposable, identifiable before-image shape as the primary's, so one stamp names both. Pure.
+ */
+function derivedSnapshotTable(o) {
+  const stamp = String(o.backupTable).slice(`${o.table}_cohort_bak_`.length);
+  const name = `${o.derivedTable}_cohort_bak_${stamp}`;
+  if (!BACKUP_TABLE_RE.test(name)) throw new Error(`derivedSnapshotTable: ${JSON.stringify(name)} does not match ${BACKUP_TABLE_RE}`);
+  return name;
+}
+
+/** The derived-key values for the cohort keys: `--derived-key-prefix` + String(key). Pure. */
+function derivedKeysFor(o, keys) {
+  return (Array.isArray(keys) ? keys : []).map((k) => `${o.derivedKeyPrefix || ''}${String(k)}`);
+}
+
+/**
+ * The derived row identity as SERVER-RENDERED text: `ROW(<natural key cols>)::text`. Rendered by Postgres
+ * in every read and in the DELETE predicate alike, so no JS type round-trip can alias two rows. A session
+ * whose DateStyle/TimeZone renders differently fails the --run snapshot precondition (refuse, never guess).
+ */
+function derivedRowText(o) {
+  for (const c of o.derivedNaturalKey || []) if (!TABLE_NAME_RE.test(c)) throw new Error(`invalid natural-key column ${JSON.stringify(c)}`);
+  if (!Array.isArray(o.derivedNaturalKey) || o.derivedNaturalKey.length === 0) throw new Error('derivedRowText: no --derived-natural-key');
+  return `ROW(${o.derivedNaturalKey.map((c) => `t."${c}"`).join(', ')})::text`;
+}
+
+/** Read the cohort's derived rows `{dk, nk}`; `$1` = derivedKeysFor(cohort keys). Pure. */
+function derivedRowsSql(o) {
+  return `SELECT t."${o.derivedKey}"::text AS dk, ${derivedRowText(o)} AS nk FROM ${o.derivedTable} t WHERE t."${o.derivedKey}" = ANY($1)`;
+}
+
+/** The derived before-image: the cohort's derived natural keys, frozen at --backup. Pure. */
+function derivedSnapshotCreateSql(o) {
+  return `CREATE TABLE ${derivedSnapshotTable(o)} AS SELECT t."${o.derivedKey}"::text AS dk, ${derivedRowText(o)} AS nk FROM ${o.derivedTable} t WHERE t."${o.derivedKey}" = ANY($1)`;
+}
+
+/** Read the derived before-image back. Pure. */
+function derivedSnapshotSelectSql(o) {
+  return `SELECT dk, nk FROM ${derivedSnapshotTable(o)}`;
+}
+
+/** The restore DELETE: exactly the inserted natural keys, RETURNING them for the exact-set check. Pure. */
+function derivedDeleteSql(o) {
+  const rowText = derivedRowText(o);
+  return `DELETE FROM ${o.derivedTable} t WHERE t."${o.derivedKey}" = ANY($1) AND ${rowText} = ANY($2::text[]) RETURNING t."${o.derivedKey}"::text AS dk, ${rowText} AS nk`;
+}
+
+/** `{dk, nk}` rows as a value map keyed by nk (dk is the value), for sameValueMap. Pure. */
+function derivedEntries(rows) {
+  return (Array.isArray(rows) ? rows : []).map((r) => ({ key: r.nk, value: r.dk }));
+}
+
+/**
+ * The derived diff. PURE: `inserted` = rows present after and absent before; `removed` = rows present
+ * before and absent after (a derived ledger the step DELETED from — never legitimate for R-DY).
+ */
+function derivedInsertedRows({ before, after }) {
+  const had = new Set((before || []).map((r) => r.nk));
+  const has = new Set((after || []).map((r) => r.nk));
+  return {
+    inserted: (after || []).filter((r) => !had.has(r.nk)),
+    removed: (before || []).filter((r) => !has.has(r.nk)),
+  };
+}
+
+/**
+ * The derived --run claim. PURE. Green only when ALL hold:
+ *   - R-DN: the `<derived_table>_written` count_path decision is ok and counts >= the cohort size (other
+ *     keys may legitimately change status in the same run, so >=, never ==);
+ *   - the primary healed: (column, derive column) back to the before-image for every cohort key;
+ *   - no prior derived row vanished;
+ *   - EXACTLY ONE inserted derived row per cohort key (0 = the step wrote no ledger row: RED).
+ */
+function derivedClaim({ countPathResult, liveValues, backupValues, derivedKeys, before, after }) {
+  if (!countPathResult) return { ok: false, reason: 'derived_status needs the count_path decision (R-DN) — none was computed' };
+  if (!countPathResult.ok) return { ok: false, reason: `count_path: ${countPathResult.reason} (gate G #38)` };
+  const keys = Array.isArray(derivedKeys) ? derivedKeys : [];
+  if (countPathResult.n < keys.length) {
+    return { ok: false, reason: `count_path emitted ${countPathResult.n} < the cohort's ${keys.length} derived key(s) — the emit does not cover the cohort (R-DN)` };
+  }
+  const same = sameValueMap(canonicalValueMap(backupValues), canonicalValueMap(liveValues));
+  if (!same.ok) return { ok: false, reason: `the step did not heal the perturbation — ${same.reason}` };
+  const { inserted, removed } = derivedInsertedRows({ before, after });
+  if (removed.length > 0) return { ok: false, reason: `${removed.length} prior derived row(s) vanished during the run (first: ${removed[0].nk})` };
+  for (const k of keys) {
+    const n = inserted.filter((r) => r.dk === k).length;
+    if (n !== 1) return { ok: false, reason: `${k}: ${n} inserted derived row(s), expected exactly 1 per cohort key (R-DY (e))` };
+  }
+  const stray = inserted.filter((r) => !keys.includes(r.dk));
+  if (stray.length > 0) return { ok: false, reason: `${stray.length} inserted derived row(s) outside the cohort keys (first: ${stray[0].nk})` };
+  return { ok: true, written: countPathResult.n };
+}
+
+/** The restore's exact-set decision: the DELETE's RETURNING must BE the inserted set. PURE. */
+function derivedRestoreDecision({ expected, returned }) {
+  const exp = expected || [];
+  const got = returned || [];
+  if (got.length !== exp.length) return { ok: false, reason: `DELETE returned ${got.length} row(s), expected ${exp.length}` };
+  const same = sameValueMap(canonicalValueMap(derivedEntries(exp)), canonicalValueMap(derivedEntries(got)));
+  return same.ok ? { ok: true } : { ok: false, reason: same.reason };
+}
+
+/**
+ * Delete exactly the `inserted` derived rows in ONE transaction on `client`, COMMIT only when the
+ * DELETE's RETURNING set equals them, else ROLLBACK and throw. Nothing inserted ⇒ no transaction.
+ * Returns the number of rows deleted. Shared by the --run finally and --restore.
+ */
+async function deleteInsertedDerived(client, o, derivedKeys, inserted) {
+  if (!Array.isArray(inserted) || inserted.length === 0) return 0;
+  assertRestoreKeys(derivedKeys);
+  await client.query('BEGIN');
+  try {
+    const del = await client.query(derivedDeleteSql(o), [derivedKeys, inserted.map((r) => r.nk)]);
+    const verdict = derivedRestoreDecision({ expected: inserted, returned: del.rows });
+    if (!verdict.ok) throw new Error(`derived restore mismatch on ${o.derivedTable} — ${verdict.reason}; rolled back`);
+    await client.query('COMMIT');
+    return del.rowCount;
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch { /* the original error wins */ }
+    throw err;
+  }
 }
 
 // ── source reachability (the source-checked cohort, operator ruling 2026-10-03) ──
@@ -902,7 +1116,7 @@ function cohortRowsSql(o, checked, cohortKeys) {
   }
   if (!checked) return cohortSelect(o);
   if (!Array.isArray(cohortKeys) || cohortKeys.length === 0) throw new Error('cohortRowsSql: the source-checked cohort must be a non-empty key list');
-  return `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE ${o.where} AND t."${o.key}" = ANY($1) ORDER BY ${o.order}`;
+  return `SELECT ${selectCols(o)} FROM ${o.table} t WHERE ${o.where} AND t."${o.key}" = ANY($1) ORDER BY ${o.order}`;
 }
 
 // ── DB plumbing ──────────────────────────────────────────────────────────────
@@ -992,9 +1206,16 @@ function firstSummary(stdout) {
 function pairId(k, c) {
   return JSON.stringify([k === null || k === undefined ? null : String(k), c === null || c === undefined ? null : String(c)]);
 }
-function rowsToKeyValues(rows, key, column, pairMode = false) {
+function rowsToKeyValues(rows, key, column, pairMode = false, deriveColumn = null) {
   if (pairMode) return rows.map((r) => ({ key: pairId(r[key], r[column]), value: 'present' }));
+  // R-ET: the value is the (column, derive column) PAIR, JSON-encoded so neither can alias the other.
+  if (deriveColumn) return rows.map((r) => ({ key: r[key], value: pairId(r[column], r[deriveColumn]) }));
   return rows.map((r) => ({ key: r[key], value: r[column] }));
+}
+
+/** rowsToKeyValues for the bracket's own options (pair / derived / plain). Pure. */
+function cohortEntries(rows, o) {
+  return rowsToKeyValues(rows, o.key, o.column, isPairMode(o), isDerivedMode(o) ? o.deriveColumn : null);
 }
 
 /**
@@ -1052,7 +1273,11 @@ function recoveryCommand(o) {
   return 'node -r dotenv/config scripts/analysis/ingestor-forced-cohort.js --restore'
     + ` --table=${o.table} --key=${o.key} --column=${o.column} --op=${JSON.stringify(o.opRaw)}`
     + ` --count=${o.count} --where=${JSON.stringify(o.where)} --order=${JSON.stringify(o.order)}`
-    + ` --backup-table=${o.backupTable}`;
+    + ` --backup-table=${o.backupTable}`
+    + (isDerivedMode(o)
+      ? ` --derive-column=${o.deriveColumn} --derived-table=${o.derivedTable} --derived-key=${o.derivedKey}`
+        + ` --derived-key-prefix=${JSON.stringify(o.derivedKeyPrefix || '')} --derived-natural-key=${o.derivedNaturalKey.join(',')}`
+      : '');
 }
 
 /**
@@ -1115,7 +1340,7 @@ async function resolveCohort(pool, o) {
   if (pair ? rows.length < keys.length : rows.length !== keys.length) {
     throw new Error(`refusing: the cohort SELECT returned ${rows.length} row(s), expected ${pair ? `>= ${keys.length}` : keys.length} — --order is not deterministic over --where`);
   }
-  return { eligible, keys, rows: rowsToKeyValues(rows, o.key, o.column, pair), sourceInfo };
+  return { eligible, keys, rows: cohortEntries(rows, o), sourceInfo };
 }
 
 /**
@@ -1145,13 +1370,13 @@ function reportSourceCheck(mode, sourceInfo, log) {
 
 /** The cohort's CURRENT values, read back by key. Reads only. */
 async function liveCohortValues(pool, o, keys) {
-  const rows = await readOnlyQuery(pool, `SELECT t."${o.key}", t."${o.column}" FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`, [keys]);
-  return rowsToKeyValues(rows, o.key, o.column, isPairMode(o));
+  const rows = await readOnlyQuery(pool, `SELECT ${selectCols(o)} FROM ${o.table} t WHERE t."${o.key}" = ANY($1)`, [keys]);
+  return cohortEntries(rows, o);
 }
 
 /** The before-image's rows, read back by key. Reads only. */
 async function backupCohortValues(pool, o) {
-  return rowsToKeyValues(await readOnlyQuery(pool, backupSelectSql(o)), o.key, o.column, isPairMode(o));
+  return cohortEntries(await readOnlyQuery(pool, backupSelectSql(o)), o);
 }
 
 /**
@@ -1184,6 +1409,37 @@ async function tableExists(pool, table) {
   return (await readOnlyQuery(pool, 'SELECT to_regclass($1) AS r', [table]))[0].r !== null;
 }
 
+/** R-ET: the cohort's LIVE derived rows `{dk, nk}`. Reads only. */
+async function liveDerivedRows(pool, o, keys) {
+  return readOnlyQuery(pool, derivedRowsSql(o), [derivedKeysFor(o, keys)]);
+}
+
+/** R-ET: the derived before-image rows `{dk, nk}`. Reads only. */
+async function derivedSnapshotRows(pool, o) {
+  return readOnlyQuery(pool, derivedSnapshotSelectSql(o));
+}
+
+/** R-ET: do the cohort's live derived rows equal the derived before-image? Reads only. */
+async function derivedMatchesSnapshot(pool, o, keys) {
+  return sameValueMap(canonicalValueMap(derivedEntries(await derivedSnapshotRows(pool, o))), canonicalValueMap(derivedEntries(await liveDerivedRows(pool, o, keys))));
+}
+
+/**
+ * R-ET: delete the derived rows the cohort gained since the before-image (live minus snapshot),
+ * through deleteInsertedDerived — one transaction, exact RETURNING set or ROLLBACK. A prior row that
+ * VANISHED cannot be recreated by this bracket (the snapshot holds identities, not rows): it is reported
+ * and the caller's verification fails. Returns `{deleted, removed}`.
+ */
+async function restoreDerived(pool, o, keys) {
+  const { inserted, removed } = derivedInsertedRows({ before: await derivedSnapshotRows(pool, o), after: await liveDerivedRows(pool, o, keys) });
+  const client = await pool.connect();
+  try {
+    return { deleted: await deleteInsertedDerived(client, o, derivedKeysFor(o, keys), inserted), removed };
+  } finally {
+    client.release();
+  }
+}
+
 // ── --plan ────────────────────────────────────────────────────────────────────
 /**
  * READ ONLY. Prints the cohort (the first N keys by --order among --where), the table's
@@ -1201,6 +1457,10 @@ async function plan(o) {
     console.log(`[cohort:plan] eligible=${cohort.eligible} cohort=${cohort.keys.length} (where ${JSON.stringify(o.where)}; order ${o.order})`);
     console.log(`[cohort:plan] whole-table hash over (${[o.key, o.column].join(', ')}): ${whole}`);
     for (const r of cohort.rows) console.log(`[cohort:plan]   ${o.key}=${r.key} ${o.column}=${JSON.stringify(r.value)}`);
+    if (isDerivedMode(o)) {
+      const d = await liveDerivedRows(pool, o, cohort.keys);
+      console.log(`[cohort:plan] derived ${o.derivedTable}: ${d.length} existing row(s) for the cohort's ${cohort.keys.length} ${o.derivedKey} value(s); snapshot ${derivedSnapshotTable(o)} (R-ET)`);
+    }
   } finally {
     await pool.end();
   }
@@ -1222,6 +1482,9 @@ async function backup(o) {
     if (await tableExists(pool, o.backupTable)) {
       throw new Error(`--backup-table ${o.backupTable} already exists — refusing to overwrite a before-image; pick a fresh <yyyymmddthhmmz> name`);
     }
+    if (isDerivedMode(o) && (await tableExists(pool, derivedSnapshotTable(o)))) {
+      throw new Error(`the derived before-image ${derivedSnapshotTable(o)} already exists — refusing to overwrite it; pick a fresh <yyyymmddthhmmz> name`);
+    }
     await assertPairModeSafe(pool, o);
     const cohort = await resolveCohort(pool, o);
     reportSourceCheck('backup', cohort.sourceInfo, console.log);
@@ -1235,7 +1498,14 @@ async function backup(o) {
     if (!ok.ok) {
       throw new Error(`the copy ${o.backupTable} does not hold the cohort's current values — ${ok.reason}; DROP ${o.backupTable} and investigate`);
     }
-    console.log(`[cohort:backup] wrote ${o.backupTable} — ${cohort.keys.length} row(s) of (${o.key}, ${o.column})`);
+    console.log(`[cohort:backup] wrote ${o.backupTable} — ${cohort.keys.length} row(s) of (${o.key}, ${o.column}${isDerivedMode(o) ? `, ${o.deriveColumn}` : ''})`);
+    if (isDerivedMode(o)) {
+      // R-ET: the derived before-image — the cohort's derived natural keys, verified against live.
+      await pool.query(derivedSnapshotCreateSql(o), [derivedKeysFor(o, cohort.keys)]);
+      const snap = await derivedMatchesSnapshot(pool, o, cohort.keys);
+      if (!snap.ok) throw new Error(`the copy ${derivedSnapshotTable(o)} does not hold the cohort's derived rows — ${snap.reason}; DROP it and investigate`);
+      console.log(`[cohort:backup] wrote ${derivedSnapshotTable(o)} — ${(await derivedSnapshotRows(pool, o)).length} derived natural key(s) of ${o.derivedTable}`);
+    }
     console.log(`[cohort:backup] ${recoveryCommand(o)}`);
   } finally {
     await pool.end();
@@ -1293,6 +1563,14 @@ async function restore(o) {
     console.log(`[cohort:restore] restored ${restored} row(s) from ${o.backupTable}`);
     console.log(`[cohort:restore] cohort ${check.ok ? 'matches the before-image (OK)' : `MISMATCH — ${check.reason}`}`);
     if (!check.ok) process.exitCode = 1;
+    if (isDerivedMode(o)) {
+      if (!(await tableExists(pool, derivedSnapshotTable(o)))) throw new Error(`the derived before-image ${derivedSnapshotTable(o)} does not exist — cannot tell inserted derived rows from prior ones`);
+      const d = await restoreDerived(pool, o, keys);
+      const dcheck = await derivedMatchesSnapshot(pool, o, keys);
+      console.log(`[cohort:restore] derived: deleted ${d.deleted} inserted row(s) from ${o.derivedTable}${d.removed.length ? `; ${d.removed.length} prior row(s) VANISHED and cannot be recreated` : ''}`);
+      console.log(`[cohort:restore] derived ${dcheck.ok ? 'matches its before-image (OK)' : `MISMATCH — ${dcheck.reason}`}`);
+      if (!dcheck.ok) process.exitCode = 1;
+    }
   } finally {
     await pool.end();
   }
@@ -1399,7 +1677,7 @@ async function run(o) {
   // incident left a 199-row capture in docs/reports/golden/address_points/post/sources.json).
   // Captured BEFORE makePool so a refusal can never have written anything.
   const outAbs = resolveCaptureOut(o.out);
-  const cohortCheck = countPathCohortDecision(o.countPath ? readCohortDoc(outAbs) : null, { table: o.table, countPath: o.countPath });
+  const cohortCheck = countPathCohortDecision(o.countPath ? readCohortDoc(outAbs) : null, { table: isDerivedMode(o) ? o.derivedTable : o.table, countPath: o.countPath });
   if (!cohortCheck.ok) throw new Error(`refusing: ${cohortCheck.reason}`);
   const goldenBefore = readGoldenState(outAbs);
   let asserted = false;
@@ -1418,6 +1696,7 @@ async function run(o) {
   const sig = { interrupted: false };
   let backupRows = [];
   let cohortKeys = [];
+  let derivedBefore = [];
   let restoreFailed = false;
   installSignalHandlers(sig);
   try {
@@ -1433,6 +1712,14 @@ async function run(o) {
       const pre = backupPrecondition({ exists: true, liveValues: cohort.rows, backupValues: backupRows });
       if (!pre.ok) throw new Error(pre.reason);
       console.log(`[cohort:run] before-image verified: ${o.backupTable} covers ${backupRows.length} key(s) == live cohort`);
+      if (isDerivedMode(o)) {
+        // R-ET: the derived before-image must describe the derived rows the run starts from.
+        if (!(await tableExists(pool, derivedSnapshotTable(o)))) throw new Error(`the derived before-image ${derivedSnapshotTable(o)} does not exist — take --backup first`);
+        const snap = await derivedMatchesSnapshot(pool, o, cohortKeys);
+        if (!snap.ok) throw new Error(`the derived before-image does not describe the live derived rows — ${snap.reason}; re-take --backup`);
+        derivedBefore = await derivedSnapshotRows(pool, o);
+        console.log(`[cohort:run] derived before-image verified: ${derivedSnapshotTable(o)} holds ${derivedBefore.length} natural key(s) == live`);
+      }
 
       // (4) the perturbation, ONE committed transaction.
       abortIfInterrupted(sig);
@@ -1452,7 +1739,7 @@ async function run(o) {
           }
         } else {
           const bind = opBindValue(o.opRaw);
-          const setExpr = perturbationSetExpr(o.op, o.column);
+          const setExpr = perturbationSetExpr(o.op, o.column, o.deriveColumn);
           const upd = bind === null
             ? await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys])
             : await client.query(`UPDATE ${o.table} t SET ${setExpr} WHERE t."${o.key}" = ANY($1)`, [cohortKeys, bind]);
@@ -1501,13 +1788,18 @@ async function run(o) {
       const summary = firstSummary(stdout);
       const after = await liveCohortValues(pool, o, cohortKeys);
       const countPathResult = o.countPath ? await countPathFromCapture(o, outAbs) : null;
-      const claim = captureClaim({
-        recordsUpdated: summary.records_updated,
-        recordsNew: summary.records_new,
-        liveValues: after,
-        backupValues: backupRows,
-        countPathResult,
-      });
+      const claim = isDerivedMode(o)
+        ? derivedClaim({
+          countPathResult, liveValues: after, backupValues: backupRows,
+          derivedKeys: derivedKeysFor(o, cohortKeys), before: derivedBefore, after: await liveDerivedRows(pool, o, cohortKeys),
+        })
+        : captureClaim({
+          recordsUpdated: summary.records_updated,
+          recordsNew: summary.records_new,
+          liveValues: after,
+          backupValues: backupRows,
+          countPathResult,
+        });
       const written = countPathResult && countPathResult.ok
         ? countPathResult.n
         : (Number(summary.records_updated) || 0) + (Number(summary.records_new) || 0);
@@ -1533,11 +1825,18 @@ async function run(o) {
         }
         const n = await restoreFromBackup(pool, o, cohortKeys);
         console.log(`[cohort:run] restore: put ${n} row(s) back from ${o.backupTable}`);
+        if (isDerivedMode(o)) {
+          // R-ET: delete exactly the derived rows the run inserted; a RETURNING mismatch rolls back and throws (exit 2).
+          const d = await restoreDerived(pool, o, cohortKeys);
+          console.log(`[cohort:run] restore: deleted ${d.deleted} inserted ${o.derivedTable} row(s)`);
+        }
       } else {
         console.log('[cohort:run] this run never perturbed; the table is left as found');
       }
       const after = await liveCohortValues(pool, o, cohortKeys);
-      const check = backupPrecondition({ exists: true, liveValues: after, backupValues: backupRows });
+      const primaryCheck = backupPrecondition({ exists: true, liveValues: after, backupValues: backupRows });
+      // R-ET: a perturbed derived run is restored only when the derived rows match their before-image too.
+      const check = primaryCheck.ok && isDerivedMode(o) && perturbed ? await derivedMatchesSnapshot(pool, o, cohortKeys) : primaryCheck;
       restored = check.ok;
       console.log(`[cohort:run] POST-RESTORE cohort ${restored ? 'matches the before-image (OK)' : `MISMATCH — ${check.reason}`}`);
     } catch (err) {
@@ -1736,6 +2035,16 @@ function selfTest() {
   assert(captureClaim({ recordsUpdated: 0, recordsNew: 2, liveValues: healedPairs, backupValues: pairs }).ok === true, 'captureClaim rejected a fully re-inserted pair set');
   assert(captureClaim({ recordsUpdated: 0, recordsNew: 1, liveValues: shortPairs, backupValues: pairs }).ok === false, 'captureClaim accepted a pair set missing a deleted pair');
   assert(backupPrecondition({ exists: true, liveValues: shortPairs, backupValues: pairs }).ok === false, 'backupPrecondition accepted a pair set that drifted from the before-image');
+
+  // R-ET: derived_status — the op, the claim (0 inserted is RED), and the exact-set restore decision.
+  assert(parseOp('derived_status: f').kind === 'derived_status' && opBindValue('derived_status: f') === ' f', 'parseOp/opBindValue mishandled derived_status');
+  throws(() => parseOp('derived_status'), 'parseOp accepted derived_status with no text');
+  const dPrim = [{ key: 'A1', value: '["h","s"]' }];
+  const dRow = { dk: 'coa:A1', nk: '(coa:A1,s,t)' };
+  assert(derivedClaim({ countPathResult: { ok: true, n: 1 }, liveValues: dPrim, backupValues: dPrim, derivedKeys: ['coa:A1'], before: [], after: [dRow] }).ok === true, 'derivedClaim refused one inserted row per key');
+  assert(derivedClaim({ countPathResult: { ok: true, n: 1 }, liveValues: dPrim, backupValues: dPrim, derivedKeys: ['coa:A1'], before: [], after: [] }).ok === false, 'derivedClaim accepted a run that wrote no derived row');
+  assert(derivedRestoreDecision({ expected: [dRow], returned: [dRow] }).ok === true, 'derivedRestoreDecision refused the exact set');
+  assert(derivedRestoreDecision({ expected: [dRow], returned: [] }).ok === false, 'derivedRestoreDecision accepted a short DELETE');
 
   // canonicalValueMap: a bigint/number round-trip compares equal (the driver types differ).
   assert(canonicalValueMap([{ key: 1, value: 5 }]).get('1') === '5', 'canonicalValueMap did not stringify the value');
@@ -1958,6 +2267,17 @@ module.exports = {
   backupColumnsSql,
   pairId,
   isPairMode,
+  isDerivedMode,
+  derivedSnapshotTable,
+  derivedKeysFor,
+  derivedRowsSql,
+  derivedSnapshotCreateSql,
+  derivedSnapshotSelectSql,
+  derivedDeleteSql,
+  derivedInsertedRows,
+  derivedClaim,
+  derivedRestoreDecision,
+  deleteInsertedDerived,
   orderedKeysSql,
   cohortRowsSql,
   projection,

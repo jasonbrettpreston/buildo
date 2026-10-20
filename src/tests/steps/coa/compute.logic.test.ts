@@ -216,6 +216,18 @@ describe('coa ② compute — observers over the runner result (ctx.acquired / c
     expect(l.out.lifecycle_status_history_errors?.violations).toBe(1);
   });
 
+  // R-ET: the derived target's own per-table write count, the int emit #38's count_path reads (R-DN).
+  it('emits lifecycle_status_history_written = the same ledger count the check row reports (one source), declared int', async () => {
+    const l = await run(['lifecycle_status_history_inserted'], {}, { e1: { inserted: 4, updated: 1, errors: 1 } });
+    expect((l.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(5);
+    expect((l.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(l.out.lifecycle_status_history_inserted?.value);
+    const none = await run([], {}, null);
+    expect((none.r.records_meta as Record<string, unknown>).lifecycle_status_history_written).toBe(0);
+    const d = req(path.join(REPO_ROOT, 'scripts/load-coa.descriptor.json')) as { emits: Array<{ key: string; type: string }>; terminals: Array<{ id: string; kind: string; records_meta: Record<string, string> }> };
+    expect(d.emits.find((e) => e.key === 'lifecycle_status_history_written')?.type).toBe('int');
+    for (const t of d.terminals.filter((x) => x.kind === 'success')) expect(t.records_meta.lifecycle_status_history_written).toBe('int');
+  });
+
   it('max_days_stale is inert when no row was fed (zero records or a refused write)', async () => {
     const skipped = await run(['max_days_stale'], { rows_read: 10 }, { inserted: 0, updated: 0, write_skipped_pre_write_fail: true });
     expect(skipped.out.max_days_stale?.inert).toBe(true);
