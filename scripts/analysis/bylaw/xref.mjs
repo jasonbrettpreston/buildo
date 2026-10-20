@@ -59,7 +59,7 @@ export const REASON_CODES = Object.freeze([
   'not_an_override_invalid',
 ]);
 /** Backward triggers: the displaced provision precedes the phrase ("regulation (A) does not apply"). */
-export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply', 'apply to prevent', 'will prevent']); // Spec 69a M-94(b) "will prevent"; M-93: the regulations it switches off precede "apply to prevent"
+export const BACKWARD_TRIGGERS = Object.freeze(['does not apply', 'do not apply', 'apply to prevent', 'will prevent', 'may be reduced to']); // Spec 69a M-94(b) "will prevent"; M-93: the regulations it switches off precede "apply to prevent"
 /** Phase 1 allowance (Spec 68 §6.1): an include_ref may resolve to a `ref` with this reason, counted. */
 export const PHASE1_INCLUDE_REF_REASONS = Object.freeze(['phase2_exception']);
 

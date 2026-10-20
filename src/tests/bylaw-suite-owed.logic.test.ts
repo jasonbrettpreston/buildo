@@ -101,7 +101,8 @@ describe('M-177(1)/(2) — the garden-suite caps answer on every lot from class 
   });
   it('M-177: 150.7.60.50(1) the garden-suite GFA is left out of the lot FSI (a DEFINE on gfa_m2, applied in the suite scenario)', () => {
     const u = unitOf('150.7.60.50(1)#whole');
-    expect([u.archetype, u.target, u.application.building_types]).toEqual(['DEFINE', 'gfa_m2', ['ancillary_building', 'garden_suite']]);
+    // the suite class only (M-159; a plain ancillary building is not "an ancillary building containing a garden suite", 2026-10-20)
+    expect([u.archetype, u.target, u.application.building_types]).toEqual(['DEFINE', 'gfa_m2', ['garden_suite']]);
   });
   it('M-177(2): 150.7.60.50(2) the garden suite is kept smaller than the house, disclosed, never an unchecked comparison', () => {
     expect(unitOf('150.7.60.50(2)#whole').disclosure).toBe('A garden suite must be smaller in gross floor area than the house on the lot; the maximum suite is sized below the house.');
@@ -124,10 +125,13 @@ describe('M-198 / M-197 — garden-suite setbacks: the blank wall and the smalle
   it('M-198: 150.7.60.20(2)(B) the garden-suite rear setback is 1.5 m in all other cases', () => {
     for (const zone of ZONES) expect([eff(lot(zone, 'garden_suite'), 'rear_setback_m').value, eff(lot(zone, 'garden_suite'), 'rear_setback_m').winner]).toEqual([1.5, '150.7.60.20(2)#(2)(B)']);
   });
-  it('M-198(1): 150.7.60.20(3)(A) a through lot is keyed on the neighbour front setback, which the step approximates (owed to P5.13)', () => {
+  it('M-198(1) / M-169(1): 150.7.60.20(3)(A) a through lot whose rear-street neighbour fact is not held takes the 1.5 m fallback (the neighbour-front-yard proxy is owed to P5.13)', () => {
     const u = unitOf('150.7.60.20(3)#(3)(A)');
-    expect([u.condition, u.numeric_expression]).toEqual([{ tokens: ['through_lot'] }, ['rear_setback_m = abutting_front_setback_m @(3)(A)']]);
-    expect(eff(lot('RD', 'garden_suite', { flags: { through_lot: true } }), 'rear_setback_m').reason).toBe('missing_input:abutting_front_setback_m');
+    expect([u.condition, u.numeric_expression]).toEqual([{ tokens: ['through_lot', 'adjacent_lot_fronts_rear_street'] }, ['rear_setback_m = abutting_front_setback_m @(3)(A)']]);
+    // E2E-F-02: the step supplies the undetermined site fact as not holding (M-169(1)) and the restrictive garage choice as not taken (M-172(3))
+    const r = eff(lot('RD', 'garden_suite', { flags: { through_lot: true, adjacent_lot_fronts_rear_street: false, garage_entrance_faces_street: false } }), 'rear_setback_m');
+    expect([r.value, (r.applied ?? []).includes('150.7.60.20(3)#(3)(A)')]).toEqual([1.5, false]);
+    expect(eff(lot('RD', 'garden_suite', { flags: { through_lot: true, adjacent_lot_fronts_rear_street: true } }), 'rear_setback_m').reason).toBe('missing_input:abutting_front_setback_m');
   });
   it('M-198: 150.7.60.20(3)(B) the through-lot fallback is 1.5 m', () => {
     expect(unitOf('150.7.60.20(3)#(3)(B)').numeric_expression).toEqual(['rear_setback_m = 1.5 m @(3)(B)']);

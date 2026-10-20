@@ -109,7 +109,7 @@
     "OPEN": 0
    }
   },
-  "feeding_a_lineage_field": 262
+  "feeding_a_lineage_field": 267
  },
  "rows": [
   {
@@ -7214,7 +7214,9 @@
    "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots front (10.5.30.20(1)(B)), read as the lot's address street; the 0.3 m reserve of (A) is taken as not separating (M-169(1)); the opposite street line is the rear lot line; disclosed through_lot_front_line. Recorded (sentence, gaps, P5.12 code); the computation, the Layer 3 lot-line classification that swaps the front and rear setbacks, is owed to the Spec 78 Phase-5 step commit ① (P5.5, ML-1): no setback changes until it lands (verify-12f N3).",
    "disclosure_code": "through_lot_front_line",
    "question": "",
-   "fields": [],
+   "fields": [
+    "main_front_setback_basis"
+   ],
    "locks": [],
    "owed": [],
    "checks": [
@@ -7237,7 +7239,9 @@
    "corrected_value": "Through lots are in scope: the front lot line is the street line on which the adjacent lots front (10.5.30.20(1)(B)), read as the lot's address street; the 0.3 m reserve of (A) is taken as not separating (M-169(1)); the opposite street line is the rear lot line; disclosed through_lot_front_line. Recorded (sentence, gaps, P5.12 code); the computation, the Layer 3 lot-line classification that swaps the front and rear setbacks, is owed to the Spec 78 Phase-5 step commit ① (P5.5, ML-1): no setback changes until it lands (verify-12f N3).",
    "disclosure_code": "through_lot_front_line",
    "question": "",
-   "fields": [],
+   "fields": [
+    "main_front_setback_basis"
+   ],
    "locks": [],
    "owed": [],
    "checks": [
@@ -7258,7 +7262,9 @@
    "corrected_value": "",
    "disclosure_code": "",
    "question": "",
-   "fields": [],
+   "fields": [
+    "main_front_setback_basis"
+   ],
    "locks": [],
    "owed": [],
    "checks": [],
@@ -8330,7 +8336,9 @@
    "corrected_value": "Applied by default: where the maximum design has an attic counted in GFA (passes 10.5.40.40(1)), the lesser of 5 % of the permitted maximum GFA or 20 m² of it is left out of GFA as mechanical-equipment space, disclosed achieved-if (mechanical_attic_excluded). Recorded (sentence, gaps, P5.12 code); the computation, the max-GFA deduction of min(5 % × max GFA, 20 m²), is owed to the Spec 78 Phase-5 step commit ① (P5.13) with the keying of 10.5.40.40(2): the GFA number does not change until it lands (verify-12f N3).",
    "disclosure_code": "mechanical_attic_excluded",
    "question": "",
-   "fields": [],
+   "fields": [
+    "attic_outside_gfa_sqm"
+   ],
    "locks": [],
    "owed": [],
    "checks": [
@@ -13105,7 +13113,9 @@
    "corrected_value": "Each dwelling unit may have one secondary suite; the suite class carries one suite per host unit.",
    "disclosure_code": "",
    "question": "",
-   "fields": [],
+   "fields": [
+    "unit_breakdown"
+   ],
    "locks": [
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
@@ -13634,10 +13644,10 @@
     {
      "file": "src/tests/bylaw-suite-owed.logic.test.ts",
      "describe": "M-198 / M-197 — garden-suite setbacks: the blank wall and the smaller lawful setback lead; a lot fact we do not hold is disclosed",
-     "it": "M-198(1): 150.7.60.20(3)(A) a through lot is keyed on the neighbour front setback, which the step approximates (owed to P5.13)",
+     "it": "M-198(1) / M-169(1): 150.7.60.20(3)(A) a through lot whose rear-street neighbour fact is not held takes the 1.5 m fallback (the neighbour-front-yard proxy is owed to P5.13)",
      "asserts": [
       "'150.7.60.20(3)#(3)(A)'",
-      "abutting_front_setback_m"
+      "adjacent_lot_fronts_rear_street"
      ],
      "satisfies": [
       "M-198"
@@ -13646,11 +13656,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.7.60.20(3)#(3)(A)/condition, COR-150.7.60.20(3)#(3)(A)/application.lot_conditions, COR-150.7.60.20(3)#(3)(A)/application.evidence, COR-150.7.60.20(3)#(3)(A)/calculation_handling",
     "verified by named lock: M-198"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.60.20(3)#(3)(B)",
@@ -13875,7 +13885,7 @@
     }
    ],
    "checks": [
-    "correction COR-150.7.60.20(6)#(6)(C)/condition~s1, COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1, COR-150.7.60.20(6)#(6)(C)/application.evidence~s1",
+    "correction COR-150.7.60.20(6)#(6)(C)/condition~s1, COR-150.7.60.20(6)#(6)(C)/application.lot_conditions~s1, COR-150.7.60.20(6)#(6)(C)/application.evidence~s1, COR-150.7.60.20(6)#(6)(C)/numeric_expression, COR-150.7.60.20(6)#(6)(C)/calculation_handling, COR-150.7.60.20(6)#(6)(C)/disclosure",
     "owed M-198 → P5.13"
    ],
    "state": "INCORPORATED",
@@ -14692,11 +14702,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.7.60.50(1)#whole/application.building_types, COR-150.7.60.50(1)#whole/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.60.50(2)#whole",
@@ -14730,7 +14740,7 @@
    ],
    "owed": [],
    "checks": [
-    "correction COR-150.7.60.50(2)#whole/disclosure",
+    "correction COR-150.7.60.50(2)#whole/disclosure, COR-150.7.60.50(2)#whole/application.building_types, COR-150.7.60.50(2)#whole/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
@@ -14788,11 +14798,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.7.60.50(4)#(4)(A)/application.building_types, COR-150.7.60.50(4)#(4)(A)/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.60.50(4)#(4)(B)",
@@ -14827,11 +14837,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.7.60.50(4)#(4)(B)/application.building_types, COR-150.7.60.50(4)#(4)(B)/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.7.60.50(5)#whole",
@@ -16285,7 +16295,7 @@
    ],
    "owed": [],
    "checks": [
-    "correction COR-150.8.60.30(1)#(1)(A)/disclosure",
+    "correction COR-150.8.60.30(1)#(1)(A)/disclosure, COR-150.8.60.30(1)#(1)(A)/application.building_types, COR-150.8.60.30(1)#(1)(A)/application.evidence",
     "verified by named lock: M-177, M-198"
    ],
    "state": "INCORPORATED",
@@ -16326,7 +16336,7 @@
    ],
    "owed": [],
    "checks": [
-    "correction COR-150.8.60.30(1)#(1)(B)/disclosure",
+    "correction COR-150.8.60.30(1)#(1)(B)/disclosure, COR-150.8.60.30(1)#(1)(B)/application.building_types, COR-150.8.60.30(1)#(1)(B)/application.evidence",
     "verified by named lock: M-177, M-198"
    ],
    "state": "INCORPORATED",
@@ -16422,11 +16432,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.8.60.30(5)#whole/application.building_types, COR-150.8.60.30(5)#whole/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.30(6)#whole",
@@ -16461,11 +16471,11 @@
    ],
    "owed": [],
    "checks": [
-    "no keyed correction cites the fix",
+    "correction COR-150.8.60.30(6)#whole/application.building_types, COR-150.8.60.30(6)#whole/application.evidence",
     "verified by named lock: M-177"
    ],
    "state": "INCORPORATED",
-   "reason": "verified by named lock"
+   "reason": "every cited ruling applied (keyed correction or named lock)"
   },
   {
    "unit_id": "150.8.60.31(1)#whole",

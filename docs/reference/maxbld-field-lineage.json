@@ -712,9 +712,10 @@
     "2",
     "RA"
    ],
-   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status; zone_default_needs_survey where averaging would apply but an estimate is excluded (LC-58)",
+   "computation": "which arm of 10.5.40.70(1) / x.40.70(1) decided, with the neighbour estimate status; zone_default_needs_survey where averaging would apply but an estimate is excluded (LC-58); on a through lot the front lot line is the address street's line and the other street line the rear (10.5.30.20(1)(B), M-228; disclosed through_lot_front_line)",
    "regulation_ids": [
-    "10.5.40.70(1)"
+    "10.5.40.70(1)",
+    "10.5.30.20(1)"
    ],
    "keyed": {
     "units": [],
@@ -1365,9 +1366,10 @@
     "2",
     "RA"
    ],
-   "computation": "attic floor area with clearance > 1.4 m that the 10.5.40.40(1) test leaves out of GFA: livable, outside FSI (M-203)",
+   "computation": "attic floor area with clearance > 1.4 m that the 10.5.40.40(1) test leaves out of GFA: livable, outside FSI (M-203); plus, on a counted attic, the mechanical-equipment area left out of GFA, min(5 % × the permitted maximum GFA, 20 m²) (10.5.40.40(2), M-229; disclosed mechanical_attic_excluded)",
    "regulation_ids": [
-    "10.5.40.40(1)"
+    "10.5.40.40(1)",
+    "10.5.40.40(2)"
    ],
    "keyed": {
     "units": [],
@@ -1776,9 +1778,10 @@
     "RI",
     "RB"
    ],
-   "computation": "P5.4 per-floor split",
+   "computation": "P5.4 per-floor split; at most one secondary suite per dwelling unit (150.10.20.1(2), M-177(4))",
    "regulation_ids": [
-    "800.50(181)"
+    "800.50(181)",
+    "150.10.20.1(2)"
    ],
    "keyed": {
     "units": [],

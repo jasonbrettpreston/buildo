@@ -202,7 +202,7 @@
     "proposed_height_m": {
       "unit": "m",
       "definition": "800.50(240)",
-      "licensed_by": ["height of the", "with a height", "has a height"],
+      "licensed_by": ["height of the", "with a height", "has a height", "from a height of"],
       "note": "height of the building the unit applies to, measured from established grade (a scenario value)"
     },
     "proposed_building_depth_m": { "unit": "m", "definition": "800.50(100)", "licensed_by": ["building depth"], "note": "a scenario value" },
@@ -292,6 +292,7 @@
     "heritage_property": { "patterns": ["heritage"] },
     "exception_area": { "generated": true },
     "adjacent_lot_fronts_flanking_street": {},
+    "adjacent_lot_fronts_rear_street": {},
     "all_units_front_street": {},
     "unit_not_fronting_street": {},
     "front_averaging_not_applicable": {},
@@ -354,7 +355,7 @@
     "derived_unit": { "m2/unit": "Layer 3 report targets only (avg_unit_gfa_sqm): m2 ÷ units; never a literal, dsl_target or Layer 1 unit (Spec 69 M-72 note)" }
   },
   "displacement_triggers": {
-    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in"],
+    "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in", "may be reduced to"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]
   },
   "vector_status": ["by_law_expected", "no_expected", "model_composite"],
@@ -583,6 +584,7 @@
       "abuts_named_street": "the lot abuts the street the rule names",
       "shoreline_or_top_of_bank": "the lot is on a shoreline or top of bank",
       "adjacent_lot_fronts_flanking_street": "the adjacent lot fronts on the flanking street",
+      "adjacent_lot_fronts_rear_street": "a house on an adjacent lot fronts on the street at the rear lot line",
       "front_averaging_not_applicable": "front yard averaging does not apply to the lot",
       "one_abutting_building_within_15_m": "one building on an abutting lot is within 15 m",
       "two_abutting_buildings_within_15_m": "buildings on both abutting lots are within 15 m",

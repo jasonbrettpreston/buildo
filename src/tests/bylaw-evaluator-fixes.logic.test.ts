@@ -517,3 +517,21 @@ describe('INV-19 open arm — where the article does not exist the answer is sti
     ]);
   });
 });
+
+// M-159 (a unit governs only its own subject), golden-lot verification 2026-10-20 (coordinator: "a plain ancillary_building
+// on an R lot picks up the one-storey garden-suite gfa cap of 60 m² from 150.7.60.50(4)(B)"). Red at 3d64c9f8: 60 m2 from
+// 150.7.60.50(4)(B), and the separation / length / width suite limits on a plain ancillary building.
+describe('M-159 / M-177(1) — a plain ancillary building (no suite) takes no garden- or laneway-suite limit', () => {
+  it('no 150.7 / 150.8 unit governing "an ancillary building containing a … suite" decides an ancillary_building target', () => {
+    for (const zone of ZONES) for (const t of ['gfa_m2', 'separation_m', 'building_length_m', 'building_width_m', 'side_setback_m', 'rear_setback_m', 'height_projection_m', 'encroachment_m']) {
+      const r = eff(lot(zone, 'ancillary_building', { vars: { height_storeys: 1 } }), t);
+      expect([zone, t, touched(r).filter((id) => /^150\.(7|8)\.60\.(2|3|5|6)/.test(id))]).toEqual([zone, t, []]);
+    }
+  });
+  it('the suite still takes its own caps: a one-storey garden suite 60 m2, a laneway suite 10.0 m long', () => {
+    const g = eff(lot('R', 'garden_suite', { vars: { height_storeys: 1 } }), 'gfa_m2');
+    expect([g.value, g.winner]).toEqual([60, '150.7.60.50(4)#(4)(B)']);
+    const l = eff(lot('R', 'laneway_suite', { flags: { abuts_lane: true } }), 'building_length_m');
+    expect([l.value, l.winner]).toEqual([10, '150.8.60.30(5)#whole']);
+  });
+});
