@@ -38,6 +38,13 @@ type Mod = {
   mentionsRule: (text: string, rule: Rule) => boolean;
   enforcementCounts: (map: RuleMap) => Record<string, number>;
 };
+type Gen = {
+  factFindings: (texts: string[], root?: string) => string[];
+  handWrittenTexts: (shapes?: string) => string[];
+  readDispatch: (root?: string, src?: string | null) => { order: Array<{ predicate: string; shape: string; phases: string[] }>; phases: Record<string, { hooks: string[] }> };
+  readSteps: (root?: string) => Array<{ slug: string; shape: string; phase: string }>;
+  RUNNER_REL: string;
+};
 
 let mod: Mod;
 let io: Io;
@@ -158,7 +165,8 @@ describe('handbook rule map — every rule maps to exactly one handbook line (op
   });
 });
 
-// verify-12 N1 (operator y 2026-10-20 consolidation 1-4): a lock names a test that mentions the rule.
+// verify-12 N1/N3 (operator y 2026-10-20 consolidation 1-4): a lock names a test that mentions the rule; the handbook's
+// hand-written facts are checked against the code.
 describe('handbook rule map — enforcement honesty (verify-12 N1)', () => {
   it('RED (e) — a lock whose test file never names the rule', () => {
     const m = clone(load());
@@ -210,5 +218,47 @@ describe('handbook rule map — enforcement honesty (verify-12 N1)', () => {
     expect(bad.map((r) => r.id)).toEqual([]);
     const c = mod.enforcementCounts(m);
     expect(Object.values(c).reduce((a, b) => a + b, 0)).toBe(m.rules.length);
+  });
+});
+
+describe('step handbook — hand-written facts are locked to the code (verify-12 N3)', () => {
+  let gen: Gen;
+  beforeAll(async () => {
+    gen = (await import(pathToFileURL(path.join(REPO_ROOT, 'scripts/generate-step-handbook.mjs')).href)) as unknown as Gen;
+  });
+
+  it('GREEN — every symbol, path, flag and invariant number in §1, §5 and the glossary holds', () => {
+    expect(gen.factFindings(gen.handWrittenTexts())).toEqual([]);
+  });
+
+  it('RED — an unknown symbol, a missing path, a flag its script lacks and an unknown invariant are each named', () => {
+    const f = gen.factFindings(['`noSuchRunnerFunction` in `scripts/lib/step/no-such.js`; run with `--replay-everything`; fast invariant #99']);
+    expect(f).toEqual(expect.arrayContaining([
+      'symbol noSuchRunnerFunction has no SYMBOL_HOME entry',
+      'path scripts/lib/step/no-such.js does not exist',
+      'flag --replay-everything has no FLAG_HOME entry',
+      'fast invariant #99 is not in step-validate or its gates',
+    ]));
+  });
+
+  it('GREEN — the dispatch §1 describes is the runner one: shapes, phases and the no-phase path', () => {
+    const d = gen.readDispatch();
+    expect(d.order.map((o) => o.shape)).toEqual(['link', 'link_keyed', 'link_column', 'ingest', 'cascade', 'materialize', 'backfill', 'recorder', 'enrich']);
+    expect(d.order.find((o) => o.shape === 'ingest')!.phases).toEqual(['runIngestPhase', 'ingestPrimaries']);
+    expect(d.phases.runLinkPhase!.hooks).toContain('buildMatchSql');
+    const by = new Map(gen.readSteps().map((s) => [s.slug, s]));
+    expect(by.get('link_wsib')!.phase).toBe('runCascadePhase');
+    expect(by.get('link_parcels')!.phase).toBe('runLinkKeyedPhase');
+    expect(by.get('link_neighbourhoods')!.phase).toBe('runLinkColumnPhase');
+    expect(by.get('assert_engine_health')!.phase).toBe('no phase');
+    expect(by.get('load_ravines')!.shape).toBe('none (inferred ingest)');
+  });
+
+  it('RED — a runner whose run order drifts from §1 fails by name', () => {
+    const src = fs.readFileSync(path.join(REPO_ROOT, gen.RUNNER_REL), 'utf8');
+    const noLock = src.replace('pipeline.withAdvisoryLock(pool, descriptor.identity.lock', 'pipeline.withSomeOtherLock(pool, descriptor.identity.lock');
+    expect(() => gen.readDispatch(REPO_ROOT, noLock)).toThrow(/advisory lock on identity.lock/);
+    const noReportGuard = src.replace('if (!declared.has(checkId))', 'if (false)');
+    expect(() => gen.readDispatch(REPO_ROOT, noReportGuard)).toThrow(/ctx.report/);
   });
 });
