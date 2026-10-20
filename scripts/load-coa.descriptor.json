@@ -524,7 +524,7 @@
       "chains": "all",
       "accept_until": "none",
       "why": {
-        "text": "Legacy INFO row records_skipped [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:619] = rows_read - rows_shaped; the detail is the skip reasons in the legacy vocabulary (missing_app_num = the runner's bad_key_count; schema_mismatch).",
+        "text": "Legacy INFO row records_skipped [READ src/tests/steps/coa/fixtures/legacy-load-coa.js.txt:619] = rows_read - rows_shaped, rendered as the count (COA-D15); the skip reasons in the legacy vocabulary (missing_app_num = the runner's bad_key_count; schema_mismatch) are records_meta.coa_load.skip_reasons.",
         "liveness": {
           "kind": "file",
           "ref": "scripts/lib/compute/load-coa.js"

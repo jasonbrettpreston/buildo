@@ -314,39 +314,46 @@ const ledger = (ctx) => wr(ctx).e1 || {};
  */
 const ledgerWritten = (ctx) => num(ledger(ctx).inserted) + num(ledger(ctx).updated);
 
+/*
+ * COA-D15 (Spec 124 R-EX, R-EW (ii)): an INFO counter reports `{ value: N }` alone. verdict.js checkRow renders
+ * `detail ?? violations ?? value`, so a `violations: 0` beside the count rendered every counter row as 0 (Night P4
+ * 2026-10-20: records_touched read 0 against 2,689 rewritten rows). The skip reasons live in records_meta.coa_load.
+ */
 function zero_records(ctx) {
   ctx.report('zero_records', { violations: fetched(ctx) === 0 ? 1 : 0, detail: `${fetched(ctx)} records fetched` });
 }
 function records_fetched(ctx) {
-  ctx.report('records_fetched', { violations: 0, value: fetched(ctx) });
+  ctx.report('records_fetched', { value: fetched(ctx) });
 }
 function records_mapped(ctx) {
-  ctx.report('records_mapped', { violations: 0, value: mappedCount(ctx) });
+  ctx.report('records_mapped', { value: mappedCount(ctx) });
 }
 function records_skipped(ctx) {
-  ctx.report('records_skipped', { violations: 0, value: fetched(ctx) - mappedCount(ctx), detail: skipReasons(ctx) });
+  ctx.report('records_skipped', { value: fetched(ctx) - mappedCount(ctx) });
 }
 function skip_rate(ctx) {
   const f = fetched(ctx);
   ctx.report('skip_rate', { value: f > 0 ? ((f - mappedCount(ctx)) * 100) / f : 0 });
 }
 function records_inserted(ctx) {
-  ctx.report('records_inserted', { violations: 0, value: num(wr(ctx).inserted) });
+  ctx.report('records_inserted', { value: num(wr(ctx).inserted) });
 }
 function records_updated(ctx) {
-  ctx.report('records_updated', { violations: 0, value: num(wr(ctx).updated) });
+  ctx.report('records_updated', { value: num(wr(ctx).updated) });
 }
 /**
  * Spec 124 R-EX / R-DZ: the keys the runner's seen-column touch rewrote this run (written.touched) — the count the
  * POST rerun proof requires the second run's rewritten rows to equal exactly (declared_drift.liveness names this check).
  */
 function records_touched(ctx) {
-  ctx.report('records_touched', { violations: 0, value: num(wr(ctx).touched) });
+  ctx.report('records_touched', { value: num(wr(ctx).touched) });
 }
 function schema_mismatch_count(ctx) {
   const d = schemaDrift(ctx);
   // The legacy value is the distinct missing fields (:631); a record-level miss under a complete header still counts once.
-  ctx.report('schema_mismatch_count', { violations: Math.max(d.fields.length, d.records > 0 ? 1 : 0), detail: d.fields });
+  const violations = Math.max(d.fields.length, d.records > 0 ? 1 : 0);
+  // COA-D15: the field names ride on a drift row only; a clean row renders its count (legacy value 0).
+  ctx.report('schema_mismatch_count', violations > 0 ? { violations, detail: d.fields } : { violations });
 }
 function applicant_names_present(ctx) {
   ctx.report('applicant_names_present', { violations: num((acq(ctx).shaped_tags || {}).applicant_present) });
@@ -358,7 +365,7 @@ function zoning_designation_null(ctx) {
   ctx.report('zoning_designation_null', { violations: rows > 0 && nulls === rows ? 1 : 0, detail: nulls });
 }
 function lifecycle_status_history_inserted(ctx) {
-  ctx.report('lifecycle_status_history_inserted', { violations: 0, value: ledgerWritten(ctx) });
+  ctx.report('lifecycle_status_history_inserted', { value: ledgerWritten(ctx) });
 }
 function lifecycle_status_history_errors(ctx) {
   ctx.report('lifecycle_status_history_errors', { violations: num(ledger(ctx).errors) });
@@ -398,7 +405,8 @@ async function max_days_stale(ctx) {
     ctx.report('max_days_stale', { ...INERT, detail: 'inert (no hearing on or before the run date)' });
     return;
   }
-  ctx.report('max_days_stale', { value: daysSince(newest, ctx.clock()), detail: newest });
+  // COA-D15: the row renders the day count its value_max bound reads (the legacy row value), never the hearing date.
+  ctx.report('max_days_stale', { value: daysSince(newest, ctx.clock()) });
 }
 
 const CHECKS = {
