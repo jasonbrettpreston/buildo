@@ -6,7 +6,7 @@
 // Spec 124 §5 register row from R-CX on — the first row written under V3-final — and
 // fails a row that carries no "McDonald's Airtight V3" label or whose backticked
 // tokens name no file in the repo. A row moved to a 124a LIVE REGISTER section for the
-// byte budget (M32 on, Spec 124 §4 R-I(4)) stays in force and stays under this lock.
+// byte budget (M32, M33 on, Spec 124 §4 R-I(4)) stays in force and stays under this lock.
 
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
@@ -85,6 +85,11 @@ describe('Spec 124 §5 R-DF — every V3-final register row is labelled and name
   it('keeps the rows moved to 124a (M32: R-CY…R-DE) under the lock', () => {
     const ids = rows.map((r) => r.id);
     for (const id of ['R-CY', 'R-CZ', 'R-DA', 'R-DB', 'R-DC', 'R-DD', 'R-DE']) expect(ids).toContain(id);
+  });
+
+  it('keeps the rows moved to 124a (M33: R-DG…R-DM) under the lock', () => {
+    const ids = rows.map((r) => r.id);
+    for (const id of ['R-DG', 'R-DH', 'R-DI', 'R-DJ', 'R-DK', 'R-DL', 'R-DM']) expect(ids).toContain(id);
   });
 
   it("each row carries the McDonald's Airtight V3 label", () => {

@@ -617,6 +617,19 @@
       "content_sha256": "3697b9aa42bb16a8b1546e470516e2ebdb2d16a9af3d6918f40c34cecb2bbe36",
       "moved_at": "2026-10-20",
       "commit": "cd7a649e"
+    },
+    {
+      "id": "M33",
+      "from_spec": "124",
+      "anchor": "| R-DG | **#44 accounting rulings (McDonald's Airtight V3, operator y 2026-10-17; compliance proof `.cursor/v3-r-dg-compliance-2026-10-17.md`).** (G3) A column a reader WRITES itself derives no producer edge in the #44 (e) derivation (`derivedReadsSteps`; extends R-BL(v)); read-only columns, pin edges and `stepUpstreams` are unchanged. (G7) A traced read whose fingerprint equals the step's own `plausibility[]`/`invariants[]` SQL is accounted against that SQL in (a)'s traced ⊆ declared half, at column level; it never enters `inputs.reads` or the (e) derivation (amends R-BJ; no schema field). (G8) A read that only feeds a §9 emit is a measurement read, declared in `checks[].reads` on the emit's reporting check, never in `inputs.reads`. (G5) HELD: a system relation stays unwitnessed until the witness catalog captures its columns (column level, no table-level allowance). (A5) A read newly visible under G9 on a table with no converted inserter raises gate D's UNPRODUCED-UNWITNESSED ceiling by its measured count only (+1 `permit_inspections.created_at`, Python inserter; Claude ruling, for operator review). | Amends R-BJ, R-BL(v) | `step-upstreams.logic`; `witness-w44.logic` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B18 — Register rows R-DG…R-DM (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 7,
+      "classification": "REGISTER",
+      "evidence": "rulings-7 (operator 2026-10-20: \"a nd b rullings approved - just ensure no conflict with existing rulings\", McDonald's Airtight V3): Spec 124 was at 381/380 lines and 126,986 B after R-EW and R-EX. Rows R-DG…R-DM (the next contiguous block after M32; R-DF stays, it is the V3 admission rule) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.",
+      "content_sha256": "d18b2a275df2001af2c60589222aa1dcf6ec18ce43bc53188fce668cd24ff989",
+      "moved_at": "2026-10-20",
+      "commit": "6d63db74"
     }
   ]
 }
