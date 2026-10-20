@@ -447,7 +447,7 @@ Operator decisions (2026-10-20, verbatim): "the label V3 should only apply if al
 | Question | Answer |
 |---|---|
 | STANDARDIZED | One reader, `tableDataRows` (`scripts/analysis/gates/markdown-table.mjs`), for G3, G-2, both churn-table parsers, G6's ledger reader and #36. |
-| OBSERVABLE | The G3 detail prints `table rows=<data rows>`; the G-2 detail its preserved-in-compute count. |
+| OBSERVABLE | The G3 detail prints `table rows=<data rows>` (amended 2026-10-20 by R-FB: `ledger rows=<n> vocab-hit rows=<m>; evidence rows=<k> (not scored)`, §B19); the G-2 detail its preserved-in-compute count. |
 | RECORDED | Spec 124 §5 R-FA, dated 2026-10-20, with the measured fleet change. |
 | SCALABLE | Any markdown table, any number per section; alignment colons handled. |
 | ACCURATE | Red-first evidence `docs/reports/red-evidence/v3-label/r-fa-table-header-rows.json` (4 of 5 failed on the unfixed scorers); fleet change measured: 21 steps rise, none drops. |
@@ -480,3 +480,35 @@ Moved from Spec 124 — v3-label lane (operator 2026-10-20: R-EY, R-EZ, R-FA, Mc
 | R-DR | **The §1.2a P4 hidden-variable check counts only a step's own consumption (McDonald's Airtight V3, operator y 2026-10-18).** `config: "none"` is a hidden variable when the step consumes a tunable through its own paths: compute reads, its descriptor's `*_from_config` fields, maintenance/distribution keys derived from its own descriptor or compute, and dispatch/fields closures. A runner-wide read in `scripts/lib/step/index.js` (`ctx.config.<x>` / `configValues.<x>`) counts only when `sharedRunnerVarOwner` names this step. This is the existing dead-declaration-only posture of those paths (LP-D-conformance-gap, EP-D17), applied in both directions. Another slug's read is checked against that owner. An unowned runner-wide read is exempt only on a closed list, `RUNNER_OPT_IN_CEILINGS` (the two post-check ceilings the runner falls back from; they count for steps that declare them); any other unowned one counts as the step's own (fail closed; Spec 08 output panel round 1, 2026-10-18). First case: load_bylaw_map_areas. *(Amended by R-EB at RE-FREEZE #37: the closed list moves into the library as `RUNNER_VARIABLES`; post-check concurrency is resolved for every step and no step declares it, so `step_post_check_statement_timeout_minutes` is the one opt-in ceiling left.)* | Rule 3; 122 §1.2a P4 | `step-conformance.infra` |
 | R-DS | **The sources prove-red corpus subtracts only converted files in the sources chain (McDonald's Airtight V3, operator y 2026-10-18).** The step-shape count lock is `28 − |converted ∩ SOURCES_STEP_FILES| − pendingInScope`. A converted step of another chain (load_bylaw_map_areas, bylaw_maps) was never in the corpus, so it does not drive the expected count negative. | Spec 122 §5.2 | `step-conformance.infra` |
 | R-DT | **`standard: V3` means the whole package (McDonald's Airtight V3, operator y 2026-10-18).** `standardFor` (`scripts/analysis/gates/compute-literals.mjs`), the one source of `step-validate`'s `standard=` print, returns `V3` only when the step has zero purity rows (R-BZ/R-CA) AND zero `standard-gates-ledger.json` rows of any gate naming it (its slug or its compute module base) AND no hard stop (scorecard hard-stop, #44 hard stop or a #44 compute-attributed FAIL) AND no stage-gated red (amended 2026-10-18, output panel round 2 N1: a pending `stage` that excludes a gate from the hard stop — `STAGE_HARDSTOP_EXCLUSIONS`, e.g. `shape_clean_pending_recapture` excludes G8 — while that gate is actually red: G7/G8 below max, G9 failing, an excluded Rule row unpinned enforced-red, or a capture-derived registry gate #30/#31/#38–#41 failing; excluded alone is not red; `stageGatedReds` → `standardSignals` in `step-validate.mjs`, the call site); otherwise `V2`. A caller that cannot answer `hardStop: false` reads V2 (fail closed). Measured 2026-10-18 before and after: unchanged — refresh_snapshot V2 (its CP-PERMITS purity row), the other 29 converted/pending steps V3; load_coa_notices (`shape_clean_pending_recapture`) stays V3 because its G8 is 3/3 and #30/#31/#38–#40 pass, so its stage hides no red. **Amended 2026-10-20 by R-EY** (operator y 2026-10-20): `standard: V3` now needs all nine R-EY conditions, fail closed; the measurement above is superseded (R-EY measured 1/43 V3). | Amends the standard-versions table; R-BZ (the V2/V3 print); R-DF | `gate-compute-literals.infra`; `step-validate-standard-label.logic` |
+
+---
+
+## Appendix §B19 — V3 admission table for R-FB, the rulings-8 citations, and the bundled-night additions (rulings-8, 2026-10-20)
+
+Operator decision (2026-10-20, verbatim): "y show which ruling authorixzes this or create aruling for each." Applied to three items: (1) G3 scores intent-ledger tables only — no existing rule authorized it, so R-FB is created (provisional; renumbered at integration if taken); (2) the assert_data_bounds `COST_MAG_ACCEPT` list moves into the descriptor; (3) two Rule 4 gaps ride the bundled RE-FREEZE night (PIN REFREEZE-BUNDLE-1, §B17).
+
+**Item 1 — authority search.** No existing rule says which PH-3 tables G3 scores. R-FA (Spec 124:266) settles header rows only: "A markdown table's header and separator rows are never data rows, for every row-counting scorer". Spec 123:305 sets the G3 criterion ("100% of top-right + fence>0 constructs have a recovered *why* or an explicit `INTENT-UNKNOWN`") without naming tables. Hence R-FB.
+
+**R-FB conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-FA | Spec 124:266 | "One reader, `tableDataRows` … G3 (`scoreG3`), G-2 (`checkPreservedInComputeHasWhy`, Rule 4), the churn-table parser … all read through it" | No conflict: `tableDataRows` is unchanged (the union of `markdownTables` rows) and every non-PH-3 consumer still reads it; G3/G-2 read the split built on the same reader. R-FA's detail form is amended in place ("Amended 2026-10-20 by R-FB"). |
+| Spec 123 PH-3 output | Spec 123:62 | "**PH-3** intent ledger — `git log -S` every non-obvious constant \| … \| ledger + evidence \| G3" | Supports R-FB: the deliverable already separates the ledger from its evidence. |
+| Spec 123 §6 G3 | Spec 123:305 | "100% of top-right + fence>0 constructs have a recovered *why* or an explicit `INTENT-UNKNOWN`" | No conflict: an evidence row (a census line, a lock-inventory line) is not a construct awaiting a why. PIN G3-INTENT-UNKNOWN (§B17) is unchanged. |
+| R-R | 124a:132 | "`scripts/analysis/step-validate.mjs` is the ONE command generating the Spec 123 §6 G0–G9 scorecard" | Same one command; the scorecards are regenerated by it (`--all --write --fast`). |
+| Rule 4 / G-2 closure | Spec 124:89; 124a §B5 | "A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment."; G-2 requires every preserved-in-compute row to name "why", "notes.json" or "checks[]" | No conflict, and deliberately not narrowed: G-2 reads ledger AND evidence rows, so moving a disposition into a table without a Disposition header cannot hide it from Rule 4 (lock: `g3-ledger-tables.logic`, G-2 case). |
+| R-EY (6) | Spec 124:264 | "gates standardized: every G0–G8 at its max and no other scorecard hard-stop reason" | No conflict: R-FB changes what G3 measures, not the label rule; measured, no label changed. |
+| Spec 123 ship bar | Spec 123:313 | "Ship at ≥14/17 with G6, G7 and G8 full." | No conflict: no step dropped; 5 rose. |
+
+**R-FB — G3 scores intent-ledger tables only.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One split (`ledgerTableRows` over `markdownTables`, `scripts/analysis/gates/markdown-table.mjs`), one test of a ledger (a header cell naming Disposition), the same reader R-FA standardized; every existing ledger in the fleet already names the column (surveyed 2026-10-20 over 42 assessment reports). |
+| OBSERVABLE | The G3 scorecard line prints `ledger rows=<n> vocab-hit rows=<m>; evidence rows=<k> (not scored)`, so an excluded table is visible, never silent; `step-validate`'s selfTest refuses to run if an evidence table is scored. |
+| RECORDED | Spec 124 §5 R-FB, dated 2026-10-20, with the operator's words and the measured fleet change; R-FA amended in place. |
+| SCALABLE | Any report, any number of tables per PH-3 section; no slug list. |
+| ACCURATE | Red-first: 5 of 6 cases fail on the parent `0935a5cb` (`docs/reports/red-evidence/rulings-8/r-fb-g3-ledger-tables-red.json`; the sixth, G-2 unchanged, is a preserved-behaviour lock); 11/11 with `table-header-rows.logic` after (`…-green.json`). Fleet measured: 5 steps rise, none drop, no label changes; G-2 counts identical. |
+| SIMPLE | One rule (a Disposition column makes a ledger) and one new detail field; the G3 formula is unchanged. |
+| EXTERNALIZED | No threshold: a header-cell match and two counts. |

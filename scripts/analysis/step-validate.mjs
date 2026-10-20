@@ -275,7 +275,7 @@ import { checkTerminalsRecordsMeta, loadTerminalsFleet, selfTest as terminalsRec
 import { checkAdminRegistration, loadAdminRegistration, selfTest as adminRegistrationSelfTest } from './gates/admin-registration.mjs';
 import { checkVariableEffect, loadVariableEffect, EFFECT_REL } from './gates/variable-effect.mjs';
 import { checkComputeLiterals, loadComputeFiles, filterGateELedgerFindings, standardFor, standardLabel, selfTest as computeLiteralsSelfTest } from './gates/compute-literals.mjs';
-import { tableDataRows } from './gates/markdown-table.mjs';
+import { tableDataRows, ledgerTableRows } from './gates/markdown-table.mjs';
 import { exceptionsSignal, loadRatchet, ratchetFindings, cutoverFindings, hardGateFindings, hardGateEnabled } from './gates/v3-label.mjs';
 import { checkEstateLiterals, selfTest as estateLiteralsSelfTest } from './gates/estate-literals.mjs';
 import { selfTest as gateVariablesSelfTest } from './gates/variables.mjs';
@@ -2904,10 +2904,13 @@ function scoreG2(row, report, churnFindings) {
 export function scoreG3(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
   if (!phSection) return { max: 2, score: 0, detail: 'no PH-3/Intent Ledger section found' };
-  const rows = tableDataRows(phSection).map((r) => r.text); // R-FA: header + separator rows are never data rows
+  // R-FB: only intent-ledger tables (a header naming a Disposition column) are scored; every other PH-3 table is
+  // evidence (census, lock inventory, line accounting, provenance). R-FA: header + separator rows are never data rows.
+  const { ledger, evidence } = ledgerTableRows(phSection);
+  const rows = ledger.map((r) => r.text);
   const vocabHitRows = rows.filter((r) => DISPOSITION_VOCAB.some((v) => r.toLowerCase().includes(v)));
   const score = rows.length > 0 && vocabHitRows.length > 0 ? (vocabHitRows.length === rows.length ? 2 : 1) : phSection ? 1 : 0;
-  return { max: 2, score, detail: `table rows=${rows.length} vocab-hit rows=${vocabHitRows.length}` };
+  return { max: 2, score, detail: `ledger rows=${rows.length} vocab-hit rows=${vocabHitRows.length}; evidence rows=${evidence.length} (not scored)` };
 }
 /**
  * G-2 (Spec 124 §2 Rule 4, GAP G-2) — "no test asserts that a preserved-in-compute
@@ -2929,7 +2932,11 @@ export function scoreG3(report) {
 export function checkPreservedInComputeHasWhy(report) {
   const phSection = section(report, /##\s*.{0,10}\d*\.?\s*PH-3[^\n]*\n/i);
   if (!phSection) return { pass: true, detail: 'no PH-3 section — vacuously nothing to check', violations: [] };
-  const rows = tableDataRows(phSection).map((r) => r.text); // R-FA: header + separator rows are never data rows
+  // R-FB: the same shared split as G3, but G-2 reads ledger AND evidence rows: Rule 4 binds a preserved-in-compute
+  // row wherever it sits, so a disposition in a table whose header does not say "Disposition" cannot escape it.
+  // R-FA: header + separator rows are never data rows.
+  const { ledger, evidence } = ledgerTableRows(phSection);
+  const rows = [...ledger, ...evidence].sort((x, y) => x.line - y.line).map((r) => r.text);
   const preservedRows = rows.filter((r) => r.toLowerCase().includes('preserved-in-compute'));
   const violations = preservedRows.filter((r) => !/\bwhy\b|notes\.json|checks\[\]/i.test(r));
   return {
@@ -4783,10 +4790,14 @@ function selfTest() {
     '## §1. PH-0 — boundary freeze (commit 1, G0)',
     'stuff',
     '## §2. PH-3 — Intent Ledger over the corpus (commit 2, G3)',
-    '| commit | note |',
+    '| commit | disposition |',
     '|---|---|',
     '| `abcdef1234` | preserved-in-compute disposition |',
     '| `1234abcdef` | encoded-as-descriptor-field disposition |',
+    '',
+    '| Lines | Evidence |',
+    '|---|---|',
+    '| 1-10 | line accounting (R-FB: evidence, not scored) |',
     '## §3. PH-5 — Seam map (commit 3, G5)',
     '### DB seam',
     '### Clock seam',
@@ -4817,6 +4828,11 @@ function selfTest() {
   const g3bad = scoreG3(badReport);
   if (g3good.score < 1 || g3bad.score !== 0) {
     throw new Error(`self-test FAILED: G3 did not discriminate good/bad fixtures (good=${g3good.score}, bad=${g3bad.score})`);
+  }
+  // R-FB: the good fixture's PH-3 carries an evidence table beside a fully dispositioned ledger; G3 scores the
+  // ledger only, so it is 2/2 (an evidence row counted as an un-dispositioned ledger row would read 1/2).
+  if (g3good.score !== 2 || !g3good.detail.includes('evidence rows=1 (not scored)')) {
+    throw new Error(`self-test FAILED: G3 scored a PH-3 evidence table as ledger rows (R-FB): ${g3good.detail}`);
   }
   // reportPathFor — both-directions proof of the batch\d+-i\d+ naming-convention fix
   // (found live, C4 batch 1 I1 commit 7, 2026-09-11: the regex only matched the OLD

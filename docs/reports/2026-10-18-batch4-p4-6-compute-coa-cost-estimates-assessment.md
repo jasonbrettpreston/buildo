@@ -262,7 +262,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the 
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=11 |
 | G2 | 1 | 1 | no generated churn×complexity row; no PH-2 section; ASSESSMENT-INCOMPLETE claimed instead; why-stated=true |
-| G3 | 1 | 2 | table rows=11 vocab-hit rows=10 |
+| G3 | 1 | 2 | ledger rows=11 vocab-hit rows=10; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 10 ledger row(s), 0 without CLOSED/PIN () |

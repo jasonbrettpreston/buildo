@@ -742,7 +742,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=54 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=85 vocab-hit rows=9 |
+| G3 | 1 | 2 | ledger rows=11 vocab-hit rows=9; evidence rows=74 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |

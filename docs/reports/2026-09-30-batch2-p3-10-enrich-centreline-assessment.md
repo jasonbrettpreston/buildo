@@ -519,7 +519,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=18 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-left window=b87f62d |
-| G3 | 2 | 2 | table rows=16 vocab-hit rows=16 |
+| G3 | 2 | 2 | ledger rows=16 vocab-hit rows=16; evidence rows=0 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 11 ledger row(s), 0 without CLOSED/PIN () |

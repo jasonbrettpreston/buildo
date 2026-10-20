@@ -820,7 +820,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
 | G0 | 1 | 1 | boundary-section=true spec-line=true |
 | G1 | 1 | 1 | PH-3 section found=true sha-count=23 |
 | G2 | 1 | 1 | 122-churn-complexity.md quadrant=top-right window=b87f62d |
-| G3 | 1 | 2 | table rows=293 vocab-hit rows=8 |
+| G3 | 1 | 2 | ledger rows=13 vocab-hit rows=8; evidence rows=280 (not scored) |
 | G4 | 2 | 2 | risk-class row with chance+impact found=true |
 | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
 | G6 | 3 | 3 | 7 ledger row(s), 0 without CLOSED/PIN () |
