@@ -1,0 +1,20 @@
+{
+  "source": "operator chat 2026-10-20, as recorded in the operator queue (~/Buildo/.cursor/QUEUE.md, the two \"Operator y (2026-10-20)\" lines, copied verbatim as the recommendations) with the operator quotes recorded verbatim in Spec 124a §B25",
+  "operator_quote": "y to both; y to this revised version",
+  "decisions": [
+    {
+      "id": "HANDBOOK",
+      "subject": "Spec 132 = Step Standard Handbook; Spec 133 = By-law Handbook",
+      "decision": "y",
+      "operator_quote": "y to both",
+      "recommendation": "Operator y (2026-10-20): Spec 132 = Step Standard Handbook (generated reading spec; authority Spec 124 register); Spec 133 = By-law Handbook (generated from provision-family register; authority M-/LC-rows). Exempt from line budget, size check kept. Cite as 'Spec 132 §<line id> (R-xx)'."
+    },
+    {
+      "id": "ROLES",
+      "subject": "Revised spec roles (standard + policy pairs)",
+      "decision": "y",
+      "operator_quote": "y to this revised version",
+      "recommendation": "Operator y (2026-10-20) revised spec roles: pairs 122/124, 68/69+69a, 78/131 (policy register governs on policy, standard on schema/behaviour — 124:11 clause to be flipped); 132 generated from 122+124, 133 from 68+69/69a+78+131; 122a historical; 121/123 procedure text + Spec 120 banner → rulings at the 132 move; Spec 119 out of scope."
+    }
+  ]
+}

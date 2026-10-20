@@ -2,7 +2,7 @@
 
 **Status:** GENERATED
 
-> **Role: generated handbook.** Authority: Spec 124 register (policy) + Spec 122 (schema); this spec is GENERATED from rule-map.json — do not hand-edit. It is the reading surface of the step standard pair, Spec 122 (standard: the live schema and behaviour) and the Spec 124 register (policy: §5 and the 124a LIVE REGISTER sections). If this page and either source disagree, the Spec 124 register governs on policy and Spec 122 on the schema and behaviour (Spec 124 R-GV); fix the map or the generator. Specs 119, 120, 121, 122a, 123 are historical design records. (operator y 2026-10-20 consolidation 1-4; Spec 132: Spec 124 R-GU.)
+> **Role: generated handbook.** Authority: Spec 124 register (policy) + Spec 122 (schema); this spec is GENERATED from rule-map.json — do not hand-edit. It is the reading surface of the step standard pair, Spec 122 (standard: the live schema and behaviour) and the Spec 124 register (policy: §5 and the 124a LIVE REGISTER sections). If this page and either source disagree, the Spec 124 register governs on policy and Spec 122 on the schema and behaviour (Spec 124 R-GV); fix the map or the generator. Specs 119, 120, 121, 122a are historical design records. (operator y 2026-10-20 consolidation 1-4; Spec 132: Spec 124 R-GU.)
 >
 > **Citation form.** `Spec 132 §<line id> (R-xx)`, e.g. `Spec 132 §x-rulings.3 (R-GU)`. The line id is the bold id that starts each line in §2–§4 and §7; the rule id is one the line lists. `spec-split-check --check` resolves every such citation in the repo and fails one whose line does not exist or whose rule maps to another line (arm iii-b).
 
@@ -413,9 +413,13 @@ What to do when the standard does not answer your question.
   *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
   Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
 
-- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
   *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
-  Rules: `R-GU` `R-GV` `R-GW` `R-GX`
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM`
 
 ### Verification before integration and acceptance
 
@@ -492,7 +496,7 @@ Validator messages that name their rule directly:
 
 "A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 17 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
 
-Enforcement across all 311 mapped ids: 196 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
+Enforcement across all 324 mapped ids: 209 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 47 none (see the glossary).
 
 | Rule | Class | Line | Reason |
 |---|---|---|---|
@@ -546,7 +550,7 @@ Enforcement across all 311 mapped ids: 196 lock, 1 lock-db, 37 check, 0 hook, 30
 
 ## 7. History
 
-The Spec 124 register governs on policy and Spec 122 on the schema and behaviour (R-GV, operator y 2026-10-20, which flips Spec 124's transition clause); Spec 132, generated from this file, is the reading surface (R-GU); Specs 119, 120, 121, 122a and 123 are historical design records (decision 2). Spec 122a carries the historical role banner (R-GW); the role banners of 120, 121 and 123 await operator rulings. Spec 121 M1–M14 are retired as a set (decision 4); still-true items map to live handbook lines; Spec 121 text is unchanged.
+The Spec 124 register governs on policy and Spec 122 on the schema and behaviour (R-GV, operator y 2026-10-20, which flips Spec 124's transition clause); Spec 123 is the standard for the conversion procedure and its G0–G9 gates (R-HJ); Spec 132, generated from this file, is the reading surface (R-GU); Specs 119, 120, 121 and 122a are historical design records (decision 2, amended by R-HJ). Specs 120, 121 and 122a carry the historical role banner (R-GW, R-HH, R-HI); Spec 119 is out of scope. Spec 121 M1–M14 are retired as a set (decision 4); still-true items map to live handbook lines; Spec 121 text is unchanged.
 
 - **history.1** Spec 122 programme decisions about how the programme was run (re-architecture delivered incrementally, parallel tracks, vertical-slice library, per-step re-verification at PH-0, the P0 categories adjudication).
   *Why:* Done; kept for the record.

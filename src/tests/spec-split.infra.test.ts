@@ -44,6 +44,8 @@ const SPEC_FILES: Record<string, string> = {
   '131': '131_lot_configuration_policy.md',
   // Spec 132 — Step Standard Handbook (Spec 124 R-GU, 2026-10-20): generated; arm (iv-b) size cap and arm (v) shape check.
   '132': '132_step_standard_handbook.md',
+  // Spec 134 — resolve_bylaws (Spec 124 R-GY, 2026-10-20): the Layer 2 step's owner spec; arm (iv) budget and arm (v) shape check.
+  '134': '134_resolve_bylaws.md',
 };
 
 function runCli(args: string[], env: Record<string, string> = {}) {
@@ -232,10 +234,10 @@ describe('spec-split-check.mjs — six arms, RED via the REAL CLI on an isolated
   });
 
   // rule-map: P4-7 — tool-performed move verified by a line-set diff, both directions (verify-12 N1, operator y 2026-10-20 consolidation 1-4)
-  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M18, M20, M21, M24, M25, M27, M31, M32, M33, M34, M35) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
+  it('GREEN/RED — the Spec 124 -> 124a moves (M08, M09, M14–M18, M20, M21, M24, M25, M27, M31, M32, M33, M34, M35, M36) are lossless: an untouched copy verifies, one changed byte in a moved block fails arm (i)', () => {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) as { moves: { id: string; to_spec: string; content_sha256: string | null }[] };
     const into124a = manifest.moves.filter((m) => m.to_spec === '124a');
-    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17', 'M18', 'M20', 'M21', 'M24', 'M25', 'M27', 'M31', 'M32', 'M33', 'M34', 'M35']);
+    expect(into124a.map((m) => m.id)).toEqual(['M08', 'M09', 'M14', 'M15', 'M16', 'M17', 'M18', 'M20', 'M21', 'M24', 'M25', 'M27', 'M31', 'M32', 'M33', 'M34', 'M35', 'M36']);
     for (const m of into124a) expect(m.content_sha256, `${m.id} must carry the hash --refresh recorded`).toMatch(/^[0-9a-f]{64}$/);
 
     const green = makeFixtureTree();

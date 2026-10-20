@@ -1,5 +1,7 @@
 # SPEC 123 — Step Optimization: Assessment & Validation
 
+> **Role: standard.** The conversion procedure and the G0–G9 gates `step-validate` computes; on policy the Spec 124 register governs (Spec 124 R-GV, R-HJ).
+
 > ## ✅ Status: ACTIVE — ratified by operator 2026-08-29 after pilots 1–5
 >
 > Promoted from the prior `⛔ UNRATIFIED DRAFT — NOT REGISTERED` banner by explicit operator ruling (2026-08-29, R-R):
@@ -9,7 +11,7 @@
 > ~~Registered in `docs/specs/00_system_map.md`~~ — **CORRECTED 2026-09-10 (measured): no such path exists; the file is `docs/specs/00-architecture/00_system_map.md`** (123 *is* registered there — the path was wrong, not the registration). The same wrong path appears in `CLAUDE.md`, filed as a followup.
 
 **Status:** ACTIVE · **Scope:** the procedure applied to each of the 27 `sources` steps, then the estate's 64
-**Spec 121 is the method and GOVERNS this document.** 123 does not restate 121; it **instantiates** it for one job — converting a pipeline step in place. Where they differ, 121 wins and 123 is wrong.
+**Spec 121 is the historical method record this procedure instantiates** for one job, converting a pipeline step in place; on policy the Spec 124 register governs, on the schema and behaviour Spec 122 (Spec 124 R-HJ, R-GV).
 **Spec 122** is the target architecture. **Spec 119** owns backend verification doctrine and governs over both.
 
 > ⚠️ **TWO `P` NAMESPACES — disambiguated 2026-08-23.** A grounding audit found `P1` carrying **three incompatible meanings** across four documents. They are now distinct: **`PH-0`…`PH-8`** are Spec 121 §3's **assessment phases** (archaeology, structure, risk class…), used inside this spec. **`P0`…`P3`** are the **programme stages** in `.cursor/queued_task_step_opt_programme.md` (audit instrument · centroid · Phase B · envelope + green run). ⚠️ **A reader who takes the programme's `P1` as satisfying Spec 122 §10's S-gate silently deletes the green-cloud-run precondition** that §11 failure-mode 7 exists to enforce.

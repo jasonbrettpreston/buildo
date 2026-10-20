@@ -28,9 +28,9 @@
     "123": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 422,
-        "bytes": 49705,
-        "commit": "0820685d"
+        "lines": 433,
+        "bytes": 54848,
+        "commit": "0820685d; re-seeded 2026-10-20 (wf2/layer2-spec) with the R-GW role banner and the line-12 rewrite, Spec 124 R-HJ (equals the committed file, declared growth: +11 lines measured since 0820685d, +5.1 KB, of which this lane's +2 lines / +181 B)"
       }
     },
     "124": {
@@ -44,9 +44,17 @@
     "131": {
       "headroom_pct": 10,
       "measured_at": {
-        "lines": 131,
-        "bytes": 26023,
-        "commit": "new spec, landed 541f3dc2; re-seeded with LC-53 (2026-10-19); re-seeded with LC-54..LC-56 and LC-58 (2026-10-19, wf1/front-setback-reliability; equals the committed file, declared growth)"
+        "lines": 136,
+        "bytes": 29841,
+        "commit": "new spec, landed 541f3dc2; re-seeded with LC-53 (2026-10-19); re-seeded with LC-54..LC-56 and LC-58 (2026-10-19, wf1/front-setback-reliability; equals the committed file, declared growth); re-seeded with LC-60..LC-62 (2026-10-20, wf2/layer2-spec, the decision-log rows R-9, R-11, R-12; equals the committed file, declared growth)"
+      }
+    },
+    "134": {
+      "headroom_pct": 10,
+      "measured_at": {
+        "lines": 175,
+        "bytes": 24962,
+        "commit": "new spec, wf2/layer2-spec 2026-10-20 (Spec 124 R-GY; the Spec 131 form)"
       }
     }
   },
@@ -76,9 +84,6 @@
     "docs/specs/01-pipeline/101_notification_dispatch.md",
     "docs/specs/01-pipeline/118_deep_scrapes_execution_envelope.md",
     "docs/specs/01-pipeline/119_backend_verification_doctrine.md",
-    "docs/specs/01-pipeline/120_pipeline_step_runner.md",
-    "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md",
-    "docs/specs/01-pipeline/123_step_opt_assessment_validation.md",
     "docs/specs/01-pipeline/129_source_coa_notices.md",
     "docs/specs/01-pipeline/130_link_parcel_abutments.md",
     "docs/specs/01-pipeline/131_lot_configuration_policy.md",
@@ -182,6 +187,23 @@
       "R4",
       "R5",
       "R6"
+    ],
+    "docs/specs/01-pipeline/120_pipeline_step_runner.md": [],
+    "docs/specs/01-pipeline/121_assessment_and_verification_methodology.md": [
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "M6",
+      "M7",
+      "M8",
+      "M9",
+      "M10",
+      "M11",
+      "M12",
+      "M13",
+      "M14"
     ]
   },
   "reader_guards": [
@@ -790,6 +812,19 @@
       "content_sha256": "bacbdf6bef2e3b7b2145e09c8691b02e088755b39d6966fa8f01e4be1cfcb16c",
       "moved_at": "2026-10-20",
       "commit": "1901b3c1"
+    },
+    {
+      "id": "M36",
+      "from_spec": "124",
+      "anchor": "| R-EQ | **P4-SWAP: a pending step may swap its frozen shell before ③, after its upstreams (McDonald's Airtight V3, operator y 2026-10-19; codifies W4A-R6's \"`runner_wired` at the shell swap before P4\").** A step whose ② landed at `compute_ported` moves to `runner_wired` in its swap commit; its POST captures land the same night (G8 is not excluded at `runner_wired`, `stageExclusions`). Fast invariant #54 SWAP-ORDER: at `runner_wired` / `shape_clean*` every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`, R-EF), so nothing swaps before the coa root ②; an unregistered or unknown upstream fails. No exceptions. Converted[] registration and the legacy-name retirement (D2b/D7) stay ③'s (EP-PIN-D17). Readers' owed pins fall due in the swap commit (R-ES). V3 table: 124a §B14. *(Dated note 2026-10-20, Q-R-EQ-1, operator y to strict: \"an unregistered or unknown upstream fails. No exceptions.\" covers link_coa, unregistered and last in `chains.coa`; assert_coa_freshness and classify_coa_scope, thus classify_coa_trades and compute_coa_cost_estimates, stay blocked until its position is resolved. PIN LINKCOA-ORDER, 124a §B15. No new rule.)* | Amends W4A-R6 (ordering); R-EF; R-K | `swap-order.logic`; `docs/reports/red-evidence/w4-rulings-5/r-eq-red.json` |",
+      "to_spec": "124a",
+      "to_anchor": "## Appendix §B26 — Register rows R-EQ…R-FB (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20",
+      "line_count": 12,
+      "classification": "REGISTER",
+      "evidence": "layer2-spec (wf2/layer2-spec, 2026-10-20): recording the operator's 2026-10-20 rulings as R-GY and R-HB…R-HK put Spec 124 at 382/380 lines. Rows R-EQ…R-FB (12 contiguous rows) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9), rule-map.mjs and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.",
+      "content_sha256": "11ad3fe5ff91910c2463cd9b3a889a315f977384004fcf9b2ab64382ae4c9f68",
+      "moved_at": "2026-10-20",
+      "commit": "1fb8bd07"
     }
   ]
 }

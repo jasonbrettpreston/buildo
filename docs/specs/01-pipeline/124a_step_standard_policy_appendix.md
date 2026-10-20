@@ -893,3 +893,220 @@ Operator decisions (2026-10-20, verbatim): "y to both" (the step handbook become
 
 - **Integration note.** R-GU…R-GX are mapped in `rule-map.json` (line x-rulings.3, new). If integration renumbers them, the map, the generator's `CITATION_EXAMPLE_RULE` and `spec132-handbook-roles.logic` move with them.
 - **Owed to the operator** (prepared, not applied): rulings on the roles of Specs 120, 121 and 123 (123:12; 123's G0–G9 gates).
+
+
+---
+
+## Appendix §B26 — Register rows R-EQ…R-FB (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20
+
+Moved from Spec 124 — layer2-spec (wf2/layer2-spec, 2026-10-20): recording the operator's 2026-10-20 rulings as R-GY and R-HB…R-HK put Spec 124 at 382/380 lines. Rows R-EQ…R-FB (12 contiguous rows) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9), rule-map.mjs and spec124-register-locks.logic read them in 124a LIVE REGISTER sections.
+
+| R-EQ | **P4-SWAP: a pending step may swap its frozen shell before ③, after its upstreams (McDonald's Airtight V3, operator y 2026-10-19; codifies W4A-R6's "`runner_wired` at the shell swap before P4").** A step whose ② landed at `compute_ported` moves to `runner_wired` in its swap commit; its POST captures land the same night (G8 is not excluded at `runner_wired`, `stageExclusions`). Fast invariant #54 SWAP-ORDER: at `runner_wired` / `shape_clean*` every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`, R-EF), so nothing swaps before the coa root ②; an unregistered or unknown upstream fails. No exceptions. Converted[] registration and the legacy-name retirement (D2b/D7) stay ③'s (EP-PIN-D17). Readers' owed pins fall due in the swap commit (R-ES). V3 table: 124a §B14. *(Dated note 2026-10-20, Q-R-EQ-1, operator y to strict: "an unregistered or unknown upstream fails. No exceptions." covers link_coa, unregistered and last in `chains.coa`; assert_coa_freshness and classify_coa_scope, thus classify_coa_trades and compute_coa_cost_estimates, stay blocked until its position is resolved. PIN LINKCOA-ORDER, 124a §B15. No new rule.)* | Amends W4A-R6 (ordering); R-EF; R-K | `swap-order.logic`; `docs/reports/red-evidence/w4-rulings-5/r-eq-red.json` |
+| R-ER | **#44 (i) resolves a reader-side `by:"pin"` row (McDonald's Airtight V3, operator y 2026-10-19; Draft A).** A `by:"pin"` invalidator resolves when (i) a reader pins the declaring step (R-DO), or (ii) the row is the step's OWN column (it writes it, same table) and its own `staleness.pins[]` names another step whose `stamp` is a column of that table: the §6.3 watermark read from the reader's side, the row claim #54 makes an incremental pass index (the enrich_parcels phases[1] form). Otherwise `i:unresolved:pin`. No schema change; the producer still owes its own row at its ② (W4A-R4 (a)). First member: classify_coa_scope (`scope_classified_at` re-armed by the coa root's `last_seen_at`). Its LG-9-hatch guard draft is not admitted; Rule 9 / V7 applies (124a §B14). | Amends R-DO; follows W4A-R4 (a), claim #54 | `witness-reader-pin.logic`; `witness-i.logic` |
+| R-ES | **#44 (h) copy window: a pin on a producer still awaiting captures is owed, not failed (McDonald's Airtight V3, operator y 2026-10-19; Draft C).** While a producer is pending at a stage where `stageAwaitsCaptures` holds (the legacy shell is the live writer, W4A-R6 / R-EF), its `run_at` columns leave the h:undeclared map; a reader's unpinned acquisition read prints `#44 (h) OWED <reader>: h:owed:<writer>.<t>.<c>`, never FAIL. When the producer stops awaiting captures (the R-EQ swap, or ③) it is h:undeclared again, so the reader's pin and recapture land with the swap. One derivation for --all and --staged (`buildWitnessFleet`); #44 (i) inputs unchanged. First case: enrich_parcels on link_coa_to_parcels' `parcel_linked_at`. | Amends R-DI (h:undeclared); follows R-EF | `witness-h-copy-window.logic` |
+| R-ET | **A derived target proves #38 by a derived-status bracket (McDonald's Airtight V3, operator y 2026-10-20: "2-5 yes as long as the ruling is recorded"; discharges R-DY (e)'s owed bracket; amends R-CZ, extends R-DN, R-DP).** `ingestor-forced-cohort.js --op=derived_status:<s> --derive-column=<prior col> --derived-table=<t> --derived-key=<col> [--derived-key-prefix=<s>] --derived-natural-key=<c,…>` is the same bracket for an R-DY `outputs.writes[i].derive` target. It is refused before any DB connect when a flag is missing or contradictory, or when a derived flag is given without the op. `--backup` freezes (key, `--column`, `--derive-column`) and a sibling `<derived_table>_cohort_bak_<same stamp>` holding the cohort's derived natural keys, rendered by the server as `ROW(<natural key>)::text`. `--run` re-verifies both before-images against live, then appends `<s>` to the guard column and the prior column in ONE transaction. It requires `--count-path=<derived_table>_written`, a top-level int emit declared in `emits[]` and in the slug's `cohort.json` target for the derived table (the R-DN cross-check runs against the derived table). It passes only when: the emit reads ≥ N; the primary's (column, prior column) equal the before-image; no prior derived row vanished; and EXACTLY ONE derived row was inserted per cohort key (0 is RED). Restore: the primary pair comes back under `IS DISTINCT FROM`; the derived rows the cohort gained (live minus snapshot) are deleted by natural key in one transaction that commits only when the DELETE's RETURNING set equals them, else rolls back and exits 2. Local-only, under R-DP's lock (902002), recovery command and exit codes. First use (owed by the coa lane at ③): coa `lifecycle_status_history` (`lifecycle_status_history_written`, `scripts/lib/compute/load-coa.js`:443, from the same `ledgerWritten` as the check row at :361). V3 table and PINs: 124a §B15. | Amends R-CZ; R-BA gate G(1); discharges R-DY (e) | `cohort-derived-status.logic` |
+| R-EU | **`migrate.js --only=<n,…>` applies chosen migrations only (McDonald's Airtight V3, operator y 2026-10-20: "2-5 yes as long as the ruling is recorded"; amends Spec 113 §7's apply path, not its authority).** The listed numbers run in file order through migrate.js's own per-file transaction and the same `schema_migrations` row (filename, checksum, duration). The pure selection (`scripts/lib/migrate-select.js` `selectOnly`) refuses before any file runs on: a number with no file or with several; a listed applied file whose checksum drifted (an unchanged one is skipped, as a plain run would); or a listed file that names, outside comments, an object a HELD file creates. A held file is an unapplied, unlisted file numbered lower. Created objects are CREATE TABLE/VIEW/FUNCTION/TYPE/INDEX/SEQUENCE/TRIGGER names, ADD COLUMN names, and seeded logic_variables keys; the check is fail-closed (a false positive refuses; the fix is to list the dependency too). Every run prints run / already applied / HELD. `--only` validates before connecting, combines with `--dry-run`, refuses `--force` and `--verify`, and skips the logic_variables seed loader (`logic_variables.json` carries the held files' keys; PIN SEED-HOLD). Measured: 271, 272, 278 select cleanly over the real files with 274, 275, 276 held. V3 table: 124a §B15. | Amends Spec 113 §7 (apply path); runbook §3 rule 2a | `migrate-only.logic` |
+| R-EV | **A conversion may make a change-detection hash process-TimeZone independent at the cost of one measured re-upsert (McDonald's Airtight V3, operator y 2026-10-20: "if new ruling is required for 4 and 5 - its approved and proceed"; records the COA-D11 conditional approval, condition met).** When a legacy hash input was a zone-less timestamp parsed in the PROCESS TimeZone, the converted compute hashes the UTC-midnight form (the legacy's own output under a UTC process). Admitted only with all four: (a) a read-only proof that the stored hashes equal the legacy form computed in the producing process's TimeZone, none the UTC form, and that every other row hashes identically in both forms; (b) the re-upsert changes no status, so no R-DY derived row is written (`deriveRows` skips an unchanged status, `scripts/lib/compute/load-coa.js`:201); (c) a descriptor `limitations[]` entry carries the measured counts and names the check that shows the re-upsert; (d) a lock pins the new form as a change and the Defect Ledger row cites this row. First case, coa COA-D11: 31,253 of 31,270 Closed rows match the America/Toronto form, 0 the UTC form (17 are live CKAN changes); Active rows hash identically (measured read-only 2026-10-19, `scripts/load-coa.descriptor.json` limitations[0], check `records_updated`). The first converted `--full` re-upserts them once; incremental runs are unaffected. V3 table: 124a §B15. | Spec 123 G8 (an explained diff names a Defect Ledger id); R-DY (e) | `src/tests/steps/coa/compute.logic.test.ts` (COA-D11) |
+| R-EW | **A compute reads the ctx shape its descriptor's dispatch actually builds, and its lock builds that ctx through the real dispatch (McDonald's Airtight V3, operator y 2026-10-20: "a nd b rullings approved - just ensure no conflict with existing rulings"; item A, the compute-side form; COA-D13).** (i) A step's compute reads the context the runner's dispatch for its descriptor produces. A multi-primary INGESTOR (`externals[].target`, dispatched by runWithPool to `ingestPrimaries`, 122a §A18) reads, in the final pass, `acquired.primaries[id]` (a union member's entry = the group block with the member's own acquisition block over it, R-DX (iii)) and `written.by_target.<table>` (that target's own `inserted`/`updated`/`touched`/`e<i>`), and in the pre_write pass the flat group block with `ctx.primary` set (`scripts/lib/step/index.js` `aggregatePrimaries`, `ingestPrimaries`). A flat `runIngestPhase` read (`acquired.rows_read`, `written.e1`) on that path reads 0 (coa, Night P4 2026-10-20). (ii) Every converted step's compute lock feeds compute a ctx built by the real dispatch path, or a fixture generated from it, never a hand-built shape; locks stub only DB/network answers. (iii) Compute-side only: no change to `scripts/lib/step/**`, so no RE-FREEZE and no `lib_fingerprint` move. First case: coa (`runView`, `scripts/lib/compute/load-coa.js`). Older hand-built locks: closed list, PIN R-EW-LOCKS. Conflict check and V3 table: 124a §B20. | Applies R-DX (iii)/(iv), 122a §A18 0x; R-BZ unchanged | `src/tests/steps/coa/dispatch.logic.test.ts` |
+| R-EX | **A target with an R-DZ seen column declares `declared_drift`, and the POST rerun proof measures that drift exactly (McDonald's Airtight V3, operator y 2026-10-20: "a nd b rullings approved - just ensure no conflict with existing rulings"; item B; COA-D14).** R-DZ touches every fed key the guard skipped on every run, so `zero_writes` is false by construction (coa: 2,689 rows rewritten by run 2, Night P4 2026-10-20). Such a target declares `write_discipline.idempotent_rerun: "declared_drift"` with `idempotent_rerun_why` citing R-DZ, and `declared_drift.liveness` `{kind:"check", ref}` naming the INFO check whose row value is the run's `written.touched` (coa: `records_touched`). The POST rerun proof (`scripts/analysis/capture-rerun-proof.js`, mode `seen_drift`, answer `seen_touch_only`; outside `scripts/lib/step`, so no RE-FREEZE) passes the table only when run 2's rewritten rows (the xmin probe) == that touched count exactly, the row delta is 0 and the table's content hash with the seen column projected out (`projectedHashSql`) is unchanged; a gap throws. A `zero_writes` claim on a seen-column target is mode `seen_zero_writes`: FAIL. Spec 122 §1.0's `zero_writes` proof is unchanged. Conflict check and V3 table: 124a §B20. | Extends Spec 122 §1.0 (a measured proof for `declared_drift`); applies R-DZ | `src/tests/capture-rerun-proof.logic.test.ts` |
+| R-EY | **`standard: V3` only when all nine standards hold, fail closed, and the label is enforced (McDonald's Airtight V3, operator y 2026-10-20: "the label V3 should only apply if all the standards are met, compute purity, gates standardized, cross step, registry."; "the label should reflect and enforce the approach" → "y" to enforcement gates 1–3; "y on 2 and 4"; "y to all").** `standardFailures` (`scripts/analysis/gates/compute-literals.mjs`) answers nine conditions in order, each a failure-detail list built by `standardSignals` (`step-validate.mjs`); a condition the caller did not answer reads "not evaluated" (fail closed): (1) compute purity, no purity row (R-BZ/R-CA); (2) no gate-ledger allowance (R-BC (b)); (3) cross-step: #44 answers PASS with nothing attributed (an R-ES OWED pin is not a failure); (4) registry: no failing invariant that blocks the step (`registryFailureBlocks`; R-DL admin registration included); (5) no stage-gated red (R-DT N1); (6) gates standardized: every G0–G8 at its max and no other scorecard hard-stop reason, so an awaiting-captures step (R-EF) reads V2; (7) the five words all PASS with zero deferred (R-BA gate V); (8) no unmet `cutover_prereq` programme item names the step — `checkCutoverPrereqs`, the ③ predicate itself, `applies_when` honoured; (9) every exception naming the step — `grandfathered.json` `steps[<slug>]`, descriptor `deviations[]`, a defect-ledger row whose status is a declared deviation, `staleness-disposition.json` `spec_version.not_executed`, `execution-budget-disposition.json` `step_timeout.pending` — cites a register rule id that resolves in §5 or a 124a LIVE REGISTER section (`extractRegisterRulingIds`; `scripts/analysis/gates/v3-label.mjs`). The print is `standard=V2 (fails: <n> <details>; …)`, plus one `R-EY (9)` line naming each uncited entry. Enforcement (`v3-label.mjs`, hard stops in `step-validate`): **E1 ratchet, on** — `scripts/steps/_schema/v3-label-high-water-mark.json` `v3[]` lists every step that has read V3; a listed step that reads V2 hard-stops; the list only grows, through its generator (`step-validate --all --fast --v3-json=<f>`, then `v3-label.mjs --write <f>`). **E2 cutover gate, on** — `converted_baseline[]` freezes converted[] at R-EY (29 slugs, never grows); a converted step outside it reads V3 or hard-stops (a converted.json commit selects the whole registry, R-DJ, so the staged path enforces it). **E3 hard gate, built off** — every converted step reads V3, behind the pinned gate variable `gate_v3_hard_gate_enabled` (0; migration 279; R-CV form), with the closed exception list `HARD_GATE_EXCEPTIONS` = exactly refresh_snapshot (D-P1, operator ruling 2026-10-17, `docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md` §6.2 lines 125-144; defect-ledger PM-D5; operator y 2026-10-20 on timing). It expires when permits reaches ③: from then a still-listed exception hard-stops, on or off. Off, each run prints the converted steps that would fail; with E3 on, the Spec 123 §6 ship bar for a converted step is in effect 17/17. Measured 2026-10-20 (`--all --fast`, exit 0): 1/43 steps V3 (link_parcel_abutments); E3 would name 27 converted steps. Conflict check and seven questions: 124a §B17. | Amends R-DT; the standard-versions table; extends R-BA (gate V), R-BC (b); Spec 123 §6 ship bar when E3 is on | `step-validate-standard-label.logic`; `v3-label-enforcement.logic`; `gate-compute-literals.infra` |
+| R-EZ | **Independent verification before integration (McDonald's Airtight V3, operator y 2026-10-20: "y on 2 and 4").** Before any integrate-N branch is built, a fresh verification lane that did not write the work checks, read-only, every landing lane's claims: each cited rule id + file:line + quote resolves and says what is claimed; each red-first test actually fails on the parent commit and passes after; reported test counts and step-validate exit codes reproduce; evidence in assessments/scorecard content is accurate against code. Findings block the integration until fixed or ruled. The verification report is saved under `docs/reports/verification/<branch>.md` and the integrate commit cites it. Observable half (no library RE-FREEZE): `.husky/commit-msg` runs `scripts/hooks/check-integrate-verification.mjs` — on a branch named `…integrate-<N>`, every commit message cites that path and the file is in the index. The verification itself stays procedural. Extends §4 rule 2 ("A different party adjudicates — never the pass that discovered it"). Conflict check and seven questions: 124a §B17. | New; extends §4 rule 2 | `integrate-verification.logic` |
+| R-FA | **A markdown table's header and separator rows are never data rows, for every row-counting scorer (McDonald's Airtight V3, operator y 2026-10-20: "y to all" → "(a) fix the G3 scorer header quirk").** One reader, `tableDataRows` (`scripts/analysis/gates/markdown-table.mjs`): a separator row (alignment colons allowed) and the `|` line directly above one are skipped. G3 (`scoreG3`), G-2 (`checkPreservedInComputeHasWhy`, Rule 4), the churn-table parser (`step-validate.mjs`, `step-churn-complexity.mjs`), G6's `defectLedgerRowsFor` and #36's `defectDefinitionRows` (`registries.mjs`) all read through it. Before, the PH-3 header counted as a data row: a plain header cost G3 a point, reports put the disposition vocabulary in the header instead (e.g. `docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md`:115), and G-2 then read that header as an ungrounded preserved-in-compute row. Fleet change measured 2026-10-20: G3 1/2 → 2/2 on 10 converted steps (link_wsib, link_parcel_addresses, compute_centroids, link_parcels, refresh_snapshot, enrich_parcels, assert_parcel_sanity, enrich_ravines, enrich_heritage, compute_parcel_cost_estimates) and 11 pending steps; no step dropped; the G-2 preserved-in-compute count fell by one on the 9 vocabulary-in-header reports, no verdict changed. Spec 123 §6 G3 counts constructs and a header is not one, so this restores the criterion. *(Amended 2026-10-20 by R-FB: G3 scores intent-ledger tables only; its detail prints ledger and evidence rows.)* | Amends the Spec 123 §6 G3 / G-2 scoring (R-R) | `table-header-rows.logic` |
+| R-FB | **G3 scores only intent-ledger tables; every other table in the PH-3 section is evidence and is not scored (McDonald's Airtight V3, operator y 2026-10-20: "y show which ruling authorixzes this or create aruling for each.").** An intent-ledger table is one whose header names a Disposition column (a header cell containing "disposition"); any other table in the section (census, lock inventory, line accounting, provenance; a headerless table too) is evidence. One reader decides it: `ledgerTableRows` over `markdownTables` (`scripts/analysis/gates/markdown-table.mjs`); `tableDataRows` stays their union (R-FA, unchanged). `scoreG3` applies its unchanged formula to ledger rows and prints `ledger rows=<n> vocab-hit rows=<m>; evidence rows=<k> (not scored)`. G-2 (`checkPreservedInComputeHasWhy`, Rule 4) reads through the same split but checks ledger AND evidence rows, so a disposition in a table whose header does not say Disposition cannot escape Rule 4; its verdicts are unchanged. Spec 123 §1 names PH-3's output "ledger + evidence" and §6 G3 counts constructs with a recovered why; an evidence row is neither. Measured 2026-10-20 (`--all --fast`, exit 0): G3 1/2 → 2/2 (16/17 → 17/17) on 5 converted steps (assert_schema, load_ravines, link_massing, load_centreline, massing); no step dropped; no label changed (all five stay V2 on R-EY (9)). G3 stays 1/2 where ledger rows lack a disposition (assert_global_coverage, assert_data_bounds, assert_engine_health, address_points, parcels, neighbourhoods, compute_coa_cost_estimates) and on permits, whose PH-3 has no ledger table (0 ledger rows, 9 evidence). Conflict check and seven questions: 124a §B19. | Amends R-FA (G3 detail form); Spec 123 §6 G3 scoring (R-R) | `g3-ledger-tables.logic`; `table-header-rows.logic` |
+
+---
+
+## Appendix §B27 — Conflict checks and V3 admission tables for R-GY, R-HB…R-HK (Layer 2 spec, spec roles and decision logs, wf2/layer2-spec, 2026-10-20)
+
+Operator decisions (2026-10-20), transferred by generator, never hand-copied (R-HK): the review page https://claude.ai/artifact/MSZP9MjjXhBCnJmPsgVykw, 14 decisions all approved ("keep"), committed verbatim as `docs/reports/decisions/2026-10-20-scenario-build-rulings.json` (R-12 later amended in chat: "your rigth we want the renovation section"); and the chat "y" to the three spec-role recommendations of lane spec132-move, committed as `docs/reports/decisions/2026-10-20-spec-roles-rulings.json`. `node scripts/analysis/decision-log.mjs --write` emitted the 17 row skeletons; the step-side rows are R-GY, R-HB…R-HJ here, the by-law-side rows are Spec 69a M-231…M-234 and Spec 131 LC-60…LC-62, and `--check` proves every approved decision has its routed row. R-HK records the mechanism itself. R-GY and R-HB…R-HK are provisional (the next free ids after R-GX, skipping R-GZ and R-HA, which lane night-p4-c holds) and are renumbered at integration if taken.
+
+**Conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| Plan owner spec | `docs/reports/2026-10-20-plan-mcbylaw-phase2-v2.md`:4, :20 | "a new owner spec (Spec 72)"; "72 is free and earmarked" | Superseded by R-GY: Spec 72 was never created. The approved recommendation left the number to the operator; the coordinator wrote in chat "I'll number it Spec 134 unless you'd prefer another" and the operator did not object (corrected 2026-10-20, verify-13 N3). The plan is kept verbatim as history. |
+| Spec 68 budget | `122_split_manifest.json` `budgets["68"]`; plan :312 | "Spec 68 §11 one-line pointer (Spec 68 is over budget, F-C)" | Supports R-GY: Spec 68 §11 gains one pointer line (102,797 / 103,163 B), the contract lives in Spec 134. |
+| Spec 68 §11 Phase 2 | Spec 68:469 | "a converted pipeline step that runs `effective()` per parcel × target × structure" | No conflict: Spec 134 is that step's contract; the v1 scope narrowing is the by-law-side ruling M-234. |
+| Plan archetype | plan :45 | "`resolve_bylaws`: Layer 2. Archetype ENRICHER (provisional, R-AO)" | Conflict, resolved by R-HB as the operator ruled (MATERIALIZER). |
+| R-AO | 124a:169 | "A step's archetype is PROVISIONAL until PH-0 re-derives it from the CODE" | No conflict: R-HB names the intended archetype; #25 still checks it against the code at conversion. |
+| R-EH | 124a:810 | "A MATERIALIZER may compute its rows in JavaScript; the runner owns every read, write and transaction" | Supports R-HB: the form Spec 134 §7 uses. |
+| R-AS | 124a:184 | "the differential instrument is a COMMITTED PERTURBATION COHORT … captured against the LEGACY step" | No conflict: R-AS presumes a legacy step; R-HC records that it does not apply to the two net-new steps. |
+| R-BT | 124a:237 | "A step with no legacy predecessor declares its population as a query, and R-AS is N/A with a recorded reason" | Supports R-HC (already said for `compute_maxbld_scenarios`). |
+| R-DK | 124a:473 | "A net-new step has no PRE; its G8 reference is its own committed POST" | Supports R-HC. |
+| Spec 78 step identity | Spec 78:683 | "Chain `sources`, after `link_parcel_abutments` (phase 24) and after the Layer 2 resolution step (D-1)" | Supports R-HD. Side effect recorded in Spec 134 §2 and §11: Layer 2 then cannot read `parcel_abutments` in the same run, so the scenario plan's owed "front-averaging into the Layer 2 lot flags" item stays with the scenario step unless the operator moves the step. |
+| Spec 100 consumer contract | Spec 100 §2.1, §3.2 | presentation only; scenario and by-law fields excluded | Conflict, resolved by R-HE as the operator ruled: an explicit whitelist amendment, OWED to the app lane; no Spec 100 text changes in this lane. |
+| Spec 78 named locks | Spec 78 P5.15 (INV-18, INV-19); Spec 131 LC-53 | "Verified by named lock; no partial green" | Supports R-HF; the titles are owed to the by-law fix lane, which owns the file. |
+| Spec 78 P5.11 | Spec 78:1232-1236 | "Its commit ① lands after them" (the 18 runner rulings) | Supports R-HG: R-HG makes the check an orchestrator step. |
+| Spec 120 / 121 headers | 120:3-29, 121:3-26 (before this lane) | "No operator authorized it. No human has approved this document at any point." beside "The operator reviewed both specs and authorized registration" | Conflict inside each header, resolved by R-HH / R-HI: one historical banner; the incident kept as a dated note. |
+| Spec 122 header | Spec 122:5-6 | "The Specs 120/121 false-ratification incident this banner used to guard …" | No conflict: unchanged. |
+| Spec 123:12 | Spec 123:12 (before this lane) | "Spec 121 is the method and GOVERNS this document." | Conflict with R-GW ("a historical spec decides nothing") once 121 is historical; resolved by R-HJ's edit. |
+| R-R | 124a:132 | "`step-validate.mjs` is the ONE command generating the Spec 123 §6 G0–G9 scorecard" | Supports R-HJ: Spec 123's gates are live, so it cannot be historical. |
+| Decision 2 / R-GV | `rule-map.json` `meta.historical_design_records`; R-GV row | "Specs 119, 120, 121 and 123 stay listed" | Amended by R-HJ: Spec 123 leaves the list; 119, 120, 121 and 122a stay. |
+| R-DF RECORDED | 124a:408 (cited) | "A ruling is admitted only when its row answers the operator's seven questions" | Supports R-HK: the decision log is the RECORDED evidence of the operator's own words; the row answers the seven. |
+| R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-HK: `decision-log.mjs --check` runs in `.husky/pre-commit`. |
+| R-EC | 124a:805 | "`precommit-budget.mjs --measure` times each file-only stage" | Re-measured with the new stage (`docs/reports/generated/precommit-budget.json`). |
+
+**R-GY — Spec 134 owns `resolve_bylaws`.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The owner-spec form every step has (a spec under 122/124 with Operating Boundaries and a role banner); Spec 78 §Phase-5 is the precedent for a net-new step. |
+| OBSERVABLE | The system map lists Spec 134; `spec-split-check` arm (vii) reads its banner; `spec134-resolve-bylaws.logic` pins the pointer and the contract. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-2`; this row. |
+| SCALABLE | Each new by-law step gets its own owner spec; Spec 68 keeps pointers only. |
+| ACCURATE | The plan's "Spec 72" measured absent (`docs/specs` has no 72); 134 measured free on every branch. |
+| SIMPLE | One spec file and two pointer lines (Spec 68 §11, Spec 78 D-1). |
+| EXTERNALIZED | No threshold. |
+
+**R-HB — MATERIALIZER.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The archetype the scenario step already takes for the same write shape (own derived tables). |
+| OBSERVABLE | Fast invariant #25 (archetype parity) at conversion; `spec134-resolve-bylaws.logic` now. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-3`; this row. |
+| SCALABLE | Any step that writes only its own derived tables. |
+| ACCURATE | The plan's own text says it "writes only its own two tables, never `parcels`" (plan :45). |
+| SIMPLE | One identity field; the R-EH form exists. |
+| EXTERNALIZED | Batch size from config. |
+
+**R-HC — R-DK covers both new steps.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The R-DK net-new evidence set, as for every net-new step. |
+| OBSERVABLE | `step-validate-net-new.logic`; `scripts/analysis/gates/net-new.mjs` at ①. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-7`; this row. |
+| SCALABLE | Every step with census `legacy: "none"`. |
+| ACCURATE | R-AS's premise (a legacy step to perturb) is absent for both steps. |
+| SIMPLE | No new rule: an existing one applies. |
+| EXTERNALIZED | No threshold. |
+
+**R-HD — chain placement.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | A manifest position like every chained step. |
+| OBSERVABLE | LDG-10 and gate D read the declared reads against chain order at ①; `spec134-resolve-bylaws.logic`. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-8`; this row. |
+| SCALABLE | One position; the reads follow from it. |
+| ACCURATE | `enrich_parcels` is phase 22 and `link_parcel_abutments` phase 24 *[measured: `scripts/manifest.json` `chains.sources`]*. |
+| SIMPLE | One manifest entry at ③. |
+| EXTERNALIZED | No threshold. |
+
+**R-HE — the Spec 100 whitelist.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The one-contract, whitelist-and-parity form the S-001 descriptor already uses. |
+| OBSERVABLE | The whitelist parity check and `.strict()` schemas at node N11 (OWED); `spec134-resolve-bylaws.logic` pins the rule now. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-10`; this row. |
+| SCALABLE | Any later scenario field joins the same block. |
+| ACCURATE | Spec 100 §2.1 / §3.2 quoted; the descriptor's `versioning.answer` is frozen. |
+| SIMPLE | One block in one contract; no new endpoint. |
+| EXTERNALIZED | The whitelist is declared data. |
+
+**R-HF — INV-18 / INV-19 as named locks.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The LC-53 named-lock form. |
+| OBSERVABLE | The `describe` titles, once added, are greppable; the lineage registry `--check` then closes the entries. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-13`; this row. |
+| SCALABLE | Any stale owed entry closes the same way. |
+| ACCURATE | The fixes are in the tree (`7a782801`, `a0d5b41e`); the ids measured absent from `src/tests`. |
+| SIMPLE | Two titles in an existing file. |
+| EXTERNALIZED | No threshold. |
+
+**R-HG — the runner-rulings check before ①.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | A scheduling precondition, the R-DV / R-EB / R-EC rows' own form. |
+| OBSERVABLE | `programme-items.json` and the three rows are read by the orchestrator; `spec134-resolve-bylaws.logic` pins the rule text. |
+| RECORDED | `2026-10-20-scenario-build-rulings#R-14`; this row. |
+| SCALABLE | Both new by-law steps. |
+| ACCURATE | Not yet verified by any lane (the review page says so); the check is the verification. |
+| SIMPLE | One read before scheduling. |
+| EXTERNALIZED | No threshold. |
+
+**R-HH / R-HI — Specs 120 and 121 are historical.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The R-GW banner and the R-GX baseline, as for Spec 122a. |
+| OBSERVABLE | `spec-split-check --check` arm (vii); `spec132-handbook-roles.logic` R-HH / R-HI cases; the system map prints `HISTORICAL`. |
+| RECORDED | `2026-10-20-spec-roles-rulings#SPEC-120`, `#SPEC-121`; these rows. |
+| SCALABLE | Any spec that becomes a design record takes the same banner and baseline. |
+| ACCURATE | Baselines measured by arm (vii): Spec 120 none, Spec 121 M1–M14 (the retired M-items). The old header text is in git (`1fb8bd07`). |
+| SIMPLE | One banner and one dated note per spec; the Status word. |
+| EXTERNALIZED | No threshold. |
+
+**R-HJ — Spec 123 is a standard.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | The R-GW `standard` role; the R-GV precedence sentence. |
+| OBSERVABLE | Arm (vii); `spec132-handbook-roles.logic` R-HJ cases (banner, 123:12 text, `historical_design_records`). |
+| RECORDED | `2026-10-20-spec-roles-rulings#SPEC-123` (option (a)); this row. |
+| SCALABLE | The step family's three live specs are named once, here and in `meta.precedence`. |
+| ACCURATE | G0–G9 measured live: `step-validate.mjs` computes them every run (R-R). |
+| SIMPLE | One banner line and one rewritten line (12); Spec 123's budget re-seeded for the declared growth (433 lines / 54,848 B). |
+| EXTERNALIZED | No threshold. |
+
+**R-HK — decision logs and their register rows.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One log form for page and chat rulings, one citation form `<log stem>#<decision id>`, one generator with explicit modes (`--check`, `--write`, `--import`; unknown flags exit 2). |
+| OBSERVABLE | `decision-log.mjs --check` at pre-commit prints every uncovered decision; `decision-log.logic` (15 cases incl. a real-CLI RED → GREEN on a fixture tree). |
+| RECORDED | The logs are the operator's words, verbatim (the page export re-imports byte-identically); this row. |
+| SCALABLE | Every future ruling set is one more log file; the check reads all of them. |
+| ACCURATE | Red-first: `docs/reports/red-evidence/decision-log/` (17 decisions, 0 rows → RED; with the rows → GREEN). |
+| SIMPLE | One script, one test, one hook line. |
+| EXTERNALIZED | No threshold: exact coverage. |
+
+- **Integration note.** If integration renumbers R-GY or R-HB…R-HK, the decision logs' `routing`, `rule-map.json`, Spec 134 and the locks move with them; `decision-log.mjs --check` and `spec-split-check --check` name every site left behind.
+
+---
+
+## Appendix §B28 — verify-13 fixes: rows narrowed to what was ruled, the batch-A chat decisions, R-HL and R-HM (wf2/layer2-spec, 2026-10-20)
+
+Operator decisions (2026-10-20, verbatim, "push failed 1 test y to 1-4"), committed as the chat record `docs/reports/decisions/raw/2026-10-20-chat-batch-a/2026-10-20-batch-a.json` and imported by `decision-log.mjs --import --chat` into `2026-10-20-chat-batch-a.json`: CHAT-1 (Spec 131 LC-62's render form), CHAT-2 (R-HL), CHAT-3 (R-HK confirmed), CHAT-4 (R-HM, drafted as R-RS), CHAT-5 (E2E-F-05; its row is Spec 69a M-230 on wf1/bylaw-fix-1 at cf4e57a4, routed `owed` until it lands here). The Spec 132 rulings R-GU…R-GX now cite `2026-10-20-spec132-rulings`, imported from a chat record of the two operator-queue lines and the quotes this appendix's §B25 records. Independent verification verify-13 (R-EZ) narrowed four rows to what the operator approved: R-HG covers the scenario step's ① (N6) only; R-HB rules the archetype, and the rows form and reset posture are Spec 134 design defaults; Spec 69a M-233 / M-234 no longer name logic variables (Spec 134 proposes them); R-GY records how 134 was chosen. The by-law-side M-230 draft became M-234, because wf1/bylaw-fix-1 took M-230 for CHAT-5.
+
+**Conflict check (existing text, cited).**
+
+| Rule | Where | Quote | Verdict |
+|---|---|---|---|
+| R-HD | Spec 124 R-HD row | "the step does not read `parcel_abutments` (written later in the chain); neighbour-dependent readings stay with the scenario step" | Supports R-HL, which the operator now rules directly. |
+| Scenario plan owed item | scratchpad scenario plan §1.4 (LIN owed entry) | "wiring `front-averaging.mjs` (on read) into the Layer 2 lot flags" | Superseded by R-HL: averaging stays with `compute_maxbld_scenarios`. |
+| Spec 131 LC-58 | Spec 131 LC-58 | "Front averaging, floored and adjusted for porches" | No conflict: LC-58 says how averaging is computed; R-HL says which step computes it. |
+| R-BF | 124a:216 | "every step-registry and cross-step-ledger row generated or witnessed, never hand-kept" | Supports R-HM: a report surface's outputs are generated from one declaration. |
+| R-DJ (1) | 124a:472 | "Every chain-era generator `--check` runs at pre-commit" | Supports R-HM; whether `report-schema.mjs --check` joins the hook is the integrator's call (wf2/report-schema: "Not wired into pre-commit"). |
+| Spec 69a M-69 | Spec 69a M-69 | the report-field inventory is the denominator, drift-locked | No conflict: R-HM's declaration is the v2 surface's; M-69's inventory stays the legacy report's denominator until the takeover. |
+
+**R-HL — front-yard averaging stays in the scenario step.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One home for a neighbour-dependent reading: the step that runs after `link_parcel_abutments`. |
+| OBSERVABLE | `spec134-resolve-bylaws.logic` (Spec 134 §2 and §11); LDG-10 / gate D would flag a Layer 2 read of `parcel_abutments` at ①. |
+| RECORDED | `2026-10-20-chat-batch-a#CHAT-2`; this row. |
+| SCALABLE | Every lot where averaging applies, in one step. |
+| ACCURATE | Chain order measured: `enrich_parcels` 22, `link_parcel_abutments` 24 (`scripts/manifest.json`). |
+| SIMPLE | No move of `resolve_bylaws`; no new Layer 2 input. |
+| EXTERNALIZED | The averaging numbers stay LC-58's logic variables. |
+
+**R-HM — R-RS: one declaration per report surface.**
+
+| Question | Answer |
+|---|---|
+| STANDARDIZED | One declaration file per product report surface; every field names one source. |
+| OBSERVABLE | `report-schema.mjs --check` RS-0…RS-9 on wf2/report-schema (OWED here until integration); `decision-log.logic` records the ruling. |
+| RECORDED | `2026-10-20-chat-batch-a#CHAT-4`; this row. |
+| SCALABLE | Every product report surface, the v2 maxbld report first. |
+| ACCURATE | wf2/report-schema @ 326eca17: 228 fields, 15 sections, 19 red-first tests (its own record). |
+| SIMPLE | One declaration and one generator per surface. |
+| EXTERNALIZED | Names, types, presentation and pending states live in the declaration, not code. |
+
+**R-HK, confirmed.** CHAT-3 confirms R-HK as drafted. The verify-13 tooling gaps are closed in the same change: an amended decision's routed row must carry the amendment quote; a routed decision cited by a row in another register is RED; each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/` (a hand edit is RED); `--import` takes a page export, a chat record (`--chat`) or a rulings memo (`--rulings-md`), which replaces the scratchpad script that built the spec-roles log. Red first: `docs/reports/red-evidence/decision-log/verify13-arms-red.json` (7 of 21 failing before the change) and `verify13-check-red.txt` (the committed logs had no raw record).

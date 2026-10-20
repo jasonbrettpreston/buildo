@@ -136,6 +136,9 @@ export const SPEC_FILES = {
   // cap (manifest generated_size_caps); it has no hand-written budget. Its `Spec 132 §<line id> (R-xx)` citations
   // resolve against scripts/steps/_schema/rule-map.json (arm iii-b).
   132: '132_step_standard_handbook.md',
+  // Spec 134 — resolve_bylaws, the Layer 2 step's owner spec (Spec 124 R-GY, operator 2026-10-20): registered for the
+  // arm (iv) budget and the arm (v) system-map shape check, like Spec 131.
+  134: '134_resolve_bylaws.md',
 };
 // The family that shares 122a as a citation-resolution fallback (arm iii).
 const APPENDIX_FAMILY = new Set(['122', '123', '124']);

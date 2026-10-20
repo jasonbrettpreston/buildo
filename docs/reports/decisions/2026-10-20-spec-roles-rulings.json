@@ -1,0 +1,63 @@
+{
+  "$comment": "Operator decision log (scripts/analysis/decision-log.mjs; Spec 124 R-HK). The operator approved the memo docs/reports/decisions/raw/2026-10-20-spec-roles-rulings/RULINGS-NEEDED.md in chat (\"y\"); each recommendation is that file's text, verbatim (the question is the section heading plus the summary table's Today cell). `decision_vocab`, `routing` (the register and row that record each decision), `amendments` and `options` are added by the lane and are not the operator's text; everything else is re-derived from `source.raw` by `--check`.",
+  "log_id": "2026-10-20-spec-roles-rulings",
+  "source": {
+    "kind": "chat",
+    "operator_quote": "y",
+    "raw": {
+      "form": "rulings-md",
+      "file": "docs/reports/decisions/raw/2026-10-20-spec-roles-rulings/RULINGS-NEEDED.md",
+      "decided_at": "2026-10-20"
+    }
+  },
+  "decision_vocab": {
+    "y": "approve"
+  },
+  "routing": {
+    "SPEC-120": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HH"
+    },
+    "SPEC-121": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HI"
+    },
+    "SPEC-123": {
+      "register": "docs/specs/01-pipeline/124_step_standard_policy.md",
+      "row": "R-HJ"
+    }
+  },
+  "amendments": {},
+  "options": {
+    "SPEC-123": "(a): make Spec 123 a standard (the recommended option)"
+  },
+  "decisions": [
+    {
+      "id": "SPEC-120",
+      "question": "Role of Spec 120: Pipeline Step Runner & Step Validator (1,211 lines). Today: Contradictory banner (NOT RATIFIED, plus \"authorized registration\"); Status UNRATIFIED DRAFT.",
+      "recommendation": "**Recommendation.** Make Spec 120 **historical**. Replace the contradictory banner block with one historical banner, worded roughly: \"Role: historical. The design record for the step runner; built and superseded by Spec 122 (standard) and Spec 124 (policy). Registered 2026-08-22 on 'the specs are good ratify'; never ratified as a standard.\" Keep the false-ratification incident as a dated note under the banner, not as the header. The Status line becomes `HISTORICAL`. Code citations to `Spec 120 §x` stay valid as history. The historical-spec rule then stops any new rule id from landing in Spec 120.",
+      "summary_recommendation": "historical; one banner; dated incident note",
+      "must_go_with": "none",
+      "decision": "y",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "SPEC-121",
+      "question": "Role of Spec 121: Assessment & Verification Methodology (2,689 lines). Today: Same contradictory banner; still GOVERNS Spec 123 (123:12).",
+      "recommendation": "**Recommendation.** Make Spec 121 **historical**, with the same banner clean-up as Spec 120. This needs the Spec 123 ruling below in the same change. Otherwise a historical spec would still \"govern\" an active one, and that contradicts R-GW (\"a historical spec decides nothing\"). Any Spec 121 content that is still true and still enforced already lives in Spec 123 §6 (the gates) or in Spec 132 lines (the M-items). Nothing needs to move first.",
+      "summary_recommendation": "historical",
+      "must_go_with": "the Spec 123 ruling (123:12 rewritten)",
+      "decision": "y",
+      "decided_at": "2026-10-20"
+    },
+    {
+      "id": "SPEC-123",
+      "question": "Role of Spec 123: Step Optimization: Assessment & Validation (431 lines). Today: ACTIVE; G0–G9 enforced by step-validate; listed as a historical record in rule-map meta.",
+      "recommendation": "**Recommendation.** Spec 123 can't be historical while its G0–G9 gates are enforced. Choose one:\n- **(a) Recommended: make Spec 123 a standard**, the procedure half of the step family, and take it off `historical_design_records`. Its role banner would read roughly: \"Role: standard. The conversion procedure and the G0–G9 gates step-validate computes; on policy the Spec 124 register governs (R-GV).\" Line 12 changes from \"Spec 121 is the method and GOVERNS this document\" to \"Spec 121 is the historical method record this procedure instantiates; on policy the Spec 124 register governs, on the schema and behaviour Spec 122.\" Spec 123 has a hand-written budget (423 lines / 49,705 B measured, +10%), so this costs about one line.\n- **(b) Move §6 (the G0–G9 table) into Spec 124 or 122 through a spec-split register move, then make Spec 123 historical.** This costs more: 59 code citations to `Spec 123 §6` would need re-pointing or a stub.\n\nUnder (a), the steps family has three live specs: Spec 122 (standard: schema and behaviour), Spec 123 (standard: conversion procedure) and Spec 124 (register: policy). Spec 132 is generated from them. Under (b) the family stays a pair.",
+      "summary_recommendation": "(a) standard (procedure), 123:12 rewritten, removed from `historical_design_records`; or (b) move §6, then historical",
+      "must_go_with": "Spec 121 ruling",
+      "decision": "y",
+      "decided_at": "2026-10-20"
+    }
+  ]
+}

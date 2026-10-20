@@ -1,0 +1,3 @@
+[decision-log] RED — 2 problem(s):
+  2026-10-20-scenario-build-rulings: no committed raw export (source.raw) — import the log from a raw record under docs/reports/decisions/raw/
+  2026-10-20-spec-roles-rulings: no committed raw export (source.raw) — import the log from a raw record under docs/reports/decisions/raw/

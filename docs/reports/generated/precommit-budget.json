@@ -1,8 +1,8 @@
 {
   "$comment": "R-EC (Spec 124): per-stage timings of .husky/pre-commit file-only stages, one command at a time (never a whole-hook run). registry_s replaces the staged step-validate stage with the whole-registry selection. Checked file-only by fast invariant #52 against tooling_precommit_budget_*_s.",
-  "measured_at": "2026-10-20T16:57:15.959Z",
+  "measured_at": "2026-10-20T18:30:26.851Z",
   "host": "Bretts-Mac-Mini.local (darwin arm64, 12 cpu)",
-  "hook_sha256": "95b39322a84767ad702c89c4e83d18675ad05d09fa51df0dbab66d45784a226a",
+  "hook_sha256": "43206858b43c661ee278a9059e3baebe850189f18c888fd61df305b135f9c18a",
   "stages": [
     {
       "command": "bash scripts/hooks/check-partial-staging.sh",
@@ -10,7 +10,7 @@
     },
     {
       "command": "node scripts/analysis/step-churn-complexity.mjs --check",
-      "s": 0.81
+      "s": 0.85
     },
     {
       "command": "node scripts/steps/_schema/generate-template-freeze.mjs --check",
@@ -18,7 +18,7 @@
     },
     {
       "command": "node scripts/analysis/generate-target-files.mjs --check",
-      "s": 0.23
+      "s": 0.24
     },
     {
       "command": "node scripts/analysis/src-sql-ledger.mjs --check",
@@ -26,15 +26,15 @@
     },
     {
       "command": "node scripts/analysis/generate-chain-args.mjs --check",
-      "s": 0.06
+      "s": 0.07
     },
     {
       "command": "node scripts/generate-bylaw-provisions.mjs --check",
-      "s": 5.3
+      "s": 5.47
     },
     {
       "command": "node scripts/generate-ingest-batch.js --check",
-      "s": 0.13
+      "s": 0.15
     },
     {
       "command": "node scripts/generate-sharing-phase.js --check",
@@ -42,27 +42,27 @@
     },
     {
       "command": "node scripts/generate-logic-variable-groups.mjs --check",
-      "s": 0.06
-    },
-    {
-      "command": "node scripts/generate-logic-vars-docs.mjs --check",
       "s": 0.07
     },
     {
+      "command": "node scripts/generate-logic-vars-docs.mjs --check",
+      "s": 0.08
+    },
+    {
       "command": "node scripts/generate-assert-schema-probe-lists.js --check",
-      "s": 0.06
+      "s": 0.08
     },
     {
       "command": "node scripts/generate-assert-parcel-sanity-descriptor.js --check",
-      "s": 0.06
+      "s": 0.08
     },
     {
       "command": "node scripts/generate-assert-global-coverage-descriptor.js --check",
-      "s": 0.06
+      "s": 0.08
     },
     {
       "command": "node scripts/generate-assert-data-bounds-descriptor.js --check",
-      "s": 0.06
+      "s": 0.07
     },
     {
       "command": "node scripts/analysis/generate-last-measured.mjs --check",
@@ -70,15 +70,15 @@
     },
     {
       "command": "node scripts/analysis/report-fields.mjs --check",
-      "s": 0.35
+      "s": 0.38
     },
     {
       "command": "node scripts/violations/generate-conversion-roadmap.mjs --check",
-      "s": 0.07
+      "s": 0.08
     },
     {
       "command": "node scripts/violations/generate-programme-backlog.mjs --check",
-      "s": 0.06
+      "s": 0.07
     },
     {
       "command": "node scripts/violations/generate-surface-registry.mjs --check",
@@ -86,19 +86,23 @@
     },
     {
       "command": "node scripts/generate-step-handbook.mjs --check",
-      "s": 0.16
+      "s": 0.18
+    },
+    {
+      "command": "node scripts/analysis/decision-log.mjs --check",
+      "s": 0.09
     },
     {
       "command": "node scripts/analysis/spec-split-check.mjs --check",
-      "s": 0.64
+      "s": 1.16
     },
     {
       "command": "node scripts/violations/schema-to-vocab.mjs --check docs/reports/generated/122-vocabulary.md",
-      "s": 0.06
+      "s": 0.07
     },
     {
       "command": "npx vitest src/tests/system-map.infra.test.ts --run",
-      "s": 0.72
+      "s": 0.74
     },
     {
       "command": "node scripts/analysis/gates/generated-docs.mjs",
@@ -106,11 +110,11 @@
     },
     {
       "command": "node scripts/analysis/step-validate.mjs --staged --fast",
-      "s": 0.31
+      "s": 4.89
     },
     {
       "command": "bash scripts/hooks/validate-migrations.sh",
-      "s": 0.01
+      "s": 0.02
     },
     {
       "command": "bash scripts/hooks/check-migration-down-comments.sh",
@@ -118,21 +122,21 @@
     },
     {
       "command": "bash scripts/hooks/ast-grep-leads.sh",
-      "s": 2.95
+      "s": 3.06
     },
     {
       "command": "npm run typecheck",
-      "s": 1.99
+      "s": 1.72
     },
     {
       "command": "npm run lint",
-      "s": 1.49
+      "s": 1.27
     }
   ],
   "registry_stage": {
     "command": "node scripts/analysis/step-validate.mjs --all --fast",
-    "s": 4.79
+    "s": 4.83
   },
-  "docs_only_s": 16.55,
-  "registry_s": 21.03
+  "docs_only_s": 21.81,
+  "registry_s": 21.75
 }
