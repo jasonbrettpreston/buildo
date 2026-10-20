@@ -93,7 +93,7 @@ Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or ma
 **MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
 
 - **Archetype variance:** none.
-- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
 - **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
 
 **5. `checks` may never be `"none"` — every step declares at least one.**
