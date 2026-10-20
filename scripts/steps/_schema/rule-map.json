@@ -4960,7 +4960,7 @@
     {
       "id": "R-DF",
       "class": "partial",
-      "reason": "partial: spec124-register-locks.logic (R-CX onward only)"
+      "reason": "partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists"
     },
     {
       "id": "R-EL",
@@ -5000,7 +5000,7 @@
     {
       "id": "P4-4",
       "class": "partial",
-      "reason": "partial: spec124-register-locks names-a-lock (R-CX on only)"
+      "reason": "partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only)"
     },
     {
       "id": "P4-6",

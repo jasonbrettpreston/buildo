@@ -406,7 +406,7 @@ Validator messages that name their rule directly:
 | R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
 | R-CT | partial | core.12 | partial: write.js assertWritePrivileges (runtime, declared tables only); fleet gate owed (V3 lane C1) |
 | R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
-| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic (R-CX onward only) |
+| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
 | R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
 | R-EW | partial | core.10 | partial: src/tests/steps/coa/dispatch.logic.test.ts (rul7 branch only) |
 | R-EX | partial | ingestor.5 | partial: src/tests/capture-rerun-proof.logic.test.ts; capture-rerun-proof.js seen_drift (rul7 branch only) |
@@ -414,7 +414,7 @@ Validator messages that name their rule directly:
 | Rule-10-addendum-R-H | none | core.6 | no machine check for INFO-vs-WARN (GAP G-5) |
 | P4-1 | none | x-rulings.1 | no machine check: procedural |
 | P4-2 | none | x-rulings.1 | no machine check except R-EZ commit-msg citation for integrate branches |
-| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks names-a-lock (R-CX on only) |
+| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only) |
 | P4-6 | none | x-rulings.1 | no machine check: G9 checks the Reflection section exists |
 | L7-0 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
 | L7-3 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |

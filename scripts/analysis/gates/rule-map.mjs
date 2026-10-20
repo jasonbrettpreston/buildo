@@ -162,3 +162,9 @@ export function defaultIo(repoRoot = REPO_ROOT) {
     defectIds: readDefectIds(repoRoot),
   };
 }
+
+/** step-validate's `--all` report line (never a hard stop): the standing unenforced-rule count, R-BA's own test. */
+export function unenforcedReportLine(map) {
+  const s = unenforcedSummary(map);
+  return `[step-validate] rule-map: ${s.inForce.length} in-force rule(s) with no or partial machine check (${s.none.length} none, ${s.partial.length} partial): ${s.inForce.join(', ')}; ${s.notInForce} retired id(s) also listed (${RULE_MAP_REL} unenforced[], ${HANDBOOK_REL} §6)`;
+}

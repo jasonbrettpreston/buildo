@@ -31,6 +31,7 @@ type Mod = {
   defaultIo: () => Io;
   unenforcedSummary: (map: RuleMap) => { total: number; inForce: string[]; none: string[]; partial: string[]; notInForce: number };
   IN_FORCE: readonly string[];
+  unenforcedReportLine: (map: RuleMap) => string;
 };
 
 let mod: Mod;
@@ -135,5 +136,19 @@ describe('handbook rule map — every rule maps to exactly one handbook line (op
     const es = mod.checkRuleMap(m, io).filter((f) => f.arm === 'e');
     expect(es.some((f) => /now has enforcement/.test(f.detail))).toBe(true);
     expect(es.some((f) => /does not resolve/.test(f.detail))).toBe(true);
+  });
+
+  // observe-1: step-validate --all prints the standing count (a report line, never a hard stop).
+  it('step-validate --all prints the unenforced-rule count from rule-map.json', () => {
+    const m = load();
+    const line = mod.unenforcedReportLine(m);
+    const s = mod.unenforcedSummary(m);
+    expect(line).toMatch(new RegExp(`^\\[step-validate\\] rule-map: ${s.inForce.length} in-force rule\\(s\\) with no or partial machine check \\(${s.none.length} none, ${s.partial.length} partial\\)`));
+    for (const id of s.inForce) expect(line).toContain(id);
+    const sv = fs.readFileSync(path.join(REPO_ROOT, 'scripts/analysis/step-validate.mjs'), 'utf8');
+    expect(sv).toContain("import { loadRuleMap, unenforcedReportLine } from './gates/rule-map.mjs';");
+    const allBlock = sv.indexOf('  if (opts.all) {\n    // Operator y 2026-10-20 consolidation 1-4 (observe-1)');
+    expect(allBlock).toBeGreaterThan(-1);
+    expect(sv.indexOf('console.log(unenforcedReportLine(loadRuleMap(REPO_ROOT)));', allBlock)).toBeGreaterThan(allBlock);
   });
 });
