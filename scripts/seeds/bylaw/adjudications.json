@@ -76918,12 +76918,12 @@
       "field": "calculation_handling",
       "id": "COR-10.5.40.11(2)#whole/calculation_handling",
       "kind": "correction",
-      "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 10.5.40.11(2) \"wrong\": \"Scenario - Additions to existing buildings - Condition = must comply with the permitted maximum height\". M-192 (disclosed) with M-211(1) (additions comply with the caps): the renovation answer holds additions to the base height.",
-      "rule": "Spec 69a M-192, M-211(1); Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "reason": "Review answers batch 5 (operator, live page DB 2026-10-20): 10.5.40.11(2) \"wrong\": \"Scenario - Additions to existing buildings - Condition = must comply with the permitted maximum height\". M-192: the renovation answer holds additions to the base height (re-cited 2026-10-20 from M-192 + M-211(1); M-211(1) governs the up-room depth / length / FSI caps, not height; verify-12f N6).",
+      "rule": "Spec 69a M-192; Spec 78 P5.12 lawfully_existing_relief; M-75",
       "unit": "10.5.40.11(2)#whole",
       "value": {
         "description": "An addition or extension to a lawfully existing building covered by 10.5.40.11(1) must meet the permitted maximum height, or be authorized by a minor variance.",
-        "gaps": "The unit text names no zone; its scope follows 10.5.40.11(1) (Residential Zone category). The minor-variance arm is outside our evaluation. M-192 / M-211(1): an addition meets the permitted maximum height; the renovation answer holds every addition to the base height limit (evaluated), so the clause is met by construction; the minor-variance arm is outside our evaluation.",
+        "gaps": "The unit text names no zone; its scope follows 10.5.40.11(1) (Residential Zone category). The minor-variance arm is outside our evaluation. M-192: an addition meets the permitted maximum height; the renovation answer holds every addition to the base height limit (evaluated), so the clause is met by construction; the minor-variance arm is outside our evaluation.",
         "not_modelled_reason": "existing_building_facts",
         "status": "not_modelled",
         "user_inputs": [
@@ -77148,6 +77148,131 @@
           "roof_type"
         ]
       }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.20.41(6)#whole/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.20.41(6) \"wrong\": \"procedural - Secondary Suite Not Permitted in a Converted Semi-Detached House\". The R copy of 10.5.20.40(6) (batch 5): M-196(1) no secondary suite in a converted semi-detached portion (applied in the interior-conversion answer); M-214(3) a secondary suite in a semi is a deferred form, disclosed.",
+      "rule": "Spec 69a M-196(1), M-214(3); Spec 78 P5.12 forms_deferred; M-75",
+      "unit": "10.10.20.41(6)#whole",
+      "value": {
+        "description": "Despite 150.10.20.1(1) and (2), a secondary suite is not permitted in the portion of a semi-detached house converted to more than four dwelling units under 10.10.20.41(2).",
+        "gaps": "Applies only to a semi-detached portion already converted under (2); conversion history not held. No zone is named in the unit text. 'Despite regulations 150.10.20.1(1) and (2)' displaces the secondary-suite permission for this case only. M-196(1): applied in the interior-conversion answer (a semi-detached portion converted under 10.10.20.41(2) takes no secondary suite); M-214(3): a secondary suite in a semi-detached house is a deferred form, disclosed (forms_deferred).",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "has_secondary_suite"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.30.20(1)#(1)(C)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.30.20(1)(C) \"wrong\" (no note). Parallel chapters: RD / RT (C) take the M-176(1) / M-187 Q4 townhouse driveway trade-off (5.0 m / 6.0 m per unit), RS / RM the semi arm (M-181). In R the semi-detached house and the townhouse are forms not modelled (M-214(2)/(3)), so the per-unit frontage and the 1.0 m driveway reduction are disclosed, not bound.",
+      "rule": "Spec 69a M-176(1), M-187 (Q4), M-214(2)/(3); Spec 78 P5.12 townhouse_driveway_width; M-75",
+      "unit": "10.10.30.20(1)#(1)(C)",
+      "value": {
+        "description": "Measurement rule for the frontage required by (A) or (B): for a semi-detached house it is required per dwelling unit; for a townhouse with every unit fronting a street it is required per dwelling unit and reduced by 1.0 m for each unit without an individual private driveway leading to its front.",
+        "gaps": "Modifies the (A)/(B) value rather than setting its own bound; the per-unit multiplication and the 1.0 m per-unit reduction depend on the unit count and on how many units lack an individual driveway, which has no DSL input, so no expression is written. The 1.0 m reduction is listed as a cross-reference adjustment for lack of a closer reason. The lot conditions are arm-specific (townhouse arm only), so they are recorded in application, not as a conjunctive condition. M-176(1) / M-187 Q4: the townhouse arm is the driveway trade-off (1.0 m less per unit without an individual private driveway; townhouse_driveway_width); M-214(2)/(3): the semi-detached house and townhouse forms are not modelled in R, so the per-unit frontage is disclosed, not bound.",
+        "not_modelled_reason": "needs_user_input",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type",
+          "unit_count"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(8)#(8)(A)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(8) (disclose): antennae on a building over 15.0 m may exceed the height limit by 5.0 m. M-169(4): a permission the user would verify is disclosed, never evaluated (as 10.5.40.10(2)-(5), batch 5).",
+      "rule": "Spec 69a M-169(4); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(8)#(8)(A)",
+      "value": "On a building taller than 15.0 m, antennae on the roof may rise up to 5.0 m above the height limit; rooftop elements are design details and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(8)#(8)(B)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(8) (disclose): flagpoles on a building over 15.0 m may exceed the height limit by 5.0 m. M-169(4): a permission the user would verify is disclosed, never evaluated (as 10.5.40.10(2)-(5), batch 5).",
+      "rule": "Spec 69a M-169(4); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(8)#(8)(B)",
+      "value": "On a building taller than 15.0 m, flagpoles on the roof may rise up to 5.0 m above the height limit; rooftop elements are design details and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.10(8)#(8)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.10(8) (disclose): satellite dishes on a building over 15.0 m may exceed the height limit by 5.0 m. M-169(4): a permission the user would verify is disclosed, never evaluated (as 10.5.40.10(2)-(5), batch 5).",
+      "rule": "Spec 69a M-169(4); Spec 78 P5.12 rooftop_elements_exempt; M-75",
+      "unit": "10.10.40.10(8)#(8)(C)",
+      "value": "On a building taller than 15.0 m, satellite dishes on the roof may rise up to 5.0 m above the height limit; rooftop elements are design details and are not modelled."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "calculation_handling",
+      "id": "COR-10.10.40.40(2)#(2)(A)/calculation_handling",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.40(2)(A) \"wrong\": \"Additions to the Rear of Certain Residential Buildings ... 0.6 - additions\". M-211(3): R pre-1953 FSI 0.69 joins M-192's disclosed reliefs (r_pre1953_fsi_relief); (B) and (C) answered \"Addition Scenario\" are the same relief.",
+      "rule": "Spec 69a M-211(3), M-192; Spec 78 P5.12 r_pre1953_fsi_relief; M-75",
+      "unit": "10.10.40.40(2)#(2)(A)",
+      "value": {
+        "description": "A pre-October 15, 1953 detached or semi-detached house on a lot with permitted FSI 0.6 may get a rear addition if overall FSI including the addition does not exceed 0.69.",
+        "gaps": "Applies only to a detached or semi-detached house erected before October 15, 1953 on a lot whose permitted FSI is 0.6; the 0.6 is the permitted FSI used to decide whether the rear-addition allowance applies, not a limit. Depends on the existing building's construction date and prior additions, which we do not hold. The 0.69 is a ceiling on the permission, not a general FSI limit, so it is not keyed as an fsi LIMIT. M-211(3) (with M-192): the pre-15 October 1953 rear-addition relief (overall FSI up to 0.69 on a 0.6 lot) is a renovation reading, disclosed (r_pre1953_fsi_relief), never applied: the build year is a site fact (M-158, M-169), so the new-build answer keeps the 0.6.",
+        "not_modelled_reason": "existing_building_facts",
+        "status": "not_modelled",
+        "user_inputs": [
+          "building_type"
+        ]
+      }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.10.20.1(1)#(1)(C)/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 150.10.20.1(1)(C) (disclose): a secondary suite is permitted in a townhouse. (A) detached and (B) semi are suite hosts (M-177); a townhouse, and a secondary suite in a townhouse, are deferred forms, disclosed (M-214(3)).",
+      "rule": "Spec 69a M-214(3), M-177; Spec 78 P5.12 forms_deferred; M-75",
+      "unit": "150.10.20.1(1)#(1)(C)",
+      "value": "A secondary suite is permitted in a townhouse; townhouses, and a secondary suite in a townhouse, are not modelled in this release."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-150.7.1(2)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 150.7.1(2) (disclose): the garden-suite definition of lawful (existing or authorized on or before 3 February 2022). A transition definition of lawfully existing that only feeds the lawfully-existing caveat (M-158, M-178; as 10.40.40.1(9)(A)).",
+      "rule": "Spec 69a M-158, M-178; Spec 78 P5.12 lawfully_existing_relief; M-75",
+      "unit": "150.7.1(2)#whole",
+      "value": "For garden suites, a building or use that existed or was authorized on or before February 3, 2022 counts as lawfully existing."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.10.40.71(1)#whole/disclosure",
+      "kind": "correction",
+      "reason": "Review answers batch 6 (operator, live page DB 2026-10-20, envdb12): 10.10.40.71(1) (disclose) \"Setback exemptions\": the setback exemption for a transportation use along Eglinton Avenue is a non-residential use. PIN NONRES-4, as NONRES-1 / NONRES-2 (batch 5): the answer is kept, no disclosure is applied (operator 2026-10-19 \"our focus is residential this is beyond the scope at this point\"; 2026-10-20 \"y pin them\").",
+      "rule": "Spec 69a M-169; PIN NONRES-4 (residential focus, operator 2026-10-19; \"y pin them\" 2026-10-20); M-75",
+      "unit": "10.10.40.71(1)#whole",
+      "value": "none"
     }
   ]
 }

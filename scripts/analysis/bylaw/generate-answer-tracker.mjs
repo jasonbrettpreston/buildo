@@ -143,7 +143,15 @@ export function build(root) {
         if (!row.disclosure_code) problems.push(`${a.unit_id}: disclose without a P5.12 code`);
         const keyedDisclosure = unit && unit.disclosure && unit.disclosure !== 'none';
         row.checks.push(`P5.12 code ${row.disclosure_code || '(none)'}`, keyedDisclosure ? 'unit carries a disclosure' : 'unit carries no disclosure');
-        if (keyedDisclosure || isRowAnswer) { row.state = 'INCORPORATED'; row.reason = isRowAnswer ? 'row answer; P5.12 code' : 'keyed disclosure + P5.12 code'; } else { row.state = 'UNFIXED'; row.reason = 'P5.12 code ruled; keyed unit has no disclosure yet'; }
+        if (d.scope_pin !== undefined) {
+          // Pinned out of scope (operator "y pin them", 2026-10-20): the answer is kept, no disclosure is applied, and the
+          // row stays UNFIXED, owed to the pin. The pin id must be named in the corrected value, and the unit must carry none.
+          if (!/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+$/.test(String(d.scope_pin))) problems.push(`${a.unit_id}: scope_pin "${d.scope_pin}" is not a PIN id`);
+          if (!row.corrected_value.includes(`PIN ${d.scope_pin}`)) problems.push(`${a.unit_id}: scope_pin ${d.scope_pin} not named in the corrected value`);
+          if (keyedDisclosure) problems.push(`${a.unit_id}: pinned out of scope (PIN ${d.scope_pin}) but the unit carries a disclosure`);
+          row.checks.push(`pinned out of scope: PIN ${d.scope_pin}`);
+          row.state = 'UNFIXED'; row.reason = `pinned out of scope (PIN ${d.scope_pin}): answer kept, no disclosure applied`;
+        } else if (keyedDisclosure || isRowAnswer) { row.state = 'INCORPORATED'; row.reason = isRowAnswer ? 'row answer; P5.12 code' : 'keyed disclosure + P5.12 code'; } else { row.state = 'UNFIXED'; row.reason = 'P5.12 code ruled; keyed unit has no disclosure yet'; }
         break;
       }
       case 'fixed_by':

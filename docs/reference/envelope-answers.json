@@ -1,9 +1,97 @@
 {
  "schema": "envelope-answers-v1",
- "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). + 38 answers from dump envdb9 (2026-10-19). + 26 answers from dump envdb10 (2026-10-19). + 98 answers from dump envdb11 (2026-10-20). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
- "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567) + envdb9 2026-10-19 (605) + envdb10 2026-10-19 (631) + envdb11 2026-10-20 (729)",
- "count": 729,
+ "description": "Snapshot of the operator's envelope-review answers (the MaxBLD envelope review page). 497 from the local copy envdb6/envreviews (2026-10-15/16 pastes) + 14 RD answers (operator copy-paste 2026-10-18; the live artifact DB already holds them). + 56 answers and 23 refreshed notes from the live review page DB (read-only dump envdb8, 2026-10-19; a refreshed note is marked note_refreshed). + 38 answers from dump envdb9 (2026-10-19). + 26 answers from dump envdb10 (2026-10-19). + 98 answers from dump envdb11 (2026-10-20). + 59 answers and 3 verdicts given to null answers (marked verdict_refreshed) from dump envdb12 (2026-10-20). Each record is copied verbatim; `verdict` absent = no verdict given (reported as null). Read by scripts/analysis/bylaw/generate-answer-tracker.mjs (Spec 78 P5.15).",
+ "snapshot_of": "claude.ai envelope-review artifact DB, local copy envdb6 + 14 records 2026-10-18 + live page DB dump envdb8 2026-10-19 (567) + envdb9 2026-10-19 (605) + envdb10 2026-10-19 (631) + envdb11 2026-10-20 (729) + envdb12 2026-10-20 (788)",
+ "count": 788,
  "answers": [
+  {
+   "note": "Procedural 14) Secondary Suite A secondary suite in the R zone must comply with the specific use regulations in Section 150.10.",
+   "reading_sha": "6c78fe1035ff58bd",
+   "regulation_id": "10.10.20.100(14)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.20.100(14)#whole",
+   "updated_at": "2026-10-20T15:18:13.560Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "14) Secondary Suite A secondary suite in the R zone must comply with the specific use regulations in Section 150.10.",
+   "reading_sha": "85ea0668a5af72ab",
+   "regulation_id": "10.10.20.100(19)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.20.100(19)#whole",
+   "updated_at": "2026-10-20T15:19:32.177Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "20) Garden Suite A garden suite in the R zone must comply with the specific use regulations in Section 150.7. [ By-law: 101-2022 ]",
+   "reading_sha": "674f32965bfa9e41",
+   "regulation_id": "10.10.20.100(20)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.20.100(20)#whole",
+   "updated_at": "2026-10-20T15:20:04.576Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "efcaaa5a5e0a7849",
+   "regulation_id": "10.10.20.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.20.20(1)#whole",
+   "updated_at": "2026-10-20T15:15:40.985Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "procedural - Secondary Suite  Not Permitted in a Converted Semi-Detached House Despite regulations 150.10.20.1(1) and (2), a secondary suite may not be in the portion of a semi-detached house that has been converted to contain more than four dwelling units in accordance with regulations 10.10.20.41(2). [ By-law: 1313-2023 ]",
+   "reading_sha": "ddb41d667dce75a9",
+   "regulation_id": "10.10.20.41(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.20.41(6)#whole",
+   "updated_at": "2026-10-20T15:17:55.243Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "5907c9c919fd920e",
+   "regulation_id": "10.10.30.1(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.1(1)#(1)(A)",
+   "updated_at": "2026-10-20T15:21:15.687Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "64c2f75dd47865f5",
+   "regulation_id": "10.10.30.1(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.1(1)#(1)(B)",
+   "updated_at": "2026-10-20T15:21:22.078Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "650a8f395ab7033b",
+   "regulation_id": "10.10.30.1(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.1(2)#whole",
+   "updated_at": "2026-10-20T15:21:29.498Z",
+   "verdict": "wrong"
+  },
   {
    "note": "",
    "reading_sha": "aa563574728a2f17",
@@ -49,6 +137,17 @@
    "verdict": "matches"
   },
   {
+   "note": "",
+   "reading_sha": "3798a1426d704d66",
+   "regulation_id": "10.10.30.20(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.30.20(1)#(1)(C)",
+   "updated_at": "2026-10-20T15:21:42.538Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "We don't know which way they are facing.. just a disclosure",
    "reading_sha": "355ada889ed0f689",
    "regulation_id": "10.10.30.20(1)",
@@ -58,6 +157,94 @@
    "unit_id": "10.10.30.20(1)#(1)(D)",
    "updated_at": "2026-10-19T23:18:18.563Z",
    "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "8b4425d0ea383df5",
+   "regulation_id": "10.10.40.1(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(1)#whole",
+   "updated_at": "2026-10-20T15:27:35.742Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "ab2f6d1611d5edff",
+   "regulation_id": "10.10.40.1(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(10)#(10)(A)",
+   "updated_at": "2026-10-20T15:31:05.515Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "7ec73a85e7233c76",
+   "regulation_id": "10.10.40.1(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(10)#(10)(B)",
+   "updated_at": "2026-10-20T15:31:08.210Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "5ac86b52d3e31548",
+   "regulation_id": "10.10.40.1(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(10)#(10)(C)",
+   "updated_at": "2026-10-20T15:31:10.823Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "82d0860ad365eda9",
+   "regulation_id": "10.10.40.1(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(10)#(10)(D)",
+   "updated_at": "2026-10-20T15:31:13.946Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "053c39cfbdb2302c",
+   "regulation_id": "10.10.40.1(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(10)#(10)(E)",
+   "updated_at": "2026-10-20T15:31:16.964Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3f1cd53a43c87cd3",
+   "regulation_id": "10.10.40.1(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(2)#(2)(A)",
+   "updated_at": "2026-10-20T15:27:52.869Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "340065123bf18a7e",
+   "regulation_id": "10.10.40.1(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(2)#(2)(B)",
+   "updated_at": "2026-10-20T15:27:57.863Z",
+   "verdict": "no_application"
   },
   {
    "note": "Determines the number of dwellings on a lot. pplying to a lot in the R zone on the Zoning By-law Map has the letter \"u\", the numerical value following the letter \"u\" is the maximum number of dwelling units permitted on the lot; and",
@@ -104,6 +291,72 @@
    "verdict": "matches"
   },
   {
+   "note": "Procedural",
+   "reading_sha": "3d1da8a953b2e990",
+   "regulation_id": "10.10.40.1(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(5)#(5)(A)",
+   "updated_at": "2026-10-20T15:28:25.235Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "Procedural",
+   "reading_sha": "0961e0371227b266",
+   "regulation_id": "10.10.40.1(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(5)#(5)(B)",
+   "updated_at": "2026-10-20T15:28:47.134Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "2884d39e787c026f",
+   "regulation_id": "10.10.40.1(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(5)#(5)(C)",
+   "updated_at": "2026-10-20T15:29:21.058Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3dbea8dc2f75898e",
+   "regulation_id": "10.10.40.1(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(6)#(6)(A)",
+   "updated_at": "2026-10-20T15:29:25.333Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "f47635be8fd8b17a",
+   "regulation_id": "10.10.40.1(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(6)#(6)(B)",
+   "updated_at": "2026-10-20T15:29:27.757Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Procedural - etached Houseplex or Semi-Detached Houseplex Despite regulations 10.10.40.1(6), 900.1.10(3) and 900.1.10(4)(A), if a regulation in clauses 10.10.40.10, 10.10.40.30 or 10.10.40.40 for a detached houseplex or semi-detached houseplex is more permissive than the regulation that would apply to the detached houseplex or semi-detached houseplex under regulation 10.10.40.1(6), then the more permissive regulation prevails.",
+   "reading_sha": "e5f3ef9cf0882f6c",
+   "regulation_id": "10.10.40.1(7)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(7)#whole",
+   "updated_at": "2026-10-20T15:30:47.791Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "",
    "reading_sha": "8d51351daedf4677",
    "regulation_id": "10.10.40.1(8)",
@@ -134,6 +387,39 @@
    "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
    "unit_id": "10.10.40.1(8)#(8)(C)",
    "updated_at": "2026-10-19T23:20:11.351Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "e8d7c7aa3e22d030",
+   "regulation_id": "10.10.40.1(9)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(9)#(9)(A)",
+   "updated_at": "2026-10-20T15:30:57.884Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "fa01c6e9aa8b7ba4",
+   "regulation_id": "10.10.40.1(9)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(9)#(9)(B)",
+   "updated_at": "2026-10-20T15:31:00.849Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "08b89d45085222d4",
+   "regulation_id": "10.10.40.1(9)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.1(9)#(9)(C)",
+   "updated_at": "2026-10-20T15:31:03.157Z",
    "verdict": "no_application"
   },
   {
@@ -179,6 +465,39 @@
    "unit_id": "10.10.40.10(1)#(1)(D)",
    "updated_at": "2026-10-19T17:36:58.983Z",
    "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "b21b5ad51c16f5b1",
+   "regulation_id": "10.10.40.10(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(10)#(10)(A)",
+   "updated_at": "2026-10-20T15:33:17.527Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "9b85347962a71c1a",
+   "regulation_id": "10.10.40.10(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(10)#(10)(B)",
+   "updated_at": "2026-10-20T15:33:21.835Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "acae4f9d2a5cd8a1",
+   "regulation_id": "10.10.40.10(10)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(10)#(10)(C)",
+   "updated_at": "2026-10-20T15:33:25.867Z",
+   "verdict": "disclose"
   },
   {
    "note": "Maximum Height of Main Walls for a Residential Building other than an Apartment Building with a Flat or Shallow Roof - this is the Max Height for flat roods in R zone - doesn't apply to apartment buildings. So you can exceed the permitted max height if you meet this condition  the R zone has a roof with a slope of less than 1.0 vertical units for every 10.0 horizontal units for more than 50 percent of the total horizontal roof area: (A) despite regulation 10.10.40.10(2) above, additional main walls are permitted to be located above the maximum height of all main walls permitted in regulation 10.10.40.10(2), provided all the additional front main walls and rear main walls located above the main walls permitted in regulation 10.10.40.10(2) are set back a minimum of 1.4 metres from the front main walls and rear main walls permitted in regulation 10.10.40.10(2. - this is just a disclosure ",
@@ -336,6 +655,61 @@
   },
   {
    "note": "",
+   "reading_sha": "69e2bd4172e0e363",
+   "regulation_id": "10.10.40.10(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(8)#(8)(A)",
+   "updated_at": "2026-10-20T15:33:01.328Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "af1f7b31fd201979",
+   "regulation_id": "10.10.40.10(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(8)#(8)(B)",
+   "updated_at": "2026-10-20T15:33:07.571Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "e8d3e3c423b72325",
+   "regulation_id": "10.10.40.10(8)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(8)#(8)(C)",
+   "updated_at": "2026-10-20T15:33:10.243Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "662af660ca65623d",
+   "regulation_id": "10.10.40.10(9)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.10(9)#row",
+   "updated_at": "2026-10-20T15:33:13.919Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "664cf0f096c2545a",
+   "regulation_id": "10.10.40.11(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.11(1)#whole",
+   "updated_at": "2026-10-20T15:33:33.017Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
    "reading_sha": "ec1e37beaaca6fd0",
    "regulation_id": "10.10.40.20(1)",
    "set": "base",
@@ -420,6 +794,61 @@
    "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
    "unit_id": "10.10.40.40(1)#(1)(D)",
    "updated_at": "2026-10-19T17:49:35.180Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "Additions to the Rear of Certain Residential Buildings If a lot in the R zone has a permitted maximum floor space index of 0.6 - additions - ",
+   "reading_sha": "481bd07ac6717c6a",
+   "regulation_id": "10.10.40.40(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.40(2)#(2)(A)",
+   "updated_at": "2026-10-20T15:35:16.305Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "Addition Scenario ",
+   "reading_sha": "c463cbd45b9c3f87",
+   "regulation_id": "10.10.40.40(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.40(2)#(2)(B)",
+   "updated_at": "2026-10-20T15:36:21.444Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Additions Scenario",
+   "reading_sha": "336c85ef08a9ac5d",
+   "regulation_id": "10.10.40.40(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.40(2)#(2)(C)",
+   "updated_at": "2026-10-20T15:36:55.630Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "7a9dc5e44beeaa56",
+   "regulation_id": "10.10.40.50(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.50(1)#whole",
+   "updated_at": "2026-10-20T15:37:14.246Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "083763fa0f9613b7",
+   "regulation_id": "10.10.40.61(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.61(1)#whole",
+   "updated_at": "2026-10-20T15:37:33.850Z",
    "verdict": "no_application"
   },
   {
@@ -565,6 +994,17 @@
    "verdict": "matches"
   },
   {
+   "note": "Setback exemptions  ",
+   "reading_sha": "73c2eed9cb4ecdc9",
+   "regulation_id": "10.10.40.71(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.71(1)#whole",
+   "updated_at": "2026-10-20T15:40:01.484Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "Details for townhouses and apartment buildings",
    "reading_sha": "f13fc1bca4d77514",
    "regulation_id": "10.10.40.80(1)",
@@ -598,6 +1038,28 @@
    "verdict": "no_application"
   },
   {
+   "note": "",
+   "reading_sha": "892e3638ae98b050",
+   "regulation_id": "10.10.40.80(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.80(2)#(2)(A)",
+   "updated_at": "2026-10-20T15:39:00.932Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "41ab00a0a7af2b5b",
+   "regulation_id": "10.10.40.80(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.80(2)#(2)(B)",
+   "updated_at": "2026-10-20T15:38:53.081Z",
+   "verdict": "wrong"
+  },
+  {
    "note": "This just grandfathers in the legally existing building . We don't know that... ",
    "reading_sha": "4a320a56498ef35f",
    "regulation_id": "10.10.40.81(1)",
@@ -606,6 +1068,17 @@
    "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
    "unit_id": "10.10.40.81(1)#whole",
    "updated_at": "2026-10-20T13:05:57.385Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
+   "reading_sha": "4887448646365a6b",
+   "regulation_id": "10.10.40.81(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.10.40.81(2)#whole",
+   "updated_at": "2026-10-20T15:38:47.060Z",
    "verdict": "disclose"
   },
   {
@@ -1337,6 +1810,50 @@
    "verdict": "no_application"
   },
   {
+   "note": "Platforms ",
+   "reading_sha": "5ebf1aedff97801e",
+   "regulation_id": "10.20.40.50(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.50(1)#(1)(A)",
+   "updated_at": "2026-10-20T15:37:09.795Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "0c6a78e13ab34088",
+   "regulation_id": "10.20.40.50(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.50(2)#whole",
+   "updated_at": "2026-10-20T15:37:17.210Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "de451e15a711127d",
+   "regulation_id": "10.20.40.50(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.50(3)#(3)(A)",
+   "updated_at": "2026-10-20T15:37:24.371Z",
+   "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "3680fc8b24ec3a66",
+   "regulation_id": "10.20.40.50(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.50(3)#(3)(B)",
+   "updated_at": "2026-10-20T15:37:30.451Z",
+   "verdict": "no_application"
+  },
+  {
    "note": "",
    "reading_sha": "34ceba28f2158c93",
    "regulation_id": "10.20.40.70(1)",
@@ -1448,6 +1965,17 @@
   },
   {
    "note": "",
+   "reading_sha": "096776b9a4173acb",
+   "regulation_id": "10.20.40.70(4)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(4)#whole",
+   "updated_at": "2026-10-20T15:40:08.264Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
    "reading_sha": "2b7e31d4fd5646e6",
    "regulation_id": "10.20.40.70(5)",
    "set": "base",
@@ -1488,6 +2016,17 @@
    "table_sha256": "7100633b80558479a46930f41ec49f60189d72995ad847668deddee52aea9103",
    "unit_id": "10.20.40.70(6)#(6)(B)",
    "updated_at": "2026-10-19T18:06:42.954Z",
+   "verdict": "matches"
+  },
+  {
+   "note": "",
+   "reading_sha": "f3bfc3b0c60ef2e0",
+   "regulation_id": "10.20.40.70(7)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.70(7)#(7)(A)",
+   "updated_at": "2026-10-20T15:12:24.760Z",
    "verdict": "matches"
   },
   {
@@ -1544,6 +2083,28 @@
    "unit_id": "10.20.40.80(1)#(1)(C)",
    "updated_at": "2026-10-19T21:00:54.383Z",
    "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "26d9aa1630a570ca",
+   "regulation_id": "10.20.40.80(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.80(2)#(2)(A)",
+   "updated_at": "2026-10-20T15:39:03.095Z",
+   "verdict": "wrong"
+  },
+  {
+   "note": "",
+   "reading_sha": "af082a6af93c197e",
+   "regulation_id": "10.20.40.80(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.20.40.80(2)#(2)(B)",
+   "updated_at": "2026-10-20T15:38:56.211Z",
+   "verdict": "wrong"
   },
   {
    "note": "12) Secondary Suite A secondary suite in the RS zone must comply with the specific use regulations in Section 150.10. we have this",
@@ -2196,6 +2757,17 @@
    "verdict": "disclose"
   },
   {
+   "note": "",
+   "reading_sha": "b189190be8d6e0a3",
+   "regulation_id": "10.40.40.50(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.40.40.50(3)#(3)(A)",
+   "updated_at": "2026-10-20T15:37:26.462Z",
+   "verdict": "no_application"
+  },
+  {
    "note": "Not important - Decks- platforms etc.",
    "reading_sha": "122e934d163df9e2",
    "regulation_id": "10.40.40.50(3)",
@@ -2468,7 +3040,9 @@
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
    "unit_id": "10.5.30.11(3)#whole",
-   "updated_at": "2026-10-20T13:20:51.312Z"
+   "updated_at": "2026-10-20T15:12:37.722Z",
+   "verdict": "disclose",
+   "verdict_refreshed": "claude.ai review page DB 2026-10-20 (envdb12): verdict null -> disclose"
   },
   {
    "note": "Through Lots - we fall for this - Designated Front Lot Line = ny lot line separating the lot from a street may be selected as the front lot line, if: (A) the lot line is not separated from the street by a 0.3 metre reserve;",
@@ -2725,7 +3299,9 @@
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
    "unit_id": "10.5.40.10(3)#(3)(B)",
-   "updated_at": "2026-10-20T13:50:51.149Z"
+   "updated_at": "2026-10-20T15:13:31.886Z",
+   "verdict": "disclose",
+   "verdict_refreshed": "claude.ai review page DB 2026-10-20 (envdb12): verdict null -> disclose"
   },
   {
    "note": "Height of Elements for Functional Operation - Not important - can exceed max height of the building by 5M however, the building needs a height greater than 15M",
@@ -3524,7 +4100,9 @@
    "source": "claude.ai review page DB 2026-10-20 (envdb11 read-only dump)",
    "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
    "unit_id": "10.5.40.71(2)#whole",
-   "updated_at": "2026-10-20T14:59:50.334Z"
+   "updated_at": "2026-10-20T15:13:36.356Z",
+   "verdict": "disclose",
+   "verdict_refreshed": "claude.ai review page DB 2026-10-20 (envdb12): verdict null -> disclose"
   },
   {
    "note": "This pertains to additions or renovation above lawfully existing buildings - ie building up. Applied to a lot with lot frontage of 12.2 or less - this is what applies the required minimum building setback for any addition or extension above a lawfully existing building or structure referred to in regulation 10.5.40.71(1) is the minimum building setback from the respective lot line permitted by regulation 10.5.40.71(1).",
@@ -3558,6 +4136,28 @@
    "unit_id": "10.5.40.71(4)#(4)(B)",
    "updated_at": "2026-10-19T20:55:29.683Z",
    "verdict": "wrong"
+  },
+  {
+   "note": "Grandfathering in permitted setback for lawfully existing building",
+   "reading_sha": "eba074d1f90bca3e",
+   "regulation_id": "10.5.40.71(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(5)#whole",
+   "updated_at": "2026-10-20T15:14:35.217Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "Scenario - Additions - he minimum distance from the original centreline of a lane for any addition or extension above a lawfully existing building or structure referred to in regulation 10.5.40.71(5) is the minimum distance from the original centreline of the lane permitted by regulation 10.5.40.71(5)",
+   "reading_sha": "57986f5ea1017913",
+   "regulation_id": "10.5.40.71(6)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "10.5.40.71(6)#whole",
+   "updated_at": "2026-10-20T15:15:34.820Z",
+   "verdict": "disclose"
   },
   {
    "note": "This just states what we know from 150.10 - RT applies",
@@ -4950,6 +5550,17 @@
    "verdict": "wrong"
   },
   {
+   "note": "",
+   "reading_sha": "89db7f75b866e263",
+   "regulation_id": "150.10.20.1(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "150.10.20.1(1)#(1)(C)",
+   "updated_at": "2026-10-20T15:38:43.640Z",
+   "verdict": "disclose"
+  },
+  {
    "note": "Defines the maximum number of secondary suites allowed. Each dwelling can have 1. Applies to etached house, semi-detached house, or townhouse",
    "reading_sha": "eed0e9abad1b2c6f",
    "regulation_id": "150.10.20.1(2)",
@@ -5000,6 +5611,17 @@
    "unit_id": "150.7.1(1)#whole",
    "updated_at": "2026-10-16T15:40:37.467Z",
    "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "76bf0148148b6f52",
+   "regulation_id": "150.7.1(2)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "150.7.1(2)#whole",
+   "updated_at": "2026-10-20T15:38:12.853Z",
+   "verdict": "disclose"
   },
   {
    "note": "",
@@ -6562,6 +7184,17 @@
   },
   {
    "note": "",
+   "reading_sha": "64ab39297263368c",
+   "regulation_id": "150.8.60.60(3)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "150.8.60.60(3)#(3)(A)",
+   "updated_at": "2026-10-20T15:38:02.412Z",
+   "verdict": "disclose"
+  },
+  {
+   "note": "",
    "reading_sha": "abe71a6ef698ed00",
    "regulation_id": "150.8.60.60(3)",
    "set": "base",
@@ -6579,6 +7212,17 @@
    "unit_id": "150.8.60.60(4)#whole",
    "updated_at": "2026-10-16T14:19:36.399Z",
    "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "f677bb279dca7cf8",
+   "regulation_id": "150.8.60.60(5)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "150.8.60.60(5)#(5)(A)",
+   "updated_at": "2026-10-20T15:37:59.407Z",
+   "verdict": "disclose"
   },
   {
    "note": "",
@@ -6699,6 +7343,17 @@
    "unit_id": "150.8.75.1(1)@1075-2026#[instruction]",
    "updated_at": "2026-10-16T14:19:36.399Z",
    "verdict": "no_application"
+  },
+  {
+   "note": "",
+   "reading_sha": "57428bbbc652ef9f",
+   "regulation_id": "150.8.80.1(1)",
+   "set": "base",
+   "source": "claude.ai review page DB 2026-10-20 (envdb12 read-only dump)",
+   "table_sha256": "979051b265e9db37c4f41444809a7501232a208632a8009f383a63176504c897",
+   "unit_id": "150.8.80.1(1)#(1)(A)",
+   "updated_at": "2026-10-20T15:37:54.722Z",
+   "verdict": "wrong"
   },
   {
    "note": "Parking Space Requirement for a Lot with a Laneway Suite = none",

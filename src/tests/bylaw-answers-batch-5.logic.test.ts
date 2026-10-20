@@ -117,8 +117,9 @@ describe('M-158 / M-192 — the lawfully existing lot family 10.5.30.11 / .21 / 
       expect(unitOf(id).disclosure).toBe(T[k]);
     });
   }
-  it('M-192 / M-211(1): 10.5.40.11(2) names the renovation answer holding additions to the base height', () => {
-    expect(unitOf('10.5.40.11(2)#whole').calculation_handling.gaps).toMatch(/M-192 \/ M-211\(1\): an addition meets the permitted maximum height/);
+  it('M-192: 10.5.40.11(2) names the renovation answer holding additions to the base height (re-cited from M-211(1), verify-12f N6)', () => {
+    expect(unitOf('10.5.40.11(2)#whole').calculation_handling.gaps).toMatch(/M-192: an addition meets the permitted maximum height/);
+    expect(unitOf('10.5.40.11(2)#whole').calculation_handling.gaps).not.toMatch(/M-211/);
   });
 });
 
@@ -167,9 +168,9 @@ describe('M-229 — the mechanical attic area is left out of GFA by default (10.
   });
 });
 
-describe('PIN NONRES — non-residential arms answered "disclose" are pinned out of scope, no disclosure applied', () => {
+describe('PIN NONRES-1 / NONRES-2 / SCOPE-100UNITS-1 — arms answered "disclose" pinned out of scope, no disclosure applied', () => {
   for (const id of ['5.10.40.70(6)#(6)(B)', '5.10.40.80(1)#(1)(B)', '10.5.40.60(4)#(4)(B)']) {
-    it(`${id} carries no disclosure (PIN NONRES)`, () => {
+    it(`${id} carries no disclosure (pinned out of scope)`, () => {
       expect(unitOf(id).disclosure).toBe('none');
     });
   }
