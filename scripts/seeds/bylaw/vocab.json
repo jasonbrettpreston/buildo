@@ -354,6 +354,10 @@
     "trial_name_map": { "layer1_unit_missing": "target_not_keyed", "lot_data_unavailable": "missing_input", "lot_flag_missing": "missing_input", "map_area_membership_unavailable": "map_area_not_held" },
     "derived_unit": { "m2/unit": "Layer 3 report targets only (avg_unit_gfa_sqm): m2 ÷ units; never a literal, dsl_target or Layer 1 unit (Spec 69 M-72 note)" }
   },
+  "citation_corrections": {
+    "$comment": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5): a by-law mis-citation read as the regulation it was meant to cite, per regulation row: {row: {cited: intended}}. Read by xref.mjs displacesOf only; the unit discloses the mis-citation.",
+    "10.40.40.20(4)": { "10.20.40.20(1)": "10.40.40.20(1)" }
+  },
   "displacement_triggers": {
     "phrases": ["Despite", "despite", "does not apply", "do not apply", "notwithstanding", "Notwithstanding", "exempt from", "apply to prevent", "will prevent", "is not subject to the regulations of", "percent of the requirements cited in", "may be reduced to"],
     "not_an_override": ["subordinate_reference", "explanatory_note", "self_reference", "condition_not_displacement"]

@@ -4750,10 +4750,10 @@
    "disclosure_code": null,
    "corrected_value": "No change: (A) is the townhouse 19.0 m and (B) the apartment 25.0 m, a separate unit, so the answer already matches.",
    "zone": "RS",
-   "class": "FAILS",
-   "finding": "E2E-F-05",
+   "class": "PROVEN",
+   "finding": null,
    "owed_field": null,
-   "reason": "the 19.0 m townhouse length is applied but the general 17.0 m (10.40.40.20(1)) still wins as the smaller maximum; the by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD cross-reference), so no displacement link to 10.40.40.20(1) is made",
+   "reason": "E2E-F-05 fixed (bylaw-fix-1, 2026-10-20; Spec 69a M-230, operator CHAT-5): the mis-cited \"Despite regulation 10.20.40.20(1)\" is read as 10.40.40.20(1) (vocab citation_corrections), so 19.0 m answers, disclosed. Before: the 19.0 m townhouse length is applied but the general 17.0 m (10.40.40.20(1)) still wins as the smaller maximum; the by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD cross-reference), so no displacement link to 10.40.40.20(1) is made",
    "checks": [
     {
      "kind": "value",
@@ -4768,17 +4768,16 @@
      },
      "rationale": "townhouse on a lot abutting a major street: 19.0 m (\"Despite … (1)\")",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 17,
+       "value": 19,
        "reason": null,
-       "winner": "10.40.40.20(1)#whole",
+       "winner": "10.40.40.20(4)#(4)(A)",
        "applied": [
-        "10.40.40.20(1)#whole",
         "10.40.40.20(4)#(4)(A)"
        ],
        "disclosures": [],
@@ -4799,17 +4798,16 @@
      },
      "rationale": "as above",
      "initial": {
-      "pass": false,
+      "pass": true,
       "observed": {
        "candidate": true,
        "applies": true,
        "why": null,
        "status": "value",
-       "value": 17,
+       "value": 19,
        "reason": null,
-       "winner": "10.40.40.20(1)#whole",
+       "winner": "10.40.40.20(4)#(4)(A)",
        "applied": [
-        "10.40.40.20(1)#whole",
         "10.40.40.20(4)#(4)(A)"
        ],
        "disclosures": [],

@@ -89,7 +89,8 @@ describe('PROVEN — the answer takes effect on real lots', () => {
   }
 });
 
-describe('FAILS — the answer does not take effect (it.fails: turns green when the fix lands)', () => {
+// every FAILS case flipped 2026-10-20 (bylaw-fix-1): the block runs only while a finding is open (vitest rejects an empty suite)
+if (CASES.some((c) => c.class === 'FAILS')) describe('FAILS — the answer does not take effect (it.fails: turns green when the fix lands)', () => {
   for (const [fam, cs] of byFamily('FAILS')) {
     describe(fam, () => {
       for (const c of cs) it.fails(`[${c.finding}] ${label(c)} — ${c.reason}`, () => runAll(c));

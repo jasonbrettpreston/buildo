@@ -535,3 +535,25 @@ describe('M-159 / M-177(1) — a plain ancillary building (no suite) takes no ga
     expect([l.value, l.winner]).toEqual([10, '150.8.60.30(5)#whole']);
   });
 });
+
+// M-230 (operator 2026-10-20, chat decision CHAT-5, E2E-F-05): RS 10.40.40.20(4) says "Despite regulation 10.20.40.20(1)"
+// (an RD regulation) inside the RS section; it is read as RS's own 10.40.40.20(1), so a townhouse on a major street
+// takes 19.0 m, and the mis-citation is disclosed. Red at a59710ba: 17.0 m from 10.40.40.20(1).
+describe('M-230 — RS 10.40.40.20(4) "Despite regulation 10.20.40.20(1)" is read as 10.40.40.20(1) (CHAT-5)', () => {
+  it('the declared citation correction makes (4)(A)/(B) displace RS 10.40.40.20(1), not RD 10.20.40.20(1)', () => {
+    for (const id of ['10.40.40.20(4)#(4)(A)', '10.40.40.20(4)#(4)(B)']) {
+      const u = units.find((x) => x.unit_id === id) as Json;
+      expect([id, u.displaces]).toEqual([id, ['10.40.40.20(1)']]);
+    }
+    expect(I.vocab.citation_corrections['10.40.40.20(4)']).toMatchObject({ '10.20.40.20(1)': '10.40.40.20(1)' });
+  });
+  it('an RS townhouse on a major street answers 19.0 m from (4)(A), with the mis-citation disclosed', () => {
+    const r = eff(lot('RS', 'townhouse', { flags: { major_street: true } }), 'building_length_m');
+    expect([r.value, r.winner]).toEqual([19, '10.40.40.20(4)#(4)(A)']);
+    expect(unitOf('10.40.40.20(4)#(4)(A)').disclosure).toMatch(/10\.20\.40\.20\(1\)/);
+  });
+  it('off a major street the RS 17.0 m length stands', () => {
+    const r = eff(lot('RS', 'townhouse', { flags: { major_street: false } }), 'building_length_m'); // major_street is data-filled (M-169(3))
+    expect([r.value, r.winner]).toEqual([17, '10.40.40.20(1)#whole']);
+  });
+});

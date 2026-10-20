@@ -79344,6 +79344,28 @@
         "deck_or_platform": "a platform without",
         "laneway_suite": "the ancillary building"
       }
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(4)#(4)(A)/disclosure",
+      "kind": "correction",
+      "reason": "E2E-F-05 (golden lots 3375 and 3365 Weston Rd, RS: 17.0 m from 10.40.40.20(1) won over the 19.0 m townhouse length). The clause cites the RD regulation 10.20.40.20(1) inside the RS section; the operator read it as RS 10.40.40.20(1) (vocab citation_corrections), and the answer discloses the mis-citation.",
+      "rule": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5: read \"Despite regulation 10.20.40.20(1)\" as 10.40.40.20(1), disclose the mis-citation); M-75",
+      "unit": "10.40.40.20(4)#(4)(A)",
+      "value": "On a lot abutting a major street a townhouse may be 19.0 m long. The by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD regulation); we read it as the RS length rule 10.40.40.20(1), as intended."
+    },
+    {
+      "adjudicated_on": "2026-10-20",
+      "adjudicator": "operator",
+      "field": "disclosure",
+      "id": "COR-10.40.40.20(4)#(4)(B)/disclosure",
+      "kind": "correction",
+      "reason": "E2E-F-05 (golden lots 3375 and 3365 Weston Rd, RS: 17.0 m from 10.40.40.20(1) won over the 19.0 m townhouse length). The clause cites the RD regulation 10.20.40.20(1) inside the RS section; the operator read it as RS 10.40.40.20(1) (vocab citation_corrections), and the answer discloses the mis-citation.",
+      "rule": "Spec 69a M-230 (operator 2026-10-20, chat decision CHAT-5: read \"Despite regulation 10.20.40.20(1)\" as 10.40.40.20(1), disclose the mis-citation); M-75",
+      "unit": "10.40.40.20(4)#(4)(B)",
+      "value": "On a lot abutting a major street an apartment building may be 25.0 m long. The by-law text says \"Despite regulation 10.20.40.20(1)\" (an RD regulation); we read it as the RS length rule 10.40.40.20(1), as intended."
     }
   ]
 }
